@@ -104,16 +104,27 @@ def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png):
 
 @workerapp.task
 def update_packages():
+    sys.stderr.write("update_packages in worker: starting\n")
     if worker_controller is None:
         initialize_db()
+    sys.stderr.write("update_packages in worker: continuing\n")
     try:
         with worker_controller.flaskapp.app_context():
+            sys.stderr.write("update_packages in worker: importing update\n")
             import docassemble.webapp.update
+            sys.stderr.write("update_packages in worker: starting update\n")
             ok, logmessages, results = docassemble.webapp.update.check_for_updates()
+            sys.stderr.write("update_packages in worker: update completed\n")
             worker_controller.trigger_update(except_for=hostname)
-        return worker_controller.functions.ReturnValue(ok=ok, logmessages=logmessages, results=results)
-    except Exception as the_error:
-        return worker_controller.functions.ReturnValue(ok=False, error_message=str(the_error))
+            sys.stderr.write("update_packages in worker: trigger completed\n")
+            return worker_controller.functions.ReturnValue(ok=ok, logmessages=logmessages, results=results)
+    except:
+        e = sys.exc_info()[0]
+        error_mess = sys.exc_info()[1]
+        sys.stderr.write("update_packages in worker: error was " + str(e) + " with message " + str(error_mess) + "\n")
+        return worker_controller.functions.ReturnValue(ok=False, error_message=str(e))
+    sys.stderr.write("update_packages in worker: all done\n")
+    return worker_controller.functions.ReturnValue(ok=False, error_message="Reached end")
     
 @workerapp.task
 def email_attachments(yaml_filename, user_info, user_code, secret, url, url_root, email_address, question_number, include_editable):

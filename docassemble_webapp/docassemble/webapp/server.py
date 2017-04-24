@@ -6542,18 +6542,20 @@ def update_package_ajax():
     if result.ready():
         if 'update' in session:
             del session['update']
-        if type(result.result) == ReturnValue:
-            if result.result.ok:
+        the_result = result.get()
+        if type(the_result) is ReturnValue:
+            if the_result.ok:
                 #logmessage("update_package_ajax: success")
-                return jsonify(success=True, status='finished', ok=result.result.ok, summary=summarize_results(result.result.results, result.result.logmessages))
-            elif hasattr(result.result, 'error_message'):
-                logmessage("update_package_ajax: failed return value is " + str(result.result.error_message))
-                return jsonify(success=True, status='failed', error_message=str(result.result.error_message))
+                return jsonify(success=True, status='finished', ok=the_result.ok, summary=summarize_results(the_result.results, the_result.logmessages))
+            elif hasattr(the_result, 'error_message'):
+                logmessage("update_package_ajax: failed return value is " + str(the_result.error_message))
+                return jsonify(success=True, status='failed', error_message=str(the_result.error_message))
             else:
-                return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(result.result)))
+                return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(the_result)))
         else:
-            logmessage("update_package_ajax: failed return value is " + str(result.result))
-            return jsonify(success=True, status='failed', error_message=str(result.result))
+            logmessage("update_package_ajax: failed return value is a " + str(type(the_result)))
+            logmessage("update_package_ajax: failed return value is " + str(the_result))
+            return jsonify(success=True, status='failed', error_message=str(the_result))
     else:
         return jsonify(success=True, status='waiting')
 
@@ -6615,10 +6617,17 @@ def update_package():
         else:
             if form.giturl.data:
                 giturl = form.giturl.data.strip()
-                packagename = re.sub(r'.*/', '', giturl)
+                packagename = re.sub(r'^git+', '', packagename)
+                packagename = re.sub(r'#.*', '', packagename)
+                packagename = re.sub(r'/*$', '', giturl)
+                packagename = re.sub(r'\.git$', '', packagename)
+                packagename = re.sub(r'.*/', '', packagename)
                 if user_can_edit_package(giturl=giturl) and user_can_edit_package(pkgname=packagename):
                     #commands = ['install', '--egg', '--src=' + temp_directory, '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user", 'git+' + giturl + '.git#egg=' + packagename]
                     install_git_package(packagename, giturl)
+                    result = docassemble.webapp.worker.update_packages.delay()
+                    session['update'] = result.id
+                    return redirect(url_for('update_package_wait'))
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
             elif form.pippackage.data:
@@ -6632,6 +6641,9 @@ def update_package():
                 packagename = re.sub(r'[^A-Za-z0-9\_\-]', '', packagename)
                 if user_can_edit_package(pkgname=packagename):
                     install_pip_package(packagename, limitation)
+                    result = docassemble.webapp.worker.update_packages.delay()
+                    session['update'] = result.id
+                    return redirect(url_for('update_package_wait'))
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
             else:
@@ -6716,12 +6728,23 @@ def create_playground_package():
             with open(filename, 'rU') as fp:
                 content = fp.read().decode('utf8')
                 info = yaml.load(content)
-            for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
+            for field in ['dependencies', 'dependency_links', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
                 if field not in info:
                     info[field] = list()
             for package in ['docassemble', 'docassemble.base']:
                 if package not in info['dependencies']:
                     info['dependencies'].append(package)
+            for package in info['dependencies']:
+                existing_package = Package.query.filter_by(name=package, active=True).first()
+                if existing_package is not None and existing_package.giturl is not None and existing_package.giturl != 'https://github.com/jhpyle/docassemble':
+                    # https://github.com/jhpyle/docassemble-helloworld
+                    # git+https://github.com/fact-project/smart_fact_crawler.git@master#egg=smart_fact_crawler-0
+                    the_package_name = re.sub(r'.*/', '', existing_package.giturl)
+                    the_package_name = re.sub(r'-', '_', the_package_name)
+                    #new_url = existing_package.giturl + '/archive/master.zip'
+                    new_url = 'git+' + existing_package.giturl + '.git@master#egg=' + the_package_name + '-' + existing_package.packageversion
+                    if new_url not in info['dependency_links']:
+                        info['dependency_links'].append(str(new_url))
             author_info = dict()
             author_info['author name and email'] = name_of_user(current_user, include_email=True)
             author_info['author name'] = name_of_user(current_user)
@@ -7619,7 +7642,7 @@ def playground_packages():
                                     inner_item = re.sub(r'^u?"+', '', inner_item)
                                     the_list.append(inner_item)
                                 extracted[m.group(1)] = the_list
-                        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
+                        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
                         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
                         with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w') as fp:
                             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
@@ -8033,8 +8056,8 @@ def playground_variables():
             if active_file == '':
                 active_file = 'test.yml'
             content = ''
-            if form.playground_content.data:
-                content = form.playground_content.data
+            if 'playground_content' in post_data:
+                content = post_data['playground_content']
             interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
         interview = interview_source.get_interview()
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))

@@ -58,8 +58,8 @@ class ReturnValue(object):
         if hasattr(self, 'ok') and self.ok and hasattr(self, 'content'):
             return self.content
         if hasattr(self, 'error_message'):
-            return self.error_message
-        return self.value
+            return str(self.error_message)
+        return str(self.value)
     def __unicode__(self):
         return unicode(self.__str__())
     

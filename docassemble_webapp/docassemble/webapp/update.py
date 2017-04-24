@@ -1,6 +1,6 @@
 import os
 import sys
-import pip.utils.logging
+#import pip.utils.logging
 import pip
 import socket
 import tempfile
@@ -50,6 +50,7 @@ def check_for_updates():
     ok = True
     here_already = dict()
     results = dict()
+    sys.stderr.write("check_for_updates: 1\n")
     installed_packages = get_installed_distributions()
     for package in installed_packages:
         here_already[package.key] = package.version
@@ -61,24 +62,30 @@ def check_for_updates():
     uninstalled_packages = dict()
     logmessages = ''
     package_by_name = dict()
+    sys.stderr.write("check_for_updates: 2\n")
     for package in Package.query.filter_by(active=True).all():
         package_by_name[package.name] = package
     # packages is what is supposed to be installed
+    sys.stderr.write("check_for_updates: 3\n")
     for package in Package.query.filter_by(active=True).all():
         if package.type is not None:
             packages[package.id] = package
             #print "Found a package " + package.name
+    sys.stderr.write("check_for_updates: 4\n")
     for package in Package.query.filter_by(active=False).all():
         if package.name not in package_by_name:
             uninstalled_packages[package.id] = package # this is what the database says should be uninstalled
+    sys.stderr.write("check_for_updates: 5\n")
     for install in Install.query.filter_by(hostname=hostname).all():
         installs[install.package_id] = install # this is what the database says in installed on this server
         if install.package_id in uninstalled_packages and uninstalled_packages[install.package_id].name not in package_by_name:
             to_uninstall.append(uninstalled_packages[install.package_id]) # uninstall if it is installed
     changed = False
     package_owner = dict()
+    sys.stderr.write("check_for_updates: 6\n")
     for auth in PackageAuth.query.filter_by(authtype='owner').all():
         package_owner[auth.package_id] = auth.user_id
+    sys.stderr.write("check_for_updates: 7\n")
     for package in packages.itervalues():
         if package.id not in installs and package.name in here_already:
             sys.stderr.write("check_for_updates: package " + package.name + " here already\n")
@@ -88,6 +95,7 @@ def check_for_updates():
             changed = True
     if changed:
         db.session.commit()
+    sys.stderr.write("check_for_updates: 8\n")
     for package in packages.itervalues():
         #sys.stderr.write("check_for_updates: processing package id " + str(package.id) + "\n")
         #sys.stderr.write("1: " + str(installs[package.id].packageversion) + " 2: " + str(package.packageversion) + "\n")
@@ -99,6 +107,7 @@ def check_for_updates():
         if package.id not in installs or package.version > installs[package.id].version or new_version_needed:
             to_install.append(package)
     #sys.stderr.write("done with that" + "\n")
+    sys.stderr.write("check_for_updates: 9\n")
     for package in to_uninstall:
         #sys.stderr.write("Going to uninstall a package: " + package.name + "\n")
         if package.name in uninstall_done:
@@ -114,6 +123,7 @@ def check_for_updates():
             results[package.name] = 'uninstall failed'
             ok = False
     packages_to_delete = list()
+    sys.stderr.write("check_for_updates: 10\n")
     for package in to_install:
         sys.stderr.write("check_for_updates: going to install a package: " + package.name + "\n")
         returnval, newlog = install_package(package)
@@ -145,10 +155,12 @@ def check_for_updates():
             update_versions()
             add_dependencies(package_owner.get(package.id, 1))
             update_versions()
+    sys.stderr.write("check_for_updates: 11\n")
     for package in packages_to_delete:
         package.active = False
+    sys.stderr.write("check_for_updates: 12\n")
     db.session.commit()
-    sys.stderr.write("check_for_updates: finished uninstalling and installing" + "\n")
+    sys.stderr.write("check_for_updates: finished uninstalling and installing\n")
     return ok, logmessages, results
 
 def update_versions():
@@ -175,6 +187,7 @@ def update_versions():
 
 def add_dependencies(user_id):
     #sys.stderr.write('add_dependencies: user_id is ' + str(user_id) + "\n")
+    sys.stderr.write("add_dependencies: starting\n")
     from docassemble.base.config import hostname, daconfig
     docassemble_git_url = daconfig.get('docassemble git url', 'https://github.com/jhpyle/docassemble')
     package_by_name = dict()
@@ -197,6 +210,7 @@ def add_dependencies(user_id):
         install = Install(hostname=hostname, packageversion=package_entry.packageversion, version=package_entry.version, package_id=package_entry.id)
         db.session.add(install)
         db.session.commit()
+    sys.stderr.write("add_dependencies: ending\n")
     return
 
 def fix_names():
@@ -211,32 +225,39 @@ def fix_names():
                 sys.stderr.write("fix_names: package " + package.name + " does not appear to be installed" + "\n")
 
 def install_package(package):
+    sys.stderr.write("install_package: " + package.name + "\n")
     if package.type == 'zip' and package.upload is None:
         return 0, ''
     sys.stderr.write('install_package: ' + package.name + "\n")
     from docassemble.base.config import daconfig
     PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
     logfilecontents = ''
-    pip.utils.logging._log_state = threading.local()
-    pip.utils.logging._log_state.indentation = 0
+    #pip.utils.logging._log_state = threading.local()
+    #pip.utils.logging._log_state.indentation = 0
     pip_log = tempfile.NamedTemporaryFile()
     temp_dir = tempfile.mkdtemp()
     if package.type == 'zip' and package.upload is not None:
         saved_file = SavedFile(package.upload, extension='zip', fix=True)
-        commands = ['install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--log-file=' + pip_log.name, '--upgrade', saved_file.path + '.zip']
+        commands = ['pip', 'install', '--quiet', '--process-dependency-links', '--allow-all-external', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--log-file=' + pip_log.name, '--upgrade', saved_file.path + '.zip']
     elif package.type == 'git' and package.giturl is not None:
-        commands = ['install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + package.giturl + '.git#egg=' + package.name]
+        commands = ['pip', 'install', '--quiet', '--process-dependency-links', '--allow-all-external', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + package.giturl + '.git#egg=' + package.name]
     elif package.type == 'pip':
         if package.limitation is None:
             limit = ""
         else:
             limit = str(package.limitation)
-        commands = ['install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, package.name + limit]
+        commands = ['pip', 'install', '--quiet', '--process-dependency-links', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, package.name + limit]
     else:
+        sys.stderr.write("Wrong package type\n")
         return 1, 'Unable to recognize package type: ' + package.name
-    #sys.stderr.write("install_package: running pip " + " ".join(commands) + "\n")
-    logfilecontents += "pip " + " ".join(commands) + "\n"
-    returnval = pip.main(commands)
+    sys.stderr.write("install_package: running " + " ".join(commands) + "\n")
+    logfilecontents += " ".join(commands) + "\n"
+    #returnval = pip.main(commands)
+    try:
+        subprocess.call(commands)
+        returnval = 0
+    except subprocess.CalledProcessError as err:
+        returnval = err.returncode
     with open(pip_log.name, 'rU') as x:
         logfilecontents += x.read().decode('utf8')
     sys.stderr.write(logfilecontents + "\n")
@@ -249,14 +270,19 @@ def uninstall_package(package):
     logfilecontents = ''
     #sys.stderr.write("uninstall_package: uninstalling " + package.name + "\n")
     #return 0
-    pip.utils.logging._log_state = threading.local()
-    pip.utils.logging._log_state.indentation = 0
+    #pip.utils.logging._log_state = threading.local()
+    #pip.utils.logging._log_state.indentation = 0
     pip_log = tempfile.NamedTemporaryFile()
-    commands = ['uninstall', '-y', '--log-file=' + pip_log.name, package.name]
-    #sys.stderr.write("Running pip " + " ".join(commands) + "\n")
-    logfilecontents += "pip " + " ".join(commands) + "\n"
-    returnval = pip.main(commands)
-    #sys.stderr.write('Finished running pip' + "\n")
+    commands = ['pip', 'uninstall', '-y', '--log-file=' + pip_log.name, package.name]
+    sys.stderr.write("Running " + " ".join(commands) + "\n")
+    logfilecontents += " ".join(commands) + "\n"
+    #returnval = pip.main(commands)
+    try:
+        subprocess.call(commands)
+        returnval = 0
+    except subprocess.CalledProcessError as err:
+        returnval = err.returncode
+    sys.stderr.write('Finished running pip' + "\n")
     with open(pip_log.name, 'rU') as x:
         logfilecontents += x.read().decode('utf8')
     sys.stderr.write(logfilecontents + "\n")
@@ -270,26 +296,40 @@ class Object(object):
     pass
 
 def get_installed_distributions():
+    sys.stderr.write("get_installed_distributions: starting\n")
     from docassemble.base.config import daconfig
     PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
     results = list()
-    old_stdout = sys.stdout
-    sys.stdout = saved_stdout = StringIO()
-    pip.main(['freeze'])
-    sys.stdout = old_stdout
-    output = saved_stdout.getvalue()
+    try:
+        output = subprocess.check_output(['pip', 'freeze'])
+    except subprocess.CalledProcessError as err:
+        output = err.output
+    # old_stdout = sys.stdout
+    # old_stderr = sys.stderr
+    # sys.stdout = saved_stdout = StringIO()
+    # pip.main(['freeze'])
+    # sys.stdout = old_stdout
+    # output = saved_stdout.getvalue()
     for line in output.split('\n'):
         a = line.split("==")
         if len(a) == 2:
             results.append(Object(key=a[0], version=a[1]))
+    # sys.stderr = old_stderr
+    sys.stderr.write("get_installed_distributions: ending\n")
     return results
 
 def get_real_name(package_name):
-    old_stdout = sys.stdout
-    sys.stdout = saved_stdout = StringIO()
-    pip.main(['show', package_name])
-    sys.stdout = old_stdout
-    output = saved_stdout.getvalue()
+    try:
+        output = subprocess.check_output(['pip', 'show', package_name])
+    except subprocess.CalledProcessError as err:
+        output = err.output
+        sys.stderr.write("get_real_name: error.  output was " + str(output) + "\n")
+        return None
+    # old_stdout = sys.stdout
+    # sys.stdout = saved_stdout = StringIO()
+    # pip.main(['show', package_name])
+    # sys.stdout = old_stdout
+    # output = saved_stdout.getvalue()
     for line in output.split('\n'):
         a = line.split(": ")
         if len(a) == 2 and a[0] == 'Name':
