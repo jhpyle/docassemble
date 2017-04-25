@@ -37,7 +37,9 @@ Then, copy and paste the interview code above into the editor:
 
 ![Code copied into interview]({{ site.baseurl }}/img/playground-new-interview-with-code.png)
 
-Then, click the ![Save and Run]({{ site.baseurl }}/img/playground-button-save-and-run.png) button.
+Then, click the ![Save]({{ site.baseurl
+}}/img/playground-button-save.png) button, followed by the ![Save and run]({{ site.baseurl
+}}/img/playground-button-save-and-run.png) button.
 
 You should see:
 
@@ -68,6 +70,20 @@ fields:
 
 It should now ask you "What is your planet's name?" and then greet
 your world by its name.
+
+Try clicking ![Source]({{ site.baseurl }}/img/button-source.png) in
+the navigation bar.  This toggles the display of information that will
+help you understand how a question came to be asked.  This can be
+helpful for "debugging" your interview.  Information about the
+readability of your interview question is also displayed.
+
+![Source]({{ site.baseurl }}/img/hello-world-source-code-for-question.png)
+
+In this example, the "Source" information explains that the interview
+tried to show a [`mandatory`] question, but couldn't, because it
+needed the definition of the variable `planet`.  Therefore it looked
+for a question that offered to define `planet`, and asked that
+question of the user.
 
 # Adding some Python code
 
@@ -180,7 +196,9 @@ You should now see the file listed as one of the "Static files."
 
 In this example, the name of the file is `globe.svg`.
 
-Now, click ![Back to playground]({{ site.baseurl
+Now, click ![Back]({{ site.baseurl
+}}/img/playground-button-back-to-playground-top.png) or
+![Back to playground]({{ site.baseurl
 }}/img/playground-button-back-to-playground.png) and add the following
 to your interview:
 
@@ -225,9 +243,12 @@ Now, when you run the interview, you can see that the image
 
 ([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/hello5.yml){:target="_blank"}.)
 
+For more ideas about how you can extend your interview, check out the
+examples area of the [Playground].
+
 # Packaging your interview
 
-Now, let's bundle the interview into a package so that we can
+Let's bundle the interview into a package so that we can
 share it with other developers or post it on [GitHub].
 
 Go to the Folders menu and select "Packages."
@@ -268,9 +289,18 @@ At the bottom of the screen, you will see some buttons:
 
 ![Buttons]({{ site.baseurl }}/img/playground-packages-buttons.png)
 
+Click the ![Save]({{ site.baseurl
+}}/img/playground-packages-button-save.png) button to save your
+package.
+
+Then, once your package is saved in the system, you will see the
+following buttons at the top of the screen.
+
+![Buttons]({{ site.baseurl }}/img/playground-packages-buttons-top.png)
+
 Click the ![Download]({{ site.baseurl
-}}/img/playground-packages-button-download.png) button to retrieve
-your package as a ZIP file called `docassemble-helloworld.zip`.
+}}/img/playground-packages-button-download.png) button to download the
+package as a ZIP file called `docassemble-helloworld.zip`.
 
 If you unpack the contents of the ZIP file, you will have a folder
 called `docassemble-helloworld`.  You can make changes to the files,
@@ -278,13 +308,74 @@ then re-ZIP the `docassemble-helloworld` folder, and install the
 revised package on a **docassemble** server using the
 [Package Management] tool.
 
-If you want to share your interview on [GitHub], make this folder the
-root folder of a new [GitHub] repository.  Then you will be able to go
-to [Package Management] on a **docassemble** server and install your
+## Storing on Github
+
+If you want to share your interview on [GitHub], download the ZIP
+file, unpack it, and make the `docassemble-helloworld` folder the root
+folder of a new [GitHub] repository.  Then you will be able to go to
+[Package Management] on a **docassemble** server and install your
 package using the URL to the [GitHub] repository.
 
-For more ideas about how you can extend your interview, check out the
-examples area of the [Playground].
+The [GitHub] repository name for a **docassemble** extension package
+should be in the form of `docassemble-helloworld`.
+
+![GitHub Repository]({{ site.baseurl }}/img/github-helloworld.png)
+
+After you press ![Create Repository]({{ site.baseurl
+}}/img/github-create-repository.png), you can push your first commit.
+
+Using [GitHub] is beyond the scope of this tutorial, but on a Linux
+machine, the process of initializing the package as a [GitHub]
+repository looks something like the following:
+
+{% highlight text %}
+jpyle@laptop:~$ unzip docassemble-helloworld.zip 
+Archive:  docassemble-helloworld.zip
+ extracting: docassemble-helloworld/README.md  
+ extracting: docassemble-helloworld/LICENSE  
+ extracting: docassemble-helloworld/setup.py  
+ extracting: docassemble-helloworld/docassemble/__init__.py  
+ extracting: docassemble-helloworld/docassemble/helloworld/__init__.py  
+ extracting: docassemble-helloworld/docassemble/helloworld/data/templates/README.md  
+ extracting: docassemble-helloworld/docassemble/helloworld/data/sources/README.md  
+ extracting: docassemble-helloworld/docassemble/helloworld/data/static/README.md  
+jpyle@laptop:~$ cd docassemble-helloworld
+jpyle@laptop:~/docassemble-helloworld$ git init
+Initialized empty Git repository in /home/jpyle/docassemble-helloworld/.git/
+jpyle@laptop:~/docassemble-helloworld$ git add .
+jpyle@laptop:~/docassemble-helloworld$ git commit -m "first commit"
+[master (root-commit) 7e21b49] first commit
+ 8 files changed, 106 insertions(+)
+ create mode 100644 LICENSE
+ create mode 100644 README.md
+ create mode 100644 docassemble/__init__.py
+ create mode 100644 docassemble/helloworld/__init__.py
+ create mode 100644 docassemble/helloworld/data/sources/README.md
+ create mode 100644 docassemble/helloworld/data/static/README.md
+ create mode 100644 docassemble/helloworld/data/templates/README.md
+ create mode 100644 setup.py
+jpyle@laptop:~/docassemble-helloworld$ git remote add origin git@github.com:jhpyle/docassemble-helloworld.git
+jpyle@laptop:~/docassemble-helloworld$ git push -u origin master
+Counting objects: 16, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (12/12), done.
+Writing objects: 100% (16/16), 2.59 KiB | 0 bytes/s, done.
+Total 16 (delta 0), reused 0 (delta 0)
+To github.com:jhpyle/docassemble-helloworld.git
+ * [new branch]      master -> master
+Branch master set up to track remote branch master from origin.
+{% endhighlight %}
+
+With the files pushed, the repository will look like the following,
+with the `setup.py` file and the `docassemble` directory at the top
+level.
+
+![GitHub Repository]({{ site.baseurl }}/img/github-helloworld-repository.png)
+
+On the **docassemble** menu, you can go to Package Management ->
+Update a Package, and [install] the package using its [GitHub] URL.
+
+![GitHub Install]({{ site.baseurl }}/img/update-package-github.png)
 
 [GitHub]: https://github.com
 [`decoration`]: {{ site.baseurl }}/docs/modifiers.html#decoration
@@ -303,3 +394,5 @@ examples area of the [Playground].
 [`root`]: {{ site.baseurl }}/docs/config.html#root
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
+[`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
+[install]: {{ site.baseurl }}/docs/packages.html
