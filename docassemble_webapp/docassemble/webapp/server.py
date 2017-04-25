@@ -6617,9 +6617,9 @@ def update_package():
         else:
             if form.giturl.data:
                 giturl = form.giturl.data.strip()
+                packagename = re.sub(r'/*$', '', giturl)
                 packagename = re.sub(r'^git+', '', packagename)
                 packagename = re.sub(r'#.*', '', packagename)
-                packagename = re.sub(r'/*$', '', giturl)
                 packagename = re.sub(r'\.git$', '', packagename)
                 packagename = re.sub(r'.*/', '', packagename)
                 if user_can_edit_package(giturl=giturl) and user_can_edit_package(pkgname=packagename):
@@ -6735,16 +6735,23 @@ def create_playground_package():
                 if package not in info['dependencies']:
                     info['dependencies'].append(package)
             for package in info['dependencies']:
+                logmessage("Considering " + str(package))
                 existing_package = Package.query.filter_by(name=package, active=True).first()
-                if existing_package is not None and existing_package.giturl is not None and existing_package.giturl != 'https://github.com/jhpyle/docassemble':
+                if existing_package is not None:
+                    logmessage("Package " + str(package) + " exists")
+                    if existing_package.giturl is None or existing_package.giturl == 'https://github.com/jhpyle/docassemble':
+                        logmessage("Package " + str(package) + " exists but I will skip it; name is " + str(existing_package.name) + " and giturl is " + str(existing_package.giturl))
+                        continue
                     # https://github.com/jhpyle/docassemble-helloworld
                     # git+https://github.com/fact-project/smart_fact_crawler.git@master#egg=smart_fact_crawler-0
-                    the_package_name = re.sub(r'.*/', '', existing_package.giturl)
-                    the_package_name = re.sub(r'-', '_', the_package_name)
+                    #the_package_name = re.sub(r'.*/', '', existing_package.giturl)
+                    #the_package_name = re.sub(r'-', '_', the_package_name)
                     #new_url = existing_package.giturl + '/archive/master.zip'
-                    new_url = 'git+' + existing_package.giturl + '.git@master#egg=' + the_package_name + '-' + existing_package.packageversion
+                    new_url = 'git+' + existing_package.giturl + '#egg=' + existing_package.name + '-' + existing_package.packageversion
                     if new_url not in info['dependency_links']:
                         info['dependency_links'].append(str(new_url))
+                else:
+                    logmessage("Package " + str(package) + " does not exist")
             author_info = dict()
             author_info['author name and email'] = name_of_user(current_user, include_email=True)
             author_info['author name'] = name_of_user(current_user)
@@ -7574,7 +7581,7 @@ def playground_packages():
                 content = fp.read().decode('utf8')
                 old_info = yaml.load(content)
                 if type(old_info) is dict:
-                    for field in ['license', 'description', 'version', 'url', 'readme']:
+                    for field in ['license', 'description', 'version', 'url', 'giturl', 'readme']:
                         if field in old_info:
                             form[field].data = old_info[field]
                         else:

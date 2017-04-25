@@ -133,7 +133,8 @@ def check_for_updates():
             sys.stderr.write("Return value was not good" + "\n")
             ok = False
         pip._vendor.pkg_resources._initialize_master_working_set()
-        real_name = get_real_name(package.name)
+        pip_info = get_pip_info(package.name)
+        real_name = pip_info['Name']
         sys.stderr.write("check_for_updates: real name of package " + str(package.name) + " is " + str(real_name) + "\n")
         if real_name is None:
             results[package.name] = 'install failed'
@@ -199,11 +200,18 @@ def add_dependencies(user_id):
     for package in installed_packages:
         if package.key in package_by_name:
             continue
+        pip_info = get_pip_info(package.key)
+        sys.stderr.write("Home page of " + str(package.key) + " is " + str(pip_info['Home-page']) + "\n")
+        Package.query.filter_by(name=package.key).delete()
+        db.session.commit()
         package_auth = PackageAuth(user_id=user_id)
         if package.key in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
             package_entry = Package(name=package.key, package_auth=package_auth, giturl=docassemble_git_url, packageversion=package.version, gitsubdir=re.sub(r'\.', '-', package.key), type='git', core=True)
         else:
-            package_entry = Package(name=package.key, package_auth=package_auth, type='pip', packageversion=package.version, dependency=True)
+            if pip_info['Home-page'] is not None and re.search(r'/github.com/', pip_info['Home-page']):
+                package_entry = Package(name=package.key, package_auth=package_auth, type='git', giturl=pip_info['Home-page'], packageversion=package.version, dependency=True)
+            else:
+                package_entry = Package(name=package.key, package_auth=package_auth, type='pip', packageversion=package.version, dependency=True)
         db.session.add(package_auth)
         db.session.add(package_entry)
         db.session.commit()
@@ -217,7 +225,8 @@ def fix_names():
     installed_packages = [package.key for package in get_installed_distributions()]
     for package in Package.query.filter_by(active=True).all():
         if package.name not in installed_packages:
-            actual_name = get_real_name(package.name)
+            pip_info = get_pip_info(package.name)
+            actual_name = pip_info['Name']
             if actual_name is not None:
                 package.name = actual_name
                 db.session.commit()
@@ -318,23 +327,29 @@ def get_installed_distributions():
     sys.stderr.write("get_installed_distributions: ending\n")
     return results
 
-def get_real_name(package_name):
+def get_pip_info(package_name):
+    #sys.stderr.write("get_pip_info: " + package_name + "\n")
     try:
         output = subprocess.check_output(['pip', 'show', package_name])
     except subprocess.CalledProcessError as err:
-        output = err.output
-        sys.stderr.write("get_real_name: error.  output was " + str(output) + "\n")
-        return None
+        output = ""
+        sys.stderr.write("get_pip_info: error.  output was " + str(err.output) + "\n")
     # old_stdout = sys.stdout
     # sys.stdout = saved_stdout = StringIO()
     # pip.main(['show', package_name])
     # sys.stdout = old_stdout
     # output = saved_stdout.getvalue()
+    results = dict()
     for line in output.split('\n'):
+        #sys.stderr.write("Found line " + str(line) + "\n")
         a = line.split(": ")
-        if len(a) == 2 and a[0] == 'Name':
-            return a[1]
-    return None
+        if len(a) == 2:
+            #sys.stderr.write("Found " + a[0] + " which was " + a[1] + "\n")
+            results[a[0]] = a[1]
+    for key in ['Name', 'Home-page']:
+        if key not in results:
+            results[key] = None
+    return results
 
 if __name__ == "__main__":
     #import docassemble.webapp.database
