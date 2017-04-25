@@ -6832,6 +6832,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
             readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
+            setupcfg = """\
+[metadata]
+description-file = README.md
+"""
             setuppy = """\
 #!/usr/bin/env python
 
@@ -6985,10 +6989,12 @@ class Fruit(DAObject):
             os.makedirs(sourcesdir)
             with open(os.path.join(packagedir, 'README.md'), 'a') as the_file:
                 the_file.write(readme)
-            with open(os.path.join(packagedir, 'LICENSE'), 'a') as the_file:
+            with open(os.path.join(packagedir, 'LICENSE.txt'), 'a') as the_file:
                 the_file.write(licensetext)
             with open(os.path.join(packagedir, 'setup.py'), 'a') as the_file:
                 the_file.write(setuppy)
+            with open(os.path.join(packagedir, 'setup.cfg'), 'a') as the_file:
+                the_file.write(setupcfg)
             with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'a') as the_file:
                 the_file.write(initpy)
             with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'a') as the_file:
@@ -7581,7 +7587,7 @@ def playground_packages():
                 content = fp.read().decode('utf8')
                 old_info = yaml.load(content)
                 if type(old_info) is dict:
-                    for field in ['license', 'description', 'version', 'url', 'giturl', 'readme']:
+                    for field in ['license', 'description', 'version', 'url', 'readme']:
                         if field in old_info:
                             form[field].data = old_info[field]
                         else:

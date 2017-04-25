@@ -34,3 +34,4 @@ save-db-schema-html.sh
 audit.py
 conflict_check.yml
 publish.sh
+pypi-publish.sh

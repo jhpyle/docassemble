@@ -273,6 +273,10 @@ SOFTWARE.
         readme = info['readme']
     else:
         readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + author_info['author name and email'] + "\n\n"
+    setupcfg = """\
+[metadata]
+description-file = README.md
+"""
     setuppy = """\
 #!/usr/bin/env python
 
@@ -388,10 +392,12 @@ machine learning training files, and other source files.
             shutil.copyfile(orig_file, os.path.join(sourcesdir, the_file))
     with open(os.path.join(packagedir, 'README.md'), 'a') as the_file:
         the_file.write(readme)
-    with open(os.path.join(packagedir, 'LICENSE'), 'a') as the_file:
+    with open(os.path.join(packagedir, 'LICENSE.txt'), 'a') as the_file:
         the_file.write(licensetext)
     with open(os.path.join(packagedir, 'setup.py'), 'a') as the_file:
         the_file.write(setuppy)
+    with open(os.path.join(packagedir, 'setup.cfg'), 'a') as the_file:
+        the_file.write(setupcfg)
     with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'a') as the_file:
         the_file.write(initpy)
     with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'a') as the_file:

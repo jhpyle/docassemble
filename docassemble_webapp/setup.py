@@ -3,8 +3,8 @@
 import os
 from setuptools import setup, find_packages
 setup(name='docassemble.webapp',
-      version='0.1',
-      description=('The standard web application for the docassemble system.'),
+      version='0.1.1',
+      description=('The web application components of the docassemble system.'),
       author='Jonathan Pyle',
       author_email='jhpyle@gmail.com',
       license='MIT',
