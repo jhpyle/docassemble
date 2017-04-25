@@ -37,8 +37,3 @@ then
     psql -h localhost -T 'class="table table-striped"' -U docassemble -P footer=off -P border=0 -Hc "select table_name, column_name, data_type, character_maximum_length, column_default from information_schema.columns where table_schema='public'" docassemble > ~/gh-pages-da/_includes/db-schema.html
 fi
 rm $tempfile
-tar --exclude-from=.gitignore -zcf ~/downloadda/docassemble.tar.gz docassemble/
-tar --exclude-from=.gitignore -zcf ~/downloadda/docassemble-base.tar.gz docassemble_base/
-tar --exclude-from=.gitignore -zcf ~/downloadda/docassemble-demo.tar.gz docassemble_demo/
-tar --exclude-from=.gitignore -zcf ~/downloadda/docassemble-webapp.tar.gz docassemble_webapp/
-rsync -au ~/downloadda/*.gz jpyle@litigationdatabase.org:da/ 
