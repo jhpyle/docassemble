@@ -310,35 +310,55 @@ revised package on a **docassemble** server using the
 
 ## Storing on Github
 
-If you want to share your interview on [GitHub], download the ZIP
-file, unpack it, and make the `docassemble-helloworld` folder the root
-folder of a new [GitHub] repository.  Then you will be able to go to
-[Package Management] on a **docassemble** server and install your
+You can share your package on [GitHub].  Then you will be able to go
+to [Package Management] on a **docassemble** server and install your
 package using the URL to the [GitHub] repository.
 
-The [GitHub] repository name for a **docassemble** extension package
+To share your interview on [GitHub], first create a [GitHub]
+repository.
+
+The name of the repository for a **docassemble** extension package
 should be in the form of `docassemble-helloworld`.
 
 ![GitHub Repository]({{ site.baseurl }}/img/github-helloworld.png)
 
 After you press ![Create Repository]({{ site.baseurl
-}}/img/github-create-repository.png), you can push your first commit.
+}}/img/github-create-repository.png), you will get a URL for your
+repository, which will be in a form like
+`https://github.com/jhpyle/docassemble-helloworld`, where your
+[GitHub] username will be in place of `jhpyle`, and your repository
+name will be in place of `docassemble-helloworld`.
+
+In the "Packages" folder of the **docassemble** [Playground], edit
+your package and add the [GitHub] URL as the "URL" of the package.
+
+![GitHub URL]({{ site.baseurl }}/img/playground-packages-github-url.png)
+
+![Save]({{ site.baseurl }}/img/playground-packages-button-save.png)
+your package and then ![Download]({{ site.baseurl
+}}/img/playground-packages-button-download.png) it as a ZIP file.
+Extract the files from the ZIP file to a convenient place on your computer.
+
+You will see a `docassemble-helloworld` directory containing a
+directory called `docassemble` and a file called `setup.py`.  The
+`docassemble-helloworld` directory will be the root directory of your
+new [GitHub] repository.
 
 Using [GitHub] is beyond the scope of this tutorial, but on a Linux
-machine, the process of initializing the package as a [GitHub]
+machine, the process of initializing a package as a [GitHub]
 repository looks something like the following:
 
 {% highlight text %}
 jpyle@laptop:~$ unzip docassemble-helloworld.zip 
 Archive:  docassemble-helloworld.zip
- extracting: docassemble-helloworld/README.md  
- extracting: docassemble-helloworld/LICENSE  
- extracting: docassemble-helloworld/setup.py  
- extracting: docassemble-helloworld/docassemble/__init__.py  
- extracting: docassemble-helloworld/docassemble/helloworld/__init__.py  
- extracting: docassemble-helloworld/docassemble/helloworld/data/templates/README.md  
- extracting: docassemble-helloworld/docassemble/helloworld/data/sources/README.md  
- extracting: docassemble-helloworld/docassemble/helloworld/data/static/README.md  
+ extracting: docassemble-helloworld/README.md
+ extracting: docassemble-helloworld/LICENSE
+ extracting: docassemble-helloworld/setup.py
+ extracting: docassemble-helloworld/docassemble/__init__.py
+ extracting: docassemble-helloworld/docassemble/helloworld/__init__.py
+ extracting: docassemble-helloworld/docassemble/helloworld/data/templates/README.md
+ extracting: docassemble-helloworld/docassemble/helloworld/data/sources/README.md
+ extracting: docassemble-helloworld/docassemble/helloworld/data/static/README.md
 jpyle@laptop:~$ cd docassemble-helloworld
 jpyle@laptop:~/docassemble-helloworld$ git init
 Initialized empty Git repository in /home/jpyle/docassemble-helloworld/.git/
@@ -372,11 +392,39 @@ level.
 
 ![GitHub Repository]({{ site.baseurl }}/img/github-helloworld-repository.png)
 
-On the **docassemble** menu, you can go to Package Management ->
+Now, on the **docassemble** menu, you can go to Package Management ->
 Update a Package, and [install] the package using its [GitHub] URL.
 
 ![GitHub Install]({{ site.baseurl }}/img/update-package-github.png)
 
+## Storing on PyPI
+
+It is also possible, and encouraged, to store **docassemble**
+extension packages on [PyPI], the central repository for [Python]
+software.  This allows the packages to be easily installed from
+"Update a package" in the [packages] menu.
+
+To store a package on [PyPI]:
+
+* Create an account on [PyPI].
+* Create a `.pypirc` configuration file in your home directory
+  containing your [PyPI] username and password.
+* Download your package's ZIP file and go into the directory containing
+  the `setup.py` file.
+* Run `python setup.py register -r pypi`
+* Run `python setup.py sdist upload -r pypi`
+
+In order to upload a new version of your package to [PyPI], after you
+have already uploaded a version, you will need to change the version
+number.  You can do this by editing the `setup.py` file manually, or
+by changing the version number in the "Packages" folder of the
+[Playground] and then re-downloading the ZIP file.
+
+For more information about how to upload packages to [PyPI], see
+[how to submit a package to PyPI].
+
+[PyPI]: https://pypi.python.org/pypi
+[how to submit a package to PyPI]: http://peterdowns.com/posts/first-time-with-pypi.html
 [GitHub]: https://github.com
 [`decoration`]: {{ site.baseurl }}/docs/modifiers.html#decoration
 [Package Management]: {{ site.baseurl }}/docs/playground.html
@@ -391,8 +439,10 @@ Update a Package, and [install] the package using its [GitHub] URL.
 [`code`]: {{ site.baseurl }}/docs/code.html
 [question]: {{ site.baseurl }}/docs/questions.html
 [package]: {{ site.baseurl }}/docs/packages.html
+[packages]: {{ site.baseurl }}/docs/packages.html
 [`root`]: {{ site.baseurl }}/docs/config.html#root
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [install]: {{ site.baseurl }}/docs/packages.html
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29

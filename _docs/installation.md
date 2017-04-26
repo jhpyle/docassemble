@@ -155,6 +155,10 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   libsvm3 libsvm-dev liblinear1 liblinear-dev
 {% endhighlight %}
 
+The libraries `libcurl4-openssl-dev` and `libssl-dev` are particularly
+important; **docassemble**'s [Python] dependencies will not install
+unless these libraries are present.
+
 **docassemble** depends on version 5.0.1 or later of the
 [Perl Audio Converter] to convert uploaded sound files into other
 formats.  If your distribution offers an earlier version, you will
@@ -304,6 +308,7 @@ and run the following as `www-data`:
 
 {% highlight bash %}
 virtualenv /usr/share/docassemble/local
+cp ./docassemble/Docker/pip.conf /usr/share/docassemble/local/
 source /usr/share/docassemble/local/bin/activate
 pip install --upgrade ndg-httpsclient
 pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
@@ -313,11 +318,17 @@ pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
 ./docassemble/docassemble_webapp
 {% endhighlight %}
 
-The [ndg-httpsclient] module, which is a dependency, is installed by
-itself because errors might occur during installation if this package
-does not already exist on the system.  Also note that there is one
-[Python] dependency, [PyRTF-ng], which is not available on [PyPI], but
-must be installed from [GitHub].
+The `pip.conf` file is necessary because it enables the use of
+[GitHub] package references in the `setup.py` files of **docassemble**
+extension packages.  The [ndg-httpsclient] module, which is a
+dependency, is installed by itself because errors might occur during
+installation if this package does not already exist on the system.
+There is one [Python] dependency, [PyRTF-ng], which is not available
+on [PyPI], but must be installed from [GitHub].  The **docassemble**
+packages are installed from the cloned [GitHub] repository.  These
+packages are also available on [PyPI], and could be installed with
+`pip install docassemble.webapp`, but it is just as easy to install
+them from the local copy.
 
 Then, you need to move certain files into place for the web
 application.  Still acting as `www-data`, do:
@@ -329,7 +340,7 @@ cp ./docassemble/Docker/*.sh /usr/share/docassemble/webapp/
 {% endhighlight %}
 
 The `docassemble.wsgi` file is the primary "executable" for the web
-application.  Your web server configuration will point to this file.
+application.  The web server configuration will point to this file.
 
 The files copied to `/usr/share/docassemble/config/` include configuration
 file templates for **docassemble** and [Apache].
@@ -361,8 +372,10 @@ sudo cp ./docassemble/Docker/rabbitmq.config /etc/rabbitmq/
 The `/etc/apache2/conf-available/docassemble.conf` file contains
 instructions for [Apache] to use the virtual environment to run the
 **docassemble** web application.  The
-`/etc/apache2/sites-available/docassemble.conf` file contains [Apache]
-site configuration directives for the **docassemble** web application.
+`/etc/apache2/sites-available/docassemble-http.conf` and
+`/etc/apache2/sites-available/docassemble-ssl.conf` files contain
+[Apache] site configuration directives for the **docassemble** web
+application.
 
 # Setting up the web application
 
