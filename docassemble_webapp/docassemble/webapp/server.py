@@ -1412,6 +1412,7 @@ def install_pip_package(packagename, limitation):
         existing_package.limitation = limitation
         existing_package.giturl = None
         existing_package.upload = None
+        existing_package.active = True
         db.session.commit()
     return
 
@@ -6631,14 +6632,14 @@ def update_package():
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
             elif form.pippackage.data:
-                m =re.match(r'([^>=<]+)([>=<]+.+)', form.pippackage.data)
+                m = re.match(r'([^>=<]+)([>=<]+.+)', form.pippackage.data)
                 if m:
                     packagename = m.group(1)
                     limitation = m.group(2)
                 else:
                     packagename = form.pippackage.data
                     limitation = None
-                packagename = re.sub(r'[^A-Za-z0-9\_\-]', '', packagename)
+                packagename = re.sub(r'[^A-Za-z0-9\_\-\.]', '', packagename)
                 if user_can_edit_package(pkgname=packagename):
                     install_pip_package(packagename, limitation)
                     result = docassemble.webapp.worker.update_packages.delay()
