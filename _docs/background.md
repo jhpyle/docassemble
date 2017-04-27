@@ -1,7 +1,7 @@
 ---
 layout: docs
 title: Running code behind the scenes
-short_title: Background code
+short_title: Background Code
 ---
 
 Usually, your interview [code] runs whenever the user is "between

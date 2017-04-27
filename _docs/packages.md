@@ -46,13 +46,39 @@ docassemble-baseball
 |   |   |       `-- game-summary.md
 |   |   `-- __init__.py
 |   `-- __init__.py
-|-- LICENSE
+|-- LICENSE.txt
 |-- README.md
+|-- setup.cfg
 `-- setup.py
 {% endhighlight %}
 
-When installed on the server, the interview can be run by going to a
-link like `https://example.com?i=docassemble.baseball:hitters.yml`.
+The package is known as `docassemble.baseball` in [Python], but the
+name `docassemble-baseball`, replacing the dot with a hyphen, is
+sometimes used.  There are reasons for using the hyphen -- in certain
+contexts, the dot is considered an invalid character.
+
+There are a lot of subdirectories (this is the nature of
+[namespace packages]).  There are reasons for all of these
+subdirectories.
+
+1. The top-level directory, `docassemble-baseball`, is
+important because a complete [Python] package should be all in one directory.
+2. Within that, the `docassemble` directory is necessary so that the
+package is a subpackage of `docassemble`.
+3. Within that, the `baseball` directory is necessary
+because when packages within the `docassemble` [namespace package] are
+installed on a system, [Python] needs them to be in a subdirectory
+under a directory called `docassemble`.
+4. Within `baseball`, you have `baseball-stats.py`, which contains
+[Python] code.  The `__init.py__` file is necessary for declaring
+`baseball` to be a package; you never have to edit that file.
+5. There is also a `data` directory with subdirectories `questions`,
+`static`, `sources`, and `templates`.  These are for [interviews],
+[static files], [data files], and [document templates].
+
+When installed on the server, the interview `hitters.yml` can be run
+by going to a link like
+`https://example.com?i=docassemble.baseball:hitters.yml`.
 
 In your own interviews, you can include resources from this package by
 writing things like the following:
@@ -76,14 +102,31 @@ attachment:
     filename: game_summary
     content file: docassemble.baseball:game-summary.md
 ---
+modules:
+  - docassemble.baseball.baseball-stats
 {% endhighlight %}
+
+The first example uses [`include`] to incorporate by reference a
+[YAML] file located in the `data/questions` directory of the package.
+
+The second example uses a [file reference] to refer to an image file in
+the `data/static` directory of the package.
+
+The third example uses [`content file`] within an [`attachment`] to
+refer to a [Markdown] file in the `data/templates` directory of the
+package.
+
+The fourth example uses [`modules`] to import [Python] names from the
+`baseball-stats.py` file.
 
 # Creating your own packages
 
 ## On-line
 
 You can create your own **docassemble** package on-line using the
-[Packages area] of the [Playground].
+[Packages area] of the [Playground].  This allows you to download a
+package as a ZIP file that contains resources from various "folders"
+in the [Playground].
 
 ## Off-line
 
@@ -100,111 +143,278 @@ To create your own **docassemble** package off-line, start by downloading a
    Developer.
 2. On the menu in the upper right hand corner, select Package Management.
 3. Click "Create a package."
-4. Enter a name for the package, such as `missouri_family_law` and click "Get template."
+4. Enter a name for the package, such as `missouri-family-law` and click "Get template."
 5. Save the resulting .zip file to your computer.
 
-The full name of your package will be
-`docassemble.missouri_family_law`.  You will refer to files in your
-package with names like
-`docassemble.missouri_family_law:questions.yml`.
+Then you will have a ZIP file called
+`docassemble-missouri-family-law.zip`, which contains a directory
+`docassemble-missouri-family-law`.  You can extract this directory to
+a convenient location on your computer, so that you can make changes
+to the files and/or add files of your own.
 
-There are a lot of subdirectories in the .zip file (this is the nature
-of [namespace packages]).  The `data` directory resides at 
-`docassemble_missouri_family_law/docassemble/missouri_family_law/data`.
+# Dependencies
 
-There are reasons for all of these subdirectories.
+If your package uses code from other [Python] packages that are not
+distributed with the standard **docassemble** installation, you will
+need to indicate that these packages are "dependencies" of your
+package.
 
-1. The top-level directory, `docassemble_missouri_family_law`, is
-important because when you unpack the .zip file, you want everything
-in one directory.
-2. Within that, the `docassemble` directory is necessary so that your
-package is a subpackage of `docassemble`.
-3. Within that, the `missouri_family_law` directory is necessary
-because when packages within the `docassemble` [namespace package] are
-installed on a system, [Python] needs them to be in separate
-directories under `docassemble`.
-4. Within `missouri_family_law` you have `objects.py`, which you can
-use to write [Python] code.  The `__init.py__` file is necessary for
-declaring `missouri_family_law` to be a package.
-5. You also have a `data` directory with subdirectories `questions`,
-`static`, `sources`, and `templates`.  These are for [interviews],
-static files, data files, and [document templates].
+This will ensure that if you share your package with someone else and
+they install it on their system, the packages that your package needs
+will be automatically installed.  Otherwise, that person will get
+errors when they try to use your package.
 
-## Installing your package
+If you maintain your package in the [Packages area] of the
+[Playground], you can indicate the dependencies of your package by
+selecting them from a multi-select list.
 
-### Installing through GitHub
+If you maintain your package off-line, you will need to edit the
+`setup.py` file and change the line near the end that begins with
+`install_requires`.  This refers to a list of [Python] packages.  For
+example:
 
-The best way to install interviews on a server is through [GitHub].
-[GitHub] has an excellent command line interface on Linux and also has
-a high-quality [Windows application].
+{% highlight python %}
+      install_requires=['docassemble', 'docassemble.base', 'docassemble.helloworld', 'kombu'],
+{% endhighlight %}
 
-1. Set up a git repository in the top level directory
-(`docassemble_missouri_family_law`).
-2. Push the repository to [GitHub].
-3. In the **docassemble** web app, go to Package Management.
-4. Click "Update a package."
-5. Enter the [GitHub] URL into the Git URL field and click "Update."
+This line indicates that the package relies on `docassemble` and
+`docassemble.base` (as all **docassemble** packages do), and also
+relies on the **docassemble** extension package
+`docassemble.helloworld`, as well as the [Python] package `kombu`.
+When someone tries to install `docassemble.baseball` on their system,
+`docassemble.helloworld` and `kombu` will be installed first, and any
+packages that these packages depend on will also be installed.
 
-The package will be installed and the [WSGI] server will reset upon
-the next page load.
+Note that if your package depends on a package that exists on [GitHub]
+but not on [PyPI], you will also need to add an extra line so that the
+system knows where to find the package.  For example, if
+`docassemble.helloworld` did not exist on [PyPI], you would need to
+include:
 
-### Installing through a .zip file
+{% highlight python %}
+      install_requires=['docassemble', 'docassemble.base', 'docassemble.helloworld', 'kombu'],
+      dependency_links=['git+https://github.com/jhpyle/docassemble-helloworld#egg=docassemble.helloworld-0.1'],
+{% endhighlight %}
 
-1. Create a new .zip file containing the `docassemble_missouri_family_law`
-folder.  (On Windows, right-click the `docassemble_missouri_family_law`
-folder, select "Send To," then select "Compressed (zipped) Folder.")
-2. In the **docassemble** web app, go back to Package Management.
+If you use the [Packages area] of the [Playground] to maintain your
+package, this is all handled for you.
+
+# Installing a package
+
+You can install a **docassemble** extension package, or any other
+[Python] package, using the **docassemble** web application.
+
+From the menu, go to Package Management.  Then click "Update a package."
+
+**docassemble** installs packages using the [pip] package manager.
+This installation process may take a long time.  A log of the output
+of [pip] will be shown when the installation is complete, and in the
+background, the server will restart.
+
+## Installing through GitHub
+
+One way to install [Python] packages on a server is through [GitHub].
+
+1. Find the [GitHub] URL of the package you want to install.  This is
+in the location bar when you are looking at a [GitHub] repository.
+For example, the [GitHub] URL of the `docassemble-missouri-family-law`
+package may be `https://github.com/jhpyle/docassemble-missouri-family-law`.
+2. In the **docassemble** web app, go to Package Management.
 3. Click "Update a package."
-4. Upload the .zip file you just created.  You should see a message
-that the package was installed successfully.
+4. Enter `https://github.com/jhpyle/docassemble-missouri-family-law`
+   into the "GitHub URL" field.
+5. Click "Update."
 
-## Testing your new interview
+## Installing through a .zip file
 
-Point your browser to
-`http://localhost/demo?i=docassemble.missouri_family_law:data/questions/questions.yml`
+You can also install [Python] packages from ZIP files.  For example,
+if you have a package `docassemble-missouri-family-law`, the ZIP file
+will be called `docassemble-missouri-family-law.zip`.  It will contain
+a single directory called `docassemble-missouri-family-law`, which in
+turn contains `setup.py`, a subdirectory called `docassemble`, and
+other files.
+
+1. In the **docassemble** web app, go back to Package Management.
+2. Click "Update a package."
+3. Under "Zip File," upload the `.zip` file you want to install.
+4. Click "Update."
+
+## Installing through PyPI
+
+You can also install [Python] packages from [PyPI].  [PyPI] is the
+central repository for [Python] software.  Anyone can register on
+[PyPI] and upload software to it.  For example, if you want to install
+the `docassemble-missouri-family-law` package:
+
+1. Make sure the `docassemble-missouri-family-law` package exists on [PyPI].
+2. In the **docassemble** web app, go to Package Management.
+3. Click "Update a package."
+4. Type `docassemble.missouri-family-law` into the "Package on PyPI"
+   field.
+5. Click "Update."
+
+# Running interviews from installed packages
+
+Once a **docassemble** extension package is installed, you can start
+using its interviews.  For example, if you installed
+`docassemble.missouri-family-law`, and there was an interview file in
+that package called `questions.yml`, you would point your browser to
+`http://localhost/?i=docassemble.missouri-family-law:data/questions/questions.yml`
 (substituting the actual domain and base URL of your **docassemble**
-site).  The base url is set during the [installation] of the [WSGI]
-server and in the **docassemble** [configuration] file (where it is
-called [`root`]).
+site).
 
-Note that you can also test interview [YAML] using the **docassemble**
-[Playground].
+# <a name="updating"></a>Updating Python packages
 
-# Python packages installed on the server
-
-If your **docassemble** interviews or code depend on other
-[Python packages] being installed, you can install packages from the
-**docassemble** front end:
-
-1. Make sure you are logged in as a developer or administrator.
-2. Go to "Package Management" on the menu.
-3. Go to "Update a package."
-4. Indicate the package you want to install, or click 
-
-Packages can be installed in three different ways:
-
-* **GitHub URL**: Enter the URL for the GitHub repository containing the
-  Python package you want to install.  The repository must be in a
-  format that is compatible with [pip].
-* **Zip File**: Provide a Zip file containing your Python package.
-  The Zip file must be in a format that is compatible with [pip].
-* **Package on [PyPI]**: Provide the name of a package that exists on
-  [PyPI].
-
-Packages will be installed using the [pip] package manager.  A log
-of the output of [pip] will be shown.
-
-If you are running **docassemble** on Mac and Windows, make sure that
-the web server user has a home directory to which [pip] can write.
-(See [pip/utils/appdirs.py].)
-
-## <a name="updating"></a>Updating Python packages
-
-To upgrade a package that you installed from a GitHub URL or from
+To upgrade a package that you installed from a [GitHub] URL or from
 [PyPI], you can click the "Update" button next to the package name on
 the "Update a package" screen.  You will only see these Update buttons
 if you are an administrator or if you are the person who caused the
-packages to be installed.
+packages to be installed.  Also, the "Update" buttons will not appear
+if the package was installed using a ZIP file.
+
+# <a name="publishing"></a>Publishing a package
+
+## <a name="pypi"></a>Publishing on PyPI
+
+The best place to publish a **docassemble** extension packages is on
+[PyPI], the central repository for [Python] software.
+
+In order to publish to [PyPI], you will need [Python] installed on
+your computer.  You can install [Python for Windows] if you have a
+Windows PC; make sure that when you install it, you enable the option
+to "Add python.exe to Path."
+
+To store a package on [PyPI], you first need to create an account on
+[PyPI].  You will need to choose a username and password and verify
+your e-mail address.  It is also a good idea to register on the
+[PyPI test server] as well.
+
+Then, create a `.pypirc` configuration file in your home directory
+containing your [PyPI] username and password.  The file should have
+the following contents (substitute your [PyPI] username and password
+in place of `YOURUSERNAME` and `YOURPASSWORD`):
+
+{% highlight text %}
+[distutils]
+index-servers =
+  pypi
+  pypitest
+
+[pypi]
+repository: https://pypi.python.org/pypi
+username: YOURUSERNAME
+password: YOURPASSWORD
+
+[pypitest]
+repository: https://testpypi.python.org/pypi
+username: YOURUSERNAME
+password: YOURPASSWORD
+{% endhighlight %}
+
+On Windows, you can use Notepad to create this file; save it in your
+`C:\Users\yourusername` directory.
+
+If you are maintaining your package in the [Playground], download it
+as a ZIP file and extract the files.
+
+The next part requires the command line, so open a shell (e.g.,
+[PowerShell] on Windows).
+
+First, make sure you have the necessary [Python] modules by running:
+
+{% highlight bash %}
+pip install twine wheel
+{% endhighlight %}
+
+Then, go into the directory in your package that
+contains the `setup.py` file.  For example,
+
+{% highlight bash %}
+cd docassemble-missouri-family-law
+{% endhighlight %}
+
+Within that directory, run the following commands:
+
+{% highlight bash %}
+python setup.py sdist
+python setup.py bdist_wheel
+twine register dist/*.gz
+twine upload dist/*
+{% endhighlight %}
+
+To upload to the test server instead of the main server, use `twine
+upload dist/* -r pypitest` in place of the last command.
+
+Once your packages have been uploaded, you can inspect what they look
+like on the [PyPI] web site.  The URL will be something like
+`https://pypi.python.org/pypi/docassemble.missouri-family-law`.
+
+You can repeat this process every time you make a change to your
+package.  However, first change the version number, or else you may
+get an error.  You can change the version number of your package in
+the "Packages" folder of the [Playground] and then re-download the ZIP
+file and re-extract the files.  Or, you can manually edit the
+`version=` line in the `setup.py` file.
+
+For more information about uploading packages to [PyPI], see
+[how to submit a package to PyPI].
+
+## <a name="github"></a>Publishing on GitHub
+
+You can publish your package on [GitHub] in addition to (or instead
+of) publishing it on [PyPI].  Publishing on both sites is recommended,
+however.  [PyPI] is the simplest and safest way to distribute [Python]
+packages, while [GitHub] is a version control system with many
+features for facilitating sharing and collaboration.
+
+If you do not have [git] on your computer, install it.  If you use
+Windows, install [git for Windows], choosing all of the default
+options when installing.
+
+Sign up for a [GitHub] account if you do not already have one.
+
+Then create a [GitHub] repository.  If your **docassemble** extension
+package is `docassemble.missouri-family-law`, the name of the [GitHub]
+package should be `docassemble-missouri-family-law`.
+
+After you press ![Create Repository]({{ site.baseurl
+}}/img/github-create-repository.png), you will get a URL for your
+repository, which will be in a form like
+`https://github.com/jhpyle/docassemble-missouri-family-law`.  In this
+example, `jhpyle` is the username, and
+`docassemble-missouri-family-law` is the name of the repository.
+
+In the "Packages" folder of the **docassemble** [Playground], edit
+your package and add the [GitHub] URL as the "URL" of the package.
+Then save your package and then download it as a ZIP file.  Extract
+the files from the ZIP file to a convenient place on your computer.
+
+You will see a directory with the name of your package (e.g.,
+`docassemble-missouri-family-law`.  This directory will contain a
+directory called `docassemble` and a file called `setup.py`.  The top
+directory (e.g., `docassemble-missouri-family-law`) will be the root
+directory of your new [GitHub] repository.
+
+The process of initializing a package as a [GitHub] repository
+requires using the shell.  (On Windows, you can use [PowerShell].)
+First use `cd` to change into the directory that contains the package
+you want to install (in this example, we'll use
+`docassemble-missouri-family-law`) and then run the [git] commands
+suggested by [GitHub].  For example:
+
+{% highlight text %}
+cd docassemble-missouri-family-law
+git init
+git add .
+git commit -m "first commit"
+git remote add origin https://github.com/jhpyle/docassemble-missouri-family-law.git
+git push -u origin master
+{% endhighlight %}
+
+The last command will prompt you for your [GitHub] credentials.
+
+Now, on the **docassemble** menu, you can go to Package Management ->
+Update a Package, and install the package using its [GitHub] URL.
 
 # Best practices for packaging your interviews
 
@@ -222,10 +432,15 @@ three files, separately containing:
 This way, other people can take advantage of your work product in
 interviews that might have a very different purpose.
 
+[Python for Windows]: https://www.python.org/downloads/windows/
+[git for Windows]: https://git-scm.com/download/win
+[how to submit a package to PyPI]: https://packaging.python.org/distributing/
+[PowerShell]: https://en.wikipedia.org/wiki/PowerShell
 [Packages area]: {{ site.baseurl }}/docs/playground.html#packages
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [interviews]: {{ site.baseurl }}/docs/interviews.html
 [YAML]: https://en.wikipedia.org/wiki/YAML
+[Markdown]: https://daringfireball.net/projects/markdown/
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [Python packages]: https://docs.python.org/2/tutorial/modules.html#packages
 [Python package]: https://docs.python.org/2/tutorial/modules.html#packages
@@ -248,9 +463,18 @@ interviews that might have a very different purpose.
 [`root`]: {{ site.baseurl }}/docs/config.html#root
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
 [PyPI]: https://pypi.python.org/pypi
+[PyPI test server]: https://testpypi.python.org/pypi
 [mandatory]: {{ site.baseurl }}/docs/logic.html#mandatory
 [initial]: {{ site.baseurl }}/docs/logic.html#initial
 [initial blocks]: {{ site.baseurl }}/docs/logic.html#mandatory
 [machine learning]: {{ site.baseurl }}/docs/ml.html
 [translations]: {{ site.baseurl }}/docs/config.html#words
 [pip/utils/appdirs.py]: https://github.com/pypa/pip/blob/master/pip/utils/appdirs.py
+[file reference]: {{ site.baseurl }}/docs/markup.html#inserting images
+[`content file`]: {{ site.baseurl }}/docs/documents.html#content file
+[`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
+[`include`]: {{ site.baseurl }}/docs/initial.html#include
+[`modules`]: {{ site.baseurl }}/docs/initial.html#modules
+[static files]: {{ site.baseurl }}/docs/playground.html#static
+[data files]: {{ site.baseurl }}/docs/playground.html#sources
+[git]: https://git-scm.com/

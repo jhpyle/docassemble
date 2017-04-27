@@ -314,13 +314,18 @@ You can share your package on [GitHub].  Then you will be able to go
 to [Package Management] on a **docassemble** server and install your
 package using the URL to the [GitHub] repository.
 
+In order to publish files on [GitHub], you will need the [git]
+application.  If you do not have [git] on your computer, install it.
+If you use Windows, install [git for Windows], choosing all of the
+default options when installing.
+
 To share your interview on [GitHub], first create a [GitHub]
 repository.
 
 The name of the repository for a **docassemble** extension package
 should be in the form of `docassemble-helloworld`.
 
-![GitHub Repository]({{ site.baseurl }}/img/github-helloworld.png)
+![GitHub Repository]({{ site.baseurl }}/img/github-helloworld.png){: .maybe-full-width }
 
 After you press ![Create Repository]({{ site.baseurl
 }}/img/github-create-repository.png), you will get a URL for your
@@ -337,94 +342,138 @@ your package and add the [GitHub] URL as the "URL" of the package.
 ![Save]({{ site.baseurl }}/img/playground-packages-button-save.png)
 your package and then ![Download]({{ site.baseurl
 }}/img/playground-packages-button-download.png) it as a ZIP file.
-Extract the files from the ZIP file to a convenient place on your computer.
+
+Extract the files from the ZIP file to a convenient place on your
+computer.  Windows will suggest extracting to
+`C:\Users\yourusername\Desktop\docassemble-helloworld`, but you should
+change that path to `C:\Users\yourusername`; after extraction, your
+package directory will be
+`C:\Users\yourusername\docassemble-helloworld`.
 
 You will see a `docassemble-helloworld` directory containing a
 directory called `docassemble` and a file called `setup.py`.  The
 `docassemble-helloworld` directory will be the root directory of your
 new [GitHub] repository.
 
-Using [GitHub] is beyond the scope of this tutorial, but on a Linux
-machine, the process of initializing a package as a [GitHub]
-repository looks something like the following:
+Using a shell (e.g., [PowerShell] on Windows), run the following commands.
 
 {% highlight text %}
-jpyle@laptop:~$ unzip docassemble-helloworld.zip 
-Archive:  docassemble-helloworld.zip
- extracting: docassemble-helloworld/README.md
- extracting: docassemble-helloworld/LICENSE
- extracting: docassemble-helloworld/setup.py
- extracting: docassemble-helloworld/docassemble/__init__.py
- extracting: docassemble-helloworld/docassemble/helloworld/__init__.py
- extracting: docassemble-helloworld/docassemble/helloworld/data/templates/README.md
- extracting: docassemble-helloworld/docassemble/helloworld/data/sources/README.md
- extracting: docassemble-helloworld/docassemble/helloworld/data/static/README.md
-jpyle@laptop:~$ cd docassemble-helloworld
-jpyle@laptop:~/docassemble-helloworld$ git init
-Initialized empty Git repository in /home/jpyle/docassemble-helloworld/.git/
-jpyle@laptop:~/docassemble-helloworld$ git add .
-jpyle@laptop:~/docassemble-helloworld$ git commit -m "first commit"
-[master (root-commit) 7e21b49] first commit
- 8 files changed, 106 insertions(+)
- create mode 100644 LICENSE
- create mode 100644 README.md
- create mode 100644 docassemble/__init__.py
- create mode 100644 docassemble/helloworld/__init__.py
- create mode 100644 docassemble/helloworld/data/sources/README.md
- create mode 100644 docassemble/helloworld/data/static/README.md
- create mode 100644 docassemble/helloworld/data/templates/README.md
- create mode 100644 setup.py
-jpyle@laptop:~/docassemble-helloworld$ git remote add origin git@github.com:jhpyle/docassemble-helloworld.git
-jpyle@laptop:~/docassemble-helloworld$ git push -u origin master
-Counting objects: 16, done.
-Delta compression using up to 4 threads.
-Compressing objects: 100% (12/12), done.
-Writing objects: 100% (16/16), 2.59 KiB | 0 bytes/s, done.
-Total 16 (delta 0), reused 0 (delta 0)
-To github.com:jhpyle/docassemble-helloworld.git
- * [new branch]      master -> master
-Branch master set up to track remote branch master from origin.
+cd docassemble-helloworld
+git init
+git add .
+git commit -m "first commit"
+git remote add origin https://github.com/jhpyle/docassemble-helloworld.git
+git push -u origin master
 {% endhighlight %}
 
 With the files pushed, the repository will look like the following,
 with the `setup.py` file and the `docassemble` directory at the top
 level.
 
-![GitHub Repository]({{ site.baseurl }}/img/github-helloworld-repository.png)
+![GitHub Repository]({{ site.baseurl }}/img/github-helloworld-repository.png){: .maybe-full-width }
 
 Now, on the **docassemble** menu, you can go to Package Management ->
 Update a Package, and [install] the package using its [GitHub] URL.
 
 ![GitHub Install]({{ site.baseurl }}/img/update-package-github.png)
 
+For more information about uploading packages to [GitHub], see
+the [PyPI subsection] of the [packages] section.
+
 ## Storing on PyPI
 
-It is also possible, and encouraged, to store **docassemble**
-extension packages on [PyPI], the central repository for [Python]
-software.  This allows the packages to be easily installed from
-"Update a package" in the [packages] menu.
+You can also share your package on [PyPI], the central repository for
+[Python] software.
 
-To store a package on [PyPI]:
+This section of the tutorial will explain how to upload the
+`docassemble.helloworld` package to [PyPI], but keep in mind that the
+final step of this process will not work for you because package names
+on [PyPI] are unique and the `docassemble.helloworld` package has
+already been uploaded (by me!).  However, these instructions will work
+if you adapt them to a package of your own.
 
-* Create an account on [PyPI].
-* Create a `.pypirc` configuration file in your home directory
-  containing your [PyPI] username and password.
-* Download your package's ZIP file and go into the directory containing
-  the `setup.py` file.
-* Run `python setup.py register -r pypi`
-* Run `python setup.py sdist upload -r pypi`
+First, you need to create an account on [PyPI].  It is also a good
+idea to register on the [PyPI test server] as well.
 
-In order to upload a new version of your package to [PyPI], after you
-have already uploaded a version, you will need to change the version
-number.  You can do this by editing the `setup.py` file manually, or
-by changing the version number in the "Packages" folder of the
-[Playground] and then re-downloading the ZIP file.
+Then, create a `.pypirc` configuration file in your home directory
+containing your [PyPI] username and password.  On Windows, you can use
+Notepad to create this file; save it in your `C:\Users\yourusername`
+directory.
 
-For more information about how to upload packages to [PyPI], see
-[how to submit a package to PyPI].
+The file should have the following contents (substitute your [PyPI]
+username and password in place of `YOURUSERNAME` and `YOURPASSWORD`):
 
-[PyPI]: https://pypi.python.org/pypi
-[how to submit a package to PyPI]: http://peterdowns.com/posts/first-time-with-pypi.html
+{% highlight text %}
+[distutils]
+index-servers =
+  pypi
+  pypitest
+
+[pypi]
+repository: https://pypi.python.org/pypi
+username: YOURUSERNAME
+password: YOURPASSWORD
+
+[pypitest]
+repository: https://testpypi.python.org/pypi
+username: YOURUSERNAME
+password: YOURPASSWORD
+{% endhighlight %}
+
+In order to publish to [PyPI], you will need [Python] installed on
+your computer.  You can install [Python for Windows] if you have a
+Windows PC; just make sure that when you install it, you enable the
+option to "Add python.exe to Path."
+
+If you have not done so already, download the `docassemble-helloworld`
+package as a ZIP file and extract the contents to your computer.
+Windows will suggest extracting to
+`C:\Users\yourusername\Desktop\docassemble-helloworld`, but you should
+change that path to `C:\Users\yourusername`; after extraction, your
+package directory will be
+`C:\Users\yourusername\docassemble-helloworld`.
+
+The next steps require the command line, so open a shell (e.g.,
+[PowerShell] on Windows).
+
+First, make sure you have the necessary [Python] modules by running:
+
+{% highlight bash %}
+pip install twine wheel
+{% endhighlight %}
+
+Then, navigate using `cd` to directory that contains the `setup.py`
+file for your package.
+
+{% highlight bash %}
+cd docassemble-helloworld
+{% endhighlight %}
+
+Within that directory, run the following commands:
+
+{% highlight bash %}
+python setup.py sdist
+python setup.py bdist_wheel
+twine register dist/*.gz
+twine upload dist/*
+{% endhighlight %}
+
+If the upload is successful, you will be able to see the package on
+the [PyPI] web site.
+
+![PyPI page]({{ site.baseurl }}/img/pypi-helloworld-page.png){: .maybe-full-width }
+
+Now, on the **docassemble** menu, you can go to Package Management ->
+Update a Package, and [install] the package by specifying a "Package
+on PyPI."
+
+![PyPI Install]({{ site.baseurl }}/img/update-package-pypi.png)
+
+For more information about uploading packages to [PyPI], see
+the [PyPI subsection] of the [packages] section.
+
+[GitHub subsection]: {{ site.baseurl }}/docs/packages.html#github
+[PyPI subsection]: {{ site.baseurl }}/docs/packages.html#pypi
 [GitHub]: https://github.com
 [`decoration`]: {{ site.baseurl }}/docs/modifiers.html#decoration
 [Package Management]: {{ site.baseurl }}/docs/playground.html
@@ -446,3 +495,9 @@ For more information about how to upload packages to [PyPI], see
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [install]: {{ site.baseurl }}/docs/packages.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[git]: https://git-scm.com/
+[git for Windows]: https://git-scm.com/download/win
+[PowerShell]: https://en.wikipedia.org/wiki/PowerShell
+[Python for Windows]: https://www.python.org/downloads/windows/
+[PyPI]: https://pypi.python.org/pypi
+[PyPI test server]: https://testpypi.python.org/pypi
