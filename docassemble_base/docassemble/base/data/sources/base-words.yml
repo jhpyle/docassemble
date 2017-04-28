@@ -225,6 +225,7 @@
 "Privileges": Null
 "Problem detected.": Null
 "Profile": Null
+"Publish on PyPI": Null
 "question": Null
 "Question": Null
 "quit": Null
@@ -284,6 +285,7 @@
 "Terms used in this question:": Null
 "Terms used:": Null
 "tex_message": Null
+"That package name is already in use by someone else.  Please change the name.": Null
 "That screen is already being controlled by another operator": Null
 "The configuration file was saved.": Null
 "The information was saved.": Null

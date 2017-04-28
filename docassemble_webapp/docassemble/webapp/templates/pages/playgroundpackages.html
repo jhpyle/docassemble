@@ -106,10 +106,20 @@
     <label for="{{ form.readme.id }}">{{ word("The README.md file for the package") }}</label>
     <textarea rows="24" cols="80" id="{{ form.readme.id }}" name="{{ form.readme.id }}">{{ form.readme.data }}</textarea>
   </div>
+  {%- if pypi_message %}
+  <div class="panel panel-default">
+    <div class="panel-body">
+      {{ pypi_message|safe }}
+    </div>
+  </div>
+  {%- endif %}
   <div class="form-actions">
     {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }}
     {%- if current_file != '' %}
     {{ render_submit_field(form.install, class="btn btn-success btn-lg") }}
+    {%- if can_publish_to_pypi %}
+    {{ render_submit_field(form.publish, id="daPublish", class="btn btn-warning btn-lg") }}
+    {%- endif %}
     {{ render_submit_field(form.delete, id="daDelete", class="btn btn-default btn-lg") }}
     {%- else %}
     <a class="btn btn-default btn-lg" href="{{ url_for('playground_packages') }}">{{ word('Cancel') }}</a>

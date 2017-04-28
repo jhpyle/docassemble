@@ -295,6 +295,7 @@ import shutil
 import codecs
 import weakref
 import types
+import stat
 import pkg_resources
 import babel.dates
 import pytz
@@ -1450,7 +1451,7 @@ def get_package_info():
 def name_of_user(user, include_email=False):
     output = ''
     if user.first_name:
-        output += ''
+        output += user.first_name
         if user.last_name:
             output += ' '
     if user.last_name:
@@ -3394,7 +3395,7 @@ def index():
               return """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.temp_user_id;
           }
           else{
-              if (data.first_name && data.first_name != ''){
+              if (data.first_name != '' && data.first_name != ''){
                   return data.first_name + ' ' + data.last_name;
               }
               else{
@@ -6692,6 +6693,7 @@ def update_package():
 def create_playground_package():
     form = CreatePlaygroundPackageForm(request.form)
     current_package = request.args.get('package', None)
+    do_publish = request.args.get('publish', False)
     do_install = request.args.get('install', False)
     area = dict()
     area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
@@ -6713,7 +6715,7 @@ def create_playground_package():
     if current_package is not None:
         pkgname = re.sub(r'^docassemble-', r'', current_package)
         if not user_can_edit_package(pkgname='docassemble.' + pkgname):
-            flash(word('Sorry, that package name is already in use by someone else'), 'error')
+            flash(word('That package name is already in use by someone else.  Please change the name.'), 'error')
             current_package = None
     if current_package is not None and current_package not in file_list['playgroundpackages']:
         flash(word('Sorry, that package name does not exist in the playground'), 'error')
@@ -6760,6 +6762,11 @@ def create_playground_package():
             author_info['first name'] = current_user.first_name
             author_info['last name'] = current_user.last_name
             author_info['id'] = current_user.id
+            if do_publish:
+                logmessages = docassemble.webapp.files.publish_package(pkgname, info, author_info)
+                flash(logmessages, 'info')
+                time.sleep(3.0)
+                return redirect(url_for('playground_packages', file=current_package))
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(session.get('uid', None), nice_name)
             saved_file = SavedFile(file_number, extension='zip', fix=True)
@@ -6886,7 +6893,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
 
 """
             setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
-      version='0.1',
+      version='0.0.1',
       description=('A docassemble extension.'),
       author=""" + repr(str(name_of_user(current_user))) + """,
       author_email=""" + repr(str(current_user.email)) + """,
@@ -7521,6 +7528,15 @@ def playground_packages():
     else:
         no_file_specified = False
     scroll = False
+    pypi_username = daconfig.get('pypi username', False)
+    pypi_password = daconfig.get('pypi password', False)
+    pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
+    if pypi_username and pypi_password:
+        can_publish_to_pypi = True
+    else:
+        can_publish_to_pypi = False
+    pypi_message = None
+    pypi_version = None        
     package_list, package_auth = get_package_info()
     package_names = sorted([package.package.name for package in package_list])
     for default_package in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
@@ -7674,18 +7690,40 @@ def playground_packages():
         area['playgroundpackages'].finalize()
         flash(word("Deleted package"), "success")
         return redirect(url_for('playground_packages'))
+    if not is_new:
+        pkgname = 'docassemble.' + the_file
+        pypi_info = pypi_status(pkgname)
+        if not pypi_info['error']:
+            if pypi_info['exists'] and 'info' in pypi_info['info']:
+                pypi_version = pypi_info['info']['info'].get('version', None)
+                pypi_message = 'This package is <a target="_blank" href="' + pypi_url + '/' + pkgname + '/' + pypi_version + '">published on PyPI</a>.'
+                pypi_author = pypi_info['info']['info'].get('author', None)
+                if pypi_author:
+                    pypi_message += "  The author is " + pypi_author + "."
+                if pypi_version != form['version'].data:
+                    pypi_message += "  The version on PyPI is " + str(pypi_version) + ".  Your version is " + str(form['version'].data) + "."
+            else:
+                pypi_message = 'This package is not yet published on PyPI.'
     if request.method == 'POST' and validated:
         new_info = dict()
         for field in ['license', 'description', 'version', 'url', 'readme', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
             new_info[field] = form[field].data
         #logmessage("found " + str(new_info))
-        if form.submit.data or form.download.data or form.install.data:
+        if form.submit.data or form.download.data or form.install.data or form.publish.data:
             if the_file != '':
                 area['playgroundpackages'].finalize()
                 if form.original_file_name.data and form.original_file_name.data != the_file:
                     old_filename = os.path.join(area['playgroundpackages'].directory, form.original_file_name.data)
                     if os.path.isfile(old_filename):
                         os.remove(old_filename)
+                if form.publish.data and pypi_version is not None:
+                    versions = pypi_version.split(".")
+                    while True:
+                        versions[-1] = str(int(versions[-1]) + 1)
+                        new_info['version'] = ".".join(versions)
+                        if 'releases' not in pypi_info['info'] or new_info['version'] not in pypi_info['info']['releases'].keys():
+                            break
+                        versions = new_info['version'].split(".")
                 filename = os.path.join(area['playgroundpackages'].directory, the_file)
                 with open(filename, 'w') as fp:
                     the_yaml = yaml.safe_dump(new_info, default_flow_style=False, default_style = '|')
@@ -7695,6 +7733,8 @@ def playground_packages():
                     return redirect(url_for('create_playground_package', package=the_file))
                 if form.install.data:
                     return redirect(url_for('create_playground_package', package=the_file, install=True))
+                if form.publish.data:
+                    return redirect(url_for('create_playground_package', package=the_file, publish=True))
                 the_time = formatted_current_time()
                 flash(word('The package information was saved.'), 'success')
     form.original_file_name.data = the_file
@@ -7724,7 +7764,9 @@ def playground_packages():
     else:
         any_files = False
     back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
-    return render_template('pages/playgroundpackages.html', back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    ' + kbLoad + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+    if pypi_message is not None:
+        pypi_message = Markup(pypi_message)
+    return render_template('pages/playgroundpackages.html', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    ' + kbLoad + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      $("#daPublish").click(function(event){if(!confirm("' + word("Are you sure that you want to publish this package to PyPI?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
 
 def splitall(path):
     allparts = []
@@ -9775,6 +9817,53 @@ def get_email_obj(email, short_record, user):
         email_obj.body_html = None
     return email_obj
 
+def write_pypirc():
+    pypirc_file = daconfig.get('pypirc path', '/var/www/.pypirc')
+    pypi_username = daconfig.get('pypi username', None)
+    pypi_password = daconfig.get('pypi password', None)
+    pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
+    if pypi_username is None or pypi_password is None:
+        return
+    if os.path.isfile(pypirc_file):
+        with open(pypirc_file, 'rU') as fp:
+            existing_content = fp.read()
+    else:
+        existing_content = None
+    content = """\
+[distutils]
+index-servers =
+  pypi
+
+[pypi]
+repository: """ + pypi_url + """
+username: """ + pypi_username + """
+password: """ + pypi_password + "\n"
+    if existing_content != content:
+        with open(pypirc_file, 'w') as fp:
+            fp.write(content)
+        os.chmod(pypirc_file, stat.S_IRUSR | stat.S_IWUSR)
+    
+def pypi_status(packagename):
+    result = dict()
+    pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
+    try:
+        handle = urllib2.urlopen(pypi_url + '/' + str(packagename) + '/json')
+    except urllib2.HTTPError, e:
+        if e.code == 404:
+            result['error'] = False
+            result['exists'] = False
+        else:
+            result['error'] = e.code
+    else:
+        try:
+            result['info'] = json.load(handle)
+        except:
+            result['error'] = 'json'
+        else:
+            result['error'] = False
+            result['exists'] = True
+    return result
+
 def get_short_code(**pargs):
     key = pargs.get('key', None)
     index = pargs.get('index', None)
@@ -9880,7 +9969,6 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
 #docassemble.base.parse.set_url_for(url_for)
 #APPLICATION_NAME = 'docassemble'
 
-
 base_words = get_base_words()
 title_documentation = get_title_documentation()
 documentation_dict = get_documentation_dict()
@@ -9957,6 +10045,7 @@ docassemble.base.util.set_machine_learning_entry(docassemble.webapp.machinelearn
 from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog
 with app.app_context():
     copy_playground_modules()
+    write_pypirc()
 
 if __name__ == "__main__":
     app.run()

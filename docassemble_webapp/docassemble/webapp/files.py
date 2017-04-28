@@ -7,6 +7,7 @@ import tempfile
 import mimetypes
 import zipfile
 import datetime
+import subprocess
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
 from docassemble.base.config import daconfig
@@ -233,8 +234,38 @@ def get_ext_and_mimetype(filename):
         mimetype = 'audio/3gpp'
     return(extension, mimetype)
 
+def publish_package(pkgname, info, author_info):
+    directory = make_package_dir(pkgname, info, author_info)
+    packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
+    output = "Publishing docassemble." + pkgname + " to PyPI . . .\n\n"
+    try:
+        output += subprocess.check_output(['python', 'setup.py', 'register', '-r', 'pypi'], cwd=packagedir, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as err:
+        output += err.output
+    try:
+        output += subprocess.check_output(['python', 'setup.py', 'sdist', 'upload', '-r', 'pypi'], cwd=packagedir, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as err:
+        output += err.output
+    output = re.sub(r'\n', '<br>', output)
+    shutil.rmtree(directory)
+    logmessage(output)
+    return output
+
 def make_package_zip(pkgname, info, author_info):
+    directory = make_package_dir(pkgname, info, author_info)
+    trimlength = len(directory) + 1
+    packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     temp_zip = tempfile.NamedTemporaryFile(suffix=".zip")
+    zf = zipfile.ZipFile(temp_zip.name, mode='w')
+    for root, dirs, files in os.walk(packagedir):
+        for file in files:
+            thefilename = os.path.join(root, file)
+            zf.write(thefilename, thefilename[trimlength:])
+    zf.close()
+    shutil.rmtree(directory)
+    return temp_zip
+
+def make_package_dir(pkgname, info, author_info):
     area = dict()
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
@@ -408,12 +439,4 @@ machine learning training files, and other source files.
         the_file.write(staticreadme)
     with open(os.path.join(sourcesdir, 'README.md'), 'a') as the_file:
         the_file.write(sourcesreadme)
-    zf = zipfile.ZipFile(temp_zip.name, mode='w')
-    trimlength = len(directory) + 1
-    for root, dirs, files in os.walk(packagedir):
-        for file in files:
-            thefilename = os.path.join(root, file)
-            zf.write(thefilename, thefilename[trimlength:])
-    zf.close()
-    shutil.rmtree(directory)
-    return temp_zip
+    return directory
