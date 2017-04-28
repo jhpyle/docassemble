@@ -246,7 +246,7 @@ Now, when you run the interview, you can see that the image
 For more ideas about how you can extend your interview, check out the
 examples area of the [Playground].
 
-# Packaging your interview
+# <a name="packaging"></a>Packaging your interview
 
 Let's bundle the interview into a package so that we can
 share it with other developers or post it on [GitHub].
@@ -255,7 +255,7 @@ Go to the Folders menu and select "Packages."
 
 ![Packages menu item]({{ site.baseurl }}/img/playground-menu-packages.png)
 
-This will take you to the "Packages" folder, where you can create and
+This will take you to the ["Packages" folder], where you can create and
 edit packages.
 
 ![Packages folder]({{ site.baseurl }}/img/playground-folder-packages.png)
@@ -308,10 +308,72 @@ then re-ZIP the `docassemble-helloworld` folder, and install the
 revised package on a **docassemble** server using the
 [Package Management] tool.
 
+## Storing on PyPI
+
+You can share your package on [PyPI], the central repository for
+[Python] software, so that other people can install your package on
+their servers.
+
+This section of the tutorial will explain how to upload the
+`docassemble.helloworld` package to [PyPI], but keep in mind that if
+you try this yourself on a package called `docassemble.helloworld`,
+you will probably get an error because package names on [PyPI] are
+unique and the `docassemble.helloworld` package has already been
+uploaded (by me!).  However, these instructions will work if you adapt
+them to a package of your own.
+
+First, you need to create a username and password on [PyPI].  Then, go
+to "Configuration" on the menu and add the username and password into
+the **docassemble** [configuration] like so:
+
+{% highlight yaml %}
+pypi username: johndoe
+pypi password: xX_s3cret_Xx
+{% endhighlight %}
+
+After you save the [configuration], go to the ["Packages" folder] of
+the **docassemble** [Playground] and open your
+`docassemble-helloworld` package that you created [above](#packaging).
+At the bottom of the screen you will see a message about whether the
+package is published on [PyPI].
+
+![PyPI Info]({{ site.baseurl }}/img/playground-packages-not-published-yet.png)
+
+Press the ![Publish]({{ site.baseurl
+}}/img/playground-packages-publish-button.png) button to publish the
+package to [PyPI].
+
+When the publishing is done, you will see an informational message
+with the output of the uploading commands.  Check this message to see
+if there are any errors.
+
+If the publishing was successful, then at the bottom of the page
+describing your package, you should see a message that the package now
+exists on [PyPI].
+
+![PyPI Info]({{ site.baseurl }}/img/playground-packages-published.png)
+
+If you click the link, you can see what the package looks like on the
+[PyPI] web site.
+
+![PyPI page]({{ site.baseurl }}/img/pypi-helloworld-page.png){: .maybe-full-width }
+
+Now, on the **docassemble** menu (of this server or another server),
+you can go to Package Management -> Update a Package, and [install]
+the package by specifying a "Package on PyPI."
+
+![PyPI Install]({{ site.baseurl }}/img/update-package-pypi.png)
+
+For more information about uploading packages to [PyPI], see
+the [PyPI subsection] of the [packages] section.
+
 ## Storing on Github
 
-You can share your package on [GitHub].  Then you will be able to go
-to [Package Management] on a **docassemble** server and install your
+You can also share your package on [GitHub], a popular
+[version control system] that facilitates collaboration.
+
+If your package is on [GitHub], you will be able to go to
+[Package Management] on a **docassemble** server and install your
 package using the URL to the [GitHub] repository.
 
 In order to publish files on [GitHub], you will need the [git]
@@ -334,7 +396,7 @@ repository, which will be in a form like
 [GitHub] username will be in place of `jhpyle`, and your repository
 name will be in place of `docassemble-helloworld`.
 
-In the "Packages" folder of the **docassemble** [Playground], edit
+In the ["Packages" folder] of the **docassemble** [Playground], edit
 your package and add the [GitHub] URL as the "URL" of the package.
 
 ![GitHub URL]({{ site.baseurl }}/img/playground-packages-github-url.png)
@@ -378,100 +440,9 @@ Update a Package, and [install] the package using its [GitHub] URL.
 ![GitHub Install]({{ site.baseurl }}/img/update-package-github.png)
 
 For more information about uploading packages to [GitHub], see
-the [PyPI subsection] of the [packages] section.
+the [GitHub subsection] of the [packages] section.
 
-## Storing on PyPI
-
-You can also share your package on [PyPI], the central repository for
-[Python] software.
-
-This section of the tutorial will explain how to upload the
-`docassemble.helloworld` package to [PyPI], but keep in mind that the
-final step of this process will not work for you because package names
-on [PyPI] are unique and the `docassemble.helloworld` package has
-already been uploaded (by me!).  However, these instructions will work
-if you adapt them to a package of your own.
-
-First, you need to create an account on [PyPI].  It is also a good
-idea to register on the [PyPI test server] as well.
-
-Then, create a `.pypirc` configuration file in your home directory
-containing your [PyPI] username and password.  On Windows, you can use
-Notepad to create this file; save it in your `C:\Users\yourusername`
-directory.
-
-The file should have the following contents (substitute your [PyPI]
-username and password in place of `YOURUSERNAME` and `YOURPASSWORD`):
-
-{% highlight text %}
-[distutils]
-index-servers =
-  pypi
-  pypitest
-
-[pypi]
-repository: https://pypi.python.org/pypi
-username: YOURUSERNAME
-password: YOURPASSWORD
-
-[pypitest]
-repository: https://testpypi.python.org/pypi
-username: YOURUSERNAME
-password: YOURPASSWORD
-{% endhighlight %}
-
-In order to publish to [PyPI], you will need [Python] installed on
-your computer.  You can install [Python for Windows] if you have a
-Windows PC; just make sure that when you install it, you enable the
-option to "Add python.exe to Path."
-
-If you have not done so already, download the `docassemble-helloworld`
-package as a ZIP file and extract the contents to your computer.
-Windows will suggest extracting to
-`C:\Users\yourusername\Desktop\docassemble-helloworld`, but you should
-change that path to `C:\Users\yourusername`; after extraction, your
-package directory will be
-`C:\Users\yourusername\docassemble-helloworld`.
-
-The next steps require the command line, so open a shell (e.g.,
-[PowerShell] on Windows).
-
-First, make sure you have the necessary [Python] modules by running:
-
-{% highlight bash %}
-pip install twine wheel
-{% endhighlight %}
-
-Then, navigate using `cd` to directory that contains the `setup.py`
-file for your package.
-
-{% highlight bash %}
-cd docassemble-helloworld
-{% endhighlight %}
-
-Within that directory, run the following commands:
-
-{% highlight bash %}
-python setup.py sdist
-python setup.py bdist_wheel
-twine register dist/*.gz
-twine upload dist/*
-{% endhighlight %}
-
-If the upload is successful, you will be able to see the package on
-the [PyPI] web site.
-
-![PyPI page]({{ site.baseurl }}/img/pypi-helloworld-page.png){: .maybe-full-width }
-
-Now, on the **docassemble** menu, you can go to Package Management ->
-Update a Package, and [install] the package by specifying a "Package
-on PyPI."
-
-![PyPI Install]({{ site.baseurl }}/img/update-package-pypi.png)
-
-For more information about uploading packages to [PyPI], see
-the [PyPI subsection] of the [packages] section.
-
+["Packages" folder]: {{ site.baseurl }}/docs/playground.html#packages
 [GitHub subsection]: {{ site.baseurl }}/docs/packages.html#github
 [PyPI subsection]: {{ site.baseurl }}/docs/packages.html#pypi
 [GitHub]: https://github.com
@@ -501,3 +472,4 @@ the [PyPI subsection] of the [packages] section.
 [Python for Windows]: https://www.python.org/downloads/windows/
 [PyPI]: https://pypi.python.org/pypi
 [PyPI test server]: https://testpypi.python.org/pypi
+[version control system]: https://en.wikipedia.org/wiki/Version_control

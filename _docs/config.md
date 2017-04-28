@@ -1166,6 +1166,33 @@ zone will be set to the time zone of the server.
 timezone: America/Los_Angeles
 {% endhighlight %}
 
+## <a name="pypi"></a>Sharing packages on PyPI
+
+If you want users of your server to be able to publish packages to
+[PyPI] from the [packages folder] of the [Playground], you will need
+to provide a [PyPI] username and password in the configuration:
+
+{% highlight yaml %}
+pypi username: johndoe
+pypi password: xX_s3cret_Xx
+{% endhighlight %}
+
+You can also tweak the operation of **docassemble**'s interaction with
+[PyPI] by setting the following optional directives (which you should
+never need to do):
+
+{% highlight yaml %}
+pypi url: https://pypi.python.org/pypi
+pypirc path: /var/www/.pypirc
+{% endhighlight %}
+
+The `pypi url` directive refers to the web site to use for publishing.
+It should not have a trailing slash.
+
+The `pypirc path` directive refers to the file where the username and
+password will be stored.  You may need to edit this if you run
+**docassemble** on a non-standard operating system.
+
 ## <a name="oauth"></a>Facebook, Google, and Azure login
 
 If you want to enable logging in with Facebook, Google, or Microsoft
@@ -1443,6 +1470,7 @@ and Facebook API keys.
 [`default interview`]: #default interview
 [readability statistics]: https://pypi.python.org/pypi/textstat/
 [Playground]: {{ site.baseurl }}/docs/playground.html
+[packages folder]: {{ site.baseurl }}/docs/playground.html#packages
 [Vim]: http://www.vim.org/
 [Vim bindings option]: https://codemirror.net/demo/vim.html
 [CodeMirror]: http://codemirror.net/
@@ -1456,3 +1484,4 @@ and Facebook API keys.
 [favicon]: https://en.wikipedia.org/wiki/Favicon
 [ICO]: https://en.wikipedia.org/wiki/ICO_(file_format)
 [optical character recognition]: https://en.wikipedia.org/wiki/Optical_character_recognition
+[PyPI]: https://pypi.python.org/pypi

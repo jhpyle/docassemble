@@ -239,7 +239,7 @@ other files.
 3. Under "Zip File," upload the `.zip` file you want to install.
 4. Click "Update."
 
-## Installing through PyPI
+## <a name="pypi_install"></a>Installing through PyPI
 
 You can also install [Python] packages from [PyPI].  [PyPI] is the
 central repository for [Python] software.  Anyone can register on
@@ -279,85 +279,46 @@ if the package was installed using a ZIP file.
 The best place to publish a **docassemble** extension packages is on
 [PyPI], the central repository for [Python] software.
 
-In order to publish to [PyPI], you will need [Python] installed on
-your computer.  You can install [Python for Windows] if you have a
-Windows PC; make sure that when you install it, you enable the option
-to "Add python.exe to Path."
+In order to publish to [PyPI], you will first need to create an
+account on [PyPI].  You will need to choose a username and password
+and verify your e-mail address.
 
-To store a package on [PyPI], you first need to create an account on
-[PyPI].  You will need to choose a username and password and verify
-your e-mail address.  It is also a good idea to register on the
-[PyPI test server] as well.
+Then, go to "Configuration" on the menu and add the username and
+password into the **docassemble** [configuration] like so:
 
-Then, create a `.pypirc` configuration file in your home directory
-containing your [PyPI] username and password.  The file should have
-the following contents (substitute your [PyPI] username and password
-in place of `YOURUSERNAME` and `YOURPASSWORD`):
-
-{% highlight text %}
-[distutils]
-index-servers =
-  pypi
-  pypitest
-
-[pypi]
-repository: https://pypi.python.org/pypi
-username: YOURUSERNAME
-password: YOURPASSWORD
-
-[pypitest]
-repository: https://testpypi.python.org/pypi
-username: YOURUSERNAME
-password: YOURPASSWORD
+{% highlight yaml %}
+pypi username: johndoe
+pypi password: xX_s3cret_Xx
 {% endhighlight %}
 
-On Windows, you can use Notepad to create this file; save it in your
-`C:\Users\yourusername` directory.
+After you save the [configuration], go to the ["Packages" folder] of
+the **docassemble** [Playground] and open the package you want to
+publish (e.g., `docassemble-missouri-family-law`).
 
-If you are maintaining your package in the [Playground], download it
-as a ZIP file and extract the files.
+Press the ![Publish]({{ site.baseurl
+}}/img/playground-packages-publish-button.png) button to publish the
+package to [PyPI].
 
-The next part requires the command line, so open a shell (e.g.,
-[PowerShell] on Windows).
+If your package already exists on [PyPI], then clicking the Publish
+button will increment the version of your package.  This is necessary
+because you cannot overwrite files that already exist on [PyPI].
 
-First, make sure you have the necessary [Python] modules by running:
+When the publishing is done, you will see an informational message
+with the output of the uploading commands.  Check this message to see
+if there are any errors.
 
-{% highlight bash %}
-pip install twine wheel
-{% endhighlight %}
+If the publishing was successful, then at the bottom of the page
+describing your package, you should see a message that the package now
+exists on [PyPI].
 
-Then, go into the directory in your package that
-contains the `setup.py` file.  For example,
+![PyPI Info]({{ site.baseurl }}/img/playground-packages-published.png)
 
-{% highlight bash %}
-cd docassemble-missouri-family-law
-{% endhighlight %}
+You can click on the link to see what the package looks like on [PyPI].
 
-Within that directory, run the following commands:
-
-{% highlight bash %}
-python setup.py sdist
-python setup.py bdist_wheel
-twine register dist/*.gz
-twine upload dist/*
-{% endhighlight %}
-
-To upload to the test server instead of the main server, use `twine
-upload dist/* -r pypitest` in place of the last command.
-
-Once your packages have been uploaded, you can inspect what they look
-like on the [PyPI] web site.  The URL will be something like
-`https://pypi.python.org/pypi/docassemble.missouri-family-law`.
-
-You can repeat this process every time you make a change to your
-package.  However, first change the version number, or else you may
-get an error.  You can change the version number of your package in
-the "Packages" folder of the [Playground] and then re-download the ZIP
-file and re-extract the files.  Or, you can manually edit the
-`version=` line in the `setup.py` file.
-
-For more information about uploading packages to [PyPI], see
-[how to submit a package to PyPI].
+Now, on the **docassemble** menu (of this server or another server),
+you can go to Package Management -> Update a Package, and
+[install](#pypi_install) the package by specifying a "Package on PyPI"
+and typing in `docassemble.missouri-family-law`.
 
 ## <a name="github"></a>Publishing on GitHub
 
@@ -478,3 +439,4 @@ interviews that might have a very different purpose.
 [static files]: {{ site.baseurl }}/docs/playground.html#static
 [data files]: {{ site.baseurl }}/docs/playground.html#sources
 [git]: https://git-scm.com/
+["Packages" folder]: {{ site.baseurl }}/docs/playground.html#packages

@@ -71,7 +71,7 @@ main interview files will consist only of "mandatory" code blocks.
 Improvements you make to the questions will be available automatically
 to all interviews.
 
-## Folders
+## <a name="templates"></a>The Templates folder
 
 Within your Playground there are five "folders" where you can upload,
 download, and/or create various resources related to the development
@@ -91,14 +91,13 @@ of your interviews.  These include:
 * [Packages](#packages) for bundling your interviews into packages for
   installation on a production server or other means of distribution.
 
-### <a name="templates"></a>The Templates folder
-
-If you create [documents], you might want to use separate document
-templates.  In a typical **docassemble** package, these templates are
-files in the `data/templates` subdirectory.  In the Playground, they
-are stored in the "Templates" folder.  For more information about the
-different types of template files that can be provided as options to
-the [`attachments`] directive, see [documents].
+The first of these is the Templates folder.  If you create
+[documents], you might want to use separate document templates.  In a
+typical **docassemble** package, these templates are files in the
+`data/templates` subdirectory.  In the Playground, they are stored in
+the "Templates" folder.  For more information about the different
+types of template files that can be provided as options to the
+[`attachments`] directive, see [documents].
 
 For example, you can write [Markdown] text in a separate text file
 called `small_claims_complaint.md` in the Templates folder and then
@@ -117,7 +116,7 @@ uploaded files from [Microsoft Word] format (`.docx`, `.doc`, or
 `.rtf`) or [OpenDocument] format (`odt`) to Markdown (`.md`) format,
 so that you can include the text in your documents.
 
-### <a name="static"></a>The Static folder
+## <a name="static"></a>The Static folder
 
 If your interviews include images or sound, you can bundle image and
 audio files with your interview's **docassemble** [package] by
@@ -130,7 +129,7 @@ In this area, you can upload files or write files of your own.  For
 example, you might want to write your own Javascript files here, or
 upload images that you want to include in interview questions.
 
-### <a name="sources"></a>The Sources folder
+## <a name="sources"></a>The Sources folder
 
 {% include scroll-image.html image="playground-sources-page-clipped.png" %}
 
@@ -141,7 +140,7 @@ including:
 using the [`words`] directive in the [configuration].
 * Training data for the [machine learning] function.
 
-### <a name="modules"></a>The Modules folder
+## <a name="modules"></a>The Modules folder
 
 If your interviews contain any complicated Python code, or you want to
 create your own classes, you should create a Python module and import
@@ -168,11 +167,12 @@ modules:
 This notation will work both in the Playground and when the interview
 is bundled as a Python module.
 
-### <a name="packages"></a>The Packages folder
+## <a name="packages"></a>The Packages folder
 
-The Packages area allows you to bundle the [interview files], [templates],
-[static files], and/or [modules] from your Playground into a
-[Python package] that can be downloaded as a ZIP file.
+The Packages area allows you to bundle the [interview files],
+[templates], [static files], and/or [modules] from your Playground
+into a [Python package] that can be downloaded as a ZIP file,
+installed on the server, or published to [PyPI].
 
 You can keep track of one or more packages in the Packages folder.  Each
 package has its own tab.  To create a new package, click "<i
@@ -238,6 +238,8 @@ At the bottom of the page, you can press one of the following buttons:
 * **Save**: Saves the package definition and does nothing more.
 * **Install**: Saves the package definition, creates a ZIP file
   containing the package, and installs that ZIP file on the server.
+* **Publish**: Publishes the package on [PyPI] so that other people
+  can install it.
 * **Delete**: Deletes the package definition.  If you installed the
   package on the system, it does not uninstall the package.
 
@@ -299,7 +301,7 @@ purposes of populating the "Variables, etc." section.  Usually the
 file you want to select here is the "top level" file for your
 interview, which [`include`]s the file you are editing.
 
-### Meaning of icons
+## Meaning of icons
 
 * Clicking ![magnifying glass]({{ site.baseurl
   }}/img/playground-icon-magnifying-glass.png) next to a variable name
@@ -474,3 +476,4 @@ Then the editing screen will load.
 [Static folder]: #static
 [special variables]: {{ site.baseurl }}/docs/special.html
 [Markdown]: https://daringfireball.net/projects/markdown/
+[PyPI]: https://pypi.python.org/pypi
