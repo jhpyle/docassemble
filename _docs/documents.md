@@ -69,7 +69,7 @@ content file:
 
 The content of multiple `content file` files will be concatenated.
 
-## <a name="pdf template file"></a>Filling PDF forms
+## <a name="pdf template file"></a>Filling PDF templates
 
 If you have a PDF file that contains fillable fields (e.g. fields
 added using Adobe Acrobat Pro), **docassemble** can
@@ -92,14 +92,114 @@ specified.  E.g.:
 The `fields` must be in the form of a [YAML] dictionary.  Checkbox
 fields will be checked if the value evaluates to "True" or "Yes."
 
-### <a name="list field names"></a>How to get a list of field names in a PDF file
+## <a name="docx template file"></a>Filling DOCX templates
+
+Much in the same way as you can fill in fields in a PDF file using
+[`pdf template file`], you can fill in fields in a .docx file using
+[`docx template file`].
+
+{% include side-by-side.html demo="docx-template" %}
+
+This allows you to use [Microsoft Word] to design your document and
+apply all the fancy formatting you want to it.  **docassemble** will
+simply "fill in the blanks."  This is in contrast to the method of
+[using `docx` as one of the `valid formats`], described
+[below](#docx), where you assemble a document from scratch by writing
+[Markdown] text that is then converted to .docx format.
+
+The `docx template file` feature relies heavily on the [Python]
+package known as [`python-docx-template`], and you should consult the
+[documentation of that package] in order to learn how to use `docx
+template file`.
+
+In the example above, the [letter_template.docx] file contains the
+following text:
+
+![letter template source]({{ site.baseurl }}/img/letter_template_source.png)
+
+In the example above, the `fields` list in the `attachment` maps
+variable names used in the .docx file to pieces of text.  You can use
+[Mako] templating to generate these pieces of text.  In the example
+above, `phone_number` maps to the text `202-555-1234`, while
+`full_name` maps to `${ user.name }`.
+
+The [`python-docx-template`] uses the [Jinja2] templating system.
+[Jinja2] is different from the [Mako] templating system, which
+**docassemble** uses primarily.  It is important that you do confuse
+the rules of these two templating formats.  The biggest difference
+between the two formats is that [Mako] uses the syntax `${
+variable_name }` while [Jinja2] uses the syntax `{% raw %}{{
+variable_name }}{% endraw %}`.
+
+If any of your [Mako] statements contain an image, the image will be
+used for the variable in the .docx file.  This is illustrated in the
+example above by the mapping of `signature` to `${ user.signature }`:
+the variable `user.signature` is a graphics image (an image of the
+user's signature).  You can also use the `[FILE ...]` markup syntax to
+[insert an image].  However, do not mix image references with other
+text, because the other text will be lost.
+
+Note that if you include [Markdown] formatting syntax in substituted
+text, it will pass through literally, so you will want to avoid using
+[Markdown] syntax.  Some of the [markup](#markup) tags explained
+[below](#markup) can be used, such as `[BR]` and `[TAB]`, but the vast
+majority are ignored.  If you want to apply formatting, apply it in
+the .docx template file.
+
+The content of `fields` is converted into a data structure, which is
+passed to the `render()` method of [`python-docx-template`].  The data
+structure can contain structure.  For example:
+
+{% highlight yaml %}
+question: |
+  Here is your document.
+attachment:
+  name: Your recipe
+  filename: recipe
+  docx template file: recipe_template.docx
+  fields:
+    title: Mandelbrot cookies
+    oven temperature: ${ oven_degrees } degrees
+    ingredients:
+      - apple sauce
+      - ${ special_ingredient }
+      - flour
+      - sugar
+    preparation time: 48 hours
+{% endhighlight %}
+
+You will then have to use appropriate [Jinja2] syntax in order to
+process this data structure.
+
+For more information, see the documentation of [`python-docx-template`].
+
+### <a name="template code"></a>Generating fields with code
+
+You can also use [Python] code to populate the values of fields that
+are filled in with [`pdf template file`] and [`docx template file`].
+If you insert a `code` directive along with [`pdf template file`] or
+[`docx template file`] and the code evaluates to a [Python dict], the
+values in `fields` will be [updated] with the values of that
+[Python dict].
+
+Here is a variation on the PDF fill-in example above that uses `code`
+to supplement the values of the `fields`:
+
+{% include side-by-side.html demo="pdf-fill-code" %}
+
+Here is a variation on the .docx template example above that uses
+`code` to supplement the values of the `fields`:
+
+{% include side-by-side.html demo="docx-template-code" %}
+
+### <a name="list field names"></a>How to get a list of field names in a PDF or DOCX file
 
 When logged in to **docassemble** as a developer, you can go to
-"Utilities" from the menu and, under "Get list of fields from fillable
-PDF," you can upload a PDF file that has fillable fields in it.
-**docassemble** will scan the PDF file, identify its fields, and
-present you with the [YAML] text of a question that uses that PDF file
-as a `pdf template file`.
+"Utilities" from the menu and, under "Get list of fields from PDF/DOCX
+template," you can upload a PDF or DOCX file that has fillable fields
+in it.  **docassemble** will scan the file, identify its fields, and
+present you with the [YAML] text of a question that uses that file
+as a [`pdf template file`] or a [`docx template file`].
 
 ### <a name="signature"></a>How to insert signatures or other images into fillable PDF files
 
@@ -211,16 +311,23 @@ You can also limit the file formats available.
 In this example, the user will not have the option of seeing an HTML
 preview and will only be able to download the PDF file.
 
-## <a name="docx"></a>Assembling documents in DOCX format
+## <a name="docx"></a>Creating documents in DOCX format
 
 **docassemble** can use [Pandoc] to convert [Markdown] into a
 Microsoft Word .docx file.  These .docx files are not created by
 default because they do not support all of the features that are
-supported by RTF and PDF formats, such as tables (which are necessary
-for case captions).  To generate .docx files, specify `docx` as one of
-the `valid formats`:
+supported by RTF and PDF formats.  To generate .docx files, specify
+`docx` as one of the `valid formats`:
 
 {% include side-by-side.html demo="document-docx" %}
+
+Note that you can also create .docx files using the
+[`docx template file`] feature, which is described above.  If you have
+an existing .docx file and you want to use **docassemble** to fill in
+fields in that file, use [`docx template file`].  If you want to
+create a document from scratch (i.e. by writing raw [Markdown]), use
+`docx` as one of the `valid formats`.  Both methods allow you to
+generate a PDF version of the document along with the .docx version.
 
 To customize document styles, headers, and footers, see the `docx
 reference file` setting, discussed below.
@@ -578,5 +685,16 @@ substantive content.
 [hello.md]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/hello.md
 [sample-form.pdf]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/sample-form.pdf
 [Transfer-of-Ownership.pdf]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/Transfer-of-Ownership.pdf
+[letter_template.docx]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/letter_template.docx
 [Slack]: https://slack.com
 [linguistic functions]: {{ site.baseurl }}/docs/functions.html#linguistic
+[`pdf template file`]: #pdf template file
+[`docx template file`]: #docx template file
+[using `docx` as one of the `valid formats`]: #docx
+[`python-docx-template`]: http://docxtpl.readthedocs.io/en/latest/
+[documentation of that package]: http://docxtpl.readthedocs.io/en/latest/
+[Jinja2]: http://jinja.pocoo.org/docs/2.9/
+[Microsoft Word]: https://en.wikipedia.org/wiki/Microsoft_Word
+[insert an image]: {{ site.baseurl }}/docs/markup.html#inserting images
+[updated]: https://docs.python.org/2/library/stdtypes.html#dict.update
+[Python dict]: https://docs.python.org/2/library/stdtypes.html#dict

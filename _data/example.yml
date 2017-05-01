@@ -1027,6 +1027,37 @@
     sent_ok = send_email(to=[authority],
                          template=my_email,
                          attachments=[hello_file])
+"docx-template": |-
+  mandatory: True
+  question: |
+    Here is your document.
+  attachment:
+    name: Your letter
+    filename: letter
+    docx template file: letter_template.docx
+    fields:
+      "letter_date": ${ format_date(today()) }
+      "phone_number": 202-555-1234
+      "subject_matter": ${ subject_matter }
+      "address_block": ${ adverse_party.address_block() }
+      "full_name": ${ user.name }
+      "signature": ${ user.signature }
+"docx-template-code": |-
+  mandatory: True
+  question: |
+    Here is your document.
+  attachment:
+    name: Your letter
+    filename: letter
+    docx template file: letter_template.docx
+    fields:
+      "letter_date": ${ format_date(today()) }
+      "phone_number": 202-555-1234
+      "subject_matter": ${ subject_matter }
+      "address_block": ${ adverse_party.address_block() }
+      "signature": ${ user.signature }
+    code: |
+      dict(full_name=user.name.full())
 "doors": |-
   question: |
     Which door do you choose?
@@ -3706,6 +3737,25 @@
           ${ likes_pears }
         Toast Checkbox: |
           ${ likes_toast }
+  mandatory: True
+"pdf-fill-code": |-
+  question: |
+    Here is your PDF form
+  attachments:
+    - name: A filled-in form
+      filename: filled-form
+      pdf template file: sample-form.pdf
+      fields:
+        Your Name: |
+          ${ user }
+        Your Organization: |
+          ${ user.organization }
+        Apple Checkbox: |
+          ${ likes_apples }
+        Pear Checkbox: |
+          ${ likes_pears }
+      code: |
+        {"Orange Checkbox": likes_oranges, "Toast Checkbox": likes_toast}
   mandatory: True
 "pdf-fill-signature": |-
   question: |
