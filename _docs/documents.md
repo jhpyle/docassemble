@@ -117,11 +117,11 @@ following text:
 
 ![letter template source]({{ site.baseurl }}/img/letter_template_source.png)
 
-In the example above, the `fields` list in the `attachment` maps
-variable names used in the .docx file to pieces of text.  You can use
-[Mako] templating to generate these pieces of text.  In the example
-above, `phone_number` maps to the text `202-555-1234`, while
-`full_name` maps to `${ user.name }`.
+The `fields` list in the `attachment` maps variable names used in the
+.docx file to pieces of text.  You can use [Mako] templating to
+generate these pieces of text.  In the example above, `phone_number`
+maps to the text `202-555-1234`, while `full_name` maps to `${
+user.name }`.
 
 The [`python-docx-template`] uses the [Jinja2] templating system.
 [Jinja2] is different from the [Mako] templating system, which
