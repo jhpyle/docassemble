@@ -4,8 +4,8 @@
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
 
 {% if fields %}
-<h3 class="page-header">{{ word('Fields from fillable PDF') }}</h3>
-<p>{{ word('Here is the start of a question you can use to assemble the PDF by filling form fields.') }}</p>
+<h3 class="page-header">{{ word('Fields from %s template' % (file_type.upper(),)) }}</h3>
+<p>{{ word('Here is the start of a question you can use to assemble the %s template.' % (file_type.upper(),)) }}</p>
 <pre>
 {{ fields }}
 </pre>
@@ -25,13 +25,11 @@
 
 {% endif %}
 
-<h3 class="page-header">{{ word('Get list of fields from fillable PDF') }}</h3>
+<h3 class="page-header">{{ word('Get list of fields from PDF/DOCX template') }}</h3>
 
 <form action="{{ url_for('utilities') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
-  <div class="form-group">
-    {{ render_file_field(form.pdffile, tabindex=80) }}
-  </div>
+  {{ render_file_field(form.pdfdocxfile, tabindex=80) }}
   <div class="form-actions">
     {{ render_submit_field(form.scan, tabindex=100) }}
   </div>

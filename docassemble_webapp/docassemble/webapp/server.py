@@ -8726,6 +8726,7 @@ def utilities():
     fields_output = None
     word_box = None
     uses_null = False
+    file_type = None
     if request.method == 'POST':
         if 'language' in request.form:
             language = request.form['language']
@@ -8766,19 +8767,44 @@ def utilities():
                     uses_null = True
             word_box = ruamel.yaml.safe_dump(result, default_flow_style=False, default_style = '"', allow_unicode=True, width=1000).decode('utf8')
             word_box = re.sub(r'"XYZNULLXYZ"', r'Null', word_box)
-        if 'pdffile' in request.files and request.files['pdffile'].filename:
-            pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=True)
-            the_file = request.files['pdffile']
-            the_file.save(pdf_file.name)
-            fields = docassemble.base.pdftk.read_fields(pdf_file.name)
-            if fields is None:
-                fields_output = word("Error: no fields could be found in the file")
-            else:
-                fields_output = "---\nquestion: " + word("something") + "\nsets: " + 'some_variable' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + the_file.filename + "\n    fields:\n"
-                for field, default, pageno, rect, field_type in fields:
-                    fields_output += '      "' + field + '": ' + default + "\n"
-                fields_output += "---"
-    return render_template('pages/utilities.html', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null)
+        if 'pdfdocxfile' in request.files and request.files['pdfdocxfile'].filename:
+            filename = secure_filename(request.files['pdfdocxfile'].filename)
+            extension, mimetype = get_ext_and_mimetype(filename)
+            if mimetype == 'application/pdf':
+                file_type = 'pdf'
+                pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=True)
+                the_file = request.files['pdfdocxfile']
+                the_file.save(pdf_file.name)
+                fields = docassemble.base.pdftk.read_fields(pdf_file.name)
+                if fields is None:
+                    fields_output = word("Error: no fields could be found in the file")
+                else:
+                    fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + the_file.filename + "\n    fields:\n"
+                    for field, default, pageno, rect, field_type in fields:
+                        fields_output += '      "' + field + '": ' + default + "\n"
+                    fields_output += "---"
+            elif mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+                file_type = 'docx'
+                docx_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".docx", delete=True)
+                the_file = request.files['pdfdocxfile']
+                the_file.save(docx_file.name)
+                result_file = word_to_markdown(docx_file.name, 'docx')
+                if result_file is None:
+                    fields_output = word("Error: no fields could be found in the file")
+                else:
+                    with open(result_file.name, 'rU') as fp:
+                        result = fp.read()
+                    fields = set()
+                    for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
+                        fields.add(re.sub(r'\\', '', variable))
+                    if len(fields):
+                        fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    docx template file: " + the_file.filename + "\n    fields:\n"
+                        for field in fields:
+                            fields_output += '      "' + field + '": ' + "Something\n"
+                        fields_output += "---"
+                    else:
+                        fields_output = word("Error: no fields could be found in the file")
+    return render_template('pages/utilities.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script>$("#pdfdocxfile").fileinput();</script>'), tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type)
 
 # @app.route('/save', methods=['GET', 'POST'])
 # def save_for_later():

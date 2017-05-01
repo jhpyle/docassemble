@@ -1,0 +1,53 @@
+metadata:
+  title: PDF fill-in with code
+  documentation: "http://docassemble.org/docs/documents.html#template code"
+  example start: 8
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+---
+question: |
+  Please fill in the following information.
+fields:
+  - Your First Name: user.name.first
+  - Your Last Name: user.name.last
+  - Your Organization: user.organization
+---
+question: |
+  Do you like toast?
+yesno: likes_toast
+---
+question: |
+  Do you like apples?
+yesno: likes_apples
+---
+question: |
+  Do you like pears?
+yesno: likes_pears
+---
+question: |
+  Do you like oranges?
+yesno: likes_oranges
+---
+question: |
+  Here is your PDF form
+attachments:
+  - name: A filled-in form
+    filename: filled-form
+    pdf template file: sample-form.pdf
+    fields:
+      Your Name: |
+        ${ user }
+      Your Organization: |
+        ${ user.organization }
+      Apple Checkbox: |
+        ${ likes_apples }
+      Pear Checkbox: |
+        ${ likes_pears }
+    code: |
+      {"Orange Checkbox": likes_oranges, "Toast Checkbox": likes_toast}
+mandatory: True
+

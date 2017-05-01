@@ -135,6 +135,23 @@ class MyPandoc(object):
             self.output_content = p.communicate(self.input_content.encode('utf8'))[0]
         return
 
+def word_to_pdf(in_file, in_format, out_file):
+    temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
+    tempdir = tempfile.mkdtemp()
+    from_file = os.path.join(tempdir, "file." + in_format)
+    to_file = os.path.join(tempdir, "file.pdf")
+    shutil.copyfile(in_file, from_file)
+    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'pdf', from_file]
+    p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
+    result = p.wait()
+    if result == 0:
+        shutil.copyfile(to_file, out_file)
+    if tempdir is not None:
+        shutil.rmtree(tempdir)
+    if result != 0:
+        return False
+    return True
+
 def word_to_markdown(in_file, in_format):
     temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
     if in_format not in ['docx', 'odt']:

@@ -52,7 +52,7 @@ class LogForm(FlaskForm):
     clear = SubmitField(word('Clear'))
 
 class Utilities(FlaskForm):
-    pdffile = FileField(word('PDF File'))
+    pdfdocxfile = FileField(word('PDF/DOCX File'))
     scan = SubmitField(word('Scan'))
     language = StringField(word('Language'))
     language_submit = SubmitField(word('Translate'))

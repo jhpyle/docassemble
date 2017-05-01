@@ -1,0 +1,92 @@
+metadata:
+  title: Fill fields in a DOCX template with code
+  short title: DOCX
+  documentation: "http://docassemble.org/docs/documents.html#template code"
+  example start: 10
+  example end: 10
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  user: Individual
+  adverse_party: Individual
+---
+question: |
+  Assembling a document from a .docx
+  template
+subquestion: |
+  
+  This interview will fill fields in
+  a .docx template.  You can
+  [download the template] to see what
+  it looks like.
+
+  The letter will be sent by the
+  user to an adverse party to
+  complain about something.
+
+  [download the template]: ${ url_of('letter_template.docx') }
+field: introduction_shown
+---
+question: |
+  What is your name?
+fields:
+  - First Name: user.name.first
+  - Last Name: user.name.last
+---
+question: |
+  What is the adverse party's name?
+fields:
+  - First Name: adverse_party.name.first
+  - Last Name: adverse_party.name.last
+---
+question: |
+  What is the address of ${ adverse_party }?
+fields:
+  - Address: adverse_party.address.address
+  - Unit: adverse_party.address.unit
+    required: False
+  - City: adverse_party.address.city
+  - State: adverse_party.address.state
+    code: |
+      states_list()
+  - Zip: adverse_party.address.zip
+    required: False
+---
+question: |
+  What the subject of your complaint?
+field: subject_matter
+choices:
+  - world peace
+  - overpriced coffee
+  - so many channels, nothing on
+  - youth unemployment
+---
+question: |
+  Please sign your name below.
+subquestion: |
+  Your signature will be added to the letter.
+signature: user.signature
+under: |
+  ${ user.name }
+---
+mandatory: true
+code: |
+  introduction_shown
+---
+mandatory: True
+question: |
+  Here is your document.
+attachment:
+  name: Your letter
+  filename: letter
+  docx template file: letter_template.docx
+  fields:
+    "letter_date": ${ format_date(today()) }
+    "phone_number": 202-555-1234
+    "subject_matter": ${ subject_matter }
+    "address_block": ${ adverse_party.address_block() }
+    "signature": ${ user.signature }
+  code: |
+    dict(full_name=user.name.full())

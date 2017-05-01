@@ -16,6 +16,7 @@
 "Are you sure that you want to delete this file?": Null
 "Are you sure that you want to delete this package?": Null
 "Are you sure that you want to delete this playground file?": Null
+"Are you sure that you want to publish this package to PyPI?": Null
 "Are you sure you want to delete all saved interviews?": Null
 "attachment_message_plural": Null
 "attachment_message_singular": Null
@@ -106,6 +107,7 @@
 "Help is available": Null
 "Help": Null
 "Help with this question": Null
+"Here is your document.": Null
 "How question came to be asked": Null
 "How this question came to be asked": Null
 "I am sorry.  The code you entered is invalid or expired.  Goodbye.": Null
@@ -195,7 +197,7 @@
 "Package on PyPI": Null
 "Packages": Null
 "pages": Null
-"PDF File": Null
+"PDF/DOCX File": Null
 "pdf_message": Null
 "Per Month": Null
 "Per Week": Null
@@ -225,7 +227,7 @@
 "Privileges": Null
 "Problem detected.": Null
 "Profile": Null
-"Publish on PyPI": Null
+"Publish": Null
 "question": Null
 "Question": Null
 "quit": Null

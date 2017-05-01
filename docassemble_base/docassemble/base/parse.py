@@ -1,5 +1,6 @@
 # docassemble.base.parse
 import mimetypes
+import traceback
 import re
 import ast
 import ruamel.yaml
@@ -13,6 +14,9 @@ import pprint
 import copy
 import codecs
 import random
+import tempfile
+from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing
+from docx.shared import Mm, Inches, Pt
 import docassemble.base.filter
 import docassemble.base.pdftk
 from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute
@@ -399,6 +403,70 @@ class Field:
             self.required = data['required']
         else:
             self.required = True
+
+def recursive_textobject(target, names_used):
+    if type(target) is dict or (hasattr(target, 'elements') and type(target.elements) is dict):
+        new_dict = dict()
+        for key, val in target.iteritems():
+            new_dict[key] = recursive_textobject(val, names_used)
+        return new_dict
+    if type(target) is list or (hasattr(target, 'elements') and type(target.elements) is list):
+        new_list = list()
+        for val in target.__iter__():
+            new_list.append(recursive_textobject(val, names_used))
+        return new_list
+    if type(target) is set or (hasattr(target, 'elements') and type(target.elements) is set):
+        new_set = set()
+        for val in target.__iter__():
+            new_set.add(recursive_textobject(val, names_used))
+        return new_set
+    return TextObject(unicode(target), names_used=names_used)
+
+def recursive_eval_textobject(target, user_dict, question, tpl):
+    if type(target) is dict or (hasattr(target, 'elements') and type(target.elements) is dict):
+        new_dict = dict()
+        for key, val in target.iteritems():
+            new_dict[key] = recursive_eval_textobject(val, user_dict, question, tpl)
+        return new_dict
+    if type(target) is list or (hasattr(target, 'elements') and type(target.elements) is list):
+        new_list = list()
+        for val in target.__iter__():
+            new_list.append(recursive_eval_textobject(val, user_dict), question, tpl)
+        return new_list
+    if type(target) is set or (hasattr(target, 'elements') and type(target.elements) is set):
+        new_set = set()
+        for val in target.__iter__():
+            new_set.add(recursive_eval_textobject(val, user_dict), question, tpl)
+        return new_set
+    if type(target) in [bool, NoneType]:
+        return target
+    if type(target) is TextObject:
+        text = target.text(user_dict)
+        m = re.search(r'\[FILE ([^,\]]+), *([0-9\.]) *([A-Za-z]+) *\]', text)
+        if m:
+            amount = m.group(2)
+            units = m.group(3).lower()
+            if units in ['in', 'inches', 'inch']:
+                the_width = Inches(amount)
+            elif units in ['pt', 'pts', 'point', 'points']:
+                the_width = Pt(amount)
+            elif units in ['mm', 'millimeter', 'millimeters']:
+                the_width = Mm(amount)
+            else:
+                the_width = Pt(amount)
+            file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
+            if 'fullpath' not in file_info:
+                return '[FILE NOT FOUND]'
+            return InlineImage(tpl, file_info['fullpath'], the_width)
+        m = re.search(r'\[FILE ([^,\]]+)\]', text)
+        if m:
+            file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
+            if 'fullpath' not in file_info:
+                return '[FILE NOT FOUND]'
+            return InlineImage(tpl, file_info['fullpath'], Inches(2))
+        return docassemble.base.filter.docx_template_filter(text)
+    else:
+        raise DAError("Expected a TextObject, but found a " + str(type(target)))
 
 class Question:
     def idebug(self, data):
@@ -1574,13 +1642,6 @@ class Question:
                     if def_key not in self.interview.defs:
                         raise DAError('Referred to a non-existent def "' + def_key + '."  All defs must be defined before they are used.' + self.idebug(target))
                     defs.extend(self.interview.defs[def_key])
-            if 'valid formats' in target:
-                if type(target['valid formats']) is str:
-                    target['valid formats'] = [target['valid formats']]
-                elif type(target['valid formats']) is not list:
-                    raise DAError('Unknown data type in attachment valid formats.' + self.idebug(target))
-            else:
-                target['valid formats'] = ['*']
             if 'variable name' in target:
                 variable_name = target['variable name']
                 self.fields_used.add(target['variable name'])
@@ -1614,20 +1675,41 @@ class Question:
                             target['content'] += the_file.read().decode('utf8')
                     else:
                         raise DAError('Unable to read content file ' + str(content_file) + ' after trying to find it at ' + str(file_to_read) + self.idebug(target))
+            if ('pdf template file' in target or 'docx template file' in target) and 'code' in target and 'fields' not in target:
+                target['fields'] = dict()
             if 'fields' in target:
-                if 'pdf template file' not in target:
-                    raise DAError('Fields supplied to attachment but no pdf template file supplied' + self.idebug(target))
-                if type(target['pdf template file']) is not str:
-                    raise DAError('pdf template file supplied to attachment must be a string' + self.idebug(target))
+                if 'pdf template file' not in target and 'docx template file' not in target:
+                    raise DAError('Fields supplied to attachment but no pdf template file or docx template file supplied' + self.idebug(target))
+                if 'pdf template file' in target and 'docx template file' in target:
+                    raise DAError('You cannot use a pdf template file and a docx template file at the same time' + self.idebug(target))
+                if 'pdf template file' in target:
+                    template_type = 'pdf'
+                    target['valid formats'] = ['pdf']
+                elif 'docx template file' in target:
+                    template_type = 'docx'
+                    if 'valid formats' in target:
+                        if type(target['valid formats']) is str:
+                            target['valid formats'] = [target['valid formats']]
+                        elif type(target['valid formats']) is not list:
+                            raise DAError('Unknown data type in attachment valid formats.' + self.idebug(target))
+                    else:
+                        target['valid formats'] = ['docx', 'pdf']
+                if type(target[template_type + ' template file']) is not str:
+                    raise DAError(template_type + ' template file supplied to attachment must be a string' + self.idebug(target))
                 if type(target['fields']) is not dict:
                     raise DAError('fields supplied to attachment must be a dictionary' + self.idebug(target))
                 target['content'] = ''
-                target['valid formats'] = ['pdf']
-                options['pdf_template_file'] = docassemble.base.functions.package_template_filename(target['pdf template file'], package=self.package)
-                options['fields'] = dict()
-                for key, val in target['fields'].iteritems():
-                    #logmessage("Set " + str(key) + " to " + str(val))
-                    options['fields'][key] = TextObject(str(val), names_used=self.mako_names)
+                options[template_type + '_template_file'] = docassemble.base.functions.package_template_filename(target[template_type + ' template file'], package=self.package)
+                options['fields'] = recursive_textobject(target['fields'], self.mako_names)
+                if 'code' in target:
+                    options['code'] = compile(target['code'], '', 'eval')
+            if 'valid formats' in target:
+                if type(target['valid formats']) is str:
+                    target['valid formats'] = [target['valid formats']]
+                elif type(target['valid formats']) is not list:
+                    raise DAError('Unknown data type in attachment valid formats.' + self.idebug(target))
+            else:
+                target['valid formats'] = ['*']
             if 'content' not in target:
                 raise DAError("No content provided in attachment")
             #logmessage("The content is " + str(target['content']))
@@ -1989,7 +2071,19 @@ class Question:
         for doc_format in result['formats_to_use']:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options']:
-                    result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'], data_strings=result['data_strings'], images=result['images'])
+                    if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
+                        result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'], data_strings=result['data_strings'], images=result['images'])
+                    elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
+                        logmessage("field_data is " + str(result['field_data']))
+                        result['template'].render(result['field_data'])
+                        docx_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".docx", delete=False)
+                        result['template'].save(docx_file.name)
+                        if 'docx' in result['formats_to_use']:
+                            result['file']['docx'] = docx_file.name
+                        if 'pdf' in result['formats_to_use']:
+                            pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=False)
+                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name)
+                            result['file']['pdf'] = pdf_file.name
                 else:
                     converter = MyPandoc()
                     converter.output_format = doc_format
@@ -2068,7 +2162,16 @@ class Question:
                     result['metadata'][key] = data.text(user_dict)
         for doc_format in result['formats_to_use']:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
-                if 'fields' in attachment['options']:
+                if doc_format == 'docx' and 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
+                    result['template'] = DocxTemplate(attachment['options']['docx_template_file'])
+                    result['field_data'] = recursive_eval_textobject(attachment['options']['fields'], user_dict, self, result['template'])
+                    if 'code' in attachment['options']:
+                        additional_dict = eval(attachment['options']['code'], user_dict)
+                        if type(additional_dict) is dict:
+                            result['field_data'].update(additional_dict)
+                        else:
+                            raise DAError("code in an attachment returned something other than a dictionary")
+                if doc_format == 'pdf' and 'fields' in attachment['options'] and 'pdf_template_file' in attachment['options']:
                     result['data_strings'] = []
                     result['images'] = []
                     for key, val in attachment['options']['fields'].iteritems():
@@ -2087,6 +2190,19 @@ class Question:
                             result['images'].append((key, file_info))
                         else:
                             result['data_strings'].append((key, answer))
+                    if 'code' in attachment['options']:
+                        additional_dict = eval(attachment['options']['code'], user_dict)
+                        if type(additional_dict) is dict:
+                            for key, val in additional_dict.iteritems():
+                                if val is True:
+                                    val = 'Yes'
+                                elif val is False:
+                                    val = 'No'
+                                elif val is None:
+                                    val = ''
+                                result['data_strings'].append((key, val))
+                        else:
+                            raise DAError("code in an attachment returned something other than a dictionary")
                 else:
                     the_markdown = ""
                     if len(result['metadata']):
@@ -2504,9 +2620,9 @@ class Interview:
                 the_question = new_question.follow_multiple_choice(user_dict)
                 interview_status.populate(the_question.ask(user_dict, 'None', 'None'))
                 break
-            except AttributeError as errMess:
-                #logmessage(str(errMess.args))
-                raise DAError('Got error ' + str(errMess))
+            except AttributeError as the_error:
+                #logmessage(str(the_error.args))
+                raise DAError('Got error ' + str(the_error) + " " + traceback.format_exc(the_error))
             except MandatoryQuestion:
                 break
             except CodeExecute as code_error:
