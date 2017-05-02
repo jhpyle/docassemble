@@ -1007,9 +1007,11 @@
       filename: Hello_World_Document
       content file: hello.md
   mandatory: True
-"document-language": |-
-  modules:
-    - docassemble.base.util
+"document-language": "initial: True\ncode: |\n  set_language('es')\n---\nmandatory:\
+  \ True\nlanguage: es\nquestion: El documento est\xE1 listo.\nsets: provide_user_with_document\n\
+  attachment:\n  - name: Alimentos\n    language: en\n    filename: food_order\n \
+  \   content: |\n      This customer would like to order\n      ${ comma_and_list('fries',\
+  \ 'a Coke') }."
 "document-variable-name": |-
   question: Your document is ready.
   subquestion: |
