@@ -1,7 +1,7 @@
 metadata:
   title: PDF fill-in
   documentation: "http://docassemble.org/docs/documents.html#pdf template file"
-  example start: 8
+  example start: 10
 ---
 modules:
   - docassemble.base.util
@@ -31,6 +31,23 @@ yesno: likes_pears
 question: |
   Do you like oranges?
 yesno: likes_oranges
+---
+mandatory: true
+code: |
+  introduction_shown
+---
+question: |
+  question: |
+  Assembling a document from a .docx
+  template
+subquestion: |
+  This interview will fill fields in
+  a .pdf template.  You can
+  [download the template] to see what
+  it looks like.
+
+  [download the template]: ${ url_of('sample-form.pdf') }
+field: introduction_shown
 ---
 question: |
   Here is your PDF form

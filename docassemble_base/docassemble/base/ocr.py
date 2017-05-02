@@ -1,7 +1,5 @@
-import pyocr
-import pyocr.builders
 import tempfile
-from subprocess import call
+import subprocess
 from PIL import Image, ImageEnhance
 from docassemble.base.functions import get_config, get_language, ReturnValue
 from docassemble.base.core import DAFile, DAFileList
@@ -31,6 +29,16 @@ def ocr_finalize(*pargs, **kwargs):
     #sys.stderr.write("ocr_finalize: final output has length " + str(len(final_output)) + "\n")
     return final_output
 
+def get_available_languages():
+    try:
+        output = subprocess.check_output(['tesseract', '--list-langs'], stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as err:
+        raise Exception("get_available_languages: failed to list available languages: " + str(err))
+    else:
+        result = output.splitlines()
+        result.pop(0)
+        return result
+    
 def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=None, user_code=None, **kwargs):
     #sys.stderr.write("ocr_page_tasks running\n")
     if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
@@ -41,11 +49,7 @@ def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=N
     ocr_resolution = get_config("ocr dpi")
     if ocr_resolution is None:
         ocr_resolution = '300'
-    tools = pyocr.get_available_tools()
-    if len(tools) == 0:
-        return word('(OCR engine not available)')
-    tool = tools[0]
-    langs = tool.get_available_languages()
+    langs = get_available_languages()
     if language is None:
         language = get_language()
     if language in langs:
@@ -96,7 +100,7 @@ def make_png_for_pdf(doc, prefix, resolution, pdf_to_ppm):
     test_path = basefile + prefix + '-in-progress'
     with open(test_path, 'a'):
         os.utime(test_path, None)
-    result = call([str(pdf_to_ppm), '-r', str(resolution), '-png', str(path), str(basefile + prefix)])
+    result = subprocess.call([str(pdf_to_ppm), '-r', str(resolution), '-png', str(path), str(basefile + prefix)])
     os.remove(test_path)
     if result > 0:
         raise Exception("Unable to extract images from PDF file")
@@ -132,16 +136,12 @@ def ocr_page(doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resolution=300, p
             if H is not None:
                 args.extend(['-H', str(H)])
             args.extend(['-singlefile', '-png', str(path), str(output_file.name)])
-            result = call(args)
+            result = subprocess.call(args)
             if result > 0:
                 return word("(Unable to extract images from PDF file)")
             the_file = output_file.name + '.png'
     else:
         the_file = path
-    tools = pyocr.get_available_tools()
-    if len(tools) == 0:
-        return word('(OCR engine not available)')
-    tool = tools[0]
     image = Image.open(the_file)
     color = ImageEnhance.Color(image)
     bw = color.enhance(0.0)
@@ -149,7 +149,13 @@ def ocr_page(doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resolution=300, p
     brightened = bright.enhance(1.5)
     contrast = ImageEnhance.Contrast(brightened)
     final_image = contrast.enhance(2.0)
-    text = tool.image_to_string(final_image, lang=lang, builder=pyocr.builders.TextBuilder(tesseract_layout=psm))
+    file_to_read = tempfile.TemporaryFile()
+    final_image.save(file_to_read, "PNG")
+    file_to_read.seek(0)
+    try:
+        text = subprocess.check_output(['tesseract', 'stdin', 'stdout', '-l', str(lang), '-psm', str(psm)], stdin=file_to_read, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as err:
+        raise Exception("ocr_page: failed to list available languages: " + str(err) + " " + str(err.output))
     sys.stderr.write("ocr_page finished with page " + str(page) + "\n")
-    return dict(page=page, text=text)
+    return dict(page=page, text=text.decode('utf8'))
 
