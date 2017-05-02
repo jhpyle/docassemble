@@ -8,8 +8,8 @@ permalink: /about/
 **docassemble** is a free, open-source expert system for guided
 interviews and document assembly.  It provides a web site that
 conducts interviews with users.  Based on the information gathered,
-the interviews can present users with documents in PDF and RTF format,
-which users can download or e-mail.
+the interviews can present users with documents in PDF, RTF, or DOCX
+format, which users can download or e-mail.
 
 **docassemble** was created by a lawyer/computer programmer for
 purposes of automating the practice of law, but it is a
@@ -28,7 +28,7 @@ information.
 
 The interface is user-friendly.  **docassemble** uses [Bootstrap] to
 provide a mobile-friendly and desktop-friendly interface.  In addition
-to gathering yes/no answers and fill-in forms, **docassemble** can
+to gathering yes/no answers and fill-in fields, **docassemble** can
 collect uploaded documents, pictures taken with a smartphone, and the
 user's signature, which the user can write using a touchscreen or
 mouse.  The documents created by **docassemble** can incorporate the
@@ -150,7 +150,8 @@ the server and incorporating the author's interview questions or
 modules by reference into their own interviews.  The web interface
 allows [Python packages] to be installed either as .zip files, through
 the cloning of [GitHub] repositories, or through installation from
-[PyPI].
+[PyPI].  To facilitate sharing of interviews, [Python packages] can be
+[published on PyPI] at the touch of a button.
 
 ### More than a traditional guided interview
 
@@ -174,6 +175,12 @@ for those of your users without computers or smartphones.
 process user input.  Your interviews can become "smarter" over time as
 the machine learning models are trained to associate particular user
 input with particular concepts.
+* **Optical Character Recognition** Your users can take pictures of
+documents or upload scanned PDFs, and **docassemble** will read the
+text from the documents using Optical Character Recognition (OCR).
+This text can then be processed by [machine learning].  For maximum
+speed, the OCR tasks are [farmed out] to all available CPUs in your
+application server cluster and processed simultaneously.
 * **Central storage** Your interviews can [store data] in a central
 location, for example if you want use your interview to conduct a
 survey, or collect analytics about user answers.
@@ -228,8 +235,7 @@ database.
 
 **docassemble** can easily be [set up] to run on [HTTPS] rather than
 [HTTP] in order to encrypt the traffic between the browser and the
-server.  SSL certificates are available at no cost from companies like
-[StartCom].  In addition, **docassemble** has built-in support for
+server.  **docassemble** has built-in support for
 using [Let's Encrypt].
 
 ### Multilingual
@@ -242,7 +248,7 @@ interviews.
 ### Scalable
 
 **docassemble** can be deployed in a [multi-server configuration] on
-Amazon's EC3 platform with load balancing.
+Amazon's EC2 platform with load balancing.
 
 ### Multi-purpose
 
@@ -260,28 +266,22 @@ interview and a telephone interview.
 ### Superior to the alternatives
 
 Much of what **docassemble** does can be accomplished with [HotDocs]
-and [A2J].  If the logic behind an interview is easy to flowchart, or
-being able to create the document template in Microsoft Word is
-important so as to have fine-grained control over document formatting,
+and [A2J].  If the logic behind an interview is easy to flowchart,
 then the [A2J]/[HotDocs] platform may be preferable.
 
 However, many of **docassemble**'s features are not available yet in
-the [A2J]/[HotDocs] platform, such as electronic signatures, document
-uploads, text-to-speech, ability to generate documents in the middle
-of interviews as opposed to only at the end, and multi-user
-interviews.
+the [A2J]/[HotDocs] platform, such as electronic signature images,
+document uploads, OCR, machine learning, text-to-speech, ability to
+generate documents in the middle of interviews as opposed to only at
+the end, and multi-user interviews.
 
 In addition, **docassemble** does many things that [A2J] and [HotDocs]
 can do, but does them better.  For example, **docassemble** has
 superior features for incorporating "libraries" of questions (which
 might reference other "libraries," which in turn reference other
-"libraries," etc.).  Since all the authoring is done within a [YAML]
-file, content can easily be reused through incorporation by reference
-(using the [include] function) or copy-and-paste.  By contrast,
-[HotDocs] allows one component file to be imported, but does not allow
-such inclusions to be nested.  All of the content of an [A2J] or
-[HotDocs] interview is effectively locked inside the
-graphical user interface.
+"libraries," etc.).  Since all the authoring is done within text
+files, content can easily be reused through incorporation by reference
+(using the [include] function) or copy-and-paste.
 
 For some people, **docassemble** may have a steeper learning curve
 than [A2J] and [HotDocs].  [A2J] is optimized for legal professionals
@@ -399,19 +399,14 @@ The interview files are written in [YAML].  Within the [YAML] file,
 interview questions and document text are represented in [Markdown]
 enhanced with the [Mako] templating system.  [Mako] allows the full
 power of [Python] to be embedded into interview [questions] and
-[document templates].  Documents are converted from [Markdown] into
-PDF, RTF, and HTML using [Pandoc].
+[document templates].  PDF, RTF, and DOCX documents can be [generated
+from Markdown] using [Pandoc].  In addition, you can [populate fields]
+within existing [PDF] and [DOCX] files.
 
-To test the interview, the author re-packs the [Python] subpackage as
-a .zip file and [uploads] it to a **docassemble** server.  Alternatively,
-the author can push the [Python package] to a [GitHub] repository and
-then tell the web application to install the package directly from
-[GitHub].  [GitHub] and Microsoft have developed a user-friendly
-[GitHub] application for Windows, which makes this process very easy.
-
-For quicker testing of interview questions, the developer can test
-**docassemble** interviews in the [Playground] area, which allows
-[YAML] code to be entered and tested in the web browser.
+Developers can develop, test, package, and distribute **docassemble**
+interviews through the web interface, in the [Playground].  Or, they
+can edit the interviews off-line and install them on a server using
+zip file upload, [GitHub], or [PyPI].
 
 **docassemble** figures out which questions to ask by taking advantage
 of the exception-trapping features of [Python].  **docassemble** will
@@ -489,7 +484,6 @@ the same interview on a single server.
 [HTTPS]: https://en.wikipedia.org/wiki/HTTPS
 [set up]: {{ site.baseurl }}/docs/config.html
 [roles]: {{ site.baseurl }}/docs/roles.html
-[StartCom]: https://www.startssl.com/
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [Let's Encrypt]: https://letsencrypt.org/
 [extract]: {{ site.baseurl }}/docs/functions.html#response
@@ -503,3 +497,9 @@ the same interview on a single server.
 [text messaging interface]: {{ site.baseurl }}/docs/sms.html
 [store data]: {{ site.baseurl }}/docs/functions.html#storage
 [optical character recognition]: {{ site.baseurl }}/docs/functions.html#ocr_file
+[populate fields]: {{ site.baseurl }}/docs/documents.html#fill-in forms
+[PDF]: {{ site.baseurl }}/docs/documents.html#pdf template file
+[DOCX]: {{ site.baseurl }}/docs/documents.html#docx template file
+[published on PyPI]: {{ site.baseurl }}/docs/packages.html#pypi
+[generated from Markdown]: {{ site.baseurl }}/docs/documents.html#from markdown
+[farmed out]: {{ site.baseurl }}/docs/functions.html#ocr_file_in_background

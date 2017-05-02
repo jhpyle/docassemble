@@ -64,7 +64,7 @@ metadata:
   authors:
     - name: Jonathan Pyle
       organization: none
-  revision_date: 2016-04-22
+  revision_date: 2017-05-01
 comment: |
   A "metadata" block contains information about the YAML file, such as
   the name of the author.
@@ -147,7 +147,7 @@ comment: |
   This "objects" block creates the variable "village_idiot" and
   specifies that it is an object of type "Individual."
 ---
-terms:
+auto terms:
   rhododendron: |
      A genus of shrubs or small trees, often having handsome
      evergreen leaves, and remarkable for the beauty of their
@@ -414,7 +414,7 @@ progress: 50
 ---
 question: |
   I understand that you live in ${ client.address.city }.
-  Were you injured in ${ jurisdiction.state }?
+  Were you injured in ${ jurisdiction_state }?
 yesno: injury_in_jurisdiction
 ---
 question: When did your injury take place?
@@ -464,20 +464,21 @@ question: Would you like to enter your address yet again?
 yesno: retry_address
 ---
 code: |
-  jurisdiction.state = "Pennsylvania"
-  jurisdiction.county = "Philadelphia"
+  court.jurisdiction = ['US', 'state', 'PA', 'trial', 'Philadelphia County']
+  jurisdiction_state = "Pennsylvania"
+  jurisdiction_county = "Philadelphia"
 ---
 code: |
-  if jurisdiction.state == "Pennsylvania":
+  if jurisdiction_state == "Pennsylvania":
       statute_of_limitations_years = 5
   else:
       statute_of_limitations_years = 2
 ---
 code: |
-  if jurisdiction.state == "Pennsylvania":
+  if jurisdiction_state == "Pennsylvania":
       if law_category == "custody" or law_category == "support":
           court.name = "Court of Common Pleas of " + \
-          jurisdiction.county + " County"
+          jurisdiction_county + " County, " + jurisdiction_state
 ---
 code: |
   import datetime
@@ -947,36 +948,6 @@ terms:
   cliente: |
     El cliente es la persona que está llenando este formulario
 ---
-sets: markdown_demo
-question: Markdown demonstration
-subquestion: |
-  This is *italic text*.
-  This is **bold text**.
-  This is __also bold text__.
-
-  > This is some block-quoted
-  > text.
-
-  ### This is a heading
-
-  This is an image from the internet:
-
-  ![Bass logo](https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Bass_logo.svg/199px-Bass_logo.svg.png)
-
-  Here is a bullet list:
-
-  * Apple
-  * Peach
-  * Pear
-
-  Here is a numbered list:
-
-  1. Nutmeg
-  2. Celery
-  3. Oregano
-
-  Here is a [link to a web site](http://google.com).
----
 question: |
   What is the village idiot's name?
 fields:
@@ -993,11 +964,6 @@ fields:
   - Suffix: village_idiot.name.suffix
     required: False
     code: name_suffix()
----
-question: Take something!
-fields:
-  - no label: my_av_file
-    datatype: camera
 ...
 {% endhighlight %}
 
@@ -1083,15 +1049,14 @@ objects:
   - spouse: Individual
   - advocate: Individual
   - pleading: LegalFiling
-  - jurisdiction: Jurisdiction
   - court: Court
 comment: |
   An "objects" section defines variables that are docassemble objects.
   The object types here are defined in the docassemble.base.core and
   docassemble.base.legal modules.
 ---
+mandatory: true
 code: |
-  court.jurisdiction = jurisdiction
   case.court = court
   pleading.case = case
 comment: |
@@ -1589,6 +1554,68 @@ fields:
     datatype: yesnowide
   - Stocks and Bonds: x.asset['stocks and bonds'].exists
     datatype: yesnowide
+---
+generic object: Individual
+question: |
+  Where ${ x.do_question('live') } in ${ case.state }?
+fields:
+  - Address: x.address.address
+  - Unit: x.address.unit
+    required: False
+    help: The apartment, suite, or unit number of the residence.
+  - City: x.address.city
+  - State: x.address.state
+    default: 
+      code: |
+        case.state
+    code: |
+      us.states.mapping('abbr', 'name')
+  - Zip: x.address.zip
+    required: False
+---
+generic object: Address
+question: |
+  In which county is
+  ${ x.on_one_line() }
+  located?
+fields:
+  - County: x.county
+---
+generic object: City
+question: |
+  In which county in
+  ${ state_name(x.state) }
+  is
+  ${ x.city }
+  located?
+fields:
+  - County: x.county
+    hint: |
+      e.g., Springfield County
+---
+generic object: Address
+sets: x.county
+code: |
+  x.geolocate()
+---
+generic object: City
+sets: x.county
+code: |
+  x.geolocate()
+---
+generic object: Document
+question: |
+  Are you able to attach or take a picture of ${ x.title }?
+yesno: x.able_to_attach
+---
+generic object: Document
+question: |
+  Please attach or take a picture of ${ x.title }.
+fields:
+  - label: |
+      ${ capitalize(x.title) }
+    field: x.file
+    datatype: file
 ...
 {% endhighlight %}
 
