@@ -964,9 +964,19 @@ def as_html(status, url_for, debug, root, validation_rules):
                     elif 'docx' in attachment['valid_formats']:
                         editable_name = 'DOCX ' + file_word
             if debug and len(attachment['markdown']):
-                show_markdown = True
+                if 'html' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
+                    md_format = 'html'
+                else:
+                    for format_type in attachment['valid_formats']:
+                        md_format = format_type
+                        break
+                if md_format in attachment['markdown'] and attachment['markdown'][md_format] != '':
+                    show_markdown = True
+                else:
+                    show_markdown = False
             else:
                 show_markdown = False
+            logmessage("markdown is " + str(attachment['markdown']))
             if 'pdf' in attachment['valid_formats'] or 'rtf' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or (debug and 'tex' in attachment['valid_formats']) or '*' in attachment['valid_formats']:
                 show_download = True
             else:
@@ -1013,12 +1023,6 @@ def as_html(status, url_for, debug, root, validation_rules):
                 output += '                  <blockquote>' + unicode(attachment['content']['html']) + '</blockquote>\n'
                 output += '                </div>\n'
             if show_markdown:
-                if 'html' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                    md_format = 'html'
-                else:
-                    for format_type in attachment['valid_formats']:
-                        md_format = format_type
-                        break
                 output += '                <div class="tab-pane" id="markdown' + str(attachment_index) + '">\n'
                 output += '                  <pre>' + safe_html(attachment['markdown'][md_format]) + '</pre>\n'
                 output += '                </div>\n'

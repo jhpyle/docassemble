@@ -6454,6 +6454,7 @@ def monitor():
 @login_required
 @roles_required(['admin', 'developer'])
 def update_package_wait():
+    next_url = request.args.get('next', url_for('update_package'))
     my_csrf = generate_csrf()
     script = """<script>
       var checkinInterval = null;
@@ -6532,7 +6533,7 @@ def update_package_wait():
       });
     </script>
 """
-    return render_template('pages/update_package_wait.html', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=url_for('update_package'))
+    return render_template('pages/update_package_wait.html', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=next_url)
 
 @app.route('/update_package_ajax', methods=['GET', 'POST'])
 @login_required
@@ -6789,7 +6790,10 @@ def create_playground_package():
             # db.session.commit()
             if do_install:
                 install_zip_package('docassemble.' + pkgname, file_number)
-                return redirect(url_for('playground_packages', file=current_package))
+                result = docassemble.webapp.worker.update_packages.delay()
+                session['update'] = result.id
+                return redirect(url_for('update_package_wait', next=url_for('playground_packages', file=current_package)))
+                #return redirect(url_for('playground_packages', file=current_package))
             else:
                 response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -7609,6 +7613,10 @@ def playground_packages():
                             form[field].data = old_info[field]
                         else:
                             form[field].data = ''
+                    if 'dependencies' in old_info and type(old_info['dependencies']) is list and len(old_info['dependencies']):
+                        for item in old_info['dependencies']:
+                            pass
+                        #PPP
                     for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
                         if field in old_info and type(old_info[field]) is list and len(old_info[field]):
                             form[field].data = old_info[field]

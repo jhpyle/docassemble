@@ -1,0 +1,55 @@
+metadata:
+  title: Fill fields in a DOCX template
+  short title: DOCX
+  documentation: "http://docassemble.org/docs/documents.html#docx template file"
+  example start: 10
+  example end: 10
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  user: Individual
+  adverse_party: Individual
+---
+question: |
+  Assembling a document from a .docx
+  template
+subquestion: |
+  This interview will fill fields in
+  a .docx template.  You can
+  [download the template] to see what
+  it looks like.
+
+  [download the template]: ${ url_of('docx-jinja2-demo.docx') }
+field: introduction_shown
+---
+question: |
+  Is the sky blue?
+yesno: sky_is_blue
+---
+code: |
+  fruit_types = ['apples', 'oranges', 'peaches', 'pears']
+---
+question: |
+  What fruits do you like?
+fields:
+  - Favorite fruits: favorite_fruit
+    datatype: checkboxes
+    code: fruit_types
+---
+mandatory: true
+code: |
+  introduction_shown
+  document_shown
+---
+event: document_shown
+question: |
+  Here is the document.
+attachment:
+  docx template file: docx-jinja2-demo.docx
+  field variables:
+    - sky_is_blue
+  field code:
+    favorite_fruit: raw(favorite_fruit)
+    fruit_types: raw(fruit_types)

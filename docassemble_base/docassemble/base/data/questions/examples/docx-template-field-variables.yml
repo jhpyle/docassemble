@@ -1,7 +1,7 @@
 metadata:
-  title: Fill fields in a DOCX template
-  short title: DOCX
-  documentation: "http://docassemble.org/docs/documents.html#docx template file"
+  title: Field variables
+  short title: Fields
+  documentation: "http://docassemble.org/docs/documents.html#field variables"
   example start: 10
   example end: 10
 ---
@@ -63,6 +63,9 @@ choices:
   - so many channels, nothing on
   - youth unemployment
 ---
+code: |
+  phone_number = '202-555-1234'
+---
 question: |
   Please sign your name below.
 subquestion: |
@@ -82,10 +85,11 @@ attachment:
   name: Your letter
   filename: letter
   docx template file: letter_template.docx
-  fields:
-    "letter_date": ${ today() }
-    "phone_number": 202-555-1234
-    "subject_matter": ${ subject_matter }
-    "address_block": ${ adverse_party.address_block() }
-    "full_name": ${ user.name }
-    "signature": ${ user.signature }
+  field code:
+    letter_date: today()
+    address_block: adverse_party.address_block()
+    signature: user.signature
+    full_name: user.name
+  field variables:
+    - subject_matter
+    - phone_number

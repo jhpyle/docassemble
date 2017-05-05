@@ -1,0 +1,70 @@
+metadata:
+  title: Two columns
+  documentation: "http://docassemble.org/docs/documents.html#twocol"
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+---
+question: |
+  What is your name?
+fields:
+  - First Name: user.name.first
+    default: ${ user.first_name_hint() }
+  - Middle Name: user.name.middle
+    required: False
+  - Last Name: user.name.last
+    default: ${ user.last_name_hint() }
+  - Suffix: user.name.suffix
+    required: False
+    code: |
+      name_suffix()
+---
+question: |
+  Where do you live?
+fields:
+  - Address: user.address.address
+  - Unit: user.address.unit
+    required: False
+    help: The apartment, suite, or unit number of the residence.
+  - City: user.address.city
+  - State: user.address.state
+    code: |
+      us.states.mapping('abbr', 'name')
+  - Zip: user.address.zip
+    required: False
+---
+question: |
+  Please sign your name below.
+signature: user.signature
+under: |
+  ${ user.name }
+---
+question: Your document is ready.
+sets: provide_user_with_document
+attachment:
+  - name: A two column document
+    filename: two_col
+    description: |
+      A document with a two column area
+    content: |
+      Hello, world!
+
+      [BEGIN_TWOCOL]
+      Line one
+      
+      Line two
+      [BREAK]
+      Line three
+      [SKIPLINE]
+      Line four
+      
+      ${ user.signature.show('2in') }
+      
+      ${ user.address_block() }
+      [END_TWOCOL]
+---
+mandatory: True
+code: provide_user_with_document

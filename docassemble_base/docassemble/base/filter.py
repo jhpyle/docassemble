@@ -573,6 +573,8 @@ def clean_markdown_to_latex(string):
     string = re.sub(r'[\n ]+$', '', string)
     string = re.sub(r' *\n *$', '\n', string)
     string = re.sub(r'\n{2,}', '[NEWLINE]', string)
+    string = re.sub(r'\[BR\]', '[NEWLINE]', string)
+    string = re.sub(r'\[FLUSHLEFT|FLUSHRIGHT|CENTER|BOLDCENTER|SINGLESPACING|DOUBLESPACING|INDENTATION|NOINDENTATION|PAGEBREAK\]\s*', '', string)
     string = re.sub(r'\*\*([^\*]+?)\*\*', r'\\textbf{\1}', string)
     string = re.sub(r'\*([^\*]+?)\*', r'\\emph{\1}', string)
     string = re.sub(r'(?<!\\)_([^_]+?)_', r'\\emph{\1}', string)
@@ -822,15 +824,21 @@ def image_url_string(match, emoji=False, question=None, playground=False):
             width_string = "max-width:" + width
         if emoji:
             width_string += ';vertical-align: middle'
+        the_url = server.url_finder(file_reference, question=question)
+        if the_url is None:
+            return ('[ERROR: File reference ' + str(file_reference) + ' cannot be displayed]')
         if file_info.get('extension', '') in ['png', 'jpg', 'gif', 'svg', 'jpe', 'jpeg']:
-            return('<img class="daicon" style="' + width_string + '" src="' + server.url_finder(file_reference, question=question) + '"/>')
+            return('<img class="daicon" style="' + width_string + '" src="' + the_url + '"/>')
         elif file_info['extension'] == 'pdf':
-            output = '<a href="' + server.url_finder(file_reference, question=question) + '"><img class="daicon" style="' + width_string + '" src="' + server.url_finder(file_reference, size="screen", page=1, question=question) + '"/></a>'
+            image_url = server.url_finder(file_reference, size="screen", page=1, question=question)
+            if image_url is None:
+                return ('[ERROR: File reference ' + str(file_reference) + ' cannot be displayed]')
+            output = '<a href="' + the_url + '"><img class="daicon" style="' + width_string + '" src="' + image_url + '"/></a>'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + str(file_info['pages']) + " " + word('pages') + ")"
             return(output)
         else:
-            return('<a href="' + server.url_finder(file_reference, question=question) + '">' + file_info['filename'] + '</a>')
+            return('<a href="' + the_url + '">' + file_info['filename'] + '</a>')
     else:
         return('[Invalid image reference; reference=' + str(file_reference) + ', width=' + str(width) + ', filename=' + file_info.get('filename', 'unknown') + ']')
 

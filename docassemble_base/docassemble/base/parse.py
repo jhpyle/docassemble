@@ -1,4 +1,3 @@
-# docassemble.base.parse
 import mimetypes
 import traceback
 import re
@@ -15,13 +14,12 @@ import copy
 import codecs
 import random
 import tempfile
-from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing
-from docx.shared import Mm, Inches, Pt
 import docassemble.base.filter
 import docassemble.base.pdftk
+import docassemble.base.docxfile
 from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute
 import docassemble.base.functions
-from docassemble.base.functions import pickleable_objects, word, get_language, server
+from docassemble.base.functions import pickleable_objects, word, get_language, server, RawValue
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import MyPandoc
 from docassemble.base.mako.template import Template as MakoTemplate
@@ -34,6 +32,7 @@ run_process_action = compile('process_action()', '', 'exec')
 match_process_action = re.compile(r'process_action\(')
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
 emoji_match = re.compile(r':([^ ]+):')
+valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]+$')
 nameerror_match = re.compile(r'\'(.*)\' (is not defined|referenced before assignment)')
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 remove_trailing_dots = re.compile(r'\.\.\.$')
@@ -442,29 +441,7 @@ def recursive_eval_textobject(target, user_dict, question, tpl):
         return target
     if type(target) is TextObject:
         text = target.text(user_dict)
-        m = re.search(r'\[FILE ([^,\]]+), *([0-9\.]) *([A-Za-z]+) *\]', text)
-        if m:
-            amount = m.group(2)
-            units = m.group(3).lower()
-            if units in ['in', 'inches', 'inch']:
-                the_width = Inches(amount)
-            elif units in ['pt', 'pts', 'point', 'points']:
-                the_width = Pt(amount)
-            elif units in ['mm', 'millimeter', 'millimeters']:
-                the_width = Mm(amount)
-            else:
-                the_width = Pt(amount)
-            file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
-            if 'fullpath' not in file_info:
-                return '[FILE NOT FOUND]'
-            return InlineImage(tpl, file_info['fullpath'], the_width)
-        m = re.search(r'\[FILE ([^,\]]+)\]', text)
-        if m:
-            file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
-            if 'fullpath' not in file_info:
-                return '[FILE NOT FOUND]'
-            return InlineImage(tpl, file_info['fullpath'], Inches(2))
-        return docassemble.base.filter.docx_template_filter(text)
+        return docassemble.base.docxfile.transform_for_docx(text, question, tpl)
     else:
         raise DAError("Expected a TextObject, but found a " + str(type(target)))
 
@@ -1675,7 +1652,7 @@ class Question:
                             target['content'] += the_file.read().decode('utf8')
                     else:
                         raise DAError('Unable to read content file ' + str(content_file) + ' after trying to find it at ' + str(file_to_read) + self.idebug(target))
-            if ('pdf template file' in target or 'docx template file' in target) and 'code' in target and 'fields' not in target:
+            if ('pdf template file' in target or 'docx template file' in target) and ('code' in target or 'field variables' in target or 'field code' in target or 'raw field variables' in target) and 'fields' not in target:
                 target['fields'] = dict()
             if 'fields' in target:
                 if 'pdf template file' not in target and 'docx template file' not in target:
@@ -1702,7 +1679,36 @@ class Question:
                 options[template_type + '_template_file'] = docassemble.base.functions.package_template_filename(target[template_type + ' template file'], package=self.package)
                 options['fields'] = recursive_textobject(target['fields'], self.mako_names)
                 if 'code' in target:
-                    options['code'] = compile(target['code'], '', 'eval')
+                    if type(target['code']) in [str, unicode]:
+                        options['code'] = compile(target['code'], '', 'eval')
+                if 'field variables' in target:
+                    if type(target['field variables']) is not list:
+                        raise DAError('The field variables must be expressed in the form of a list' + self.idebug(target))
+                    if 'code dict' not in options:
+                        options['code dict'] = dict()
+                    for varname in target['field variables']:
+                        if not valid_variable_match.match(str(varname)):
+                            raise DAError('The variable ' + str(varname) + " cannot be used in a code list" + self.idebug(target))
+                        options['code dict'][varname] = compile(varname, '', 'eval')
+                if 'raw field variables' in target:
+                    if type(target['raw field variables']) is not list:
+                        raise DAError('The raw field variables must be expressed in the form of a list' + self.idebug(target))
+                    if 'raw code dict' not in options:
+                        options['raw code dict'] = dict()
+                    for varname in target['raw field variables']:
+                        if not valid_variable_match.match(str(varname)):
+                            raise DAError('The variable ' + str(varname) + " cannot be used in a code list" + self.idebug(target))
+                        options['raw code dict'][varname] = compile(varname, '', 'eval')
+                if 'field code' in target:
+                    if 'code dict' not in options:
+                        options['code dict'] = dict()
+                    if type(target['field code']) is not list:
+                        target['field code'] = [target['field code']]
+                    for item in target['field code']:
+                        if type(item) is not dict:
+                            raise DAError('The field code must be expressed in the form of a dictionary' + self.idebug(target))
+                        for key, val in item.iteritems():
+                            options['code dict'][key] = compile(val, '', 'eval')
             if 'valid formats' in target:
                 if type(target['valid formats']) is str:
                     target['valid formats'] = [target['valid formats']]
@@ -2162,16 +2168,31 @@ class Question:
                     result['metadata'][key] = data.text(user_dict)
         for doc_format in result['formats_to_use']:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
-                if doc_format == 'docx' and 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
-                    result['template'] = DocxTemplate(attachment['options']['docx_template_file'])
-                    result['field_data'] = recursive_eval_textobject(attachment['options']['fields'], user_dict, self, result['template'])
-                    if 'code' in attachment['options']:
-                        additional_dict = eval(attachment['options']['code'], user_dict)
-                        if type(additional_dict) is dict:
-                            result['field_data'].update(additional_dict)
-                        else:
-                            raise DAError("code in an attachment returned something other than a dictionary")
-                if doc_format == 'pdf' and 'fields' in attachment['options'] and 'pdf_template_file' in attachment['options']:
+                if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
+                    if doc_format == 'docx':
+                        result['template'] = docassemble.base.docxfile.DocxTemplate(attachment['options']['docx_template_file'])
+                        result['field_data'] = recursive_eval_textobject(attachment['options']['fields'], user_dict, self, result['template'])
+                        if 'code' in attachment['options']:
+                            additional_dict = eval(attachment['options']['code'], user_dict)
+                            if type(additional_dict) is dict:
+                                for key, val in additional_dict.iteritems():
+                                    if type(val) is RawValue:
+                                        result['field_data'][key] = val.value
+                                    else:
+                                        result['field_data'][key] = docassemble.base.docxfile.transform_for_docx(val, self, result['template'])
+                            else:
+                                raise DAError("code in an attachment returned something other than a dictionary")
+                        if 'raw code dict' in attachment['options']:
+                            for varname, var_code in attachment['options']['raw code dict'].iteritems():
+                                result['field_data'][varname] = eval(var_code, user_dict)
+                        if 'code dict' in attachment['options']:
+                            for varname, var_code in attachment['options']['code dict'].iteritems():
+                                val = eval(var_code, user_dict)
+                                if type(val) is RawValue:
+                                    result['field_data'][varname] = val.value
+                                else:
+                                    result['field_data'][varname] = docassemble.base.docxfile.transform_for_docx(val, self, result['template'])
+                elif doc_format == 'pdf' and 'fields' in attachment['options'] and 'pdf_template_file' in attachment['options']:
                     result['data_strings'] = []
                     result['images'] = []
                     for key, val in attachment['options']['fields'].iteritems():
@@ -2203,6 +2224,26 @@ class Question:
                                 result['data_strings'].append((key, val))
                         else:
                             raise DAError("code in an attachment returned something other than a dictionary")
+                    if 'code dict' in attachment['options']:
+                        for key, var_code in attachment['options']['code dict'].iteritems():
+                            val = eval(var_code, user_dict)
+                            if val is True:
+                                val = 'Yes'
+                            elif val is False:
+                                val = 'No'
+                            elif val is None:
+                                val = ''
+                            result['data_strings'].append((key, val))
+                    if 'raw code dict' in attachment['options']:
+                        for key, var_code in attachment['options']['raw code dict'].iteritems():
+                            val = eval(var_code, user_dict)
+                            if val is True:
+                                val = 'Yes'
+                            elif val is False:
+                                val = 'No'
+                            elif val is None:
+                                val = ''
+                            result['data_strings'].append((key, val))
                 else:
                     the_markdown = ""
                     if len(result['metadata']):

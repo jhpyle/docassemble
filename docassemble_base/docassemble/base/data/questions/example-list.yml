@@ -22,7 +22,11 @@
     - document-docx
     - pdf-fill
     - pdf-fill-signature
+    - pdf-fill-code
+    - docx-template
+    - docx-template-code
     - allow-emailing-false
+    - document-language
 - Document templates:
     - template
     - template-subject
@@ -180,7 +184,7 @@
     - language_from_browser
     - language_from_browser_restricted
     - ocr
-    - ocr-background
+    - ocr-chord
     - save-url-to-file
 - Code:
     - imports
