@@ -195,13 +195,13 @@ documents.
 * `[INDENTATION]` - From now on, indent the first line of every paragraph.
 * `[NOINDENTATION]` - From now on, do not indent the first line of
   every paragraph.
-* `[BEGIN_TWOCOL] First column text [BREAK] Second column text
+* <a name="twocol"></a>`[BEGIN_TWOCOL] First column text [BREAK] Second column text
   [END_TWOCOL]` - Puts text into two columns.
-* `[FLUSHLEFT]` - Used at the beginning of a paragraph to indicate
+* <a name="flushleft"></a>`[FLUSHLEFT]` - Used at the beginning of a paragraph to indicate
   that the paragraph should be flushed left and not indented.
-* `[FLUSHRIGHT]` - Used at the beginning of a paragraph to indicate
+* <a name="flushright"></a>`[FLUSHRIGHT]` - Used at the beginning of a paragraph to indicate
   that the paragraph should be flushed right and not indented.
-* `[CENTER]` - Used at the beginning of a paragraph to indicate that
+* <a name="center"></a>`[CENTER]` - Used at the beginning of a paragraph to indicate that
   the paragraph should be centered.
 * `[BOLDCENTER]` - Like `[CENTER]` except that text is bolded.
 * `[INDENTBY 1in]` - Used at the beginning of a paragraph to indicate
@@ -623,24 +623,165 @@ fields:
 For more information, see the documentation of
 [`python-docx-template`].
 
-## <a name="template code"></a>Generating fields with code
+## <a name="template code"></a>Passing values using code
 
 You can also use [Python] code to populate the values of fields that
 are filled in with [`pdf template file`] and [`docx template file`].
-If you insert a `code` directive along with [`pdf template file`] or
-[`docx template file`] and the code evaluates to a [Python dict], the
-values in `fields` will be [updated] with the values of that
-[Python dict].
+
+The `fields` directive allows you to use [Mako] to pass the values
+of variables to the template.  For example:
+
+{% highlight yaml %}
+fields:
+  favorite_fruit: ${ favorite_fruit }
+  favorite_vegetable: ${ favorite_vegetable }
+  favorite_legume: ${ favorite_legume }
+  favorite_fungus: ${ favorite_fungus }
+{% endhighlight %}
+
+This is a bit repetitive and punctuation-heavy.  Instead, you can use
+the `field variables` directive to list the variables you want to pass:
+
+{% highlight yaml %}
+field variables:
+  - favorite_fruit
+  - favorite_vegetable
+  - favorite_legume
+  - favorite_fungus
+{% endhighlight %}
+
+This will have the same effect.
+
+The `field variables` directive only works when your variable in the
+template has the same name as the variable in your interview, and when
+you do not need to perform any transformations on the variable before
+passing it to the template.
+
+For example, you can use `fields` to pass the following values to a
+template:
+
+{% highlight yaml %}
+fields:
+  letter_date: ${ today() }
+  subject_line: ${ subject_of_letter }
+  recipient_address: ${ recipient.address_block() }
+{% endhighlight %}
+
+Note that every value is a [Mako] variable reference.  You can achieve
+the same result with less punctuation by using the `field code`
+directive:
+
+{% highlight yaml %}
+field code:
+  letter_date: today()
+  subject_line: subject_of_letter
+  recipient_address: recipient.address_block()
+{% endhighlight %}
+
+There is an even more advanced way of passing values to a template:
+you can include a `code` directive containing [Python] code that
+evaluates to a [Python dict] in which the keys are the names of
+variables in the template, and the values are the values you want
+those variables to have.
+
+The `fields`, `field variables`, and `field code` directives can all
+be used together; they will supplement each other.
 
 Here is a variation on the PDF fill-in example above that uses `code`
-to supplement the values of the `fields`:
+to supplement the values of `fields`:
 
 {% include side-by-side.html demo="pdf-fill-code" %}
 
 Here is a variation on the .docx template example above that uses
-`code` to supplement the values of the `fields`:
+`code` to supplement the values of `fields`:
 
 {% include side-by-side.html demo="docx-template-code" %}
+
+### <a name="raw field variables"></a>Turning off automatic conversion of .docx variables
+
+Normally, all values that you transfer to a .docx template are
+converted so that they display appropriately in your .docx file.  For
+example, if the value is a [`DAFile`] graphics image, it will be
+converted so that it displays in the .docx file as an image.  Or, if
+the value contains [document markup] codes that indicate line breaks,
+these will display as actual line breaks in the .docx file, rather
+than as codes like `[BR]`.
+
+However, if your .docx file uses [Jinja2] templating to do complicated
+things like for loops, this conversion might cause problems.
+
+For example, suppose you have a variable `vegetable_list` that is
+defined as a [`DAList`] with items `['potatoes', 'beets']`, and you
+pass it to a .docx template as follows.
+
+{% highlight yaml %}
+event: document_shown
+question: |
+  Here are your instructions.
+attachment:
+  docx template file: instruction_template.docx
+  field variables:
+    - vegetable_list
+{% endhighlight %}
+
+This will work as intended if your template uses `vegetable_list` in a
+context like:
+
+{% highlight text %}
+make sure to bring {% raw %}{{ vegetable_list }}{% endraw %} to the party
+{% endhighlight %}
+
+This will result in:
+
+> make sure to bring potatoes and beets to the party
+
+When the [`DAList`] is converted, the [`.comma_and_list()`] method is
+automatically applied to make the data structure "presentable."
+
+However, suppose you wanted to write:
+
+{% highlight text %}
+{% raw %}{%p for vegetable in vegetable_list: %}
+Don't forget to bring {{ vegetable }}!
+{%p endfor %}{% endraw %}
+{% endhighlight %}
+
+In this case, since the variable `vegetable_list` has been converted
+into a literal piece of text, `potatoes and beets`, the `for` loop
+will loop over each character, not over each vegetable.  You will get:
+
+> Don't forget to bring p!
+> Don't forget to bring o!
+> Don't forget to bring t!
+> Don't forget to bring a!
+> Don't forget to bring t!
+
+and so on.
+
+You can prevent the conversion of `vegetable_list` into text by using `raw
+field variables` instead of `field variables`.  For example:
+
+{% highlight yaml %}
+event: document_shown
+question: |
+  Here are your instructions.
+attachment:
+  docx template file: instruction_template.docx
+  raw field variables:
+    - vegetable_list
+{% endhighlight %}
+
+Now, the `vegetable_list` variable in the .docx template will be a
+real list that [Jinja2] can process.  The output will be what you expected:
+
+> Don't forget to bring potatoes!
+> Don't forget to bring beets!
+
+The conversion to text is also done if you use `field code` or `code`
+to pass variables to a .docx template.  In order to pass variables in
+"raw" form using `field code` or `code`, you can wrap the code in the
+[`raw()`] function.  For more information, see the
+[documentation for the `raw()` function].
 
 ## <a name="list field names"></a>How to get a list of field names in a PDF or DOCX file
 
@@ -827,3 +968,7 @@ Including `allow emailing: False` will disable this:
 [package]: {{ site.baseurl }}/docs/packages.html
 [`docx reference file`]: #docx reference file
 [XeTeX]: https://en.wikipedia.org/wiki/XeTeX
+[document markup]: {{ site.baseurl }}/docs/documents.html#markup
+[documentation for the `raw()` function]: {{ site.baseurl }}/docs/functions.html#raw
+[`raw()`]: {{ site.baseurl }}/docs/functions.html#raw
+[`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
