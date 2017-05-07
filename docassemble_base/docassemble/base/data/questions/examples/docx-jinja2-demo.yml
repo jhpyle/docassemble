@@ -2,24 +2,24 @@ metadata:
   title: Fill fields in a DOCX template
   short title: DOCX
   documentation: "http://docassemble.org/docs/documents.html#docx template file"
-  example start: 10
-  example end: 10
+  example start: 8
+  example end: 8
 ---
-modules:
-  - docassemble.base.util
----
-objects:
-  user: Individual
-  adverse_party: Individual
+include:
+  - basic-questions.yml
 ---
 question: |
   Assembling a document from a .docx
   template
 subquestion: |
   This interview will fill fields in
-  a .docx template.  You can
+  a .docx template. You can
   [download the template] to see what
   it looks like.
+
+  This example demonstrates how to
+  use "for loops" in a .docx
+  template.
 
   [download the template]: ${ url_of('docx-jinja2-demo.docx') }
 field: introduction_shown
@@ -38,6 +38,10 @@ fields:
     datatype: checkboxes
     code: fruit_types
 ---
+question: |
+  Your children are ${ client.child }.
+field: show_children  
+---
 mandatory: true
 code: |
   introduction_shown
@@ -48,8 +52,8 @@ question: |
   Here is the document.
 attachment:
   docx template file: docx-jinja2-demo.docx
-  field variables:
+  raw field variables:
     - sky_is_blue
-  field code:
-    favorite_fruit: raw(favorite_fruit)
-    fruit_types: raw(fruit_types)
+    - client
+    - favorite_fruit
+    - fruit_types
