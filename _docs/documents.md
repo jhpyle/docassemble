@@ -192,8 +192,8 @@ In addition to using [Markdown] syntax, you can use
 **docassemble**-specific markup tags to control the appearance of
 documents.
 
-* `[INDENTATION]` - From now on, indent the first line of every paragraph.
-* `[NOINDENTATION]` - From now on, do not indent the first line of
+* `[START_INDENTATION]` - From now on, indent the first line of every paragraph.
+* `[STOP_INDENTATION]` - From now on, do not indent the first line of
   every paragraph.
 * <a name="twocol"></a>`[BEGIN_TWOCOL] First column text [BREAK] Second column text
   [END_TWOCOL]` - Puts text into two columns.
@@ -203,9 +203,12 @@ documents.
   that the paragraph should be flushed right and not indented.
 * <a name="center"></a>`[CENTER]` - Used at the beginning of a paragraph to indicate that
   the paragraph should be centered.
-* `[BOLDCENTER]` - Like `[CENTER]` except that text is bolded.
-* `[INDENTBY 1in]` - Used at the beginning of a paragraph to indicate
-  that all the lines paragraph should be indented on the left.  In
+* <a name="boldcenter"></a>`[BOLDCENTER]` - Like `[CENTER]` except that text is bolded.
+* <a name="noindent"></a>`[NOINDENT]` - Used at the beginning of a
+  paragraph to indicate that the first line of the paragraph should
+  not be indented.
+* <a name="indentby"></a>`[INDENTBY 1in]` - Used at the beginning of a paragraph to indicate
+  that all the lines of the paragraph should be indented on the left.  In
   this example, the amount of indentation is one inch.  You can
   express lengths using units of `in` for inches, `pt` for points, or
   `cm` for centimeters.
@@ -213,41 +216,51 @@ documents.
   indents both on the left and on the right.  In this example, the
   amount of left indentation is one inch and the amount of right
   indentation is half an inch.
-* `[BORDER]` - Used at the beginning of a paragraph to indicate that
+* <a name="border"></a>`[BORDER]` - Used at the beginning of a paragraph to indicate that
   the paragraph should have a box drawn around it.  (The border will
   only go around one paragraph; that is, the effect of `[BORDER]`
   lasts until the next empty line.  You can use `[NEWPAR]` in place of
   an empty line to extend the effect of the `[BORDER]` tag to
   another paragraph.)
-* `[SINGLESPACING]` - From now on, paragraphs should be single-spaced.
-* `[ONEANDAHALFSPACING]` - From now on, paragraphs should be
-  one-and-a-half-spaced.
-* `[DOUBLESPACING]` - From now on, paragraphs should be double-spaced.
-* `[NBSP]` - Insert a non-breaking space.
-* `[ENDASH]` - Normally, `--` produces an en-dash, but if you want to
+* <a name="singlespacing"></a>`[SINGLESPACING]` - From now on,
+  paragraphs should be single-spaced without indentation the first lines.
+* <a name="oneandahalfspacing"></a>`[ONEANDAHALFSPACING]` - From now on, paragraphs should be
+  one-and-a-half-spaced, with indentation of first lines.
+* <a name="doublespacing"></a>`[DOUBLESPACING]` - From now on,
+  paragraphs should be double-spaced, with indentation of first lines.
+* <a name="triplespacing"></a>`[TRIPLESPACING]` - From now on,
+  paragraphs should be triple-spaced, with indentation of first lines.
+* <a name="tightspacing"></a>`[TIGHTSPACING]` - This is like
+  `[SINGLESPACING]` except there is no spacing between paragraphs.
+* <a name="nbsp"></a>`[NBSP]` - Insert a non-breaking space.
+* <a name="endash"></a>`[ENDASH]` - Normally, `--` produces an en-dash, but if you want to
   be explicit, `[ENDASH]` will do the same thing.
-* `[EMDASH]` - Normally, `---` produces an em-dash, but if you want to
+* <a name="emdash"></a>`[EMDASH]` - Normally, `---` produces an em-dash, but if you want to
   be explicit, `[EMDASH]` will do the same thing.
-* `[HYPHEN]` - Insert a hyphen.  Normally, `---` produces an em-dash, but if you want to
+* <a name="hyphen"></a>`[HYPHEN]` - Insert a hyphen.  Normally, `---` produces an em-dash, but if you want to
   be explicit, `[HYPHEN]` will do the same thing.
-* `[PAGEBREAK]` - Insert a manual page break.
-* `[PAGENUM]` - Insert the current page number.
-* `[SECTIONNUM]` - Insert the current section number.
-* `[NEWPAR]` - Insert a paragraph break.  (Cannot be used within
+* <a name="pagebreak"></a>`[PAGEBREAK]` - Insert a manual page break.
+* <a name="pagenum"></a>`[PAGENUM]` - Insert the current page number.
+* <a name="sectionnum"></a>`[SECTIONNUM]` - Insert the current section number.
+* <a name="newpar"></a>`[NEWPAR]` - Insert a paragraph break.  (Cannot be used within
   `[FLUSHLEFT]`, `[FLUSHRIGHT]`, `[CENTER]`, or `[BOLDCENTER]` environments.)
-* `[SKIPLINE]` - Skip a line (insert vertical space).  This is
+* <a name="skipline"></a>`[SKIPLINE]` - Skip a line (insert vertical space).  This is
   different from `[NEWPAR]` because `[NEWPAR]` breaks a paragraph but
   multiple calls to `[NEWPAR]` will not insert additional vertical
   space.  (Cannot be used within `[FLUSHLEFT]`, `[FLUSHRIGHT]`,
   `[CENTER]`, or `[BOLDCENTER]` environments.)
-* `[BR]` - Insert a line break.  `[BR]` is useful to use with
+* <a name="br"></a>`[BR]` - Insert a line break.  `[BR]` is useful to use with
   environments like `[FLUSHLEFT]`, `[FLUSHRIGHT]`, `[CENTER]`, and
   `[BOLDCENTER]` that only apply to a single paragraph.  Within the
   `[BEGIN_TWOCOL]` environment, a standard [Markdown] paragraph break
   (pressing enter twice, i.e., leaving one blank line) has the same
   effect.
-* `[TAB]` - Insert a tab (horizontal space), e.g., to indent the first
+* <a name="tab"></a>`[TAB]` - Insert a tab (horizontal space), e.g., to indent the first
   line of a paragraph when it otherwise would not be indented.
+
+This interview demonstrates these features:
+
+{% include side-by-side.html demo="document-markup" %}
 
 ## <a name="pandoc"></a>Formatting documents with Pandoc templates and metadata
 
@@ -287,11 +300,14 @@ Metadata values can contain [Mako] template commands.
   * `date`
 * `toc` - default is not defined.  If defined, a table of contents is
   included.
-* `SingleSpacing` - set this to `True` for single spacing.
-* `OneAndAHalfSpacing` - set to `True` for 1.5 spacing.
-* `DoubleSpacing` - set this to `True` for double spacing.  Double spacing
-  is the default.
-* `TripleSpacing` - set this to `True` for triple spacing.
+* `SingleSpacing` - set this to `True` for single spacing and no
+  indentation of first lines of paragraphs.
+* `OneAndAHalfSpacing` - set to `True` for 1.5 spacing, with
+  indentation of first lines.
+* `DoubleSpacing` - set this to `True` for double spacing with
+  indentation of first lines.  This is the default.
+* `TripleSpacing` - set this to `True` for triple spacing with
+  indentation of first lines.
 * `fontsize` - default is `12pt`.  Must be one of `10pt`, `11pt`, and `12pt`.
 * `Indentation` - not defined by default.  By default, the first line
   of each paragraph is indented, unless `SingleSpacing` is set, in
@@ -313,7 +329,7 @@ Metadata values can contain [Mako] template commands.
   * `HeaderLeft`
   * `HeaderCenter`
   * `HeaderRight`
-  
+
 ## <a name="metadata pdf"></a>Metadata applicable to generated PDFs only
 
 The following metadata tags only apply to PDF file generation.  To

@@ -357,3 +357,8 @@ h4:hover > a.bookmark,
 h5:hover > a.bookmark {
     display: inline;
 }
+
+div.col-md-5 > figure > pre {
+    max-height: 650px;
+    overflow-y: auto;
+}

@@ -156,12 +156,11 @@ It has one method:
 * `caption()`: returns a case caption suitable for inclusion in a
 **docassemble** document.  If `pleading` is a `LegalFiling`, then
 including `pleading.caption()` will require the following:
-
-* `pleading.case`
-* `pleading.case.firstParty.gathered`
-* `pleading.case.secondParty.gathered`
-* `pleading.case.court.name`
-* `pleading.title`
+    * `pleading.case`
+    * `pleading.case.firstParty.gathered`
+    * `pleading.case.secondParty.gathered`
+    * `pleading.case.court.name`
+    * `pleading.title`
 
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
@@ -226,3 +225,5 @@ including `pleading.caption()` will require the following:
 [`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
 [`interview_url()`]: #interview_url
 [`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
+[`LegalFiling`]: #LegalFiling
+[`Case`]: #Case

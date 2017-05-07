@@ -145,9 +145,9 @@
   sets: provide_user_with_document
   attachment:
     - name: A hello world document
+      filename: Hello_World
       valid formats:
         - pdf
-      filename: Hello_World
       description: |
         A document with a classic message
       content: |
@@ -1008,10 +1008,91 @@
       content file: hello.md
   mandatory: True
 "document-language": "initial: True\ncode: |\n  set_language('es')\n---\nmandatory:\
-  \ True\nlanguage: es\nquestion: El documento est\xE1 listo.\nsets: provide_user_with_document\n\
-  attachment:\n  - name: Alimentos\n    language: en\n    filename: food_order\n \
-  \   content: |\n      This customer would like to order\n      ${ comma_and_list('fries',\
-  \ 'a Coke') }."
+  \ True\nlanguage: es\nquestion: El documento est\xE1 listo.\nattachment:\n  - name:\
+  \ Alimentos\n    language: en\n    filename: food_order\n    content: |\n      This\
+  \ customer would like to order\n      ${ comma_and_list('fries', 'a Coke') }."
+"document-language-docx": "initial: True\ncode: |\n  set_language('es')\n---\ncode:\
+  \ |\n  food_list = DAList(elements=['fries', 'a Coke'])\n---\nmandatory: True\n\
+  language: es\nquestion: El documento est\xE1 listo.\nattachment:\n  - name: Alimentos\n\
+  \    language: en\n    filename: food_order\n    docx template file: document-language.docx\n\
+  \    field variables:\n      - food_list"
+"document-markup": "mandatory: True\nquestion: Here is your document.\nattachment:\n\
+  \  name: A demonstration\n  filename: demo_document\n  description: |\n    This\
+  \ document demonstrates the\n    markup codes you can insert into\n    document\
+  \ text.\n  metadata:\n    FirstFooterLeft: |\n      First of [TOTALPAGES] pages\n\
+  \    HeaderLeft: |\n      Page [PAGENUM] of [TOTALPAGES]\n  content: |\n    [BOLDCENTER]\
+  \ Lorem Ipsum Dolor Sit Amet\n\n    [BEGIN_CAPTION]\n    Consectetur adipiscing\
+  \ elit.\n    \n    Integer nec ${ client_name } odio.\n\n    Praesent libero.\n\n\
+  \    [VERTICAL_LINE]\n\n    Sed cursus ante dapibus diam.\n\n    Sed nisi.\n   \
+  \ [END_CAPTION]\n\n    [CENTER] Nulla quis sem at\n    nibh elementum imperdiet.\n\
+  \n    Duis sagittis ipsum. Praesent\n    mauris. Fusce nec tellus sed\n    augue\
+  \ semper porta. Mauris massa.\n    Proin ut ligula vel nunc egestas\n    porttitor.\n\
+  \    \n    Vestibulum lacinia arcu eget nulla. \n    Class aptent taciti sociosqu\
+  \ ad\n    litora torquent per conubia nostra,\n    per inceptos himenaeos.\n   \
+  \ \n    Curabitur sodales\n    ligula in libero. Praesent\n    mauris. Fusce nec\
+  \ tellus sed\n    augue semper porta. Mauris massa.\n    Proin ut ligula vel nunc\
+  \ egestas\n    porttitor.\n\n    [FLUSHLEFT] Sed dignissim. [NEWLINE]\n    Lacinia\
+  \ nunc. [NEWLINE]\n    Curabitur tortor. [NEWLINE]\n    These lines are [NEWLINE]\n\
+  \    flushed left.\n\n    Pellentesque nibh.\n\n    [NOINDENT] Primis tacimates\
+  \ eos\n    in. Vel affert vituperata te, eos\n    te melius legimus temporibus.\
+  \ At\n    quaeque aliquando contentiones\n    his. First-line indentation is\n \
+  \   suppressed in this paragraph.\n    \n    [FILE stareps.eps]\n    \n    Unless\
+  \ a width is specified, images\n    will be displayed four inches wide.\n    Maecenas\
+  \ mattis. Sed convallis\n    tristique sem.\n\n    [FLUSHRIGHT] Proin ut ligula\n\
+  \    vel nunc egestas porttitor.\n    [NEWLINE]\n    Quisque volutpat condimentum\n\
+  \    velit. [NEWLINE]\n    We are flushed right.\n    \n    Morbi lectus risus,\
+  \ iaculis vel,\n    suscipit quis, luctus non, massa.\n    Time for a page break.\n\
+  \n    [PAGEBREAK]\n\n    Nulla facilisi. Ut fringilla.\n    Suspendisse potenti.\n\
+  \    \n    [INDENTBY 3in] Curabitur tortor.\n    Pellentesque nibh. Aenean quam.\n\
+  \    In scelerisque sem at dolor.\n    Maecenas mattis. Sed convallis\n    tristique\
+  \ sem. Proin ut ligula\n    vel nunc egestas porttitor. I\n    am indented by three\
+  \ inches.\n\n    [INDENTBY 1in 1in] Morbi lectus\n    risus, iaculis vel, suscipit\
+  \ quis,\n    luctus non, massa.  Fusce ac\n    turpis quis ligula lacinia\n    aliquet.\
+  \ Sed convallis tristique\n    sem. I am indented by one inch\n    on each side.\n\
+  \n    Now, let's put text in two columns\n    side by side.\n    \n    [BEGIN_TWOCOL]\n\
+  \n    This is the first column.\n    \n    Nulla facilisi.\n\n    Let's insert some\
+  \ vertical space.\n\n    [SKIPLINE]\n    Cras metus.\n\n    [BREAK]\n\n    This\
+  \ is the second column.\n    \n    Cras metus. Let's have some\n    vertical space\
+  \ again.\n\n    [SKIPLINE]\n\n    Integer id quam.\n\n    Morbi mi.\n\n    [END_TWOCOL]\n\
+  \n    \n    Quisque nisl felis, venenatis\n    tristique, dignissim in,\n    ultrices\
+  \ sit amet, augue.\n\n    [FLUSHLEFT] [FILE bluediamond.png, 0.5in]\n\n    Maecenas\
+  \ mattis. Sed convallis\n    tristique sem.\n    \n    [BORDER] Vestibulum ante\
+  \ ipsum\n    primis in faucibus orci luctus et\n    ultrices posuere cubilia\n \
+  \   Curae; [FILE bluediamond.png, 10pt]\n    Morbi lacinia molestie dui. \n\n  \
+  \  Here we see various types of dashes.\n    Praesent[HYPHEN]mauris.  Nulla \n \
+  \   quis [ENDASH] sem at nibh\n    elementum imperdiet.  Duis\n    sagittis[EMDASH]ipsum.\n\
+  \n    [BORDER] Class aptent\n    taciti sociosqu ad litora torquent\n    per conubia\
+  \ nostra, per inceptos \n    himenaeos.\n    [NEWPAR]\n    Curabitur sodales ligula\
+  \ in libero.\n    Sed dignissim lacinia nunc.\n    [NEWPAR]\n    You can include\
+  \ paragraph breaks \n    inside of a border.\n\n    Aenean quam. In scelerisque\
+  \ sem at \n    dolor. Maecenas mattis. Sed \n    convallis tristique sem.  Let us\
+  \ \n    now stop indenting the first line \n    of each paragraph.\n\n    [STOP_INDENTATION]\n\
+  \n    Duis sagittis ipsum. Praesent\n    mauris. Fusce nec tellus sed\n    augue\
+  \ semper porta. Mauris massa.\n    Proin ut ligula vel nunc egestas\n    porttitor.\n\
+  \n    Praesent mauris. Fusce nec tellus sed\n    augue semper porta. \n\n    [TAB]\
+  \ Even though we are no longer\n    indenting the first line of each \n    paragraph\
+  \ automatically, we can \n    still indent manually.\n    \n    Vestibulum lacinia\
+  \ arcu eget nulla. \n    Class aptent taciti sociosqu ad\n    litora torquent per\
+  \ conubia nostra,\n    per inceptos himenaeos.  Let us go back \n    to indenting\
+  \ the first line of each \n    paragraph.  \n\n    [START_INDENTATION]\n\n    Duis\
+  \ sagittis ipsum. Praesent mauris. \n    Fusce nec tellus sed augue semper \n  \
+  \  porta. Mauris massa.  Proin ut \n    ligula vel nunc egestas porttitor.\n   \
+  \ \n    Vestibulum lacinia arcu eget nulla. \n    Class aptent taciti sociosqu ad\n\
+  \    litora torquent per conubia nostra,\n    per inceptos himenaeos.  Let's try\n\
+  \    single spacing now.\n\n    [SINGLESPACING]\n\n    Ullum primis scripserit ne\
+  \ vis, ad eam\n    quem dictas dissentias. Alia\n    scripserit vel cu, choro delicata\n\
+  \    dissentiunt mel no, reque persequeris\n    mei an. Paulo graeci ex eos, no\
+  \ usu\n    dicit inimicus. In putant ornatus\n    forensibus cum, percipit mediocrem\n\
+  \    in vel.\n\n    Alii timeam eos ut, habeo oblique\n    ocurreret ei sea. Quis\
+  \ utroque\n    definiebas et per, ad sumo\n    repudiandae eam, pro no sale\n  \
+  \  adolescens. Habeo splendide\n    evertitur has eu, in has vocent\n    signiferumque.\
+  \ Ex qui homero graeci\n    quaerendum, nulla veniam blandit\n    ei mea. Sea at\
+  \ idque referrentur.\n    Sit autem liberavisse te.  Let's \n    go back to double\
+  \ spacing now.\n\n    [DOUBLESPACING]\n\n    Sea ad tacimates elaboraret, \n   \
+  \ vel simul urbanitas efficiantur id. \n    Id mel option denique. Ludus essent\n\
+  \    eu ius, natum option appareat cu mea, \n    in saepe deterruisset pri. Mei\
+  \ et vero \n    admodum. At quas pertinax sed, et mel \n    modo probo iriure. Per\
+  \ te sententiae \n    elaboraret. Cum tritani delectus \n    definitionem ne."
 "document-variable-name": |-
   question: Your document is ready.
   subquestion: |
@@ -1029,6 +1110,7 @@
     sent_ok = send_email(to=[authority],
                          template=my_email,
                          attachments=[hello_file])
+"docx-jinja2-demo": ""
 "docx-template": |-
   mandatory: True
   question: |
@@ -1038,7 +1120,7 @@
     filename: letter
     docx template file: letter_template.docx
     fields:
-      "letter_date": ${ format_date(today()) }
+      "letter_date": ${ today() }
       "phone_number": 202-555-1234
       "subject_matter": ${ subject_matter }
       "address_block": ${ adverse_party.address_block() }
@@ -1060,6 +1142,10 @@
       "signature": ${ user.signature }
     code: |
       dict(full_name=user.name.full())
+"docx-template-field-variables": |-
+  mandatory: true
+  code: |
+    introduction_shown
 "doors": |-
   question: |
     Which door do you choose?
@@ -4871,6 +4957,9 @@
   question: |
     Today's date is ${ today() }.
   mandatory: True
+"twocol": |-
+  modules:
+    - docassemble.base.util
 "under": |-
   question: |
     What is the airspeed velocity of an
