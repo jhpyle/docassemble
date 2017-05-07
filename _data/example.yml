@@ -1021,7 +1021,7 @@
   \ document demonstrates the\n    markup codes you can insert into\n    document\
   \ text.\n  metadata:\n    FirstFooterLeft: |\n      First of [TOTALPAGES] pages\n\
   \    HeaderLeft: |\n      Page [PAGENUM] of [TOTALPAGES]\n  content: |\n    [BOLDCENTER]\
-  \ Lorem Ipsum Dolor Sit Amet\n\n    [BEGIN_CAPTION]\n    Consectetur adipiscing\
+  \ Lorem Ipsum Dolor Sit\n    Amet\n\n    [BEGIN_CAPTION]\n    Consectetur adipiscing\
   \ elit.\n    \n    Integer nec ${ client_name } odio.\n\n    Praesent libero.\n\n\
   \    [VERTICAL_LINE]\n\n    Sed cursus ante dapibus diam.\n\n    Sed nisi.\n   \
   \ [END_CAPTION]\n\n    [CENTER] Nulla quis sem at\n    nibh elementum imperdiet.\n\
@@ -1073,8 +1073,8 @@
   \ Even though we are no longer\n    indenting the first line of each \n    paragraph\
   \ automatically, we can \n    still indent manually.\n    \n    Vestibulum lacinia\
   \ arcu eget nulla. \n    Class aptent taciti sociosqu ad\n    litora torquent per\
-  \ conubia nostra,\n    per inceptos himenaeos.  Let us go back \n    to indenting\
-  \ the first line of each \n    paragraph.  \n\n    [START_INDENTATION]\n\n    Duis\
+  \ conubia nostra,\n    per inceptos himenaeos.  Let us go\n    back to indenting\
+  \ the first line\n    of each paragraph.  \n\n    [START_INDENTATION]\n\n    Duis\
   \ sagittis ipsum. Praesent mauris. \n    Fusce nec tellus sed augue semper \n  \
   \  porta. Mauris massa.  Proin ut \n    ligula vel nunc egestas porttitor.\n   \
   \ \n    Vestibulum lacinia arcu eget nulla. \n    Class aptent taciti sociosqu ad\n\
@@ -1110,7 +1110,17 @@
     sent_ok = send_email(to=[authority],
                          template=my_email,
                          attachments=[hello_file])
-"docx-jinja2-demo": ""
+"docx-jinja2-demo": |-
+  event: document_shown
+  question: |
+    Here is the document.
+  attachment:
+    docx template file: docx-jinja2-demo.docx
+    raw field variables:
+      - sky_is_blue
+      - client
+      - favorite_fruit
+      - fruit_types
 "docx-template": |-
   mandatory: True
   question: |
