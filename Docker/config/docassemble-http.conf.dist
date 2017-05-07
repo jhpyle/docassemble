@@ -7,17 +7,17 @@
     <IfModule mod_ssl.c>
         RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
     </IfModule>
-    RewriteCond %{REQUEST_URI}     ^/ws/socket.io         [NC]
+    RewriteCond %{REQUEST_URI}     ^{{POSTURLROOT}}ws/socket.io         [NC]
     RewriteCond %{QUERY_STRING}    transport=websocket    [NC]
-    RewriteRule /ws/(.*)           ws://127.0.0.1:5000/$1 [P,L]
-    ProxyPass /ws/ http://127.0.0.1:5000/
-    ProxyPassReverse /ws/ http://127.0.0.1:5000/
+    RewriteRule {{POSTURLROOT}}ws/(.*)           ws://127.0.0.1:5000/$1 [P,L]
+    ProxyPass {{POSTURLROOT}}ws/ http://127.0.0.1:5000/
+    ProxyPassReverse {{POSTURLROOT}}ws/ http://127.0.0.1:5000/
     <IfModule !mod_ssl.c>
         XSendFile on
         XSendFilePath /usr
         XSendFilePath /tmp
         WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
-        WSGIScriptAlias / /usr/share/docassemble/webapp/docassemble.wsgi
+        WSGIScriptAlias {{WSGIROOT}} /usr/share/docassemble/webapp/docassemble.wsgi
         <Directory /usr/share/docassemble/webapp>
             WSGIProcessGroup docassemble.webserver
             WSGIApplicationGroup %{GLOBAL}

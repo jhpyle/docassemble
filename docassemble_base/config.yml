@@ -1,5 +1,4 @@
-url root: http://localhost
-exitpage: /
+exitpage: https://docassemble.org
 db:
   prefix: postgresql+psycopg2://
   name: docassemble
@@ -53,5 +52,12 @@ azure:
   account key: 1TGSCr2P2uSw9/CLoucfNIAEFcqakAC7kiVwJsKLX65X3yugWwnNFRgQRfRHtenGVcc5KujusYUNnXXGXruDCA==
   container: yourcontainername
 ec2: False
+log server: Null
+use https: False
+use lets encrypt: False
+lets encrypt email: Null
+behind https load balancer: False
+url root: http://localhost
+external hostname: Null
 words:
   - docassemble.base:data/sources/us-words.yml

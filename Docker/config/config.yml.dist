@@ -1,6 +1,5 @@
 debug: False
-url root: {{URLROOT}}
-exitpage: /
+exitpage: http://docassemble.org
 db:
   prefix: {{DBPREFIX}}
   name: {{DBNAME}}
@@ -60,6 +59,8 @@ use https: {{USEHTTPS}}
 use lets encrypt: {{USELETSENCRYPT}}
 lets encrypt email: {{LETSENCRYPTEMAIL}}
 behind https load balancer: {{BEHINDHTTPSLOADBALANCER}}
+url root: {{URLROOT}}
 external hostname: {{DAHOSTNAME}}
+root: {{POSTURLROOT}}
 words:
   - docassemble.base:data/sources/us-words.yml

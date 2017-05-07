@@ -102,4 +102,10 @@ if __name__ == "__main__":
         print('export LETSENCRYPTEMAIL="' + str(daconfig['lets encrypt email']) + '"')
     if 'external hostname' in daconfig and daconfig['external hostname'] is not None:
         print('export DAHOSTNAME="' + str(daconfig['external hostname']) + '"')
+    if 'root' in daconfig and daconfig['root'] is not None:
+        print('export POSTURLROOT="' + str(daconfig['root']) + '"')
+        print('export WSGIROOT="' + str(re.sub(r'^(.+)/$', r'\1', daconfig['root'])) + '"')
+    else:
+        print('export POSTURLROOT="/"')
+        print('export WSGIROOT="/"')
     sys.exit(0)

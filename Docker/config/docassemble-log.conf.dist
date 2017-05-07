@@ -3,10 +3,10 @@
     #ServerName {{DAHOSTNAME}}
     DocumentRoot "/var/www/html/log"
     <Directory "/var/www/html/log">
-        DirectoryIndex /cgi-bin/index.sh
+        DirectoryIndex {{POSTURLROOT}}cgi-bin/index.sh
         Require all granted
     </Directory>
-    ScriptAlias "/cgi-bin/" "/usr/lib/cgi-bin/"
+    ScriptAlias "{{POSTURLROOT}}cgi-bin/" "/usr/lib/cgi-bin/"
     <Directory "/usr/lib/cgi-bin/">
         Options +ExecCGI
     </Directory>
