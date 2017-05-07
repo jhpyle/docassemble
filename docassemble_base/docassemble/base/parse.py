@@ -16,7 +16,7 @@ import random
 import tempfile
 import docassemble.base.filter
 import docassemble.base.pdftk
-import docassemble.base.docxfile
+import docassemble.base.file_docx
 from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute
 import docassemble.base.functions
 from docassemble.base.functions import pickleable_objects, word, get_language, server, RawValue
@@ -441,7 +441,7 @@ def recursive_eval_textobject(target, user_dict, question, tpl):
         return target
     if type(target) is TextObject:
         text = target.text(user_dict)
-        return docassemble.base.docxfile.transform_for_docx(text, question, tpl)
+        return docassemble.base.file_docx.transform_for_docx(text, question, tpl)
     else:
         raise DAError("Expected a TextObject, but found a " + str(type(target)))
 
@@ -2170,7 +2170,7 @@ class Question:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
                     if doc_format == 'docx':
-                        result['template'] = docassemble.base.docxfile.DocxTemplate(attachment['options']['docx_template_file'])
+                        result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'])
                         result['field_data'] = recursive_eval_textobject(attachment['options']['fields'], user_dict, self, result['template'])
                         if 'code' in attachment['options']:
                             additional_dict = eval(attachment['options']['code'], user_dict)
@@ -2179,7 +2179,7 @@ class Question:
                                     if type(val) is RawValue:
                                         result['field_data'][key] = val.value
                                     else:
-                                        result['field_data'][key] = docassemble.base.docxfile.transform_for_docx(val, self, result['template'])
+                                        result['field_data'][key] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
                             else:
                                 raise DAError("code in an attachment returned something other than a dictionary")
                         if 'raw code dict' in attachment['options']:
@@ -2191,7 +2191,7 @@ class Question:
                                 if type(val) is RawValue:
                                     result['field_data'][varname] = val.value
                                 else:
-                                    result['field_data'][varname] = docassemble.base.docxfile.transform_for_docx(val, self, result['template'])
+                                    result['field_data'][varname] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
                 elif doc_format == 'pdf' and 'fields' in attachment['options'] and 'pdf_template_file' in attachment['options']:
                     result['data_strings'] = []
                     result['images'] = []

@@ -5,6 +5,24 @@
                      '(("$if(documentclass)$$documentclass$$else$article$endif$" "$if(fontsize)$$fontsize$$else$12pt$endif$" "$if(lang)$$lang$" "$endif$$if(papersize)$$papersize$$else$letterpaper$endif$$for(classoption)$" "$classoption$$sep$$endfor$")))
    (TeX-add-to-alist 'LaTeX-provided-package-options
                      '(("fontenc" "T1") ("inputenc" "utf8") ("geometry" "$for(geometry)$$geometry$$sep$" "$endfor$" "left=1in" "right=1in" "top=1in" "bottom=1in" "heightrounded") ("hyperref" "setpagesize=false" "unicode=false" "xetex" "unicode=true") ("ulem" "normalem") ("bidi" "RTLdocument") ("babel" "$lang$")))
+   (add-to-list 'LaTeX-verbatim-environments-local "lstlisting")
+   (add-to-list 'LaTeX-verbatim-environments-local "VerbatimOut")
+   (add-to-list 'LaTeX-verbatim-environments-local "SaveVerbatim")
+   (add-to-list 'LaTeX-verbatim-environments-local "LVerbatim")
+   (add-to-list 'LaTeX-verbatim-environments-local "BVerbatim")
+   (add-to-list 'LaTeX-verbatim-environments-local "Verbatim")
+   (add-to-list 'LaTeX-verbatim-environments-local "code")
+   (add-to-list 'LaTeX-verbatim-macros-with-braces-local "url")
+   (add-to-list 'LaTeX-verbatim-macros-with-braces-local "path")
+   (add-to-list 'LaTeX-verbatim-macros-with-braces-local "lstinline")
+   (add-to-list 'LaTeX-verbatim-macros-with-braces-local "Verb")
+   (add-to-list 'LaTeX-verbatim-macros-with-braces-local "hyperref")
+   (add-to-list 'LaTeX-verbatim-macros-with-braces-local "hyperimage")
+   (add-to-list 'LaTeX-verbatim-macros-with-braces-local "hyperbaseurl")
+   (add-to-list 'LaTeX-verbatim-macros-with-braces-local "nolinkurl")
+   (add-to-list 'LaTeX-verbatim-macros-with-delims-local "path")
+   (add-to-list 'LaTeX-verbatim-macros-with-delims-local "lstinline")
+   (add-to-list 'LaTeX-verbatim-macros-with-delims-local "Verb")
    (TeX-run-style-hooks
     "latex2e"
     "$if(documentclass)$$documentclass$$else$article$endif$"
@@ -27,6 +45,8 @@
     "fontspec"
     "upquote"
     "microtype"
+    "graphicx"
+    "epstopdf"
     "calc"
     "geometry"
     "natbib"
@@ -35,7 +55,6 @@
     "fancyvrb"
     "longtable"
     "booktabs"
-    "graphicx"
     "hyperref"
     "ulem"
     "bidi"
@@ -51,6 +70,7 @@
     "oldparagraph"
     "oldsubparagraph")
    (LaTeX-add-environments
+    '("code")
     "RTL"
     "LTR")
    (LaTeX-add-bibliographies
@@ -67,5 +87,6 @@
     "backup"
     "myindentamount")
    (LaTeX-add-saveboxes
-    "headerbox")))
+    "headerbox"))
+ :latex)
 

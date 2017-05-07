@@ -976,7 +976,7 @@ def as_html(status, url_for, debug, root, validation_rules):
                     show_markdown = False
             else:
                 show_markdown = False
-            logmessage("markdown is " + str(attachment['markdown']))
+            #logmessage("markdown is " + str(attachment['markdown']))
             if 'pdf' in attachment['valid_formats'] or 'rtf' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or (debug and 'tex' in attachment['valid_formats']) or '*' in attachment['valid_formats']:
                 show_download = True
             else:

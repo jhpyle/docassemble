@@ -88,27 +88,40 @@ class MyPandoc(object):
         temp_file.close()
         temp_outfile = tempfile.NamedTemporaryFile(mode="wb", suffix="." + str(self.output_format), delete=False)
         temp_outfile.close()
-        subprocess_arguments = [PANDOC_PATH, '--smart']
+        current_temp_dir = 'epsconv'
+        latex_conversion_directory = os.path.join(tempfile.gettempdir(), 'latex_convert')
+        if not os.path.isdir(latex_conversion_directory):
+            os.makedirs(latex_conversion_directory)
+        if not os.path.isdir(latex_conversion_directory):
+            raise Exception("Could not create latex conversion directory")
+        subprocess_arguments = [PANDOC_PATH, '--smart', '-M', 'latextmpdir=' + os.path.join('latex_convert', '')]
         if len(yaml_to_use) > 0:
             subprocess_arguments.extend(yaml_to_use)
-        subprocess_arguments.extend([temp_file.name])
         if self.template_file is not None:
             subprocess_arguments.extend(['--template=%s' % self.template_file])
         if self.reference_file is not None:
             subprocess_arguments.extend(['--reference-docx=%s' % self.reference_file])
-        subprocess_arguments.extend(['-s -o %s' % temp_outfile.name])
+        subprocess_arguments.extend(['-s', '-o', temp_outfile.name])
+        subprocess_arguments.extend([temp_file.name])
         subprocess_arguments.extend(self.arguments)
-        cmd = " ".join(subprocess_arguments)
+        #logmessage("Arguments are " + str(subprocess_arguments))
+        try:
+            msg = subprocess.check_output(subprocess_arguments, cwd=tempfile.gettempdir(), stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as err:
+            raise Exception("Failed to assemble PDF file: " + str(err.output))
+        #cmd = " ".join(subprocess_arguments)
         #logmessage(cmd)
-        fin = os.popen(cmd)
-        msg = fin.read()
-        fin.close()
+        #fin = os.popen(cmd)
+        #msg = fin.read()
+        #fin.close()
         if msg:
             self.pandoc_message = msg
         os.remove(temp_file.name)
         if os.path.exists(temp_outfile.name):
             if self.output_format == 'rtf':
                 with open(temp_outfile.name) as the_file: file_contents = the_file.read()
+                # with open('/tmp/asdf.rtf', 'w') as deb_file:
+                #     deb_file.write(file_contents)
                 file_contents = docassemble.base.filter.rtf_filter(file_contents, metadata=metadata_as_dict, styles=get_rtf_styles(self.template_file), question=question)
                 with open(temp_outfile.name, "wb") as the_file: the_file.write(file_contents)
             if self.output_filename is not None:
@@ -120,15 +133,22 @@ class MyPandoc(object):
             raise IOError("Failed creating file: %s" % output_filename)
         return
     def convert(self, question):
+        latex_conversion_directory = os.path.join(tempfile.gettempdir(), 'latex_convert')
+        if not os.path.isdir(latex_conversion_directory):
+            os.makedirs(latex_conversion_directory)
+        if not os.path.isdir(latex_conversion_directory):
+            raise Exception("Could not create latex conversion directory")
         if (self.output_format == "pdf" or self.output_format == "tex" or self.output_format == "rtf" or self.output_format == "epub" or self.output_format == "docx"):
             self.convert_to_file(question)
         else:
-            subprocess_arguments = [PANDOC_PATH, '--smart', '--from=%s' % self.input_format, '--to=%s' % self.output_format]
+            subprocess_arguments = [PANDOC_PATH, '--smart', '-M', 'latextmpdir=' + os.path.join('latex_convert', ''), '--from=%s' % self.input_format, '--to=%s' % self.output_format]
             subprocess_arguments.extend(self.arguments)
+            #logmessage("Arguments are " + str(subprocess_arguments))
             p = subprocess.Popen(
                 subprocess_arguments,
                 stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE
+                stdout=subprocess.PIPE,
+                cwd=tempfile.gettempdir()
             )
             self.output_filename = None
             

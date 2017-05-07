@@ -95,6 +95,9 @@ $endif$
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 % use microtype if available
 \IfFileExists{microtype.sty}{\usepackage{microtype}}{}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\epstopdfsetup{outdir=$latextmpdir$}
 \usepackage{calc}
 $if(geometry)$
 \usepackage[$for(geometry)$$geometry$$sep$,$endfor$]{geometry}
@@ -411,19 +414,19 @@ $endif$
 \normalfont
 \ifthenelse{\lengthtest{\backup<0pt}}{\addtolength{\backup}{-2\baselineskip}\vspace*{\backup}\par}{}
 
-$if(SingleSpacing)$
-\setlength{\parskip}{\myfontsize}
-$else$
-\doublespacing
-\setlength{\parindent}{0.5in}
-\setlength{\RaggedRightParindent}{\parindent}
-$endif$
-
 \newlength{\myindentamount}
 $if(IndentationAmount)$
 \setlength{\myindentamount}{$IndentationAmount$}
 $else$
 \setlength{\myindentamount}{0.5in}
+$endif$
+
+$if(SingleSpacing)$
+\setlength{\parskip}{\myfontsize}
+$else$
+\doublespacing
+\setlength{\parindent}{\myindentamount}
+\setlength{\RaggedRightParindent}{\parindent}
 $endif$
 
 $if(Indentation)$

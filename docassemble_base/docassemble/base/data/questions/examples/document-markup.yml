@@ -1,0 +1,254 @@
+metadata:
+  title: Document formatting
+  documentation: "http://docassemble.org/docs/documents.html#markup"
+  example start: 2
+  example end: 2
+---
+code: |
+  client_name = "Jane Doe"
+---
+mandatory: True
+question: Here is your document.
+attachment:
+  name: A demonstration
+  filename: demo_document
+  description: |
+    This document demonstrates the
+    markup codes you can insert into
+    document text.
+  metadata:
+    FirstFooterLeft: |
+      First of [TOTALPAGES] pages
+    HeaderLeft: |
+      Page [PAGENUM] of [TOTALPAGES]
+  content: |
+    [BOLDCENTER] Lorem Ipsum Dolor Sit
+    Amet
+
+    [BEGIN_CAPTION]
+    Consectetur adipiscing elit.
+    
+    Integer nec ${ client_name } odio.
+
+    Praesent libero.
+
+    [VERTICAL_LINE]
+
+    Sed cursus ante dapibus diam.
+
+    Sed nisi.
+    [END_CAPTION]
+
+    [CENTER] Nulla quis sem at
+    nibh elementum imperdiet.
+
+    Duis sagittis ipsum. Praesent
+    mauris. Fusce nec tellus sed
+    augue semper porta. Mauris massa.
+    Proin ut ligula vel nunc egestas
+    porttitor.
+    
+    Vestibulum lacinia arcu eget nulla. 
+    Class aptent taciti sociosqu ad
+    litora torquent per conubia nostra,
+    per inceptos himenaeos.
+    
+    Curabitur sodales
+    ligula in libero. Praesent
+    mauris. Fusce nec tellus sed
+    augue semper porta. Mauris massa.
+    Proin ut ligula vel nunc egestas
+    porttitor.
+
+    [FLUSHLEFT] Sed dignissim. [NEWLINE]
+    Lacinia nunc. [NEWLINE]
+    Curabitur tortor. [NEWLINE]
+    These lines are [NEWLINE]
+    flushed left.
+
+    Pellentesque nibh.
+
+    [NOINDENT] Primis tacimates eos
+    in. Vel affert vituperata te, eos
+    te melius legimus temporibus. At
+    quaeque aliquando contentiones
+    his. First-line indentation is
+    suppressed in this paragraph.
+    
+    [FILE stareps.eps]
+    
+    Unless a width is specified, images
+    will be displayed four inches wide.
+    Maecenas mattis. Sed convallis
+    tristique sem.
+
+    [FLUSHRIGHT] Proin ut ligula
+    vel nunc egestas porttitor.
+    [NEWLINE]
+    Quisque volutpat condimentum
+    velit. [NEWLINE]
+    We are flushed right.
+    
+    Morbi lectus risus, iaculis vel,
+    suscipit quis, luctus non, massa.
+    Time for a page break.
+
+    [PAGEBREAK]
+
+    Nulla facilisi. Ut fringilla.
+    Suspendisse potenti.
+    
+    [INDENTBY 3in] Curabitur tortor.
+    Pellentesque nibh. Aenean quam.
+    In scelerisque sem at dolor.
+    Maecenas mattis. Sed convallis
+    tristique sem. Proin ut ligula
+    vel nunc egestas porttitor. I
+    am indented by three inches.
+
+    [INDENTBY 1in 1in] Morbi lectus
+    risus, iaculis vel, suscipit quis,
+    luctus non, massa.  Fusce ac
+    turpis quis ligula lacinia
+    aliquet. Sed convallis tristique
+    sem. I am indented by one inch
+    on each side.
+
+    Now, let's put text in two columns
+    side by side.
+    
+    [BEGIN_TWOCOL]
+
+    This is the first column.
+    
+    Nulla facilisi.
+
+    Let's insert some vertical space.
+
+    [SKIPLINE]
+    Cras metus.
+
+    [BREAK]
+
+    This is the second column.
+    
+    Cras metus. Let's have some
+    vertical space again.
+
+    [SKIPLINE]
+
+    Integer id quam.
+
+    Morbi mi.
+
+    [END_TWOCOL]
+
+    
+    Quisque nisl felis, venenatis
+    tristique, dignissim in,
+    ultrices sit amet, augue.
+
+    [FLUSHLEFT] [FILE bluediamond.png, 0.5in]
+
+    Maecenas mattis. Sed convallis
+    tristique sem.
+    
+    [BORDER] Vestibulum ante ipsum
+    primis in faucibus orci luctus et
+    ultrices posuere cubilia
+    Curae; [FILE bluediamond.png, 10pt]
+    Morbi lacinia molestie dui. 
+
+    Here we see various types of dashes.
+    Praesent[HYPHEN]mauris.  Nulla 
+    quis [ENDASH] sem at nibh
+    elementum imperdiet.  Duis
+    sagittis[EMDASH]ipsum.
+
+    [BORDER] Class aptent
+    taciti sociosqu ad litora torquent
+    per conubia nostra, per inceptos 
+    himenaeos.
+    [NEWPAR]
+    Curabitur sodales ligula in libero.
+    Sed dignissim lacinia nunc.
+    [NEWPAR]
+    You can include paragraph breaks 
+    inside of a border.
+
+    Aenean quam. In scelerisque sem at 
+    dolor. Maecenas mattis. Sed 
+    convallis tristique sem.  Let us 
+    now stop indenting the first line 
+    of each paragraph.
+
+    [STOP_INDENTATION]
+
+    Duis sagittis ipsum. Praesent
+    mauris. Fusce nec tellus sed
+    augue semper porta. Mauris massa.
+    Proin ut ligula vel nunc egestas
+    porttitor.
+
+    Praesent mauris. Fusce nec tellus sed
+    augue semper porta. 
+
+    [TAB] Even though we are no longer
+    indenting the first line of each 
+    paragraph automatically, we can 
+    still indent manually.
+    
+    Vestibulum lacinia arcu eget nulla. 
+    Class aptent taciti sociosqu ad
+    litora torquent per conubia nostra,
+    per inceptos himenaeos.  Let us go
+    back to indenting the first line
+    of each paragraph.  
+
+    [START_INDENTATION]
+
+    Duis sagittis ipsum. Praesent mauris. 
+    Fusce nec tellus sed augue semper 
+    porta. Mauris massa.  Proin ut 
+    ligula vel nunc egestas porttitor.
+    
+    Vestibulum lacinia arcu eget nulla. 
+    Class aptent taciti sociosqu ad
+    litora torquent per conubia nostra,
+    per inceptos himenaeos.  Let's try
+    single spacing now.
+
+    [SINGLESPACING]
+
+    Ullum primis scripserit ne vis, ad eam
+    quem dictas dissentias. Alia
+    scripserit vel cu, choro delicata
+    dissentiunt mel no, reque persequeris
+    mei an. Paulo graeci ex eos, no usu
+    dicit inimicus. In putant ornatus
+    forensibus cum, percipit mediocrem
+    in vel.
+
+    Alii timeam eos ut, habeo oblique
+    ocurreret ei sea. Quis utroque
+    definiebas et per, ad sumo
+    repudiandae eam, pro no sale
+    adolescens. Habeo splendide
+    evertitur has eu, in has vocent
+    signiferumque. Ex qui homero graeci
+    quaerendum, nulla veniam blandit
+    ei mea. Sea at idque referrentur.
+    Sit autem liberavisse te.  Let's 
+    go back to double spacing now.
+
+    [DOUBLESPACING]
+
+    Sea ad tacimates elaboraret, 
+    vel simul urbanitas efficiantur id. 
+    Id mel option denique. Ludus essent
+    eu ius, natum option appareat cu mea, 
+    in saepe deterruisset pri. Mei et vero 
+    admodum. At quas pertinax sed, et mel 
+    modo probo iriure. Per te sententiae 
+    elaboraret. Cum tritani delectus 
+    definitionem ne.

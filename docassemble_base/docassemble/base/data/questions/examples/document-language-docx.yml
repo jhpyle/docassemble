@@ -2,7 +2,7 @@ metadata:
   title: Language
   documentation: "http://docassemble.org/docs/documents.html#language"
   example start: 2
-  example end: 3
+  example end: 4
 ---
 modules:
   - docassemble.base.util
@@ -11,6 +11,9 @@ initial: True
 code: |
   set_language('es')
 ---
+code: |
+  food_list = DAList(elements=['fries', 'a Coke'])
+---
 mandatory: True
 language: es
 question: El documento está listo.
@@ -18,7 +21,7 @@ attachment:
   - name: Alimentos
     language: en
     filename: food_order
-    content: |
-      This customer would like to order
-      ${ comma_and_list('fries', 'a Coke') }.
+    docx template file: document-language.docx
+    field variables:
+      - food_list
 
