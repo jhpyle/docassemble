@@ -244,7 +244,7 @@ DEFAULT_SECRET=$(python -m docassemble.base.generate_key)
 # echo "15"
 
 if [ ! -f $DA_CONFIG_FILE ]; then
-    sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2://}"'@' \
+    sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2:\/\/}"'@' \
 	-e 's/{{DBNAME}}/'"${DBNAME:-docassemble}"'/' \
 	-e 's/{{DBUSER}}/'"${DBUSER:-docassemble}"'/' \
 	-e 's/{{DBPASSWORD}}/'"${DBPASSWORD:-abc123}"'/' \
@@ -271,7 +271,7 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{LOCALE}}/'"${LOCALE:-null}"'/' \
 	-e 's/{{DASECRETKEY}}/'"${DEFAULT_SECRET}"'/' \
 	-e 's@{{URLROOT}}@'"${URLROOT:-null}"'@' \
-	-e 's@{{POSTURLROOT}}@'"${POSTURLROOT:-/}"'@' \
+	-e 's@{{POSTURLROOT}}@'"${POSTURLROOT:-null}"'@' \
 	-e 's/{{BEHINDHTTPSLOADBALANCER}}/'"${BEHINDHTTPSLOADBALANCER:-false}"'/' \
 	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
 fi
@@ -333,29 +333,29 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     a2dissite -q default-ssl &> /dev/null
     if [ "${DAHOSTNAME:-none}" != "none" ]; then
 	if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ] || [ "${USELETSENCRYPT:-none}" == "none" ] || [ "${USEHTTPS:-false}" == "false" ]; then
-	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/g' \
-		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@g' \
-		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@g' \
+	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
+		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@' \
+		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@' \
 		/usr/share/docassemble/config/docassemble-ssl.conf.dist > /etc/apache2/sites-available/docassemble-ssl.conf || exit 1
 	    rm -f /etc/letsencrypt/da_using_lets_encrypt
 	fi
 	if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ] || [ "${USELETSENCRYPT:-none}" == "none" ] || [ "${USEHTTPS:-false}" == "false" ]; then
-	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/g' \
-		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@g' \
-		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@g' \
+	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
+		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@' \
+		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@' \
 		/usr/share/docassemble/config/docassemble-http.conf.dist > /etc/apache2/sites-available/docassemble-http.conf || exit 1
 	    rm -f /etc/letsencrypt/da_using_lets_encrypt
 	fi
 	if [ ! -f /etc/apache2/sites-available/docassemble-log.conf ]; then
-	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/g' \
-		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@g' \
-		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@g' \
+	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
+		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@' \
+		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@' \
 		/usr/share/docassemble/config/docassemble-log.conf.dist > /etc/apache2/sites-available/docassemble-log.conf || exit 1
 	fi
 	if [ ! -f /etc/apache2/sites-available/docassemble-redirect.conf ]; then
-	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/g' \
-		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@g' \
-		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@g' \
+	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
+		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@' \
+		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@' \
 		/usr/share/docassemble/config/docassemble-redirect.conf.dist > /etc/apache2/sites-available/docassemble-redirect.conf || exit 1
 	fi
     else
