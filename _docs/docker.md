@@ -318,6 +318,12 @@ You can set the following configuration options:
   https://docassemble.example.com, set `URLROOT` to
   `https://docassemble.example.com`.  See the [`url root`]
   configuration directive.
+* <a name="POSTURLROOT"></a>`POSTURLROOT`: If users access
+  **docassemble** at https://docassemble.example.com/da, set `URLROOT`
+  to `/da/`.  The trailing slash is important.  If users access
+  **docassemble** at https://docassemble.example.com, you can ignore
+  this.  The default value is `/`.  See the [`root`] configuration
+  directive.
 * <a name="BEHINDHTTPSLOADBALANCER"></a>`BEHINDHTTPSLOADBALANCER`: Set
   this to `True` if a load balancer is in use and the load balancer
   accepts connections in HTTPS but forwards them to web servers as
@@ -915,6 +921,161 @@ On startup, `docassemble.webapp.install_certs` will copy these files
 into the appropriate location (`/etc/exim4`) with the appropriate
 ownership and permissions.
 
+# <a name="forwarding"></a>Installing on a machine already using a web server
+
+The simplest way to run **docassemble** is to give it a dedicated
+machine and run [Docker] on ports 80 and 443.  However, if you have an
+existing machine that is already running a web server, it is possible
+to run **docassemble** on that machine using [Docker].  You can
+configure the web server on that machine to forward traffic to the
+[Docker] container.
+
+The following example illustrates how to do this.  Your situation will
+probably be different, but this example will still help you figure out
+how to configure your system.
+
+In this example, we will show how to run **docassemble** using
+[Docker] on an Ubuntu 16.04 server.  The machine will run a web server
+using encryption.  The web server will be accessible at
+`https://justice.example.com` and will serve resources other than
+**docassemble**.  The **docassemble** resources will be accessible at
+`https://justice.example.com/da`.  [Docker] will run on the machine
+and will listen on port 8080.  The web server will accept HTTPS
+requests at `/da` and forward them HTTP requests to port 8080.  The
+SSL certificate will be installed on the Ubuntu server, and the
+[Docker] container will run an HTTP server.  [Docker] will be
+controlled by the user account `ubuntu`, which is assumed to have
+[sudo] privileges.
+
+First, let's install [Apache], [Let's Encrypt] (the [certbot]
+utility), and [Docker].  We log in to the server as `ubuntu` and do:
+
+{% highlight bash %}
+sudo add-apt-repository ppa:certbot/certbot
+sudo apt-get -y update
+sudo apt-get -y install apache2 python-certbot-apache docker.io 
+sudo usermod -a -G docker ubuntu
+{% endhighlight %}
+
+The last command changes the user privileges of the `ubuntu` user.
+For these changes to take effect, we need to log out and log in again.
+(E.g., exit the [ssh] session and start a new one.)
+
+Before we run [certbot], let's add some basic information to the
+[Apache] configuration.  Edit the standard HTTP configuration:
+
+{% highlight bash %}
+sudo vi /etc/apache2/sites-available/000-default.conf
+{% endhighlight %}
+
+and add the following lines, replacing any other lines that
+begin with `ServerName` or `ServerAdmin`.
+
+{% highlight text %}
+ServerName justice.example.com
+ServerAdmin admin@example.com
+{% endhighlight %}
+
+We then do the same with the HTTPS configuration.
+
+{% highlight bash %}
+sudo vi /etc/apache2/sites-available/default-ssl.conf
+{% endhighlight %}
+
+Now, let's enable some necessary components of [Apache]:
+
+{% highlight bash %}
+sudo a2ensite default-ssl
+sudo a2enmod proxy_http
+sudo a2enmod headers
+sudo service apache2 reload
+{% endhighlight %}
+
+Then, we need to make sure that `justice.example.com` is directed to
+this server.  This may require going to our DNS provider and adding a
+[CNAME record] or an [A record].
+
+We can test whether everything is working by going to
+`http://justice.example.com` in a web browser.  We should see the
+default [Apache] page.
+
+Once that is done, we are ready to run [certbot].
+
+{% highlight bash %}
+sudo certbot --apache
+{% endhighlight %}
+
+When [certbot] asks "Please choose whether HTTPS access is required or
+optional," we will select "Secure - Make all requests redirect to
+secure HTTPS access."  This will cause all HTTP traffic to be
+forwarded to HTTPS.
+
+The [certbot] command will obtain certificates and modify the [Apache]
+configuration.  A [cron] job will be installed that takes care of
+renewing the certificates.
+
+We can test whether the SSL certificates work by going to
+`https://justice.example.com`.  We should see the default [Apache] page
+again, but with encryption this time.
+
+Now we are ready to run **docassemble**.  First we need to create a
+short text file called `env.list` that contains some configuration
+options for **docassemble**.
+
+{% highlight bash %}
+vi env.list
+{% endhighlight %}
+
+Set the contents of `env.list` to:
+
+{% highlight text %}
+BEHINDHTTPSLOADBALANCER=true
+DAHOSTNAME=justice.example.com
+URLROOT=https://justice.example.com
+POSTURLROOT=/da/
+{% endhighlight %}
+
+The `POSTURLROOT` directive, which is set to `/da/`, indicates the
+path after the domain at which **docassemble** can be accessed.  The
+[Apache] web server will be able to provide other resources at other
+paths, but `/da/` will be reserved for the exclusive use of
+**docassemble**.  The beginning slash and the trailing slash are both
+necessary.
+
+Now, let's download, install, and run **docassemble**.
+
+{% highlight bash %}
+docker run --env-file=env.list -d -p 8080:80 jhpyle/docassemble
+{% endhighlight %}
+
+The option `-p 8080:80` means that port 8080 on the Ubuntu
+machine will be mapped to port 80 within the [Docker] container.
+
+Now that **docassemble** is running, let's configure [Apache] on the
+Ubuntu machine to forward requests to **docassemble**.  Edit the HTTPS
+configuration file:
+
+{% highlight bash %}
+sudo vi /etc/apache2/sites-available/default-ssl.conf
+{% endhighlight %}
+
+Add the following lines within the `<VirtualHost>` area:
+
+{% highlight text %}
+ProxyPass "/da"  "http://localhost:8080/da"
+ProxyPassReverse "/da"  "http://localhost:8080/da"
+RequestHeader set X-Forwarded-Proto "https"
+{% endhighlight %}
+
+Then restart the web server:
+
+{% highlight bash %}
+sudo service apache2 restart
+{% endhighlight %}
+
+Now, when we go to `https://justice.example.com/da`, we will see the
+**docassemble** demo interview.
+
 # <a name="build"></a>Creating your own Docker image
 
 To create your own [Docker] image, first make sure [git] is installed:
@@ -1186,6 +1347,7 @@ delete all of the data on the server unless you are using a
 [`ec2`]: {{ site.baseurl }}/docs/config.html#ec2
 [`debian packages`]: {{ site.baseurl }}/docs/config.html#debian packages
 [`url root`]: {{ site.baseurl }}/docs/config.html#url root
+[`root`]: {{ site.baseurl }}/docs/config.html#root
 [Debian]: https://www.debian.org/
 [using S3]: #persistent s3
 [using Azure blob storage]: #persistent azure
@@ -1217,3 +1379,8 @@ delete all of the data on the server unless you are using a
 [Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
 [Microsoft Azure]: https://azure.microsoft.com/
 [blob storage container]: https://docs.microsoft.com/en-us/azure/storage/storage-dotnet-how-to-use-blobs#create-a-container
+[certbot]: https://certbot.eff.org/
+[sudo]: https://en.wikipedia.org/wiki/Sudo
+[ssh]: https://en.wikipedia.org/wiki/Secure_Shell
+[CNAME record]: https://en.wikipedia.org/wiki/CNAME_record
+[A record]: https://en.wikipedia.org/wiki/List_of_DNS_record_types#A

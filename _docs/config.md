@@ -1017,8 +1017,17 @@ The `external hostname` is the hostname by which users will access
 running on [Docker].
 
 {% highlight yaml %}
-external hostname: https://docassemble.example.com
+external hostname: docassemble.example.com
 {% endhighlight %}
+
+## <a name="behind https load balancer"></a>When behind a proxy
+
+Set the `behind https load balancer` directive to `True` if you are
+running **docassemble** in a configuration where **docassemble**
+itself is running HTTP, but requests are being forwarded to it by a
+server running HTTPS.  This might be your configuration if you are
+using a [load balancer] or you are running [Docker] on machine that
+[forwards] HTTPS requests to [Docker] on a non-standard HTTP port.
 
 ## <a name="incoming mail domain"></a>E-mail domain of the site
 
@@ -1485,3 +1494,5 @@ and Facebook API keys.
 [ICO]: https://en.wikipedia.org/wiki/ICO_(file_format)
 [optical character recognition]: https://en.wikipedia.org/wiki/Optical_character_recognition
 [PyPI]: https://pypi.python.org/pypi
+[load balancer]: {{ site.baseurl }}/docs/scalability.html
+[forwards]: {{ site.baseurl }}/docs/docker.html#forwarding
