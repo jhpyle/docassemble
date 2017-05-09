@@ -1,0 +1,58 @@
+metadata:
+  title: Fill fields in a DOCX template
+  short title: DOCX
+  documentation: "http://docassemble.org/docs/documents.html#docx template file"
+  example start: 6
+  example end: 6
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Assembling a document from a .docx
+  template
+subquestion: |
+  
+  This interview will fill fields in
+  a .docx template.  You can
+  [download the template] to see what
+  it looks like.
+
+  The letter will be sent by the
+  user to an adverse party to
+  complain about something.
+
+  [download the template]: ${ url_of('recipe_template.docx') }
+field: introduction_shown
+---
+question: |
+  What is the maximum temperature
+  setting of your oven?
+fields:
+  - Degrees: oven_degrees
+---
+question: |
+  What is your favorite thing to eat?
+fields:
+  - Favorite food: special_ingredient
+---
+mandatory: true
+code: |
+  introduction_shown
+---
+mandatory: True
+question: |
+  Here is your recipe.  Enjoy!
+attachment:
+  name: Your recipe
+  filename: recipe
+  docx template file: recipe_template.docx
+  fields:
+    title: Mandelbrot cookies
+    oven_temperature: ${ oven_degrees } degrees
+    ingredients:
+      - apple sauce
+      - ${ special_ingredient }
+      - flour
+      - sugar
+    preparation_time: 48 hours

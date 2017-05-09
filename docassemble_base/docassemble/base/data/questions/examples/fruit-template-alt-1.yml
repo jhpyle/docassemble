@@ -1,0 +1,51 @@
+metadata:
+  title: Fill fields with Mako
+  short title: Fill
+  documentation: "http://docassemble.org/docs/documents.html#template code"
+  example start: 8
+  example end: 8
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Assembling a document from a .docx
+  template
+subquestion: |
+  This interview will fill fields in
+  a .docx template.  You can
+  [download the template] to see what
+  it looks like.
+
+  [download the template]: ${ url_of('fruit_template.docx') }
+field: introduction_shown
+---
+question: What is your favorite fruit?
+fields:
+  Favorite fruit: favorite_fruit
+---
+question: What is your favorite vegetable?
+fields:
+  Favorite vegetable: favorite_vegetable
+---
+question: What is your favorite legume?
+fields:
+  Favorite legume: favorite_legume
+---
+question: What is your favorite fungus?
+fields:
+  Favorite fungus: favorite_fungus
+---
+mandatory: True
+code: |
+  introduction_shown
+---
+mandatory: True
+question: Here is your document.
+attachment:
+  docx template file: fruit_template.docx
+  fields:
+    favorite_fruit: ${ favorite_fruit }
+    favorite_vegetable: ${ favorite_vegetable }
+    favorite_legume: ${ favorite_legume }
+    favorite_fungus: ${ favorite_fungus }

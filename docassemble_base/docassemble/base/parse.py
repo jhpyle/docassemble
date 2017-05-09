@@ -430,12 +430,12 @@ def recursive_eval_textobject(target, user_dict, question, tpl):
     if type(target) is list or (hasattr(target, 'elements') and type(target.elements) is list):
         new_list = list()
         for val in target.__iter__():
-            new_list.append(recursive_eval_textobject(val, user_dict), question, tpl)
+            new_list.append(recursive_eval_textobject(val, user_dict, question, tpl))
         return new_list
     if type(target) is set or (hasattr(target, 'elements') and type(target.elements) is set):
         new_set = set()
         for val in target.__iter__():
-            new_set.add(recursive_eval_textobject(val, user_dict), question, tpl)
+            new_set.add(recursive_eval_textobject(val, user_dict, question, tpl))
         return new_set
     if type(target) in [bool, NoneType]:
         return target

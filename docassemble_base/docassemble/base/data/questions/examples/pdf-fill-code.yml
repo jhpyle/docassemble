@@ -48,6 +48,7 @@ attachments:
       Pear Checkbox: |
         ${ likes_pears }
     code: |
-      {"Orange Checkbox": likes_oranges, "Toast Checkbox": likes_toast}
+      {"Orange Checkbox": likes_oranges,
+       "Toast Checkbox": likes_toast}
 mandatory: True
 

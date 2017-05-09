@@ -1,0 +1,82 @@
+metadata:
+  title: Fill fields with code
+  short title: Fill
+  documentation: "http://docassemble.org/docs/documents.html#template code"
+  example start: 8
+  example end: 9
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  recipient: Individual
+---
+question: |
+  Assembling a document from a .docx
+  template
+subquestion: |
+  
+  This interview will fill fields in
+  a .docx template.  You can
+  [download the template] to see what
+  it looks like.
+
+  [download the template]: ${ url_of('letter.docx') }
+field: introduction_shown
+---
+question: |
+  To whom shall the letter be sent?
+fields:
+  - First Name: recipient.name.first
+  - Last Name: recipient.name.last
+---
+question: |
+  What is the address of ${ recipient }?
+fields:
+  - Address: recipient.address.address
+  - Unit: recipient.address.unit
+    required: False
+  - City: recipient.address.city
+  - State: recipient.address.state
+    code: |
+      states_list()
+  - Zip: recipient.address.zip
+    required: False
+---
+question: |
+  What the subject of the letter?
+field: subject_of_letter
+choices:
+  - Sales of oranges in Q4 2016
+  - Pedantry and pedagogy
+  - Tulips, tiptoes, and soil erosion
+  - Breakfast cereals in late antiquity
+---
+question: |
+  What type of letter do you
+  want to send?
+field: letter_type
+choices:
+  - Litigation threat: threat
+  - Happy birthday: birthday
+  - Other: other
+---
+mandatory: true
+code: |
+  introduction_shown
+---
+mandatory: True
+question: Here is your document.
+attachment:
+  docx template file: letter.docx
+  code: letter_variables
+---
+code: |
+  letter_variables = dict()
+  letter_variables['letter_date'] = today()
+  if letter_type == 'threat':
+    letter_variables['subject_line'] = "Litigation hold"
+  else:
+    letter_variables['subject_line'] = "Matter we discussed"
+  letter_variables['recipient_address'] = recipient.address_block()
+reconsider: True
