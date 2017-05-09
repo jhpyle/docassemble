@@ -1121,6 +1121,23 @@
       - client
       - favorite_fruit
       - fruit_types
+"docx-recipe": |-
+  mandatory: True
+  question: |
+    Here is your recipe.  Enjoy!
+  attachment:
+    name: Your recipe
+    filename: recipe
+    docx template file: recipe_template.docx
+    fields:
+      title: Mandelbrot cookies
+      oven_temperature: ${ oven_degrees } degrees
+      ingredients:
+        - apple sauce
+        - ${ special_ingredient }
+        - flour
+        - sugar
+      preparation_time: 48 hours
 "docx-template": |-
   mandatory: True
   question: |
@@ -1136,6 +1153,43 @@
       "address_block": ${ adverse_party.address_block() }
       "full_name": ${ user.name }
       "signature": ${ user.signature }
+"docx-template-alt-1": |-
+  mandatory: True
+  question: Here is your document.
+  attachment:
+    docx template file: letter.docx
+    fields:
+      letter_date: ${ today() }
+      subject_line: ${ subject_of_letter }
+      recipient_address: ${ recipient.address_block() }
+"docx-template-alt-2": |-
+  mandatory: True
+  question: Here is your document.
+  attachment:
+    docx template file: letter.docx
+    field code:
+      letter_date: today()
+      subject_line: subject_of_letter
+      recipient_address: recipient.address_block()
+"docx-template-alt-3": "mandatory: True\nquestion: Here is your document.\nattachment:\n\
+  \  docx template file: letter.docx\n  code:\n    dict(letter_date=today(), \n  \
+  \       subject_line=subject_of_letter, \n         recipient_address=recipient.address_block())"
+"docx-template-alt-4": |-
+  mandatory: True
+  question: Here is your document.
+  attachment:
+    docx template file: letter.docx
+    code: letter_variables
+  ---
+  code: |
+    letter_variables = dict()
+    letter_variables['letter_date'] = today()
+    if letter_type == 'threat':
+      letter_variables['subject_line'] = "Litigation hold"
+    else:
+      letter_variables['subject_line'] = "Matter we discussed"
+    letter_variables['recipient_address'] = recipient.address_block()
+  reconsider: True
 "docx-template-code": |-
   mandatory: True
   question: |
@@ -1923,6 +1977,26 @@
   \ here beside\n      the Potomac. We now find it\n      necessary to provide by\
   \ great\n      additional buildings for the\n      business of the government.\n\
   mandatory: True"
+"fruit-template-alt-1": |-
+  mandatory: True
+  question: Here is your document.
+  attachment:
+    docx template file: fruit_template.docx
+    fields:
+      favorite_fruit: ${ favorite_fruit }
+      favorite_veggie: ${ favorite_veggie }
+      favorite_legume: ${ favorite_legume }
+      favorite_fungus: ${ favorite_fungus }
+"fruit-template-alt-2": |-
+  mandatory: True
+  question: Here is your document.
+  attachment:
+    docx template file: fruit_template.docx
+    field variables:
+      - favorite_fruit
+      - favorite_veggie
+      - favorite_legume
+      - favorite_fungus
 "function": |-
   question: |
     The word ${ color } becomes
@@ -3853,7 +3927,8 @@
         Pear Checkbox: |
           ${ likes_pears }
       code: |
-        {"Orange Checkbox": likes_oranges, "Toast Checkbox": likes_toast}
+        {"Orange Checkbox": likes_oranges,
+         "Toast Checkbox": likes_toast}
   mandatory: True
 "pdf-fill-signature": |-
   question: |

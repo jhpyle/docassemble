@@ -594,54 +594,33 @@ The content of `fields` is converted into a data structure, which is
 passed to the `render()` method of [`python-docx-template`].  The data
 structure can contain structure.  For example:
 
-{% highlight yaml %}
-question: |
-  Here is your document.
-attachment:
-  name: Your recipe
-  filename: recipe
-  docx template file: recipe_template.docx
-  fields:
-    title: Mandelbrot cookies
-    oven temperature: ${ oven_degrees } degrees
-    ingredients:
-      - apple sauce
-      - ${ special_ingredient }
-      - flour
-      - sugar
-    preparation time: 48 hours
-{% endhighlight %}
+{% include side-by-side.html demo="docx-recipe" %}
 
-You will then have to use appropriate [Jinja2] syntax in order to
-process this data structure.  For more information, see the
-documentation of [`python-docx-template`].
+You will need to use appropriate [Jinja2] syntax in order to process
+the list of ingredients.  Here is an example of a .docx template that
+uses the above data structure:
+
+![recipe template source]({{ site.baseurl }}/img/recipe_template.png)
+
+For more information on using [Jinja2] within a .docx template, see
+the documentation of [`python-docx-template`].
 
 ## <a name="template code"></a>Passing values using code
 
 You can also use [Python] code to populate the values of fields that
 are filled in with [`pdf template file`] and [`docx template file`].
 
-The `fields` directive allows you to use [Mako] to pass the values
-of variables to the template.  For example:
+When you use the `fields` directive, which is described above, you
+have to use [Mako] in order to pass the values of interview variables
+to the template.  For example:
 
-{% highlight yaml %}
-fields:
-  favorite_fruit: ${ favorite_fruit }
-  favorite_vegetable: ${ favorite_vegetable }
-  favorite_legume: ${ favorite_legume }
-  favorite_fungus: ${ favorite_fungus }
-{% endhighlight %}
+{% include side-by-side.html demo="fruit-template-alt-1" %}
 
-This is a bit repetitive and punctuation-heavy.  Instead, you can use
-the `field variables` directive to list the variables you want to pass:
+This is a bit punctuation-heavy and repetitive.  As an alternative,
+you can use the `field variables` directive to list the variables you
+want to pass:
 
-{% highlight yaml %}
-field variables:
-  - favorite_fruit
-  - favorite_vegetable
-  - favorite_legume
-  - favorite_fungus
-{% endhighlight %}
+{% include side-by-side.html demo="fruit-template-alt-2" %}
 
 This will have the same effect.
 
@@ -650,45 +629,62 @@ template has the same name as the variable in your interview, and when
 you do not need to perform any transformations on the variable before
 passing it to the template.
 
-For example, you can use `fields` to pass the following values to a
-template:
+Suppose you want to pass the results of functions or methods to the
+template.  One way to do it is to use `fields`, where every value is a
+[Mako] variable reference containing code:
 
-{% highlight yaml %}
-fields:
-  letter_date: ${ today() }
-  subject_line: ${ subject_of_letter }
-  recipient_address: ${ recipient.address_block() }
-{% endhighlight %}
+{% include side-by-side.html demo="docx-template-alt-1" %}
 
-Note that every value is a [Mako] variable reference.  You can achieve
-the same result with less punctuation by using the `field code`
-directive:
+You can achieve the same result with less punctuation by using the
+`field code` directive:
 
-{% highlight yaml %}
-field code:
-  letter_date: today()
-  subject_line: subject_of_letter
-  recipient_address: recipient.address_block()
-{% endhighlight %}
+{% include side-by-side.html demo="docx-template-alt-2" %}
 
-There is an even more advanced way of passing values to a template:
-you can include a `code` directive containing [Python] code that
-evaluates to a [Python dict] in which the keys are the names of
-variables in the template, and the values are the values you want
-those variables to have.
+There is still another way of passing values to a template: you can
+include a `code` directive that contains [Python] code that evaluates
+to a [Python dict] in which the keys are the names of variables in the
+template, and the values are the values you want those variables to
+have.  For example:
 
-The `fields`, `field variables`, and `field code` directives can all
-be used together; they will supplement each other.
+{% include side-by-side.html demo="docx-template-alt-3" %}
+
+Note that the `code` must be a single [Python] expression, not a list
+of statements.  It can be difficult to cram a lot of logic into a
+[Python] expression, so you may want to create a variable to hold the
+values.  For example:
+
+{% include side-by-side.html demo="docx-template-alt-4" %}
+
+Note that the use of the [`reconsider`] modifier is important here.
+[Remember] that **docassemble** will only ask a question or run code
+when it encounters an undefined variable.  If the recipient's address
+is undefined when **docassemble** tries to run the code above,
+**docassemble** will ask a question to gather it, but once that
+question is answered, **docassemble** will have no reason to run the
+above code again because `letter_variables` will already be defined --
+albeit in an incomplete state, with a `letter_date` item and a
+`subject_line` item but without a `recipient_address` item.  Setting
+`reconsider` to `True` ensures that whenever a screen in the interview
+needs to know the value of `letter_variables`, that value will be
+"reconsidered"---treated as undefined---and the code above will be
+re-run in order to obtain a fresh definition of `letter_variables`.
+
+The `fields`, `field variables`, and `field code` directives are not
+mutually exclusive.  When they are used together, they supplement each
+other.
 
 Here is a variation on the PDF fill-in example above that uses `code`
 to supplement the values of `fields`:
 
 {% include side-by-side.html demo="pdf-fill-code" %}
 
-Here is a variation on the .docx template example above that uses
-`code` to supplement the values of `fields`:
-
-{% include side-by-side.html demo="docx-template-code" %}
+Like the [Mako] tag `${ ... }`, the `fields`, `field variables`, and
+`field code` directives will convert the values of your variables to a
+format suitable for printing.  If you are using the .docx template
+format and you only use the `{% raw %}{{ ... }}{% endraw %}` syntax in
+your template, this will always be appropriate.  But if you want to
+use other features of [Jinja2], you should read the next section,
+which explains how to pass variables in raw format to the template.
 
 ### <a name="raw field variables"></a>Turning off automatic conversion of .docx variables
 
@@ -744,9 +740,13 @@ into a literal piece of text, `potatoes and beets`, the `for` loop
 will loop over each character, not over each vegetable.  You will get:
 
 > Don't forget to bring p!
+>
 > Don't forget to bring o!
+>
 > Don't forget to bring t!
+>
 > Don't forget to bring a!
+>
 > Don't forget to bring t!
 
 and so on.
@@ -973,3 +973,5 @@ Including `allow emailing: False` will disable this:
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [`.comma_and_list()`]: {{ site.baseurl }}/docs/objects.html#DAList.comma_and_list
+[`reconsider`]: {{ site.baseurl }}/docs/code.html#reconsider
+[Remember]: {{ site.baseurl }}/docs/logic.html
