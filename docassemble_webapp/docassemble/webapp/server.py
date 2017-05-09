@@ -256,7 +256,7 @@ def unauthenticated():
 
 def unauthorized():
     flash(word("You are not authorized to access") + " " + word(request.path), 'error')
-    return redirect(url_for('user.login', next=fix_http(request.url)))
+    return redirect(url_for('interview_list', next=fix_http(request.url)))
 
 def my_default_url(error, endpoint, values):
     return url_for('index')
@@ -486,6 +486,8 @@ def get_url_from_file_reference(file_reference, **kwargs):
     if file_reference in ['login', 'signin']:
         return(url_for('user.login', **kwargs))
     elif file_reference == 'interviews':
+        return(url_for('interview_list', **kwargs))
+    elif file_reference == 'interview_list':
         return(url_for('interview_list', **kwargs))
     elif file_reference == 'playground':
         return(url_for('playground_page', **kwargs))

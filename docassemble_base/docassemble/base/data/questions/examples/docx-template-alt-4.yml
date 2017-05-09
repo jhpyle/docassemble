@@ -2,8 +2,8 @@ metadata:
   title: Fill fields with code
   short title: Fill
   documentation: "http://docassemble.org/docs/documents.html#template code"
-  example start: 8
-  example end: 9
+  example start: 9
+  example end: 10
 ---
 modules:
   - docassemble.base.util

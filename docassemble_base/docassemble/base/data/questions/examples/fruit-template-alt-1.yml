@@ -26,7 +26,7 @@ fields:
 ---
 question: What is your favorite vegetable?
 fields:
-  Favorite vegetable: favorite_vegetable
+  Favorite vegetable: favorite_veggie
 ---
 question: What is your favorite legume?
 fields:
@@ -46,6 +46,6 @@ attachment:
   docx template file: fruit_template.docx
   fields:
     favorite_fruit: ${ favorite_fruit }
-    favorite_vegetable: ${ favorite_vegetable }
+    favorite_veggie: ${ favorite_veggie }
     favorite_legume: ${ favorite_legume }
     favorite_fungus: ${ favorite_fungus }
