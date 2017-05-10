@@ -73,8 +73,9 @@ your document might need, and specify them all in the `attachments`
 block.
 
 For example, if you are generating a [DOCX](#docx template file)
-fill-in form, you can write `{% raw %}{{ favorite_fruit }}{% endraw
-%}` in your Microsoft Word file where the name of the user's favorite
+fill-in form, you can write 
+`{% raw %}{{ favorite_fruit }}{% endraw %}`
+in your Microsoft Word file where the name of the user's favorite
 fruit should be plugged in.  Then you will have to indicate how the
 variables in your Word file "map" to variables in your interview by
 including a line like the following in your `attachments` block:
@@ -122,12 +123,12 @@ previewing the document in the browser).
 The PDF file will be called `Hello_World.pdf` and will look
 like this in a PDF viewer (depending on the user's software):
 
-![document screenshot]({{ site.baseurl }}/img/document-example-pdf.png)
+![document screenshot]({{ site.baseurl }}/img/document-example-pdf.png){: .maybe-full-width }
 
 The RTF file will be called `Hello_World.rtf` and will look
 like this in a word processor (depending on the user's software):
 
-![document screenshot]({{ site.baseurl }}/img/document-example-rtf.png)
+![document screenshot]({{ site.baseurl }}/img/document-example-rtf.png){: .maybe-full-width }
 
 If the user clicks the "Preview" tab, an HTML version of the document
 will be visible:
@@ -469,9 +470,11 @@ by providing specific options within the question block.
 ## <a name="pdf template file"></a>Filling PDF templates
 
 If you have a PDF file that contains fillable fields (e.g. fields
-added using [Adobe Acrobat Pro]), **docassemble** can assemble a PDF
-file by filling in fields.  To do this, provide a `pdf template file`
-and a dictionary of `fields`.
+added using [Adobe Acrobat Pro]), **docassemble** can fill in the
+fields of the PDF using information from an interview and provide the
+user with the resulting PDF file.  To do this, use the [`attachments`]
+statement as above, but instead of providing `content` or `content
+file`, provide a `pdf template file` and a dictionary of `fields`.
 
 For example, here is an interview that populates fields in a file
 called [sample-form.pdf]:
@@ -486,14 +489,25 @@ specified.  E.g.:
 pdf template file: docassemble.missouri-family-law:data/templates/form.pdf
 {% endhighlight %}
 
-The `fields` must be in the form of a [YAML] dictionary.  Checkbox
-fields will be checked if the value evaluates to "True" or "Yes."
+In [Adobe Acrobat Pro]'s "Add or Edit Fields" mode, the PDF file looks
+like this:
+
+![sample form]({{ site.baseurl }}/img/sample-form.png){: .maybe-full-width }
+
+The `fields` must be in the form of a [YAML] dictionary.  [Mako] can
+be used, but [Markdown] will be interpreted literally.  Checkbox
+fields will be checked only if the value evaluates to "True" or "Yes."
+
+The section below on [passing values using code](#template code)
+explains alternative ways that you can populate the values of fields
+in a PDF file.
 
 ### <a name="signature"></a>How to insert signatures or other images into fillable PDF files
 
 To add a signature or other image to a fillable PDF file, use Adobe
 Acrobat Pro to insert a "Digital Signature" into the document where
-you want the signature to appear.  Give the field a unique name.
+you want the signature to appear, and with the height and width you
+want the image to have.  Give the field a unique name.
 
 Then, the signature will be a field, just like a checkbox or a text
 box is a fill-in field.  In your `pdf template file`, set the field to
@@ -501,8 +515,8 @@ box is a fill-in field.  In your `pdf template file`, set the field to
 will trim whitespace from the edges of the image and fit the image
 into the "Digital Signature" box.
 
-For example, here is an interview that populates text fields and a
-signature into the template [Transfer-of-Ownership.pdf]:
+For example, here is an interview that populates text fields and
+inserts a signature into the template [Transfer-of-Ownership.pdf]:
 
 {% include side-by-side.html demo="pdf-fill-signature" %}
 
@@ -529,11 +543,11 @@ Much in the same way as you can fill in fields in a PDF file using
 {% include side-by-side.html demo="docx-template" %}
 
 This allows you to use [Microsoft Word] to design your document and
-apply all the fancy formatting you want to it.  **docassemble** will
-simply "fill in the blanks."  This is in contrast to the method of
-[using `docx` as one of the `valid formats`], described
-[below](#docx), where you assemble a document from scratch by writing
-[Markdown] text that is then converted to .docx format.
+apply all the fancy formatting you want to it to have.
+**docassemble** will simply "fill in the blanks."  This is in contrast
+to the method of [using `docx` as one of the `valid formats`],
+described [above](#docx), where you assemble a document from scratch
+by writing [Markdown] text that is then converted to .docx format.
 
 The `docx template file` is assumed to reside in the `data/templates`
 directory of your package, unless a specific package name is
@@ -543,15 +557,10 @@ specified.  E.g.:
 docx template file: docassemble.missouri-family-law:data/templates/form.docx
 {% endhighlight %}
 
-The `docx template file` feature relies heavily on the [Python]
-package known as [`python-docx-template`].  You should consult the
-[documentation of that package] in order to learn how to use `docx
-template file`.
-
 In the example above, the [letter_template.docx] file contains the
 following text:
 
-![letter template source]({{ site.baseurl }}/img/letter_template_source.png)
+![letter template source]({{ site.baseurl }}/img/letter_template_source.png){: .maybe-full-width }
 
 The `fields` list in the `attachment` maps variable names used in the
 .docx file to pieces of text.  You can use [Mako] templating to
@@ -559,13 +568,43 @@ generate these pieces of text.  In the example above, `phone_number`
 maps to the text `202-555-1234`, while `full_name` maps to `${
 user.name }`.
 
-The [`python-docx-template`] uses the [Jinja2] templating system.
+The `docx template file` feature relies heavily on the [Python]
+package known as [`python-docx-template`].  The
+[`python-docx-template`] package uses the [Jinja2] templating system.
 [Jinja2] is different from the [Mako] templating system, which
-**docassemble** uses primarily.  It is important that you do confuse
-the rules of these two templating formats.  The biggest difference
-between the two formats is that [Mako] uses the syntax `${
-variable_name }` while [Jinja2] uses the syntax `{% raw %}{{
-variable_name }}{% endraw %}`.
+**docassemble** uses primarily.  When you work on .docx templates, is
+important that you do confuse the rules of these two templating
+formats.  The biggest difference between the two formats is that
+[Mako] uses the syntax `${ variable_name }` while [Jinja2] uses the
+syntax `{% raw %}{{ variable_name }}{% endraw %}`.
+
+Also, the [`python-docx-template`] package uses a slightly modified
+version of the [Jinja2] syntax to account for the fact that it is
+being used inside of a .docx file.  In standard [Jinja2], you would
+write:
+
+{% highlight text %}
+{% raw %}{% for item in fruit_list %}
+{{ item }} is a type of fruit.
+{% endfor %}{% endraw %}
+{% endhighlight %}
+
+In a .docx template, however, you should write:
+
+{% highlight text %}
+{% raw %}{%p for item in fruit_list %}
+{{ item }} is a type of fruit.
+{%p endfor %}{% endraw %}
+{% endhighlight %}
+
+The `p` indicates that the paragraph containing the 
+`{% raw %}{%p ... %}{% endraw %}` statement should be removed from 
+the document.  This means that when you edit the spacing of paragraphs
+in your .docx file, you need to edit the paragraph spacing of
+paragraphs that do _not_ contain `{% raw %}{%p ... %}{% endraw %}`
+statements.  You may need to change both the spacing after a paragraph
+and the spacing before a paragraph in order to get the results you
+want.
 
 If any of your [Mako] statements contain an image, the image will be
 used for the variable in the .docx file.  This is illustrated in the
@@ -596,14 +635,14 @@ structure can contain structure.  For example:
 
 {% include side-by-side.html demo="docx-recipe" %}
 
-You will need to use appropriate [Jinja2] syntax in order to process
-the list of ingredients.  Here is an example of a .docx template that
-uses the above data structure:
+In your .docx file, you will need to use appropriate [Jinja2] syntax
+in order to process the list of ingredients.  Here is an example of a
+.docx file that uses the above data structure:
 
-![recipe template source]({{ site.baseurl }}/img/recipe_template.png)
+![recipe template source]({{ site.baseurl }}/img/recipe_template.png){: .maybe-full-width }
 
-For more information on using [Jinja2] within a .docx template, see
-the documentation of [`python-docx-template`].
+For more information on using [Jinja2] in a .docx template, see the
+documentation of [`python-docx-template`].
 
 ## <a name="template code"></a>Passing values using code
 
@@ -808,30 +847,10 @@ a `variable name` key to an attachment.  For example:
 
 You can also assemble a document and save it to a variable without
 presenting it to the user.  The following example creates a PDF file
-containing the message "Hello, world!" and posts it to a [Slack]
-site.
+and an RTF file containing the message "Hello, world!" and offers the
+files as hyperlinks.
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
-mandatory: True
-code: |
-  import slacker
-  slacker.Slacker(daconfig['slack api key']).files.upload(my_file.pdf.path())
----
-mandatory: True
-question: |
-  I have posted a Hello World file to Slack!
----
-attachments:
-  - variable name: my_file
-    filename: hello_world
-    content: |
-      Hello, world!
----
-{% endhighlight %}
+{% include side-by-side.html demo="document-variable-name-link" %}
 
 The varible indicated by `variable name` will be defined as an object
 of class [`DAFileCollection`].  An object of this type will have

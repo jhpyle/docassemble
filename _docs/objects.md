@@ -895,6 +895,9 @@ argument, `width`.
 When included in a [Mako] template, a `DAFile` object will effectively
 call `show()` on itself.
 
+<a name="DAFile.url_for"></a>The `.url_for()` method returns a URL at
+which the file can be accessed.
+
 <a name="DAFile.path">The `.path()` method returns a complete file
 path that you can use to read the file or write to the file.</a>
 

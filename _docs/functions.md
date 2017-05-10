@@ -819,6 +819,17 @@ If you do not specify a package, **docassemble** will look for the
 file in the `static` folder of the package in which the current
 [`question`] or current [`code`] block resides.
 
+### Special uses
+
+The `url_of()` function also has a few special uses.
+
+* If applied to a [`DAFile`] object, it will return a URL to the file.
+* `url_of('login')` returns a URL to the sign-in page.
+* `url_of('signin')` does the same thing as `url_of('login')`.
+* `url_of('interviews')` returns a URL to the page listing the
+  on-going interviews of a signed-in user.
+* `url_of('playground')` returns a URL to the [Playground].
+
 # E-mail functions
 
 ## <a name="send_email"></a>send_email()
