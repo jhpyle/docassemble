@@ -189,7 +189,7 @@ class SavedFile(object):
                         url += 'screen'
                     url += '/' + str(self.file_number) + '/' + str(page)
                 else:
-                    url = fileroot + 'uploadedfile/' + str(self.file_number) + extn
+                    url = fileroot + 'uploadedfile/' + str(self.file_number) + '/' + str(filename)
             else:
                 url = 'about:blank'
             return(url)

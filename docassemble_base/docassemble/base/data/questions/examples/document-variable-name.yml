@@ -1,7 +1,7 @@
 metadata:
   title: Document as variable
   documentation: "http://docassemble.org/docs/documents.html#variable name"
-  example start: 4
+  example start: 3
   example end: 5
 ---
 modules:

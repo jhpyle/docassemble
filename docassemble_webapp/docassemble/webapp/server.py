@@ -480,6 +480,18 @@ def fix_http(url):
         return url
 
 def get_url_from_file_reference(file_reference, **kwargs):
+    if isinstance(file_reference, DAFile) and hasattr(file_reference, 'number'):
+        file_number = file_reference.number
+        if can_access_file_number(file_number):
+            url_properties = dict()
+            if hasattr(file_reference, 'filename'):
+                url_properties['filename'] = file_reference.filename
+            if hasattr(file_reference, 'extension'):
+                url_properties['ext'] = file_reference.extension
+            for key, val in kwargs.iteritems():
+                url_properties[key] = val
+            the_file = SavedFile(file_number)
+            return(the_file.url_for(**url_properties))
     file_reference = str(file_reference)
     if re.search(r'^http', file_reference):
         return(file_reference)
@@ -4855,6 +4867,29 @@ def serve_stored_file(uid, number, filename, extension):
     else:
         response = send_file(file_info['path'], mimetype=file_info['mimetype'])
         return(response)
+
+@app.route('/uploadedfile/<number>/<filename>.<extension>', methods=['GET'])
+def serve_uploaded_file_with_filename_and_extension(number, filename, extension):
+    if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
+        privileged = True
+    else:
+        privileged = False
+    number = re.sub(r'[^0-9]', '', str(number))
+    if cloud is not None:
+        if not can_access_file_number(number):
+            abort(404)
+        the_file = SavedFile(number)
+    else:
+        file_info = get_info_from_file_number(number, privileged=privileged)
+        if 'path' not in file_info:
+            abort(404)
+        else:
+            if os.path.isfile(file_info['path'] + '.' + extension):
+                extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
+                response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype)
+                return(response)
+            else:
+                abort(404)
 
 @app.route('/uploadedfile/<number>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_extension(number, extension):

@@ -1333,6 +1333,9 @@ class DAFile(DAObject):
             return('[FILE ' + str(self.number) + ', ' + str(width) + ']')
         else:
             return('[FILE ' + str(self.number) + ']')
+    def url_for(self):
+        """Returns a URL to the file."""
+        return server.url_finder(self)
 
 class DAFileCollection(DAObject):
     """Used internally by docassemble to refer to a collection of DAFile

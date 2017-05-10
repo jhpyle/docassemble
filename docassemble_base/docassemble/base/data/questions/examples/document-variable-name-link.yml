@@ -1,0 +1,24 @@
+metadata:
+  title: Documents as links
+  documentation: "http://docassemble.org/docs/documents.html#variable name"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+attachment:
+  filename: Hello_World
+  variable name: my_file
+  content: |
+    Hello, world!
+---
+mandatory: True
+question: |
+  All done.
+subquestion: |
+  You can download your document in
+  [PDF](${ my_file.pdf.url_for() })
+  or
+  [RTF](${ my_file.rtf.url_for() })
+  format.
