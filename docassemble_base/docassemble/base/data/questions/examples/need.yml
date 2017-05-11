@@ -2,7 +2,7 @@ metadata:
   title: Need
   example start: 4
   example end: 4
-  documentation: "http://docassemble.org/docs/functions.html#need"
+  documentation: "https://docassemble.org/docs/functions.html#need"
 ---
 modules:
   - docassemble.base.util

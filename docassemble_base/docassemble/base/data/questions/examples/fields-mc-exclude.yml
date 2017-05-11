@@ -3,7 +3,7 @@ metadata:
   short title: With exclusion
   example start: 2
   example end: 4
-  documentation: "http://docassemble.org/docs/fields.html#exclude"
+  documentation: "https://docassemble.org/docs/fields.html#exclude"
 ---
 mandatory: True
 question: |

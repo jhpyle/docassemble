@@ -2,7 +2,7 @@ metadata:
   title: Upload file
   example start: 2
   example end: 2
-  documentation: "http://docassemble.org/docs/markup.html#inserting images"
+  documentation: "https://docassemble.org/docs/markup.html#inserting images"
 ---
 question: |
   Please upload a picture of yourself.

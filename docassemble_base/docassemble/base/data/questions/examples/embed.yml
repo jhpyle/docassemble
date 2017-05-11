@@ -1,6 +1,6 @@
 metadata:
   title: Embedded fields
-  documentation: "http://docassemble.org/docs/fields.html#embed"
+  documentation: "https://docassemble.org/docs/fields.html#embed"
   example start: 1
   example end: 1
 ---

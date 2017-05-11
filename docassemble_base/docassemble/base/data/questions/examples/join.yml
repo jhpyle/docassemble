@@ -2,7 +2,7 @@ metadata:
   title: Join from monitor
   example start: 3
   example end: 4
-  documentation: "http://docassemble.org/docs/livehelp.html#join"
+  documentation: "https://docassemble.org/docs/livehelp.html#join"
 ---
 modules:
   - docassemble.base.util

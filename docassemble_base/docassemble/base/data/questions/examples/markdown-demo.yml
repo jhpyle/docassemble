@@ -1,7 +1,7 @@
 metadata:
   title: Markdown demonstration
   short title: Markdown
-  documentation: "http://docassemble.org/docs/markup.html#markdown"
+  documentation: "https://docassemble.org/docs/markup.html#markdown"
 ---
 question: Markdown demonstration
 subquestion: |

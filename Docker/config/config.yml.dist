@@ -1,5 +1,5 @@
 debug: False
-exitpage: http://docassemble.org
+exitpage: https://docassemble.org
 db:
   prefix: {{DBPREFIX}}
   name: {{DBNAME}}

@@ -1,7 +1,7 @@
 metadata:
   title: Empty object checkboxes
   short title: Empty
-  documentation: "http://docassemble.org/docs/fields.html#object_checkboxes"
+  documentation: "https://docassemble.org/docs/fields.html#object_checkboxes"
   example start: 2
   example end: 6
 ---

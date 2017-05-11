@@ -2,7 +2,7 @@ metadata:
   title: Past tense
   example start: 3
   example end: 3
-  documentation: "http://docassemble.org/docs/functions.html#verb_past"
+  documentation: "https://docassemble.org/docs/functions.html#verb_past"
 ---
 modules:
   - docassemble.base.util

@@ -1,6 +1,6 @@
 metadata:
   title: Send SMS message
-  documentation: "http://docassemble.org/docs/functions.html#send_sms"
+  documentation: "https://docassemble.org/docs/functions.html#send_sms"
 ---
 modules:
   - docassemble.base.util

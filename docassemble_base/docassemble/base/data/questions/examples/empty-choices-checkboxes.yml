@@ -3,7 +3,7 @@ metadata:
   short title: Choices
   example start: 1
   example end: 3
-  documentation: "http://docassemble.org/docs/fields.html#fields checkboxes"
+  documentation: "https://docassemble.org/docs/fields.html#fields checkboxes"
 ---
 code: |
   import random

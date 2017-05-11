@@ -2,7 +2,7 @@ metadata:
   title: Country selection
   example start: 2
   example end: 3
-  documentation: "http://docassemble.org/docs/functions.html#countries_list"
+  documentation: "https://docassemble.org/docs/functions.html#countries_list"
 ---
 modules:
   - docassemble.base.util

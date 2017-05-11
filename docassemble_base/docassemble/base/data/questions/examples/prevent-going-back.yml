@@ -1,6 +1,6 @@
 metadata:
   title: Disable back button
-  documentation: "http://docassemble.org/docs/modifiers.html#prevent_going_back"
+  documentation: "https://docassemble.org/docs/modifiers.html#prevent_going_back"
 ---
 prevent_going_back: True
 question: |

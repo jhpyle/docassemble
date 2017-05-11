@@ -1,7 +1,7 @@
 metadata:
   title: Variables as dictionary
   short title: Variables dict
-  documentation: "http://docassemble.org/docs/functions.html#all_variables"
+  documentation: "https://docassemble.org/docs/functions.html#all_variables"
   example start: 3
   example end: 3
 ---

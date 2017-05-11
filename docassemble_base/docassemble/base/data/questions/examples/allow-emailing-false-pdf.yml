@@ -1,6 +1,6 @@
 metadata:
   title: Disallowing e-mailing
-  documentation: "http://docassemble.org/docs/documents.html#allow emailing"
+  documentation: "https://docassemble.org/docs/documents.html#allow emailing"
 ---
 mandatory: True
 question: Your document is ready.

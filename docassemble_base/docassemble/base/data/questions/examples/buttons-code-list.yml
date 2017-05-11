@@ -1,6 +1,6 @@
 metadata:
   title: Buttons defined with code
-  documentation: "http://docassemble.org/docs/fields.html#code button"
+  documentation: "https://docassemble.org/docs/fields.html#code button"
 ---
 field: target_variable
 question: |

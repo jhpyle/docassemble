@@ -3,7 +3,7 @@ metadata:
   short title: Continue
   example start: 1
   example end: 1
-  documentation: "http://docassemble.org/docs/questions.html#special buttons"
+  documentation: "https://docassemble.org/docs/questions.html#special buttons"
 ---
 mandatory: true
 question: |

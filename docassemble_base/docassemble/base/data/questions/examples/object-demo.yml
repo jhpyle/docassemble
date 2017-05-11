@@ -1,7 +1,7 @@
 metadata:
   title: Groups
   short title: Groups
-  documentation: "http://docassemble.org/docs/groups.html"
+  documentation: "https://docassemble.org/docs/groups.html"
   example start: 1
   example end: 4
 ---

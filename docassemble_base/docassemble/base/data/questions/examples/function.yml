@@ -2,7 +2,7 @@ metadata:
   title: Function
   example start: 2
   example end: 2
-  documentation: "http://docassemble.org/docs/functions.html"
+  documentation: "https://docassemble.org/docs/functions.html"
 ---
 modules:
   - docassemble.base.util  

@@ -1,7 +1,7 @@
 metadata:
   title: Reconsidering computed values
   short title: Reconsider
-  documentation: "http://docassemble.org/docs/logic.html#reconsider"
+  documentation: "https://docassemble.org/docs/logic.html#reconsider"
 ---
 code: |
   cat_food_cans_needed = number_of_cats * 4

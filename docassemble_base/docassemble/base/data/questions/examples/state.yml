@@ -2,7 +2,7 @@ metadata:
   title: State selection
   example start: 2
   example end: 3
-  documentation: "http://docassemble.org/docs/functions.html#states_list"
+  documentation: "https://docassemble.org/docs/functions.html#states_list"
 ---
 modules:
   - docassemble.base.util

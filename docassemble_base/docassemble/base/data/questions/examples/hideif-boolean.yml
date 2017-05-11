@@ -1,7 +1,7 @@
 metadata:
   title: Conditionally hide
   short title: Conditionally hide
-  documentation: "http://docassemble.org/docs/fields.html#hide if"
+  documentation: "https://docassemble.org/docs/fields.html#hide if"
 ---
 question: |
   Please fill in the following information.

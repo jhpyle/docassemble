@@ -1,6 +1,6 @@
 metadata:
   title: Attachment
-  documentation: "http://docassemble.org/docs/documents.html#attachment"
+  documentation: "https://docassemble.org/docs/documents.html#attachment"
 ---
 mandatory: True
 question: Your document is ready.

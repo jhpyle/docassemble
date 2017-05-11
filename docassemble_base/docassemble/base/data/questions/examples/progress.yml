@@ -2,7 +2,7 @@ metadata:
   title: Progress meter
   example start: 1
   example end: 3
-  documentation: "http://docassemble.org/docs/initial.html#progress bar"
+  documentation: "https://docassemble.org/docs/initial.html#progress bar"
 ---
 features:
   progress bar: True

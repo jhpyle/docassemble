@@ -3,7 +3,7 @@ metadata:
   short title: E-mail code
   example start: 1
   example end: 7
-  documentation: "http://docassemble.org/docs/background.html#email"
+  documentation: "https://docassemble.org/docs/background.html#email"
 ---
 mandatory: true
 code: |

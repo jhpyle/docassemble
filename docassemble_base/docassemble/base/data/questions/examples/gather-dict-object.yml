@@ -1,7 +1,7 @@
 metadata:
   title: "Dictionary: gather keys, objects"
   short title: "Dictionary: gather keys, objects"
-  documentation: "http://docassemble.org/docs/groups.html#gathering"
+  documentation: "https://docassemble.org/docs/groups.html#gathering"
   example start: 1
   example end: 8
 ---
@@ -22,7 +22,7 @@ question: |
 subquestion: |
   % for item in pet:
   Your pet ${ item } named
-  ${ pet[item] } has 
+  ${ pet[item].name } has 
   ${ pet[item].feet } feet.
   % endfor
 ---

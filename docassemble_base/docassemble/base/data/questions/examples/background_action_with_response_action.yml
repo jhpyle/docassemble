@@ -2,7 +2,7 @@ metadata:
   title: Set a variable
   example start: 4
   example end: 6
-  documentation: "http://docassemble.org/docs/background.html#background_response_action"
+  documentation: "https://docassemble.org/docs/background.html#background_response_action"
 ---
 mandatory: True
 code: |

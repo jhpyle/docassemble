@@ -2,7 +2,7 @@ metadata:
   title: Custom button on review screen
   example start: 3
   example end: 3
-  documentation: "http://docassemble.org/docs/fields.html#resume button label"
+  documentation: "https://docassemble.org/docs/fields.html#resume button label"
 ---
 modules:
   - docassemble.base.util

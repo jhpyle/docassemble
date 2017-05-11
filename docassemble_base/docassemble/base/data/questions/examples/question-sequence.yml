@@ -3,7 +3,7 @@ metadata:
   short title: Sequence
   example start: 1
   example end: 8
-  documentation: "http://docassemble.org/docs/logic.html#mandatory"
+  documentation: "https://docassemble.org/docs/logic.html#mandatory"
 ---
 mandatory: True
 question: |

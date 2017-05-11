@@ -2,7 +2,7 @@ metadata:
   title: Simple for loop
   example start: 1
   example end: 2
-  documentation: "http://docassemble.org/docs/groups.html"
+  documentation: "https://docassemble.org/docs/groups.html"
 ---
 code: |
   fruit_list = ['peaches', 'pears', 'apricots']

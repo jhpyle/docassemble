@@ -1,7 +1,7 @@
 metadata:
   title: "Dictionary: ask number"
   short title: "Dictionary: ask number"
-  documentation: "http://docassemble.org/docs/groups.html#gathering"
+  documentation: "https://docassemble.org/docs/groups.html#gathering"
   example start: 1
   example end: 6
 ---

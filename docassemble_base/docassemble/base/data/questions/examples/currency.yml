@@ -2,7 +2,7 @@ metadata:
   title: Currency
   example start: 3
   example end: 3
-  documentation: "http://docassemble.org/docs/functions.html#currency"
+  documentation: "https://docassemble.org/docs/functions.html#currency"
 ---
 modules:
   - docassemble.base.util

@@ -1,6 +1,6 @@
 metadata:
   title: Continue button
-  documentation: "http://docassemble.org/docs/fields.html#field"
+  documentation: "https://docassemble.org/docs/fields.html#field"
 ---
 question: |
   Welcome to the interview!

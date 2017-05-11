@@ -1,7 +1,7 @@
 metadata:
   title: "Set: gather objects"
   short title: "Set: gather objects"
-  documentation: "http://docassemble.org/docs/groups.html#gathering"
+  documentation: "https://docassemble.org/docs/groups.html#gathering"
   example start: 1
   example end: 8
 ---

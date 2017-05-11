@@ -1,6 +1,6 @@
 metadata:
   title: DOCX format
-  documentation: "http://docassemble.org/docs/documents.html#docx"
+  documentation: "https://docassemble.org/docs/documents.html#docx"
 ---
 question: Here is your document.
 attachments:

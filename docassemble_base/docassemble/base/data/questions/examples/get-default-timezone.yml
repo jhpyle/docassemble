@@ -1,7 +1,7 @@
 metadata:
   title: Default timezone
   example start: 2
-  documentation: "http://docassemble.org/docs/functions.html#get_default_timezone"
+  documentation: "https://docassemble.org/docs/functions.html#get_default_timezone"
 ---
 modules:
   - docassemble.base.util

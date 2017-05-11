@@ -1,7 +1,7 @@
 metadata:
   title: Including a question library
   short title: Library
-  documentation: "http://docassemble.org/docs/logic.html#order"
+  documentation: "https://docassemble.org/docs/logic.html#order"
   example start: 1
   example end: 4
 ---

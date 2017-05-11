@@ -2,7 +2,7 @@ metadata:
   title: HTML
   example start: 2
   example end: 2
-  documentation: "http://docassemble.org/docs/fields.html#html"
+  documentation: "https://docassemble.org/docs/fields.html#html"
 ---
 modules:
   - docassemble.base.util

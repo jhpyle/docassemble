@@ -1,7 +1,7 @@
 metadata:
   title: "Yes/no/maybe within fields"
   short title: "Yes/no/maybe within fields"
-  documentation: "http://docassemble.org/docs/fields.html#fields yesnomaybe"
+  documentation: "https://docassemble.org/docs/fields.html#fields yesnomaybe"
 ---
 question: |
   Please answer the following question.

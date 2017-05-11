@@ -1,7 +1,7 @@
 metadata:
   title: Separate label and field
   short title: Label and field
-  documentation: "http://docassemble.org/docs/fields.html#label"
+  documentation: "https://docassemble.org/docs/fields.html#label"
 ---
 question: |
   What are your favorite things to eat?

@@ -1,6 +1,6 @@
 metadata:
   title: Shuffle
-  documentation: "http://docassemble.org/docs/fields.html#shuffle"
+  documentation: "https://docassemble.org/docs/fields.html#shuffle"
 ---
 question: |
   For which of the following obscure

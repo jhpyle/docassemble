@@ -2,7 +2,7 @@ metadata:
   title: Review answers
   example start: 4
   example end: 5
-  documentation: "http://docassemble.org/docs/fields.html#review"
+  documentation: "https://docassemble.org/docs/fields.html#review"
 ---
 modules:
   - docassemble.base.util

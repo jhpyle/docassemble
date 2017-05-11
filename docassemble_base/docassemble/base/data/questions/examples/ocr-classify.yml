@@ -2,7 +2,7 @@ metadata:
   title: OCR machine learning
   example start: 2
   example end: 5
-  documentation: "http://docassemble.org/docs/functions.html#ocr_file"
+  documentation: "https://docassemble.org/docs/functions.html#ocr_file"
 ---
 modules:
   - docassemble.base.util

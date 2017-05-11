@@ -2,7 +2,7 @@ metadata:
   title: Actions
   example start: 1
   example end: 3
-  documentation: "http://docassemble.org/docs/functions.html#actions"
+  documentation: "https://docassemble.org/docs/functions.html#actions"
 ---
 field: lucky_information_confirmed
 question: |

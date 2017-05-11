@@ -1,6 +1,6 @@
 metadata:
   title: E-mail address
-  documentation: "http://docassemble.org/docs/fields.html#email"
+  documentation: "https://docassemble.org/docs/fields.html#email"
 ---
 question: |
   What is your e-mail address?

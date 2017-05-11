@@ -2,7 +2,7 @@ metadata:
   title: CSS
   example start: 2
   example end: 2
-  documentation: "http://docassemble.org/docs/modifiers.html#css"
+  documentation: "https://docassemble.org/docs/modifiers.html#css"
 ---
 modules:
   - docassemble.base.util

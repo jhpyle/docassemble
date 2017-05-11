@@ -1,6 +1,6 @@
 metadata:
   title: "From .md file"
-  documentation: "http://docassemble.org/docs/documents.html#content file"
+  documentation: "https://docassemble.org/docs/documents.html#content file"
 ---
 question: Your document is ready.
 attachment:

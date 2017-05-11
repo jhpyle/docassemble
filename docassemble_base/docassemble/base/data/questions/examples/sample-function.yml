@@ -2,7 +2,7 @@ metadata:
   title: Custom function in module
   example start: 1
   example end: 2
-  documentation: "http://docassemble.org/docs/functions.html#yourown"
+  documentation: "https://docassemble.org/docs/functions.html#yourown"
 ---
 modules:
   - .test

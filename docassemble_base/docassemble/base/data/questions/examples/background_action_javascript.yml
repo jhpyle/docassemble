@@ -2,7 +2,7 @@ metadata:
   title: Return a value and run Javascript
   example start: 2
   example end: 4
-  documentation: "http://docassemble.org/docs/background.html#ui_notification"
+  documentation: "https://docassemble.org/docs/background.html#ui_notification"
 ---
 mandatory: True
 code: |

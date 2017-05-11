@@ -2,7 +2,7 @@ metadata:
   title: Special screen
   example start: 1
   example end: 1
-  documentation: "http://docassemble.org/docs/questions.html#event"
+  documentation: "https://docassemble.org/docs/questions.html#event"
 ---
 question: |
   This is a special screen.

@@ -1,7 +1,7 @@
 metadata:
   title: User language from browser (restricted)
   short title: Browser language (restricted)
-  documentation: "http://docassemble.org/docs/functions.html#language_from_browser"
+  documentation: "https://docassemble.org/docs/functions.html#language_from_browser"
   example start: 2
   example end: 2
 ---

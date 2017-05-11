@@ -1,6 +1,6 @@
 metadata:
   title: "Today's date"
-  documentation: "http://docassemble.org/docs/functions.html#today"
+  documentation: "https://docassemble.org/docs/functions.html#today"
   example start: 2
 ---
 modules:

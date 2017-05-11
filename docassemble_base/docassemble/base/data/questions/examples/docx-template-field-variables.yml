@@ -1,7 +1,7 @@
 metadata:
   title: Field variables
   short title: Fields
-  documentation: "http://docassemble.org/docs/documents.html#field variables"
+  documentation: "https://docassemble.org/docs/documents.html#field variables"
   example start: 10
   example end: 10
 ---

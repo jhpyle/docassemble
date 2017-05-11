@@ -1,7 +1,7 @@
 metadata:
   title: Save URL to file
   short title: URL
-  documentation: "http://docassemble.org/docs/functions.html#path_and_mimetype"
+  documentation: "https://docassemble.org/docs/functions.html#path_and_mimetype"
   example start: 2
   example end: 5
 ---
@@ -12,7 +12,7 @@ objects:
   - logo: DAFile
 ---
 code: |
-  url = 'http://docassemble.org/img/docassemble-logo.jpg'
+  url = 'https://docassemble.org/img/docassemble-logo.jpg'
   (filename, mimetype) = path_and_mimetype(url)
   logo.set_mimetype(mimetype)
   logo.copy_into(filename)

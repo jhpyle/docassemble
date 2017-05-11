@@ -1,6 +1,6 @@
 metadata:
   title: Loading
-  documentation: "http://docassemble.org/docs/functions.html"
+  documentation: "https://docassemble.org/docs/functions.html"
 ---
 modules:
   - docassemble.base.util

@@ -1,6 +1,6 @@
 metadata:
   title: Buttons that run code
-  documentation: "http://docassemble.org/docs/fields.html#code button"
+  documentation: "https://docassemble.org/docs/fields.html#code button"
 ---
 question: What kind of car do you want?
 buttons:

@@ -1,7 +1,7 @@
 metadata:
   title: Send e-mail with attachment
   short title: Mail
-  documentation: "http://docassemble.org/docs/functions.html#send_email"
+  documentation: "https://docassemble.org/docs/functions.html#send_email"
   example start: 4
   example end: 5
 ---

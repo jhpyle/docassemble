@@ -1,7 +1,7 @@
 metadata:
   title: Quote paragraphs
   short title: Quote paragraphs
-  documentation: "http://docassemble.org/docs/functions.html#quote_paragraphs"
+  documentation: "https://docassemble.org/docs/functions.html#quote_paragraphs"
   example start: 2
   example end: 2
 ---

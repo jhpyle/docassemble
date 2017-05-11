@@ -2,7 +2,7 @@ metadata:
   title: Two plus two
   example start: 1
   example end: 2
-  documentation: "http://docassemble.org/docs/code.html#python"
+  documentation: "https://docassemble.org/docs/code.html#python"
 ---
 code: |
   answer = 2 + 2

@@ -1,6 +1,6 @@
 metadata:
   title: Exit or restart with choices
-  documentation: "http://docassemble.org/docs/questions.html#special buttons"
+  documentation: "https://docassemble.org/docs/questions.html#special buttons"
 ---
 question: We are all done.
 choices:

@@ -1,6 +1,6 @@
 metadata:
   title: Age of Individual
-  documentation: "http://docassemble.org/docs/objects.html#Individual.age_in_years"
+  documentation: "https://docassemble.org/docs/objects.html#Individual.age_in_years"
   example start: 3
   example end: 4
 ---

@@ -2,7 +2,7 @@ metadata:
   title: Upload multiple files
   example start: 1
   example end: 2
-  documentation: "http://docassemble.org/docs/fields.html#file"
+  documentation: "https://docassemble.org/docs/fields.html#file"
 ---
 question: |
   Please upload pictures of yourself.

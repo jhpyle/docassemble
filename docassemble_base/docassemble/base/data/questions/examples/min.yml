@@ -1,7 +1,7 @@
 metadata:
   title: Min/Max value
   short title: Min/Max value
-  documentation: "http://docassemble.org/docs/fields.html#min"
+  documentation: "https://docassemble.org/docs/fields.html#min"
 ---
 question: |
   What percentage of your friends

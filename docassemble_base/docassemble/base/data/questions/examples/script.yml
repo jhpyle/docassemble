@@ -2,7 +2,7 @@ metadata:
   title: Javascript
   example start: 1
   example end: 1
-  documentation: "http://docassemble.org/docs/modifiers.html#script"
+  documentation: "https://docassemble.org/docs/modifiers.html#script"
 ---
 question: |
   Do you want to build a snowman?

@@ -1,7 +1,7 @@
 metadata:
   title: Range slider
   short title: Range slider
-  documentation: "http://docassemble.org/docs/fields.html#range"
+  documentation: "https://docassemble.org/docs/fields.html#range"
 ---
 question: |
   On a scale from 1 to 10, how

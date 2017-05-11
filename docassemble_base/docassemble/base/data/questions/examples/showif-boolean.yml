@@ -1,7 +1,7 @@
 metadata:
   title: Conditionally show
   short title: Conditionally show 
-  documentation: "http://docassemble.org/docs/fields.html#show if"
+  documentation: "https://docassemble.org/docs/fields.html#show if"
 ---
 question: |
   Please fill in the following information.

@@ -1,7 +1,7 @@
 metadata:
   title: Suggestions
   short title: Suggestions
-  documentation: "http://docassemble.org/docs/ml.html"
+  documentation: "https://docassemble.org/docs/ml.html"
 ---
 modules:
   - docassemble.base.util

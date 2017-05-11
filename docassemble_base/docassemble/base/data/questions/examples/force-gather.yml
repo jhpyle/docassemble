@@ -1,6 +1,6 @@
 metadata:
   title: "Insist question be asked"
-  documentation: "http://docassemble.org/docs/functions.html#force_gather"
+  documentation: "https://docassemble.org/docs/functions.html#force_gather"
   example start: 2
   example end: 3
 ---

@@ -1,6 +1,6 @@
 metadata:
   title: Question text
-  documentation: "http://docassemble.org/docs/questions.html#question"
+  documentation: "https://docassemble.org/docs/questions.html#question"
 ---
 question: |
   What is the airspeed velocity of an unladen swallow?

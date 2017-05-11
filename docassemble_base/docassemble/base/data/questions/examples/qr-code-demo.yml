@@ -1,6 +1,6 @@
 metadata:
   title: QR code
-  documentation: "http://docassemble.org/docs/markup.html#qr"
+  documentation: "https://docassemble.org/docs/markup.html#qr"
   example start: 1
   example end: 1
 ---

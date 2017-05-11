@@ -1,6 +1,6 @@
 metadata:
   title: PDF fill-in with signature
-  documentation: "http://docassemble.org/docs/documents.html#signature"
+  documentation: "https://docassemble.org/docs/documents.html#signature"
   example start: 7
   example end: 8
 ---

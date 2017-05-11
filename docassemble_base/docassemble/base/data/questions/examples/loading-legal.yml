@@ -1,6 +1,6 @@
 metadata:
   title: Loading legal module
-  documentation: "http://docassemble.org/docs/legal.html"
+  documentation: "https://docassemble.org/docs/legal.html"
 ---
 modules:
   - docassemble.base.legal

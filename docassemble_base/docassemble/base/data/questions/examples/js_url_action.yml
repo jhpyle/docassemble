@@ -1,6 +1,6 @@
 metadata:
   title: Action links
-  documentation: "http://docassemble.org/docs/functions.html#js_url_action"
+  documentation: "https://docassemble.org/docs/functions.html#js_url_action"
   example start: 3
   example end: 5
 ---

@@ -1,6 +1,6 @@
 metadata:
   title: Custom continue button
-  documentation: "http://docassemble.org/docs/modifiers.html#continue button label"
+  documentation: "https://docassemble.org/docs/modifiers.html#continue button label"
 ---
 question: |
   What is your favorite fruit?

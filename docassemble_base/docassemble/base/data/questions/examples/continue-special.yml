@@ -1,6 +1,6 @@
 metadata:
   title: Continue option
-  documentation: "http://docassemble.org/docs/questions.html#continue"
+  documentation: "https://docassemble.org/docs/questions.html#continue"
 ---
 modules:
   - docassemble.base.util

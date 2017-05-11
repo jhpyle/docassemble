@@ -2,7 +2,7 @@ metadata:
   title: Export to YAML
   example start: 2
   example end: 2
-  documentation: "http://docassemble.org/docs/ml.html#SimpleTextMachineLearner.export_training_set"
+  documentation: "https://docassemble.org/docs/ml.html#SimpleTextMachineLearner.export_training_set"
 ---
 modules:
   - docassemble.base.util

@@ -1,7 +1,7 @@
 metadata:
   title: Selecting a timezone
   example start: 2
-  documentation: "http://docassemble.org/docs/functions.html#timezone_list"
+  documentation: "https://docassemble.org/docs/functions.html#timezone_list"
 ---
 modules:
   - docassemble.base.util

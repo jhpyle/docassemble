@@ -1,6 +1,6 @@
 metadata:
   title: PDF fill-in with code
-  documentation: "http://docassemble.org/docs/documents.html#template code"
+  documentation: "https://docassemble.org/docs/documents.html#template code"
   example start: 8
 ---
 modules:

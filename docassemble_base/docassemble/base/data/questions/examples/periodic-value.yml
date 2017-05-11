@@ -1,7 +1,7 @@
 metadata:
   title: Periodic value attributes
   short title: Periodic value
-  documentation: "http://docassemble.org/docs/objects.html"
+  documentation: "https://docassemble.org/docs/objects.html"
   example start: 2
   example end: 5
 ---

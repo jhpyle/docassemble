@@ -3,7 +3,7 @@ metadata:
   short title: Predict
   example start: 4
   example end: 4
-  documentation: "http://docassemble.org/docs/ml.html#SimpleTextMachineLearner.predict"
+  documentation: "https://docassemble.org/docs/ml.html#SimpleTextMachineLearner.predict"
 ---
 modules:
   - docassemble.base.util

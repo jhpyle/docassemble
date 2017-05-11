@@ -3,7 +3,7 @@ metadata:
   short title: Multiple choice pulldown
   example start: 2
   example end: 2
-  documentation: "http://docassemble.org/docs/fields.html#choices"
+  documentation: "https://docassemble.org/docs/fields.html#choices"
 ---
 mandatory: True
 question: |

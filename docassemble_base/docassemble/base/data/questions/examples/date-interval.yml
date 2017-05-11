@@ -2,7 +2,7 @@ metadata:
   title: Adding to a date
   example start: 2
   example end: 2
-  documentation: "http://docassemble.org/docs/functions.html#date_interval"
+  documentation: "https://docassemble.org/docs/functions.html#date_interval"
 ---
 modules:
   - docassemble.base.util

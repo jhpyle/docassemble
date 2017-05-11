@@ -2,7 +2,7 @@ metadata:
   title: Ordinal numbers
   example start: 2
   example end: 2
-  documentation: "http://docassemble.org/docs/functions.html#ordinal_number"
+  documentation: "https://docassemble.org/docs/functions.html#ordinal_number"
 ---
 modules:
   - docassemble.base.util

@@ -1,6 +1,6 @@
 metadata:
   title: Inline emoji
-  documentation: "http://docassemble.org/docs/markup.html#emoji"
+  documentation: "https://docassemble.org/docs/markup.html#emoji"
   example start: 2
   example end: 3
 ---

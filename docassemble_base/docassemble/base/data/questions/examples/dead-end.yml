@@ -1,6 +1,6 @@
 metadata:
   title: Dead end question
-  documentation: "http://docassemble.org/docs/questions.html#ending screens"
+  documentation: "https://docassemble.org/docs/questions.html#ending screens"
   example start: 1
   example end: 2
 ---

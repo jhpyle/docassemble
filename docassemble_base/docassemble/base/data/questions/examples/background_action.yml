@@ -2,7 +2,7 @@ metadata:
   title: Return a value
   example start: 1
   example end: 6
-  documentation: "http://docassemble.org/docs/background.html#background_action"
+  documentation: "https://docassemble.org/docs/background.html#background_action"
 ---
 mandatory: True
 code: |

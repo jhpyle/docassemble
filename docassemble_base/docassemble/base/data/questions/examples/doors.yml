@@ -2,7 +2,7 @@ metadata:
   title: Ending screens
   example start: 1
   example end: 4
-  documentation: "http://docassemble.org/docs/questions.html#event"
+  documentation: "https://docassemble.org/docs/questions.html#event"
 ---
 question: |
   Which door do you choose?

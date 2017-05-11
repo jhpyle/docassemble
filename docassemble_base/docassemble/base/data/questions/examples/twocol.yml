@@ -1,6 +1,6 @@
 metadata:
   title: Two columns
-  documentation: "http://docassemble.org/docs/documents.html#twocol"
+  documentation: "https://docassemble.org/docs/documents.html#twocol"
 ---
 modules:
   - docassemble.base.util

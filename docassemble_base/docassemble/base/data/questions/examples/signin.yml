@@ -2,7 +2,7 @@ metadata:
   title: Sign in button
   example start: 2
   example end: 3
-  documentation: "http://docassemble.org/docs/questions.html#signin"
+  documentation: "https://docassemble.org/docs/questions.html#signin"
 ---
 modules:
   - docassemble.base.util

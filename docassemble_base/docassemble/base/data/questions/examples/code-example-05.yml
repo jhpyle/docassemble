@@ -1,6 +1,6 @@
 metadata:
   title: Arithmetic
-  documentation: "http://docassemble.org/docs/code.html#python"
+  documentation: "https://docassemble.org/docs/code.html#python"
 ---
 question: |
   The answer is ${ ( 42 + 4 ) * 50 / ( 5 - 2 ) }.

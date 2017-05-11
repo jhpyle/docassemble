@@ -1,7 +1,7 @@
 metadata:
   title: Current date and time
   example start: 2
-  documentation: "http://docassemble.org/docs/functions.html#current_datetime"
+  documentation: "https://docassemble.org/docs/functions.html#current_datetime"
 ---
 modules:
   - docassemble.base.util

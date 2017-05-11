@@ -2,7 +2,7 @@ metadata:
   title: Dialog box
   example start: 2
   example end: 3
-  documentation: "http://docassemble.org/docs/fields.html#event"
+  documentation: "https://docassemble.org/docs/fields.html#event"
 ---
 modules:
   - docassemble.base.util

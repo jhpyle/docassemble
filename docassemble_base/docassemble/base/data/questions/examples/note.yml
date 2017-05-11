@@ -1,7 +1,7 @@
 metadata:
   title: Notes among fields
   short title: Notes among fields
-  documentation: "http://docassemble.org/docs/fields.html#note"
+  documentation: "https://docassemble.org/docs/fields.html#note"
 ---
 question: |
   Please fill in the following information.

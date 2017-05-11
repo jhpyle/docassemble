@@ -3,7 +3,7 @@ metadata:
   short title: MC
   example start: 4
   example end: 4
-  documentation: "http://docassemble.org/docs/fields.html#code"
+  documentation: "https://docassemble.org/docs/fields.html#code"
 ---
 mandatory: True
 question: |

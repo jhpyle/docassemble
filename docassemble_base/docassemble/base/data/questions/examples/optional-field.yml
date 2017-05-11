@@ -1,6 +1,6 @@
 metadata:
   title: Optional field
-  documentation: "http://docassemble.org/docs/fields.html#required"
+  documentation: "https://docassemble.org/docs/fields.html#required"
 ---
 question: |
   What are your favorite things to eat?

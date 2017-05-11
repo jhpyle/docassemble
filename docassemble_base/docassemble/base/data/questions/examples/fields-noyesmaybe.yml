@@ -1,7 +1,7 @@
 metadata:
   title: "Yes/no/maybe within fields (reversed)"
   short title: "Yes/no/maybe within fields (reversed)"
-  documentation: "http://docassemble.org/docs/fields.html#fields noyesmaybe"
+  documentation: "https://docassemble.org/docs/fields.html#fields noyesmaybe"
 ---
 question: |
   Please answer the following question.

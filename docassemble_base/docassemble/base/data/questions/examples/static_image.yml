@@ -1,7 +1,7 @@
 metadata:
   title: Insert image with code
   short title: Insert image with code
-  documentation: "http://docassemble.org/docs/functions.html#static_image"
+  documentation: "https://docassemble.org/docs/functions.html#static_image"
   example start: 2
   example end: 3
 ---

@@ -1,6 +1,6 @@
 metadata:
   title: Custom yes/no
-  documentation: "http://docassemble.org/docs/fields.html#field with buttons"
+  documentation: "https://docassemble.org/docs/fields.html#field with buttons"
 ---
 question: |
   Are you satisfied?

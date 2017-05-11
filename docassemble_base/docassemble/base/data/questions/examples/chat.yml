@@ -2,7 +2,7 @@ metadata:
   title: Live chat
   example start: 2
   example end: 2
-  documentation: "http://docassemble.org/docs/livehelp.html#chat"
+  documentation: "https://docassemble.org/docs/livehelp.html#chat"
 ---
 modules:
   - docassemble.base.util

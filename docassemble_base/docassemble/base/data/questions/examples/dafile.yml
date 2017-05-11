@@ -2,7 +2,7 @@ metadata:
   title: Create file with code
   example start: 1
   example end: 5
-  documentation: "http://docassemble.org/docs/objects.html#DAFile"
+  documentation: "https://docassemble.org/docs/objects.html#DAFile"
 ---
 modules:
   - docassemble.base.core

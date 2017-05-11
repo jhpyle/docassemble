@@ -1,6 +1,6 @@
 metadata:
   title: List of objects
-  documentation: "http://docassemble.org/docs/groups.html"
+  documentation: "https://docassemble.org/docs/groups.html"
   example start: 1
   example end: 6
 ---

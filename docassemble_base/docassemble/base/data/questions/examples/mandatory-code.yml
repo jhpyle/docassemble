@@ -1,7 +1,7 @@
 metadata:
   title: Mandatory code
   short title: Mandatory
-  documentation: "http://docassemble.org/docs/logic.html#mandatory"
+  documentation: "https://docassemble.org/docs/logic.html#mandatory"
   example start: 1
   example end: 3
 ---

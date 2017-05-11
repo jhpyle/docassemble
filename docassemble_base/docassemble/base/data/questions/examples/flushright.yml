@@ -1,6 +1,6 @@
 metadata:
   title: Flushright
-  documentation: "http://docassemble.org/docs/documents.html#metadata rtf pdf"
+  documentation: "https://docassemble.org/docs/documents.html#metadata rtf pdf"
 ---
 mandatory: True
 question: |

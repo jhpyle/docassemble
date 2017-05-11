@@ -1,6 +1,6 @@
 metadata:
   title: Salutation
-  documentation: "http://docassemble.org/docs/objects.html#Individual.salutation"
+  documentation: "https://docassemble.org/docs/objects.html#Individual.salutation"
   example start: 3
   example end: 4
 ---

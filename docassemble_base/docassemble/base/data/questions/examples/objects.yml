@@ -2,7 +2,7 @@ metadata:
   title: Define objects
   example start: 2
   example end: 2
-  documentation: "http://docassemble.org/docs/initial.html#objects"
+  documentation: "https://docassemble.org/docs/initial.html#objects"
 ---
 modules:
   - docassemble.base.util

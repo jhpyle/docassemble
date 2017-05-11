@@ -514,10 +514,10 @@ subquestion: |
   how to write **docassemble** interviews.  There are many features in
   **docassemble** that are not available with this wizard.
 
-  [Mako syntax]: http://docassemble.org/docs/markup.html#mako
+  [Mako syntax]: https://docassemble.org/docs/markup.html#mako
   [Playground]: ${ url_of('playground') }
   [sample Word file]: ${ url_of('docassemble.webapp:data/static/test-document.docx') }
   [Markdown]: https://daringfireball.net/projects/markdown/syntax
-  [Documents]: http://docassemble.org/docs/documents.html
+  [Documents]: https://docassemble.org/docs/documents.html
   [Templates section]: ${ url_of('playgroundtemplate') }
 field: splash_screen

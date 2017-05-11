@@ -1,7 +1,7 @@
 metadata:
   title: Yes/no radio buttons
   short title: Yes/no radio buttons
-  documentation: "http://docassemble.org/docs/fields.html#fields yesnoradio"
+  documentation: "https://docassemble.org/docs/fields.html#fields yesnoradio"
 ---
 question: |
   Please provide the following information.

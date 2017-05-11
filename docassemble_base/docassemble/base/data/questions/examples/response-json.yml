@@ -2,7 +2,7 @@ metadata:
   title: JSON response
   example start: 1
   example end: 7
-  documentation: "http://docassemble.org/docs/functions.html#response"
+  documentation: "https://docassemble.org/docs/functions.html#response"
 ---
 imports:
   - json

@@ -2,7 +2,7 @@ metadata:
   title: Machine learning
   example start: 2
   example end: 5
-  documentation: "http://docassemble.org/docs/ml.html"
+  documentation: "https://docassemble.org/docs/ml.html"
 ---
 features:
   javascript: ml-classify.js

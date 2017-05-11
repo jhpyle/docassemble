@@ -1,6 +1,6 @@
 metadata:
   title: Send e-mail
-  documentation: "http://docassemble.org/docs/functions.html#send_email"
+  documentation: "https://docassemble.org/docs/functions.html#send_email"
   example start: 2
   example end: 8
 ---

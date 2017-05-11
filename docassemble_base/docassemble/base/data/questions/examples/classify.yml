@@ -2,7 +2,7 @@ metadata:
   title: Classifier
   example start: 4
   example end: 6
-  documentation: "http://docassemble.org/docs/ml.html#SimpleTextMachineLearner.one_unclassified_entry"
+  documentation: "https://docassemble.org/docs/ml.html#SimpleTextMachineLearner.one_unclassified_entry"
 ---
 modules:
   - docassemble.base.util

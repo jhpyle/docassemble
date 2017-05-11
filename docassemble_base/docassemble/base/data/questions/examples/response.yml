@@ -1,7 +1,7 @@
 metadata:
   title: Custom response
   example start: 3
-  documentation: "http://docassemble.org/docs/functions.html#response"
+  documentation: "https://docassemble.org/docs/functions.html#response"
 ---
 modules:
   - docassemble.base.util

@@ -3,7 +3,7 @@ metadata:
   short title: E-mail
   example start: 1
   example end: 3
-  documentation: "http://docassemble.org/docs/background.html#email"
+  documentation: "https://docassemble.org/docs/background.html#email"
 ---
 modules:
   - docassemble.base.util

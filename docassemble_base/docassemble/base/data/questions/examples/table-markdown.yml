@@ -1,7 +1,7 @@
 metadata:
   title: Tables in Markdown
   short title: tables
-  documentation: "http://docassemble.org/docs/markup.html#tables"
+  documentation: "https://docassemble.org/docs/markup.html#tables"
 ---
 mandatory: true
 question: |

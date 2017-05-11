@@ -1,6 +1,6 @@
 metadata:
   title: User IP
-  documentation: "http://docassemble.org/docs/functions.html#device"
+  documentation: "https://docassemble.org/docs/functions.html#device"
   example start: 2
   example end: 2
 ---

@@ -1,7 +1,7 @@
 metadata:
   title: Resetting variables
   short title: Reset
-  documentation: "http://docassemble.org/docs/initial.html#reset"
+  documentation: "https://docassemble.org/docs/initial.html#reset"
 ---
 reset:
   - cat_food_cans_needed

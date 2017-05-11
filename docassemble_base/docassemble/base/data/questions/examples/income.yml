@@ -3,7 +3,7 @@ metadata:
   short title: Periods
   example start: 3
   example end: 3
-  documentation: "http://docassemble.org/docs/functions.html#period_list"
+  documentation: "https://docassemble.org/docs/functions.html#period_list"
 ---
 modules:
   - docassemble.base.util

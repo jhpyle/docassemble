@@ -1,7 +1,7 @@
 metadata:
   title: Variables as JSON
   short title: JSON variables
-  documentation: "http://docassemble.org/docs/functions.html#variables_as_json"
+  documentation: "https://docassemble.org/docs/functions.html#variables_as_json"
   example start: 2
   example end: 5
 ---

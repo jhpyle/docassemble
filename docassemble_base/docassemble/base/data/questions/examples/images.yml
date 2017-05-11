@@ -1,6 +1,6 @@
 metadata:
   title: Images without attribution
-  documentation: "http://docassemble.org/docs/initial.html#images"
+  documentation: "https://docassemble.org/docs/initial.html#images"
 ---
 images:
   star: star.svg

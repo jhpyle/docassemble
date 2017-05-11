@@ -1,6 +1,6 @@
 metadata:
   title: Video from static file
-  documentation: "http://docassemble.org/docs/modifiers.html#video"
+  documentation: "https://docassemble.org/docs/modifiers.html#video"
 ---
 question: |
   Are you traveling to New York City?

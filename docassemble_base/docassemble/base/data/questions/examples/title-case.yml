@@ -2,7 +2,7 @@ metadata:
   title: Title case
   example start: 2
   example end: 2
-  documentation: "http://docassemble.org/docs/functions.html#title_case"
+  documentation: "https://docassemble.org/docs/functions.html#title_case"
 ---
 modules:
   - docassemble.base.util

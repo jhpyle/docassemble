@@ -1,6 +1,6 @@
 metadata:
   title: Allowing documents to be e-mailed
-  documentation: "http://docassemble.org/docs/documents.html#allow emailing"
+  documentation: "https://docassemble.org/docs/documents.html#allow emailing"
   example start: 1
   example end: 1
 ---

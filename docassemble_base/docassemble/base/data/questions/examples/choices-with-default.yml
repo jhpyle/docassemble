@@ -1,6 +1,6 @@
 metadata:
   title: Radio buttons with default
-  documentation: "http://docassemble.org/docs/fields.html#field with choices"
+  documentation: "https://docassemble.org/docs/fields.html#field with choices"
 ---
 question: |
   What type of shoes do you wear?

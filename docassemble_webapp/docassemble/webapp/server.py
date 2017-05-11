@@ -147,7 +147,7 @@ else:
     VOICERSS_ENABLED = True
 ROOT = daconfig.get('root', '/')
 #app.logger.warning("default sender is " + current_app.config['MAIL_DEFAULT_SENDER'] + "\n")
-exit_page = daconfig.get('exitpage', 'http://docassemble.org')
+exit_page = daconfig.get('exitpage', 'https://docassemble.org')
 
 SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
 #PACKAGE_CACHE = daconfig.get('packagecache', '/var/www/.cache')
@@ -6939,7 +6939,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
       author=""" + repr(str(name_of_user(current_user))) + """,
       author_email=""" + repr(str(current_user.email)) + """,
       license='MIT',
-      url='http://docassemble.org',
+      url='https://docassemble.org',
       packages=find_packages(),
       namespace_packages = ['docassemble'],
       zip_safe = False,

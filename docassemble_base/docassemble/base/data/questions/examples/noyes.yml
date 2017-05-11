@@ -1,6 +1,6 @@
 metadata:
   title: Yes means false
-  documentation: "http://docassemble.org/docs/fields.html#noyes"
+  documentation: "https://docassemble.org/docs/fields.html#noyes"
 ---
 question: |
   Are you at least 18 years of age?

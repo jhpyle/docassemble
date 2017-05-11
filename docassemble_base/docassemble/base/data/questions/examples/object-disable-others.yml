@@ -1,7 +1,7 @@
 metadata:
   title: Existing or new
   short title: Existing or new
-  documentation: "http://docassemble.org/docs/fields.html#disable others"
+  documentation: "https://docassemble.org/docs/fields.html#disable others"
   example start: 2
   example end: 4
 ---

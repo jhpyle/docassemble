@@ -1,6 +1,6 @@
 metadata:
   title: Comments
-  documentation: "http://docassemble.org/docs/modifiers.html#comment"
+  documentation: "https://docassemble.org/docs/modifiers.html#comment"
 ---
 question: |
   Do you agree the weather

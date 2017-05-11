@@ -2,7 +2,7 @@ metadata:
   title: Force asking a question
   example start: 3
   example end: 3
-  documentation: "http://docassemble.org/docs/functions.html#force_ask"
+  documentation: "https://docassemble.org/docs/functions.html#force_ask"
 ---
 modules:
   - docassemble.base.util

@@ -1,7 +1,7 @@
 metadata:
   title: Fill fields in a DOCX template
   short title: DOCX
-  documentation: "http://docassemble.org/docs/documents.html#docx template file"
+  documentation: "https://docassemble.org/docs/documents.html#docx template file"
   example start: 6
   example end: 6
 ---

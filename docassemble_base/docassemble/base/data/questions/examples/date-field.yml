@@ -1,6 +1,6 @@
 metadata:
   title: Date
-  documentation: "http://docassemble.org/docs/fields.html#date"
+  documentation: "https://docassemble.org/docs/fields.html#date"
 ---
 question: |
   What is your date of birth?

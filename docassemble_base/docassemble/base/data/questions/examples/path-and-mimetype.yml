@@ -1,7 +1,7 @@
 metadata:
   title: File path and MIME type
   short title: Path
-  documentation: "http://docassemble.org/docs/functions.html#path_and_mimetype"
+  documentation: "https://docassemble.org/docs/functions.html#path_and_mimetype"
   example start: 2
   example end: 3
 ---
@@ -11,7 +11,7 @@ modules:
 code: |
   (filename_a, mimetype_a) = path_and_mimetype('data/static/hello.pdf')
   (filename_b, mimetype_b) = path_and_mimetype('docassemble.demo:data/static/house.png')
-  (filename_c, mimetype_c) = path_and_mimetype('http://docassemble.org/img/docassemble-logo.jpg')
+  (filename_c, mimetype_c) = path_and_mimetype('https://docassemble.org/img/docassemble-logo.jpg')
 ---
 mandatory: True
 question: |
@@ -27,7 +27,7 @@ subquestion: |
   Path **${ filename_b }** has
   MIME type **${ mimetype_b }**.
 
-  #### `http://docassemble.org/img/docassemble-logo.jpg`
+  #### `https://docassemble.org/img/docassemble-logo.jpg`
 
   Path **${ filename_c }** has
   MIME type **${ mimetype_c }**.

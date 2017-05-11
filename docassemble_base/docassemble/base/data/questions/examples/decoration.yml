@@ -1,6 +1,6 @@
 metadata:
   title: Icon in corner
-  documentation: "http://docassemble.org/docs/modifiers.html#decoration"
+  documentation: "https://docassemble.org/docs/modifiers.html#decoration"
 ---
 decoration: kids
 question:

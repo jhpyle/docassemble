@@ -2,7 +2,7 @@ metadata:
   title: Computed attachment list
   example start: 1
   example end: 4
-  documentation: "http://docassemble.org/docs/documents.html#attachment code"
+  documentation: "https://docassemble.org/docs/documents.html#attachment code"
 ---
 mandatory: True
 question: |

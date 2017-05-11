@@ -15,60 +15,60 @@ functions:
   doc: >-
     These are functions that you can call from within code or within
     ${ } statements in text.
-  url: "http://docassemble.org/docs/functions.html"
+  url: "https://docassemble.org/docs/functions.html"
 classes:
   title: Classes
   doc: >-
     Classes are the types of "objects" that are available to use in
     your interview.
-  url: "http://docassemble.org/docs/objects.html"
+  url: "https://docassemble.org/docs/objects.html"
 modules:
   title: Modules
   doc: >-
     These are the modules that have been brought into the interview
     through "import" commands.
-  url: "http://docassemble.org/docs/initial.html#imports"
+  url: "https://docassemble.org/docs/initial.html#imports"
 playground_modules:
   title: Playground modules
   doc: >-
     These are the modules that exist in the "Modules" area
     of the Playground and that are available to bring in using an "imports"
     or "modules" block.
-  url: "http://docassemble.org/docs/playground.html#modules"
+  url: "https://docassemble.org/docs/playground.html#modules"
 templates:
   title: Templates
   doc: >-
     These are the templates that exist in the "Templates" area of the
     Playground and that are available for use in "attachment" and
     "template" blocks.
-  url: "http://docassemble.org/docs/playground.html#templates"
+  url: "https://docassemble.org/docs/playground.html#templates"
 static:
   title: Static files
   doc: >-
     These are the static files that exist in the "Static" area of the
     Playground and that are available for use through the "image sets," "images,"
     "decoration," and "[FILE]" features.
-  url: "http://docassemble.org/docs/functions.html#url_of"
+  url: "https://docassemble.org/docs/functions.html#url_of"
 sources:
   title: Source files
   doc: >-
     These are the data files that exist in the "Sources" area of the
     Playground.  The data files may include word translation files and
     data files for training a machine learning model.
-  url: "http://docassemble.org/docs/functions.html#word"
+  url: "https://docassemble.org/docs/functions.html#word"
 decorations:
   title: Decorations
   doc: >-
     These are the images that have been made available in your
     interview through "image sets" and "images" blocks and that can be
     included using emoji-style markup and the "decoration" modifier.
-  url: "http://docassemble.org/docs/modifiers.html#decoration"
+  url: "https://docassemble.org/docs/modifiers.html#decoration"
 incomplete:
   doc: >-
     This interview file does not have an endpoint.  If you intend
     users to run this interview file directly, you need to add a
     <a target="_blank"
-    href="http://docassemble.org/docs/logic.html#mandatory">mandatory
+    href="https://docassemble.org/docs/logic.html#mandatory">mandatory
     code block or question</a>.
 generic error:
   doc: >-

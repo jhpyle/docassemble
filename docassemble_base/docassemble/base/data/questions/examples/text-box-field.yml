@@ -1,6 +1,6 @@
 metadata:
   title: Text box
-  documentation: "http://docassemble.org/docs/fields.html#area"
+  documentation: "https://docassemble.org/docs/fields.html#area"
 ---
 question: |
   Tell me the story of your life.

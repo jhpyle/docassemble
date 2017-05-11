@@ -2,7 +2,7 @@ metadata:
   title: Number as word
   example start: 2
   example end: 2
-  documentation: "http://docassemble.org/docs/functions.html#nice_number"
+  documentation: "https://docassemble.org/docs/functions.html#nice_number"
 ---
 modules:
   - docassemble.base.util

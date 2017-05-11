@@ -1,7 +1,7 @@
 metadata:
   title: Custom objects from file
   short title: Import
-  documentation: "http://docassemble.org/docs/functions.html#objects_from_file"
+  documentation: "https://docassemble.org/docs/functions.html#objects_from_file"
   example start: 2
   example end: 3
 ---

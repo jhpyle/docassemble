@@ -1,7 +1,7 @@
 metadata:
   title: Database storage
   short title: Database storage
-  documentation: "http://docassemble.org/docs/functions.html#write_record"
+  documentation: "https://docassemble.org/docs/functions.html#write_record"
   example start: 2
   example end: 4
 ---

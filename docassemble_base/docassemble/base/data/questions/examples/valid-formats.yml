@@ -1,6 +1,6 @@
 metadata:
   title: Output formats
-  documentation: "http://docassemble.org/docs/documents.html#valid formats"
+  documentation: "https://docassemble.org/docs/documents.html#valid formats"
 ---
 question: Your document is ready.
 attachment:

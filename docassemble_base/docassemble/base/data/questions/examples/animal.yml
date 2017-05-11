@@ -1,7 +1,7 @@
 metadata:
   title: Animals and vegetables
   short title: Test
-  documentation: "http://docassemble.org/docs/interviews.html#simple interview"
+  documentation: "https://docassemble.org/docs/interviews.html#simple interview"
   example start: 1
   example end: 3
 ---

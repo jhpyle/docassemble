@@ -1,6 +1,6 @@
 metadata:
   title: Signature
-  documentation: "http://docassemble.org/docs/fields.html#signature"
+  documentation: "https://docassemble.org/docs/fields.html#signature"
 ---
 question: |
   Please sign your name below.

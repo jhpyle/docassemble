@@ -2,7 +2,7 @@ metadata:
   title: Mad libs
   example start: 3
   example end: 4
-  documentation: "http://docassemble.org/docs/groups.html"
+  documentation: "https://docassemble.org/docs/groups.html"
 ---
 modules:
   - docassemble.base.util

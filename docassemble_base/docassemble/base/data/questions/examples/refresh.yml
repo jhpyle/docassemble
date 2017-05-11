@@ -2,7 +2,7 @@ metadata:
   title: Refresh button
   example start: 2
   example end: 2
-  documentation: "http://docassemble.org/docs/questions.html#refresh"
+  documentation: "https://docassemble.org/docs/questions.html#refresh"
 ---
 modules:
   - docassemble.base.util

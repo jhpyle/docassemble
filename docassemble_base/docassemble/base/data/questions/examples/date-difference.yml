@@ -2,7 +2,7 @@ metadata:
   title: Difference between dates
   example start: 2
   example end: 3
-  documentation: "http://docassemble.org/docs/functions.html#date_difference"
+  documentation: "https://docassemble.org/docs/functions.html#date_difference"
 ---
 modules:
   - docassemble.base.util

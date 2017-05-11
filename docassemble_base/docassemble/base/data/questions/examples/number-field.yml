@@ -1,6 +1,6 @@
 metadata:
   title: Numbers
-  documentation: "http://docassemble.org/docs/fields.html#number"
+  documentation: "https://docassemble.org/docs/fields.html#number"
 ---
 question: |
   Describe your possessions.

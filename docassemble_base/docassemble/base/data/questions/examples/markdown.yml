@@ -1,6 +1,6 @@
 metadata:
   title: Marking up text
-  documentation: "http://docassemble.org/docs/markup.html"
+  documentation: "https://docassemble.org/docs/markup.html"
 ---
 question: |
   Introduction to Markdown

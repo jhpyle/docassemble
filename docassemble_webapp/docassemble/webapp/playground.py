@@ -94,7 +94,7 @@ class DAInterview(DAObject):
         info['description'] = self.title
         info['version'] = "1.0"
         info['license'] = "The MIT License"
-        info['url'] = "http://docassemble.org"
+        info['url'] = "https://docassemble.org"
         for block in self.all_blocks():
             for template in block.templates_used:
                 if not re.search(r'^docassemble\.', template):

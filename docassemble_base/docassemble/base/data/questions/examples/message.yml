@@ -1,6 +1,6 @@
 metadata:
   title: Question generated with code
-  documentation: "http://docassemble.org/docs/functions.html#message"
+  documentation: "https://docassemble.org/docs/functions.html#message"
   example start: 2
 ---
 modules:

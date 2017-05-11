@@ -1,6 +1,6 @@
 metadata:
   title: The lastfirst method
-  documentation: "http://docassemble.org/docs/objects.html#Name.lastfirst"
+  documentation: "https://docassemble.org/docs/objects.html#Name.lastfirst"
   example start: 2
   example end: 4
 ---
