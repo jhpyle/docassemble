@@ -30,7 +30,7 @@ Here is an example of what a configuration file may look like:
 
 {% highlight yaml %}
 debug: True
-exitpage: http://docassemble.org
+exitpage: https://docassemble.org
 db:
   prefix: postgresql+psycopg2://
   name: docassemble

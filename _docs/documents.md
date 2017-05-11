@@ -604,7 +604,8 @@ in your .docx file, you need to edit the paragraph spacing of
 paragraphs that do _not_ contain `{% raw %}{%p ... %}{% endraw %}`
 statements.  You may need to change both the spacing after a paragraph
 and the spacing before a paragraph in order to get the results you
-want.
+want.  Other modifiers besides `p` include `tr` for table rows and
+`tc` for table columns.
 
 If any of your [Mako] statements contain an image, the image will be
 used for the variable in the .docx file.  This is illustrated in the
@@ -641,7 +642,7 @@ in order to process the list of ingredients.  Here is an example of a
 
 ![recipe template source]({{ site.baseurl }}/img/recipe_template.png){: .maybe-full-width }
 
-For more information on using [Jinja2] in a .docx template, see the
+For more information on using [Jinja2] in .docx templates, see the
 documentation of [`python-docx-template`].
 
 ## <a name="template code"></a>Passing values using code
@@ -821,6 +822,30 @@ use [`DAList`] and [`DADict`] objects.
 
 {% include side-by-side.html demo="docx-jinja2-demo" %}
 
+### <a name="docx tables"></a>Inserting tables into .docx templates
+
+You can assemble tables in a .docx template using a "for loop."
+
+Here is an example.  Your .docx template will look like this:
+
+![table template source]({{ site.baseurl }}/img/table_template.png){: .maybe-full-width }
+
+Note that the row that should be repeated is sandwiched between two
+rows containing `for` and `endfor` [Jinja2] statements.  Both of these
+statements use the `tr` prefix.  These two rows will not appear in the
+final output.  The final output will look something like this:
+
+![table template result]({{ site.baseurl }}/img/table_template_result.png){: .maybe-full-width }
+
+In this example, each row corresponds to an item in a [Python dict].
+Here is an example of an interview that gathers these items and
+provides the .docx file.
+
+{% include side-by-side.html demo="docx-template-table" %}
+
+For more information about gathering the items of a [Python dict], see
+the [Dictionary] subsection of the [Groups] section of the documentation.
+
 ## <a name="list field names"></a>How to get a list of field names in a PDF or DOCX file
 
 When logged in to **docassemble** as a developer, you can go to
@@ -994,3 +1019,5 @@ Including `allow emailing: False` will disable this:
 [`.comma_and_list()`]: {{ site.baseurl }}/docs/objects.html#DAList.comma_and_list
 [`reconsider`]: {{ site.baseurl }}/docs/code.html#reconsider
 [Remember]: {{ site.baseurl }}/docs/logic.html
+[Dictionary]: {{ site.baseurl }}/docs/groups.html#gather dictionary
+[Groups]: {{ site.baseurl }}/docs/groups.html

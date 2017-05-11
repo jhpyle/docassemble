@@ -286,21 +286,82 @@ objects, the gathering process for [`DADict`] objects will call upon
 the attributes `.there_are_any` and `.there_is_another`.
 
 In addition, the process will look for the attribute `.new_item_name`
-to get the key to be added to the dictionary.
-
-If you use a plain [`DADict`] object, the process will look for the
-attribute `.new_item_value` to get the value of the 
+to get the key to be added to the dictionary.  In the example below,
+we build a [`DADict`] in which the keys are the names of fruits and
+the values are the number of seeds that fruit contains.  There is one
+question that asks for the fruit name (`fruit.new_item_name`) and a
+separate question that asks for the number of seeds (`fruit[i]`).
 
 {% include side-by-side.html demo="gather-dict" %}
 
-{% include side-by-side.html demo="gather-dict-object" %}
+Alternatively, you can use the attribute `.new_item_value` to set the
+value of a new item.
 
 {% include side-by-side.html demo="gather-dict-value" %}
 
+The value of the `.new_item_value` attribute will never be sought by
+the **docassemble** gathering process; only the value of the
+`.new_item_name` attribute will be sought.  So if you want to use
+`.new_item_value`, you need to set it using a question that also sets
+`.new_item_name`, as in the example above.
+
+You can also populate the contents of a [`DADict`] object where each
+value is itself an object.
+
+{% include side-by-side.html demo="gather-dict-object" %}
+
+In the example above, we populate a [`DADict`] called `pet`, in which
+the keys are a type of pet (e.g., `'cat'`, `'dog'`), and the values
+are objects of type [`DAObject`] with attributes `.name` (e.g.,
+`'Mittens'`, `'Spot'`) and `.feet` (e.g., `4`).  We need to start by
+telling **docassemble** that the [`DADict`] is a dictionary of
+objects.  We do this by setting the `.object_type` attribute of the
+[`DADict`] to `DAObject`, using some [`mandatory`] code.  Then we
+provide a question that sets the `.new_item_name` attribute.
+
+When a `.object_type` is provided, **docassemble** will take care of
+initializing the value of each entry as an object of this type.  It
+will also gather whatever attributes, if any, are necessary to
+represent the object as text.  The representation of the object as
+text is what you see if you include the object in a [Mako] template:
+`${ pet['cat'] }`.  (Or, if you know [Python], it is the result of
+`str(pet['cat'])`.)  The attributes necessary to represent the object
+as text depend on the type of object.  In the case of a [`DAObject`],
+no attributes are required to represent the object as text.  In the
+case of an [`Individual`], the individual's name is required.
+
+Since a [`DAObject`] does not have any necessary attributes, then in
+the example above, the `pet` object is considered "gathered"
+(i.e. `pet.gathered` is `True`) after all the types of pet (e.g.,
+`'cat'`, `'dog'`) have been provided.  At this point, the values of
+the [`DADict`] are simply empty [`DAObject`]s.  The `.name` and
+`.feet` attributes are still not defined.  The final screen of the
+interview, which contains a "for" loop that describes the number of
+feet of each pet, causes the asking of questions to obtain the `.feet`
+and `.name` attributes.
 
 ### <a name="gather set"></a>Sets
 
+The gathering of items into a [`DASet`] is much like the gathering of
+items into a [`DADict`].  The difference is that instead of using the
+attributes `.new_item_name` and `.new_item_value`, you use a single
+attribute, `.new_item`.
+
+Here is an example that gathers a set of text items (e.g., `'apple'`,
+`'orange'`, `'banana'`) into a [`DASet`].
+
 {% include side-by-side.html demo="gather-set" %}
+
+You can also gather objects into a [`DASet`].  However, the [`DASet`]
+does not use the `.object_type` attribute, as [`DAList`] and
+[`DADict`] groups do.  The objects that you gather into a [`DASet`]
+need to exist already.
+
+In the example below, we create several [`DAObject`]s, each
+representing a fruit, and we use a multiple choice question with
+`datatype` set to `object` to ask which fruits the user likes.  (See
+[selecting objects] for more information about these types of
+questions.)
 
 {% include side-by-side.html demo="gather-set-object" %}
 
@@ -528,6 +589,8 @@ yesno: case.plaintiff[i].agrees_to_accept_service
 [`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`docassemble.base.core`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/core.py
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
+[`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
+[`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [`DASet`]: {{ site.baseurl }}/docs/objects.html#DASet
@@ -552,3 +615,4 @@ yesno: case.plaintiff[i].agrees_to_accept_service
 [set]: https://docs.python.org/2/library/stdtypes.html#set
 [object]: {{ site.baseurl }}/docs/objects.html
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
+[selecting objects]: {{ site.baseurl }}/docs/fields.html#objects
