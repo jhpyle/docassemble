@@ -2,7 +2,7 @@
     - markdown
     - terms
     - auto-terms
-- Templates:
+- Mako templating:
     - mako-01
     - mako-02
     - mako-03
@@ -20,14 +20,15 @@
     - attachment-code
     - valid-formats
     - document-docx
+    - allow-emailing-false
+    - document-language
+- "PDF & DOCX templates":
     - pdf-fill
     - pdf-fill-signature
     - pdf-fill-code
     - docx-template
     - docx-template-code
-    - allow-emailing-false
-    - document-language
-- Document templates:
+- Markdown templates:
     - template
     - template-subject
     - template-file
@@ -35,6 +36,7 @@
     - table-markdown
     - table
     - table-mako
+    - docx-template-table
 - Fields:
     - text-field
     - text-box-field
