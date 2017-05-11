@@ -871,9 +871,13 @@ a `variable name` key to an attachment.  For example:
 {% include side-by-side.html demo="document-variable-name" %}
 
 You can also assemble a document and save it to a variable without
-presenting it to the user.  The following example creates a PDF file
-and an RTF file containing the message "Hello, world!" and offers the
-files as hyperlinks.
+presenting it to the user in this manner.  You do not need to use
+[`attachments`] with a [`question`]; it can stand on its own, and it
+will be evaluated when **docassemble** needs the definition of the
+variable indicated by `variable name`.
+
+The following example creates a PDF file and an RTF file containing
+the message "Hello, world!" and offers the files as hyperlinks.
 
 {% include side-by-side.html demo="document-variable-name-link" %}
 
