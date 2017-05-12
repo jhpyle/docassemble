@@ -537,10 +537,14 @@ class Address(DAObject):
     def block(self):
         """Returns the address formatted as a block, as in a mailing."""
         output = ""
+        if this_thread.evaluation_context == 'docx':
+            line_breaker = "\n"
+        else:
+            line_breaker = " [NEWLINE] "
         if self.city_only is False:
-            output += str(self.address) + " [NEWLINE] "
+            output += str(self.address) + line_breaker
             if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-                output += str(self.unit) + " [NEWLINE] "
+                output += str(self.unit) + line_breaker
         output += str(self.city) + ", " + str(self.state)
         if hasattr(self, 'zip'):
             output += " " + str(self.zip)
@@ -616,7 +620,7 @@ class Person(DAObject):
                 the_info = self.name.full()
             else:
                 the_info = capitalize(self.object_name())
-            the_info += ' [NEWLINE] ' + self.location.description
+            the_info += " [NEWLINE] " + self.location.description
             result = {'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}
             if hasattr(self, 'icon'):
                 result['icon'] = self.icon
@@ -673,7 +677,10 @@ class Person(DAObject):
         return self is this_thread.user
     def address_block(self):
         """Returns the person name address as a block, for use in mailings."""
-        return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block())
+        if this_thread.evaluation_context == 'docx':
+            return(self.name.full() + "\n" + self.address.block())
+        else:
+            return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block())
     def sms_number(self):
         """Returns the person's mobile_number, if defined, otherwise the phone_number."""
         if hasattr(self, 'mobile_number'):
@@ -992,7 +999,7 @@ class Organization(Person):
                     the_info = self.name.full()
                 else:
                     the_info = capitalize(self.object_name())
-                the_info += ' [NEWLINE] ' + office.location.description
+                the_info += " [NEWLINE] " + office.location.description
                 this_response = {'latitude': office.location.latitude, 'longitude': office.location.longitude, 'info': the_info}
                 if hasattr(office, 'icon'):
                     this_response['icon'] = office.icon

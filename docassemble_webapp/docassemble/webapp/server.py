@@ -8763,6 +8763,11 @@ def request_developer():
         return redirect(url_for('interview_list'))
     return render_template('users/request_developer.html', tab_title=word("Developer Access"), page_title=word("Developer Access"), form=form)
 
+def docx_variable_fix(variable):
+    variable = re.sub(r'\\', '', variable)
+    variable = re.sub(r'^([A-Za-z\_][A-Za-z\_0-9]*).*', r'\1', variable)
+    return variable
+
 @app.route('/utilities', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -8841,7 +8846,9 @@ def utilities():
                         result = fp.read()
                     fields = set()
                     for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
-                        fields.add(re.sub(r'\\', '', variable))
+                        fields.add(docx_variable_fix(variable))
+                    for variable in re.findall(r'{%[a-z]* for [A-Za-z\_][A-Za-z0-9\_]* in *([^\} ]+) *%}', result):
+                        fields.add(docx_variable_fix(variable))
                     if len(fields):
                         fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    docx template file: " + the_file.filename + "\n    fields:\n"
                         for field in fields:

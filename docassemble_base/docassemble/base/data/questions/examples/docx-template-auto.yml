@@ -1,0 +1,39 @@
+metadata:
+  title: Automatically fill fields in a DOCX template
+  short title: DOCX
+  documentation: "https://docassemble.org/docs/documents.html#docx template file"
+  example start: 10
+  example end: 10
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Assembling a document from a .docx
+  template
+subquestion: |
+  This interview will fill fields in
+  a .docx template.  You can
+  [download the template] to see what
+  it looks like.
+
+  The letter will be sent by the
+  user to an adverse party to
+  complain about something.
+
+  [download the template]: ${ url_of('docx-template-auto.docx') }
+field: introduction_shown
+---
+code: |
+  foo = "I am foo"
+  bar = "I am bar"
+---
+mandatory: True
+code: |
+  introduction_shown
+---
+mandatory: True
+question: |
+  Here is your document.
+attachment:
+  docx template file: docx-template-auto.docx

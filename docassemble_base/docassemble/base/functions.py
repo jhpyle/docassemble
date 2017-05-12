@@ -81,6 +81,14 @@ def get_current_variable():
         return this_thread.current_variable[-1]
     return None
 
+def reset_context():
+    this_thread.evaluation_context = None
+    this_thread.docx_template = None
+
+def set_context(new_context, template=None):
+    this_thread.evaluation_context = new_context
+    this_thread.docx_template = template
+
 def set_current_variable(var):
     #logmessage("set_current_variable: " + str(var))
     this_thread.current_variable.append(var)
@@ -839,6 +847,8 @@ class ThreadVariables(threading.local):
     uid = None
     current_package = None
     current_question = None
+    evaluation_context = None
+    docx_template = None
     gathering_mode = dict()
     current_variable = list()
     open_files = set()
@@ -1740,20 +1750,12 @@ def standard_template_filename(the_file):
         return(None)
 
 def package_template_filename(the_file, **kwargs):
+    the_file = the_file.strip()
     parts = the_file.split(":")
     if len(parts) == 1:
         package = kwargs.get('package', None)
-        #logmessage("my package is " + str(package))
         if package is not None:
             parts = [package, the_file]
-            #logmessage("my package is " + str(package))
-        #else:
-            #parts = ['docassemble.base', the_file]
-            #logmessage("my package is docassemble.base and the_file is " + str(the_file))
-        #else:
-        #    retval = server.absolute_filename('/playgroundtemplate/' + the_file).path
-        #    logmessage("package_template_filename: retval is " + str(retval))
-        #    return(retval)
     if len(parts) == 2:
         m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
         if m:
@@ -1762,7 +1764,6 @@ def package_template_filename(the_file, **kwargs):
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/templates/' + parts[1]
         try:
-            #logmessage("Trying with " + str(parts[0]) + " and " + str(parts[1]))
             return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
         except:
             return(None)

@@ -5,7 +5,30 @@ from docassemble.base.functions import server
 import docassemble.base.filter
 from types import NoneType
 
-def transform_for_docx(text, question, tpl):
+def image_for_docx(number, question, tpl, width=None):
+    file_info = server.file_finder(number, convert={'svg': 'png'}, question=question)
+    if 'fullpath' not in file_info:
+        return '[FILE NOT FOUND]'
+    if width is not None:
+        m = re.search(r'$([0-9\.]) *([A-Za-z]+) *\]', width)
+        if m:
+            amount = m.group(1)
+            units = m.group(2).lower()
+            if units in ['in', 'inches', 'inch']:
+                the_width = Inches(amount)
+            elif units in ['pt', 'pts', 'point', 'points']:
+                the_width = Pt(amount)
+            elif units in ['mm', 'millimeter', 'millimeters']:
+                the_width = Mm(amount)
+            else:
+                the_width = Pt(amount)
+        else:
+            the_width = Inches(2)
+    else:
+        the_width = Inches(2)
+    return InlineImage(tpl, file_info['fullpath'], the_width)
+
+def transform_for_docx(text, question, tpl, width=None):
     if type(text) in (int, float, bool, NoneType):
         return text
     text = unicode(text)

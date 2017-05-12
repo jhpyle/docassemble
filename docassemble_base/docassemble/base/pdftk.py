@@ -79,7 +79,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
     fdf_file.write(fdf)
     fdf_file.close()
     pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=False)
-    subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name,'output', pdf_file.name, 'flatten']
+    subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name, 'flatten']
     result = call(subprocess_arguments)
     if result != 0:
         logmessage("Failed to fill PDF form " + str(template))

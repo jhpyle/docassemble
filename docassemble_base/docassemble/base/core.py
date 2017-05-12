@@ -10,6 +10,7 @@ import inspect
 import mimetypes
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article
 import docassemble.base.functions
+import docassemble.base.file_docx
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate']
 
@@ -1329,10 +1330,13 @@ class DAFile(DAObject):
             return('')
         if hasattr(self, 'number') and hasattr(self, 'extension') and self.extension == 'pdf':
             self.page_path(1, 'page')
-        if width is not None:
-            return('[FILE ' + str(self.number) + ', ' + str(width) + ']')
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+            return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.docx_template, width=width)
         else:
-            return('[FILE ' + str(self.number) + ']')
+            if width is not None:
+                return('[FILE ' + str(self.number) + ', ' + str(width) + ']')
+            else:
+                return('[FILE ' + str(self.number) + ']')
     def url_for(self):
         """Returns a URL to the file."""
         return server.url_finder(self)
@@ -1412,6 +1416,8 @@ class DAEmailRecipient(DAObject):
             return 'EMAIL NOT DEFINED'
         if self.address == '' and name != '':
             return name
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+            return unicode(self.address)
         if name == '' and self.address != '':
             return '[' + unicode(self.address) + '](mailto:' + unicode(self.address) + ')' 
         return '[' + unicode(name) + '](mailto:' + unicode(self.address) + ')'

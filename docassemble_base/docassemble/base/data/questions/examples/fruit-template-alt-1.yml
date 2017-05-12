@@ -9,15 +9,15 @@ modules:
   - docassemble.base.util
 ---
 question: |
-  Assembling a document from a .docx
+  Assembling a document from a PDF
   template
 subquestion: |
   This interview will fill fields in
-  a .docx template.  You can
+  a .pdf template.  You can
   [download the template] to see what
   it looks like.
 
-  [download the template]: ${ url_of('fruit_template.docx') }
+  [download the template]: ${ url_of('fruit_template.pdf') }
 field: introduction_shown
 ---
 question: What is your favorite fruit?
@@ -43,7 +43,7 @@ code: |
 mandatory: True
 question: Here is your document.
 attachment:
-  docx template file: fruit_template.docx
+  pdf template file: fruit_template.pdf
   fields:
     favorite_fruit: ${ favorite_fruit }
     favorite_veggie: ${ favorite_veggie }

@@ -1,5 +1,5 @@
 metadata:
-  title: Fill fields with code in Mako
+  title: Fill fields with field code
   short title: Fill
   documentation: "https://docassemble.org/docs/documents.html#template code"
   example start: 8
@@ -12,16 +12,15 @@ objects:
   recipient: Individual
 ---
 question: |
-  Assembling a document from a .docx
+  Assembling a document from a PDF
   template
 subquestion: |
-  
   This interview will fill fields in
-  a .docx template.  You can
+  a PDF template.  You can
   [download the template] to see what
   it looks like.
 
-  [download the template]: ${ url_of('letter.docx') }
+  [download the template]: ${ url_of('letter.pdf') }
 field: introduction_shown
 ---
 question: |
@@ -59,8 +58,8 @@ code: |
 mandatory: True
 question: Here is your document.
 attachment:
-  docx template file: letter.docx
-  fields:
-    letter_date: ${ today() }
-    subject_line: ${ subject_of_letter }
-    recipient_address: ${ recipient.address_block() }
+  pdf template file: letter.pdf
+  field code:
+    letter_date: today()
+    subject_line: subject_of_letter
+    recipient_address: recipient.address_block()

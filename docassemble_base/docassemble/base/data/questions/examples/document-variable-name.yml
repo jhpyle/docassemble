@@ -17,10 +17,12 @@ subquestion: |
     % if sent_ok:
   Your document was sent.
     % else:
-  For some reason, I was not able to send your document.
+  For some reason, I was not able to
+  send your document.
     % endif
   % else:
-  Ok, I will not send your document to The Man.
+  Ok, I will not send your document to
+  The Man.
   % endif
 ---
 question: Your document is ready.

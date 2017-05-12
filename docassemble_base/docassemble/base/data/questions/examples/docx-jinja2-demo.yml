@@ -52,8 +52,3 @@ question: |
   Here is the document.
 attachment:
   docx template file: docx-jinja2-demo.docx
-  raw field variables:
-    - sky_is_blue
-    - client
-    - favorite_fruit
-    - fruit_types

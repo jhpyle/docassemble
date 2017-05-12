@@ -50,5 +50,3 @@ question: |
   Here is your document.
 attachment:
   docx template file: table_template.docx
-  raw field variables:
-    - seeds_of_fruit

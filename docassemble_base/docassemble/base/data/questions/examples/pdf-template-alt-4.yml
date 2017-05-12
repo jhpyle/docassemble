@@ -12,16 +12,15 @@ objects:
   recipient: Individual
 ---
 question: |
-  Assembling a document from a .docx
+  Assembling a document from a PDF
   template
 subquestion: |
-  
   This interview will fill fields in
-  a .docx template.  You can
+  a PDF template.  You can
   [download the template] to see what
   it looks like.
 
-  [download the template]: ${ url_of('letter.docx') }
+  [download the template]: ${ url_of('letter.pdf') }
 field: introduction_shown
 ---
 question: |
@@ -68,7 +67,7 @@ code: |
 mandatory: True
 question: Here is your document.
 attachment:
-  docx template file: letter.docx
+  pdf template file: letter.pdf
   code: letter_variables
 ---
 code: |

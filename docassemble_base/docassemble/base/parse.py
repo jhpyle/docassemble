@@ -1,6 +1,8 @@
 import mimetypes
 import traceback
 import re
+from jinja2.runtime import StrictUndefined, UndefinedError
+from jinja2.environment import Environment
 import ast
 import ruamel.yaml
 import os
@@ -33,7 +35,7 @@ match_process_action = re.compile(r'process_action\(')
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
 emoji_match = re.compile(r':([^ ]+):')
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]+$')
-nameerror_match = re.compile(r'\'(.*)\' (is not defined|referenced before assignment)')
+nameerror_match = re.compile(r'\'(.*)\' (is not defined|referenced before assignment|is undefined)')
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 remove_trailing_dots = re.compile(r'\.\.\.$')
 fix_tabs = re.compile(r'\t')
@@ -1652,8 +1654,20 @@ class Question:
                             target['content'] += the_file.read().decode('utf8')
                     else:
                         raise DAError('Unable to read content file ' + str(content_file) + ' after trying to find it at ' + str(file_to_read) + self.idebug(target))
-            if ('pdf template file' in target or 'docx template file' in target) and ('code' in target or 'field variables' in target or 'field code' in target or 'raw field variables' in target) and 'fields' not in target:
+            if 'pdf template file' in target and ('code' in target or 'field variables' in target or 'field code' in target or 'raw field variables' in target) and 'fields' not in target:
                 target['fields'] = dict()
+                field_mode = 'manual'
+            elif 'docx template file' in target:
+                if 'fields' in target:
+                    field_mode = 'manual'
+                else:
+                    target['fields'] = dict()
+                    if 'code' in target or 'field variables' in target or 'field code' in target or 'raw field variables' in target:
+                        field_mode = 'manual'
+                    else:
+                        field_mode = 'auto'
+            else:
+                field_mode = 'manual'
             if 'fields' in target:
                 if 'pdf template file' not in target and 'docx template file' not in target:
                     raise DAError('Fields supplied to attachment but no pdf template file or docx template file supplied' + self.idebug(target))
@@ -1673,42 +1687,45 @@ class Question:
                         target['valid formats'] = ['docx', 'pdf']
                 if type(target[template_type + ' template file']) is not str:
                     raise DAError(template_type + ' template file supplied to attachment must be a string' + self.idebug(target))
-                if type(target['fields']) is not dict:
+                if field_mode == 'auto':
+                    options['fields'] = 'auto'
+                elif type(target['fields']) is not dict:
                     raise DAError('fields supplied to attachment must be a dictionary' + self.idebug(target))
                 target['content'] = ''
                 options[template_type + '_template_file'] = docassemble.base.functions.package_template_filename(target[template_type + ' template file'], package=self.package)
-                options['fields'] = recursive_textobject(target['fields'], self.mako_names)
-                if 'code' in target:
-                    if type(target['code']) in [str, unicode]:
-                        options['code'] = compile(target['code'], '', 'eval')
-                if 'field variables' in target:
-                    if type(target['field variables']) is not list:
-                        raise DAError('The field variables must be expressed in the form of a list' + self.idebug(target))
-                    if 'code dict' not in options:
-                        options['code dict'] = dict()
-                    for varname in target['field variables']:
-                        if not valid_variable_match.match(str(varname)):
-                            raise DAError('The variable ' + str(varname) + " cannot be used in a code list" + self.idebug(target))
-                        options['code dict'][varname] = compile(varname, '', 'eval')
-                if 'raw field variables' in target:
-                    if type(target['raw field variables']) is not list:
-                        raise DAError('The raw field variables must be expressed in the form of a list' + self.idebug(target))
-                    if 'raw code dict' not in options:
-                        options['raw code dict'] = dict()
-                    for varname in target['raw field variables']:
-                        if not valid_variable_match.match(str(varname)):
-                            raise DAError('The variable ' + str(varname) + " cannot be used in a code list" + self.idebug(target))
-                        options['raw code dict'][varname] = compile(varname, '', 'eval')
-                if 'field code' in target:
-                    if 'code dict' not in options:
-                        options['code dict'] = dict()
-                    if type(target['field code']) is not list:
-                        target['field code'] = [target['field code']]
-                    for item in target['field code']:
-                        if type(item) is not dict:
-                            raise DAError('The field code must be expressed in the form of a dictionary' + self.idebug(target))
-                        for key, val in item.iteritems():
-                            options['code dict'][key] = compile(val, '', 'eval')
+                if field_mode == 'manual':
+                    options['fields'] = recursive_textobject(target['fields'], self.mako_names)
+                    if 'code' in target:
+                        if type(target['code']) in [str, unicode]:
+                            options['code'] = compile(target['code'], '', 'eval')
+                    if 'field variables' in target:
+                        if type(target['field variables']) is not list:
+                            raise DAError('The field variables must be expressed in the form of a list' + self.idebug(target))
+                        if 'code dict' not in options:
+                            options['code dict'] = dict()
+                        for varname in target['field variables']:
+                            if not valid_variable_match.match(str(varname)):
+                                raise DAError('The variable ' + str(varname) + " cannot be used in a code list" + self.idebug(target))
+                            options['code dict'][varname] = compile(varname, '', 'eval')
+                    if 'raw field variables' in target:
+                        if type(target['raw field variables']) is not list:
+                            raise DAError('The raw field variables must be expressed in the form of a list' + self.idebug(target))
+                        if 'raw code dict' not in options:
+                            options['raw code dict'] = dict()
+                        for varname in target['raw field variables']:
+                            if not valid_variable_match.match(str(varname)):
+                                raise DAError('The variable ' + str(varname) + " cannot be used in a code list" + self.idebug(target))
+                            options['raw code dict'][varname] = compile(varname, '', 'eval')
+                    if 'field code' in target:
+                        if 'code dict' not in options:
+                            options['code dict'] = dict()
+                        if type(target['field code']) is not list:
+                            target['field code'] = [target['field code']]
+                        for item in target['field code']:
+                            if type(item) is not dict:
+                                raise DAError('The field code must be expressed in the form of a dictionary' + self.idebug(target))
+                            for key, val in item.iteritems():
+                                options['code dict'][key] = compile(val, '', 'eval')
             if 'valid formats' in target:
                 if type(target['valid formats']) is str:
                     target['valid formats'] = [target['valid formats']]
@@ -2080,8 +2097,10 @@ class Question:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
                         result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'], data_strings=result['data_strings'], images=result['images'])
                     elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
-                        logmessage("field_data is " + str(result['field_data']))
-                        result['template'].render(result['field_data'])
+                        #logmessage("field_data is " + str(result['field_data']))
+                        docassemble.base.functions.set_context('docx', template=result['template'])
+                        result['template'].render(result['field_data'], jinja_env=Environment(undefined=StrictUndefined))
+                        docassemble.base.functions.reset_context()
                         docx_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".docx", delete=False)
                         result['template'].save(docx_file.name)
                         if 'docx' in result['formats_to_use']:
@@ -2171,7 +2190,10 @@ class Question:
                 if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
                     if doc_format == 'docx':
                         result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'])
-                        result['field_data'] = recursive_eval_textobject(attachment['options']['fields'], user_dict, self, result['template'])
+                        if type(attachment['options']['fields']) in [str, unicode]:
+                            result['field_data'] = user_dict
+                        else:
+                            result['field_data'] = recursive_eval_textobject(attachment['options']['fields'], user_dict, self, result['template'])
                         if 'code' in attachment['options']:
                             additional_dict = eval(attachment['options']['code'], user_dict)
                             if type(additional_dict) is dict:
@@ -2203,6 +2225,8 @@ class Question:
                             answer = 'No'
                         elif answer == 'None':
                             answer = ''
+                        answer = re.sub(r'\[(NEWLINE|BR)\]', r'\n', answer)
+                        answer = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', answer)
                         #logmessage("Found a " + str(key) + " with a |" + str(answer) + '|')
                         m = re.search(r'\[FILE ([^\]]+)\]', answer)
                         if m:
@@ -2221,6 +2245,8 @@ class Question:
                                     val = 'No'
                                 elif val is None:
                                     val = ''
+                                val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
+                                val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
                                 result['data_strings'].append((key, val))
                         else:
                             raise DAError("code in an attachment returned something other than a dictionary")
@@ -2233,6 +2259,8 @@ class Question:
                                 val = 'No'
                             elif val is None:
                                 val = ''
+                            val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
+                            val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
                             result['data_strings'].append((key, val))
                     if 'raw code dict' in attachment['options']:
                         for key, var_code in attachment['options']['raw code dict'].iteritems():
@@ -2243,6 +2271,8 @@ class Question:
                                 val = 'No'
                             elif val is None:
                                 val = ''
+                            val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
+                            val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
                             result['data_strings'].append((key, val))
                 else:
                     the_markdown = ""
@@ -2530,28 +2560,33 @@ class Interview:
                         else:
                             raise MandatoryQuestion()
             except NameError as errMess:
+                docassemble.base.functions.reset_context()
                 if isinstance(errMess, ForcedNameError):
-                    #logmessage("forced nameerror")
                     follow_mc = False
                 else:
-                    #logmessage("regular nameerror")
                     follow_mc = True
-                #logmessage("Gota this: " + str(errMess))
                 missingVariable = extract_missing_name(errMess)
-                #missingVariable = str(errMess).split("'")[1]
                 question_result = self.askfor(missingVariable, user_dict, seeking=interview_status.seeking, follow_mc=follow_mc)
                 if question_result['type'] == 'continue':
-                    #logmessage("Continuing after asking for " + missingVariable + "...")
                     continue
                 elif question_result['type'] == 'refresh':
                     pass
                 else:
-                    #pp = pprint.PrettyPrinter(indent=4)
-                    #logmessage("Need to ask:\n  " + question_result['question_text'] + "\n" + "type is " + str(question_result['question'].question_type) + "\n" + pp.pformat(question_result) + "\n" + pp.pformat(question_result['question']))
-                    #logmessage("Need to ask:\n  " + question_result['question_text'])
+                    interview_status.populate(question_result)
+                    break
+            except UndefinedError as errMess:
+                docassemble.base.functions.reset_context()
+                missingVariable = extract_missing_name(errMess)
+                question_result = self.askfor(missingVariable, user_dict, seeking=interview_status.seeking, follow_mc=True)
+                if question_result['type'] == 'continue':
+                    continue
+                elif question_result['type'] == 'refresh':
+                    pass
+                else:
                     interview_status.populate(question_result)
                     break
             except CommandError as qError:
+                docassemble.base.functions.reset_context()
                 question_data = dict(command=qError.return_type, url=qError.url)
                 new_interview_source = InterviewSourceString(content='')
                 new_interview = new_interview_source.get_interview()
@@ -2561,6 +2596,7 @@ class Interview:
                 interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
                 break
             except ResponseError as qError:
+                docassemble.base.functions.reset_context()
                 #logmessage("Trapped ResponseError")
                 question_data = dict(extras=dict())
                 if hasattr(qError, 'response') and qError.response is not None:
@@ -2590,6 +2626,7 @@ class Interview:
                 interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
                 break
             except BackgroundResponseError as qError:
+                docassemble.base.functions.reset_context()
                 #logmessage("Trapped BackgroundResponseError")
                 question_data = dict(extras=dict())
                 if hasattr(qError, 'backgroundresponse'):
@@ -2602,6 +2639,7 @@ class Interview:
                 interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
                 break
             except BackgroundResponseActionError as qError:
+                docassemble.base.functions.reset_context()
                 #logmessage("Trapped BackgroundResponseActionError")
                 question_data = dict(extras=dict())
                 if hasattr(qError, 'action'):
@@ -2627,6 +2665,7 @@ class Interview:
             #     interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
             #     break
             except QuestionError as qError:
+                docassemble.base.functions.reset_context()
                 question_data = dict()
                 if qError.question:
                     question_data['question'] = qError.question
@@ -2662,16 +2701,20 @@ class Interview:
                 interview_status.populate(the_question.ask(user_dict, 'None', 'None'))
                 break
             except AttributeError as the_error:
+                docassemble.base.functions.reset_context()
                 #logmessage(str(the_error.args))
                 raise DAError('Got error ' + str(the_error) + " " + traceback.format_exc(the_error))
             except MandatoryQuestion:
+                docassemble.base.functions.reset_context()
                 break
             except CodeExecute as code_error:
+                docassemble.base.functions.reset_context()
                 #if debug:
                 #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
                 logmessage("I am going to execute " + str(code_error.compute))
                 exec(code_error.compute, user_dict)
             except SyntaxException as qError:
+                docassemble.base.functions.reset_context()
                 the_question = None
                 try:
                     the_question = question
@@ -3070,6 +3113,7 @@ class Interview:
                             return question.ask(user_dict, the_x, the_i)
                     raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
                 except NameError as errMess:
+                    docassemble.base.functions.reset_context()
                     if isinstance(errMess, ForcedNameError):
                         #logmessage("forced nameerror")
                         follow_mc = False
@@ -3085,7 +3129,16 @@ class Interview:
                         continue
                     docassemble.base.functions.pop_current_variable()
                     return(question_result)
+                except UndefinedError as errMess:
+                    docassemble.base.functions.reset_context()
+                    newMissingVariable = extract_missing_name(errMess)
+                    question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=True)
+                    if question_result['type'] == 'continue':
+                        continue
+                    docassemble.base.functions.pop_current_variable()
+                    return(question_result)
                 except CommandError as qError:
+                    docassemble.base.functions.reset_context()
                     question_data = dict(command=qError.return_type, url=qError.url)
                     new_interview_source = InterviewSourceString(content='')
                     new_interview = new_interview_source.get_interview()
@@ -3094,6 +3147,7 @@ class Interview:
                     new_question.name = "Question_Temp"
                     return(new_question.ask(user_dict, 'None', 'None'))
                 except ResponseError as qError:
+                    docassemble.base.functions.reset_context()
                     #logmessage("Trapped ResponseError2")
                     question_data = dict(extras=dict())
                     if hasattr(qError, 'response') and qError.response is not None:
@@ -3117,6 +3171,7 @@ class Interview:
                     #the_question = new_question.follow_multiple_choice(user_dict)
                     return(new_question.ask(user_dict, 'None', 'None'))
                 except BackgroundResponseError as qError:
+                    docassemble.base.functions.reset_context()
                     #logmessage("Trapped BackgroundResponseError2")
                     question_data = dict(extras=dict())
                     if hasattr(qError, 'backgroundresponse'):
@@ -3128,6 +3183,7 @@ class Interview:
                     new_question.name = "Question_Temp"
                     return(new_question.ask(user_dict, 'None', 'None'))
                 except BackgroundResponseActionError as qError:
+                    docassemble.base.functions.reset_context()
                     #logmessage("Trapped BackgroundResponseActionError2")
                     question_data = dict(extras=dict())
                     if hasattr(qError, 'action'):
@@ -3139,6 +3195,7 @@ class Interview:
                     new_question.name = "Question_Temp"
                     return(new_question.ask(user_dict, 'None', 'None'))
                 except QuestionError as qError:
+                    docassemble.base.functions.reset_context()
                     #logmessage("Trapped QuestionError")
                     question_data = dict()
                     if qError.question:
@@ -3174,6 +3231,7 @@ class Interview:
                     the_question = new_question.follow_multiple_choice(user_dict)
                     return(the_question.ask(user_dict, 'None', 'None'))
                 except CodeExecute as code_error:
+                    docassemble.base.functions.reset_context()
                     #if debug:
                     #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
                     logmessage("Going to execute " + str(code_error.compute) + " where missing_var is " + str(missing_var))
@@ -3191,6 +3249,7 @@ class Interview:
                         #raise DAError("Problem setting that variable")
                         continue
                 except SyntaxException as qError:
+                    docassemble.base.functions.reset_context()
                     the_question = None
                     try:
                         the_question = question
