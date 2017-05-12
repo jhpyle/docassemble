@@ -201,7 +201,7 @@ def add_dependencies(user_id):
         if package.key in package_by_name:
             continue
         pip_info = get_pip_info(package.key)
-        sys.stderr.write("Home page of " + str(package.key) + " is " + str(pip_info['Home-page']) + "\n")
+        #sys.stderr.write("Home page of " + str(package.key) + " is " + str(pip_info['Home-page']) + "\n")
         Package.query.filter_by(name=package.key).delete()
         db.session.commit()
         package_auth = PackageAuth(user_id=user_id)
