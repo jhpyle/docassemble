@@ -5,14 +5,22 @@ short_title: Templates
 ---
 
 This section explains how the `template` and `table` blocks are used
-in **docassemble** interviews.  If you are interested in document
-templates, see [documents].  If you are interested in how to insert
-variables into the text of your questions or documents, see [markup].
+in **docassemble** interviews.
+
+The word "template" has a number of different meanings.  If you are
+interested in how to insert variables into the text of your questions
+or documents using the [Mako] templating syntax, see [markup].  If you
+are interested in PDF or DOCX templates for downloadable documents,
+see [fill-in forms].  If you are interested in the RTF, LaTeX, or DOCX
+templates that determine the formatting of downloadable documents
+generated from [Markdown] content, see
+[customization of document formatting].  The only purpose of this
+section is to describe the `template` and `table` blocks.
 
 # <a name="template"></a>The `template` block
 
-A `template` allows you assign text to a variable and then re-use the
-text by referring to a variable.
+A `template` block allows you assign text to a variable and then
+re-use the text by referring to a variable.
 
 {% include side-by-side.html demo="template" %}
 
@@ -265,3 +273,5 @@ setting value of [`table width`] in a [`features`] block.
 [dictionary]: https://docs.python.org/2/library/stdtypes.html#dict
 [set]: https://docs.python.org/2/library/stdtypes.html#set
 [`label` and `field`]: {{ site.baseurl }}/docs/fields.html#label
+[fill-in forms]: {{ site.baseurl }}/docs/documents.html#fill-in forms
+[customization of document formatting]: {{ site.baseurl }}/docs/documents.html#customization

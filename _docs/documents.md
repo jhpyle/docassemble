@@ -27,20 +27,18 @@ There are several ways to make downloadable documents using the
 
 First, you can [generate attachments from Markdown](#from markdown).
 In the same way that you format the text of questions, you can format
-the text of attachments.  This document content:
+the text of attachments.  This document source:
 
 {% highlight markdown %}
 Hello, ${ user }.  This text is in **bold face**.
 {% endhighlight %}
 
-would become:
+would become this document content:
 
 > Hello, John Doe.  This text is in **bold face**.
 
 In this way, you can produce documents in [PDF](#pdf), [RTF](#rtf),
 and [DOCX](#docx) format.
-
-The example above uses this method of document assembly.
 
 In addition to using [Markdown], you can use **docassemble**-specific
 [markup](#markup) codes to do things like center text, insert a page
@@ -49,63 +47,47 @@ break, or insert a case caption.
 ## Method 2: filling in fields
 
 The second way to make attachments is to generate [PDF](#pdf template
-file) or [DOCX](#docx template file) files by creating a template in
-[Adobe Acrobat Pro] or [Microsoft Word] with named "fields."  You put
-the template in the `data/templates` folder of a [package].  The
-`attachments` block will take the template and
-"[fill in the blanks](#fill-in forms)" using values from interview
-variables, providing the user with a filled-in version of the
-template.
+file) or [DOCX](#docx template file) using templates that you prepare
+in [Adobe Acrobat Pro] or [Microsoft Word].  You put the template file
+in the `data/templates` folder of a [package].  The `attachments`
+block will take the template and "[fill in the blanks](#fill-in
+forms)" using values from interview variables, providing the user with
+a filled-in version of the template.
 
 Here is an example that generates a PDF file:
 
 {% include side-by-side.html demo="pdf-fill" %}
 
+Here is an example that generates a .docx file:
+
+{% include side-by-side.html demo="docx-template" %}
+
 ## Comparison of the methods
 
-Each method has benefits and drawbacks.
+Each method has benefits.
 
 The advantage of the [fill-in-fields method](#fill-in forms) is that
 you have more direct, [WYSIWYG] control over document formatting.
 
-The downside is that you have to be attentive to all the variables
-your document might need, and specify them all in the `attachments`
-block.
-
-For example, if you are generating a [DOCX](#docx template file)
-fill-in form, you can write 
-`{% raw %}{{ favorite_fruit }}{% endraw %}`
-in your Microsoft Word file where the name of the user's favorite
-fruit should be plugged in.  Then you will have to indicate how the
-variables in your Word file "map" to variables in your interview by
-including a line like the following in your `attachments` block:
-
-{% highlight yaml %}
-    favorite_fruit: ${ user.favorite_fruit }
-{% endhighlight %}
-
-The variable `favorite_fruit` is a variable in the Word file, and the
-variable `user.favorite_fruit` is a variable in your interview.  The
-Word file does not know anything about your interview variables, and
-vice-versa; you have to explicitly tell the Word file all the
-information it might need to know.
-
-As a result, your interview might ask the user for information that
-does not need to be asked.  There are ways around this, but they
-require you as the interview author to plan for these contingencies.
-
-By contrast, when you
-[assemble documents directly from Markdown](#from markdown), all you
-need to do is refer to `${ user.favorite_fruit }` in the `content` of
-your document.  If the reference is only conditionally displayed, your
-interview will automatically refrain from asking the user about his or
-her favorite fruit, if the information is not needed.
+The advantage of the [Markdown](#from markdown) method is that you can
+concentrate on the content and let **docassemble** handle the
+formatting.  For example, there are automatic methods for generating
+case captions in legal documents created from [Markdown], whereas if
+you create your legal document in .docx format, you will need to
+construct your caption in the .docx template file and make sure that
+it gets filled in correctly.
 
 If you use the [PDF fill-in field](#pdf template file) method to
-populate fields in a PDF file, you will have perfect control over
-formatting, but you will need to worry about whether the user's
-content will fit into the provided fields.  [DOCX fill-in forms](#docx
-template file) are more flexible, and they also provide a PDF version.
+populate fields in a PDF file, you will have total control over
+pagination, but you will need to worry about whether the user's
+content will fit into the provided fields.  Also, the
+[PDF fill-in field](#pdf template file) method requires that you write
+an itemized list of fields in your document and the values you want
+those fields to have.  [Markdown](#from markdown) documents and
+[DOCX fill-in forms](#docx template file) are more flexible because
+they do not require this itemization of fields.  Also, note that the
+[DOCX fill-in forms](#docx template file) method provides not only a
+.docx file, but a PDF version of that .docx file.
 
 # <a name="from markdown"></a>Creating files from Markdown
 
@@ -470,11 +452,13 @@ by providing specific options within the question block.
 ## <a name="pdf template file"></a>Filling PDF templates
 
 If you have a PDF file that contains fillable fields (e.g. fields
-added using [Adobe Acrobat Pro]), **docassemble** can fill in the
-fields of the PDF using information from an interview and provide the
-user with the resulting PDF file.  To do this, use the [`attachments`]
-statement as above, but instead of providing `content` or `content
-file`, provide a `pdf template file` and a dictionary of `fields`.
+added using [Adobe Acrobat Pro] or a similar application),
+**docassemble** can fill in the fields of the PDF file using
+information from an interview and provide the user with a copy of that
+PDF file with the fields filled in.  To do this, use the
+[`attachments`] statement as above, but instead of providing `content`
+or `content file`, provide a `pdf template file` and a dictionary of
+`fields`.
 
 For example, here is an interview that populates fields in a file
 called [sample-form.pdf]:
@@ -483,7 +467,8 @@ called [sample-form.pdf]:
 
 The `pdf template file` is assumed to reside in the `data/templates`
 directory of your package, unless a specific package name is
-specified.  E.g.:
+specified.  For example, you could refer to a file in another package
+by writing:
 
 {% highlight yaml %}
 pdf template file: docassemble.missouri-family-law:data/templates/form.pdf
@@ -494,9 +479,15 @@ like this:
 
 ![sample form]({{ site.baseurl }}/img/sample-form.png){: .maybe-full-width }
 
-The `fields` must be in the form of a [YAML] dictionary.  [Mako] can
-be used, but [Markdown] will be interpreted literally.  Checkbox
-fields will be checked only if the value evaluates to "True" or "Yes."
+The `fields` must be in the form of a [YAML] dictionary.  The names of
+the fields listed in `fields` must correspond _exactly_ with the names
+of the fields in the PDF file.  Luckiliy, there is [a tool] that will help you
+extract the literal field names from a PDF file.
+
+When writing the values of the fields, you can use [Mako], but not
+[Markdown].  If you use [Markdown], it will be interpreted literally.
+Checkbox fields will be checked if and only if the value evaluates to
+"True" or "Yes."
 
 The section below on [passing values using code](#template code)
 explains alternative ways that you can populate the values of fields
@@ -504,14 +495,14 @@ in a PDF file.
 
 ### <a name="signature"></a>How to insert signatures or other images into fillable PDF files
 
-To add a signature or other image to a fillable PDF file, use Adobe
-Acrobat Pro to insert a "Digital Signature" into the document where
-you want the signature to appear, and with the height and width you
-want the image to have.  Give the field a unique name.
+To add a signature or other image to a fillable PDF file, use
+[Adobe Acrobat Pro] to insert a "Digital Signature" into the document
+where you want the signature to appear.  Give it the height and width
+you want the image to have.  Give the field a unique name.
 
-Then, the signature will be a field, just like a checkbox or a text
-box is a fill-in field.  In your `pdf template file`, set the field to
-`${ user.signature }` or another reference to an image.  **docassemble**
+Then, the image will be a field, just like a checkbox or a text box is
+a fill-in field.  In your `pdf template file`, set the field to `${
+user.signature }` or another reference to an image.  **docassemble**
 will trim whitespace from the edges of the image and fit the image
 into the "Digital Signature" box.
 
@@ -536,22 +527,23 @@ name.  For example:
 
 ## <a name="docx template file"></a>Filling DOCX templates
 
-Much in the same way as you can fill in fields in a PDF file using
-[`pdf template file`], you can fill in fields in a .docx file using
-[`docx template file`].
+You can fill in fields in .docx template files by referring to a `docx
+template file`.
 
 {% include side-by-side.html demo="docx-template" %}
 
 This allows you to use [Microsoft Word] to design your document and
-apply all the fancy formatting you want to it to have.
-**docassemble** will simply "fill in the blanks."  This is in contrast
-to the method of [using `docx` as one of the `valid formats`],
-described [above](#docx), where you assemble a document from scratch
-by writing [Markdown] text that is then converted to .docx format.
+apply formatting.  **docassemble** will simply "fill in the blanks."
+(This is in contrast to the method of
+[using `docx` as one of the `valid formats`], described
+[above](#docx).  When you use that method, you assemble a document
+from scratch by writing [Markdown] text that is then converted to
+.docx format.)
 
-The `docx template file` is assumed to reside in the `data/templates`
-directory of your package, unless a specific package name is
-specified.  E.g.:
+The file referenced with `docx template file` is assumed to reside in
+the `data/templates` directory of your package, unless a specific
+package name is specified.  For example, you could refer to a .docx
+file in another package by writing:
 
 {% highlight yaml %}
 docx template file: docassemble.missouri-family-law:data/templates/form.docx
@@ -562,21 +554,16 @@ following text:
 
 ![letter template source]({{ site.baseurl }}/img/letter_template_source.png){: .maybe-full-width }
 
-The `fields` list in the `attachment` maps variable names used in the
-.docx file to pieces of text.  You can use [Mako] templating to
-generate these pieces of text.  In the example above, `phone_number`
-maps to the text `202-555-1234`, while `full_name` maps to `${
-user.name }`.
-
 The `docx template file` feature relies heavily on the [Python]
-package known as [`python-docx-template`].  The
-[`python-docx-template`] package uses the [Jinja2] templating system.
+package known as [`python-docx-template`].  This package uses the
+[Jinja2] templating system to indicate fields in the .docx file.
 [Jinja2] is different from the [Mako] templating system, which
-**docassemble** uses primarily.  When you work on .docx templates, is
-important that you do confuse the rules of these two templating
-formats.  The biggest difference between the two formats is that
-[Mako] uses the syntax `${ variable_name }` while [Jinja2] uses the
-syntax `{% raw %}{{ variable_name }}{% endraw %}`.
+**docassemble** uses primarily.
+
+When you work on .docx templates, be careful not to confuse the rules
+of these two templating formats.  The biggest difference between the
+formats is that [Mako] uses the syntax `${ variable_name }`, while
+[Jinja2] uses the syntax `{% raw %}{{ variable_name }}{% endraw %}`.
 
 Also, the [`python-docx-template`] package uses a slightly modified
 version of the [Jinja2] syntax to account for the fact that it is
@@ -599,40 +586,85 @@ In a .docx template, however, you should write:
 
 The `p` indicates that the paragraph containing the 
 `{% raw %}{%p ... %}{% endraw %}` statement should be removed from 
-the document.  This means that when you edit the spacing of paragraphs
-in your .docx file, you need to edit the paragraph spacing of
-paragraphs that do _not_ contain `{% raw %}{%p ... %}{% endraw %}`
-statements.  You may need to change both the spacing after a paragraph
-and the spacing before a paragraph in order to get the results you
-want.  Other modifiers besides `p` include `tr` for table rows and
-`tc` for table columns.
+the document.  When you edit the spacing of paragraphs in your .docx
+file, you need to edit the paragraph spacing of paragraphs that do
+_not_ contain `{% raw %}{%p ... %}{% endraw %}` statements.  You may
+need to change both the spacing after a paragraph and the spacing
+before a paragraph in order to get the results you want.  Other
+modifiers besides `p` include `tr` for table rows and `tc` for table
+columns.
 
-If any of your [Mako] statements contain an image, the image will be
-used for the variable in the .docx file.  This is illustrated in the
-example above by the mapping of `signature` to `${ user.signature }`:
-the variable `user.signature` is a graphics image (an image of the
-user's signature).  You can also use the `[FILE ...]` markup syntax to
-[insert an image].  However, do not mix image references with other
-text inside of a single field, because the other text will be lost.
-Also, only include one image per field.
+Images can be inserted into .docx files.  This is illustrated in the
+example above: the variable `user.signature` is a graphics image (an
+image of the user's signature created with the [`signature` block]).
+You can also use the `[FILE ...]` markup syntax to [insert an image].
+However, do not mix image references with other text inside of a
+single field.
 
 When you use `docx template file`, the user is provided with both a
-PDF file and a DOCX file.  The PDF file is generated by converting the
-DOCX file to PDF format using [LibreOffice].  Note that the quality of
-this conversion might not be as good as a PDF conversion done by
-[Microsoft Word].  To hide the PDF version, you can add a
-[`valid formats`] directive.
+PDF file and a .docx file.  The PDF file is generated by converting
+the .docx file to PDF format using [LibreOffice].  To suppress the
+creation of the PDF version, you can add a [`valid formats`]
+directive.
 
-Note that if you include [Markdown] formatting syntax in substituted
-text, it will pass through literally, so you will want to avoid using
-[Markdown] syntax.  Some of the [markup](#markup) tags explained
-[below](#markup) can be used, such as `[BR]` and `[TAB]`, but the vast
-majority are ignored.  If you want to apply formatting, apply it in
-the .docx template file.
+Note that you cannot use [Markdown] formatting syntax in text that you
+insert into a .docx file.  If you do, it will pass through literally.
+Apply all of your formatting in the .docx template file.
+
+Here is an example that demonstrates how to use [`DAList`] and [`DADict`]
+[objects] in a .docx template and using [Jinja2] templating code.
+
+{% include side-by-side.html demo="docx-jinja2-demo" %}
+
+The `docx-jinja2-demo.docx` file looks like this:
+
+![docx jinja2 source]({{ site.baseurl }}/img/docx-jinja2-demo.png){: .maybe-full-width }
+
+For more information on using [Jinja2] in .docx templates, see the
+documentation of [`python-docx-template`].
+
+### <a name="docx tables"></a>Inserting tables into .docx templates
+
+You can assemble tables in a .docx template using a [Jinja2] "for loop."
+
+Here is an example.  The .docx template looks like this:
+
+![table template source]({{ site.baseurl }}/img/table_template.png){: .maybe-full-width }
+
+Note that the row that should be repeated is sandwiched between two
+rows containing `for` and `endfor` [Jinja2] statements.  Both of these
+statements use the `tr` prefix.  These two rows, which span the width
+of the table, will not appear in the final output.  The final output
+will look something like this:
+
+![table template result]({{ site.baseurl }}/img/table_template_result.png){: .maybe-full-width }
+
+In this example, each row corresponds to an item in a [Python dict]
+called `seeds_of_fruit`.  Here is an example of an interview that
+gathers items into a [`DADict`] called `seeds_of_fruit` and provides
+the .docx file.
+
+{% include side-by-side.html demo="docx-template-table" %}
+
+For more information about gathering items into a [`DADict`] object,
+see the [Dictionary] subsection of the [Groups] section of the
+documentation.
+
+### Passing values only for particular fields
+
+By default, all of the variables in your interview will be available
+in the .docx template.  If you do not want this, perhaps because your
+.docx template uses a different variable naming convention, you can
+use the `fields` directive to indicate a mapping between the fields in
+the .docx template and the values that you want to be filled in.  This
+operates much like the [PDF fill-in fields](#pdf template file)
+feature.
 
 The content of `fields` is converted into a data structure, which is
 passed to the `render()` method of [`python-docx-template`].  The data
-structure can contain structure.  For example:
+structure needs to be a [Python dict], but it can contain other data
+types.  For example, in this interview, `fields` contains a list of
+ingredients.:
 
 {% include side-by-side.html demo="docx-recipe" %}
 
@@ -647,18 +679,20 @@ documentation of [`python-docx-template`].
 
 ## <a name="template code"></a>Passing values using code
 
-You can also use [Python] code to populate the values of fields that
-are filled in with [`pdf template file`] and [`docx template file`].
-
-When you use the `fields` directive, which is described above, you
+When you use the `fields` directive with [`pdf template file`], you
 have to use [Mako] in order to pass the values of interview variables
-to the template.  For example:
+to the template.  For example, suppose you have a PDF file with these
+fields:
+
+![fruit template]({{ site.baseurl }}/img/fruit_template.png){: .maybe-full-width }
+
+You can use an interview like this to populate the fields:
 
 {% include side-by-side.html demo="fruit-template-alt-1" %}
 
-This is a bit punctuation-heavy and repetitive.  As an alternative,
-you can use the `field variables` directive to list the variables you
-want to pass:
+However, this is a bit punctuation-heavy and repetitive.  As an
+alternative, you can use the `field variables` directive to list the
+variables you want to pass:
 
 {% include side-by-side.html demo="fruit-template-alt-2" %}
 
@@ -669,16 +703,28 @@ template has the same name as the variable in your interview, and when
 you do not need to perform any transformations on the variable before
 passing it to the template.
 
-Suppose you want to pass the results of functions or methods to the
-template.  One way to do it is to use `fields`, where every value is a
-[Mako] variable reference containing code:
+The `field variables` directive, and other directives described in
+this subsection, work both with [`pdf template file`] and
+[`docx template file`].  But note that since the
+[.docx assembly process](#docx template file) by default accesses all
+of your interview variables, you will normally only need to use `field
+variables` with PDF templates.
 
-{% include side-by-side.html demo="docx-template-alt-1" %}
+Suppose you want to pass the results of functions or methods to a 
+template that looks like this:
+
+![letter template]({{ site.baseurl }}/img/letter.png){: .maybe-full-width }
+
+One way to pass the results of functions or methods it is to use
+`fields`, where every value is a [Mako] variable reference containing
+code:
+
+{% include side-by-side.html demo="pdf-template-alt-1" %}
 
 You can achieve the same result with less punctuation by using the
 `field code` directive:
 
-{% include side-by-side.html demo="docx-template-alt-2" %}
+{% include side-by-side.html demo="pdf-template-alt-2" %}
 
 There is still another way of passing values to a template: you can
 include a `code` directive that contains [Python] code that evaluates
@@ -686,14 +732,14 @@ to a [Python dict] in which the keys are the names of variables in the
 template, and the values are the values you want those variables to
 have.  For example:
 
-{% include side-by-side.html demo="docx-template-alt-3" %}
+{% include side-by-side.html demo="pdf-template-alt-3" %}
 
 Note that the `code` must be a single [Python] expression, not a list
 of statements.  It can be difficult to cram a lot of logic into a
 [Python] expression, so you may want to create a variable to hold the
 values.  For example:
 
-{% include side-by-side.html demo="docx-template-alt-4" %}
+{% include side-by-side.html demo="pdf-template-alt-4" %}
 
 Note that the use of the [`reconsider`] modifier is important here.
 [Remember] that **docassemble** will only ask a question or run code
@@ -711,10 +757,13 @@ re-run in order to obtain a fresh definition of `letter_variables`.
 
 The `fields`, `field variables`, and `field code` directives are not
 mutually exclusive.  When they are used together, they supplement each
-other.
+other.  (In .docx templates, however, the fields do not supplement the
+values of variables in the interview dictionary; if you use `fields`,
+`field variables`, and `field code`, **docassemble** will not use the
+interview dictionary as a whole.)
 
-Here is a variation on the PDF fill-in example above that uses `code`
-to supplement the values of `fields`:
+Here is a variation on the original PDF fill-in example [above](#pdf
+template file) that uses `code` to supplement the values of `fields`:
 
 {% include side-by-side.html demo="pdf-fill-code" %}
 
@@ -723,18 +772,21 @@ Like the [Mako] tag `${ ... }`, the `fields`, `field variables`, and
 format suitable for printing.  If you are using the .docx template
 format and you only use the `{% raw %}{{ ... }}{% endraw %}` syntax in
 your template, this will always be appropriate.  But if you want to
-use other features of [Jinja2], you should read the next section,
-which explains how to pass variables in raw format to the template.
+use "for loops" and other features of [Jinja2] when passing variables
+using `fields`, `field variables`, or `field code`, you should read
+the next section, which explains how to pass variables in "raw" format
+to the template.
 
 ### <a name="raw field variables"></a>Turning off automatic conversion of .docx variables
 
-Normally, all values that you transfer to a .docx template are
-converted so that they display appropriately in your .docx file.  For
-example, if the value is a [`DAFile`] graphics image, it will be
-converted so that it displays in the .docx file as an image.  Or, if
-the value contains [document markup] codes that indicate line breaks,
-these will display as actual line breaks in the .docx file, rather
-than as codes like `[BR]`.
+Normally, all values that you transfer to a .docx template using
+`fields`, `field variables`, and `field code` are converted so that
+they display appropriately in your .docx file.  For example, if the
+value is a [`DAFile`] graphics image, it will be converted so that it
+displays in the .docx file as an image.  Or, if the value contains
+[document markup] codes that indicate line breaks, these will display
+as actual line breaks in the .docx file, rather than as codes like
+`[BR]`.
 
 However, if your .docx file uses [Jinja2] templating to do complicated
 things like for loops, this conversion might cause problems.
@@ -816,36 +868,6 @@ to pass variables to a .docx template.  In order to pass variables in
 [`raw()`] function.  For more information, see the
 [documentation for the `raw()` function].
 
-Here is an example that demonstrates how to pass **docassemble**
-[objects] to a .docx template and to use [Jinja2] templating code to
-use [`DAList`] and [`DADict`] objects.
-
-{% include side-by-side.html demo="docx-jinja2-demo" %}
-
-### <a name="docx tables"></a>Inserting tables into .docx templates
-
-You can assemble tables in a .docx template using a "for loop."
-
-Here is an example.  Your .docx template will look like this:
-
-![table template source]({{ site.baseurl }}/img/table_template.png){: .maybe-full-width }
-
-Note that the row that should be repeated is sandwiched between two
-rows containing `for` and `endfor` [Jinja2] statements.  Both of these
-statements use the `tr` prefix.  These two rows will not appear in the
-final output.  The final output will look something like this:
-
-![table template result]({{ site.baseurl }}/img/table_template_result.png){: .maybe-full-width }
-
-In this example, each row corresponds to an item in a [Python dict].
-Here is an example of an interview that gathers these items and
-provides the .docx file.
-
-{% include side-by-side.html demo="docx-template-table" %}
-
-For more information about gathering the items of a [Python dict], see
-the [Dictionary] subsection of the [Groups] section of the documentation.
-
 ## <a name="list field names"></a>How to get a list of field names in a PDF or DOCX file
 
 When logged in to **docassemble** as a developer, you can go to
@@ -854,7 +876,8 @@ template," you can upload a [PDF](#pdf template file) or [DOCX](#docx
 template file) file that has fillable fields in it.  **docassemble**
 will scan the file, identify its fields, and present you with the
 [YAML] text of a question that uses that file as a
-[`pdf template file`] or a [`docx template file`].
+[`pdf template file`] or a [`docx template file`] with a list of
+`fields`.
 
 # <a name="variable name"></a>Saving documents as variables
 
@@ -913,17 +936,17 @@ separate [`attachment`] block.
 
 # <a name="valid formats"></a>Limiting availability of file formats
 
-You can also limit the file formats available.
+You limit the file formats that are generated by `attachments`.
 
 {% include side-by-side.html demo="valid-formats" %}
 
 In this example, the user will not have the option of seeing an HTML
 preview and will only be able to download the PDF file.
 
-Note that when you use [`docx template file`], the user is provided
-with both a PDF file and a DOCX file.  The PDF file is generated by
-converting the DOCX file to PDF format.  To hide the PDF file, set
-`valid formats` to `docx` only.
+Note that when you use [`docx template file`], the user is normally
+provided with both a PDF file and a DOCX file.  The PDF file is
+generated by converting the DOCX file to PDF format.  To hide the PDF
+file, set `valid formats` to `docx` only.
 
 # <a name="language"></a>Assembling documents in a different language than the current language
 
@@ -1025,3 +1048,5 @@ Including `allow emailing: False` will disable this:
 [Remember]: {{ site.baseurl }}/docs/logic.html
 [Dictionary]: {{ site.baseurl }}/docs/groups.html#gather dictionary
 [Groups]: {{ site.baseurl }}/docs/groups.html
+[a tool]: #list field names
+[`signature` block]: {{ site.baseurl }}/docs/fields.html#signature

@@ -1101,10 +1101,12 @@
       % if sent_ok:
     Your document was sent.
       % else:
-    For some reason, I was not able to send your document.
+    For some reason, I was not able to
+    send your document.
       % endif
     % else:
-    Ok, I will not send your document to The Man.
+    Ok, I will not send your document to
+    The Man.
     % endif
   ---
   question: Your document is ready.
@@ -1145,11 +1147,6 @@
     Here is the document.
   attachment:
     docx template file: docx-jinja2-demo.docx
-    raw field variables:
-      - sky_is_blue
-      - client
-      - favorite_fruit
-      - fruit_types
 "docx-recipe": |-
   mandatory: True
   question: |
@@ -1175,50 +1172,7 @@
     name: Your letter
     filename: letter
     docx template file: letter_template.docx
-    fields:
-      "letter_date": ${ today() }
-      "phone_number": 202-555-1234
-      "subject_matter": ${ subject_matter }
-      "address_block": ${ adverse_party.address_block() }
-      "full_name": ${ user.name }
-      "signature": ${ user.signature }
-"docx-template-alt-1": |-
-  mandatory: True
-  question: Here is your document.
-  attachment:
-    docx template file: letter.docx
-    fields:
-      letter_date: ${ today() }
-      subject_line: ${ subject_of_letter }
-      recipient_address: ${ recipient.address_block() }
-"docx-template-alt-2": |-
-  mandatory: True
-  question: Here is your document.
-  attachment:
-    docx template file: letter.docx
-    field code:
-      letter_date: today()
-      subject_line: subject_of_letter
-      recipient_address: recipient.address_block()
-"docx-template-alt-3": "mandatory: True\nquestion: Here is your document.\nattachment:\n\
-  \  docx template file: letter.docx\n  code:\n    dict(letter_date=today(), \n  \
-  \       subject_line=subject_of_letter, \n         recipient_address=recipient.address_block())"
-"docx-template-alt-4": |-
-  mandatory: True
-  question: Here is your document.
-  attachment:
-    docx template file: letter.docx
-    code: letter_variables
-  ---
-  code: |
-    letter_variables = dict()
-    letter_variables['letter_date'] = today()
-    if letter_type == 'threat':
-      letter_variables['subject_line'] = "Litigation hold"
-    else:
-      letter_variables['subject_line'] = "Matter we discussed"
-    letter_variables['recipient_address'] = recipient.address_block()
-  reconsider: True
+"docx-template-auto": ""
 "docx-template-code": |-
   mandatory: True
   question: |
@@ -1266,8 +1220,6 @@
     Here is your document.
   attachment:
     docx template file: table_template.docx
-    raw field variables:
-      - seeds_of_fruit
 "doors": |-
   question: |
     Which door do you choose?
@@ -2039,7 +1991,7 @@
   mandatory: True
   question: Here is your document.
   attachment:
-    docx template file: fruit_template.docx
+    pdf template file: fruit_template.pdf
     fields:
       favorite_fruit: ${ favorite_fruit }
       favorite_veggie: ${ favorite_veggie }
@@ -2049,7 +2001,7 @@
   mandatory: True
   question: Here is your document.
   attachment:
-    docx template file: fruit_template.docx
+    pdf template file: fruit_template.pdf
     field variables:
       - favorite_fruit
       - favorite_veggie
@@ -3950,23 +3902,23 @@
 "pdf-fill": |-
   question: |
     Here is your PDF form
-  attachments:
-    - name: A filled-in form
-      filename: filled-form
-      pdf template file: sample-form.pdf
-      fields:
-        Your Name: |
-          ${ user }
-        Your Organization: |
-          ${ user.organization }
-        Apple Checkbox: |
-          ${ likes_apples }
-        Orange Checkbox: |
-          ${ likes_oranges }
-        Pear Checkbox: |
-          ${ likes_pears }
-        Toast Checkbox: |
-          ${ likes_toast }
+  attachment:
+    name: A filled-in form
+    filename: filled-form
+    pdf template file: sample-form.pdf
+    fields:
+      Your Name: |
+        ${ user }
+      Your Organization: |
+        ${ user.organization }
+      Apple Checkbox: |
+        ${ likes_apples }
+      Orange Checkbox: |
+        ${ likes_oranges }
+      Pear Checkbox: |
+        ${ likes_pears }
+      Toast Checkbox: |
+        ${ likes_toast }
   mandatory: True
 "pdf-fill-code": |-
   question: |
@@ -4010,6 +3962,43 @@
         "grantee": ${ friend }
         "collection": ${ prized_collection }
         "signature": ${ user.signature }
+"pdf-template-alt-1": |-
+  mandatory: True
+  question: Here is your document.
+  attachment:
+    pdf template file: letter.pdf
+    fields:
+      letter_date: ${ today() }
+      subject_line: ${ subject_of_letter }
+      recipient_address: ${ recipient.address_block() }
+"pdf-template-alt-2": |-
+  mandatory: True
+  question: Here is your document.
+  attachment:
+    pdf template file: letter.pdf
+    field code:
+      letter_date: today()
+      subject_line: subject_of_letter
+      recipient_address: recipient.address_block()
+"pdf-template-alt-3": "mandatory: True\nquestion: Here is your document.\nattachment:\n\
+  \  pdf template file: letter.pdf\n  code:\n    dict(letter_date=today(), \n    \
+  \     subject_line=subject_of_letter, \n         recipient_address=recipient.address_block())"
+"pdf-template-alt-4": |-
+  mandatory: True
+  question: Here is your document.
+  attachment:
+    pdf template file: letter.pdf
+    code: letter_variables
+  ---
+  code: |
+    letter_variables = dict()
+    letter_variables['letter_date'] = today()
+    if letter_type == 'threat':
+      letter_variables['subject_line'] = "Litigation hold"
+    else:
+      letter_variables['subject_line'] = "Matter we discussed"
+    letter_variables['recipient_address'] = recipient.address_block()
+  reconsider: True
 "periodic-amount": |-
   modules:
     - docassemble.base.util
