@@ -26,10 +26,11 @@ subquestion: |
   [Playground].
 
   If you have not already uploaded your templates, you can upload them
-  with this wizard.  If you upload a Word file, it will be converted
-  to [Markdown] format.
+  with this wizard.
 
-  [Markdown]: https://daringfireball.net/projects/markdown/syntax
+  If you have already uploaded a template but you want to upload a new
+  version of it, answer "No" here.
+
   [Playground]: ${ url_of('playground') }
   [Templates section]: ${ url_of('playgroundtemplate') }
 yesno: templates_already_uploaded
@@ -40,12 +41,18 @@ question: |
 subquestion: |
   The following types of files are accepted: 
 
-  * Word files with variable names in square brackets.  These will be
-    converted to [Markdown] format.  Only basic formatting will be
-    retained, such as bold, italics, and section headings.
-  * PDF files with fillable fields.
-  * Text files in [Markdown] format.
-  
+  * Microsoft Word .docx files with variable names in double curly
+    brackets ([Jinja2] template format).
+  * Adobe PDF files with fillable fields.
+  * Text files in [Markdown] format with variable names embedded
+    in [Mako syntax].
+  * Microsoft Word files with variable names in single square
+    brackets.  These files will be converted to [Markdown] format.
+    Only basic formatting will be retained, such as bold, italics, and
+    section headings.
+
+  [Mako syntax]: https://docassemble.org/docs/markup.html#mako
+  [Jinja2]: http://jinja.pocoo.org/docs
   [Markdown]: https://daringfireball.net/projects/markdown/syntax
 fields:
   - Files: template_uploads
@@ -75,6 +82,10 @@ code: |
       attachment.type = 'pdf'
       attachment.pdf_filename = template_filename
       attachment.fields = templates.get_fields(template_filename)
+    elif templates.is_fillable_docx(template_filename):
+      attachment = attachments.appendObject()
+      attachment.type = 'docx'
+      attachment.docx_filename = template_filename
     else:
       if templates.is_markdown(template_filename):
         markdown_filename = template_filename
@@ -301,9 +312,15 @@ help: |
   % endif
 fields:
   - Title: x.question_text
+    default:
+      code: |
+        'Your document is ready.' if x.field_list[0].variable == 'all_done' else ''
   - Body: x.subquestion_text
     datatype: area
     required: False
+    default:
+      code: |
+        'Thank you for using this interview.' if x.field_list[0].variable == 'all_done' else ''
   - Decoration: x.decoration
     datatype: radio
     default: "None"
@@ -431,6 +448,9 @@ question: |
   % if x.type == 'md':
   What is the name of the document that will be assembled using
   the template `${ x.markdown_filename }`?
+  % elif x.type == 'docx':
+  What is the name of the document that will be assembled using
+  the template `${ x.docx_filename }`?
   % else:
   What is the name of the document that will be filled in using
   the template `${ x.pdf_filename }`?
@@ -442,25 +462,33 @@ subquestion: |
   the name of the downloaded file.
 fields:
   - Document Name: x.name
+    default: Petition for Allowance of Appeal
 ---
 generic object: DAInterview
 question: |
   How would you like to name your interview?
 subquestion: |
-  The **File name** is the name of the interview within the [Playground].
+  
+  The **File name** is the name of the interview within the
+  [Playground].  If you set this to `petition to open`, your interview
+  file name will be `petition to open.yml`.
 
-  The **Title** is the name that the user will see on the [Interview
-  List] and in the upper-left corner of the screen.
+  The **Title** is the name that the user will see in the upper-left
+  corner of the screen during the interview.  The user will also see
+  this name in the [Interview List].
 
   The **Short title** is the name that mobile users will see in the
-  upper-left corner of the screen.
+  upper-left corner of the screen.  It should be very short.
 
   [Playground]: ${ url_of('playground') }
   [Interview List]: ${ url_of('interviews') }
 fields:
   - File name: x.file_name
+    default: appeal_petition
   - Title: x.title
+    default: Petition for Allowance of Appeal
   - Short title: x.short_title
+    default: Appeal
 ---
 generic object: DAQuestion
 question: |
@@ -478,20 +506,15 @@ subquestion: |
 
   It will ask you to upload at least one document template.
 
-  You can upload a Word file template in which variable names are
-  enclosed in square brackets.  For example, your Word document may
-  contain the text:
+  You can upload Microsoft Word .docx template files in which variable
+  names are embedded in double curly brackets ([Jinja2 syntax]).  For
+  example, if your .docx document contains the text:
 
-  > Your phone number is \[phone number\] and you live in \[city\].
+  > My phone number is {{ phone_number }} and I live in {{ city }}.
 
-  The wizard will build a **docassemble** interview that gathers
+  then the wizard will build a **docassemble** interview that gathers
   definitions of the variables `phone_number` and `city` in order to
   create the assembled document.
-
-  The Word file(s) you upload will be converted to [Markdown].  As a
-  result, some of the formatting in the documents may be lost.
-  (See the [Documents] section of the documentation for more
-  information about how documents are formatted in **docassemble**.)
 
   Here is a [sample Word file] you can use as a starting point.
   
@@ -503,9 +526,11 @@ subquestion: |
 
       Your phone number is ${ '${ phone_number }' } and you live in ${ '${ city }' }.
 
-  The files will be uploaded into the [Templates section] of the
-  [Playground].  If the template file you want to use is already in
-  the [Templates section], you do not need to upload it again.
+  Regardless of what file format you use, the files you upload will be
+  saved in the [Templates section] of the [Playground].  If the
+  template file you want to use is already in the [Templates section],
+  you do not need to upload it again unless you want to upload a new
+  version.
   
   Once your interview has been created, it will be available in the
   [Playground], where you can edit it.
@@ -514,6 +539,7 @@ subquestion: |
   how to write **docassemble** interviews.  There are many features in
   **docassemble** that are not available with this wizard.
 
+  [Jinja2 syntax]: http://jinja.pocoo.org/docs
   [Mako syntax]: https://docassemble.org/docs/markup.html#mako
   [Playground]: ${ url_of('playground') }
   [sample Word file]: ${ url_of('docassemble.webapp:data/static/test-document.docx') }

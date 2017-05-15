@@ -23,7 +23,7 @@ from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint
 import docassemble.base.functions
 from docassemble.base.functions import pickleable_objects, word, get_language, server, RawValue
 from docassemble.base.logger import logmessage
-from docassemble.base.pandoc import MyPandoc
+from docassemble.base.pandoc import MyPandoc, word_to_markdown
 from docassemble.base.mako.template import Template as MakoTemplate
 from docassemble.base.mako.exceptions import SyntaxException
 from types import CodeType, NoneType
@@ -446,6 +446,11 @@ def recursive_eval_textobject(target, user_dict, question, tpl):
         return docassemble.base.file_docx.transform_for_docx(text, question, tpl)
     else:
         raise DAError("Expected a TextObject, but found a " + str(type(target)))
+
+def docx_variable_fix(variable):
+    variable = re.sub(r'\\', '', variable)
+    variable = re.sub(r'^([A-Za-z\_][A-Za-z\_0-9]*).*', r'\1', variable)
+    return variable
 
 class Question:
     def idebug(self, data):
@@ -1693,6 +1698,17 @@ class Question:
                     raise DAError('fields supplied to attachment must be a dictionary' + self.idebug(target))
                 target['content'] = ''
                 options[template_type + '_template_file'] = docassemble.base.functions.package_template_filename(target[template_type + ' template file'], package=self.package)
+                if template_type == 'docx':
+                    logmessage("Got a docx template!!")
+                    result_file = word_to_markdown(options['docx_template_file'], 'docx')
+                    with open(result_file.name, 'rU') as fp:
+                        result = fp.read()
+                        for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
+                            logmessage("Fixing up " + variable)
+                            self.mako_names.add(docx_variable_fix(variable))
+                        for variable in re.findall(r'{%[a-z]* for [A-Za-z\_][A-Za-z0-9\_]* in *([^\} ]+) *%}', result):
+                            logmessage("Fixing up " + variable)
+                            self.mako_names.add(docx_variable_fix(variable))
                 if field_mode == 'manual':
                     options['fields'] = recursive_textobject(target['fields'], self.mako_names)
                     if 'code' in target:

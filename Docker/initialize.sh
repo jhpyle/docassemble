@@ -271,7 +271,7 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{LOCALE}}/'"${LOCALE:-null}"'/' \
 	-e 's/{{DASECRETKEY}}/'"${DEFAULT_SECRET}"'/' \
 	-e 's@{{URLROOT}}@'"${URLROOT:-null}"'@' \
-	-e 's@{{POSTURLROOT}}@'"${POSTURLROOT:-null}"'@' \
+	-e 's@{{POSTURLROOT}}@'"${POSTURLROOT:-/}"'@' \
 	-e 's/{{BEHINDHTTPSLOADBALANCER}}/'"${BEHINDHTTPSLOADBALANCER:-false}"'/' \
 	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
 fi

@@ -44,7 +44,7 @@ def remove_inactive_hosts():
         for id_to_delete in to_delete:
             Supervisors.query.filter_by(id=id_to_delete).delete()
 
-def check_for_updates():
+def check_for_updates(doing_startup=False):
     sys.stderr.write("check_for_updates: starting\n")
     from docassemble.base.config import hostname
     ok = True
@@ -126,6 +126,11 @@ def check_for_updates():
     sys.stderr.write("check_for_updates: 10\n")
     for package in to_install:
         sys.stderr.write("check_for_updates: going to install a package: " + package.name + "\n")
+        # if doing_startup and package.name.startswith('docassemble') and package.name in here_already:
+        #     #adding this because of unpredictability of installing new versions of docassemble
+        #     #just because of a system restart.
+        #     sys.stderr.write("check_for_updates: skipping update on " + str(package.name) + "\n")
+        #     continue
         returnval, newlog = install_package(package)
         logmessages += newlog
         sys.stderr.write("check_for_updates: return value was " + str(returnval) + "\n")
@@ -358,7 +363,7 @@ if __name__ == "__main__":
         any_package = Package.query.filter_by(active=True).first()
         if any_package is None:
             add_dependencies(1)
-        check_for_updates()
+        check_for_updates(doing_startup=True)
         remove_inactive_hosts()
         from docassemble.base.config import daconfig
         sys.stderr.write("update: touched wsgi file" + "\n")

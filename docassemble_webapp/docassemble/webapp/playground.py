@@ -55,6 +55,8 @@ class DAAttachmentList(DAList):
                 output_list.append('[`' + x.markdown_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", file=x.markdown_filename) + ')')
             elif x.type == 'pdf':
                 output_list.append('[`' + x.pdf_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", file=x.pdf_filename) + ')')
+            elif x.type == 'docx':
+                output_list.append('[`' + x.docx_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", file=x.docx_filename) + ')')
         return docassemble.base.functions.comma_and_list(output_list)
 
 class DAUploadMultiple(DAObject):
@@ -194,6 +196,8 @@ class DAQuestion(DAObject):
                             content += "    fields: " + "\n"
                             for field, default, pageno, rect, field_type in attachment.fields:
                                 content += '      "' + field + '": ${ ' + varname(field).lower() + " }\n"
+                        elif attachment.type == 'docx':
+                            content += "    docx template file: " + oneline(attachment.docx_filename) + "\n"
             else:
                 content += "fields:\n"
                 for field in self.field_list:
@@ -288,7 +292,7 @@ class PlaygroundSection(object):
         return out_list            
     def reduced_file_list(self):
         lower_list = [f.lower() for f in self.file_list]
-        out_list = [f for f in self.file_list if os.path.splitext(f)[1].lower() == '.md' or os.path.splitext(f)[0].lower() + '.md' not in lower_list]
+        out_list = [f for f in self.file_list if os.path.splitext(f)[1].lower() in ['.md', '.pdf', '.docx'] or os.path.splitext(f)[0].lower() + '.md' not in lower_list]
         return out_list            
     def get_file(self, filename):
         return os.path.join(self.area.directory, filename)
@@ -319,6 +323,26 @@ class PlaygroundSection(object):
         shutil.copyfile(from_file, to_path)
         self.area.finalize()
         return filename
+    def is_fillable_docx(self, filename):
+        extension, mimetype = get_ext_and_mimetype(filename)
+        if extension != "docx":
+            return False
+        if not self.file_exists(filename):
+            return False
+        path = self.get_file(filename)
+        result_file = word_to_markdown(path, 'docx')
+        if result_file is None:
+            return False
+        with open(result_file.name, 'rU') as fp:
+            result = fp.read()
+        fields = set()
+        for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
+            fields.add(docx_variable_fix(variable))
+        for variable in re.findall(r'{%[a-z]* for [A-Za-z\_][A-Za-z0-9\_]* in *([^\} ]+) *%}', result):
+            fields.add(docx_variable_fix(variable))
+        if len(fields):
+            return True
+        return False
     def is_markdown(self, filename):
         extension, mimetype = get_ext_and_mimetype(filename)
         if extension == "md":
@@ -480,3 +504,8 @@ def to_package_name(text):
     
 def repr_str(text):
     return remove_u.sub(r'', repr(text))
+
+def docx_variable_fix(variable):
+    variable = re.sub(r'\\', '', variable)
+    variable = re.sub(r'^([A-Za-z\_][A-Za-z\_0-9]*).*', r'\1', variable)
+    return variable
