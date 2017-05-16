@@ -497,6 +497,8 @@ def get_url_from_file_reference(file_reference, **kwargs):
         return(file_reference)
     if file_reference in ['login', 'signin']:
         return(url_for('user.login', **kwargs))
+    elif file_reference == 'help':
+        return('javascript:show_help_tab()');
     elif file_reference == 'interviews':
         return(url_for('interview_list', **kwargs))
     elif file_reference == 'interview_list':
@@ -3369,6 +3371,9 @@ def index():
           }
           data = {action: action, arguments: args};
           return '?action=' + encodeURIComponent(btoa(JSON.stringify(data)));
+      }
+      function show_help_tab(){
+          $('#helptoggle').trigger('click');
       }
       function url_action_call(action, args, callback){
           if (args == null){
@@ -7282,7 +7287,7 @@ def playground_files():
             active_file = pulldown_files[0]
     area = SavedFile(current_user.id, fix=True, section='playground' + section)
     if request.args.get('delete', False):
-        argument = re.sub(r'[^A-Za-z0-9\-\_\.]', '', request.args.get('delete'))
+        argument = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', request.args.get('delete'))
         if argument:
             filename = os.path.join(area.directory, argument)
             if os.path.exists(filename):
@@ -7293,7 +7298,7 @@ def playground_files():
             else:
                 flash(word("File not found: ") + argument, "error")
     if request.args.get('convert', False):
-        argument = re.sub(r'[^A-Za-z0-9\-\_\.]', '', request.args.get('convert'))
+        argument = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', request.args.get('convert'))
         if argument:
             filename = os.path.join(area.directory, argument)
             if os.path.exists(filename):
@@ -7334,6 +7339,7 @@ def playground_files():
                             return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file)))
                     except Exception as errMess:
                         flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
+                flash(word("Upload successful"), "success")
         if formtwo.delete.data:
             if the_file != '':
                 filename = os.path.join(area.directory, the_file)
@@ -7429,7 +7435,7 @@ def playground_files():
     description = None
     if (section == "template"):
         header = word("Templates")
-        description = 'Add files here that you want want to include in your interviews using "content file," "initial yaml," "additional yaml," "template file," "rtf template file," "pdf template file," or "docx reference file."'
+        description = 'Add files here that you want want to include in your interviews using "docx template file," "pdf template file," "content file," "initial yaml," "additional yaml," "template file," "rtf template file," or "docx reference file."'
         upload_header = word("Upload a template file")
         edit_header = word('Edit text files')
         after_text = None

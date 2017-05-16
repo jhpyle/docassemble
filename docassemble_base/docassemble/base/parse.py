@@ -3,6 +3,8 @@ import traceback
 import re
 from jinja2.runtime import StrictUndefined, UndefinedError
 from jinja2.environment import Environment
+from jinja2.environment import Template as JinjaTemplate
+from jinja2 import meta as jinja2meta
 import ast
 import ruamel.yaml
 import os
@@ -1699,16 +1701,14 @@ class Question:
                 target['content'] = ''
                 options[template_type + '_template_file'] = docassemble.base.functions.package_template_filename(target[template_type + ' template file'], package=self.package)
                 if template_type == 'docx':
-                    logmessage("Got a docx template!!")
-                    result_file = word_to_markdown(options['docx_template_file'], 'docx')
-                    with open(result_file.name, 'rU') as fp:
-                        result = fp.read()
-                        for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
-                            logmessage("Fixing up " + variable)
-                            self.mako_names.add(docx_variable_fix(variable))
-                        for variable in re.findall(r'{%[a-z]* for [A-Za-z\_][A-Za-z0-9\_]* in *([^\} ]+) *%}', result):
-                            logmessage("Fixing up " + variable)
-                            self.mako_names.add(docx_variable_fix(variable))
+                    docx_template = docassemble.base.file_docx.DocxTemplate(options['docx_template_file'])
+                    the_env = Environment()
+                    the_xml = docx_template.get_xml()
+                    the_xml = docx_template.patch_xml(the_xml)
+                    parsed_content = the_env.parse(the_xml)
+                    for key in jinja2meta.find_undeclared_variables(parsed_content):
+                        if not key.startswith('_'):
+                            self.mako_names.add(key)
                 if field_mode == 'manual':
                     options['fields'] = recursive_textobject(target['fields'], self.mako_names)
                     if 'code' in target:

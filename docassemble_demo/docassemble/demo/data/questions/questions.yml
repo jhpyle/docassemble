@@ -263,7 +263,7 @@ subquestion: |
   fake client letter and a fake pleading.
 
   % if interface() == 'web':
-  In the navigation bar above, you can click "Help" to see the help
+  In the navigation bar above, you can click "[Help]" to see the help
   text associated with the interview and with the individual question
   (if any).  If "Help <i class="glyphicon glyphicon-star"></i>"
   appears in the navigation bar, that means help text specific to the
@@ -279,6 +279,7 @@ subquestion: |
   Your current location is ${ user.location }.
   % endif
 
+  [Help]: ${ url_of('help') }
   [YAML]: https://en.wikipedia.org/wiki/YAML
 field: user_saw_initial_screen
 datatype: boolean

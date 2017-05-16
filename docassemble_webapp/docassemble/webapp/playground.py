@@ -112,7 +112,7 @@ class DAInterview(DAObject):
             if block not in seen:
                 out.append(block)
                 seen.add(block)
-        for var in self.questions:
+        for var in sorted(self.questions.keys()):
             if self.questions[var] not in seen:
                 out.append(self.questions[var])
                 seen.add(self.questions[var])
@@ -154,34 +154,36 @@ class DAQuestion(DAObject):
     def names_reduced(self):
         varsinuse = Playground().variables_from(self.interview.known_source(skip=self))
         var_list = sorted([field.variable for field in self.field_list])
-        return [var for var in varsinuse['all_names_reduced'] if var not in var_list and var != self.interview.target_variable]
+        return [var for var in sorted(varsinuse['all_names_reduced']) if var not in var_list and var != self.interview.target_variable]
     def other_variables(self):
         varsinuse = Playground().variables_from(self.interview.known_source(skip=self))
         var_list = sorted([field.variable for field in self.field_list])
-        return [var for var in varsinuse['undefined_names'] if var not in var_list and var != self.interview.target_variable]
+        return [var for var in sorted(varsinuse['undefined_names']) if var not in var_list and var != self.interview.target_variable]
     def source(self, follow_additional_fields=True):
         content = ''
+        if hasattr(self, 'is_mandatory') and self.is_mandatory:
+            content += "mandatory: True\n"
         if self.type == 'question':
-            if self.field_list[0].field_type not in ['end_attachment']:
-                if follow_additional_fields and len(self.other_variables()):
-                    vars_in_question = [field.variable for field in self.field_list]
-                    for addl_field in sorted(self.additional_fields.keys()):
-                        if self.additional_fields[addl_field]:
-                            if addl_field not in vars_in_question:
-                                new_field = self.field_list.appendObject()
-                                new_field.variable = addl_field
-                                new_field.question = self
-                                self.interview.questions[addl_field] = self
-            if self.field_list[0].field_type == 'end_attachment':
-                content += "sets: " + varname(self.field_list[0].variable) + "\n"
+            done_with_content = False
+            if follow_additional_fields and len(self.other_variables()):
+                vars_in_question = [field.variable for field in self.field_list]
+                for addl_field in sorted(self.additional_fields.keys()):
+                    if self.additional_fields[addl_field]:
+                        if addl_field not in vars_in_question:
+                            new_field = self.field_list.appendObject()
+                            new_field.variable = addl_field
+                            new_field.question = self
+                            self.interview.questions[addl_field] = self
             content += "question: |\n" + indent_by(self.question_text, 2)
             if self.subquestion_text != "":
                 content += "subquestion: |\n" + indent_by(self.subquestion_text, 2)
             if len(self.field_list) == 1:
                 if self.field_list[0].field_type == 'yesno':
                     content += "yesno: " + varname(self.field_list[0].variable) + "\n"
+                    done_with_content = True
                 elif self.field_list[0].field_type == 'yesnomaybe':
                     content += "yesnomaybe: " + varname(self.field_list[0].variable) + "\n"
+                    done_with_content = True
             if self.field_list[0].field_type == 'end_attachment':
                 content += "buttons:\n  - Exit: exit\n  - Restart: restart\n"
                 if self.attachments.gathered and len(self.attachments):
@@ -198,7 +200,8 @@ class DAQuestion(DAObject):
                                 content += '      "' + field + '": ${ ' + varname(field).lower() + " }\n"
                         elif attachment.type == 'docx':
                             content += "    docx template file: " + oneline(attachment.docx_filename) + "\n"
-            else:
+                done_with_content = True
+            if not done_with_content:
                 content += "fields:\n"
                 for field in self.field_list:
                     if field.has_label:
@@ -239,8 +242,6 @@ class DAQuestion(DAObject):
             if self.under_text:
                 content += "under: |\n" + indent_by(self.under_text, 2)
         elif self.type == 'code':
-            if hasattr(self, 'is_mandatory') and self.is_mandatory:
-                content += "mandatory: True\n"
             content += "code: |\n" + indent_by(self.code, 2)
         elif self.type == 'text_template':
             content += "template: " + varname(self.field_list[0].variable) + "\n"
@@ -270,6 +271,7 @@ class DAQuestionDict(DADict):
         self.object_type = DAQuestion
         self.auto_gather = False
         self.gathered = True
+        self.is_mandatory = False
         return super(DAQuestionDict, self).init(**kwargs)
 
 class PlaygroundSection(object):
@@ -423,7 +425,7 @@ class Playground(PlaygroundSection):
             has_error = True
             error_message = str(errmess)
             error_type = type(errmess)
-            logmessage("Failed assembly with error type " + str(error_type) + " and message: " + error_message)
+            #logmessage("Failed assembly with error type " + str(error_type) + " and message: " + error_message)
         functions = set()
         modules = set()
         classes = set()

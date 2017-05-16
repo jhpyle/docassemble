@@ -1061,7 +1061,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         result = markdown.markdown(a, extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables'], output_format='html5')
     result = re.sub(r'<table>', r'<table class="table table-striped">', result)
     #result = re.sub(r'<table>', r'<table class="datable">', result)
-    result = re.sub('<a href="(?!\?)', '<a target="_blank" href="', result)
+    result = re.sub('<a href="(?!\?|javascript:)', '<a target="_blank" href="', result)
     if do_terms and question is not None and term_start.search(result):
         if status is not None:
             if len(question.terms):

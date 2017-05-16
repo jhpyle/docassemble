@@ -177,20 +177,15 @@ code: |
   interview.demonstrate()
   need(attachments.gathered)
   varsinuse = Playground().variables_from(interview.source())
-  main_code.type = 'code'
-  main_code.is_mandatory = True
-  main_code.code = 'all_done'
-  main_code.demonstrated = True
-  interview.target_variable = 'all_done'
   end_question = interview.questions.initializeObject('all_done')
   end_question.type = 'question'
+  end_question.is_mandatory = True
   end_question.interview = interview
-  end_question.field_list.appendObject()
-  end_question.field_list[0].variable = 'all_done'
-  end_question.field_list[0].field_type = 'end_attachment'
-  end_question.field_list[0].question = end_question
   end_question.attachments = attachments
-  interview.blocks.append(main_code)
+  end_question.field_list.appendObject()
+  end_question.field_list[0].field_type = 'end_attachment'
+  end_question.field_list[0].variable = 'all_done'
+  end_question.field_list[0].question = end_question
 ---
 mandatory: True
 code: |
@@ -199,7 +194,7 @@ code: |
   while not ok:
     ok = True
     varsinuse = Playground().variables_from(interview.source())
-    for var in varsinuse['undefined_names']:
+    for var in sorted(varsinuse['undefined_names']):
       if var not in interview.questions:
         new_question = interview.questions.initializeObject(var)
         new_question.interview = interview
@@ -278,7 +273,7 @@ fields:
 ---
 generic object: DAQuestion
 question: |
-  % if x.field_list[0].variable == 'all_done':
+  % if x.field_list[0].field_type == 'end_attachment':
   What should the message be on the final screen of
   the interview?
   % else:
@@ -287,7 +282,7 @@ question: |
   ${ x.field_list }?
   % endif
 subquestion: |
-  % if x.field_list[0].variable == 'all_done':
+  % if x.field_list[0].field_type == 'end_attachment':
   On the final screen, the user will have the opportunity to
   download the assembled document, e-mail it, or click the
   Exit button to leave.
@@ -314,13 +309,13 @@ fields:
   - Title: x.question_text
     default:
       code: |
-        'Your document is ready.' if x.field_list[0].variable == 'all_done' else ''
+        'Your document is ready.' if x.field_list[0].field_type == 'end_attachment' else ''
   - Body: x.subquestion_text
     datatype: area
     required: False
     default:
       code: |
-        'Thank you for using this interview.' if x.field_list[0].variable == 'all_done' else ''
+        'Thank you for using this interview.' if x.field_list[0].field_type == 'end_attachment' else ''
   - Decoration: x.decoration
     datatype: radio
     default: "None"
