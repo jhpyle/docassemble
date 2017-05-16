@@ -8,3 +8,4 @@ Gemfile.lock
 _docs/kills.md
 _docs/requirements.md
 _docs/functions-errors.md
+publish.sh

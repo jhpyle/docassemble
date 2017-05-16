@@ -384,12 +384,12 @@ wizard, click the "Wizard" button.
 ![buttons]({{ site.baseurl }}/img/playground-wizard.png)
 
 The Wizard allows you to upload one or more documents in Microsoft
-Word format in which you have indicated with square brackets the areas
-where the interview needs to "fill in the blanks."
+Word format in which you have indicated with double curly brackets the
+areas where the interview needs to "fill in the blanks."
 
 For example, your Word file could include:
 
-  > Your phone number is \[phone number\] and you live in \[city\].
+  > Your phone number is {% raw %}{{ phone number }}{% endraw %} and you live in {% raw %}{{ city }}{% endraw %}.
 
 Along the way, the Wizard will show you what blocks it is adding the
 interview it is generating.

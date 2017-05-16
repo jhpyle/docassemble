@@ -824,6 +824,8 @@ file in the `static` folder of the package in which the current
 The `url_of()` function also has a few special uses.
 
 * If applied to a [`DAFile`] object, it will return a URL to the file.
+* `url_of('help')` returns a URL that causes the help tab to be shown,
+  if there is a help tab.
 * `url_of('login')` returns a URL to the sign-in page.
 * `url_of('signin')` does the same thing as `url_of('login')`.
 * `url_of('interviews')` returns a URL to the page listing the
