@@ -6,16 +6,7 @@ subquestion: |
 attachment:
   name: A letter for the inhabitants of ${ planet }
   filename: hello
-  metadata:
-    SingleSpacing: True
-  content: |
-    Dear ${ planet } residents,
-
-    Hello to all ${ inhabitant_count } of you.
-
-    Goodbye,
-
-    Your friend
+  docx template file: hello_planet.docx
 buttons:
   - Exit: exit
 mandatory: True
