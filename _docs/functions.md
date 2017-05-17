@@ -543,10 +543,10 @@ use.
 
 A call to `fix_punctuation(reason)` will return:
 
-* `I have a valid claim.` if `reason` is `'I have a valid claim'`
-* `I have a valid claim.` if `reason` is `'I have a valid claim.'`
-* `I have a valid claim!` if `reason` is `'I have a valid claim!'`
-* `I have a valid claim?` if `reason` is `'I have a valid claim?'`
+* `I have a valid claim.` if `reason` is `I have a valid claim`
+* `I have a valid claim.` if `reason` is `I have a valid claim.`
+* `I have a valid claim!` if `reason` is `I have a valid claim!`
+* `I have a valid claim?` if `reason` is `I have a valid claim?`
 
 # <a name="actions"></a>Functions for interacting with the interview using URLs
 

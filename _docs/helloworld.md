@@ -156,18 +156,18 @@ subquestion: |
   I surmise that you have no more than ${ inhabitant_count }
   inhabitants.
 attachment:
-  - name: A letter for the inhabitants of ${ planet }
-    filename: hello
-    metadata:
-      SingleSpacing: True
-    content: |
-      Dear ${ planet } residents,
+  name: A letter for the inhabitants of ${ planet }
+  filename: hello
+  metadata:
+    SingleSpacing: True
+  content: |
+    Dear ${ planet } residents,
 
-      Hello to all ${ inhabitant_count } of you.
+    Hello to all ${ inhabitant_count } of you.
 
-      Goodbye,
+    Goodbye,
 
-      Your friend
+    Your friend
 buttons:
   - Exit: exit
 mandatory: True
@@ -192,14 +192,102 @@ fields:
 
 ([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/hello4.yml){:target="_blank"}.)
 
+This creates a document "from scratch" that is available in PDF or RTF
+format.  The content of the document is contained in the `content`
+directive within the `attachment` directive.
+
+Let's also try modifying this interview to use a [DOCX template] in
+order to generate a document that will be available to the user in PDF
+or DOCX format.
+
+To do this, first open a word processing application capable of saving
+files in .docx format (e.g., [Microsoft Word]).  Create a file that
+looks like the following:
+
+![Word file]({{ site.baseurl }}/img/hello_planet.png){: .maybe-full-width }
+
+You can format [this file]({{ site.baseurl }}/img/hello_planet.docx)
+however you like; in this example, we have indented some text and
+inserted an image.  The important thing is that the variable names
+`planet` and `inhabitant_count` are spelled correctly and are enclosed
+in double curly brackets.
+
+Save the file as a .docx file (e.g., `hello_planet.docx`).
+
+Now you need to make this .docx file available to your interview by
+putting the .docx file in the [Templates] folder of your [Playground].
+
+To do this, go to the Folders menu and select "Templates."
+
+![Templates]({{ site.baseurl }}/img/playground-menu-templates.png)
+
+Then, go to "Upload a template file" and click "Browse."
+
+![Upload a template file]({{ site.baseurl }}/img/playground-files-upload-template.png)
+
+Locate your .docx file on your computer and select it.  Then click "Upload."
+
+Now you should see the .docx file listed as one of your Templates.
+
+![Template list]({{ site.baseurl }}/img/playground-files-template-listing.png)
+
+Then, click ![Back]({{ site.baseurl
+}}/img/playground-button-back-to-playground-top.png) or
+![Back to playground]({{ site.baseurl
+}}/img/playground-button-back-to-playground.png) to go back to the
+main page of the [Playground].
+
+Now you need to edit the interview so that it uses the .docx file.
+
+In the block with the `attachment`, replace the `content`
+directive with a [`docx template file`] directive that references the
+file you uploaded.  The interview should look like this:
+
+{% highlight yaml %}
+---
+question: Hello, ${ planet }!
+subquestion: |
+  I surmise that you have no more than ${ inhabitant_count }
+  inhabitants.
+attachment:
+  name: A letter for the inhabitants of ${ planet }
+  filename: hello
+  docx template file: hello_planet.docx
+buttons:
+  - Exit: exit
+mandatory: True
+---
+question: |
+  What is your planet's name?
+fields:
+  - Your Planet: planet
+---
+code: |
+  if favorite_number == 42:
+    inhabitant_count = 2
+  else:
+    inhabitant_count = 2000 + favorite_number * 45
+---
+question: What is your favorite number?
+fields:
+  - Number: favorite_number
+    datatype: number
+---
+{% endhighlight %}
+
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/hello6.yml){:target="_blank"}.)
+
+For more information about assembling downloadable documents, see the
+[documents] section.
+
 # Decorate with an image
 
-Now let's decorate one of the questions with an image.
+Now let's try [decorating] one of the questions with an image.
 
-First we need to upload the image we want to use.
+First you need to upload the image you want to use.
 
 From the [Playground], go to the Folders menu and select "Static
-files."  (The files are called "static" because they do not change,
+files."  (The files are called "[static]" because they do not change,
 unlike templates, which can be different every time.)
 
 ![Static files]({{ site.baseurl }}/img/playground-menu-static.png)
@@ -243,11 +331,11 @@ that share a common attribution.  All the images you obtain from this
 source can be added to this image set, and an appropriate attribution
 line will be added to the screen whenever the image is used.
 
-Under `images`, we indicate that the name we will give our image is
-`earth`.
+Under `images`, we indicate that the shorthand name we will give our
+image is `earth`.
 
 Now, edit the "What is your planet's name?" question and add a
-[`decoration`] line:
+[`decoration`] line referencing `earth`:
 
 {% highlight yaml %}
 ---
@@ -479,6 +567,7 @@ the [GitHub subsection] of the [packages] section.
 [WordPad]: http://windows.microsoft.com/en-us/windows/using-wordpad#1TC=windows-7
 [Notepad++]: https://notepad-plus-plus.org/
 [document]: {{ site.baseurl }}/docs/documents.html
+[documents]: {{ site.baseurl }}/docs/documents.html
 [`code`]: {{ site.baseurl }}/docs/code.html
 [code]: {{ site.baseurl }}/docs/code.html
 [question]: {{ site.baseurl }}/docs/questions.html
@@ -487,6 +576,7 @@ the [GitHub subsection] of the [packages] section.
 [`root`]: {{ site.baseurl }}/docs/config.html#root
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
+[`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [install]: {{ site.baseurl }}/docs/packages.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
@@ -498,3 +588,8 @@ the [GitHub subsection] of the [packages] section.
 [PyPI test server]: https://testpypi.python.org/pypi
 [version control system]: https://en.wikipedia.org/wiki/Version_control
 [configured as a development server]: {{ site.baseurl }}/docs/config.html#debug
+[Microsoft Word]: https://en.wikipedia.org/wiki/Microsoft_Word
+[Templates]: {{ site.baseurl }}/docs/playground.html#templates
+[static]: {{ site.baseurl }}/docs/playground.html#static
+[DOCX template]: {{ site.baseurl }}/docs/documents.html#docx template file
+[decorating]: {{ site.baseurl }}/docs/modifiers.html#decoration
