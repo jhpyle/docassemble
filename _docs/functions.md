@@ -533,6 +533,21 @@ treated as a new paragraph that ends the list.
 
 {% include side-by-side.html demo="indent" %}
 
+## <a name="fix_punctuation"></a>fix_punctuation()
+
+The `fix_punctuation()` function ensures that the given text ends with
+a punctuation mark.  It will add a `.` to the end of the text if no
+punctuation is present at the end.  To use a different punctuation
+mark, set the optional keyword argument `mark` to the text you want to
+use.
+
+A call to `fix_punctuation(reason)` will return:
+
+* `I have a valid claim.` if `reason` is `'I have a valid claim'`
+* `I have a valid claim.` if `reason` is `'I have a valid claim.'`
+* `I have a valid claim!` if `reason` is `'I have a valid claim!'`
+* `I have a valid claim?` if `reason` is `'I have a valid claim?'`
+
 # <a name="actions"></a>Functions for interacting with the interview using URLs
 
 ## <a name="url_action"></a><a name="process_action"></a>url_action() and process_action()
