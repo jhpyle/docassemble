@@ -951,13 +951,15 @@ ordinal_functions = {
     '*': ordinal_function_en
 }
 
-def fix_punctuation(text):
+def fix_punctuation(text, mark=None):
     """Ensures the text ends with punctuation."""
+    if mark is None:
+        mark = '.'
     text = re.sub(r' +$', r'', text)
     m = re.search(r'[\.\!\?]$', text)
     if m:
         return text
-    return text + '.'
+    return text + mark
 
 def item_label(num, level=None, punctuation=True):
     """Given an index and an outline level, returns I., II., A., etc."""
