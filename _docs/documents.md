@@ -75,7 +75,26 @@ formatting.  For example, there are automatic methods for generating
 case captions in legal documents created from [Markdown], whereas if
 you create your legal document in .docx format, you will need to
 construct your caption in the .docx template file and make sure that
-it gets filled in correctly.
+it gets filled in correctly.  The [Markdown](#from markdown) method
+allows for more readable embedded if/then/else statements.  In the
+[.docx template](#docx template file) method, you have to write:
+
+> I {% raw %}{% if employed %}have a job.{% else %}am unemployed.{% endif %}{% endraw %}
+
+By contrast, [Markdown](#from markdown) treats single line breaks as
+spaces, so you can write:
+
+{% highlight text %}
+I
+% if employed:
+have a job.
+% else
+am unemployed.
+% endif
+{% endhighlight %}
+
+You may find it easier to read your if/then/else statements when you can
+arrange them vertically in this fashion.
 
 If you use the [PDF fill-in field](#pdf template file) method to
 populate fields in a PDF file, you will have total control over
@@ -567,8 +586,8 @@ formats is that [Mako] uses the syntax `${ variable_name }`, while
 
 Also, the [`python-docx-template`] package uses a slightly modified
 version of the [Jinja2] syntax to account for the fact that it is
-being used inside of a .docx file.  In standard [Jinja2], you would
-write:
+being used inside of a .docx file.  The standard [Jinja2] way of
+writing a "for loop" is:
 
 {% highlight text %}
 {% raw %}{% for item in fruit_list %}
@@ -576,7 +595,8 @@ write:
 {% endfor %}{% endraw %}
 {% endhighlight %}
 
-In a .docx template, however, you should write:
+In a .docx template, however, this will result in extraneous line
+breaks.  You can avoid this by writing:
 
 {% highlight text %}
 {% raw %}{%p for item in fruit_list %}

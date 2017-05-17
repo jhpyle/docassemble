@@ -79,7 +79,11 @@ readability of your interview question is also displayed.
 
 ![Source]({{ site.baseurl }}/img/hello-world-source-code-for-question.png)
 
-In this example, the "Source" information explains that the interview
+Note that end users will not see the Source tab; it will only be shown
+to users if the interview is in the [Playground], or if the server is
+[configured as a development server].
+
+In this example, the Source information explains that the interview
 tried to show a [`mandatory`] question, but couldn't, because it
 needed the definition of the variable `planet`.  Therefore it looked
 for a question that offered to define `planet`, and asked that
@@ -121,6 +125,25 @@ fields:
 {% endhighlight %}
 
 ([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/hello3.yml){:target="_blank"}.)
+
+Note that the order in which the [question] and [code] blocks appear
+does not determine the order in which questions are asked.  This is
+because **docassemble** only asks questions as needed and when needed.
+The path of this interview is driven by the single [`mandatory`]
+question.  In order to say "Hello, \_\_\_\_\_\_", the **docassemble** needs to
+know what `planet` is, so it asks the question "What is your planet's
+name?"  Then, in order to say "I surmise that you have no more than
+\_\_\_\_ inhabitants," **docassemble** needs to know what
+`inhabitant_count` is, so it runs the `code` that computes
+`inhabitant_count`.  However, in order to compute that,
+**docassemble** needs to know `favorite_number`, so it asks "What is
+your favorite number?"  Then it knows everything it needs to know in
+order to display the `mandatory` question.
+
+The `code` block contains [Python] code.  The syntax needs to follow
+all the rules of [Python].  For example, the `==` syntax tests whether
+the `favorite_number` is 42 or not.  The `+` performs addition and the
+`*` performs multiplication.  The `=` sets the value of a variable.
 
 # Creating a document
 
@@ -457,6 +480,7 @@ the [GitHub subsection] of the [packages] section.
 [Notepad++]: https://notepad-plus-plus.org/
 [document]: {{ site.baseurl }}/docs/documents.html
 [`code`]: {{ site.baseurl }}/docs/code.html
+[code]: {{ site.baseurl }}/docs/code.html
 [question]: {{ site.baseurl }}/docs/questions.html
 [package]: {{ site.baseurl }}/docs/packages.html
 [packages]: {{ site.baseurl }}/docs/packages.html
@@ -473,3 +497,4 @@ the [GitHub subsection] of the [packages] section.
 [PyPI]: https://pypi.python.org/pypi
 [PyPI test server]: https://testpypi.python.org/pypi
 [version control system]: https://en.wikipedia.org/wiki/Version_control
+[configured as a development server]: {{ site.baseurl }}/docs/config.html#debug

@@ -63,8 +63,8 @@ feet = {'dog': 4, 'human': 2, 'bird': 2}
 {% endhighlight %}
 
 then `feet['dog']` will return `4`, `feet['human']` will return `2`,
-and `feet['bird']` will return `2`.  The keys are `dog`, `human`, and
-`bird`, and the values are `4`, `2`, and `2`, respectively.
+and `feet['bird']` will return `2`.  The keys are `'dog'`, `'human'`, and
+`'bird'`, and the values are `4`, `2`, and `2`, respectively.
 
 {% highlight python %}
 >>> feet = {'dog': 4, 'human': 2, 'bird': 2}
@@ -81,8 +81,8 @@ and `feet['bird']` will return `2`.  The keys are `dog`, `human`, and
 {% endhighlight %}
 
 The keys of a dictionary are unique.  Doing `feet['rabbit'] = 2` will
-add a new entry to the above dictionary, whereas doing `feet['dog'] =
-3` will change the existing entry for `dog`.  The items in a
+add a new entry to the above dictionary, whereas doing 
+`feet['dog'] = 3` will change the existing entry for `'dog'`.  The items in a
 dictionary are stored in no particular order; [Python] will not
 remember the order in which you add them.
 
@@ -93,14 +93,14 @@ behave much like [Python dict]s.
 
 A **set** is a **group of unique items with no order**.  There is no
 index or key that allows you to refer to a particular item; an item is
-either in the set or is not.  In Python, a set can be defined with a
+either in the set or is not.  In [Python], a set can be defined with a
 statement like `colors = set(['blue', 'red'])`. Adding a new item to
-the set is called "adding," not "appending."  E.g.,
+the set is called "adding," not "appending."  For example:
 `colors.add('green')`.  If you add an item to a set when the item is
 already in the set, this will have no effect on the set.
 
 {% highlight python %}
->>> colors = set(['blue', 'red'])
+>>> colors = set(['blue', 'green', 'red'])
 >>> colors
 set(['blue', 'green', 'red'])
 >>> colors.add('blue')
@@ -142,7 +142,10 @@ dictionary, or set, you should use the objects [`DAList`], [`DADict`],
 and [`DASet`] instead of [Python]'s basic [list], [dict], and [set]
 data types.  These objects have special attributes that help
 interviews find the right questions to ask the user in order to
-populate the items of the group.
+populate the items of the group.  (If you want to, you can use
+[Python]'s basic [list], [dict], and [set] data types in your
+interviews; nothing will stop you -- but there are no special features
+to help you populate these objects with user input.)
 
 ### <a name="gather list"></a>Lists
 
@@ -178,13 +181,14 @@ subquestion: |
   The fruits are ${ fruit }.
 {% endhighlight %}
 
-The interview encounters `fruit.number_as_word()`, which will return
+Since this [`question`] is [`mandatory`], **docassemble** tries to ask
+it.  However, it encounters `fruit.number_as_word()`, which returns
 the number of items in the list.  But in order to know how many items
-are in the list, the interview first needs to ask the user what those
+are in the list, **docassemble** needs to ask the user what those
 items are.  So the reference to `fruit.number_as_word()` will trigger
 the process of asking these questions.  (The reference to ${ fruit }
-would trigger the same process, but the interview will encounter
-`fruit.number_as_word()` first.)
+would also trigger the same process, but **docassemble** will
+encounter `fruit.number_as_word()` first.)
 
 The text of these questions is provided in [`question`] blocks that
 define the following variables:
@@ -196,8 +200,8 @@ define the following variables:
 
 First, the interview will want to know whether there are any items in
 the list at all.  It will seek a definition for `fruit.there_are_any`.
-It will ask the question, "Are there any fruit that you would like to
-add to the list?"
+Thus, it will ask the question, "Are there any fruit that you would
+like to add to the list?"
 
 {% highlight yaml %}
 question: |
@@ -207,8 +211,8 @@ yesno: fruit.there_are_any
 {% endhighlight %}
 
 If the answer to this is `True`, the interview will seek a definition
-for `fruit[0]` to gather the first element.  It will ask the question
-"What fruit should be added to the list?"
+for `fruit[0]` to gather the first element.  Thus, it will ask the
+question "What fruit should be added to the list?"
 
 {% highlight yaml %}
 question: |
@@ -219,7 +223,7 @@ fields:
 
 Assume the user enters "apples."
 
-Now the interview knows the first item in the list, but it does not
+Now **docassemble** knows the first item in the list, but it does not
 know if the list is complete yet.  Therefore, it will seek a
 definition for `fruit.there_is_another`.  It will ask the question "So
 far, the fruits include apples.  Are there any others?"
@@ -239,11 +243,12 @@ enters "oranges."
 Then the interview will again seek the definition of
 `fruit.there_is_another`.  This time, if the answer is `False`, then
 `fruit.number_as_word()` has all the information it needs, and it will
-return the number of items in `fruit` (in this case, 2).  When the interview later
-encounters `The fruits are ${ fruit }.`, it will attempt to reduce the
-variable `fruit` to text.  Since the interview knows that there are no
-more elements in the list, it does not need to ask any further
-questions.  `${ fruit }` will result in `apples and oranges`.
+return the number of items in `fruit` (in this case, 2).  When
+**docassemble** later encounters `The fruits are ${ fruit }.`, it will
+attempt to reduce the variable `fruit` to text.  Since the interview
+knows that there are no more elements in the list, it does not need to
+ask any further questions.  `${ fruit }` will result in 
+`apples and oranges`.
 
 Note that the variable `i` is special in **docassemble**.  When the
 interview seeks a definition for `fruit[0]`, the interview will first
@@ -267,9 +272,9 @@ you would prefer that the questions in the interview go like this:
 To ask questions this way, include a [`mandatory`]<span></span>
 [`code` block] up front that sets the `.ask_number` attribute of
 `fruit` to `True`.  Also include a question that asks "How many fruits
-are there?" and use `fruit.target_number` as the true/false variable.
-(The `.target_number` attribute is a special attribute, like
-`.there_is_another`.)
+are there?" and use `fruit.target_number` as the variable set by the
+question.  (The `.target_number` attribute is a special attribute,
+like `.there_is_another`.)
 
 {% include side-by-side.html demo="gather-fruit-number" %}
 
@@ -291,6 +296,8 @@ we build a [`DADict`] in which the keys are the names of fruits and
 the values are the number of seeds that fruit contains.  There is one
 question that asks for the fruit name (`fruit.new_item_name`) and a
 separate question that asks for the number of seeds (`fruit[i]`).
+(When populating a [`DADict`], `i` refers to the key, whereas when
+populating a [`DAList`], `i` refers to a number like 0, 1, 2, etc.)
 
 {% include side-by-side.html demo="gather-dict" %}
 
@@ -300,13 +307,13 @@ value of a new item.
 {% include side-by-side.html demo="gather-dict-value" %}
 
 The value of the `.new_item_value` attribute will never be sought by
-the **docassemble** gathering process; only the value of the
+the gathering process; only the value of the
 `.new_item_name` attribute will be sought.  So if you want to use
-`.new_item_value`, you need to set it using a question that also sets
-`.new_item_name`, as in the example above.
+`.new_item_value`, you need to set it using a question that
+simultaneously sets `.new_item_name`, as in the example above.
 
-You can also populate the contents of a [`DADict`] object where each
-value is itself an object.
+You can also populate the contents of a [`DADict`] in which each value
+is itself an object.
 
 {% include side-by-side.html demo="gather-dict-object" %}
 
@@ -316,14 +323,14 @@ are objects of type [`DAObject`] with attributes `.name` (e.g.,
 `'Mittens'`, `'Spot'`) and `.feet` (e.g., `4`).  We need to start by
 telling **docassemble** that the [`DADict`] is a dictionary of
 objects.  We do this by setting the `.object_type` attribute of the
-[`DADict`] to `DAObject`, using some [`mandatory`] code.  Then we
+[`DADict`] to [`DAObject`], using some [`mandatory`] code.  Then we
 provide a question that sets the `.new_item_name` attribute.
 
 When a `.object_type` is provided, **docassemble** will take care of
 initializing the value of each entry as an object of this type.  It
-will also gather whatever attributes, if any, are necessary to
-represent the object as text.  The representation of the object as
-text is what you see if you include the object in a [Mako] template:
+will also automatically gather whatever attributes, if any, are
+necessary to represent the object as text.  The representation of the 
+object as text is what you see if you include the object in a [Mako] template:
 `${ pet['cat'] }`.  (Or, if you know [Python], it is the result of
 `str(pet['cat'])`.)  The attributes necessary to represent the object
 as text depend on the type of object.  In the case of a [`DAObject`],
@@ -365,10 +372,10 @@ questions.)
 
 {% include side-by-side.html demo="gather-set-object" %}
 
-## Manually triggering the gathering process
+## <a name="manual"></a>Manually triggering the gathering process
 
 In the examples above, the process of asking questions that populate
-the list was triggered implicitly by code like `${ fruit.number() }` or
+the list is triggered implicitly by code like `${ fruit.number() }`,
 `${ fruit }` or `% for item in fruit:`.
 
 If you want to ask the questions at a particular time, you can do so
@@ -377,14 +384,71 @@ same method used when the process is implicitly triggered.)
 
 {% include side-by-side.html demo="gather-fruit-gather" %}
 
-## Asking additional questions about each item
+The `.gather()` method accepts three optional keyword arguments:
+
+* `minimum` can be set to the minimum number of items you want to
+  gather.  The `.there_are_any` attribute will not be sought.  The
+  `.there_is_another` attribute will be sought after this minimum
+  number is reached.
+* `number` can be set to the total number of items you want to
+  gather.  The `.there_is_another` attribute will not be sought.
+* `item_object_type` can be set to the type of object each element of
+the group should be.  (This is not available for [`DASet`] objects.)
+
+The `.gather()` method is not the only way that a gathering process
+can be triggered.  The `.auto_gather` attribute controls whether the
+`.gather()` method is invoked.  If `.auto_gather` is `True` (which is
+the default), then the gathering process will be triggered using
+`.gather()`.  If `.auto_gather` is `False`, the gathering process will
+be triggered in a simpler way: by seeking the value of `.gathered`.
+Thus, you can provide a [`code` block] that sets `.gathered` to
+`True`.  For example:
+
+{% include side-by-side.html demo="gather-manual-gathered" %}
+
+Setting `.gathered` to `True` means that when you try to get the
+length of the group or iterate through it, **docassemble** will assume
+that nothing more needs to be done to populate the items in the group.
+You can still add more items to the list if you want to, using
+[`code` block]s.
 
 The `.gather()` method only asks enough questions about each item in
-order to display it.  For example, if you have a `PartyList` called
-`witness`, the items will be `Individual`s, and the bare minimum
-information needed to display an `Individual` is the `Individual`'s `.name.first`.
+order to display it.  For example, if you have a [`PartyList`] called
+`witness`, the items will be [`Individual`]s, and the bare minimum
+information needed to display an [`Individual`] is the
+[`Individual`]'s `.name.first`.  So if you have a question that offers
+to set the `.name.first` attribute, this question will be asked during
+the gathering process.  However, questions that set other attributes
+of the object will not be asked during the gathering process.  If your
+interview uses these attributes, the questions to gather them will be
+asked after the list is gathered.  This might not be an ideal ordering
+of the questions in your interview.
 
-## Manually gathering items
+You can tweak the way information is gathered about the items in a
+list by setting the `.complete_attribute` to the name of an attribute
+that is defined whenever all the necessary attributes have been set.
+This way, you can include a [`code` block] that sets the attribute
+after ensuring that all necessary attributes have been defined.  This
+[`code` block] will be run during the process of gathering each item.
+Here is an example:
+
+{% include side-by-side.html demo="gather-manual-gathered-object" %}
+
+Note that when `.complete_attribute` is set to the text
+`'complete'`, the attribute that will be used is `.complete`.  You can
+use any attribute name here.
+
+In fact, this particular example could be simplified, since there is
+just one question that needs to be asked to gather the necessary
+attributes.
+
+{% include side-by-side.html demo="gather-manual-gathered-object-simple" %}
+
+This way, you do not need to use a [`code` block].  However, if your
+interview needs to ask multiple questions about each item in the
+group, it is better to use an artificial attribute like `.complete`.
+
+## Detailed explanation of gathering process
 
 At a very basic level, it is not complicated to gather a list of
 things from a user.  For example, you can do this:
@@ -419,6 +483,13 @@ after each item, ask if any additional items exist.
 
 {% include side-by-side.html demo="gather-another" %}
 
+It is necessary to [disable the automatic gathering system]:
+
+{% highlight python %}
+fruit.auto_gather = False
+fruit.gathered = True
+{% endhighlight %}
+
 This example uses a little bit of [Python] code to ask the appropriate
 questions.  The code is:
 
@@ -430,8 +501,8 @@ if more_fruits:
 {% endhighlight %}
 
 The first line makes sure that the first fruit, `fruit[0]`, is
-defined.  Initially, this initially undefined, but when the code
-encounters `fruit[0]` it will go looking for the value of `fruit[0]`,
+defined.  Initially, this is undefined.  So when the code
+encounters `fruit[0]`, it will go looking for the value of `fruit[0]`,
 and the question "What's the first fruit?" will be asked.  Once
 `fruit[0]` is defined, the interview considers whether `more_fruits`
 is true.  If `more_fruits` is undefined, the interview presents the
@@ -441,7 +512,7 @@ the definition of `more_fruit` (making the variable undefined again),
 and then makes sure that `fruit[len(fruit)]` is defined.  The
 expression `len(fruit)` returns the number of items in the `fruit`
 list.  If there is only one item in the list (i.e., `fruit[0]`), then
-`len(fruit)` will be return `1`, and the interview will look for the
+`len(fruit)` will return `1`, and the interview will look for the
 second element in the list, `fruit[1]`.
 
 This is starting to get complicated.  And things get even more
@@ -454,22 +525,23 @@ three fruits so far," you would not want this prerequisite.
 
 Since asking users for lists of things can get complicated,
 **docassemble** automates the process of asking the necessary
-questions to fully populate the list
+questions to fully populate the list.
 
-If your list is `fruit`, there are two special attributes:
-`fruit.gathered` and `fruit.there_is_another`.  The `fruit.gathered`
-attribute is initially undefined, but is set to `True` when the list
-is completely populated.  The `fruit.there_is_another` attribute is
-used to ask the user questions like "You have told me about three
-fruits so far: apples, peaches, and pears.  Are there any additional
-fruits?"
+If your list is `fruit`, there are three special attributes:
+`fruit.gathered`, `fruit.there_are_any`, and `fruit.there_is_another`.
+The `fruit.gathered` attribute is initially undefined, but is set to
+`True` when the list is completely populated.  The
+`fruit.there_are_any` attribute is used to ask the user whether the
+list is empty.  The `fruit.there_is_another` attribute is used to ask
+the user questions like "You have told me about three fruits so far:
+apples, peaches, and pears.  Are there any additional fruits?"
 
 In addition to these two attributes, there is special method,
 `fruit.gather()`, which will cause appropriate questions to be asked
 and will return `True` when the list has been fully populated.  The
-`.gather()` method looks for definitions for `fruit[i]` and
-`fruit.there_is_another`, and makes `fruit.there_is_another`
-undefined, as necessary.
+`.gather()` method looks for definitions for `fruit.there_are any`,
+`fruit[i]`, and `fruit.there_is_another`.  It makes
+`fruit.there_is_another` undefined as necessary.
 
 Here is a complete example:
 
@@ -505,7 +577,6 @@ If the list might be empty, you can check its length using an
 `if`/`else`/`endif` [Mako] statement:
 
 {% highlight yaml %}
----
 question: |
   Summary of fruit
 subquestion: |
@@ -517,15 +588,11 @@ subquestion: |
   There are no fruits to discuss.
   % endif
 mandatory: True
----
 {% endhighlight %}
 
-You can do the same with a [`DAList`], but you can check its
-[`.number()`], which has the effect of causing the list to be
-gathered.
+You can also use the [`.number()`] method:
 
 {% highlight yaml %}
----
 question: |
   Summary of the case
 subquestion: |
@@ -536,12 +603,8 @@ subquestion: |
   % else:
   There are no plaintiffs.
   % endif
----
 {% endhighlight %}
 
-The `len()` function, by contrast, only returns the number of elements
-gathered so far, or `0` if no elements have been gathered.
-  
 You can check if something is in a list using a statement of the form
 `if` ... `in`:
 
@@ -583,6 +646,10 @@ yesno: case.plaintiff[i].agrees_to_accept_service
 ---
 {% endhighlight %}
 
+For more information about "for loops" in [Mako], see the
+[markup section].
+
+[markup section]: {{ site.baseurl }}/docs/markup.html#for
 [legal applications]: {{ site.baseurl }}/docs/legal.html
 [Mako]: http://www.makotemplates.org/
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
@@ -616,3 +683,5 @@ yesno: case.plaintiff[i].agrees_to_accept_service
 [object]: {{ site.baseurl }}/docs/objects.html
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [selecting objects]: {{ site.baseurl }}/docs/fields.html#objects
+[disable the automatic gathering system]: #manual
+[`generic object`]: {{ site.baseurl }}/docs/modifiers.html#generic object

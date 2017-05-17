@@ -462,8 +462,8 @@ This will result in the following error:
 > incorporated by reference into the question file, despite reaching
 > the very end of the file.
 
-If you had a question that defined `long_branch.length` or a [`generic
-object`] question for the `x.length` where `x` is a `DAObject`, then
+If you had a question that defined `long_branch.length` or a 
+[`generic object`] question for the `x.length` where `x` is a `DAObject`, then
 **docassemble** would use that question, but it is not able to ask for
 the length of the branch with `tree.branch.length` since the intrinsic
 name of the branch is `long_branch`, not `tree.branch`.
