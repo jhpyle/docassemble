@@ -1,8 +1,8 @@
 metadata:
   title: "List: the .gather method"
   short title: "List: the .gather method"
-  documentation: "https://docassemble.org/docs/groups.html#gathering"
-  example start: 1
+  documentation: "https://docassemble.org/docs/groups.html#manual"
+  example start: 3
   example end: 6
 ---
 modules:
@@ -28,4 +28,3 @@ yesno: fruit.there_is_another
 mandatory: True
 question: |
   The fruits are ${ fruit }.
-  

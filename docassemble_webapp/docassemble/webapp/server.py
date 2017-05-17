@@ -1187,7 +1187,7 @@ def release_lock(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
     r.delete(key)
 
-def make_navbar(status, page_title, page_short_title, steps, show_login, chat_info):
+def make_navbar(status, page_title, page_short_title, steps, show_login, chat_info, debug_mode):
     navbar = """\
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
@@ -1226,7 +1226,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
         <div class="collapse navbar-collapse" id="navbar-collapse">
           <ul class="nav navbar-nav navbar-left hidden-xs">
 """
-    if DEBUG:
+    if debug_mode:
         navbar += """\
             <li><a class="no-outline" title=""" + repr(str(source_message)) + """ id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">""" + word('Source') + """</a></li>
 """
@@ -2852,6 +2852,7 @@ def index():
             except:
                 logmessage("index: bad key was " + str(key))
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    debug_mode = DEBUG or yaml_filename.startswith('docassemble.playground')
     # if should_assemble and '_action_context' in post_data:
     #     action = json.loads(myb64unquote(post_data['_action_context']))
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location), tracker=user_dict['_internal']['tracker'])
@@ -3326,7 +3327,7 @@ def index():
                 being_controlled = 'false'
         else:
             being_controlled = 'false'
-        if DEBUG:
+        if debug_mode:
             debug_readability_help = """
             $("#readability-help").show();
             $("#readability-question").hide();
@@ -4537,19 +4538,19 @@ def index():
     #     reload_after = ''
     browser_title = interview_status.question.interview.get_title().get('full', default_title)
     if not is_ajax:
-        standard_header_start = standard_html_start(interview_language=interview_language, debug=DEBUG)
+        standard_header_start = standard_html_start(interview_language=interview_language, debug=debug_mode)
     if interview_status.question.question_type == "signature":
         interview_status.extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature();});</script>')
         bodyclass="dasignature"
         if not is_ajax:
             #output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" />\n    <title>' + interview_status.question.interview.get_title().get('full', default_title) + '</title>\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">\n  </head>\n  <body class="dasignature">\n'
             start_output = standard_header_start + '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dasignature">\n'
-        output = signature_html(interview_status, DEBUG, url_for('index', i=yaml_filename), validation_rules)
+        output = signature_html(interview_status, debug_mode, url_for('index', i=yaml_filename), validation_rules)
         if not is_ajax:
             end_output = scripts + "\n    " + "\n    ".join(interview_status.extra_scripts) + """\n  </body>\n</html>"""
     else:
         bodyclass="dabody"
-        if DEBUG:
+        if debug_mode:
             interview_status.screen_reader_text = dict()
         if 'speak_text' in interview_status.extras and interview_status.extras['speak_text']:
             interview_status.initialize_screen_reader()
@@ -4575,9 +4576,9 @@ def index():
                     interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
         # else:
         #     logmessage("speak_text was not here")
-        content = as_html(interview_status, url_for, DEBUG, url_for('index', i=yaml_filename), validation_rules)
+        content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules)
         #sms_content = as_sms(interview_status)
-        if DEBUG:
+        if debug_mode:
             readability = dict()
             for question_type in ['question', 'help']:
                 if question_type not in interview_status.screen_reader_text:
@@ -4637,14 +4638,14 @@ def index():
                     start_output += '\n    <link href="' + get_url_from_file_reference(fileref, question=interview_status.question) + '" rel="stylesheet">'
             start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
             start_output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dabody">\n'
-        output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp']) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
+        output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
         if interview_status.question.interview.use_progress_bar:
             output += progress_bar(user_dict['_internal']['progress'])
         output += content + "        </div>"
-        if DEBUG:
+        if debug_mode:
             output += '\n        <div class="col-md-4" style="display: none" id="readability">' + readability_report + '</div>'
         output += "\n      </div>\n"
-        if DEBUG:
+        if debug_mode:
             output += '      <div class="row">' + "\n"
             output += '        <div id="source" class="col-md-12 collapse">' + "\n"
             #output += '          <h3>' + word('SMS version') + '</h3>' + "\n"

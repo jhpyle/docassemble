@@ -1,0 +1,55 @@
+metadata:
+  title: "List: gathering other attributes"
+  short title: "List"
+  documentation: "https://docassemble.org/docs/groups.html#manual"
+  example start: 1
+  example end: 9
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - fruit: DAList
+---
+mandatory: True
+code: |
+  fruit.object_type = DAObject
+  fruit.complete_attribute = 'complete'
+---
+code: |
+  need(fruit[i].name)
+  need(fruit[i].seeds)
+  fruit[i].complete = True
+---
+question: |
+  Tell me about the first fruit.
+fields:
+  - Name: fruit[0].name
+  - Seeds: fruit[0].seeds
+    datatype: integer
+    min: 0
+---
+question: |
+  Tell me about another fruit.
+fields:
+  - Name: fruit[i].name
+  - Seeds: fruit[i].seeds
+    datatype: integer
+    min: 0
+---
+question: |
+  Do you know about any other fruit?
+yesno: fruit.there_is_another
+---
+question: |
+  Do you know about any fruit?
+yesno: fruit.there_are_any
+---
+mandatory: True
+question: |
+  Your knowledge of fruit.
+subquestion: |
+  % for item in fruit:
+  ${ item.name } has
+  ${ item.seeds } seeds.
+  % endfor

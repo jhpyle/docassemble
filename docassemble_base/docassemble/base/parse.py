@@ -30,7 +30,7 @@ from docassemble.base.mako.template import Template as MakoTemplate
 from docassemble.base.mako.exceptions import SyntaxException
 from types import CodeType, NoneType
 
-debug = False
+debug = True
 import_and_run_process_action = compile('from docassemble.base.util import *\nprocess_action()', '', 'exec')
 run_process_action = compile('process_action()', '', 'exec')
 match_process_action = re.compile(r'process_action\(')
@@ -42,9 +42,10 @@ document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 remove_trailing_dots = re.compile(r'\.\.\.$')
 fix_tabs = re.compile(r'\t')
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
-match_brackets_at_end = re.compile(r'^(.*)(\[.+?\])$')
+match_brackets_at_end = re.compile(r'^(.*)(\[.+?\])')
 match_inside_brackets = re.compile(r'\[(.+?)\]')
 complications = re.compile(r'[\.\[]')
+fix_assign = re.compile(r'\.(\[[^\]]*\])')
 
 def process_audio_video_list(the_list, user_dict):
     output = list()
@@ -2777,14 +2778,12 @@ class Interview:
             questions_to_try = list()
             generic_needed = True;
             if realMissingVariable in self.questions:
-                #logmessage("Found realMissingVariable in question")
                 for lang in [language, '*']:
                     if lang in self.questions[realMissingVariable]:
                         for the_question in reversed(self.questions[realMissingVariable][lang]):
                             questions_to_try.append((the_question, False, 'None', 'None', realMissingVariable, None))
                         generic_needed = False
             if generic_needed and bracketPart != 'None' and missingVariable in self.questions:
-                #logmessage("got in here")
                 for lang in [language, '*']:
                     if lang in self.questions[missingVariable]:
                         for the_question in reversed(self.questions[missingVariable][lang]):
@@ -2858,7 +2857,7 @@ class Interview:
                 for i in range(1, n):
                     #if found_x:
                     #    break;
-                    sub_totry = [{'var': "x." + ".".join(components[i:n]), 'realvar': "x." + ".".join(realComponents[i:n]), 'root': ".".join(realComponents[0:i]), 'root_for_object': ".".join(realComponents[0:i])}]
+                    sub_totry = [{'var': "x." + ".".join(components[i:n]), 'realvar': "x." + ".".join(realComponents[i:n]), 'root': ".".join(realComponents[0:i]), 'root_for_object': ".".join(realComponents[0:i]), 'post': ''}]
                     m = match_brackets_at_end.search(sub_totry[0]['root'])
                     if m:
                         before_brackets = m.group(1)
@@ -3081,9 +3080,9 @@ class Interview:
                                 if the_x != 'None':
                                     exec("x = " + the_x, user_dict)
                                     #logmessage("Set x")
-                                if the_i != 'None':
-                                    exec("i = " + the_i, user_dict)
-                                    #logmessage("Set i")
+                            if the_i != 'None':
+                                exec("i = " + the_i, user_dict)
+                                #logmessage("Set i")
                             was_defined = False
                             #logmessage("Deleting " + str(missing_var))
                             try:
@@ -3295,12 +3294,23 @@ def reproduce_basics(interview, new_interview):
 class myextract(ast.NodeVisitor):
     def __init__(self):
         self.stack = []
+        self.in_subscript = False
+        self.seen_name = False
     def visit_Name(self, node):
-        self.stack.append(node.id)
+        if not (self.in_subscript and self.seen_name is True):
+            self.stack.append(node.id)
+            if self.in_subscript:
+                self.seen_name = True
         ast.NodeVisitor.generic_visit(self, node)
     def visit_Attribute(self, node):
         self.stack.append(node.attr)
         ast.NodeVisitor.generic_visit(self, node)
+    def visit_Subscript(self, node):
+        self.stack.append('[' + str(node.slice.value.id) + ']')
+        self.in_subscript = True
+        self.seen_name = False
+        ast.NodeVisitor.generic_visit(self, node)
+        self.in_subscript = False
 
 class myvisitnode(ast.NodeVisitor):
     def __init__(self):
@@ -3320,11 +3330,11 @@ class myvisitnode(ast.NodeVisitor):
                         for subsubnode in subnode.elts:
                             crawler = myextract()
                             crawler.visit(subsubnode)
-                            self.targets[".".join(reversed(crawler.stack))] = 1
+                            self.targets[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
                     else:
                         crawler = myextract()
                         crawler.visit(subnode)
-                        self.targets[".".join(reversed(crawler.stack))] = 1
+                        self.targets[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
         self.depth += 1
         #ast.NodeVisitor.generic_visit(self, node)
         self.generic_visit(node)

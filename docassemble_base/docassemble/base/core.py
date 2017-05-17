@@ -199,6 +199,11 @@ class DAList(DAObject):
             del kwargs['object_type']
         if not hasattr(self, 'object_type'):
             self.object_type = None
+        if 'complete_attribute' in kwargs:
+            self.complete_attribute = kwargs['complete_attribute']
+            del kwargs['complete_attribute']
+        if not hasattr(self, 'complete_attribute'):
+            self.complete_attribute = None
         return super(DAList, self).init(*pargs, **kwargs)
     def _trigger_gather(self):
         """Triggers the gathering process."""
@@ -345,12 +350,14 @@ class DAList(DAObject):
         """Returns the number of elements in the list, spelling out the number if ten 
         or below.  Forces the gathering of the elements if necessary."""
         return nice_number(self.number())
-    def gather(self, number=None, item_object_type=None, minimum=None):
+    def gather(self, number=None, item_object_type=None, minimum=None, complete_attribute=None):
         """Causes the elements of the list to be gathered and named.  Returns True."""
         if hasattr(self, 'gathered') and self.gathered:
             return True
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
+        if complete_attribute is None and self.complete_attribute is not None:
+            complete_attribute = self.complete_attribute
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         if number is None and self.ask_number:
             number = self.target_number
@@ -367,20 +374,28 @@ class DAList(DAObject):
             if item_object_type is not None:
                 self.appendObject(item_object_type)
             str(self.__getitem__(the_length))
+            if item_object_type is not None and complete_attribute is not None:
+                getattr(self.__getitem__(the_length), complete_attribute)
         for elem in self.elements:
             str(elem)
+            if item_object_type is not None and complete_attribute is not None:
+                getattr(elem, complete_attribute)
         the_length = len(self.elements)
         if number is not None:
             while the_length < int(number):
                 if item_object_type is not None:
                     self.appendObject(item_object_type)
                 str(self.__getitem__(the_length))
+                if item_object_type is not None and complete_attribute is not None:
+                    getattr(self.__getitem__(the_length), complete_attribute)
         elif minimum != 0:
             while self.there_is_another:
                 del self.there_is_another
                 if item_object_type is not None:
                     self.appendObject(item_object_type)
                 str(self.__getitem__(the_length))
+                if item_object_type is not None and complete_attribute is not None:
+                    getattr(self.__getitem__(the_length), complete_attribute)
         if self.auto_gather:
             self.gathered = True
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
@@ -540,6 +555,11 @@ class DADict(DAObject):
             del kwargs['object_type']
         if not hasattr(self, 'object_type'):
             self.object_type = None
+        if 'complete_attribute' in kwargs:
+            self.complete_attribute = kwargs['complete_attribute']
+            del kwargs['complete_attribute']
+        if not hasattr(self, 'complete_attribute'):
+            self.complete_attribute = None
         return super(DADict, self).init(*pargs, **kwargs)
     def _trigger_gather(self):
         """Triggers the gathering process."""
@@ -676,15 +696,19 @@ class DADict(DAObject):
         """Returns the number of keys in the dictionary, spelling out the number if ten 
         or below.  Forces the gathering of the dictionary items if necessary."""
         return nice_number(self.number())
-    def gather(self, item_object_type=None, number=None, minimum=None):
+    def gather(self, item_object_type=None, number=None, minimum=None, complete_attribute=None):
         """Causes the dictionary items to be gathered and named.  Returns True."""
         if hasattr(self, 'gathered') and self.gathered:
             return True
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
+        if complete_attribute is None and self.complete_attribute is not None:
+            complete_attribute = self.complete_attribute
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         for elem in sorted(self.elements.values()):
             str(elem)
+            if item_object_type is not None and complete_attribute is not None:
+                getattr(elem, complete_attribute)
         if number is None and self.ask_number:
             number = self.target_number
         if minimum is None:
@@ -725,6 +749,8 @@ class DADict(DAObject):
     def _new_item_init_callback(self):
         for elem in sorted(self.elements.values()):
             str(elem)
+            if self.object_type is not None and self.complete_attribute is not None:
+                getattr(elem, self.complete_attribute)
         return
     def comma_and_list(self, **kwargs):
         """Returns the keys of the list, separated by commas, with 

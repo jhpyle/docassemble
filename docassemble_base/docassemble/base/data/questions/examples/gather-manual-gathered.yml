@@ -1,0 +1,25 @@
+metadata:
+  title: "List: .auto_gather and .gathered"
+  short title: "List"
+  documentation: "https://docassemble.org/docs/groups.html#manual"
+  example start: 3
+  example end: 5
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - fruit: DAList
+---
+code: |
+  fruit.append('apple', 'orange', 'grape')
+  fruit.gathered = True
+---
+mandatory: True
+code: |
+  fruit.auto_gather = False
+---
+mandatory: True
+question: |
+  The fruits are ${ fruit }.
+  
