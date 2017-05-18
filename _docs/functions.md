@@ -3114,8 +3114,8 @@ use a list of [`raw field variables`].
 
 Moreover, the easiest way to pass "raw" values is to omit `field`,
 `field code`, `field variables`, `code`, and `raw field variables`
-entirely, so that your .docx file is [assembled](`docx template file`)
-using your full set of interview variables.
+entirely, so that your .docx file is [assembled] using your full set
+of interview variables.
 
 # <a name="yourown"></a>Writing your own functions
 
@@ -3510,7 +3510,7 @@ $(document).on('daPageLoad', function(){
 [`subdivision_type()`]: #subdivision_type
 [`incoming mail domain`]: {{ site.baseurl }}/docs/config.html#incoming mail domain
 [interaction of user roles and actions]: {{ site.baseurl }}/docs/users.html#users and actions
-[`contacts.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/sources/contacts.yml
+[`contacts.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/sources/contacts.yml
 [associative array]: https://en.wikipedia.org/wiki/Associative_array
 [`fish.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/fish.py
 [`fishes.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/sources/fishes.yml
@@ -3531,4 +3531,5 @@ $(document).on('daPageLoad', function(){
 [tesseract-ocr-all]: https://packages.debian.org/stretch/tesseract-ocr-all
 [`raw field variables`]: {{ site.baseurl }}/docs/documents.html#raw field variables
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
+[assembled]: {{ site.baseurl }}/docs/documents.html#docx template file
 [`.comma_and_list()`]: {{ site.baseurl }}/docs/objects.html#DAList.comma_and_list

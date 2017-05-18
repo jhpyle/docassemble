@@ -1150,8 +1150,6 @@ files:
   configuration file used when [`CONTAINERROLE`] includes `log`.
 * <span></span>[`docassemble/Docker/rabbitmq.config`]: [RabbitMQ]
   configuration file.
-* <span></span>[`docassemble/Docker/docassemble.wsgi`]: WSGI server file called by
-  [Apache].
 * <span></span>[`docassemble/Docker/docassemble.logrotate`]: This file will be copied
   into `/etc/logrotate.d` and will control the rotation of the
   **docassemble** log file in `/usr/share/docassemble/log`.
@@ -1276,7 +1274,6 @@ containers depend on the images.
 [`docassemble/Docker/docassemble-syslog-ng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble-syslog-ng.conf
 [`docassemble/Docker/syslog-ng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/syslog-ng.conf
 [`docassemble/Docker/rabbitmq.config`]: {{ site.github.repository_url }}/blob/master/Docker/rabbitmq.config
-[`docassemble/Docker/docassemble.wsgi`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.wsgi
 [`docassemble/Docker/docassemble.logrotate`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.logrotate
 [`docassemble/Docker/apache.logrotate`]: {{ site.github.repository_url }}/blob/master/Docker/apache.logrotate
 [`docassemble/Docker/run-postgresql.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-postgresql.sh

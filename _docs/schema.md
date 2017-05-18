@@ -60,4 +60,4 @@ concepts exist in most SQL database systems.)
 [`schema file`]: {{ site.baseurl }}/docs/config.html#db schema file
 [`docassemble.webapp.create_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
 [`docassemble.webapp.fix_postgresql_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/fix_postgresql_tables.py
-[`db-schema.txt`]: {{ site.github.repository_url }}/blob/master/Docker/db-schema.txt
+[`db-schema.txt`]: {{ site.github.repository_url }}/blob/master/Docker/config/db-schema.txt

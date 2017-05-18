@@ -492,7 +492,7 @@ the same interview on a single server.
 [embedded answers]: {{ site.baseurl }}/docs/special.html#url_args
 [run in the background]: {{ site.baseurl }}/docs/functions.html#background
 [machine learning]: {{ site.baseurl }}/docs/ml.html
-[check in]: {{ site.baseurl }}/docs/scheduled.html
+[check in]: {{ site.baseurl }}/docs/background.html#check in
 [live help]: {{ site.baseurl }}/docs/livehelp.html
 [text messaging interface]: {{ site.baseurl }}/docs/sms.html
 [store data]: {{ site.baseurl }}/docs/functions.html#storage

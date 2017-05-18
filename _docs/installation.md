@@ -133,7 +133,7 @@ Before installing packages, update the package lists.
 sudo apt-get update
 {% endhighlight %}
 
-The following [dependencies] can be installed from [Debian] or
+The following dependencies can be installed from [Debian] or
 [Ubuntu] packages:
 
 {% highlight bash %}
@@ -955,7 +955,6 @@ files.  In this case, you will need to manually reinstall
 **docassemble**.
 
 [schema]: {{ site.baseurl }}/docs/schema.html
-[dependencies]: {{ site.baseurl }}/docs/requirements.html
 [install it using Docker]: {{ site.baseurl }}/docs/docker.html
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [MacTex]: https://tug.org/mactex/
