@@ -1853,6 +1853,20 @@
   fields:
     - File: the_file
       datatype: file
+"fix-punctuation": |-
+  mandatory: true
+  question: |
+    Your petition.
+  subquestion: |
+    Tell the court that your petition
+    should be granted because
+    ${ fix_punctuation(rationale) }
+  ---
+  question: |
+    Why should the court grant your
+    petition?
+  fields:
+    - no label: rationale
 "flushleft": "mandatory: True\nquestion: |\n  Here is your document.\nsubquestion:\
   \ |\n  It demonstrates the flush left environment.\nattachments:\n  - name: A test\
   \ document\n    filename: test_document\n    content: |\n      This line is indented.\n\

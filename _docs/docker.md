@@ -15,7 +15,7 @@ install **docassemble** in a multi-server arrangement on
 # Installing Docker
 
 First, make sure you are running [Docker] on a computer or virtual
-computer with at least 1GB of memory and 16GB of hard drive space.
+computer with at least 1GB of memory and 20GB of hard drive space.
 
 If you have a Windows PC, follow the [Docker installation instructions for Windows]{:target="_blank"}.
 
@@ -90,7 +90,7 @@ then port 8080 on the host machine would be passed through to port 80
 on the [Docker] container.
 
 The `jhpyle/docassemble` tag refers to a [Docker] image that is
-[hosted on Docker Hub].  The image is about 2.4GB in size.  It is an
+[hosted on Docker Hub].  The image is about 4GB in size.  It is an
 [automated build] based on the "master" branch of the
 [docassemble repository] on [GitHub].
 
@@ -210,7 +210,7 @@ Then, you can pass these environment variables to the container using
 the [`docker run`] command:
 
 {% highlight bash %}
-docker run --env-file=env.list -d -p 80:80 -p 443:443 -p 25:25 jhpyle/docassemble
+docker run --env-file=env.list -d -p 80:80 -p 443:443 jhpyle/docassemble
 {% endhighlight %}
 
 These configuration options will cause the [Apache] configuration file
@@ -549,7 +549,7 @@ updated, run the image as follows:
 {% highlight bash %}
 docker run --env-file=env.list \
 -v dabackup:/usr/share/docassemble/backup \
--d -p 80:80 -p 443:443 -p 25:25 jhpyle/docassemble
+-d -p 80:80 -p 443:443 jhpyle/docassemble
 {% endhighlight %}
 
 where `--env-file=env.list` is an optional parameter that refers to a
@@ -696,6 +696,11 @@ docker run \
 -d -p 80:80 -p 443:443 -p 9001:9001 \
 jhpyle/docassemble
 {% endhighlight %}
+
+Note that [Docker] will fail if any of these ports is already in use.
+For example, many Linux distributions run a mail tranport agent on
+port 25 by default; you will have to stop that service in order to
+start [Docker] with `-p 25:25`.
 
 ## <a name="file sharing"></a>File sharing
 
@@ -1194,19 +1199,6 @@ Or push it to [Docker Hub]:
 docker push yourdockerhubusername/mydocassemble
 {% endhighlight %}
 
-# Cleaning up after multiple builds
-
-If you build [Docker] images, you may find your disk space being used
-up.  These three lines will stop all containers, remove all
-containers, and then remove all of the images that [Docker] created
-during the build process.
-
-{% highlight bash %}
-docker stop $(docker ps -a -q)
-docker rm $(docker ps -a -q)
-docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
-{% endhighlight %}
-
 # Upgrading docassemble when using Docker
 
 As new versions of **docassemble** become available, you can obtain
@@ -1216,15 +1208,37 @@ the latest version by running:
 docker pull jhpyle/docassemble
 {% endhighlight %}
 
-Then, subsequent [`docker run`] and [`docker build`] commands will use
-the latest **docassemble** image.
+Then, subsequent [`docker run`] commands will use the latest
+**docassemble** image.
 
 When you are using [Docker] to run **docassemble**, you can upgrade
-**docassemble** to the newest version simply by running
-[`docker stop`] and [`docker rm`] on the **docassemble** container,
-followed by [`docker run`].  Note, however, that [`docker rm`] will
-delete all of the data on the server unless you are using a
-[data storage] system.
+**docassemble** to the newest version simply by running `docker pull
+jhpyle/docassemble`, then running [`docker stop`] and [`docker rm`] on
+your **docassemble** container, followed by [`docker run`].  Note,
+however, that [`docker rm`] will delete all of the data on the server
+unless you are using a [data storage] system.
+
+# Cleaning up after Docker
+
+If you run `docker pull` to retrieve new versions of **docassemble**,
+or you build your own **docassemble** images more than once, you may
+find your disk space being used up.  The full **docassemble** image is
+about 4GB in size, and whenever you run `docker pull` or build a new
+image, a new image is created -- the old image is not overwritten.
+
+The following three lines will stop all containers, remove all
+containers, and then remove all of the images that [Docker] created
+during the build process.
+
+{% highlight bash %}
+docker stop $(docker ps -a -q)
+docker rm $(docker ps -a -q)
+docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
+{% endhighlight %}
+
+The last line, which deletes images, frees up the most disk space.
+However, it may be necessary to remove the containers first, as the
+containers depend on the images.
 
 [Redis]: http://redis.io/
 [Docker installation instructions for Windows]: https://docs.docker.com/engine/installation/windows/

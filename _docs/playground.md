@@ -214,10 +214,12 @@ Packages are defined with the following elements:
   another, you will need to edit the `LICENSE` file manually.
 * **Description**: This is a short description of your package (no
   more than 255 characters).
-* **URL**: This is a URL for the documentation for your package, if
-  any.  Defaults to a link to the **docassemble** documentation.
-* **Dependencies**: From the Python [packages] installed on the
-  system, indicate the ones that are required for your package to
+* **URL**: This is a URL indicating where your software can be found.
+  If you distribute your package on [GitHub], you will need to set
+  this to the [GitHub] URL for your package.  See the
+  [packages section] for more information about why this is necessary.
+* **Dependencies**: From the list of Python [packages] installed on
+  the system, indicate the ones that are required for your package to
   operate.  When your package is installed on another system, these
   packages will be installed first.
 * **Interview files**: From the [interview files] defined in your
@@ -477,3 +479,5 @@ Then the editing screen will load.
 [special variables]: {{ site.baseurl }}/docs/special.html
 [Markdown]: https://daringfireball.net/projects/markdown/
 [PyPI]: https://pypi.python.org/pypi
+[GitHub]: https://github.com/
+[packages section]: {{ site.baseurl }}/docs/packages.html#github

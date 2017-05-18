@@ -194,7 +194,7 @@ fields:
 
 This creates a document "from scratch" that is available in PDF or RTF
 format.  The content of the document is contained in the `content`
-directive within the `attachment` directive.
+directive within the [`attachment`] directive.
 
 Let's also try modifying this interview to use a [DOCX template] in
 order to generate a document that will be available to the user in PDF

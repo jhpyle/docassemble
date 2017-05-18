@@ -548,6 +548,8 @@ A call to `fix_punctuation(reason)` will return:
 * `I have a valid claim!` if `reason` is `I have a valid claim!`
 * `I have a valid claim?` if `reason` is `I have a valid claim?`
 
+{% include side-by-side.html demo="fix-punctuation" %}
+
 # <a name="actions"></a>Functions for interacting with the interview using URLs
 
 ## <a name="url_action"></a><a name="process_action"></a>url_action() and process_action()

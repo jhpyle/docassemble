@@ -211,7 +211,7 @@ This installation process may take a long time.  A log of the output
 of [pip] will be shown when the installation is complete, and in the
 background, the server will restart.
 
-## Installing through GitHub
+## <a name="github_install"></a>Installing through GitHub
 
 One way to install [Python] packages on a server is through [GitHub].
 
@@ -225,7 +225,7 @@ package may be `https://github.com/jhpyle/docassemble-missouri-family-law`.
    into the "GitHub URL" field.
 5. Click "Update."
 
-## Installing through a .zip file
+## <a name="zip_install"></a>Installing through a .zip file
 
 You can also install [Python] packages from ZIP files.  For example,
 if you have a package `docassemble-missouri-family-law`, the ZIP file
@@ -347,6 +347,10 @@ example, `jhpyle` is the username, and
 
 In the "Packages" folder of the **docassemble** [Playground], edit
 your package and add the [GitHub] URL as the "URL" of the package.
+This will ensure that if your package is a dependency for another
+package, that other package will be able to install your package as
+one of its dependencies when it is installed on a server.
+
 Then save your package and then download it as a ZIP file.  Extract
 the files from the ZIP file to a convenient place on your computer.
 
