@@ -800,7 +800,8 @@ attachments:
       %>
       % endfor
       
-      This petition should be granted.  ${ explanation }
+      This petition should be granted.
+      ${ fix_punctuation(explanation) }
       % if client.picture_verified:
       Look how cute I am:
 

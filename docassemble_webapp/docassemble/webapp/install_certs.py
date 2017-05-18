@@ -35,6 +35,7 @@ def main():
                 prefix = m.group(3)
                 cloud = docassemble.webapp.microsoft.azureobject(my_config)
     if cloud is not None and prefix is not None:
+        success = False
         if not re.search(r'/$', prefix):
             prefix = prefix + '/'
         dest = daconfig.get('cert install directory', '/etc/ssl/docassemble')
@@ -47,10 +48,12 @@ def main():
                 sys.stderr.write("install_certs: saving " + str(key.name) + " to " + str(fullpath) + "\n")
                 key.get_contents_to_filename(fullpath)
                 os.chmod(fullpath, stat.S_IRUSR)
+                success = True
         else:
             sys.stderr.write("SSL destination directory not known")
             sys.exit(1)
-        return
+        if success:
+            return
     if certs_location is None:
         if os.path.isdir('/usr/share/docassemble/certs'):
             certs_location = '/usr/share/docassemble/certs'

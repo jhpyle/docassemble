@@ -10117,8 +10117,8 @@ def define_examples():
     data_dict = dict()
     make_example_html(get_examples(), pg_ex['pg_first_id'], example_html, data_dict)
     example_html.append('        </div>')
-    example_html.append('        <div class="col-md-6"><h4>Preview<a target="_blank" class="label label-primary example-documentation example-hidden" id="example-documentation-link">View documentation</a></h4><a href="#" target="_blank" id="example-image-link"><img title="Click to try this interview" class="example_screenshot" id="example-image"></a></div>')
     example_html.append('        <div class="col-md-4 example-source-col"><h4>Source<a class="label label-success example-copy">Insert</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">Show context of example</a><a class="example-hider invisible" id="hide-full-example">Hide context of example</a></div></div>')
+    example_html.append('        <div class="col-md-6"><h4>Preview<a target="_blank" class="label label-primary example-documentation example-hidden" id="example-documentation-link">View documentation</a></h4><a href="#" target="_blank" id="example-image-link"><img title="Click to try this interview" class="example_screenshot" id="example-image"></a></div>')
     pg_ex['encoded_data_dict'] = safeid(json.dumps(data_dict))
     pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
 

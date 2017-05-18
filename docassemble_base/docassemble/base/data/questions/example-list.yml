@@ -27,7 +27,6 @@
     - pdf-fill-signature
     - pdf-fill-code
     - docx-template
-    - docx-template-code
 - Markdown templates:
     - template
     - template-subject
@@ -173,6 +172,7 @@
     - loading-util
     - space-underscore
     - quote_paragraphs
+    - fix-punctuation
     - qr-code
     - url-of
     - set-language

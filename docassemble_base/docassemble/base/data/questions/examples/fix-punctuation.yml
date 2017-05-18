@@ -1,0 +1,29 @@
+metadata:
+  title: End-of-sentence punctuation
+  short title: Punctuation
+  documentation: "https://docassemble.org/docs/functions.html#fix_punctuation"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+question: |
+  What to do in court.
+subquestion: |
+  Tell the court,
+  "Please grant my petition.
+  ${ fix_punctuation(rationale) }"
+---
+question: |
+  Why is the other side wrong?
+subquestion: |
+  Please be brief.
+fields:
+  - no label: rationale
+    datatype: area
+    hint: |
+      The teapot was not broken
+      and it was broken before he
+      gave it to me.
