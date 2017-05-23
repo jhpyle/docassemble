@@ -366,11 +366,11 @@ div.col-md-5 > figure > pre {
     overflow-y: auto;
 }
 
-.bgimg-1, .bgimg-3, .bgimg-4 {
-    background-attachment: fixed;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
+.bgimg-1, .bgimg-2, .bgimg-3, .bgimg-4 {
+    background-color: #83b3dd;
+    width: 100%;
+    display: table;
+    color: #fff;
 }
 
 .bgcolor {
@@ -390,6 +390,20 @@ div.col-md-5 > figure > pre {
     padding: 10px;
 }
 
+.bgimg-1 {
+    height: 100%;
+    text-align: center;
+    padding: 0;
+}
+
+.bgimg-2 {
+    height: 300px;
+}
+
+.bgimg-3, .bgimg-4 {
+    height: 200px;
+}
+
 @media (min-width: 768px) {
     .bgcolor {
 	padding: 50px 100px 50px 100px;
@@ -397,44 +411,24 @@ div.col-md-5 > figure > pre {
     .bgcolortwo {
 	padding: 0px 100px 50px 100px;
     }
-}
-
-.bgimg-1 {
-    background-image: url("/img/background.jpg");
-    height: 100%;
-    width: 100%;
-    color: #fff;
-    display: table;
-    text-align: center;
-    padding: 0;
-}
-
-.bgimg-2 {
-    background-image: url("/img/background3.jpg");
-    height: 300px;
-    width: 100%;
-    display: table;
-    color: #fff;
-    background-attachment: fixed;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-}
-
-.bgimg-3 {
-    background-image: url("/img/background2.jpg");
-    height: 200px;
-    width: 100%;
-    display: table;
-    color: #fff;
-}
-
-.bgimg-4 {
-    background-image: url("/img/tangle.jpg");
-    height: 200px;
-    width: 100%;
-    display: table;
-    color: #fff;
+    .bgimg-1, .bgimg-2, .bgimg-3, .bgimg-4 {
+	background-attachment: fixed;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+    }
+    .bgimg-1 {
+	background-image: url("/img/background.jpg");
+    }
+    .bgimg-2 {
+	background-image: url("/img/background3.jpg");
+    }
+    .bgimg-3 {
+	background-image: url("/img/background2.jpg");
+    }
+    .bgimg-4 {
+	background-image: url("/img/tangle.jpg");
+    }
 }
 
 .mega {
@@ -476,14 +470,14 @@ div.col-md-5 > figure > pre {
 .miniblock > div {
     border-style: solid;
     border-width: 2px;
-    border-color: #eee;
+    border-color: #ddd;
     border-radius: 10px;
     text-align: center;
     min-height: 200px;
     padding: 10px;
 }
 
-.boxcontainer {
+/*.boxcontainer {
     width: 100%;
     padding-top: 100%;
     position: relative;
@@ -500,7 +494,7 @@ div.col-md-5 > figure > pre {
 .spacer {
     position: relative;
     padding-top: 10px;
-}
+}*/
 
 .centerimage {
     max-width: 100%;
@@ -512,4 +506,8 @@ div.col-md-5 > figure > pre {
 
 .whitelink:hover {
     color: #ddd;
+}
+
+.padbuttons > a {
+    margin: 3px;
 }
