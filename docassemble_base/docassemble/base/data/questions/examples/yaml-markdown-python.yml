@@ -1,0 +1,18 @@
+metadata:
+  title: An Interview
+  example start: 1
+  example end: 2
+---
+question: |
+  What is your favorite number?
+fields:
+  Favorite number: best_number
+  datatype: integer
+---
+question: |
+  % if best_number == 42:
+  That's **my** favorite number!
+  % else:
+  What a _lousy_ favorite number.
+  % endif
+mandatory: true

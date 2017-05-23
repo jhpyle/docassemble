@@ -1,0 +1,16 @@
+docassemble:
+  image: jhpyle/docassemble
+  ports:
+    - "80:80"
+  roles:
+    - global
+  environment:
+    DAHOSTNAME: test7.docassemble.org
+    USEHTTPS: true
+    USELETSENCRYPT: true
+    LETSENCRYPTEMAIL: jhpyle@gmail.com
+    S3ENABLE: true
+    S3BUCKET: test7-docassemble-org
+    S3ACCESSKEY: AKIAJ4DPAVNHB7QLPZGA
+    S3SECRETACCESSKEY: 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
+    EC2: true

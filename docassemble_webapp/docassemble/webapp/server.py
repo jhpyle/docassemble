@@ -270,7 +270,7 @@ from flask_user import UserManager, SQLAlchemyAdapter
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 from docassemble.webapp.users.views import user_profile_page
 user_manager = UserManager()
-user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated) #login_view_function=custom_login
+user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated) #login_view_function=custom_login , after_login_endpoint=
 from flask_login import LoginManager
 lm = LoginManager()
 lm.init_app(app)
@@ -5381,6 +5381,8 @@ def observer():
 @login_required
 @roles_required(['admin', 'developer', 'advocate'])
 def monitor():
+    if request.method == 'GET' and needs_to_change_password():
+        return redirect(url_for('user.change_password', next=url_for('interview_list')))
     session['monitor'] = 1
     if 'user_id' not in session:
         session['user_id'] = current_user.id
@@ -8181,6 +8183,8 @@ def playground_page():
         is_ajax = True
     else:
         is_ajax = False
+        if request.method == 'GET' and needs_to_change_password():
+            return redirect(url_for('user.change_password', next=url_for('playground_page')))
     fileform = PlaygroundUploadForm(request.form)
     form = PlaygroundForm(request.form)
     interview = None
@@ -8611,6 +8615,8 @@ $( document ).ready(function() {
 @login_required
 @roles_required(['admin', 'developer'])
 def package_page():
+    if request.method == 'GET' and needs_to_change_password():
+        return redirect(url_for('user.change_password', next=url_for('interview_list')))
     return render_template('pages/packages.html', tab_title=word("Package Management"), page_title=word("Package Management")), 200
 
 @app.errorhandler(Exception)
@@ -8784,6 +8790,8 @@ def utilities():
     word_box = None
     uses_null = False
     file_type = None
+    if request.method == 'GET' and needs_to_change_password():
+        return redirect(url_for('user.change_password', next=url_for('utilities')))
     if request.method == 'POST':
         if 'language' in request.form:
             language = request.form['language']
@@ -8881,6 +8889,16 @@ def after_reset():
         del session['newsecret']
     return response
 
+def needs_to_change_password():
+    if not current_user.has_role('admin'):
+        return False
+    logmessage("needs_to_change_password: starting")
+    if app.user_manager.verify_password('password', current_user):
+        flash(word("Your password is insecure and needs to be changed"), "warning")
+        return True
+    logmessage("needs_to_change_password: ending")
+    return False
+
 @app.route('/interviews', methods=['GET', 'POST'])
 @login_required
 def interview_list():
@@ -8894,6 +8912,8 @@ def interview_list():
         response.set_cookie('secret', session['newsecret'])
         del session['newsecret']
         return response
+    if request.method == 'GET' and needs_to_change_password():
+        return redirect(url_for('user.change_password', next=url_for('interview_list')))
     secret = request.cookies.get('secret', None)
     if secret is not None:
         secret = str(secret)
