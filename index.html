@@ -1,13 +1,163 @@
 ---
-layout: title
+layout: titleonepage
 title: Docassemble
 short_title: Docassemble
 ---
-<div class="inner cover">
-  <h1 class="cover-heading over-image">{{ site.title }}</h1>
-  <img class="logo-image over-image" src="{{ '/img/docassemble-white.png' | prepend: site.baseurl }}">
-  <p class="lead over-image">{{ site.description }}</p>
-  <p class="lead">
-    <a href="{{ '/about' | prepend: site.baseurl}}" class="btn btn-lg btn-default box-over-image">Learn more</a>
-  </p>
+<div class="bgimg-1">
+  <div class="caption">
+    <img class="logo-image over-image" src="{{ '/img/docassemble-white.png' | prepend: site.baseurl }}">
+    <h1 class="cover-heading centered over-image">{{ site.title }}</h1>
+    <p class="lead over-image">{{ site.description }}</p>
+    <p class="lead">
+      <a id="learnmore" href="#pagetwo" class="btn btn-lg btn-default box-over-image">Learn more</a>
+    </p>
+  </div>
+</div>
+<div id="pagetwo" class="bgcolor">
+  <div class="caption">
+    {% capture about %}{% include_relative subdocs/about.md %}{% endcapture %}
+    {{ about | markdownify }}
+    <div class="container-fluid centered">
+      <div class="row">
+        <div class="col-sm-4 miniblock">
+          <div>
+            <div><img src="{{ site.baseurl }}/img/word-pdf.svg" style="height:3em;"></div>
+            <h3 title="What You See Is What You Get">WYSIWYG</h3>
+            <p>Compose your templates in <a href="{{ site.baseurl }}/docs/documents.html#docx template file">.docx</a> or <a href="{{ site.baseurl }}/docs/documents.html#pdf template file">.pdf</a> files.</p>
+          </div>
+        </div>
+        <div class="col-sm-4 miniblock">
+          <div>
+            <div><img src="{{ site.baseurl }}/img/signature.svg" style="height:3em;"></div>
+            <h3>Signatures</h3>
+            <p>Gather <a href="{{ site.baseurl }}/docs/fields.html#signature">touchscreen signatures</a> and embed them in documents.</p>
+          </div>
+        </div>
+        <div class="col-sm-4 miniblock">
+          <div>
+            <div><img src="{{ site.baseurl }}/img/chat.svg" style="height:3em;"></div>
+            <h3>Live chat</h3>
+            <p>Assist users in real time with <a href="{{ site.baseurl }}/docs/livehelp.html#chat">live chat</a>, <a href="{{ site.baseurl }}/docs/livehelp.html#observe">screen sharing</a>, and <a href="{{ site.baseurl }}/docs/livehelp.html#control">remote screen control</a>.</p>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-4 miniblock">
+          <div>
+            <div><img src="{{ site.baseurl }}/img/robot.svg" style="height:3em;"></div>
+            <h3 title="Artificial Intelligence">AI</h3>
+            <p>Use <a href="{{ site.baseurl }}/docs/ml.html">machine learning</a> to process user input.</p>
+          </div>
+        </div>
+        <div class="col-sm-4 miniblock">
+          <div>
+            <div><img src="{{ site.baseurl }}/img/sms.svg" style="height:3em;"></div>
+            <h3 title="Short Message Service">SMS</h3>
+            <p>Communicate with end users through <a href="{{ site.baseurl }}/docs/sms.html">text messaging</a> as an alternative to the web interface.</p>
+          </div>
+        </div>
+        <div class="col-sm-4 miniblock">
+          <div>
+            <div><img src="{{ site.baseurl }}/img/mail.svg" style="height:3em;"></div>
+            <h3>E-mail</h3>
+            <p><a href="{{ site.baseurl }}/docs/functions.html#send_email">Send</a> and <a href="{{ site.baseurl }}/docs/functions.html#get_emails">receive</a> e-mails.</p>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-4 miniblock">
+          <div>
+            <div><img src="{{ site.baseurl }}/img/international.svg" style="height:3em;"></div>
+            <h3>Multilingual</h3>
+            <p>Offer interviews in <a href="{{ site.baseurl }}/docs/language.html">multiple languages</a>.</p>
+          </div>
+        </div>
+        <div class="col-sm-4 miniblock">
+          <div>
+            <div><img src="{{ site.baseurl }}/img/ocr.svg" style="height:3em;"></div>
+            <h3 title="Optical Character Recognition">OCR</h3>
+            <p>Use <a href="{{ site.baseurl }}/docs/functions.html#ocr_file">optical character recogntion</a> to process images uploaded by the user.</p>
+          </div>
+        </div>
+        <div class="col-sm-4 miniblock">
+          <div>
+            <div><img src="{{ site.baseurl }}/img/background-tasks.svg" style="height:3em;"></div>
+            <h3>Background Tasks</h3>
+            <p>Do things <a href="{{ site.baseurl }}/docs/background.html">behind the scenes</a> of the interview, even when the user is not logged in.</p>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-4 miniblock">
+          <div>
+            <div><img src="{{ site.baseurl }}/img/scalable.svg" style="height:3em;"></div>
+            <h3>Scalable</h3>
+            <p>Deploy your interviews on <a href="{{ site.baseurl }}/docs/scalability.html">multiple machines</a> to handle high traffic.</p>
+          </div>
+        </div>
+        <div class="col-sm-4 miniblock">
+          <div>
+            <div><img src="{{ site.baseurl }}/img/secure.svg" style="height:3em;"></div>
+            <h3>Secure</h3>
+            <p>Protect user information with <a href="{{ site.baseurl }}/docs/security.html">server-side encryption</a> and other security features.</p>
+          </div>
+        </div>
+        <div class="col-sm-4 miniblock">
+          <div>
+            <div><img src="{{ site.baseurl }}/img/api.svg" style="height:3em;"></div>
+            <h3 title="Application Program Interfaces">APIs</h3>
+            <p>Send your interviews <a href="{{ site.baseurl }}/docs/special.html#url_args">input</a> and extract <a href="{{ site.baseurl }}/docs/functions.html#response">output</a> using code.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="pagethree" class="bgimg-2">
+  <div class="caption">
+    <div class="container centered">
+      <h1 class="mega lead over-image">Responsive Design</h1>
+      <h2 class="lead over-image">Based on <a class="whitelink" target="_blank" href="http://getbootstrap.com/">Bootstrap</a></h2>
+    </div>
+  </div>
+</div>
+<div id="pagefour" class="bgcolor centered">
+  <div>
+    <a href="https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml" target="_blank"><img class="centerimage" src="{{ site.baseurl }}/img/interview-on-mobile-phone.png"></a>
+  </div>
+  <div>
+    <a href="https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml" target="_blank"><img class="centerimage" src="{{ site.baseurl }}/img/interview-on-computer-monitor.png"></a>
+  </div>
+</div>
+<div id="pagefive" class="bgimg-3">
+  <div class="caption">
+    <div class="container centered">
+      <h1 class="mega lead over-image">Authoring Interviews</h1>
+    </div>
+  </div>
+</div>
+<div id="pagesix" class="bgcolor">
+  <div class="caption">
+    {% capture abouttwo %}{% include_relative subdocs/abouttwo.md %}{% endcapture %}
+    {{ abouttwo | markdownify }}
+  </div>
+</div>
+<div id="pageseven" class="bgimg-4">
+  <div class="caption">
+    <div class="container centered">
+      <h1 class="mega lead over-image">No Flowcharts</h1>
+    </div>
+  </div>
+</div>
+<div id="pageeight" class="bgcolor">
+  <div class="caption">
+    {% capture aboutthree %}{% include_relative subdocs/aboutthree.md %}{% endcapture %}
+    {{ aboutthree | markdownify }}
+  </div>
+</div>
+<div id="pagenine" class="bgcolortwo">
+  <div class="caption centered">
+    <a class="btn btn-primary btn-lg" href="https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml" target="_blank">Run the demo</a>
+    <a class="btn btn-success btn-lg" href="{{ site.baseurl }}/docs.html" target="_blank">Read the documentation</a>
+  </div>
 </div>

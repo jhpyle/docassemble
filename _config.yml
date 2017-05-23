@@ -23,4 +23,5 @@ defaults:
 # Build settings
 markdown: kramdown
 exclude:
-    - .git
+  - .git
+  - subdocs

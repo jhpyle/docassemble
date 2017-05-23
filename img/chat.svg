@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   viewBox="0 0 60 60"
+   version="1.1"
+   x="0px"
+   y="0px"
+   id="svg16"
+   sodipodi:docname="chat.svg"
+   inkscape:version="0.92.1 r15371">
+  <metadata
+     id="metadata22">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>23 -Conversation Chat- (Solid)</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs20" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1366"
+     inkscape:window-height="708"
+     id="namedview18"
+     showgrid="false"
+     inkscape:zoom="3.9333333"
+     inkscape:cx="30"
+     inkscape:cy="30"
+     inkscape:window-x="0"
+     inkscape:window-y="31"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg16" />
+  <title
+     id="title2">23 -Conversation Chat- (Solid)</title>
+  <desc
+     id="desc4">Created with Sketch.</desc>
+  <g
+     style="fill:#626262;fill-rule:evenodd;stroke:none;stroke-width:1;fill-opacity:1"
+     id="g12"
+     transform="translate(-360,-571)">
+    <g
+       id="g10"
+       transform="translate(360,571)"
+       style="fill:#626262;fill-opacity:1">
+      <path
+         inkscape:connector-curvature="0"
+         id="path6"
+         d="m 47.0001,14 h -40 c -0.552,0 -1,-0.448 -1,-1 0,-0.552 0.448,-1 1,-1 h 40 c 0.552,0 1,0.448 1,1 0,0.552 -0.448,1 -1,1 m -40,-8 h 20 c 0.552,0 1,0.448 1,1 0,0.552 -0.448,1 -1,1 h -20 c -0.552,0 -1,-0.448 -1,-1 0,-0.552 0.448,-1 1,-1 m 48,-6 h -50 c -2.757,0 -5,2.243 -5,5 v 10 c 0,2.757 2.243,5 5,5 h 8.958 c -0.242,3.042 -1.498,7 -2.958,7 -0.552,0 -1,0.448 -1,1 0,0.552 0.448,1 1,1 4.885,0 10.315,-3.786 10.94,-9 h 33.06 c 2.757,0 5,-2.243 5,-5 V 5 c 0,-2.757 -2.243,-5 -5,-5"
+         style="fill:#626262;fill-opacity:1" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path8"
+         d="m 25.0001,45 h -18 c -0.552,0 -1,-0.448 -1,-1 0,-0.552 0.448,-1 1,-1 h 18 c 0.552,0 1,0.448 1,1 0,0.552 -0.448,1 -1,1 m -18,-8 h 10 c 0.552,0 1,0.448 1,1 0,0.552 -0.448,1 -1,1 h -10 c -0.552,0 -1,-0.448 -1,-1 0,-0.552 0.448,-1 1,-1 m 48,-6 h -50 c -2.757,0 -5,2.243 -5,5 v 10 c 0,2.757 2.243,5 5,5 h 33.06 c 0.625,5.214 6.055,9 10.94,9 0.552,0 1,-0.448 1,-1 0,-0.552 -0.448,-1 -1,-1 -1.46,0 -2.716,-3.958 -2.958,-7 h 8.958 c 2.757,0 5,-2.243 5,-5 V 36 c 0,-2.757 -2.243,-5 -5,-5"
+         style="fill:#626262;fill-opacity:1" />
+    </g>
+  </g>
+</svg>

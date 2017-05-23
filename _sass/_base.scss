@@ -100,7 +100,8 @@ box-shadow: $shadow;
 }
 
 .cover-heading {
-  display: inherit;
+    padding-top: 50px;
+    text-align: center;
 }
 
 .logo-image {
@@ -114,7 +115,8 @@ box-shadow: $shadow;
     max-width: 400px;
   }
   .cover-heading {
-    display: none;
+      display: none;
+      padding-top: 0px;
   }
 }
 
@@ -189,6 +191,7 @@ box-shadow: $shadow;
   margin-bottom: 0px;
   vertical-align: top;
   text-align: left;
+  border-radius: 0px;
 }
 
 .mastfoot {
@@ -361,4 +364,152 @@ h5:hover > a.bookmark {
 div.col-md-5 > figure > pre {
     max-height: 650px;
     overflow-y: auto;
+}
+
+.bgimg-1, .bgimg-3, .bgimg-4 {
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.bgcolor {
+    background-color: #fff;
+    color: #000;
+    min-height: 100%;
+    width: 100%;
+    display: table;
+    padding: 0 10px 0 10px;
+}
+
+.bgcolortwo {
+    background-color: #fff;
+    color: #000;
+    width: 100%;
+    display: table;
+    padding: 10px;
+}
+
+@media (min-width: 768px) {
+    .bgcolor {
+	padding: 50px 100px 50px 100px;
+    }
+    .bgcolortwo {
+	padding: 0px 100px 50px 100px;
+    }
+}
+
+.bgimg-1 {
+    background-image: url("/img/background.jpg");
+    height: 100%;
+    width: 100%;
+    color: #fff;
+    display: table;
+    text-align: center;
+    padding: 0;
+}
+
+.bgimg-2 {
+    background-image: url("/img/background3.jpg");
+    height: 300px;
+    width: 100%;
+    display: table;
+    color: #fff;
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.bgimg-3 {
+    background-image: url("/img/background2.jpg");
+    height: 200px;
+    width: 100%;
+    display: table;
+    color: #fff;
+}
+
+.bgimg-4 {
+    background-image: url("/img/tangle.jpg");
+    height: 200px;
+    width: 100%;
+    display: table;
+    color: #fff;
+}
+
+.mega {
+    font-size: 40px;
+}
+
+.ontop {
+    background-color: white;
+}
+
+.ontop nav {
+    z-index: 10000;
+}
+
+.titleonepage {
+    height: 100%;
+    width: 100%;
+}
+
+.caption {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.centered {
+    text-align: center;
+}
+
+.miniblock {
+    padding: 5px;
+}
+
+@media (min-width: 992px) {
+    .miniblock {
+	padding: 20px;
+    }
+}
+
+.miniblock > div {
+    border-style: solid;
+    border-width: 2px;
+    border-color: #eee;
+    border-radius: 10px;
+    text-align: center;
+    min-height: 200px;
+    padding: 10px;
+}
+
+.boxcontainer {
+    width: 100%;
+    padding-top: 100%;
+    position: relative;
+}
+
+.boxtext {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+.spacer {
+    position: relative;
+    padding-top: 10px;
+}
+
+.centerimage {
+    max-width: 100%;
+}
+
+.whitelink {
+    color: #fff;
+}
+
+.whitelink:hover {
+    color: #ddd;
 }

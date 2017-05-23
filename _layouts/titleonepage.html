@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html lang="en" class="title-body" itemscope itemtype="http://schema.org/WebPage">
 {% include headtitle.html %}
-  <body class="title-body">
-    <div class="site-wrapper">
-      <div class="site-wrapper-inner">
-        <div class="title-nav ontop">
+  <body class="titleonepage">
+    <div class="title-nav ontop">
 {% include header.html %}
-        </div>
-        <div class="cover-container">
-          {{ content }}
-          <div class="mastfoot">
+    </div>
+    {{ content }}
+    <div class="centered">
 {% include footer-attribution.html %}
-          </div>
-        </div>
-      </div>
     </div>
     <script src="{{ '/jquery/jquery.min.js' | prepend: site.baseurl }}"></script>
     <script src="{{ '/bootstrap/js/bootstrap.min.js' | prepend: site.baseurl }}"></script>
+    <script>
+      function scrollToAnchor(aid){
+        var aTag = $("#" + aid);
+        $('html,body').animate({scrollTop: aTag.offset().top-50});
+      }
+      $("#learnmore").click(function(event){
+        scrollToAnchor('pagetwo');
+        event.preventDefault();
+      });
+    </script>
 {% include google-analytics.html %}
   </body>
 </html>

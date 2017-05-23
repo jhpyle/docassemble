@@ -1856,17 +1856,23 @@
 "fix-punctuation": |-
   mandatory: true
   question: |
-    Your petition.
+    What to do in court.
   subquestion: |
-    Tell the court that your petition
-    should be granted because
-    ${ fix_punctuation(rationale) }
+    Tell the court,
+    "Please grant my petition.
+    ${ fix_punctuation(rationale) }"
   ---
   question: |
-    Why should the court grant your
-    petition?
+    Why is the other side wrong?
+  subquestion: |
+    Please be brief.
   fields:
     - no label: rationale
+      datatype: area
+      hint: |
+        The teapot was not broken
+        and it was broken before he
+        gave it to me.
 "flushleft": "mandatory: True\nquestion: |\n  Here is your document.\nsubquestion:\
   \ |\n  It demonstrates the flush left environment.\nattachments:\n  - name: A test\
   \ document\n    filename: test_document\n    content: |\n      This line is indented.\n\
@@ -5374,6 +5380,20 @@
     before proceeding with the interview.
   video: |
     [VIMEO 96044910]
+"yaml-markdown-python": |-
+  question: |
+    What is your favorite number?
+  fields:
+    Favorite number: best_number
+    datatype: integer
+  ---
+  question: |
+    % if best_number == 42:
+    That's **my** favorite number!
+    % else:
+    What a _lousy_ favorite number.
+    % endif
+  mandatory: true
 "yesno": |-
   question: |
     Are you at least 18 years of age?
