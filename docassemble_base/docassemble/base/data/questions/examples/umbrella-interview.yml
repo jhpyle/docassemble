@@ -1,0 +1,27 @@
+metadata:
+  title: Several interviews in one
+  short title: Multi-interview
+  example start: 1
+  example end: 3
+---
+include:
+  - interview-fruit.yml
+  - interview-vegetables.yml
+  - interview-flowers.yml
+---
+question: |
+  What interview would you like to do?
+field: interview_choice
+choices:
+  - Fruit
+  - Vegetables
+  - Flowers
+---
+mandatory: true
+code: |
+  if interview_choice == 'Fruit':
+    interview_fruit_done
+  elif interview_choice == 'Vegetables':
+    interview_vegetables_done
+  elif interview_choice == 'Flowers':
+    interview_flowers_done

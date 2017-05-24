@@ -1,0 +1,9 @@
+event: interview_vegetables_done
+question: |
+  Your favorite vegetable is
+  ${ favorite_vegetable }
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Fruit: favorite_vegetable

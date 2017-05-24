@@ -128,16 +128,38 @@ code: |
   client.income.new('employment', 'self employment', 'SSI', 'TANF', 'rent', period=12)
   client.income.gathered = True
 comment: |
-  This interview asks whether the client has particular income and assets.
+  This interview will ask whether the client has particular income and assets.
+
+  The objects client.asset and client.income are docassemble objects that function
+  like Python "dictionaries."
+  
   This code initializes the list of income and asset items.
+
+  The attribute "gathered" is set to True because after being initialized with
+  the given items, we want the list to be considered complete.  That is, we
+  do not want the interview to ask the user if there are any additional items
+  to add.
+  
+  "Mandatory" sections like this one are evaluated in the order they
+  appear in the question file.
 ---
 initial: True
 code: |
   set_language(user.language)
 comment: |
   When providing interviews in multiple languages, you need to tell docassemble
-  what language it should use for various built-in words and expressions
-  that the user will see.
+  what language it should use for the built-in words and expressions
+  that the user will see.  This needs to be set up-front in "initial" code, which
+  will run every time the screen loads.
+
+  When the interview first loads, user.language is undefined.  Therefore
+  docassemble will ask the user a question in order to obtain a definition for
+  user.language.  We will encounter this question below.
+  
+  "Mandatory" and "initial" sections are evaluated in the order they
+  appear in the question file.  But "mandatory" sections are different because
+  as soon as they run to completion, they will subsequently be skipped.
+  "Initial" sections will always be run every time the screen loads.
 ---
 mandatory: True
 code: |
@@ -147,29 +169,77 @@ code: |
   else:
     need(client_kicked_out)
 comment: |
-  This is the code that directs the flow of the interview.  It
-  indicates to the system that we need to get to the endpoint
-  "client_done."  There is a question elsewhere that "sets" the variable
-  "client_done."  Docassemble will ask all the questions necessary to
-  get the information need to pose that that final question to the
-  user.
+  This is the code that directs the flow of the interview.
+
+  It runs after the user's language is set by the previous "initial" block.
+
+  Note that there are no other "mandatory" or "initial" questions in the
+  interview.  This code block determines how the interview will end.
+  
+  This code indicates to the system that we need to get to the
+  endpoint "client_done."  There is a question elsewhere that contains
+  "event: client_done."  Docassemble will ask all the questions
+  necessary to get the information need to pose that that final
+  question to the user.
 
   However, if the answer to the question
   user_understands_no_attorney_client_relationship is not
   "understands," the interview will looks for a question that sets the
-  variable "client_kicked_out."
-  
-  "Mandatory" sections like this one are evaluated in the order they
-  appear in the question file.
+  variable "client_kicked_out."  There is a question elsewhere that
+  contains "event: client_kicked_out."
+
+  This is the code that determines the entire path of the interview,
+  and yet it is very short, even though the interview has many questions.
+  That is because interview flow in docassemble is automatic.  The order
+  in which questions are asked can vary depending on the user input.  In
+  some interviews, a question is asked early, and in another, it is asked
+  later.  Questions are asked if and when there is a necessity to
+  gather information.
+
+  There is one additional bit of the interview flow that is manual: the
+  requirement of "user_saw_initial_screen."  This causes a "welcome" screen
+  to be shown.  We always want this screen to be displayed first (at
+  least as soon as we determine the user's language).
 ---
 code: |
-  if client.is_plaintiff and client not in case.plaintiff.elements:
+  if client not in case.plaintiff.elements and client.is_plaintiff:
     case.plaintiff.append(client)
   if client not in case.defendant.elements and not client.is_plaintiff and client.is_defendant:
     case.defendant.append(client)
   case.plaintiff.there_are_any = True
   case.defendant.there_are_any = True
+comment: |
+  This interview relates to a court case.  It takes advantage of the
+  basic-questions.yml file in the docassemble.base package.  This
+  interview file provides some functionality for legal interviews.
+
+  For example, basic-questions.yml defines the objects "case" and "client."
+
+  But in our interview, what do we want to do with "case" and "client"?
+  What is the relation of the client to the case?  Is the client the user,
+  or a different person from the user?
+
+  The purpose of the above code is to set initial values for the
+  objects case.plaintiff and case.defendant.  These objects are
+  docassemble objects that function as Python lists.  They represent
+  the plaintiffs and defendants in the case.
+
+  This code will add the client as a plaintiff, or add the client as a
+  defendant, depending on whether the client is a plaintiff or a
+  defendant.  This code will trigger the asking of questions to
+  determine whether the client is a plaintiff or a defendant, if those
+  facts are unknown.  Elsewhere there is a question that defines the
+  "is_plaintiff" attribute and another question that defines the
+  "is_defendant" attribute.
+
+  The end result of this code is to define the "there_are_any"
+  attributes of the two lists.  Note that this code is not
+  "mandatory."  It will be run when and if the interview needs to know
+  whether the lists are empty.  We set the attributes to True because
+  all court cases need to have at least one plaintiff and at least one
+  defendant.
 ---
+event: client_kicked_out
 progress: 100
 question: |
   Sorry, you cannot proceed with the interview.
@@ -186,11 +256,16 @@ decoration: exit
 buttons:
   - Exit: exit
   - Restart: restart
-sets: client_kicked_out
 comment: |
+  This question uses the "event" directive.  "client_kicked_out" is
+  a variable, just like any other variable, except that it is never
+  defined, only sought.  We saw above in the "mandatory" code block
+  that if the user does not understand that no attorney-client
+  relationship will be created, the user needs to be kicked out.
+  
   If docassemble is configured to show a progress bar, the progress
   bar will be set to 100% on this question, which is an endpoint
-  question (since the only options are exiting or restarting).
+  question (note that the only options are exiting or restarting).
 ---
 code: |
   advocate.name.first = "John"
@@ -227,6 +302,15 @@ field: user_saw_initial_screen
 datatype: boolean
 buttons:
   - Ok, got it: True
+---
+generic object: Individual
+question: |
+  What language ${ x.do_question('speak') }?
+field: x.language
+choices:
+  - English: en
+  - Español: es
+default: ${ language_from_browser() }
 ---
 generic object: Individual
 question: |
@@ -555,7 +639,7 @@ comment: |
   docassemble to gather the information up front, before it starts
   processing the question and its attachments.  This helps to direct
   the order of the questions in a more sensible fashion.
-sets: client_done
+event: client_done
 progress: 100
 question: |
   % if client_has_standing:
@@ -762,27 +846,6 @@ attachments:
 
       [FLUSHLEFT] ${ client }, ${ title_case(case.role_of(client)) }
 ---
-question: Your document is ready.
-sets: provide_user_with_document
-attachment:
-  - name: A *hello world* document
-    filename: Hello_World_Document
-    description: A document with a **classic** message
-    content file: 
-      - base_template.md
-      - hello_template.md
----
-question: Your document is ready, ${ user }.
-sets: provide_user_with_document
-attachment:
-  - name: A *hello world* document
-    filename: Hello_World_Document
-    description: A document with a **classic** message
-    metadata:
-      FirstFooterLeft: Can you do *markdown*?
-    content: |
-      Hello, ${ user }!
----
 language: es
 question: |
   Bienvenido a la demostración **docassemble**.
@@ -810,15 +873,6 @@ field: user_saw_initial_screen
 datatype: boolean
 buttons:
   - Comprendo: True
----
-generic object: Individual
-question: |
-  What language ${ x.do_question('speak') }?
-field: x.language
-choices:
-  - English: en
-  - Español: es
-default: ${ language_from_browser() }
 ---
 language: es
 terms:
