@@ -7,6 +7,7 @@ import redis
 import sys
 import shutil
 import inspect
+import yaml
 import mimetypes
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article
 import docassemble.base.functions
@@ -64,6 +65,7 @@ class DAObject(object):
             else:
                 thename = get_unique_name()
                 self.has_nonrandom_instance_name = False
+            del frame
         self.instanceName = str(thename)
         self.attrList = list()
         self.init(*pargs, **kwargs)
@@ -78,8 +80,10 @@ class DAObject(object):
             if len(the_names) == 3 and the_names[1] == method_name:
                 self.instanceName = the_names[2]
                 self.has_nonrandom_instance_name = True
+                del frame
                 return self
             level += 1
+            del frame
         self.instanceName = get_unique_name()
         self.has_nonrandom_instance_name = False
         return self
@@ -102,15 +106,26 @@ class DAObject(object):
         """Sets the instanceName attribute to a random value."""
         self.instanceName = str(get_unique_name())
         self.has_nonrandom_instance_name = False
-    def set_instance_name_recursively(self, thename):
+    def _set_instance_name_recursively(self, thename):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
-        if not self.has_nonrandom_instance_name:
-            self.instanceName = thename
-            self.has_nonrandom_instance_name = True
+        #logmessage("Change " + str(self.instanceName) + " to " + str(thename))
+        #if not self.has_nonrandom_instance_name:
+        self.instanceName = thename
+        self.has_nonrandom_instance_name = True
         for aname in self.__dict__:
-            if isinstance(getattr(self, aname), DAObject):
-                getattr(self, aname).set_instance_name_recursively(thename + '.' + aname)
+            if hasattr(self, aname) and isinstance(getattr(self, aname), DAObject):
+                #logmessage("ASDF Setting " + str(thename) + " for " + str(aname))
+                getattr(self, aname)._set_instance_name_recursively(thename + '.' + aname)
         return
+    def _mark_as_gathered_recursively(self):
+        self.gathered = True
+        for aname in self.__dict__:
+            if hasattr(self, aname) and isinstance(getattr(self, aname), DAObject):
+                getattr(self, aname)._mark_as_gathered_recursively()
+    def _reset_gathered_recursively(self):
+        for aname in self.__dict__:
+            if hasattr(self, aname) and isinstance(getattr(self, aname), DAObject):
+                getattr(self, aname)._reset_gathered_recursively()
     def _map_info(self):
         return None
     def __getattr__(self, thename):
@@ -213,17 +228,36 @@ class DAList(DAObject):
             else:
                 self.gathered
         return
+    def reset_gathered(self, recursive=False):
+        """Indicates that there is more to be gathered"""
+        if hasattr(self, 'there_is_another'):
+            delattr(self, 'there_is_another')
+        if hasattr(self, 'gathered'):
+            delattr(self, 'gathered')
+        if recursive:
+            self._reset_gathered_recursively()
     def clear(self):
         """Removes all the items from the list."""
         self.elements = list()
-    def set_instance_name_recursively(self, thename):
+    def _set_instance_name_recursively(self, thename):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
         indexno = 0
         for item in self.elements:
             if isinstance(item, DAObject):
-                item.set_instance_name_recursively(thename + '[' + str(indexno) + ']')
+                item._set_instance_name_recursively(thename + '[' + str(indexno) + ']')
             indexno += 1
-        return super(DAList, self).set_instance_name_recursively(thename)
+        return super(DAList, self)._set_instance_name_recursively(thename)
+    def _mark_as_gathered_recursively(self):
+        for item in self.elements:
+            if isinstance(item, DAObject):
+                item._mark_as_gathered_recursively()
+        return super(DAList, self)._mark_as_gathered_recursively()
+    def _reset_gathered_recursively(self):
+        self.reset_gathered()
+        for item in self.elements:
+            if isinstance(item, DAObject):
+                item._reset_gathered_recursively()
+        return super(DAList, self)._reset_gathered_recursively()
     def appendObject(self, *pargs, **kwargs):
         """Creates a new object and adds it to the list.
         Takes an optional argument, which is the type of object
@@ -569,12 +603,26 @@ class DADict(DAObject):
             else:
                 self.gathered
         return
-    def set_instance_name_recursively(self, thename):
+    def _set_instance_name_recursively(self, thename):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
+        #logmessage("DICT instance name recursive for " + str(self.instanceName) + " to " + str(thename))
+        for key, value in self.elements.iteritems():
+            #logmessage("QWER Setting " + str(thename) + " for " + str(key))
+            if isinstance(value, DAObject):
+                value._set_instance_name_recursively(thename + '[' + repr(key) + ']')
+        #logmessage("Change " + str(self.instanceName) + " to " + str(thename))
+        return super(DADict, self)._set_instance_name_recursively(thename)
+    def _mark_as_gathered_recursively(self):
         for key, value in self.elements.iteritems():
             if isinstance(value, DAObject):
-                value.set_instance_name_recursively(thename + '[' + str(key) + ']')
-        return super(DADict, self).set_instance_name_recursively(thename)
+                value._mark_as_gathered_recursively()
+        return super(DADict, self)._mark_as_gathered_recursively()
+    def _reset_gathered_recursively(self):
+        self.reset_gathered()
+        for key, value in self.elements.iteritems():
+            if isinstance(value, DAObject):
+                value._reset_gathered_recursively()
+        return super(DADict, self)._reset_gathered_recursively()
     def initializeObject(self, *pargs, **kwargs):
         """Creates a new object and creates an entry in the dictionary for it.
         The first argument is the name of the dictionary key to set.
@@ -611,6 +659,14 @@ class DADict(DAObject):
                 if hasattr(self, 'object_type'):
                     if parg not in self.elements:
                         self.initializeObject(parg, self.object_type, **kwargs)
+    def reset_gathered(self, recursive=False):
+        """Indicates that there is more to be gathered"""
+        if hasattr(self, 'there_is_another'):
+            delattr(self, 'there_is_another')
+        if hasattr(self, 'gathered'):
+            delattr(self, 'gathered')
+        if recursive:
+            self._reset_gathered_recursively()
     def does_verb(self, the_verb, **kwargs):
         """Returns the appropriate conjugation of the given verb depending on
         whether there is only one key in the dictionary or multiple
@@ -721,30 +777,33 @@ class DADict(DAObject):
                     minimum = 0
             else:
                 minimum = 1
+        #logmessage("foo foo call there_is_another")
         while (number is not None and len(self.elements) < int(number)) or (minimum is not None and len(self.elements) < int(minimum)) or (self.ask_number is False and minimum != 0 and self.there_is_another):
+            #logmessage("foo foo done there_is_another")
             if item_object_type is not None:
                 self.initializeObject(self.new_item_name, item_object_type)
-                del self.new_item_name
+                delattr(self, 'new_item_name')
                 self._new_item_init_callback()
             else:
                 self.new_item_name
                 if hasattr(self, 'new_item_value'):
                     self.elements[self.new_item_name] = self.new_item_value
-                    del self.new_item_value
-                    del self.new_item_name
+                    delattr(self, 'new_item_value')
+                    delattr(self, 'new_item_name')
                     if hasattr(self, 'there_is_another'):
-                        del self.there_is_another
+                        delattr(self, 'there_is_another')
                 else:
                     the_name = self.new_item_name
-                    del self.new_item_name
+                    delattr(self, 'new_item_name')
                     if hasattr(self, 'there_is_another'):
-                        del self.there_is_another
+                        delattr(self, 'there_is_another')
                     self.__getitem__(the_name)
             if hasattr(self, 'there_is_another'):
-                del self.there_is_another
+                delattr(self, 'there_is_another')
         if self.auto_gather:
             self.gathered = True
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
+        #logmessage("foo foo done")
         return True
     def _new_item_init_callback(self):
         for elem in sorted(self.elements.values()):
@@ -939,6 +998,16 @@ class DASet(DAObject):
             else:
                 self.gathered
         return
+    def reset_gathered(self, recursive=False):
+        """Indicates that there is more to be gathered"""
+        if hasattr(self, 'there_is_another'):
+            delattr(self, 'there_is_another')
+        if hasattr(self, 'gathered'):
+            delattr(self, 'gathered')
+        if recursive:
+            self._reset_gathered_recursively()
+    def _reset_gathered_recursively(self):
+        self.reset_gathered()
     def copy(self):
         """Returns a copy of the set."""
         return self.elements.copy()
@@ -1524,3 +1593,115 @@ def setify(item, output=set()):
     else:
         output.add(item)
     return output
+
+def objects_from_file(file_ref, recursive=True, gathered=True, name=None):
+    """A utility function for initializing a group of objects from a YAML file written in a certain format."""
+    from docassemble.base.core import DAObject, DAList, DADict, DASet
+    if name is None:
+        frame = inspect.stack()[1][0]
+        #logmessage("co_name is " + str(frame.f_code.co_names))
+        the_names = frame.f_code.co_names
+        if len(the_names) == 2:
+            thename = the_names[1]
+        else:
+            thename = None
+        del frame
+    else:
+        thename = name
+    #logmessage("objects_from_file: thename is " + str(thename))
+    file_info = server.file_finder(file_ref, folder='sources')
+    if 'path' not in file_info:
+        raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' not found')
+    if thename is None:
+        objects = DAList()
+    else:
+        objects = DAList(thename)
+    objects.gathered = True
+    is_singular = True
+    with open(file_info['fullpath'], 'rU') as fp:
+        for document in yaml.load_all(fp):
+            new_objects = recurse_obj(document, recursive=recursive)
+            if type(new_objects) is list:
+                is_singular = False
+                for obj in new_objects:
+                    objects.append(obj)
+            else:
+                objects.append(new_objects)
+    if is_singular and len(objects.elements) == 1:
+        objects = objects.elements[0]
+    #logmessage("Returning for a " + str(thename))
+    if thename is not None and isinstance(objects, DAObject):
+        objects._set_instance_name_recursively(thename)
+    if (isinstance(objects, DAList) or isinstance(objects, DADict) or isinstance(objects, DASet)) and not gathered:
+        objects._reset_gathered_recursively()
+    #logmessage("Returning a " + str(objects.instanceName))
+    return objects
+
+def recurse_obj(the_object, recursive=True):
+    constructor = None
+    if type(the_object) in [str, unicode, bool, int, float]:
+        return the_object
+    if type(the_object) is list:
+        if recursive:
+            return [recurse_obj(x) for x in the_object]
+        else:
+            return the_object
+    if type(the_object) is set:
+        if recursive:
+            new_set = set()
+            for sub_object in the_object:
+                new_set.add(recurse_obj(sub_object, recursive=recursive))
+            return new_list
+        else:
+            return the_object
+    if type(the_object) is dict:
+        if 'object' in the_object and ('item' in the_object or 'items' in the_object):
+            if the_object['object'] in globals() and inspect.isclass(globals()[the_object['object']]):
+                constructor = globals()[the_object['object']]
+            elif the_object['object'] in locals() and inspect.isclass(locals()[the_object['object']]):
+                constructor = locals()[the_object['object']]
+            if not constructor:
+                if 'module' in the_object:
+                    if the_object['module'].startswith('.'):
+                        module_name = docassemble.base.functions.this_thread.current_package + the_object['module']
+                    else:
+                        module_name = the_object['module']
+                    new_module = __import__(module_name, globals(), locals(), [the_object['object']], -1)
+                    constructor = getattr(new_module, the_object['object'], None)
+            if not constructor:
+                raise SystemError('recurse_obj: found an object for which the object declaration, ' + str(the_object['object']) + ' could not be found')
+            if 'items' in the_object:
+                objects = list()
+                for item in the_object['items']:
+                    if type(item) is not dict:
+                        raise SystemError('recurse_obj: found an item, ' + str(item) + ' that was not expressed as a dictionary')
+                    if recursive:
+                        transformed_item = recurse_obj(item)
+                    else:
+                        transformed_item = item
+                    #new_obj = constructor(**transformed_item)
+                    #if isinstance(new_obj, DAList) or isinstance(new_obj, DADict) or isinstance(new_obj, DASet):
+                    #    new_obj.gathered = True
+                    objects.append(constructor(**transformed_item))
+                return objects
+            if 'item' in the_object:
+                item = the_object['item']
+                if type(item) is not dict:
+                    raise SystemError('recurse_obj: found an item, ' + str(item) + ' that was not expressed as a dictionary')
+                if recursive:
+                    transformed_item = recurse_obj(item)
+                else:
+                    transformed_item = item
+                #new_obj = constructor(**transformed_item)
+                #if isinstance(new_obj, DAList) or isinstance(new_obj, DADict) or isinstance(new_obj, DASet):
+                #    new_obj.gathered = True
+                return constructor(**transformed_item)
+        else:
+            if recursive:
+                new_dict = dict()
+                for key, value in the_object.iteritems():
+                    new_dict[key] = recurse_obj(value)
+                return new_dict
+            else:
+                return the_object
+    return the_object

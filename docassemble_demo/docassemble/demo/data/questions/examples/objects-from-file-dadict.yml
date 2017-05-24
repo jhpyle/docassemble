@@ -1,0 +1,23 @@
+metadata:
+  title: Import dictionary
+  short title: Import
+  documentation: "https://docassemble.org/docs/functions.html#objects_from_file"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+code: |
+  fruitseeds = objects_from_file("fruitseeds.yml")
+---
+mandatory: True
+question: |
+  Summary of ${ fruitseeds.number_as_word() } fruit
+subquestion: |
+  % for fruit in fruitseeds:
+  The seeds of ${ fruit } are
+  ${ fruitseeds[fruit] }
+  in number.
+  
+  % endfor

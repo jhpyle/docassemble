@@ -638,6 +638,18 @@ class Question:
             self.question_type = data['command']
             self.content = TextObject(data.get('url', ''), names_used=self.mako_names)
             return
+        if 'objects from file' in data:
+            if type(data['objects from file']) is not list:
+                data['objects from file'] = [data['objects from file']]
+            self.question_type = 'objects_from_file'
+            self.objects_from_file = data['objects from file']
+            for item in data['objects from file']:
+                if type(item) is dict:
+                    for key in item:
+                        self.fields.append(Field({'saveas': key, 'type': 'object_from_file', 'file': item[key]}))
+                        self.fields_used.add(key)
+                else:
+                    raise DAError("An objects section cannot contain a nested list." + self.idebug(data))
         if 'objects' in data:
             if type(data['objects']) is not list:
                 data['objects'] = [data['objects']]
@@ -649,9 +661,6 @@ class Question:
                     for key in item:
                         self.fields.append(Field({'saveas': key, 'type': 'object', 'objecttype': item[key]}))
                         self.fields_used.add(key)
-                elif type(item) is str:
-                    self.fields.append(Field({'saveas': item, 'type': 'object', 'objecttype': data['objects'][key]}))
-                    self.fields_used.add(item)
                 else:
                     raise DAError("An objects section cannot contain a nested list." + self.idebug(data))
         if 'id' in data:
@@ -2535,12 +2544,10 @@ class Interview:
                     if question.name and question.name in user_dict['_internal']['answered']:
                         #logmessage("Skipping " + question.name + " because answered")
                         continue
-                    if question.question_type == "objects":
-                        #logmessage("Going into objects")
-                        for keyvalue in question.objects:
-                            for variable in keyvalue:
-                                object_type = keyvalue[variable]
-                                if re.search(r"\.", variable):
+                    if question.question_type == "objects_from_file":
+                        for keyvalue in question.objects_from_file:
+                            for variable, the_file in keyvalue.iteritems():
+                                if False and re.search(r"\.", variable):
                                     m = re.search(r"(.*)\.(.*)", variable)
                                     variable = m.group(1)
                                     attribute = m.group(2)
@@ -2548,8 +2555,27 @@ class Interview:
                                     #logmessage("Running " + command)
                                     exec(command, user_dict)
                                 else:
-                                    command = variable + ' = ' + object_type + '("' + variable + '")'
+                                    string = "import docassemble.base.core"
+                                    exec(string, user_dict)                       
+                                    command = variable + ' = docassemble.base.core.objects_from_file("' + str(the_file) + '", name=' + repr(variable) + ')'
+                                    logmessage("Running " + command)
+                                    exec(command, user_dict)
+                        question.mark_as_answered(user_dict)
+                    if question.question_type == "objects":
+                        #logmessage("Going into objects")
+                        for keyvalue in question.objects:
+                            for variable in keyvalue:
+                                object_type = keyvalue[variable]
+                                if False and re.search(r"\.", variable):
+                                    m = re.search(r"(.*)\.(.*)", variable)
+                                    variable = m.group(1)
+                                    attribute = m.group(2)
+                                    command = variable + "." + attribute + " = " + object_type + "()"
                                     #logmessage("Running " + command)
+                                    exec(command, user_dict)
+                                else:
+                                    command = variable + ' = ' + object_type + '(' + repr(variable) + ')'
+                                    logmessage("Running " + command)
                                     exec(command, user_dict)
                         question.mark_as_answered(user_dict)
                     if question.question_type == 'code' and (question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict))):
@@ -2728,7 +2754,7 @@ class Interview:
                 docassemble.base.functions.reset_context()
                 #if debug:
                 #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
-                logmessage("I am going to execute " + str(code_error.compute))
+                #logmessage("I am going to execute " + str(code_error.compute))
                 exec(code_error.compute, user_dict)
             except SyntaxException as qError:
                 docassemble.base.functions.reset_context()
@@ -2847,7 +2873,7 @@ class Interview:
                             break
                         #logmessage("I should be looping around now")
                     except:
-                        logmessage("variable did not exist in user_dict: " + str(sys.exc_info()[0]))
+                        logmessage("variable did not exist in user_dict where root is " + str(root) + " and root_for_object is: " + str(root_for_object) + str(sys.exc_info()[0]))
             #logmessage("Pleased to report that found_generic is " + str(found_generic) + " and generic_needed is " + str(generic_needed))
                 if generic_needed and not found_generic: # or is_iterator
                     #logmessage("There is no question for " + missingVariable)
@@ -2920,7 +2946,7 @@ class Interview:
                                 #break
                             #logmessage("I should be looping around now")
                         except:
-                            logmessage("variable did not exist in user_dict: " + str(sys.exc_info()[0]))
+                            logmessage("variable did not exist in user_dict where root is " + str(root) + " and root_for_object is: " + str(root_for_object) + str(sys.exc_info()[0]))
                 #logmessage("Pleased to report that found_generic is " + str(found_generic) + " and generic_needed is " + str(generic_needed))
                 if generic_needed and not found_generic: # or is_iterator
                     #logmessage("There is no question for " + missingVariable)
@@ -3249,16 +3275,16 @@ class Interview:
                     docassemble.base.functions.reset_context()
                     #if debug:
                     #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
-                    logmessage("Going to execute " + str(code_error.compute) + " where missing_var is " + str(missing_var))
+                    #logmessage("Going to execute " + str(code_error.compute) + " where missing_var is " + str(missing_var))
                     exec(code_error.compute, user_dict)
                     try:
                         eval(missing_var, user_dict)
-                        logmessage(str(missing_var) + " was defined")
+                        #logmessage(str(missing_var) + " was defined")
                         code_error.question.mark_as_answered(user_dict)
-                        logmessage("Got here 1")
-                        logmessage("returning from running code")
+                        #logmessage("Got here 1")
+                        #logmessage("returning from running code")
                         docassemble.base.functions.pop_current_variable()
-                        logmessage("Got here 2")
+                        #logmessage("Got here 2")
                         return({'type': 'continue'})
                     except:
                         #raise DAError("Problem setting that variable")
@@ -3306,11 +3332,13 @@ class myextract(ast.NodeVisitor):
         self.stack.append(node.attr)
         ast.NodeVisitor.generic_visit(self, node)
     def visit_Subscript(self, node):
-        self.stack.append('[' + str(node.slice.value.id) + ']')
-        self.in_subscript = True
-        self.seen_name = False
+        if hasattr(node.slice.value, 'id'):
+            self.stack.append('[' + str(node.slice.value.id) + ']')
+            self.in_subscript = True
+            self.seen_name = False
         ast.NodeVisitor.generic_visit(self, node)
-        self.in_subscript = False
+        if hasattr(node.slice.value, 'id'):
+            self.in_subscript = False
 
 class myvisitnode(ast.NodeVisitor):
     def __init__(self):

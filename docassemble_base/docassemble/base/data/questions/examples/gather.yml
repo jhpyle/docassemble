@@ -25,11 +25,11 @@ fields:
 question: |
   Were there any other witnesses?
 yesno: witness.there_is_another
-# ---
+---
 # question: |
 #   Were there any witnesses?
 # yesno: witness.there_are_any
----
+# ---
 mandatory: True
 question: |
   Witnesses

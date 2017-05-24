@@ -10,8 +10,8 @@ metadata:
       organization: none
   revision_date: 2017-05-01
 comment: |
-  A "metadata" block contains information about the YAML file, such as
-  the name of the author.
+  A "metadata" block contains information about the interview, such as
+  the title of the interview as displayed in the navigation bar.
 ---
 interview help:
   heading: |
@@ -34,6 +34,9 @@ comment: |
   question in the interview.  If the question has help text of its
   own, the "interview help" will appear after the question-specific
   help.
+
+  This help screen displays different text depending on whether the
+  web interface or the SMS interface is being used.
 ---
 language: es
 interview help:
@@ -41,6 +44,9 @@ interview help:
   content: |
     Conteste cada pregunta. Al final, se le puede dar un documento
     que puede ahorrar.
+comment: |
+  This interview is not fully translated into Spanish, but this shows
+  how you would provide a Spanish translation of the "interview help."
 ---
 include:
   - basic-questions.yml
@@ -50,13 +56,14 @@ comment: |
   the names of icons that you can use to "decorate" your questions.
 
   The "basic-questions.yml" comes from the docassemble.base package
-  and is located in the directory docassemble/base/data/questions.
+  and is located in the directory docassemble/base/data/questions
+  in that package.
 
   You can include question files from other packages by explicitly
-  referring to their package names.  E.g.,
+  referring to their package names.  For example,
   "docassemble.helloworld:questions.yml" refers to the file
   questions.yml in the docassemble/helloworld/data/questions
-  directory.
+  directory of the docassemble.helloworld package.
 ---
 image sets:
   freepik:
@@ -72,20 +79,19 @@ comment: |
   already defined a number of icons, but this block defines some more
   icons.
 
-  Since this file, questions.yml, is in the docassemble.demo package,
-  the image files referenced here are also in the docassemble.demo
-  package.  The files are located in the directory
-  docassemble/demo/data/static.
-
   Since most free icons available on the internet require attribution,
   the "image sets" block allows you to specify what attribution text
   to use for particular icons.  The web app shows the appropriate
   attribution text at the bottom of any page that uses one of the
   icons.
+  
+  Since this file, questions.yml, is in the docassemble.demo package,
+  the image files referenced here are also in the docassemble.demo
+  package.  The files are located in the directory
+  docassemble/demo/data/static.
 ---
 objects:
   - village_idiot: Individual
-  - role_change: RoleChangeTracker
 comment: |
   In a later question we will refer to the variable "village_idiot."
   This "objects" block creates the variable "village_idiot" and
@@ -115,65 +121,6 @@ comment: |
   turn them into hyperlinks wherever they appear.  When the user
   clicks on the hyperlink, a popup appears with the word's definition.
 ---
-event: role_event
-question: You are done for now.
-subquestion: |
-  % if 'advocate' in role_needed:
-  An advocate needs to review your answers before you can proceed.
-
-  Please remember the following link and come back to it when you
-  receive notice to do so:
-
-  [${ interview_url() }](${ interview_url() })  
-  % else:
-  Thanks, the client needs to resume the interview now.
-  % endif
-
-  % if role_change.send_email(role_needed, advocate={'to': advocate, 'email': role_event_email_to_advocate}, client={'to': client, 'email': role_event_email_to_client}):
-  An e-mail has been sent.
-  % endif
-decoration: exit
-buttons:
-  - Exit: leave
----
-template: role_event_email_to_advocate
-subject: |
-  Client interview waiting for your attention: ${ client }
-content: |
-  A client, ${ client }, has partly finished an interview.
-  ${ client.pronoun_subjective(capitalize=True, thirdperson=True) }
-  needs you to review
-  ${ client.pronoun_possessive('answers', thirdperson=True) }
-  so that ${ client.pronoun_subjective(thirdperson=True) } can obtain
-  ${ client.pronoun_possessive('advice letter', thirdperson=True) }
-  and ${ pleading.title }.
-
-  Please go to [the interview](${ interview_url() }) as soon as possible.
-
-  Thank you!
----
-template: role_event_email_to_client
-subject: |
-  Your interview answers have been reviewed
-content: |
-  ${ client.salutation() } ${ client.name.last }:
-  
-  An advocate has finished reviewing your answers.
-
-  Please go to [${ interview_url() }](${ interview_url() })
-  to continue the interview.
-
-  Thank you for your patience.
----
-role:
-  - client
-  - advocate
-mandatory: True
-code: |
-  multi_user = False
-  speak_text = False
-  set_live_help_status(availability='observeonly', mode='help', partner_roles=['advocate'])
----
 mandatory: True
 code: |
   client.asset.new('checking account', 'savings account', 'stocks and bonds', 'automobiles')
@@ -181,21 +128,16 @@ code: |
   client.income.new('employment', 'self employment', 'SSI', 'TANF', 'rent', period=12)
   client.income.gathered = True
 comment: |
-  This code indicates which income and asset items to ask about.
+  This interview asks whether the client has particular income and assets.
+  This code initializes the list of income and asset items.
 ---
 initial: True
 code: |
-  if role == 'advocate' and not defined('client.name.first'):
-    welcome_advocate
-  # track_location = user.location.status()
   set_language(user.language)
----
-role: advocate
-event: welcome_advocate
-question: |
-  No role for advocate yet.
-subquestion: |
-  You are an advocate and this interview is not yet ready for your participation.
+comment: |
+  When providing interviews in multiple languages, you need to tell docassemble
+  what language it should use for various built-in words and expressions
+  that the user will see.
 ---
 mandatory: True
 code: |
@@ -302,17 +244,6 @@ comment: |
   docassemble.demo package in the subdirectory
   docassemble/demo/data/static.  This is how you refer to a "static"
   file that exists within a docassemble subpackage.
----
-question: Is this reason a sound one?
-subquestion: |
-  The client, ${ client }, proposed the following reason for winning:
-  
-  > ${ explanation }
-
-  Is this a sound reason for why the judge should rule in the client's
-  favor in this ${ law_category } case?
-yesno: explanation_is_sound
-role: advocate
 ---
 question: What form do you want to prepare?
 decoration: document

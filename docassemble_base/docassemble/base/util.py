@@ -3,7 +3,6 @@ import datetime
 import time
 import pytz
 import yaml
-import inspect
 from PIL import Image, ImageEnhance
 from twilio.rest import Client as TwilioRestClient
 import pycountry
@@ -12,7 +11,7 @@ from celery import chord
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
 from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation
-from docassemble.base.core import DAObject, DAList, DADict, DASet, DAFile, DAFileCollection, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, selections
+from docassemble.base.core import DAObject, DAList, DADict, DASet, DAFile, DAFileCollection, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, selections, objects_from_file
 from decimal import Decimal
 import sys
 #sys.stderr.write("importing async mail now from util\n")
@@ -757,7 +756,7 @@ class Person(DAObject):
             tense = "2sgp"
         else:
             tense = "3sgp"
-        logmessage(the_verb + " " + tense)
+        #logmessage(the_verb + " " + tense)
         return verb_past(the_verb, tense)
     def subject(self, **kwargs):
         """Returns "you" or the person's name, depending on whether the 
@@ -1399,107 +1398,6 @@ def path_and_mimetype(file_ref):
         return file_ref.path(), mime_type
     file_info = server.file_finder(file_ref)
     return file_info.get('fullpath', None), file_info.get('mimetype', None)
-
-def objects_from_file(file_ref, recursive=True):
-    """A utility function for initializing a group of objects from a YAML file written in a certain format."""
-    frame = inspect.stack()[1][0]
-    the_names = frame.f_code.co_names
-    if len(the_names) == 2:
-        thename = the_names[1]
-    else:
-        thename = None
-    file_info = server.file_finder(file_ref, folder='sources')
-    if 'path' not in file_info:
-        raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' not found')
-    if thename is None:
-        objects = DAList()
-    else:
-        objects = DAList(thename)
-    is_singular = True
-    with open(file_info['fullpath'], 'rU') as fp:
-        for document in yaml.load_all(fp):
-            new_objects = recurse_obj(document, recursive=recursive)
-            if type(new_objects) is list:
-                is_singular = False
-                for obj in new_objects:
-                    objects.append(obj)
-            else:
-                objects.append(new_objects)
-    objects.gathered = True
-    if is_singular and len(objects.elements) == 1:
-        objects = objects.elements[0]
-    if thename is not None and isinstance(objects, DAObject):
-        objects.set_instance_name_recursively(thename)
-    return objects
-
-def recurse_obj(the_object, recursive=True):
-    constructor = None
-    if type(the_object) in [str, unicode, bool, int, float]:
-        return the_object
-    if type(the_object) is list:
-        if recursive:
-            return [recurse_obj(x) for x in the_object]
-        else:
-            return the_object
-    if type(the_object) is set:
-        if recursive:
-            new_set = set()
-            for sub_object in the_object:
-                new_set.add(recurse_obj(sub_object, recursive=recursive))
-            return new_list
-        else:
-            return the_object
-    if type(the_object) is dict:
-        if 'object' in the_object and ('item' in the_object or 'items' in the_object):
-            if the_object['object'] in globals() and inspect.isclass(globals()[the_object['object']]):
-                constructor = globals()[the_object['object']]
-            elif the_object['object'] in locals() and inspect.isclass(locals()[the_object['object']]):
-                constructor = locals()[the_object['object']]
-            if not constructor:
-                if 'module' in the_object:
-                    if the_object['module'].startswith('.'):
-                        module_name = this_thread.current_package + the_object['module']
-                    else:
-                        module_name = the_object['module']
-                    new_module = __import__(module_name, globals(), locals(), [the_object['object']], -1)
-                    constructor = getattr(new_module, the_object['object'], None)
-            if not constructor:
-                raise SystemError('recurse_obj: found an object for which the object declaration, ' + str(the_object['object']) + ' could not be found')
-            if 'items' in the_object:
-                objects = list()
-                for item in the_object['items']:
-                    if type(item) is not dict:
-                        raise SystemError('recurse_obj: found an item, ' + str(item) + ' that was not expressed as a dictionary')
-                    if recursive:
-                        transformed_item = recurse_obj(item)
-                    else:
-                        transformed_item = item
-                    #new_obj = constructor(**transformed_item)
-                    #if isinstance(new_obj, DAList) or isinstance(new_obj, DADict) or isinstance(new_obj, DASet):
-                    #    new_obj.gathered = True
-                    objects.append(constructor(**transformed_item))
-                return objects
-            if 'item' in the_object:
-                item = the_object['item']
-                if type(item) is not dict:
-                    raise SystemError('recurse_obj: found an item, ' + str(item) + ' that was not expressed as a dictionary')
-                if recursive:
-                    transformed_item = recurse_obj(item)
-                else:
-                    transformed_item = item
-                #new_obj = constructor(**transformed_item)
-                #if isinstance(new_obj, DAList) or isinstance(new_obj, DADict) or isinstance(new_obj, DASet):
-                #    new_obj.gathered = True
-                return constructor(**transformed_item)
-        else:
-            if recursive:
-                new_dict = dict()
-                for key, value in the_object.iteritems():
-                    new_dict[key] = recurse_obj(value)
-                return new_dict
-            else:
-                return the_object
-    return the_object
 
 class DummyObject(object):
     def __init__(self, *pargs, **kwargs):

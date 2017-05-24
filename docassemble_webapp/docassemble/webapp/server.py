@@ -4584,6 +4584,8 @@ def index():
                 if question_type not in interview_status.screen_reader_text:
                     continue
                 phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')
+                if not phrase:
+                    phrase = "The sky is blue."
                 readability[question_type] = [('Flesch Reading Ease', textstat.flesch_reading_ease(phrase)),
                                               ('Flesch-Kincaid Grade Level', textstat.flesch_kincaid_grade(phrase)),
                                               ('Gunning FOG Scale', textstat.gunning_fog(phrase)),
