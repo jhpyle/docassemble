@@ -24,7 +24,9 @@ fields:
 ---
 mandatory: True
 question: |
-  Summary of ${ fruitseeds.number_as_word() } fruit
+  Summary of
+  ${ fruitseeds.number_as_word() }
+  fruit
 subquestion: |
   % for fruit in fruitseeds:
   The seeds of ${ fruit } are

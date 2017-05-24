@@ -7,7 +7,7 @@ question: |
   What is your favorite number?
 fields:
   Favorite number: best_number
-  datatype: integer
+  datatype: number
 ---
 question: |
   % if best_number == 42:
