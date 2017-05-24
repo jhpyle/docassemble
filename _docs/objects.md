@@ -726,6 +726,13 @@ Other methods available on a `DAList` are:
 * <a name="DAList.gather"></a><a name="DADict.gather"></a><a
   name="DASet.gather"></a>`gather()` - causes the elements of the list
   to be gathered and named.  Returns `True`.
+* <a name="DAList.reset_gathered"></a><a name="DADict.reset_gathered"></a><a
+  name="DASet.reset_gathered"></a>`reset_gathered()` - causes the
+  list to be considered not-yet-gathered.  This can be used to query
+  the user to add elements to a list that may already be considered
+  complete.  If called with the optional keyword argument `recursive`
+  set to `True` (the default is `False`), the lists inside the list
+  are also marked as not-yet-gathered.
 
 If you refer to a list in a [Mako] template (e.g., `The applicants
 include: ${ applicant }`) or convert it to text with the
@@ -2049,7 +2056,7 @@ defined.
 * `email`: this needs to a [`DATemplate`] containing the subject and
 body of the e-mail that will be sent.
 
-# How docassemble objects are different
+# <a name="instanceName"></a>How docassemble objects are different
 
 For most purposes, **docassemble** objects behave just like [Python]
 objects.  However, they have special properties that facilitate the

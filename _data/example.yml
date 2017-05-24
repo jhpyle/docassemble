@@ -2055,11 +2055,11 @@
   question: |
     Were there any other witnesses?
   yesno: witness.there_is_another
-  # ---
+  ---
   # question: |
   #   Were there any witnesses?
   # yesno: witness.there_are_any
-  ---
+  # ---
   mandatory: True
   question: |
     Witnesses
@@ -5416,6 +5416,18 @@
 "objects-from-file": "code: |\n  people = objects_from_file(\"contacts.yml\")\n---\n\
   mandatory: true\nquestion: |\n  How to contact us\nsubquestion: |\n  % for person\
   \ in people:\n  You can e-mail ${ person } at\n  ${ person.email }.\n  \n  % endfor"
+"objects-from-file-dadict": "code: |\n  fruitseeds = objects_from_file(\"fruitseeds.yml\"\
+  )\n---\nmandatory: True\nquestion: |\n  Summary of ${ fruitseeds.number_as_word()\
+  \ } fruit\nsubquestion: |\n  % for fruit in fruitseeds:\n  The seeds of ${ fruit\
+  \ } are\n  ${ fruitseeds[fruit] }\n  in number.\n  \n  % endfor"
+"objects-from-file-gather": "code: |\n  fruitseeds = objects_from_file(\"fruitseeds.yml\"\
+  , gathered=False, name='fruitseeds')\n---\nquestion: |\n  The fruits so far are\
+  \ ${ fruitseeds }.\n  Are there more?\nyesno: fruitseeds.there_is_another\n---\n\
+  question: |\n  What fruit would you like to add?\nfields:\n  - Fruit: fruitseeds.new_item_name\n\
+  \  - Seeds: fruitseeds.new_item_value\n---\nmandatory: True\nquestion: |\n  Summary\
+  \ of ${ fruitseeds.number_as_word() } fruit\nsubquestion: |\n  % for fruit in fruitseeds:\n\
+  \  The seeds of ${ fruit } are\n  ${ fruitseeds[fruit] }\n  in number.\n  \n  %\
+  \ endfor"
 "raw-data-example": "code: |\n  raw_data = objects_from_file(\"raw_data.yml\", recursive=False)\n\
   ---\nmandatory: true\nquestion: |\n  The imported data\nsubquestion: |\n  % for\
   \ item in raw_data:\n  The `inventory` of\n  \"${ item.title }\" is:\n  \n  > `${\

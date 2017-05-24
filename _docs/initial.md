@@ -75,6 +75,23 @@ base class `DAObject` keeps track of variable names.
 Whenever possible, you should use `objects` blocks rather than code to
 initialize your objects.  `objects` blocks are clean and readable.
 
+# <a name="objects from file"></a>Importing `objects from file`
+
+{% highlight yaml %}
+---
+objects from file:
+  - claims: claim_list.yml
+---
+{% endhighlight %}
+
+An `objects from file` block imports objects or other data elements
+that you define in a separate [YAML] data file.  For more information
+about how this works, see the documentation for the
+[`objects_from_file()` function].
+
+The example above is equivalent to running 
+`claims = objects_from_file('claim_list.yml', name='claims')`.
+
 # <a name="include"></a>Incorporation by reference: `include`
 
 {% highlight yaml %}
@@ -532,3 +549,4 @@ features:
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [`css`]: {{ site.baseurl }}/docs/modifiers.html#css
 [`script`]: {{ site.baseurl }}/docs/modifiers.html#script
+[`objects_from_file()` function]: {{ site.baseurl}}/docs/functions.html#objects_from_file

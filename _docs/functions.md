@@ -691,7 +691,9 @@ passed to the interview as [`url_args`].
 
 The keyword argument `i` is special: you can set this to the name of
 an interview (e.g., `docassemble.demo:data/questions/questions.yml`)
-and this interview will be used instead of the current interview.
+and this interview will be used instead of the current interview.  In
+this case, the URL functions as a referral to a different interview,
+with a fresh variable store.
 
 ## <a name="interview_url_as_qr"></a>interview_url_as_qr()
 
@@ -2272,6 +2274,32 @@ If there is one [YAML] "[document]" and it is something other than an
 [associative array] with the keys `object` and `items` or `object` and
 `item`, then the data structure will be returned.
 
+There is an optional keyword argument `name` that will be used to set
+the [`.instanceName`] attribute of the resulting object.  If you do
+not pass a `name` parameter, the object will still be readable, not
+but it will not be writable by **docassemble** questions.
+
+Note that there is an [initial block] called [`objects from file`]
+that can be used as a shorthand way of calling `objects_from_file()`.
+Instead of writing:
+
+{% highlight yaml %}
+---
+mandatory: True
+code: |
+  claims = objects_from_file('claim_list.yml', name='claims')
+---
+{% endhighlight %}
+
+you can instead write:
+
+{% highlight yaml %}
+---
+objects from file:
+  - claims: claim_list.yml
+---
+{% endhighlight %}
+
 ### Using your own object types
 
 If you want to import objects that are not standard **docassemble**
@@ -2415,6 +2443,35 @@ item:
   month: 4
   day: 1
 {% endhighlight %}
+
+### Importing group objects
+
+To import a [`DAList`], [`DADict`], or [`DASet`] objects that contain
+items, set the `elements` attribute to a [YAML] list (in the case of a
+[`DAList`] or [`DASet`] or a [YAML] dictionary (in the case of a
+[`DADict`]).
+
+Here is a sample [YAML] file that defines a [`DADict`]:
+
+{% highlight yaml %}
+object: DADict
+item:
+  elements:
+    apple: 4
+    peach: 5
+    orange: 10
+{% endhighlight %}
+
+Here is an interview that imports this file:
+
+{% include demo-side-by-side.html demo="objects-from-file-dadict" %}
+
+By default, any groups that are populated by importing will be marked
+as [gathered].  If you want **docassemble** to ask the user if more
+elements should be added, you can set the optional keyword argument
+`gathered` to `False`:
+
+{% include demo-side-by-side.html demo="objects-from-file-gather" %}
 
 ## <a name="ocr_file"></a>ocr_file()
 
@@ -3533,3 +3590,5 @@ $(document).on('daPageLoad', function(){
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [assembled]: {{ site.baseurl }}/docs/documents.html#docx template file
 [`.comma_and_list()`]: {{ site.baseurl }}/docs/objects.html#DAList.comma_and_list
+[gathered]: {{ site.baseurl }}/docs/groups.html#gathering
+[`.instanceName`]: {{ site.baseurl }}/docs/objects.html#instanceName
