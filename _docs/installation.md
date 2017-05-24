@@ -150,8 +150,30 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   fail2ban libxml2 libxslt1.1 libxml2-dev libxslt1-dev \
   libcurl4-openssl-dev libssl-dev redis-server rabbitmq-server \
   libreoffice libtool libtool-bin pacpl syslog-ng rsync s3cmd \
-  curl mktemp dnsutils tesseract-ocr-eng tesseract-ocr-spa \
-  tesseract-ocr build-essentials nodejs npm exim4-daemon-heavy \
+  curl mktemp dnsutils tesseract-ocr tesseract-ocr-dev \
+  tesseract-ocr-afr tesseract-ocr-ara tesseract-ocr-aze \
+  tesseract-ocr-bel tesseract-ocr-ben tesseract-ocr-bul \
+  tesseract-ocr-cat tesseract-ocr-ces tesseract-ocr-chi-sim \
+  tesseract-ocr-chi-tra tesseract-ocr-chr tesseract-ocr-dan \
+  tesseract-ocr-deu tesseract-ocr-deu-frak tesseract-ocr-ell \
+  tesseract-ocr-eng tesseract-ocr-enm tesseract-ocr-epo \
+  tesseract-ocr-equ tesseract-ocr-est tesseract-ocr-eus \
+  tesseract-ocr-fin tesseract-ocr-fra tesseract-ocr-frk \
+  tesseract-ocr-frm tesseract-ocr-glg tesseract-ocr-grc \
+  tesseract-ocr-heb tesseract-ocr-hin tesseract-ocr-hrv \
+  tesseract-ocr-hun tesseract-ocr-ind tesseract-ocr-isl \
+  tesseract-ocr-ita tesseract-ocr-ita-old tesseract-ocr-jpn \
+  tesseract-ocr-kan tesseract-ocr-kor tesseract-ocr-lav \
+  tesseract-ocr-lit tesseract-ocr-mal tesseract-ocr-mkd \
+  tesseract-ocr-mlt tesseract-ocr-msa tesseract-ocr-nld \
+  tesseract-ocr-nor tesseract-ocr-osd tesseract-ocr-pol \
+  tesseract-ocr-por tesseract-ocr-ron tesseract-ocr-rus \
+  tesseract-ocr-slk tesseract-ocr-slk-frak tesseract-ocr-slv \
+  tesseract-ocr-spa tesseract-ocr-spa-old tesseract-ocr-sqi \
+  tesseract-ocr-srp tesseract-ocr-swa tesseract-ocr-swe \
+  tesseract-ocr-tam tesseract-ocr-tel tesseract-ocr-tgl \
+  tesseract-ocr-tha tesseract-ocr-tur tesseract-ocr-ukr \
+  tesseract-ocr-viebuild-essential nodejs npm exim4-daemon-heavy \
   libsvm3 libsvm-dev liblinear1 liblinear-dev
 {% endhighlight %}
 
@@ -185,6 +207,14 @@ from the source:
 {% highlight bash %}
 wget https://github.com/jgm/pandoc/releases/download/1.17.1/pandoc-1.17.1-2-amd64.deb
 sudo dpkg -i pandoc-1.17.1-2-amd64.deb
+{% endhighlight %}
+
+On some systems, you may run into a situation where [LibreOffice]
+fails with a "permission denied" error when run by the web server.  To
+avoid this, run:
+
+{% highlight bash %}
+sudo chmod -R 777 /var/spool/libreoffice
 {% endhighlight %}
 
 To enable the use of [Azure blob storage] as a means of

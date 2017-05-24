@@ -2276,8 +2276,9 @@ If there is one [YAML] "[document]" and it is something other than an
 
 There is an optional keyword argument `name` that will be used to set
 the [`.instanceName`] attribute of the resulting object.  If you do
-not pass a `name` parameter, the object will still be readable, not
-but it will not be writable by **docassemble** questions.
+not pass a `name` parameter, the object/data structure returned by
+`objects_from_file()` will still be readable, not but it will not be
+writable by **docassemble** questions.
 
 Note that there is an [initial block] called [`objects from file`]
 that can be used as a shorthand way of calling `objects_from_file()`.
@@ -3371,6 +3372,8 @@ $(document).on('daPageLoad', function(){
 [`.set_mimetype()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_mimetype
 [`.copy_into()`]: {{ site.baseurl }}/docs/objects.html#DAFile.copy_into
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
+[`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
+[`DASet`]: {{ site.baseurl }}/docs/objects.html#DASet
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
 [`DAEmail`]: {{ site.baseurl }}/docs/objects.html#DAEmail
@@ -3592,3 +3595,4 @@ $(document).on('daPageLoad', function(){
 [`.comma_and_list()`]: {{ site.baseurl }}/docs/objects.html#DAList.comma_and_list
 [gathered]: {{ site.baseurl }}/docs/groups.html#gathering
 [`.instanceName`]: {{ site.baseurl }}/docs/objects.html#instanceName
+[`objects from file`]: {{ site.baseurl }}/docs/initial.html#objects from file
