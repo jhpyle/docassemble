@@ -2784,6 +2784,16 @@
     You are using the ${ interface() }
     interface.
   mandatory: True
+"interview-flowers": |-
+  question: |
+    What is your favorite flower?
+  fields:
+    - Fruit: favorite_flower
+"interview-fruit": |-
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
 "interview-help": |-
   interview help:
     heading: About this interview
@@ -2815,6 +2825,24 @@
   subquestion: |
     Now we are done with the interview.
   sets: final_screen
+"interview-url-refer": |-
+  mandatory: true
+  question: |
+    What interview would you
+    like to use?
+  subquestion: |
+    * [Fruit]
+    * [Vegetables]
+    * [Flowers]
+
+    [Fruit]: ${ interview_url(i='docassemble.demo:data/questions/interview-about-fruit.yml') }
+    [Vegetables]: ${ interview_url(i='docassemble.demo:data/questions/interview-about-vegetables.yml') }
+    [Flowers]: ${ interview_url(i='docassemble.demo:data/questions/interview-about-flowers.yml') }
+"interview-vegetables": |-
+  question: |
+    What is your favorite vegetable?
+  fields:
+    - Fruit: favorite_vegetable
 "interview_url_action": |-
   modules:
     - docassemble.base.util
@@ -3254,6 +3282,11 @@
   \ cow.jpg]\n  \n  Cow illustration designed by\n  [Freepik](http://www.freepik.com/free-photos-vectors/animal)\n\
   buttons:\n  - Continue: continue\n---\nquestion: Welcome to the interview\nsubquestion:\
   \ |\n  Check out the menu in the\n  upper-right corner.\nmandatory: True"
+"menu-items-refer": "mandatory: True\ncode: |\n  menu_items = [ {'url': interview_url(i='docassemble.demo:data/questions/interview-about-fruit.yml'),\n\
+  \                  'label': 'Fruit'},\n                 {'url': interview_url(i='docassemble.demo:data/questions/interview-about-vegetables.yml'),\n\
+  \                  'label': 'Vegetables'}, \n                 {'url': interview_url(i='docassemble.demo:data/questions/interview-about-flowers.yml'),\n\
+  \                  'label': 'Flowers'} ]\n---\nmandatory: True\nquestion: |\n  Select\
+  \ an option from the\n  menu in the upper right."
 "message": |-
   code: |
     message("The interview is over.", "Better luck next time!")
@@ -5228,6 +5261,28 @@
 "twocol": |-
   modules:
     - docassemble.base.util
+"umbrella-interview": |-
+  include:
+    - interview-fruit.yml
+    - interview-vegetables.yml
+    - interview-flowers.yml
+  ---
+  question: |
+    What interview would you like to do?
+  field: interview_choice
+  choices:
+    - Fruit
+    - Vegetables
+    - Flowers
+  ---
+  mandatory: true
+  code: |
+    if interview_choice == 'Fruit':
+      interview_fruit_done
+    elif interview_choice == 'Vegetables':
+      interview_vegetables_done
+    elif interview_choice == 'Flowers':
+      interview_flowers_done
 "under": |-
   question: |
     What is the airspeed velocity of an
@@ -5385,7 +5440,7 @@
     What is your favorite number?
   fields:
     Favorite number: best_number
-    datatype: integer
+    datatype: number
   ---
   question: |
     % if best_number == 42:
@@ -5417,17 +5472,17 @@
   mandatory: true\nquestion: |\n  How to contact us\nsubquestion: |\n  % for person\
   \ in people:\n  You can e-mail ${ person } at\n  ${ person.email }.\n  \n  % endfor"
 "objects-from-file-dadict": "code: |\n  fruitseeds = objects_from_file(\"fruitseeds.yml\"\
-  )\n---\nmandatory: True\nquestion: |\n  Summary of ${ fruitseeds.number_as_word()\
-  \ } fruit\nsubquestion: |\n  % for fruit in fruitseeds:\n  The seeds of ${ fruit\
+  )\n---\nmandatory: True\nquestion: |\n  Summary of\n  ${ fruitseeds.number_as_word()\
+  \ }\n  fruit\nsubquestion: |\n  % for fruit in fruitseeds:\n  The seeds of ${ fruit\
   \ } are\n  ${ fruitseeds[fruit] }\n  in number.\n  \n  % endfor"
 "objects-from-file-gather": "code: |\n  fruitseeds = objects_from_file(\"fruitseeds.yml\"\
   , gathered=False, name='fruitseeds')\n---\nquestion: |\n  The fruits so far are\
   \ ${ fruitseeds }.\n  Are there more?\nyesno: fruitseeds.there_is_another\n---\n\
   question: |\n  What fruit would you like to add?\nfields:\n  - Fruit: fruitseeds.new_item_name\n\
   \  - Seeds: fruitseeds.new_item_value\n---\nmandatory: True\nquestion: |\n  Summary\
-  \ of ${ fruitseeds.number_as_word() } fruit\nsubquestion: |\n  % for fruit in fruitseeds:\n\
-  \  The seeds of ${ fruit } are\n  ${ fruitseeds[fruit] }\n  in number.\n  \n  %\
-  \ endfor"
+  \ of\n  ${ fruitseeds.number_as_word() }\n  fruit\nsubquestion: |\n  % for fruit\
+  \ in fruitseeds:\n  The seeds of ${ fruit } are\n  ${ fruitseeds[fruit] }\n  in\
+  \ number.\n  \n  % endfor"
 "raw-data-example": "code: |\n  raw_data = objects_from_file(\"raw_data.yml\", recursive=False)\n\
   ---\nmandatory: true\nquestion: |\n  The imported data\nsubquestion: |\n  % for\
   \ item in raw_data:\n  The `inventory` of\n  \"${ item.title }\" is:\n  \n  > `${\

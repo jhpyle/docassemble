@@ -450,6 +450,48 @@ If this were an optional code block, it would not run to completion
 because `user_net_worth` would already be defined when **docassemble**
 came back from asking whether the user has a car.
 
+# Combining multiple interviews into one
+
+If you have multiple interviews and you want the user to choose which
+interview to run, you could offer the multiple interviews as a single
+interview, where there is an "umbrella" [YAML] file that [`include`]s
+the others.
+
+For example:
+
+{% include side-by-side.html demo="umbrella-interview" %}
+
+Note that this interview [`include`]s three separate [YAML] files.
+The controlling logic is the [`code`] block in the "umbrella"
+interview that pursues a different endpoint depending on the value of
+`interview_choice`.
+
+The three interview files included are:
+
+* [interview-fruit.yml] 
+* [interview-vegetables.yml] 
+* [interview-flowers.yml] 
+
+Note that these interview files contain everything needed for the
+interview except for any [`mandatory`] blocks that would define an
+interview endpoint; that function is reserved for the "umbrella"
+interview.
+
+There are other ways to offer users a choice of interviews.  For
+example, you can use the [`interview_url()`] function with the `i`
+optional keyword parameter to point users from one interview to
+another:
+
+{% include side-by-side.html demo="interview-url-refer" %}
+
+You might also offer these hyperlinks in the menu, using the
+[`menu_items`] special variable:
+
+{% include side-by-side.html demo="menu-items-refer" %}
+
+You can also use the [`dispatch`] configuration directive to
+provide a list of interviews available on your server.
+
 # Best practices for interview logic and organization
 
 * Use only a single [`mandatory`]<span></span> [`code`] block for each
@@ -506,3 +548,8 @@ came back from asking whether the user has a car.
 [`reset` initial block]: {{ site.baseurl }}/docs/initial.html#reset
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [package]: {{ site.baseurl }}/docs/packages.html
+[interview-fruit.yml]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/examples/interview-fruit.yml
+[interview-vegetables.yml]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/examples/interview-vegetables.yml
+[interview-flowers.yml]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/examples/interview-flowers.yml
+[`interview_url()`]: {{ site.baseurl }}/docs/functions.html#interview_url
+[`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
