@@ -1,0 +1,21 @@
+metadata:
+  title: Several interviews in one
+  short title: Multi-interview
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+question: |
+  What interview would you
+  like to use?
+subquestion: |
+  * [Fruit]
+  * [Vegetables]
+  * [Flowers]
+
+  [Fruit]: ${ interview_url(i='docassemble.demo:data/questions/interview-about-fruit.yml') }
+  [Vegetables]: ${ interview_url(i='docassemble.demo:data/questions/interview-about-vegetables.yml') }
+  [Flowers]: ${ interview_url(i='docassemble.demo:data/questions/interview-about-flowers.yml') }

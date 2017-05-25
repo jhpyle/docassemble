@@ -1,0 +1,22 @@
+metadata:
+  title: Several interviews in one
+  short title: Multi-interview
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  menu_items = [ {'url': interview_url(i='docassemble.demo:data/questions/interview-about-fruit.yml'),
+                  'label': 'Fruit'},
+                 {'url': interview_url(i='docassemble.demo:data/questions/interview-about-vegetables.yml'),
+                  'label': 'Vegetables'}, 
+                 {'url': interview_url(i='docassemble.demo:data/questions/interview-about-flowers.yml'),
+                  'label': 'Flowers'} ]
+---
+mandatory: True
+question: |
+  Select an option from the
+  menu in the upper right.

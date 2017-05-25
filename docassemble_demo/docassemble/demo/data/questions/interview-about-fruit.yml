@@ -1,0 +1,15 @@
+metadata:
+  title: Interview about Flowers
+  short title: Flowers
+  example start: 1
+  example end: 2
+---
+mandatory: True
+question: |
+  Your favorite fruit is
+  ${ favorite_fruit }
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit

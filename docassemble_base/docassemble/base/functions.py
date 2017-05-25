@@ -438,9 +438,12 @@ def interview_url(**kwargs):
     variable store.  This is used in multi-user interviews to invite
     additional users to participate."""
     args = kwargs
-    if 'i' not in kwargs:
+    if 'i' in kwargs:
+        args['from_list'] = 1
+    else:
         args['i'] = this_thread.current_info['yaml_filename']
-    args['session'] = this_thread.current_info['session']
+        if 'session' not in kwargs:
+            args['session'] = this_thread.current_info['session']
     return str(this_thread.internal['url']) + '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
 
 def interview_url_action(action, **kwargs):
