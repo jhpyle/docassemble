@@ -66,8 +66,8 @@ metadata:
       organization: none
   revision_date: 2017-05-01
 comment: |
-  A "metadata" block contains information about the YAML file, such as
-  the name of the author.
+  A "metadata" block contains information about the interview, such as
+  the title of the interview as displayed in the navigation bar.
 ---
 interview help:
   heading: |
@@ -90,6 +90,9 @@ comment: |
   question in the interview.  If the question has help text of its
   own, the "interview help" will appear after the question-specific
   help.
+
+  This help screen displays different text depending on whether the
+  web interface or the SMS interface is being used.
 ---
 language: es
 interview help:
@@ -97,6 +100,9 @@ interview help:
   content: |
     Conteste cada pregunta. Al final, se le puede dar un documento
     que puede ahorrar.
+comment: |
+  This interview is not fully translated into Spanish, but this shows
+  how you would provide a Spanish translation of the "interview help."
 ---
 include:
   - basic-questions.yml
@@ -106,13 +112,14 @@ comment: |
   the names of icons that you can use to "decorate" your questions.
 
   The "basic-questions.yml" comes from the docassemble.base package
-  and is located in the directory docassemble/base/data/questions.
+  and is located in the directory docassemble/base/data/questions
+  in that package.
 
   You can include question files from other packages by explicitly
-  referring to their package names.  E.g.,
+  referring to their package names.  For example,
   "docassemble.helloworld:questions.yml" refers to the file
   questions.yml in the docassemble/helloworld/data/questions
-  directory.
+  directory of the docassemble.helloworld package.
 ---
 image sets:
   freepik:
@@ -128,20 +135,19 @@ comment: |
   already defined a number of icons, but this block defines some more
   icons.
 
-  Since this file, questions.yml, is in the docassemble.demo package,
-  the image files referenced here are also in the docassemble.demo
-  package.  The files are located in the directory
-  docassemble/demo/data/static.
-
   Since most free icons available on the internet require attribution,
   the "image sets" block allows you to specify what attribution text
   to use for particular icons.  The web app shows the appropriate
   attribution text at the bottom of any page that uses one of the
   icons.
+  
+  Since this file, questions.yml, is in the docassemble.demo package,
+  the image files referenced here are also in the docassemble.demo
+  package.  The files are located in the directory
+  docassemble/demo/data/static.
 ---
 objects:
   - village_idiot: Individual
-  - role_change: RoleChangeTracker
 comment: |
   In a later question we will refer to the variable "village_idiot."
   This "objects" block creates the variable "village_idiot" and
@@ -171,65 +177,6 @@ comment: |
   turn them into hyperlinks wherever they appear.  When the user
   clicks on the hyperlink, a popup appears with the word's definition.
 ---
-event: role_event
-question: You are done for now.
-subquestion: |
-  % if 'advocate' in role_needed:
-  An advocate needs to review your answers before you can proceed.
-
-  Please remember the following link and come back to it when you
-  receive notice to do so:
-
-  [${ interview_url() }](${ interview_url() })  
-  % else:
-  Thanks, the client needs to resume the interview now.
-  % endif
-
-  % if role_change.send_email(role_needed, advocate={'to': advocate, 'email': role_event_email_to_advocate}, client={'to': client, 'email': role_event_email_to_client}):
-  An e-mail has been sent.
-  % endif
-decoration: exit
-buttons:
-  - Exit: leave
----
-template: role_event_email_to_advocate
-subject: |
-  Client interview waiting for your attention: ${ client }
-content: |
-  A client, ${ client }, has partly finished an interview.
-  ${ client.pronoun_subjective(capitalize=True, thirdperson=True) }
-  needs you to review
-  ${ client.pronoun_possessive('answers', thirdperson=True) }
-  so that ${ client.pronoun_subjective(thirdperson=True) } can obtain
-  ${ client.pronoun_possessive('advice letter', thirdperson=True) }
-  and ${ pleading.title }.
-
-  Please go to [the interview](${ interview_url() }) as soon as possible.
-
-  Thank you!
----
-template: role_event_email_to_client
-subject: |
-  Your interview answers have been reviewed
-content: |
-  ${ client.salutation() } ${ client.name.last }:
-  
-  An advocate has finished reviewing your answers.
-
-  Please go to [${ interview_url() }](${ interview_url() })
-  to continue the interview.
-
-  Thank you for your patience.
----
-role:
-  - client
-  - advocate
-mandatory: True
-code: |
-  multi_user = False
-  speak_text = False
-  set_live_help_status(availability='observeonly', mode='help', partner_roles=['advocate'])
----
 mandatory: True
 code: |
   client.asset.new('checking account', 'savings account', 'stocks and bonds', 'automobiles')
@@ -237,21 +184,38 @@ code: |
   client.income.new('employment', 'self employment', 'SSI', 'TANF', 'rent', period=12)
   client.income.gathered = True
 comment: |
-  This code indicates which income and asset items to ask about.
+  This interview will ask whether the client has particular income and assets.
+
+  The objects client.asset and client.income are docassemble objects that function
+  like Python "dictionaries."
+  
+  This code initializes the list of income and asset items.
+
+  The attribute "gathered" is set to True because after being initialized with
+  the given items, we want the list to be considered complete.  That is, we
+  do not want the interview to ask the user if there are any additional items
+  to add.
+  
+  "Mandatory" sections like this one are evaluated in the order they
+  appear in the question file.
 ---
 initial: True
 code: |
-  if role == 'advocate' and not defined('client.name.first'):
-    welcome_advocate
-  # track_location = user.location.status()
   set_language(user.language)
----
-role: advocate
-event: welcome_advocate
-question: |
-  No role for advocate yet.
-subquestion: |
-  You are an advocate and this interview is not yet ready for your participation.
+comment: |
+  When providing interviews in multiple languages, you need to tell docassemble
+  what language it should use for the built-in words and expressions
+  that the user will see.  This needs to be set up-front in "initial" code, which
+  will run every time the screen loads.
+
+  When the interview first loads, user.language is undefined.  Therefore
+  docassemble will ask the user a question in order to obtain a definition for
+  user.language.  We will encounter this question below.
+  
+  "Mandatory" and "initial" sections are evaluated in the order they
+  appear in the question file.  But "mandatory" sections are different because
+  as soon as they run to completion, they will subsequently be skipped.
+  "Initial" sections will always be run every time the screen loads.
 ---
 mandatory: True
 code: |
@@ -261,29 +225,77 @@ code: |
   else:
     need(client_kicked_out)
 comment: |
-  This is the code that directs the flow of the interview.  It
-  indicates to the system that we need to get to the endpoint
-  "client_done."  There is a question elsewhere that "sets" the variable
-  "client_done."  Docassemble will ask all the questions necessary to
-  get the information need to pose that that final question to the
-  user.
+  This is the code that directs the flow of the interview.
+
+  It runs after the user's language is set by the previous "initial" block.
+
+  Note that there are no other "mandatory" or "initial" questions in the
+  interview.  This code block determines how the interview will end.
+  
+  This code indicates to the system that we need to get to the
+  endpoint "client_done."  There is a question elsewhere that contains
+  "event: client_done."  Docassemble will ask all the questions
+  necessary to get the information need to pose that that final
+  question to the user.
 
   However, if the answer to the question
   user_understands_no_attorney_client_relationship is not
   "understands," the interview will looks for a question that sets the
-  variable "client_kicked_out."
-  
-  "Mandatory" sections like this one are evaluated in the order they
-  appear in the question file.
+  variable "client_kicked_out."  There is a question elsewhere that
+  contains "event: client_kicked_out."
+
+  This is the code that determines the entire path of the interview,
+  and yet it is very short, even though the interview has many questions.
+  That is because interview flow in docassemble is automatic.  The order
+  in which questions are asked can vary depending on the user input.  In
+  some interviews, a question is asked early, and in another, it is asked
+  later.  Questions are asked if and when there is a necessity to
+  gather information.
+
+  There is one additional bit of the interview flow that is manual: the
+  requirement of "user_saw_initial_screen."  This causes a "welcome" screen
+  to be shown.  We always want this screen to be displayed first (at
+  least as soon as we determine the user's language).
 ---
 code: |
-  if client.is_plaintiff and client not in case.plaintiff.elements:
+  if client not in case.plaintiff.elements and client.is_plaintiff:
     case.plaintiff.append(client)
   if client not in case.defendant.elements and not client.is_plaintiff and client.is_defendant:
     case.defendant.append(client)
   case.plaintiff.there_are_any = True
   case.defendant.there_are_any = True
+comment: |
+  This interview relates to a court case.  It takes advantage of the
+  basic-questions.yml file in the docassemble.base package.  This
+  interview file provides some functionality for legal interviews.
+
+  For example, basic-questions.yml defines the objects "case" and "client."
+
+  But in our interview, what do we want to do with "case" and "client"?
+  What is the relation of the client to the case?  Is the client the user,
+  or a different person from the user?
+
+  The purpose of the above code is to set initial values for the
+  objects case.plaintiff and case.defendant.  These objects are
+  docassemble objects that function as Python lists.  They represent
+  the plaintiffs and defendants in the case.
+
+  This code will add the client as a plaintiff, or add the client as a
+  defendant, depending on whether the client is a plaintiff or a
+  defendant.  This code will trigger the asking of questions to
+  determine whether the client is a plaintiff or a defendant, if those
+  facts are unknown.  Elsewhere there is a question that defines the
+  "is_plaintiff" attribute and another question that defines the
+  "is_defendant" attribute.
+
+  The end result of this code is to define the "there_are_any"
+  attributes of the two lists.  Note that this code is not
+  "mandatory."  It will be run when and if the interview needs to know
+  whether the lists are empty.  We set the attributes to True because
+  all court cases need to have at least one plaintiff and at least one
+  defendant.
 ---
+event: client_kicked_out
 progress: 100
 question: |
   Sorry, you cannot proceed with the interview.
@@ -300,16 +312,25 @@ decoration: exit
 buttons:
   - Exit: exit
   - Restart: restart
-sets: client_kicked_out
 comment: |
-  If docassemble is configured to show a progress bar, the progress
-  bar will be set to 100% on this question, which is an endpoint
-  question (since the only options are exiting or restarting).
----
-code: |
-  advocate.name.first = "John"
-  advocate.name.last = "Smith"
-  advocate.email = "jpyle@philalegal.org"
+  This is an endpoint question (note that the only options are exiting
+  or restarting).
+
+  If the interview was configured to show a progress bar, the progress
+  bar would be set to 100% on this question.
+
+  This question uses the "event" directive.  "client_kicked_out" is a
+  variable, just like any other variable, except that it is never
+  defined, only sought.
+
+  We saw above in the "mandatory" code block that if the user does not
+  understand that no attorney-client relationship will be created, the
+  "client_kicked_out" variable will be sought.  When that variable is
+  sought, this question will be displayed to the user.
+
+  This question also uses a "decoration."  This places an icon in the
+  corner of the screen.  The image by the name of "exit" is defined
+  in the basic-questions.yml file.
 ---
 question: |
   Welcome to the **docassemble** demonstration.
@@ -319,7 +340,7 @@ subquestion: |
   fake client letter and a fake pleading.
 
   % if interface() == 'web':
-  In the navigation bar above, you can click "Help" to see the help
+  In the navigation bar above, you can click "[Help]" to see the help
   text associated with the interview and with the individual question
   (if any).  If "Help <i class="glyphicon glyphicon-star"></i>"
   appears in the navigation bar, that means help text specific to the
@@ -331,15 +352,40 @@ subquestion: |
   not see a "Source" tab.)
   % endif
 
-  % if user.location.known:
-  Your current location is ${ user.location }.
-  % endif
-
+  [Help]: ${ url_of('help') }
   [YAML]: https://en.wikipedia.org/wiki/YAML
 field: user_saw_initial_screen
-datatype: boolean
 buttons:
   - Ok, got it: True
+comment: |
+  This is the "splash screen" for the interview.  The question is a
+  multiple-choice question with one option.
+
+  This example demonstrates that HTML can be combined with Markdown
+  in the text of questions.  Here, we wanted to show a particular icon
+  available in Bootstrap, so we inserted raw HTML.
+---
+generic object: Individual
+question: |
+  What language ${ x.do_question('speak') }?
+field: x.language
+choices:
+  - English: en
+  - Español: es
+default: ${ language_from_browser() }
+comment: |
+  This is the first question that will be asked because there is
+  an "initial" block above that needs the definition of user.language.
+
+  This is a "generic object" question.  It is written in a "generic"
+  way so that it will ask "What language do you speak?" or "What language
+  does John Smith speak?" depending on whether "x" is the user or not.
+
+  The language_from_browser() function sets the default choice to
+  English or Spanish if the web server detects that the user's browser
+  is set to either of these languages.  This method of determining the
+  user's language is not 100% reliable, but it will save the user from
+  making an extra click.
 ---
 generic object: Individual
 question: |
@@ -357,17 +403,8 @@ comment: |
   docassemble.demo package in the subdirectory
   docassemble/demo/data/static.  This is how you refer to a "static"
   file that exists within a docassemble subpackage.
----
-question: Is this reason a sound one?
-subquestion: |
-  The client, ${ client }, proposed the following reason for winning:
-  
-  > ${ explanation }
 
-  Is this a sound reason for why the judge should rule in the client's
-  favor in this ${ law_category } case?
-yesno: explanation_is_sound
-role: advocate
+  The "100%" indicates that the image width should fill the screen.
 ---
 question: What form do you want to prepare?
 decoration: document
@@ -398,9 +435,16 @@ code: |
   else:
     client_has_standing = False
 comment: |
-  This is an example of how docassemble can serve as an "expert
+  This is an example of how docassemble can serve as a legal "expert
   system."  The variable "client_has_standing" (a legal concept) can
-  be set using simple logical expressions in Python.
+  be set using simple logical expressions in Python.  Legal concepts
+  can be expressed as true/false variables and the law can be coded in
+  logical expressions like these.
+
+  Note that the "\" character at the end of a line is merely a
+  formatting aid.  Python normally considers line breaks to indicate
+  that a statement is finished.  The "\" character at the end of a
+  line tells Python that the statement isn't finished yet.
 ---
 question: Were you injured?
 decoration: injury
@@ -411,6 +455,35 @@ help:
     purely financial injury.
   audio: schumann-clip-3.mp3
 progress: 50
+comment: |
+  This question demonstrates how an audio file can be provided on the
+  help screen of a question.
+---
+question: |
+  What is the village idiot's name?
+fields:
+  - Somebody already mentioned: village_idiot
+    datatype: object
+    disable others: True
+    choices:
+      - case.plaintiff
+      - case.defendant
+  - First Name: village_idiot.name.first
+  - Middle Name: village_idiot.name.middle
+    required: False
+  - Last Name: village_idiot.name.last
+  - Suffix: village_idiot.name.suffix
+    required: False
+    code: name_suffix()
+comment: |
+  This question demonstrates the use of objects in a multiple choice
+  question, as well as the feature of disabling fields when they are
+  not necessary.  The question allows the user to indicate who the
+  "village_idiot" is.  If the village idiot is a plaintiff or
+  defendant, the user will be able to select the person's name from a
+  list.  If the village idiot is not a plaintiff or defendant, the
+  user can enter the person's name.  Either way, village_idiot will be
+  an object.
 ---
 question: |
   I understand that you live in ${ client.address.city }.
@@ -453,20 +526,22 @@ fields:
       I should win because . . .
 ---
 code: |
-  if client.address.address and retry_address:
-    retry_address = False
-    force_ask('client.address.address')
-comment: |
-  This is an example of how the "force_ask" function can be used to
-  ask a question that has already been asked.
----
-question: Would you like to enter your address yet again?
-yesno: retry_address
----
-code: |
   court.jurisdiction = ['US', 'state', 'PA', 'trial', 'Philadelphia County']
   jurisdiction_state = "Pennsylvania"
   jurisdiction_county = "Philadelphia"
+comment: |
+  This code sets some information about the current jurisdiction.  The
+  interview assumes that the legal case is in a Pennsylvania court.
+
+  The court.jurisdiction variable uses a special format that is
+  particular to the docassemble.base.legal module.  It is used to
+  facilitate the use of "layers" of code, where there is a common
+  layer of questions and code applicable at a federal level, another
+  layer of questions and code applicable at a state level, another
+  layer of questions and code applicable at a county level, etc.
+
+  Note that this code is not "mandatory."  It will be called when and
+  if the interview needs to know any of these variables.
 ---
 code: |
   if jurisdiction_state == "Pennsylvania":
@@ -481,68 +556,25 @@ code: |
           jurisdiction_county + " County, " + jurisdiction_state
 ---
 code: |
-  import datetime
-  import dateutil.relativedelta
-  import dateutil.parser
-  cutoff_date = datetime.datetime.now() - \
-  dateutil.relativedelta.relativedelta(years=statute_of_limitations_years)
-  if dateutil.parser.parse(injury_date) > cutoff_date:
+  cutoff_date = current_datetime() - date_interval(years=statute_of_limitations_years)
+  if as_datetime(injury_date) > cutoff_date:
       statute_of_limitations_ok = True
   else:
       statute_of_limitations_ok = False
 comment: |
-  This code uses some Python functions to determine whether the date
-  of the injury is within the statute of limitations period.
+  This code uses some date/time functions to determine whether the
+  date of the injury is within the statute of limitations period.
 
   The variable cutoff_date represents the latest date in the past when
   an injury could have occurred that would still be actionable under
-  the statute of limitations.  To calculate cutoff_date, we start with
-  today's date and subtract a number of number of years given by the
-  applicable statute of limitations.  The number of years in the
-  applicable statute of limitations period is the number stored in the
-  variable statute_of_limitations_years.
+  the statute of limitations.
 
-  In Python, we calculate cutoff_date using the subtraction operator,
-  the minus sign, which does special things when the variables
-  involved are dates and intervals.  The call to
-  "datetime.datetime.now()" returns today's date and time as a date
-  object.  The call to "relativedelta()" returns a time interval
-  object where the length of the interval is number of years given by
-  statute_of_limitations_years.  Today's date "minus" that interval
-  gives the date in the past we are looking for.
+  To calculate cutoff_date, we start with today's date and subtract a
+  number of number of years given by the applicable statute of
+  limitations.
 
-  This code relies on the special Python modules datetime,
-  dateutil.relativedelta, and dateutil.parser.  We could have used an
-  "import" block to import these modules.  If we did that, the Python
-  "import" command would be run every time a question is asked in the
-  interview.  There may be a slight efficiency boost to importing
-  module names into the namespace only when and if they are necessary.
----
-generic object: Individual
-question: |
-  In what country ${ x.do_question('live') }?
-fields:
-  - Country: x.address.country
----
-generic object: Individual
-question: |
-  In what neighborhood ${ x.do_question('live') }?
-fields:
-  - Neighborhood: x.address.neighborhood
----
-generic object: Individual
-question: |
-  In what county ${ x.do_question('live') }?
-fields:
-  - County: x.address.county
----
-generic object: Address
-sets:
-  - x.county
-  - x.country
-  - x.neighborhood
-code: |
-  x.geolocate()
+  The number of years in the applicable statute of limitations period
+  is the number stored in the variable statute_of_limitations_years.
 ---
 generic object: Individual
 decoration: home
@@ -573,16 +605,16 @@ comment: |
   is loaded).
 
   The "amenities" of the home, by contrast, use a "checkbox" selector.
-  This means that the variable will be defined as a Python dictionary
-  containing two key/value pairs, not as text.  For example, if this
-  question is asked regarding an Individual with the variable name
-  "client," and the user selects "Chimney" only, the value of
+  This means that the variable will be defined not as text, but as a
+  Python dictionary containing key/value pairs.  For example, if
+  this question is asked regarding an Individual with the variable
+  name "client," and the user selects "Chimney" only, the value of
   client.address.amenities will be a Python dictionary in which
   "chimney" is set to True and "stove" is set to False.
 
-  The "amenities" field also demonstrates that checkbox values and
-  labels can be set using Python code.  The code needs to evaluate to
-  a Python dictionary, where the values are the labels to be shown to
+  The "amenities" field demonstrates that checkbox values and labels
+  can be set using Python code.  The code needs to evaluate to a
+  Python dictionary, where the values are the labels to be shown to
   the user and the keys are the keys that will be used in the
   resulting Python dictionary (x.address.amenities).
 
@@ -603,17 +635,15 @@ fields:
     help: The apartment, suite, or unit number of the residence.
   - City: x.address.city
   - State: x.address.state
-    code: |
-      us.states.mapping('abbr', 'name')
+    code: states_list()
   - Zip: x.address.zip
     required: False
 comment: |
   This question demonstrates fields that have the style of dropdown
   lists.  The values of a dropdown list can be generated with code
   that runs at the time the question is asked, or they can be
-  hard-coded into the question itself.  The code here gets a list of
-  U.S. states from a helpful Python module called "us."  Note that we
-  imported this module earlier.
+  hard-coded into the question itself.  In this case, we use the
+  states_list() function to provide a list of U.S. states.
 ---
 generic object: Individual
 question: |
@@ -623,11 +653,9 @@ fields:
   - A test file: x.picture
     datatype: files
 comment: |
-  You can accept files from users by using the datatypes "file" 
-  (for a single file) or "files" (for one or more files).   
+  You can accept file uploads from users by using the datatypes "file"
+  (for a single file) or "files" (for one or more files).
 ---
-comment: |
-  This is how you can display a picture that a user has uploaded.
 generic object: Individual
 question: |
   % if x.picture.number() > 1:
@@ -638,7 +666,23 @@ question: |
 subquestion: |  
   ${ x.picture }
 yesno: x.picture_verified
+comment: |
+  This question demonstrates displaying a picture that a user has uploaded.
 ---
+question: |
+  On a scale of 1 to 10, how much hatred do you harbor toward
+  ${ case.defendant }?
+fields:
+  no label: hatred_level
+  datatype: range
+  min: 1
+  max: 10
+---
+def: kid_defs
+mako: |
+  <%def name="describe_as_adorable(person)"> \
+  ${ person } is adorable. \
+  </%def>
 comment: |
   docassemble uses the Mako templating system to expand variables
   within Markdown text.  Mako allows functions to be defined within
@@ -651,35 +695,22 @@ comment: |
   Another way to write functions in docassemble is to write methods
   that act on docassemble objects, which you define in your objects.py
   file within your package.
-def: kid_defs
-mako: |
-  <%def name="describe_as_adorable(person)"> \
-  ${ person } is adorable. \
-  </%def>
----
-question: |
-  On a scale of 1 to 10, how much hatred do you harbor toward
-  ${ case.defendant }?
-fields:
-  no label: hatred_level
-  datatype: range
-  min: 1
-  max: 10
 ---
 comment: |
-  The following question is the interview's main endpoint.  This
-  question has two attachment documents.  Most of the questions in the
-  interview are asked because they are needed by this question or one
-  of its attachments.
+  This very long question is the interview's main endpoint (it offers
+  to define client_done, which was referred to in the mandatory code
+  block above.  This question has two "attachment" documents.  Most of
+  the questions in the interview are asked because they are needed by
+  this question or one of its attachments.
 
-  This section demonstrates use of the "need" clause to gather
-  information about the case's plaintiffs and defendants up front.
-  This is not strictly necessary, because the case caption will cause
-  those questions to be answered.  However, the "need" clause forces
-  docassemble to gather the information up front, before it starts
-  processing the question and its attachments.  This helps to direct
-  the order of the questions in a more sensible fashion.
-sets: client_done
+  This question also demonstrates use of the "need" directive to
+  gather information about the case's plaintiffs and defendants up
+  front.  This is not strictly necessary, because the case caption
+  will cause those questions to be answered.  However, the "need"
+  clause forces docassemble to gather the information up front, before
+  it starts processing the question and its attachments.  This helps
+  to direct the order of the questions in a more sensible fashion.
+event: client_done
 progress: 100
 question: |
   % if client_has_standing:
@@ -855,7 +886,8 @@ attachments:
       %>
       % endfor
       
-      This petition should be granted.  ${ explanation }
+      This petition should be granted.
+      ${ fix_punctuation(explanation) }
       % if client.picture_verified:
       Look how cute I am:
 
@@ -885,27 +917,6 @@ attachments:
 
       [FLUSHLEFT] ${ client }, ${ title_case(case.role_of(client)) }
 ---
-question: Your document is ready.
-sets: provide_user_with_document
-attachment:
-  - name: A *hello world* document
-    filename: Hello_World_Document
-    description: A document with a **classic** message
-    content file: 
-      - base_template.md
-      - hello_template.md
----
-question: Your document is ready, ${ user }.
-sets: provide_user_with_document
-attachment:
-  - name: A *hello world* document
-    filename: Hello_World_Document
-    description: A document with a **classic** message
-    metadata:
-      FirstFooterLeft: Can you do *markdown*?
-    content: |
-      Hello, ${ user }!
----
 language: es
 question: |
   Bienvenido a la demostración **docassemble**.
@@ -933,330 +944,23 @@ field: user_saw_initial_screen
 datatype: boolean
 buttons:
   - Comprendo: True
----
-generic object: Individual
-question: |
-  What language ${ x.do_question('speak') }?
-field: x.language
-choices:
-  - English: en
-  - Español: es
-default: ${ language_from_browser() }
+comment: |
+  This demonstration interview is not available in Spanish, but this
+  question and the question after it demonstrate how multi-lingual
+  interviews can be constructed.  This question offers to set
+  "user_saw_initial_screen," just like a previous question block did,
+  except that this question has a "language: es" directive, indicating
+  that this question should only be used if the current language (as
+  set by the "initial" code block above using the set_language()
+  function) is Spanish.
 ---
 language: es
-terms:
+auto terms:
   cliente: |
     El cliente es la persona que está llenando este formulario
----
-question: |
-  What is the village idiot's name?
-fields:
-  - Somebody already mentioned: village_idiot
-    datatype: object
-    disable others: True
-    choices:
-      - case.plaintiff
-      - case.defendant
-  - First Name: village_idiot.name.first
-  - Middle Name: village_idiot.name.middle
-    required: False
-  - Last Name: village_idiot.name.last
-  - Suffix: village_idiot.name.suffix
-    required: False
-    code: name_suffix()
-...
-{% endhighlight %}
-
-# The basic-questions.yml file, incorporated by reference into the demo
-
-Many of the questions asked in the demonstration interview do not need
-to be defined in the [YAML] source file because they are already
-defined in the `basic-questions.yml` file.  Here is an annotated
-guide to this file.
-
-{% highlight yaml %}
----
-metadata:
-  description: |
-    These are basic questions common to a variety of scenarios
-  authors:
-    - name: Jonathan Pyle
-      organization: none
-  revision_date: 2015-10-25
 comment: |
-  A "metadata" section contains information about who wrote the
-  YAML file and how it is intended to be used.
----
-modules:
-  - docassemble.base.legal
-comment: |
-  A "modules" section imports functions from Python modules.  The
-  docassemble.base.legal module defines some object classes and functions
-  that are useful in legal applications.
----
-default role: client
-code: |
-  if user_logged_in() and user_has_privilege('advocate'):
-    user = advocate
-    role = 'advocate'
-  else:
-    user = client
-    role = 'client'
-  set_info(user=user, role=role)
-comment: |
-  The default role is "client" and an optional role is "advocate."
-  Unless otherwise specified, all questions require the user to be a
-  "client."  The user is assumed to have the "advocate" role in this
-  interview if the user is logged in and the user has "advocate" as a
-  user role.
-
-  The functions in docassemble.base.util need to know who the user
-  is.  The set_info function communicates that information to the
-  docassemble.base.util module.  Since the code is paired with the
-  "default role" declaration, this code is run as "initial" code,
-  meaning that it is run every time docassemble processes the
-  interview (i.e., every time the screen loads).
----
-event: role_event
-question: You are done for now.
-subquestion: |
-  % if 'advocate' in role_needed:
-    An advocate needs to review your answers before you can proceed.
-
-    Please remember the following link and come back to it when you
-    receive notice to do so:
-
-    [${ interview_url() }](${ interview_url() })
-    
-  % else:
-    Thanks, the client needs to resume the interview now.
-  % endif
-
-decoration: exit
-buttons:
-  - Exit: leave
-comment: |
-  The "event" declaration acts like "sets."  When docassemble
-  needs to ask a question that requires a role other than the user's
-  role, it displays a special message for the user.  You need to
-  configure this message by defining a question tagged with "event:
-  role_event."  docassemble will search for this question just as
-  it searches for a question to define a variable.
----
-objects:
-  - case: Case
-  - client: Individual
-  - spouse: Individual
-  - advocate: Individual
-  - pleading: LegalFiling
-  - court: Court
-comment: |
-  An "objects" section defines variables that are docassemble objects.
-  The object types here are defined in the docassemble.base.core and
-  docassemble.base.legal modules.
----
-mandatory: true
-code: |
-  case.court = court
-  pleading.case = case
-comment: |
-  This code sets some basic relations among the objects created in the
-  objects block of this YAML file.
----
-image sets:
-  freepik:
-    attribution: |
-      Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
-    images:
-      bills: money146.svg
-      children: children2.svg
-      finishline: checkered12.svg
-      gavel: court.svg
-      gaveljudge: magistrate.svg
-      home: home168.svg
-      piggybank: savings1.svg
-      scalesofjustice: judge1.svg
-      stocks: increasing10.svg
-      wallet: commerce.svg
-      document: contract11.svg
-      calendar: calendar146.svg
-      picture: picture64.svg
-      parentchild: man32.svg
-      coins: coins36.svg
-      exit: open203.svg
-      man: silhouette21.svg
-      person: silhouette21.svg
-      woman: women13.svg
-      girl: girl4.svg
-      male: male244.svg
-      female: female243.svg
-      map: map32.svg
-comment: |
-  Here we pre-define some icon files so that we can easily refer to
-  them later.  These files are located in the docassemble.base package
-  in the subdirectory docassemble/base/data/static.
----
-generic object: Individual
-question: |
-  What is ${ x.possessive('time zone') }?
-fields:
-  - Time Zone: x.timezone
-    code: timezone_list()
----
-generic object: Individual
-question: |
-  What is ${ x.possessive('Social Security Number') }?
-fields:
-  - Social Security Number: x.ssn
----
-generic object: Individual
-question: |
-  What is ${ x.possessive('date of birth') }?
-fields:
-  - Date of Birth: x.birthdate
-    datatype: date
-comment: |
-  docassemble allows you to write "generic" questions.  For example,
-  if your code uses a variable called user.birthdate, docassemble will
-  first look for a question that sets user.birthdate specifically, but
-  if it does not find it, it will look for a question for which the
-  generic object property is set to the object type of the user
-  object, which is Individual, and where the question sets the
-  variable x.birthdate.
-  
-  It will find that question here.  The question uses the possessive
-  function, which is a method of the Individual class.  The result is
-  that the question will be "What is your date of birth?" if x is the
-  user, but will otherwise ask "What is Jane Doe's date of birth?"
-
-  By using "generic" questions, you can write a single question that
-  works in a variety of circumstances, saving you a lot of time.  And
-  if you ever want to use a more specific question for a specific
-  variable, you can.  For example, if your code calls for
-  spouse.birthdate, you may to ask the question in a different way.
-  (E.g., "What is the birthdate of your lovely spouse?  If you don't
-  know this, you are in deep trouble!")  You would do this by defining
-  a non-generic question that sets spouse.birthdate, in which case
-  docassemble would use that question instead of the generic question.
----
-generic object: Individual
-question: |
-  ${ x.is_are_you(capitalize=True) } a defendant in this case?
-yesno: x.is_defendant
----
-generic object: Individual
-field: x.marital_status
-question: |
-  What is ${ x.possessive('marital status') }?
-choices:
-  - Married: Married
-  - Single: Single
-  - Divorced: Divorced
-  - "*Separated*": Separated
-comment: |
-  This is an example of a multiple-choice question.  Each of the
-  choices can be a key/value pair, or it can be a single text item.
-  If the choice is a key/value pair, the key is the label that is
-  shown to the user and value is the value to which the variable will
-  be set.
-  
-  This example also illustrates that Markdown can be used to add
-  formatting to labels.
----
-field: user_understands_how_to_use_signature_feature
-question: Instructions for signing your name
-subquestion: |
-  On the next screen, you will see a box in which you can sign your
-  name using your mouse, track pad, or touch screen.  If you make a
-  mistake, you can press "Clear" and try again.  For best results, try
-  signing your name *slowly*.
----
-generic object: Individual
-question: |
-  Please sign your name below.
-signature: x.signature
-need:
-  - x.name.first
-  - user_understands_how_to_use_signature_feature
-under: |
-  ${ x.name }
-comment: |
-  docassemble can collect signatures from users, who can write their
-  signature with their finger on a touchscreen device, or use a mouse
-  or trackpad.  The signatures can be added to documents.
----
-template: blank_signature
-content: |
-  \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
-comment: |
-  This template can be used for a blank line that someone might sign.
----
-template: empty_signature
-content: |
-  \_\_\_[Your signature here]\_\_\_
-comment: |
-  This template can be used in place of a user's signature.  It is a
-  good practice to show users where their signature would go on a
-  document before the user is asked for his or her signature.
----
-generic object: Individual
-question: |
-  Is this ${ x.possessive('signature') }?
-subquestion: |
-  ${ x.signature.show() }
-sets:
-  - x.signature_verified
-buttons:
-  - "Yes":
-      generic object: Individual
-      code: |
-        x.signature_verified = True
-  - "No":
-      generic object: Individual
-      code: |
-        x.signature_verified = False
-  - "Let me try again":
-      generic object: Individual
-      code: |
-        force_ask('x.signature')
-comment: |
-  Note that in order for code or a question embedded within
-  buttons/choices to use the special variable "x," you need to declare
-  a generic object within the embedded code or question.
----
-generic object: Individual
-question: |
-  ${ x.is_are_you(capitalize=True) } a citizen of the United States?
-yesno: x.is_citizen
----
-field: user_understands_no_attorney_client_relationship
-question: |
-  Your use of this system does not mean that you have a lawyer.  Do
-  you understand this?
-buttons:
-  - "I understand": understands
-  - code: |
-      [{'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
-comment: |
-  You can specify whether you want the multiple choices to appear as
-  buttons by using the word "buttons" instead of the word "choices."
-
-  Also, the example above shows how you can use Python code to
-  generate the selections of multiple-choice question.  The code is
-  evaluated at the time the question is asked.
----
-generic object: Individual
-question: |
-  What is ${ x.possessive('e-mail address') }?
-fields:
-  - E-mail: x.email
-    datatype: email
-comment: |
-  The datatype "email" presents a text box that is like ordinary text
-  boxes except that validation is applied that checks to make sure the
-  e-mail address is valid.  Also, on supporting mobile web browsers,
-  there is a different keyboard option (e.g, the @ sign is readily
-  available).
+  This demonstrates how vocabulary terms can be provided in a
+  language other than the default language.
 ---
 generic object: Individual
 question: |
@@ -1267,149 +971,9 @@ choices:
   - "Female :female:": female
   - Other: other
 comment: |
-  You can include images "emoji-style" by putting colons around the
-  image name.  This feature works within labels as well as within question
-  text.
----
-generic object: Individual
-question: |
-  What is ${ x.object_possessive('name') }?
-fields:
-  - First Name: x.name.first
-    default: ${ x.first_name_hint() }
-  - Middle Name: x.name.middle
-    required: False
-  - Last Name: x.name.last
-    default: ${ x.last_name_hint() }
-  - Suffix: x.name.suffix
-    required: False
-    code: |
-      name_suffix()
-comment: |
-  If the object does not have a name yet, generic questions can refer
-  to it by the name of the variable itself.  For example, suppose you
-  create an object, case.judge, with the class of Individual.  If the
-  name of case.judge is ever needed, docassemble will use the question
-  above to ask "What is the name of the judge in the case?"  If the
-  object is called user, it will ask "What is your name?"  If the
-  object is called village_idiot, it will ask "What is the village
-  idiot's name?"
----
-generic list object: Individual
-question: |
-  What is the name of the ${ x[i].object_name() }?
-fields:
-  - First Name: x[i].name.first
-  - Middle Name: x[i].name.middle
-    required: False
-  - Last Name: x[i].name.last
-  - Suffix: x[i].name.suffix
-    required: False
-    code: |
-      name_suffix()
-comment: |
-  Generic questions can also use indices, for example to fill out the
-  names of a list of people.  (E.g., case.plaintiff.)
-
-  This example also illustates how the author can control whether the
-  user can leave a field blank.  By default, all fields are required,
-  but the author can add required: False to a field to indicate that
-  the field can be left blank.
----
-generic list object: Individual
-question: |
-  What is ${ x.possessive(ordinal(i) + " child") }'s name?
-fields:
-  - Somebody already mentioned: x.child[i]
-    datatype: object
-    disable others: True
-    choices: case.all_known_people()
-    exclude:
-      - x
-      - x.child
-  - First Name: x.child[i].name.first
-  - Middle Name: x.child[i].name.middle
-    required: False
-  - Last Name: x.child[i].name.last
-    default: ${ x.name.last }
-  - Suffix: x.child[i].name.suffix
-    required: False
-    code: |
-      name_suffix()
-comment: |
-  This illustrates the use of the "possessive" method of the class
-  Individual.  Depending on who x is, this question will ask different
-  things:
-
-  Example 1: What is your second child's name?
-
-  Example 2: What is John Doe's first child's name?
----
-generic object: DAList
-question: |
-  Are there any ${ x.as_noun(plural=True) }?
-yesno: x.there_are_any
----
-generic object: Individual
-question: |
-  ${ x.do_question('have', capitalize=True) } any children?
-yesno: x.child.there_are_any
-decoration: children
-comment: |
-  This illustrates the use of the "do_question" method of the class
-  Individual.  Depending on who x is, this question will ask different
-  things:
-
-  Example 1: Do you have any children?
-
-  Example 2: Does Jane Doe have any children?
----
-generic object: PartyList
-question: |
-  You have told me that there ${ x.does_verb("is") }
-  ${ x.number_as_word() } ${ x.as_noun() }, ${ x }.
-  Is there another ${ x.as_singular_noun() }?
-yesno: x.there_is_another
-comment: |
-  It is possible to write highly generalized "generic" questions that
-  use functions that ask questions of users based on variable names
-  and linguistic variations of variable names.  For that reason, it is
-  a good practice to give your variables meaningful, plain-English
-  names.
-
-  For example, if you create a PartyList called "plaintiff," this
-  generic question will ask something like: "You have told me that
-  there is one plaintiff, John Smith.  Is there another plaintiff?"
-  This would not be possible if your variable name was something that
-  only made sense to you, like "bad_guys_list_two."
----
-generic object: Individual
-question: |
-  So far, you have told me about
-  ${ x.possessive(x.child.number_as_word()) }
-  ${ x.child.as_noun() }, ${ x.child }.
-  ${ x.do_question('have', capitalize=True) } any other children?
-yesno: x.child.there_is_another
-decoration: children
-comment: |
-  This illustrates the use of various methods of the class Individual.
-  Depending on who x is, this question will ask different things:
-
-  Example 1: So far, you have told me about John Doe's two children, 
-  Sally Doe and Harold Doe.  Does John Doe have any other children?
-
-  Example 2: So far, you have told me about your one child, Kathleen 
-  Smith.  Do you have any other children?
----
-generic object: Individual
-question: |
-  ${ x.is_are_you(capitalize=True) } a plaintiff in this case?
-subquestion: |
-  A "plaintiff" is a person who starts a case by filing a lawsuit
-  against a person called a "defendant."  Plaintiffs and defendants
-  are the "parties" in a case.
-decoration: scalesofjustice
-yesno: x.is_plaintiff
+  You can include "emoji-style" images by putting colons around an
+  image name (as defined in an "images" block).  This feature works
+  within labels as well as within question text.
 ---
 generic object: Individual
 question: |
@@ -1421,6 +985,16 @@ fields:
     datatype: number
     code: |
       period_list()
+comment: |
+  If you do not want a field to be labeled, you can use "" as the
+  label name.
+
+  The function period_list() provides a list of options (12 for "Per
+  Month," 1 for "Per Year," and 52 for "Per Week").
+
+  The datatype "currency" is like the datatype "number" except that
+  causes the input field to be displayed with a locale-specific
+  currency symbol.
 ---
 generic object: Individual
 question: |
@@ -1434,15 +1008,14 @@ fields:
     code: |
       period_list()
 comment: |
-  If you do not want a field to be labeled, you can use "" as the
-  label name.
+  The previous question was a general question; this is a specific
+  question that asks the question a certain way if the income type is
+  "employment."  Although this question and the previous question are
+  both capable of defining x.income['employment'].value, this one
+  takes precedence because it is more specific.
 
-  The function period_list() comes from docassemble.base.legal.  It
-  causes the variable to be set to a number representing periods per
-  year.
-
-  The datatype "currency" is like the datatype "number" except that it
-  is displayed along with a locale-specific currency symbol.
+  The following questions are also specific cases.  The decorations
+  are different for each question.
 ---
 generic object: Individual
 question: |
@@ -1517,6 +1090,15 @@ fields:
 ---
 generic object: Individual
 question: |
+  ${ x.do_question("have", capitalize=True) } income from ${ i }?
+yesno: x.income[i].exists
+comment: |
+  This question and the following questions ask the threshold question
+  of whether the income or assets is applicable.  If it does not
+  "exist," there is no need to ask for its value.
+---
+generic object: Individual
+question: |
   What kinds of income ${ x.do_question("have") }?
 decoration: bills
 fields:
@@ -1535,11 +1117,6 @@ comment: |
 ---
 generic object: Individual
 question: |
-  ${ x.do_question("have", capitalize=True) } income from ${ i }?
-yesno: x.income[i].exists
----
-generic object: Individual
-question: |
   ${ x.do_question("own", capitalize=True) } any ${ i }?
 yesno: x.asset[i].exists
 ---
@@ -1554,6 +1131,495 @@ fields:
     datatype: yesnowide
   - Stocks and Bonds: x.asset['stocks and bonds'].exists
     datatype: yesnowide
+...
+{% endhighlight %}
+
+# The basic-questions.yml file, incorporated by reference into the demo
+
+Many of the questions asked in the demonstration interview do not need
+to be defined in the [YAML] source file because they are already
+defined in the `basic-questions.yml` file.  Here is an annotated
+guide to this file.
+
+{% highlight yaml %}
+---
+metadata:
+  description: |
+    This question file contains questions that are common in
+    law-related interviews.  It also imports docassemble functions,
+    initializes a role system involving a "client" and an "advocate,"
+    and defines objects including "client," "advocate," "case,"
+    "spouse," "pleading," and "court."    
+  authors:
+    - name: Jonathan Pyle
+      organization: none
+  revision_date: 2017-05-26
+comment: |
+  A "metadata" block contains information about the interview, such as
+  the title of the interview as displayed in the navigation bar.
+---
+modules:
+  - docassemble.base.legal
+comment: |
+  A "modules" section imports class names and function names from
+  Python modules.  The docassemble.base.legal module defines some
+  object classes and functions that are useful in legal applications.
+  
+  Using docassemble.base.legal in "modules" also has the effect of
+  importing all of the class names and function names that are in
+  docassemble.base.util.  So you never need to include both
+  docassemble.base.legal and docassemble.base.util together in the
+  same "modules" block.
+---
+default role: client
+code: |
+  if user_logged_in() and user_has_privilege('advocate'):
+    user = advocate
+    role = 'advocate'
+  else:
+    user = client
+    role = 'client'
+  set_info(user=user, role=role)
+comment: |
+  This is a special "initial block" that initializes the "roles" system
+  for the interview.  (This is an advanced feature.)
+  
+  The default user role is "client" and a secondary role is
+  "advocate."  Unless modified with a "role" directive, all questions
+  will require the user to be a "client."  The user is assumed to have
+  the role of "advocate" role in this interview if the user is logged
+  in and the user has "advocate" as one of his or her user roles.
+
+  Many docassemble functions and methods need to know who the user is.
+  The set_info() function communicates that information to the
+  docassemble code.
+
+  Since the code here is paired with the "default role" declaration,
+  it is run as "initial" code, meaning that it is run every time
+  docassemble processes the interview (i.e., every time the screen
+  loads).  This is important because in a multi-user interview, a
+  "client" and an "advocate" could be interacting with the same
+  interview with the same dictionary of variables at the same time.
+  But they would need to see different things, so it isn't enough just
+  to use a variable in the interview to keep track of the current
+  user; this needs to be reconsidered every time the screen loads.
+---
+event: role_event
+question: You are done for now.
+subquestion: |
+  % if 'advocate' in role_needed:
+    An advocate needs to review your answers before you can proceed.
+
+    Please remember the following link and come back to it when you
+    receive notice to do so:
+
+    [${ interview_url() }](${ interview_url() })
+    
+  % else:
+    Thanks, the client needs to resume the interview now.
+  % endif
+decoration: exit
+buttons:
+  - Exit: leave
+comment: |
+  This block is related to the "roles" system that was initialized in
+  the previous block.  (This is an advanced feature.)
+
+  When docassemble needs to ask a question that requires a role other
+  than the role of the current user, it needs to display a special
+  message for the user.  It does this by searching for a question that
+  offers to define the variable "role_event," and displaying that
+  question.  The question above is an example of such a question.  It
+  will be displayed in the event of a "role change" because it
+  contains the directive "event: role_event."
+---
+objects:
+  - case: Case
+  - client: Individual
+  - spouse: Individual
+  - advocate: Individual
+  - pleading: LegalFiling
+  - court: Court
+comment: |
+  An "objects" section initializes variables that are docassemble
+  objects.  The object types here (Case, Individual, LegalFiling, and
+  Court) are imported through the docassemble.base.legal module.
+  (See the "modules" block above.)
+---
+mandatory: true
+code: |
+  case.court = court
+  pleading.case = case
+comment: |
+  This code defines some basic relations among the objects created in
+  the objects block of this YAML file.
+
+  The objects created by the `objects` block do not have any
+  connections among themselves, initially.  The interview needs to
+  make those connections.  This "mandatory" code block establishes
+  those connections.
+
+  These connections among objects are what allows you to write things
+  like pleading.caption().  In order to write the caption for a
+  pleading, it is necessary to know the case of which the pleading is
+  a part and the court in which the case is filed.  The ".caption()"
+  method only has access to the attributes of "pleading," but these
+  connections allow the ".caption()" method to gain access to the case
+  and the court.
+---
+image sets:
+  freepik:
+    attribution: |
+      Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
+    images:
+      bills: money146.svg
+      children: children2.svg
+      finishline: checkered12.svg
+      gavel: court.svg
+      gaveljudge: magistrate.svg
+      home: home168.svg
+      piggybank: savings1.svg
+      scalesofjustice: judge1.svg
+      stocks: increasing10.svg
+      wallet: commerce.svg
+      document: contract11.svg
+      calendar: calendar146.svg
+      picture: picture64.svg
+      parentchild: man32.svg
+      coins: coins36.svg
+      exit: open203.svg
+      man: silhouette21.svg
+      person: silhouette21.svg
+      woman: women13.svg
+      girl: girl4.svg
+      male: male244.svg
+      female: female243.svg
+      map: map32.svg
+comment: |
+  Here we define some icons for inclusion as decorations or emoji.
+  These files are located in the docassemble.base package in the
+  subdirectory docassemble/base/data/static.
+---
+generic object: Individual
+question: |
+  What is ${ x.possessive('date of birth') }?
+fields:
+  - Date of Birth: x.birthdate
+    datatype: date
+comment: |
+  This question file defines a number of "generic" questions like
+  these.  If your interview refers to a variable called user.birthdate,
+  docassemble will first look for a question that sets "user.birthdate"
+  specifically, but if it does not find it, it will look for a
+  question for which the generic object property is set to the object
+  type of the user object, which is Individual, and where the question
+  offers to set the variable x.birthdate.
+  
+  It will find that question here.
+
+  The question uses the possessive() method, which is a method of the
+  Individual class.  The result is that the question will be "What is
+  your date of birth?" if x is the user, but will otherwise ask "What
+  is Jane Doe's date of birth?"
+
+  By using "generic" questions, you can write a single question that
+  works in a variety of circumstances.  This saves you from having to
+  write multiple questions, and also helps ensure that if you want to
+  make a global change to the way a question is asked, you can do so
+  in one place.
+
+  If you ever want to use a more specific question for a specific
+  variable, you can.  For example, if your code calls for
+  spouse.birthdate, you may to ask the question in a different way.
+  (E.g., "What is the birthdate of your lovely spouse?  If you don't
+  know this, you are in deep trouble!")  You would do this by defining
+  a non-generic question that sets spouse.birthdate, in which case
+  docassemble would use that question instead of the generic question.
+---
+generic object: Individual
+question: |
+  What is ${ x.possessive('time zone') }?
+fields:
+  - Time Zone: x.timezone
+    code: timezone_list()
+---
+generic object: Individual
+question: |
+  What is ${ x.possessive('Social Security Number') }?
+fields:
+  - Social Security Number: x.ssn
+---
+generic object: Individual
+question: |
+  ${ x.is_are_you(capitalize=True) } a defendant in this case?
+yesno: x.is_defendant
+---
+generic object: Individual
+field: x.marital_status
+question: |
+  What is ${ x.possessive('marital status') }?
+choices:
+  - Married: Married
+  - Single: Single
+  - Divorced: Divorced
+  - Separated: Separated
+comment: |
+  This is an example of a multiple-choice question.  Each of the
+  choices can be a key/value pair, or it can be a single text item.
+  If the choice is a key/value pair, the key is the label that is
+  shown to the user and value is the value to which the variable will
+  be set.
+---
+field: user_understands_how_to_use_signature_feature
+question: Instructions for signing your name
+subquestion: |
+  On the next screen, you will see a box in which you can sign your
+  name using your mouse, track pad, or touch screen.  If you make a
+  mistake, you can press "Clear" and try again.  For best results, try
+  signing your name *slowly*.
+---
+generic object: Individual
+question: |
+  Please sign your name below.
+signature: x.signature
+need:
+  - x.name.first
+  - user_understands_how_to_use_signature_feature
+under: |
+  ${ x.name }
+comment: |
+  docassemble can collect signatures from users, who can write their
+  signature with their finger on a touchscreen device, or use a mouse
+  or trackpad.  The signatures can be added to documents.
+---
+template: blank_signature
+content: |
+  \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+comment: |
+  This template can be used to insert into a document a blank line
+  that someone might sign.
+---
+template: empty_signature
+content: |
+  \_\_\_[Your signature here]\_\_\_
+comment: |
+  This template can be used in place of a user's signature.  It is a
+  good practice to show users where their signature would go on a
+  document before asking the user for his or her signature.
+---
+generic object: Individual
+question: |
+  Is this ${ x.possessive('signature') }?
+subquestion: |
+  ${ x.signature.show() }
+buttons:
+  - "Yes":
+      generic object: Individual
+      code: |
+        x.signature_verified = True
+  - "No":
+      generic object: Individual
+      code: |
+        x.signature_verified = False
+  - "Let me try again":
+      generic object: Individual
+      code: |
+        force_ask('x.signature')
+comment: |
+  This is an example of a multiple choice question where selecting an
+  option causes code to be run.  Each multiple choice option contains
+  an embedded block.
+  
+  Note that in order for an "embedded" code or question block to use
+  the special variable "x," you need to declare a generic object
+  within the embedded code or question.
+---
+generic object: Individual
+question: |
+  ${ x.is_are_you(capitalize=True) } a citizen of the United States?
+yesno: x.is_citizen
+---
+field: user_understands_no_attorney_client_relationship
+question: |
+  Your use of this system does not mean that you have a lawyer.  Do
+  you understand this?
+buttons:
+  - "I understand": understands
+  - code: |
+      [{'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
+comment: |
+  You can specify whether you want multiple choices to appear as
+  buttons by using the word "buttons" instead of the word "choices."
+
+  Also, the example above shows how you can use Python code to
+  generate the selections of multiple-choice question.  The code is
+  evaluated at the time the question is asked.
+---
+generic object: Individual
+question: |
+  What is ${ x.possessive('e-mail address') }?
+fields:
+  - E-mail: x.email
+    datatype: email
+comment: |
+  The datatype "email" presents a text box that is like ordinary text
+  boxes except that validation is applied that checks to make sure the
+  e-mail address is valid.  Also, on supporting mobile web browsers,
+  there is a different keyboard option (e.g, the @ sign is readily
+  available).
+---
+generic object: Individual
+question: |
+  What is ${ x.possessive('gender') }?
+field: x.gender
+choices:
+  - Male: male
+  - Female: female
+  - Other: other
+---
+generic object: Individual
+question: |
+  What is ${ x.object_possessive('name') }?
+fields:
+  - First Name: x.name.first
+    default: ${ x.first_name_hint() }
+  - Middle Name: x.name.middle
+    required: False
+  - Last Name: x.name.last
+    default: ${ x.last_name_hint() }
+  - Suffix: x.name.suffix
+    required: False
+    code: |
+      name_suffix()
+comment: |
+  If an object does not have a name yet, generic questions can refer
+  to it by the name of the variable itself, using the method
+  .object_possessive().  For example, suppose you create an object,
+  case.judge, with the class of Individual.  If the name of case.judge
+  is ever needed, docassemble will use the question above to ask "What
+  is the name of the judge in the case?"  If the object is called
+  user, it will ask "What is your name?"  If the object is called
+  village_idiot, it will ask "What is the village idiot's name?"
+---
+generic list object: Individual
+question: |
+  What is the name of the ${ x[i].object_name() }?
+fields:
+  - First Name: x[i].name.first
+  - Middle Name: x[i].name.middle
+    required: False
+  - Last Name: x[i].name.last
+  - Suffix: x[i].name.suffix
+    required: False
+    code: |
+      name_suffix()
+comment: |
+  Generic questions can also use indices, for example to fill out the
+  names of a list of people.  (E.g., case.plaintiff.)
+
+  This example also illustrates how the author can control whether the
+  user can leave a field blank.  By default, all fields are required,
+  but the author can add required: False to a field to indicate that
+  the field can be left blank.
+---
+generic list object: Individual
+question: |
+  What is ${ x.possessive(ordinal(i) + " child") }'s name?
+fields:
+  - Somebody already mentioned: x.child[i]
+    datatype: object
+    disable others: True
+    choices: case.all_known_people()
+    exclude:
+      - x
+      - x.child
+  - First Name: x.child[i].name.first
+  - Middle Name: x.child[i].name.middle
+    required: False
+  - Last Name: x.child[i].name.last
+    default: ${ x.name.last }
+  - Suffix: x.child[i].name.suffix
+    required: False
+    code: |
+      name_suffix()
+comment: |
+  This illustrates the use of the ".possessive()" method of the class
+  Individual.  Depending on who x is, this question will ask different
+  things:
+
+  Example 1: What is your second child's name?
+
+  Example 2: What is John Doe's first child's name?
+---
+generic object: DAList
+question: |
+  Are there any ${ x.as_noun(plural=True) }?
+yesno: x.there_are_any
+comment: |
+  The attributes .there_are_any and .there_is_another are special
+  attributes that are used in the gathering of "groups" of things
+  in docassemble interviews.
+---
+generic object: Individual
+question: |
+  ${ x.do_question('have', capitalize=True) } any children?
+yesno: x.child.there_are_any
+decoration: children
+comment: |
+  This illustrates the use of the ".do_question()" method of the class
+  Individual.  Depending on who x is, this question will ask different
+  things:
+
+  Example 1: Do you have any children?
+
+  Example 2: Does Jane Doe have any children?
+---
+generic object: DAList
+question: |
+  You have told me that there ${ x.does_verb("is") }
+  ${ x.number_as_word() } ${ x.as_noun() }, ${ x }.
+  Is there another ${ x.as_singular_noun() }?
+yesno: x.there_is_another
+comment: |
+  It is possible to write highly generalized "generic" questions that
+  use functions that ask questions of users based on variable names
+  and linguistic variations of variable names.  For that reason, it is
+  a good practice to give your variables meaningful, plain-English
+  names.
+
+  For example, if you create a PartyList called "plaintiff," this
+  generic question will ask something like: "You have told me that
+  there is one plaintiff, John Smith.  Is there another plaintiff?"
+  This would not be possible if your variable name was something that
+  only made sense to you, like "bad_guys_list_two."
+---
+generic object: Individual
+question: |
+  So far, you have told me about
+  ${ x.possessive(x.child.number_as_word()) }
+  ${ x.child.as_noun() }, ${ x.child }.
+  ${ x.do_question('have', capitalize=True) } any other children?
+yesno: x.child.there_is_another
+decoration: children
+comment: |
+  This also illustrates the use of various methods of the class Individual.
+  Depending on who x is, this question will ask different things:
+
+  Example 1: So far, you have told me about John Doe's two children, 
+  Sally Doe and Harold Doe.  Does John Doe have any other children?
+
+  Example 2: So far, you have told me about your one child, Kathleen 
+  Smith.  Do you have any other children?
+---
+generic object: Individual
+question: |
+  ${ x.is_are_you(capitalize=True) } a plaintiff in this case?
+subquestion: |
+  A "plaintiff" is a person who starts a case by filing a lawsuit
+  against a person called a "defendant."  Plaintiffs and defendants
+  are the "parties" in a case.
+decoration: scalesofjustice
+yesno: x.is_plaintiff
 ---
 generic object: Individual
 question: |
@@ -1581,6 +1647,46 @@ question: |
 fields:
   - County: x.county
 ---
+generic object: Address
+sets: x.county
+code: |
+  x.geolocate()
+comment: |
+  This code block and the question before it illustrate the concept
+  of "fallback" questions.  If the interview needs the "county"
+  attribute of an address, but finds that it is not defined, it will
+  first run this code block, which "geolocates" the address.  That is,
+  it goes on to the internet and runs the address through a
+  geolocation service, which returns geographic information about the
+  address.
+
+  This code block uses the "sets" directive to indicate that the code
+  block offers sets the attribute "county."  Normally, you don't have
+  to use "sets" with code blocks because docassemble can see by
+  looking at the code what variables the code will set.  In the case
+  of the code "x.geolocate()," however, it is not apparent that the
+  code is offering to set the "county" attribute.  Therefore we need
+  to manually specify what the code block is offering to do.
+
+  It is significant that the code block merely "offers" to set these
+  variables.  The "x.geolocate()" code might fail.  The user might put
+  in an address that the geolocation service does not understand.  Or
+  the geolocation service might be down at the time.  If that happens,
+  the code block will run, but the attributes will not be set.
+
+  If the variable that a code block offers to set is not actually set
+  when the code is run, docassemble will look for another block that
+  offers to set the variables.  In the case of the "county" attribute
+  of an address, the question immediately preceding this one offers to
+  set the "county" attribute.  It does so by asking the user a
+  question, rather than by using a geolocation service.  This question
+  serves as a "fallback" question.
+
+  Note that when docassemble looks for a block that offers to set a
+  variable, it starts at the end of the interview and proceeds
+  backward.  Therefore, the order in which these blocks appear in
+  the [YAML] file is significant.
+---
 generic object: City
 question: |
   In which county in
@@ -1593,15 +1699,29 @@ fields:
     hint: |
       e.g., Springfield County
 ---
-generic object: Address
-sets: x.county
-code: |
-  x.geolocate()
----
 generic object: City
 sets: x.county
 code: |
   x.geolocate()
+comment: |
+
+  Suppose you have an object "birthplace" of type "City."  A "City"
+  object is a subtype of an "Address," and an "Address" is a type of
+  "DAObject."  If your interview needs a definition of
+  birthplace.county, docassemble will first look for blocks that offer
+  to define "birthplace.county," then for "generic object: City"
+  blocks that offer to define "x.county," then for "generic object:
+  Address" blocks that offer to define "x.county," then for "generic
+  object: DAObject" blocks that offer to define "x.county."
+
+  Therefore, the "generic object: Address" code block is capable of
+  defining "birthplace.county."  However, if we wish to have a
+  fallback question that is "City"-specific, and we tag it with
+  "generic object: City," this question will take priority over the
+  "generic object: Address" code block.
+
+  Therefore, in order to have a "City"-specific fallback question, we
+  also need a "City"-specific code block.
 ---
 generic object: Document
 question: |
@@ -1616,6 +1736,36 @@ fields:
       ${ capitalize(x.title) }
     field: x.file
     datatype: file
+comment: |
+  These two questions facilitate using the "Document" object type to
+  gather uploaded documents if the user is able to upload the document.
+---
+generic object: Individual
+question: |
+  In what country ${ x.do_question('live') }?
+fields:
+  - Country: x.address.country
+---
+generic object: Individual
+question: |
+  In what neighborhood ${ x.do_question('live') }?
+fields:
+  - Neighborhood: x.address.neighborhood
+---
+generic object: Individual
+question: |
+  In what county ${ x.do_question('live') }?
+fields:
+  - County: x.address.county
+---
+generic object: Address
+sets:
+  - x.county
+  - x.country
+  - x.neighborhood
+code: |
+  x.geolocate()
+comment: |
 ...
 {% endhighlight %}
 

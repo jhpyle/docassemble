@@ -320,7 +320,7 @@ change.  This allows for a division of labor.  All you will need to do
 is make sure that the **docassemble** [package] containing the food
 stamp [YAML] file gets updated on the server when the law changes.
 
-## Fallback questions
+## <a name="fallback"></a>Fallback questions
 
 If a more recently-defined [`question`] or [`code`] block does not,
 for whatever reason, actually define the variable, **docassemble**

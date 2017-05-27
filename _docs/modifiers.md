@@ -329,6 +329,66 @@ ask, "So, are you a defendant in this case?"
 any object of type [`Individual`], it can get an answer by asking this
 question.
 
+If your interview needs a definition for `user.is_defendant`, where
+`user` is an object of type `Individual`, **docassemble** will first
+look for a question that offers to define `user.is_defendant`.  If no
+such question exists, it will then look for a question that offers to
+defined `x.is_defendant`, where the `generic object` is
+[`Individual`].  If no such question exists, it will look for `generic
+object` questions for the parent types of [`Individual`].  The
+variables that will be sought, in the order in which they will be sought, are:
+
+* `user.is_defendant`
+* `x.is_defendant` where `generic object` is [`Individual`].
+* `x.is_defendant` where `generic object` is [`Person`].
+* `x.is_defendant` where `generic object` is [`DAObject`].
+
+This way, you can provide layers of `generic object` blocks to handle
+special cases as well as general cases, based on the object type.  For
+example, suppose your interview uses objects of type [`Individual`],
+[`Organization`], and [`Person`].  An [`Individual`] is a special type
+of [`Person`], and an [`Organization`] is also a special type of
+[`Person`].  Suppose you have a general way of asking for a mailing
+address ("What is so-and-so's address?"), but you want to have a
+special way of asking the question if you need the mailing address of
+an [`Organization`] (e.g., "What is ABC Incorporated's primary place
+of business?").  You would write a question with `generic object:
+Person` for the general case, and a question with `generic object:
+Organization` for the special case.  The general question would be
+used for objects of type [`Individual`] and [`Person`], and the
+special question would be used for objects of type [`Organization`].
+
+You can also use `generic object` [`code`] blocks in a [fallback]
+arrangement to capture special cases within object types.  Suppose you
+have a function `retrieve_ein()` that can automatically determine an
+organization's Employer Identification Number (EIN), but only for
+organizations organized as non-profits.  For organizations not
+organized as non-profits, you will need to ask the user for the EIN.
+You could use the following two blocks to accomplish this:
+
+{% highlight yaml %}
+generic object: Organization
+question: |
+  What is the EIN of ${ x }?
+fields:
+  - EIN: x.ein
+---
+generic object: Organization
+code: |
+  if x.tax_status == '501c3':
+    x.ein = retrieve_ein(x.name)
+{% endhighlight %}
+
+Whenever the `.ein` of an organization is needed, the [`code`] block
+will be run, but the attribute will not be set if the organization is
+not a non-profit.  In that case, **docassemble** will notice that the
+attribute is still not defined, and it will "fall back" to the
+[`question`] that asks the user to manually enter the EIN.
+
+As explained in the [fallback] section of the documentation, the order
+of these two blocks matters; the [`code`] block will be tried first
+only if it appears later in the [YAML] file.
+
 # <a name="role"></a>The `role` of the question
 
 {% highlight yaml %}
@@ -421,3 +481,4 @@ by **docassemble**, so it can contain any valid [YAML].
 [Javascript]: https://en.wikipedia.org/wiki/JavaScript
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
+[fallback]: {{ site.baseurl }}/docs/logic.html#fallback

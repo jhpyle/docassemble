@@ -512,6 +512,16 @@ The section below on [passing values using code](#template code)
 explains alternative ways that you can populate the values of fields
 in a PDF file.
 
+<a name="editable"></a>By default, the PDF files created by filling in
+forms in a `pdf template file` can be edited by the user; the fill-in
+form boxes will still exist in the resulting document.
+
+If you want to prevent users from editing the forms created through
+`pdf template file`, set the `editable` directive to `False`.  For
+example:
+
+{% include side-by-side.html demo="pdf-fill-not-editable" %}
+
 ### <a name="signature"></a>How to insert signatures or other images into fillable PDF files
 
 To add a signature or other image to a fillable PDF file, use
