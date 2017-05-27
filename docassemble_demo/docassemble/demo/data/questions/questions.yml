@@ -257,20 +257,24 @@ buttons:
   - Exit: exit
   - Restart: restart
 comment: |
-  This question uses the "event" directive.  "client_kicked_out" is
-  a variable, just like any other variable, except that it is never
-  defined, only sought.  We saw above in the "mandatory" code block
-  that if the user does not understand that no attorney-client
-  relationship will be created, the user needs to be kicked out.
-  
-  If docassemble is configured to show a progress bar, the progress
-  bar will be set to 100% on this question, which is an endpoint
-  question (note that the only options are exiting or restarting).
----
-code: |
-  advocate.name.first = "John"
-  advocate.name.last = "Smith"
-  advocate.email = "jpyle@philalegal.org"
+  This is an endpoint question (note that the only options are exiting
+  or restarting).
+
+  If the interview was configured to show a progress bar, the progress
+  bar would be set to 100% on this question.
+
+  This question uses the "event" directive.  "client_kicked_out" is a
+  variable, just like any other variable, except that it is never
+  defined, only sought.
+
+  We saw above in the "mandatory" code block that if the user does not
+  understand that no attorney-client relationship will be created, the
+  "client_kicked_out" variable will be sought.  When that variable is
+  sought, this question will be displayed to the user.
+
+  This question also uses a "decoration."  This places an icon in the
+  corner of the screen.  The image by the name of "exit" is defined
+  in the basic-questions.yml file.
 ---
 question: |
   Welcome to the **docassemble** demonstration.
@@ -292,16 +296,18 @@ subquestion: |
   not see a "Source" tab.)
   % endif
 
-  % if user.location.known:
-  Your current location is ${ user.location }.
-  % endif
-
   [Help]: ${ url_of('help') }
   [YAML]: https://en.wikipedia.org/wiki/YAML
 field: user_saw_initial_screen
-datatype: boolean
 buttons:
   - Ok, got it: True
+comment: |
+  This is the "splash screen" for the interview.  The question is a
+  multiple-choice question with one option.
+
+  This example demonstrates that HTML can be combined with Markdown
+  in the text of questions.  Here, we wanted to show a particular icon
+  available in Bootstrap, so we inserted raw HTML.
 ---
 generic object: Individual
 question: |
@@ -311,6 +317,19 @@ choices:
   - English: en
   - Español: es
 default: ${ language_from_browser() }
+comment: |
+  This is the first question that will be asked because there is
+  an "initial" block above that needs the definition of user.language.
+
+  This is a "generic object" question.  It is written in a "generic"
+  way so that it will ask "What language do you speak?" or "What language
+  does John Smith speak?" depending on whether "x" is the user or not.
+
+  The language_from_browser() function sets the default choice to
+  English or Spanish if the web server detects that the user's browser
+  is set to either of these languages.  This method of determining the
+  user's language is not 100% reliable, but it will save the user from
+  making an extra click.
 ---
 generic object: Individual
 question: |
@@ -328,6 +347,8 @@ comment: |
   docassemble.demo package in the subdirectory
   docassemble/demo/data/static.  This is how you refer to a "static"
   file that exists within a docassemble subpackage.
+
+  The "100%" indicates that the image width should fill the screen.
 ---
 question: What form do you want to prepare?
 decoration: document
@@ -358,9 +379,16 @@ code: |
   else:
     client_has_standing = False
 comment: |
-  This is an example of how docassemble can serve as an "expert
+  This is an example of how docassemble can serve as a legal "expert
   system."  The variable "client_has_standing" (a legal concept) can
-  be set using simple logical expressions in Python.
+  be set using simple logical expressions in Python.  Legal concepts
+  can be expressed as true/false variables and the law can be coded in
+  logical expressions like these.
+
+  Note that the "\" character at the end of a line is merely a
+  formatting aid.  Python normally considers line breaks to indicate
+  that a statement is finished.  The "\" character at the end of a
+  line tells Python that the statement isn't finished yet.
 ---
 question: Were you injured?
 decoration: injury
@@ -371,6 +399,35 @@ help:
     purely financial injury.
   audio: schumann-clip-3.mp3
 progress: 50
+comment: |
+  This question demonstrates how an audio file can be provided on the
+  help screen of a question.
+---
+question: |
+  What is the village idiot's name?
+fields:
+  - Somebody already mentioned: village_idiot
+    datatype: object
+    disable others: True
+    choices:
+      - case.plaintiff
+      - case.defendant
+  - First Name: village_idiot.name.first
+  - Middle Name: village_idiot.name.middle
+    required: False
+  - Last Name: village_idiot.name.last
+  - Suffix: village_idiot.name.suffix
+    required: False
+    code: name_suffix()
+comment: |
+  This question demonstrates the use of objects in a multiple choice
+  question, as well as the feature of disabling fields when they are
+  not necessary.  The question allows the user to indicate who the
+  "village_idiot" is.  If the village idiot is a plaintiff or
+  defendant, the user will be able to select the person's name from a
+  list.  If the village idiot is not a plaintiff or defendant, the
+  user can enter the person's name.  Either way, village_idiot will be
+  an object.
 ---
 question: |
   I understand that you live in ${ client.address.city }.
@@ -413,20 +470,22 @@ fields:
       I should win because . . .
 ---
 code: |
-  if client.address.address and retry_address:
-    retry_address = False
-    force_ask('client.address.address')
-comment: |
-  This is an example of how the "force_ask" function can be used to
-  ask a question that has already been asked.
----
-question: Would you like to enter your address yet again?
-yesno: retry_address
----
-code: |
   court.jurisdiction = ['US', 'state', 'PA', 'trial', 'Philadelphia County']
   jurisdiction_state = "Pennsylvania"
   jurisdiction_county = "Philadelphia"
+comment: |
+  This code sets some information about the current jurisdiction.  The
+  interview assumes that the legal case is in a Pennsylvania court.
+
+  The court.jurisdiction variable uses a special format that is
+  particular to the docassemble.base.legal module.  It is used to
+  facilitate the use of "layers" of code, where there is a common
+  layer of questions and code applicable at a federal level, another
+  layer of questions and code applicable at a state level, another
+  layer of questions and code applicable at a county level, etc.
+
+  Note that this code is not "mandatory."  It will be called when and
+  if the interview needs to know any of these variables.
 ---
 code: |
   if jurisdiction_state == "Pennsylvania":
@@ -441,68 +500,25 @@ code: |
           jurisdiction_county + " County, " + jurisdiction_state
 ---
 code: |
-  import datetime
-  import dateutil.relativedelta
-  import dateutil.parser
-  cutoff_date = datetime.datetime.now() - \
-  dateutil.relativedelta.relativedelta(years=statute_of_limitations_years)
-  if dateutil.parser.parse(injury_date) > cutoff_date:
+  cutoff_date = current_datetime() - date_interval(years=statute_of_limitations_years)
+  if as_datetime(injury_date) > cutoff_date:
       statute_of_limitations_ok = True
   else:
       statute_of_limitations_ok = False
 comment: |
-  This code uses some Python functions to determine whether the date
-  of the injury is within the statute of limitations period.
+  This code uses some date/time functions to determine whether the
+  date of the injury is within the statute of limitations period.
 
   The variable cutoff_date represents the latest date in the past when
   an injury could have occurred that would still be actionable under
-  the statute of limitations.  To calculate cutoff_date, we start with
-  today's date and subtract a number of number of years given by the
-  applicable statute of limitations.  The number of years in the
-  applicable statute of limitations period is the number stored in the
-  variable statute_of_limitations_years.
+  the statute of limitations.
 
-  In Python, we calculate cutoff_date using the subtraction operator,
-  the minus sign, which does special things when the variables
-  involved are dates and intervals.  The call to
-  "datetime.datetime.now()" returns today's date and time as a date
-  object.  The call to "relativedelta()" returns a time interval
-  object where the length of the interval is number of years given by
-  statute_of_limitations_years.  Today's date "minus" that interval
-  gives the date in the past we are looking for.
+  To calculate cutoff_date, we start with today's date and subtract a
+  number of number of years given by the applicable statute of
+  limitations.
 
-  This code relies on the special Python modules datetime,
-  dateutil.relativedelta, and dateutil.parser.  We could have used an
-  "import" block to import these modules.  If we did that, the Python
-  "import" command would be run every time a question is asked in the
-  interview.  There may be a slight efficiency boost to importing
-  module names into the namespace only when and if they are necessary.
----
-generic object: Individual
-question: |
-  In what country ${ x.do_question('live') }?
-fields:
-  - Country: x.address.country
----
-generic object: Individual
-question: |
-  In what neighborhood ${ x.do_question('live') }?
-fields:
-  - Neighborhood: x.address.neighborhood
----
-generic object: Individual
-question: |
-  In what county ${ x.do_question('live') }?
-fields:
-  - County: x.address.county
----
-generic object: Address
-sets:
-  - x.county
-  - x.country
-  - x.neighborhood
-code: |
-  x.geolocate()
+  The number of years in the applicable statute of limitations period
+  is the number stored in the variable statute_of_limitations_years.
 ---
 generic object: Individual
 decoration: home
@@ -533,16 +549,16 @@ comment: |
   is loaded).
 
   The "amenities" of the home, by contrast, use a "checkbox" selector.
-  This means that the variable will be defined as a Python dictionary
-  containing two key/value pairs, not as text.  For example, if this
-  question is asked regarding an Individual with the variable name
-  "client," and the user selects "Chimney" only, the value of
+  This means that the variable will be defined not as text, but as a
+  Python dictionary containing key/value pairs.  For example, if
+  this question is asked regarding an Individual with the variable
+  name "client," and the user selects "Chimney" only, the value of
   client.address.amenities will be a Python dictionary in which
   "chimney" is set to True and "stove" is set to False.
 
-  The "amenities" field also demonstrates that checkbox values and
-  labels can be set using Python code.  The code needs to evaluate to
-  a Python dictionary, where the values are the labels to be shown to
+  The "amenities" field demonstrates that checkbox values and labels
+  can be set using Python code.  The code needs to evaluate to a
+  Python dictionary, where the values are the labels to be shown to
   the user and the keys are the keys that will be used in the
   resulting Python dictionary (x.address.amenities).
 
@@ -563,17 +579,15 @@ fields:
     help: The apartment, suite, or unit number of the residence.
   - City: x.address.city
   - State: x.address.state
-    code: |
-      us.states.mapping('abbr', 'name')
+    code: states_list()
   - Zip: x.address.zip
     required: False
 comment: |
   This question demonstrates fields that have the style of dropdown
   lists.  The values of a dropdown list can be generated with code
   that runs at the time the question is asked, or they can be
-  hard-coded into the question itself.  The code here gets a list of
-  U.S. states from a helpful Python module called "us."  Note that we
-  imported this module earlier.
+  hard-coded into the question itself.  In this case, we use the
+  states_list() function to provide a list of U.S. states.
 ---
 generic object: Individual
 question: |
@@ -583,11 +597,9 @@ fields:
   - A test file: x.picture
     datatype: files
 comment: |
-  You can accept files from users by using the datatypes "file" 
-  (for a single file) or "files" (for one or more files).   
+  You can accept file uploads from users by using the datatypes "file"
+  (for a single file) or "files" (for one or more files).
 ---
-comment: |
-  This is how you can display a picture that a user has uploaded.
 generic object: Individual
 question: |
   % if x.picture.number() > 1:
@@ -598,7 +610,23 @@ question: |
 subquestion: |  
   ${ x.picture }
 yesno: x.picture_verified
+comment: |
+  This question demonstrates displaying a picture that a user has uploaded.
 ---
+question: |
+  On a scale of 1 to 10, how much hatred do you harbor toward
+  ${ case.defendant }?
+fields:
+  no label: hatred_level
+  datatype: range
+  min: 1
+  max: 10
+---
+def: kid_defs
+mako: |
+  <%def name="describe_as_adorable(person)"> \
+  ${ person } is adorable. \
+  </%def>
 comment: |
   docassemble uses the Mako templating system to expand variables
   within Markdown text.  Mako allows functions to be defined within
@@ -611,34 +639,21 @@ comment: |
   Another way to write functions in docassemble is to write methods
   that act on docassemble objects, which you define in your objects.py
   file within your package.
-def: kid_defs
-mako: |
-  <%def name="describe_as_adorable(person)"> \
-  ${ person } is adorable. \
-  </%def>
----
-question: |
-  On a scale of 1 to 10, how much hatred do you harbor toward
-  ${ case.defendant }?
-fields:
-  no label: hatred_level
-  datatype: range
-  min: 1
-  max: 10
 ---
 comment: |
-  The following question is the interview's main endpoint.  This
-  question has two attachment documents.  Most of the questions in the
-  interview are asked because they are needed by this question or one
-  of its attachments.
+  This very long question is the interview's main endpoint (it offers
+  to define client_done, which was referred to in the mandatory code
+  block above.  This question has two "attachment" documents.  Most of
+  the questions in the interview are asked because they are needed by
+  this question or one of its attachments.
 
-  This section demonstrates use of the "need" clause to gather
-  information about the case's plaintiffs and defendants up front.
-  This is not strictly necessary, because the case caption will cause
-  those questions to be answered.  However, the "need" clause forces
-  docassemble to gather the information up front, before it starts
-  processing the question and its attachments.  This helps to direct
-  the order of the questions in a more sensible fashion.
+  This question also demonstrates use of the "need" directive to
+  gather information about the case's plaintiffs and defendants up
+  front.  This is not strictly necessary, because the case caption
+  will cause those questions to be answered.  However, the "need"
+  clause forces docassemble to gather the information up front, before
+  it starts processing the question and its attachments.  This helps
+  to direct the order of the questions in a more sensible fashion.
 event: client_done
 progress: 100
 question: |
@@ -873,26 +888,191 @@ field: user_saw_initial_screen
 datatype: boolean
 buttons:
   - Comprendo: True
+comment: |
+  This demonstration interview is not available in Spanish, but this
+  question and the question after it demonstrate how multi-lingual
+  interviews can be constructed.  This question offers to set
+  "user_saw_initial_screen," just like a previous question block did,
+  except that this question has a "language: es" directive, indicating
+  that this question should only be used if the current language (as
+  set by the "initial" code block above using the set_language()
+  function) is Spanish.
 ---
 language: es
-terms:
+auto terms:
   cliente: |
     El cliente es la persona que está llenando este formulario
+comment: |
+  This demonstrates how vocabulary terms can be provided in a
+  language other than the default language.
 ---
+generic object: Individual
 question: |
-  What is the village idiot's name?
+  What is ${ x.possessive('gender') }?
+field: x.gender
+choices:
+  - "Male :male:": male
+  - "Female :female:": female
+  - Other: other
+comment: |
+  You can include "emoji-style" images by putting colons around an
+  image name (as defined in an "images" block).  This feature works
+  within labels as well as within question text.
+---
+generic object: Individual
+question: |
+  How much ${ x.do_question("make") } from ${ i }?
 fields:
-  - Somebody already mentioned: village_idiot
-    datatype: object
-    disable others: True
-    choices:
-      - case.plaintiff
-      - case.defendant
-  - First Name: village_idiot.name.first
-  - Middle Name: village_idiot.name.middle
-    required: False
-  - Last Name: village_idiot.name.last
-  - Suffix: village_idiot.name.suffix
-    required: False
-    code: name_suffix()
+  - Amount: x.income[i].value
+    datatype: currency
+  - "": x.income[i].period
+    datatype: number
+    code: |
+      period_list()
+comment: |
+  If you do not want a field to be labeled, you can use "" as the
+  label name.
+
+  The function period_list() provides a list of options (12 for "Per
+  Month," 1 for "Per Year," and 52 for "Per Week").
+
+  The datatype "currency" is like the datatype "number" except that
+  causes the input field to be displayed with a locale-specific
+  currency symbol.
+---
+generic object: Individual
+question: |
+  How much ${ x.do_question("make") } from employment?
+decoration: bills
+fields:
+  - Employment Income: x.income['employment'].value
+    datatype: currency
+  - "": x.income['employment'].period
+    datatype: number
+    code: |
+      period_list()
+comment: |
+  The previous question was a general question; this is a specific
+  question that asks the question a certain way if the income type is
+  "employment."  Although this question and the previous question are
+  both capable of defining x.income['employment'].value, this one
+  takes precedence because it is more specific.
+
+  The following questions are also specific cases.  The decorations
+  are different for each question.
+---
+generic object: Individual
+question: |
+  How much ${ x.do_question("make") } from self-employment?
+decoration: bills
+fields:
+  - Self-employment Income: x.income['self employment'].value
+    datatype: currency
+  - "": x.income['self employment'].period
+    datatype: number
+    code: |
+      period_list()
+---
+generic object: Individual
+question: |
+  How much ${ x.do_question("make") } from SSI?
+decoration: bills
+fields:
+  - SSI Income: x.income['SSI'].value
+    datatype: currency
+  - "": x.income['SSI'].period
+    datatype: number
+    code: |
+      period_list()
+---
+generic object: Individual
+question: |
+  How much ${ x.do_question("make") } from cash assistance 
+  (Temporary Assistance to Needy Families or TANF)?
+decoration: bills
+fields:
+  - TANF Income: x.income['TANF'].value
+    datatype: currency
+  - "": x.income['TANF'].period
+    datatype: number
+    code: |
+      period_list()
+---
+generic object: Individual
+question: |
+  How much ${ x.do_question("have") } in 
+  ${ i }?
+fields:
+  - Amount: x.asset[i].value
+    datatype: currency
+---
+generic object: Individual
+question: |
+  How much ${ x.do_question("have") } in 
+  ${ x.pronoun_possessive("checking account") }?
+decoration: piggybank
+fields:
+  - Amount in Checking Account: x.asset['checking account'].value
+    datatype: currency
+---
+generic object: Individual
+question: |
+  How much ${ x.do_question("have") } in 
+  ${ x.pronoun_possessive("savings account") }?
+decoration: piggybank
+fields:
+  - Amount in Savings Account: x.asset['savings account'].value
+    datatype: currency
+---
+generic object: Individual
+question: |
+  How much ${ x.do_question("have") } in stocks and bonds?
+decoration: stocks
+fields:
+  - Amount in Stocks and Bonds: x.asset['stocks and bonds'].value
+    datatype: currency
+---
+generic object: Individual
+question: |
+  ${ x.do_question("have", capitalize=True) } income from ${ i }?
+yesno: x.income[i].exists
+comment: |
+  This question and the following questions ask the threshold question
+  of whether the income or assets is applicable.  If it does not
+  "exist," there is no need to ask for its value.
+---
+generic object: Individual
+question: |
+  What kinds of income ${ x.do_question("have") }?
+decoration: bills
+fields:
+  - Employment: x.income['employment'].exists
+    datatype: yesnowide
+  - Self-employment: x.income['self employment'].exists
+    datatype: yesnowide
+  - SSI: x.income['SSI'].exists
+    datatype: yesnowide
+  - Cash assistance: x.income['TANF'].exists
+    datatype: yesnowide
+comment: |
+  The datatype "yesnowide" is just like the data type "yesno" except
+  that it fills the width of the form rather than aligning with other
+  fields that use labels.
+---
+generic object: Individual
+question: |
+  ${ x.do_question("own", capitalize=True) } any ${ i }?
+yesno: x.asset[i].exists
+---
+generic object: Individual
+question: |
+  What kinds of assets ${ x.do_question("own") }?
+decoration: piggybank
+fields:
+  - Checking Account: x.asset['checking account'].exists
+    datatype: yesnowide
+  - Savings Account: x.asset['savings account'].exists
+    datatype: yesnowide
+  - Stocks and Bonds: x.asset['stocks and bonds'].exists
+    datatype: yesnowide
 ...

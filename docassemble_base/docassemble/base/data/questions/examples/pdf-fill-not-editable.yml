@@ -1,5 +1,5 @@
 metadata:
-  title: PDF fill-in
+  title: PDF fill-in not editable
   short title: PDF Fill
   documentation: "https://docassemble.org/docs/documents.html#pdf template file"
   example start: 10
@@ -46,6 +46,10 @@ subquestion: |
   [download the template] to see what
   it looks like.
 
+  The information filled in will not
+  be editable in the resulting PDF
+  file.
+
   [download the template]: ${ url_of('sample-form.pdf') }
 field: introduction_shown
 ---
@@ -55,6 +59,7 @@ attachment:
   name: A filled-in form
   filename: filled-form
   pdf template file: sample-form.pdf
+  editable: False
   fields:
     Your Name: |
       ${ user }
