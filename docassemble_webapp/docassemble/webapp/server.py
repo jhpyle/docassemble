@@ -1386,7 +1386,7 @@ def install_git_package(packagename, giturl):
     #logmessage("install_git_package: " + packagename + " " + str(giturl))
     if Package.query.filter_by(name=packagename).first() is None and Package.query.filter_by(giturl=giturl).first() is None:
         package_auth = PackageAuth(user_id=current_user.id)
-        package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git')
+        package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git', upload=None, limitation=None)
         db.session.add(package_auth)
         db.session.add(package_entry)
         db.session.commit()

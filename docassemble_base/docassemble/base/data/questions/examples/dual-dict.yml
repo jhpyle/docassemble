@@ -1,0 +1,19 @@
+modules:
+  - docassemble.base.util
+---
+objects:
+  foo: DADict
+---
+mandatory: True
+code: |
+  foo.object_type = DADict
+  foo.initializeObject('a')
+---
+question: |
+  What is the answer to ${ i }?
+fields:
+  - Answer: foo['a'][i]
+---
+mandatory: True
+question: |
+  The answer is ${ foo['a']['b'] }

@@ -44,8 +44,11 @@ fix_tabs = re.compile(r'\t')
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 match_brackets_at_end = re.compile(r'^(.*)(\[.+?\])')
 match_inside_brackets = re.compile(r'\[(.+?)\]')
+match_brackets = re.compile(r'(\[.+?\])')
+match_brackets_or_dot = re.compile(r'(\[.+?\]|\.[a-zA-Z_][a-zA-Z0-9_]*)')
 complications = re.compile(r'[\.\[]')
 fix_assign = re.compile(r'\.(\[[^\]]*\])')
+list_of_indices = ['i', 'j', 'k', 'l', 'm', 'n']
 
 def process_audio_video_list(the_list, user_dict):
     output = list()
@@ -1770,13 +1773,13 @@ class Question:
         else:
             raise DAError("Unknown data type in attachment")
 
-    def ask(self, user_dict, the_x, the_i):
-        #logmessage("ask: " + str(the_x) + " " + str(the_i))
+    def ask(self, user_dict, the_x, iterators):
         docassemble.base.functions.this_thread.current_question = self
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
-        if the_i != 'None':
-            exec("i = " + the_i, user_dict)
+        if len(iterators):
+            for indexno in range(len(iterators)):
+                exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
         if self.need is not None:
             for need_code in self.need:
                 exec(need_code, user_dict)
@@ -2006,7 +2009,7 @@ class Question:
                         helptexts[field.number] = field.helptext.text(user_dict)
                     if hasattr(field, 'hint'):
                         hints[field.number] = field.hint.text(user_dict)
-        attachment_text = self.processed_attachments(user_dict, the_x=the_x, the_i=the_i)
+        attachment_text = self.processed_attachments(user_dict, the_x=the_x, iterators=iterators)
         if 'menu_items' in user_dict:
             extras['menu_items'] = user_dict['menu_items']
         if 'track_location' in user_dict:
@@ -2024,7 +2027,7 @@ class Question:
                 # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
-        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels}) #'defined': defined, 
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels}) #'defined': defined, 
     def processed_attachments(self, user_dict, **kwargs):
         result_list = list()
         items = list()
@@ -2597,9 +2600,9 @@ class Interview:
                         if question.name and question.name in user_dict['_internal']['answers']:
                             #logmessage("in answers")
                             #question.mark_as_answered(user_dict)
-                            interview_status.populate(question.follow_multiple_choice(user_dict).ask(user_dict, 'None', 'None'))
+                            interview_status.populate(question.follow_multiple_choice(user_dict).ask(user_dict, 'None', []))
                         else:
-                            interview_status.populate(question.ask(user_dict, 'None', 'None'))
+                            interview_status.populate(question.ask(user_dict, 'None', []))
                         if interview_status.question.question_type == 'continue':
                             user_dict['_internal']['answered'].add(question.name)
                         else:
@@ -2638,7 +2641,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
+                interview_status.populate(new_question.ask(user_dict, 'None', []))
                 break
             except ResponseError as qError:
                 docassemble.base.functions.reset_context()
@@ -2668,7 +2671,7 @@ class Interview:
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 #the_question = new_question.follow_multiple_choice(user_dict)
-                interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
+                interview_status.populate(new_question.ask(user_dict, 'None', []))
                 break
             except BackgroundResponseError as qError:
                 docassemble.base.functions.reset_context()
@@ -2681,7 +2684,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
+                interview_status.populate(new_question.ask(user_dict, 'None', []))
                 break
             except BackgroundResponseActionError as qError:
                 docassemble.base.functions.reset_context()
@@ -2694,7 +2697,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
+                interview_status.populate(new_question.ask(user_dict, 'None', []))
                 break
             # except SendFileError as qError:
             #     #logmessage("Trapped SendFileError")
@@ -2707,7 +2710,7 @@ class Interview:
             #     new_interview = new_interview_source.get_interview()
             #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
             #     new_question.name = "Question_Temp"
-            #     interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
+            #     interview_status.populate(new_question.ask(user_dict, 'None', []))
             #     break
             except QuestionError as qError:
                 docassemble.base.functions.reset_context()
@@ -2743,7 +2746,7 @@ class Interview:
                 new_question.name = "Question_Temp"
                 # will this be a problem?
                 the_question = new_question.follow_multiple_choice(user_dict)
-                interview_status.populate(the_question.ask(user_dict, 'None', 'None'))
+                interview_status.populate(the_question.ask(user_dict, 'None', []))
                 break
             except AttributeError as the_error:
                 docassemble.base.functions.reset_context()
@@ -2781,549 +2784,369 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        #logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
+        logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
         origMissingVariable = missingVariable
         docassemble.base.functions.set_current_variable(origMissingVariable)
         if missingVariable in variable_stack:
             raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
         variable_stack.add(missingVariable)
         found_generic = False
-        bracketPart = 'None'
         realMissingVariable = missingVariable
-        totry = [{'real': missingVariable, 'vari': missingVariable}]
-        #logmessage("moo1")
-        m = match_inside_brackets.search(missingVariable)
-        if m:
-            bracketPart = m.group(1)
-            newMissingVariable = re.sub('\[.+?\]', '[i]', missingVariable)
-            #logmessage("newMissingVariable is " + newMissingVariable)
-            totry.insert(0, {'real': missingVariable, 'vari': newMissingVariable})
-        #logmessage("Length of totry is " + str(len(totry)))
+        totry = list()
+        variants = list()
+        level_dict = dict()
+        generic_dict = dict()
+        expression_as_list = [x for x in match_brackets_or_dot.split(missingVariable) if x != '']
+        expression_as_list.append('')
+        recurse_indices(expression_as_list, list_of_indices, [], variants, level_dict, [], generic_dict, [])
+        for variant in variants:
+            totry.append({'real': missingVariable, 'vari': variant, 'iterators': level_dict[variant], 'generic': generic_dict[variant], 'is_generic': 0 if generic_dict[variant] == '' else 1, 'num_dots': variant.count('.')})
+        totry = sorted(sorted(sorted(totry, key=lambda x: len(x['iterators']), reverse=True), key=lambda x: x['num_dots'], reverse=True), key=lambda x: x['is_generic'])
+        logmessage("totry is " + str(totry))
+        questions_to_try = list()
         for mv in totry:
             realMissingVariable = mv['real']
             missingVariable = mv['vari']
             #logmessage("Trying missingVariable " + missingVariable + " and realMissingVariable " + realMissingVariable)
-            questions_to_try = list()
-            generic_needed = True;
-            if realMissingVariable in self.questions:
-                for lang in [language, '*']:
-                    if lang in self.questions[realMissingVariable]:
-                        for the_question in reversed(self.questions[realMissingVariable][lang]):
-                            questions_to_try.append((the_question, False, 'None', 'None', realMissingVariable, None))
-                        generic_needed = False
-            if generic_needed and bracketPart != 'None' and missingVariable in self.questions:
+            if mv['is_generic']:
+                #logmessage("Testing out generic " + mv['generic'])
+                try:
+                    root_evaluated = eval(mv['generic'], user_dict)
+                    #logmessage("Root was evaluated")
+                    classes_to_look_for = [type(root_evaluated).__name__]
+                    for cl in type(root_evaluated).__bases__:
+                        classes_to_look_for.append(cl.__name__)
+                    for generic_object in classes_to_look_for:
+                        #logmessage("Looking for generic object " + generic_object + " for " + missingVariable)
+                        if generic_object in self.generic_questions and missingVariable in self.generic_questions[generic_object] and (language in self.generic_questions[generic_object][missingVariable] or '*' in self.generic_questions[generic_object][missingVariable]):
+                            for lang in [language, '*']:
+                                if lang in self.generic_questions[generic_object][missingVariable]:
+                                    for the_question_to_use in reversed(self.generic_questions[generic_object][missingVariable][lang]):
+                                        questions_to_try.append((the_question_to_use, True, mv['generic'], mv['iterators'], missingVariable, generic_object))
+                except:
+                    pass
+                continue
+            if missingVariable in self.questions:
                 for lang in [language, '*']:
                     if lang in self.questions[missingVariable]:
                         for the_question in reversed(self.questions[missingVariable][lang]):
-                            questions_to_try.append((the_question, False, 'None', bracketPart, missingVariable, None))
-                        generic_needed = False
-            #components = missingVariable.split(".")
-            #realComponents = realMissingVariable.split(".")
-            components = dot_split.split(missingVariable)[1::2]
-            realComponents = dot_split.split(realMissingVariable)[1::2]
-            #logmessage("Vari Components are " + str(components))
-            #logmessage("Real Components are " + str(realComponents))
-            n = len(components)
-            # if n == 1:
-            #     if generic_needed:
-            #         logmessage("There is no question for " + missingVariable)
-            #     else:
-            #         logmessage("There are no generic options for " + missingVariable)
-            if n == 1:
-                found_x = 0;
-                #sub_totry = [{'var': "x", 'realvar': "x", 'root': realComponents[0], 'root_for_object': realComponents[0]}]
-                sub_totry = []
-                m = match_brackets_at_end.search(realComponents[0])
-                if m:
-                    before_brackets = m.group(1)
-                    brackets_part = m.group(2)
-                    sub_totry.insert(0, {'var': "x[i]", 'realvar': "x" + brackets_part, 'root': before_brackets, 'root_for_object': before_brackets})
-                for d in sub_totry:
-                    the_i_to_use = 'None'
-                    if found_x:
-                        break;
-                    var = d['var']
-                    realVar = d['realvar']
-                    #logmessage("Searching for brackets in " + str(realVar))
-                    mm = match_inside_brackets.findall(realVar)
-                    if (mm):
-                        #logmessage("Found stuff inside brackets")
-                        if len(mm) > 1:
-                            #logmessage("Variable " + str(var) + " is no good because it has more than one iterator")
-                            continue;
-                        the_i_to_use = mm[0];
-                        #logmessage("The i to use is " + str(the_i_to_use))
-                    #else:
-                        #logmessage("Did not find stuff inside brackets")
-                    root = d['root']
-                    root_for_object = d['root_for_object']
-                    #logmessage("testing variable " + str(var) + " and root " + str(root) + " and root for object " + str(root_for_object))
-                    try:
-                        root_evaluated = eval(root_for_object, user_dict)
-                        classes_to_look_for = [type(root_evaluated).__name__]
-                        for cl in type(root_evaluated).__bases__:
-                            classes_to_look_for.append(cl.__name__)
-                        for generic_object in classes_to_look_for:
-                            #logmessage("foo0" + generic_object + var)
-                            if generic_object in self.generic_questions and var in self.questions and var in self.generic_questions[generic_object] and (language in self.generic_questions[generic_object][var] or '*' in self.generic_questions[generic_object][var]) and (language in self.questions[var] or '*' in self.questions[var]):
-                                #logmessage("foo1" + var)
-                                for lang in [language, '*']:
-                                    #logmessage("foo2" + lang)
-                                    if lang in self.questions[var]:
-                                        #logmessage("foo3" + var + lang)
-                                        for the_question_to_use in reversed(self.questions[var][lang]):
-                                            #logmessage("foo4 " + var + lang)
-                                            questions_to_try.append((the_question_to_use, True, root, the_i_to_use, var, generic_object))
-                                missingVariable = var
-                                found_generic = True
-                                break
-                        #logmessage("I should be looping around now")
-                    except:
-                        logmessage("variable did not exist in user_dict where root is " + str(root) + " and root_for_object is: " + str(root_for_object) + str(sys.exc_info()[0]))
-            #logmessage("Pleased to report that found_generic is " + str(found_generic) + " and generic_needed is " + str(generic_needed))
-                if generic_needed and not found_generic: # or is_iterator
-                    #logmessage("There is no question for " + missingVariable)
-                    continue
-            elif n != 1:
-                found_x = 0;
-                for i in range(1, n):
-                    #if found_x:
-                    #    break;
-                    sub_totry = [{'var': "x." + ".".join(components[i:n]), 'realvar': "x." + ".".join(realComponents[i:n]), 'root': ".".join(realComponents[0:i]), 'root_for_object': ".".join(realComponents[0:i]), 'post': ''}]
-                    m = match_brackets_at_end.search(sub_totry[0]['root'])
-                    if m:
-                        before_brackets = m.group(1)
-                        brackets_part = m.group(2)
-                        sub_totry.insert(0, {'var': "x[i]." + ".".join(components[i:n]), 'realvar': "x" + brackets_part + "." + ".".join(realComponents[i:n]), 'root': before_brackets, 'root_for_object': before_brackets + brackets_part})
-                    for d in sub_totry:
-                        the_i_to_use = 'None'
-                        #if found_x:
-                        #    break;
-                        var = d['var']
-                        realVar = d['realvar']
-                        #logmessage("Looking for " + str(realVar) + " where var is " + var + " and root is " + str(d['root']) + " and root_for_object is " + str(d['root_for_object']))
-                        mm = match_inside_brackets.findall(realVar)
-                        if (mm):
-                            #logmessage("Found stuff inside brackets")
-                            if len(mm) > 1:
-                                #logmessage("Variable " + str(var) + " is no good because it has more than one iterator")
-                                continue;
-                            the_i_to_use = mm[0];
-                            #logmessage("The i to use is " + str(the_i_to_use))
-                        #else:
-                        #    logmessage("Did not find stuff inside brackets")
-                        root = d['root']
-                        root_for_object = d['root_for_object']
-                        if var != realVar:
-                            #logmessage("testing variable " + realVar + " and root " + root + " and root for object " + root_for_object)
-                            try:
-                                root_evaluated = eval(root_for_object, user_dict)
-                                classes_to_look_for = [type(root_evaluated).__name__]
-                                for cl in type(root_evaluated).__bases__:
-                                    classes_to_look_for.append(cl.__name__)
-                                for generic_object in classes_to_look_for:
-                                    #logmessage("foo0" + generic_object + var)
-                                    if generic_object in self.generic_questions and realVar in self.questions and realVar in self.generic_questions[generic_object] and (language in self.generic_questions[generic_object][realVar] or '*' in self.generic_questions[generic_object][realVar]) and (language in self.questions[realVar] or '*' in self.questions[realVar]):
-                                        #logmessage("foo1" + var)
-                                        for lang in [language, '*']:
-                                            #logmessage("foo2" + lang)
-                                            if lang in self.questions[realVar]:
-                                                #logmessage("foo3" + realVar + lang)
-                                                for the_question_to_use in reversed(self.questions[realVar][lang]):
-                                                    #logmessage("foo4 " + realVar + lang)
-                                                    questions_to_try.append((the_question_to_use, True, root, 'None', realVar, generic_object))
-                                        missingVariable = realVar
-                                        found_generic = True
-                                        found_x = 1
-                            except:
-                                pass
-                        #logmessage("testing variable " + var + " and root " + root + " and root for object " + root_for_object)
-                        try:
-                            root_evaluated = eval(root_for_object, user_dict)
-                            classes_to_look_for = [type(root_evaluated).__name__]
-                            for cl in type(root_evaluated).__bases__:
-                                classes_to_look_for.append(cl.__name__)
-                            for generic_object in classes_to_look_for:
-                                if generic_object in self.generic_questions and var in self.questions and var in self.generic_questions[generic_object] and (language in self.generic_questions[generic_object][var] or '*' in self.generic_questions[generic_object][var]) and (language in self.questions[var] or '*' in self.questions[var]):
-                                    #logmessage("foo1" + var)
-                                    for lang in [language, '*']:
-                                        #logmessage("foo2" + lang)
-                                        if lang in self.questions[var]:
-                                            #logmessage("foo3" + var + lang)
-                                            for the_question_to_use in reversed(self.questions[var][lang]):
-                                                #logmessage("foo4 " + var + lang)
-                                                questions_to_try.append((the_question_to_use, True, root, the_i_to_use, var, generic_object))
-                                    missingVariable = var
-                                    found_generic = True
-                                    found_x = 1
-                                    #break
-                            #logmessage("I should be looping around now")
-                        except:
-                            logmessage("variable did not exist in user_dict where root is " + str(root) + " and root_for_object is: " + str(root_for_object) + str(sys.exc_info()[0]))
-                #logmessage("Pleased to report that found_generic is " + str(found_generic) + " and generic_needed is " + str(generic_needed))
-                if generic_needed and not found_generic: # or is_iterator
-                    #logmessage("There is no question for " + missingVariable)
-                    continue
-            while True:
-                #logmessage("While loop in askfor " + str(missingVariable))
-                docassemble.base.functions.reset_gathering_mode(origMissingVariable)
-                try:
-                    #for the_question, is_generic, the_x, the_i, missing_var, generic_object in questions_to_try:
-                        #logmessage("Will try question where is_generic is " + str(is_generic) + " and the_x is " + str(the_x) + " and the_i is " + str(the_i) + " and missing_var is " + missing_var + " and generic object is " + str(generic_object))
-                    for the_question, is_generic, the_x, the_i, missing_var, generic_object in questions_to_try:
-                        #logmessage("missing_var is " + str(missing_var))
-                        #logmessage("x is " + str(the_x))
-                        #logmessage("i is " + str(the_i))
-                        #logmessage("is_generic is " + str(is_generic))
-                        #logmessage("Trying question of type " + str(the_question.question_type))
-                        if follow_mc:
-                            question = the_question.follow_multiple_choice(user_dict)
-                        else:
-                            question = the_question
-                        #logmessage("Back from follow_multiple_choice")
-                        #logmessage("Trying a question of type " + str(the_question.question_type))
-                        if is_generic:
-                            #logmessage("Yes it's generic")
-                            if question.is_generic:
-                                #logmessage("Yes question is generic")
-                                if question.generic_object != generic_object:
-                                    #logmessage("Object mismatch")
-                                    continue
-                                #logmessage("ok")
-                            else:
-                                #logmessage("No question is not generic")
-                                continue
-                        if debug:
-                            seeking.append({'question': question, 'reason': 'asking'})
-                        if question.question_type == "objects":
-                            #logmessage("Going into objects")
-                            for keyvalue in question.objects:
-                                for variable in keyvalue:
-                                    object_type = keyvalue[variable]
-                                    if re.search(r"\.", variable):
-                                        m = re.search(r"(.*)\.(.*)", variable)
-                                        variable = m.group(1)
-                                        attribute = m.group(2)
-                                        command = variable + "." + attribute + " = " + object_type + "()"
-                                        #logmessage("Running " + command)
-                                        exec(command, user_dict)
-                                    else:
-                                        command = variable + ' = ' + object_type + '("' + variable + '")'
-                                        #logmessage("Running " + command)
-                                        exec(command, user_dict)
-                            # if missing_var in variable_stack:
-                            #     logmessage("3 Removing missing variable " + missing_var)
-                            #     variable_stack.remove(missing_var)
-                            question.mark_as_answered(user_dict)
-                            #logmessage("Returning after defining objects")
-                            docassemble.base.functions.pop_current_variable()
-                            return({'type': 'continue'})
-                        if question.question_type == "template":
-                            if question.target is not None:
-                                return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'under_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'variable_x': None, 'variable_i': None, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict()})
-                            string = "import docassemble.base.core"
-                            #logmessage("Doing " + string)
-                            exec(string, user_dict)
-                            if question.decorations is None:
-                                decoration_list = []
-                            else:
-                                decoration_list = question.decorations
-                            string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ', decorations=' + repr([dec['image'].text(user_dict).rstrip() for dec in decoration_list]) + ')'
-                            #logmessage("Doing " + string)
-                            exec(string, user_dict)
-                            #question.mark_as_answered(user_dict)
-                            docassemble.base.functions.pop_current_variable()
-                            return({'type': 'continue'})
-                        if question.question_type == "table":
-                            string = "import docassemble.base.core"
-                            exec(string, user_dict)
-                            table_content = "\n"
-                            header = question.fields[0].extras['header']
-                            row = question.fields[0].extras['row']
-                            column = question.fields[0].extras['column']
-                            indent = " " * (4 * int(question.fields[0].extras['indent']))
-                            header_output = [table_safe(x.text(user_dict)) for x in header]
-                            the_iterable = eval(row, user_dict)
-                            if not hasattr(the_iterable, '__iter__'):
-                                raise DAError("Error in processing table " + from_safeid(question.fields[0].saveas) + ": row value is not iterable")
-                            indexno = 0
-                            contents = list()
-                            for item in the_iterable:
-                                user_dict['row_item'] = item
-                                user_dict['row_index'] = indexno
-                                contents.append([table_safe(eval(x, user_dict)) for x in column])
-                                indexno += 1
-                            user_dict.pop('row_item', None)
-                            user_dict.pop('row_index', None)
-                            max_chars = [0 for x in header_output]
-                            max_word = [0 for x in header_output]
-                            for indexno in range(len(header_output)):
-                                words = re.split(r'[ \n]', header_output[indexno])
-                                if len(header_output[indexno]) > max_chars[indexno]:
-                                    max_chars[indexno] = len(header_output[indexno])
-                                for content_line in contents:
-                                    words += re.split(r'[ \n]', content_line[indexno])
-                                    if len(content_line[indexno]) > max_chars[indexno]:
-                                        max_chars[indexno] = len(content_line[indexno])
-                                for text in words:
-                                    if len(text) > max_word[indexno]:
-                                        max_word[indexno] = len(text)
-                            max_chars_to_use = [min(x, self.table_width) for x in max_chars]
-                            override_mode = False
-                            while True:
-                                new_sum = sum(max_chars_to_use)
-                                old_sum = new_sum
-                                if new_sum < self.table_width:
-                                    break
-                                r = random.uniform(0, new_sum)
-                                upto = 0
-                                for indexno in range(len(max_chars_to_use)):
-                                    if upto + max_chars_to_use[indexno] >= r:
-                                        if max_chars_to_use[indexno] > max_word[indexno] or override_mode:
-                                            max_chars_to_use[indexno] -= 1
-                                            break
-                                    upto += max_chars_to_use[indexno]
-                                new_sum = sum(max_chars_to_use)
-                                if new_sum == old_sum:
-                                    override_mode = True
-                            table_content += indent + "|".join(header_output) + "\n"
-                            table_content += indent + "|".join(['-' * x for x in max_chars_to_use]) + "\n"
-                            for content_line in contents:
-                                table_content += indent + "|".join(content_line) + "\n"
-                            if len(contents) == 0 and question.fields[0].extras['empty_message'] is not True:
-                                if question.fields[0].extras['empty_message'] in (False, None):
-                                    table_content = "\n"
+                            questions_to_try.append((the_question, False, 'None', mv['iterators'], missingVariable, None))
+        logmessage("questions to try is " + str(questions_to_try))
+        while True:
+            docassemble.base.functions.reset_gathering_mode(origMissingVariable)
+            try:
+                for the_question, is_generic, the_x, iterators, missing_var, generic_object in questions_to_try:
+                    if follow_mc:
+                        question = the_question.follow_multiple_choice(user_dict)
+                    else:
+                        question = the_question
+                    if debug:
+                        seeking.append({'question': question, 'reason': 'asking'})
+                    if question.question_type == "objects":
+                        for keyvalue in question.objects:
+                            for variable in keyvalue:
+                                object_type = keyvalue[variable]
+                                if re.search(r"\.", variable):
+                                    m = re.search(r"(.*)\.(.*)", variable)
+                                    variable = m.group(1)
+                                    attribute = m.group(2)
+                                    command = variable + "." + attribute + " = " + object_type + "()"
+                                    exec(command, user_dict)
                                 else:
-                                    table_content = question.fields[0].extras['empty_message'].text(user_dict) + "\n"
-                            table_content += "\n"
-                            string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(table_content) + ")"
-                            exec(string, user_dict)
+                                    command = variable + ' = ' + object_type + '("' + variable + '")'
+                                    exec(command, user_dict)
+                        question.mark_as_answered(user_dict)
+                        docassemble.base.functions.pop_current_variable()
+                        return({'type': 'continue'})
+                    if question.question_type == "template":
+                        if question.target is not None:
+                            return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'under_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict()})
+                        string = "import docassemble.base.core"
+                        exec(string, user_dict)
+                        if question.decorations is None:
+                            decoration_list = []
+                        else:
+                            decoration_list = question.decorations
+                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ', decorations=' + repr([dec['image'].text(user_dict).rstrip() for dec in decoration_list]) + ')'
+                        #logmessage("Doing " + string)
+                        exec(string, user_dict)
+                        #question.mark_as_answered(user_dict)
+                        docassemble.base.functions.pop_current_variable()
+                        return({'type': 'continue'})
+                    if question.question_type == "table":
+                        string = "import docassemble.base.core"
+                        exec(string, user_dict)
+                        table_content = "\n"
+                        header = question.fields[0].extras['header']
+                        row = question.fields[0].extras['row']
+                        column = question.fields[0].extras['column']
+                        indent = " " * (4 * int(question.fields[0].extras['indent']))
+                        header_output = [table_safe(x.text(user_dict)) for x in header]
+                        the_iterable = eval(row, user_dict)
+                        if not hasattr(the_iterable, '__iter__'):
+                            raise DAError("Error in processing table " + from_safeid(question.fields[0].saveas) + ": row value is not iterable")
+                        indexno = 0
+                        contents = list()
+                        for item in the_iterable:
+                            user_dict['row_item'] = item
+                            user_dict['row_index'] = indexno
+                            contents.append([table_safe(eval(x, user_dict)) for x in column])
+                            indexno += 1
+                        user_dict.pop('row_item', None)
+                        user_dict.pop('row_index', None)
+                        max_chars = [0 for x in header_output]
+                        max_word = [0 for x in header_output]
+                        for indexno in range(len(header_output)):
+                            words = re.split(r'[ \n]', header_output[indexno])
+                            if len(header_output[indexno]) > max_chars[indexno]:
+                                max_chars[indexno] = len(header_output[indexno])
+                            for content_line in contents:
+                                words += re.split(r'[ \n]', content_line[indexno])
+                                if len(content_line[indexno]) > max_chars[indexno]:
+                                    max_chars[indexno] = len(content_line[indexno])
+                            for text in words:
+                                if len(text) > max_word[indexno]:
+                                    max_word[indexno] = len(text)
+                        max_chars_to_use = [min(x, self.table_width) for x in max_chars]
+                        override_mode = False
+                        while True:
+                            new_sum = sum(max_chars_to_use)
+                            old_sum = new_sum
+                            if new_sum < self.table_width:
+                                break
+                            r = random.uniform(0, new_sum)
+                            upto = 0
+                            for indexno in range(len(max_chars_to_use)):
+                                if upto + max_chars_to_use[indexno] >= r:
+                                    if max_chars_to_use[indexno] > max_word[indexno] or override_mode:
+                                        max_chars_to_use[indexno] -= 1
+                                        break
+                                upto += max_chars_to_use[indexno]
+                            new_sum = sum(max_chars_to_use)
+                            if new_sum == old_sum:
+                                override_mode = True
+                        table_content += indent + "|".join(header_output) + "\n"
+                        table_content += indent + "|".join(['-' * x for x in max_chars_to_use]) + "\n"
+                        for content_line in contents:
+                            table_content += indent + "|".join(content_line) + "\n"
+                        if len(contents) == 0 and question.fields[0].extras['empty_message'] is not True:
+                            if question.fields[0].extras['empty_message'] in (False, None):
+                                table_content = "\n"
+                            else:
+                                table_content = question.fields[0].extras['empty_message'].text(user_dict) + "\n"
+                        table_content += "\n"
+                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(table_content) + ")"
+                        exec(string, user_dict)
+                        docassemble.base.functions.pop_current_variable()
+                        return({'type': 'continue'})
+                    if question.question_type == 'attachments':
+                        attachment_text = question.processed_attachments(user_dict)
+                        if missing_var in variable_stack:
+                            variable_stack.remove(missing_var)
+                        try:
+                            eval(missing_var, user_dict)
+                            question.mark_as_answered(user_dict)
                             docassemble.base.functions.pop_current_variable()
                             return({'type': 'continue'})
-                        if question.question_type == 'attachments':
-                            attachment_text = question.processed_attachments(user_dict)
-                            if missing_var in variable_stack:
-                                #logmessage("1 Removing missing variable " + missing_var)
-                                variable_stack.remove(missing_var)
-                            try:
-                                eval(missing_var, user_dict)
-                                question.mark_as_answered(user_dict)
-                                docassemble.base.functions.pop_current_variable()
-                                return({'type': 'continue'})
-                            except:
-                                #logmessage("1 Try another method of setting the variable")
-                                continue
-                        if question.question_type in ["code", "event_code"]:
-                            #logmessage("Running some code:\n\n" + question.sourcecode)
-                            if is_generic:
-                                if the_x != 'None':
-                                    exec("x = " + the_x, user_dict)
-                                    #logmessage("Set x")
-                            if the_i != 'None':
-                                exec("i = " + the_i, user_dict)
-                                #logmessage("Set i")
-                            was_defined = False
-                            #logmessage("Deleting " + str(missing_var))
-                            try:
-                                exec("__oldvariable__ = " + str(missing_var), user_dict)
-                                #logmessage("deleting the missing var " + str(missing_var))
-                                exec("del " + str(missing_var), user_dict)
-                                was_defined = True
-                            except:
-                                pass
-                            #logmessage("snoo1: " + ", ".join(list(user_dict.keys())))
-                            exec(question.compute, user_dict)
-                            #logmessage("snoo2")
-                            #logmessage("the missing variable is " + str(missing_var))
-                            if missing_var in variable_stack:
-                                #logmessage("2 Removing missing variable " + missing_var)
-                                variable_stack.remove(missing_var)
-                            if question.question_type == 'event_code':
-                                docassemble.base.functions.pop_current_variable()
-                                return({'type': 'continue'})
-                            try:
-                                eval(missing_var, user_dict)
-                                question.mark_as_answered(user_dict)
-                                #logmessage("returning from running code")
-                                docassemble.base.functions.pop_current_variable()
-                                return({'type': 'continue'})
-                            except:
-                                if was_defined:
-                                    try:
-                                        exec(str(missing_var) + " = __oldvariable__", user_dict)
-                                        exec("__oldvariable__ = " + str(missing_var), user_dict)
-                                        exec("del __oldvariable__", user_dict)
-                                    except:
-                                        pass
-                                #logmessage("2 Try another method of setting the variable")
-                                continue
-                        else:
-                            #logmessage("Question type is " + question.question_type)
-                            #logmessage("Ask:\n" + question.content.original_text)
-                            #logmessage("the_x is " + str(the_x))
-                            #logmessage("the_i is " + str(the_i))
-                            if question.question_type == 'continue':
-                                continue
-                            return question.ask(user_dict, the_x, the_i)
-                    raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
-                except NameError as errMess:
-                    docassemble.base.functions.reset_context()
-                    if isinstance(errMess, ForcedNameError):
-                        #logmessage("forced nameerror")
-                        follow_mc = False
+                        except:
+                            continue
+                    if question.question_type in ["code", "event_code"]:
+                        if is_generic:
+                            if the_x != 'None':
+                                exec("x = " + the_x, user_dict)
+                            if len(iterators):
+                                for indexno in range(len(iterators)):
+                                    exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
+                        was_defined = False
+                        try:
+                            exec("__oldvariable__ = " + str(missing_var), user_dict)
+                            exec("del " + str(missing_var), user_dict)
+                            was_defined = True
+                        except:
+                            pass
+                        exec(question.compute, user_dict)
+                        if missing_var in variable_stack:
+                            variable_stack.remove(missing_var)
+                        if question.question_type == 'event_code':
+                            docassemble.base.functions.pop_current_variable()
+                            return({'type': 'continue'})
+                        try:
+                            eval(missing_var, user_dict)
+                            question.mark_as_answered(user_dict)
+                            docassemble.base.functions.pop_current_variable()
+                            return({'type': 'continue'})
+                        except:
+                            if was_defined:
+                                try:
+                                    exec(str(missing_var) + " = __oldvariable__", user_dict)
+                                    exec("__oldvariable__ = " + str(missing_var), user_dict)
+                                    exec("del __oldvariable__", user_dict)
+                                except:
+                                    pass
+                            continue
                     else:
-                        #logmessage("regular nameerror")
-                        follow_mc = True
-                    #logmessage("got this error: " + str(errMess))
-                    newMissingVariable = extract_missing_name(errMess)
-                    #newMissingVariable = str(errMess).split("'")[1]
-                    question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=follow_mc)
-                    if question_result['type'] == 'continue':
-                        #logmessage("Continuing after asking for newMissingVariable " + str(newMissingVariable))
-                        continue
+                        if question.question_type == 'continue':
+                            continue
+                        return question.ask(user_dict, the_x, iterators)
+                raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
+            except NameError as errMess:
+                docassemble.base.functions.reset_context()
+                if isinstance(errMess, ForcedNameError):
+                    #logmessage("forced nameerror")
+                    follow_mc = False
+                else:
+                    #logmessage("regular nameerror")
+                    follow_mc = True
+                #logmessage("got this error: " + str(errMess))
+                newMissingVariable = extract_missing_name(errMess)
+                #newMissingVariable = str(errMess).split("'")[1]
+                question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=follow_mc)
+                if question_result['type'] == 'continue':
+                    #logmessage("Continuing after asking for newMissingVariable " + str(newMissingVariable))
+                    continue
+                docassemble.base.functions.pop_current_variable()
+                return(question_result)
+            except UndefinedError as errMess:
+                docassemble.base.functions.reset_context()
+                newMissingVariable = extract_missing_name(errMess)
+                question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=True)
+                if question_result['type'] == 'continue':
+                    continue
+                docassemble.base.functions.pop_current_variable()
+                return(question_result)
+            except CommandError as qError:
+                docassemble.base.functions.reset_context()
+                question_data = dict(command=qError.return_type, url=qError.url)
+                new_interview_source = InterviewSourceString(content='')
+                new_interview = new_interview_source.get_interview()
+                reproduce_basics(self, new_interview)
+                new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                new_question.name = "Question_Temp"
+                return(new_question.ask(user_dict, 'None', []))
+            except ResponseError as qError:
+                docassemble.base.functions.reset_context()
+                #logmessage("Trapped ResponseError2")
+                question_data = dict(extras=dict())
+                if hasattr(qError, 'response') and qError.response is not None:
+                    question_data['response'] = qError.response
+                elif hasattr(qError, 'binaryresponse') and qError.binaryresponse is not None:
+                    question_data['binaryresponse'] = qError.binaryresponse
+                elif hasattr(qError, 'filename') and qError.filename is not None:
+                    question_data['response filename'] = qError.filename
+                elif hasattr(qError, 'url') and qError.url is not None:
+                    question_data['redirect url'] = qError.url
+                elif hasattr(qError, 'all_variables') and qError.all_variables:
+                    question_data['content type'] = 'application/json'
+                    question_data['all_variables'] = True
+                if hasattr(qError, 'content_type') and qError.content_type:
+                    question_data['content type'] = qError.content_type
+                new_interview_source = InterviewSourceString(content='')
+                new_interview = new_interview_source.get_interview()
+                reproduce_basics(self, new_interview)
+                new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                new_question.name = "Question_Temp"
+                #the_question = new_question.follow_multiple_choice(user_dict)
+                return(new_question.ask(user_dict, 'None', []))
+            except BackgroundResponseError as qError:
+                docassemble.base.functions.reset_context()
+                #logmessage("Trapped BackgroundResponseError2")
+                question_data = dict(extras=dict())
+                if hasattr(qError, 'backgroundresponse'):
+                    question_data['backgroundresponse'] = qError.backgroundresponse
+                new_interview_source = InterviewSourceString(content='')
+                new_interview = new_interview_source.get_interview()
+                reproduce_basics(self, new_interview)
+                new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                new_question.name = "Question_Temp"
+                return(new_question.ask(user_dict, 'None', []))
+            except BackgroundResponseActionError as qError:
+                docassemble.base.functions.reset_context()
+                #logmessage("Trapped BackgroundResponseActionError2")
+                question_data = dict(extras=dict())
+                if hasattr(qError, 'action'):
+                    question_data['action'] = qError.action
+                new_interview_source = InterviewSourceString(content='')
+                new_interview = new_interview_source.get_interview()
+                reproduce_basics(self, new_interview)
+                new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                new_question.name = "Question_Temp"
+                return(new_question.ask(user_dict, 'None', []))
+            except QuestionError as qError:
+                docassemble.base.functions.reset_context()
+                #logmessage("Trapped QuestionError")
+                question_data = dict()
+                if qError.question:
+                    question_data['question'] = qError.question
+                if qError.subquestion:
+                    question_data['subquestion'] = qError.subquestion
+                if qError.dead_end:
+                    pass
+                elif qError.buttons:
+                    question_data['buttons'] = qError.buttons
+                else:
+                    buttons = list()
+                    if qError.show_exit is not False and not (qError.show_leave is True and qError.show_exit is None):
+                        exit_button = {word('Exit'): 'exit'}
+                        if qError.url:
+                            exit_button.update(dict(url=qError.url))
+                        buttons.append(exit_button)
+                    if qError.show_leave:
+                        leave_button = {word('Leave'): 'leave'}
+                        if qError.url:
+                            leave_button.update(dict(url=qError.url))
+                        buttons.append(leave_button)
+                    if qError.show_restart is not False:
+                        buttons.append({word('Restart'): 'restart'})
+                    if len(buttons):
+                        question_data['buttons'] = buttons
+                new_interview_source = InterviewSourceString(content='')
+                new_interview = new_interview_source.get_interview()
+                reproduce_basics(self, new_interview)
+                new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                new_question.name = "Question_Temp"
+                # will this be a problem?
+                the_question = new_question.follow_multiple_choice(user_dict)
+                return(the_question.ask(user_dict, 'None', []))
+            except CodeExecute as code_error:
+                docassemble.base.functions.reset_context()
+                #if debug:
+                #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
+                #logmessage("Going to execute " + str(code_error.compute) + " where missing_var is " + str(missing_var))
+                exec(code_error.compute, user_dict)
+                try:
+                    eval(missing_var, user_dict)
+                    #logmessage(str(missing_var) + " was defined")
+                    code_error.question.mark_as_answered(user_dict)
+                    #logmessage("Got here 1")
+                    #logmessage("returning from running code")
                     docassemble.base.functions.pop_current_variable()
-                    return(question_result)
-                except UndefinedError as errMess:
-                    docassemble.base.functions.reset_context()
-                    newMissingVariable = extract_missing_name(errMess)
-                    question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=True)
-                    if question_result['type'] == 'continue':
-                        continue
-                    docassemble.base.functions.pop_current_variable()
-                    return(question_result)
-                except CommandError as qError:
-                    docassemble.base.functions.reset_context()
-                    question_data = dict(command=qError.return_type, url=qError.url)
-                    new_interview_source = InterviewSourceString(content='')
-                    new_interview = new_interview_source.get_interview()
-                    reproduce_basics(self, new_interview)
-                    new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
-                    new_question.name = "Question_Temp"
-                    return(new_question.ask(user_dict, 'None', 'None'))
-                except ResponseError as qError:
-                    docassemble.base.functions.reset_context()
-                    #logmessage("Trapped ResponseError2")
-                    question_data = dict(extras=dict())
-                    if hasattr(qError, 'response') and qError.response is not None:
-                        question_data['response'] = qError.response
-                    elif hasattr(qError, 'binaryresponse') and qError.binaryresponse is not None:
-                        question_data['binaryresponse'] = qError.binaryresponse
-                    elif hasattr(qError, 'filename') and qError.filename is not None:
-                        question_data['response filename'] = qError.filename
-                    elif hasattr(qError, 'url') and qError.url is not None:
-                        question_data['redirect url'] = qError.url
-                    elif hasattr(qError, 'all_variables') and qError.all_variables:
-                        question_data['content type'] = 'application/json'
-                        question_data['all_variables'] = True
-                    if hasattr(qError, 'content_type') and qError.content_type:
-                        question_data['content type'] = qError.content_type
-                    new_interview_source = InterviewSourceString(content='')
-                    new_interview = new_interview_source.get_interview()
-                    reproduce_basics(self, new_interview)
-                    new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
-                    new_question.name = "Question_Temp"
-                    #the_question = new_question.follow_multiple_choice(user_dict)
-                    return(new_question.ask(user_dict, 'None', 'None'))
-                except BackgroundResponseError as qError:
-                    docassemble.base.functions.reset_context()
-                    #logmessage("Trapped BackgroundResponseError2")
-                    question_data = dict(extras=dict())
-                    if hasattr(qError, 'backgroundresponse'):
-                        question_data['backgroundresponse'] = qError.backgroundresponse
-                    new_interview_source = InterviewSourceString(content='')
-                    new_interview = new_interview_source.get_interview()
-                    reproduce_basics(self, new_interview)
-                    new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
-                    new_question.name = "Question_Temp"
-                    return(new_question.ask(user_dict, 'None', 'None'))
-                except BackgroundResponseActionError as qError:
-                    docassemble.base.functions.reset_context()
-                    #logmessage("Trapped BackgroundResponseActionError2")
-                    question_data = dict(extras=dict())
-                    if hasattr(qError, 'action'):
-                        question_data['action'] = qError.action
-                    new_interview_source = InterviewSourceString(content='')
-                    new_interview = new_interview_source.get_interview()
-                    reproduce_basics(self, new_interview)
-                    new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
-                    new_question.name = "Question_Temp"
-                    return(new_question.ask(user_dict, 'None', 'None'))
-                except QuestionError as qError:
-                    docassemble.base.functions.reset_context()
-                    #logmessage("Trapped QuestionError")
-                    question_data = dict()
-                    if qError.question:
-                        question_data['question'] = qError.question
-                    if qError.subquestion:
-                        question_data['subquestion'] = qError.subquestion
-                    if qError.dead_end:
-                        pass
-                    elif qError.buttons:
-                        question_data['buttons'] = qError.buttons
-                    else:
-                        buttons = list()
-                        if qError.show_exit is not False and not (qError.show_leave is True and qError.show_exit is None):
-                            exit_button = {word('Exit'): 'exit'}
-                            if qError.url:
-                                exit_button.update(dict(url=qError.url))
-                            buttons.append(exit_button)
-                        if qError.show_leave:
-                            leave_button = {word('Leave'): 'leave'}
-                            if qError.url:
-                                leave_button.update(dict(url=qError.url))
-                            buttons.append(leave_button)
-                        if qError.show_restart is not False:
-                            buttons.append({word('Restart'): 'restart'})
-                        if len(buttons):
-                            question_data['buttons'] = buttons
-                    new_interview_source = InterviewSourceString(content='')
-                    new_interview = new_interview_source.get_interview()
-                    reproduce_basics(self, new_interview)
-                    new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
-                    new_question.name = "Question_Temp"
-                    # will this be a problem?
-                    the_question = new_question.follow_multiple_choice(user_dict)
-                    return(the_question.ask(user_dict, 'None', 'None'))
-                except CodeExecute as code_error:
-                    docassemble.base.functions.reset_context()
-                    #if debug:
-                    #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
-                    #logmessage("Going to execute " + str(code_error.compute) + " where missing_var is " + str(missing_var))
-                    exec(code_error.compute, user_dict)
-                    try:
-                        eval(missing_var, user_dict)
-                        #logmessage(str(missing_var) + " was defined")
-                        code_error.question.mark_as_answered(user_dict)
-                        #logmessage("Got here 1")
-                        #logmessage("returning from running code")
-                        docassemble.base.functions.pop_current_variable()
-                        #logmessage("Got here 2")
-                        return({'type': 'continue'})
-                    except:
-                        #raise DAError("Problem setting that variable")
-                        continue
-                except SyntaxException as qError:
-                    docassemble.base.functions.reset_context()
-                    the_question = None
-                    try:
-                        the_question = question
-                    except:
-                        pass
-                    if the_question is not None:
-                        raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
-                    raise DAError("no question available in askfo: " + str(qError))
-                # except SendFileError as qError:
-                #     #logmessage("Trapped SendFileError2")
-                #     question_data = dict(extras=dict())
-                #     if hasattr(qError, 'filename') and qError.filename is not None:
-                #         question_data['response filename'] = qError.filename
-                #     if hasattr(qError, 'content_type') and qError.content_type:
-                #         question_data['content type'] = qError.content_type
-                #     new_interview_source = InterviewSourceString(content='')
-                #     new_interview = new_interview_source.get_interview()
-                #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
-                #     new_question.name = "Question_Temp"
-                #     return(new_question.ask(user_dict, 'None', 'None'))
+                    #logmessage("Got here 2")
+                    return({'type': 'continue'})
+                except:
+                    #raise DAError("Problem setting that variable")
+                    continue
+            except SyntaxException as qError:
+                docassemble.base.functions.reset_context()
+                the_question = None
+                try:
+                    the_question = question
+                except:
+                    pass
+                if the_question is not None:
+                    raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
+                raise DAError("no question available in askfo: " + str(qError))
+            # except SendFileError as qError:
+            #     #logmessage("Trapped SendFileError2")
+            #     question_data = dict(extras=dict())
+            #     if hasattr(qError, 'filename') and qError.filename is not None:
+            #         question_data['response filename'] = qError.filename
+            #     if hasattr(qError, 'content_type') and qError.content_type:
+            #         question_data['content type'] = qError.content_type
+            #     new_interview_source = InterviewSourceString(content='')
+            #     new_interview = new_interview_source.get_interview()
+            #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+            #     new_question.name = "Question_Temp"
+            #     return(new_question.ask(user_dict, 'None', []))
         raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.")
 
 def reproduce_basics(interview, new_interview):
@@ -3527,3 +3350,27 @@ def interpret_label(text):
     if text is None:
         return u'no label'
     return unicode(text)
+
+def recurse_indices(expression_array, variable_list, pre_part, final_list, var_subs_dict, var_subs, generic_dict, generic):
+    if len(expression_array) == 0:
+        return
+    the_expr = "".join(pre_part) + "".join(expression_array)
+    if the_expr not in final_list and the_expr != 'x':
+        final_list.append(the_expr)
+        var_subs_dict[the_expr] = var_subs
+        generic_dict[the_expr] = "".join(generic)
+    first_part = expression_array.pop(0)
+    if match_brackets.match(first_part) and len(variable_list) > 0:
+        new_var_subs = copy.copy(var_subs)
+        new_var_subs.append(re.sub(r'^\[|\]$', r'', first_part))
+        new_list_of_indices = copy.copy(variable_list)
+        var_to_use = new_list_of_indices.pop(0)
+        new_part = copy.copy(pre_part)
+        new_part.append('[' + var_to_use + ']')
+        recurse_indices(copy.copy(expression_array), new_list_of_indices, new_part, final_list, var_subs_dict, new_var_subs, generic_dict, generic)
+        if len(new_var_subs) == 0 and len(generic) == 0:
+            recurse_indices(copy.copy(expression_array), new_list_of_indices, ['x', '[' + var_to_use + ']'], final_list, var_subs_dict, new_var_subs, generic_dict, copy.copy(pre_part))
+    pre_part.append(first_part)
+    recurse_indices(copy.copy(expression_array), variable_list, copy.copy(pre_part), final_list, var_subs_dict, var_subs, generic_dict, copy.copy(generic))
+    if len(var_subs) == 0 and len(generic) == 0:
+        recurse_indices(copy.copy(expression_array), variable_list, ['x'], final_list, var_subs_dict, var_subs, generic_dict, copy.copy(pre_part))
