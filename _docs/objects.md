@@ -58,8 +58,9 @@ presence of parentheses whether a method is being used.
 Using objects in your interviews has a number of advantages over
 using plain variables.
 
-The first advantage is that you can write [`generic object`] questions.
-(See [modifiers] for documentation of the [`generic object`] feature.)
+<a name="generic"></a>The first advantage is that you can write
+[`generic object`] questions.  (See [modifiers] for documentation of
+the [`generic object`] feature.)
 
 For example, if you need to collect the phone numbers of three people,
 the `grantor`, the `grantee`, and the `trustee`, you don't have to

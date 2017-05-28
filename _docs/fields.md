@@ -190,7 +190,9 @@ A [`question`] with a `field` and no `buttons` will offer the user a
 "Continue" button.  When the user presses "Continue," the variable
 indicated by `field` will be set to `True`.
 
-# <a name="uploading"></a>Storing files as variables
+# Uploads
+
+## <a name="uploading"></a>Storing files as variables
 
 Users can upload files, and the files are stored as a variable in **docassemble**.
 
@@ -203,7 +205,7 @@ When set, the variable `user_picture` will be a special [object] of
 type [`DAFileList`].  For instructions about how to make use of
 uploaded files, see [inserting images].
 
-# <a name="signature"></a>Gathering the user's signature into a file variable
+## <a name="signature"></a>Gathering the user's signature into a file variable
 
 The `signature` directive presents a special screen in which the user
 can sign his or her name with the trackpad or other pointing device.
@@ -808,6 +810,67 @@ will appear on the screen in the normal fashion.
 
 The label of an embedded field is used as the [tooltip] of the field.
 
+# <a name="general"></a>Generalizing questions
+
+**docassemble** lets you write a single question that can be re-used
+  throughout an interview.
+
+For example, suppose you want to gather the following variables:
+
+* `spouse.birthdate`
+* `mother.birthdate`
+* `father.birthdate`
+
+or:
+
+* `plaintiff[0].served`
+* `plaintiff[1].served`
+* `plaintiff[2].served`
+
+It would be tedious to have to write separate questions for each of
+these variables.
+
+Luckily, there are two features in **docassemble** that allow you to
+write questions in a generalized way: the [`generic object`](#generic)
+modifier, and [index variables](#index variables).
+
+## <a name="generic"></a>The `generic object` modifier
+
+The [`generic object` modifier] is explained more fully in the
+[section on modifiers], but here is an example:
+
+{% include side-by-side.html demo="generic-object" %}
+
+The special variable `x` stands in for any object of type
+[`Individual`].
+
+If you are not yet familiar with the concept of "[objects]," see the
+[objects section].
+
+## <a name="index variables"></a>Index variables
+
+If you have an [object] that is a type or subtype of [`DAList`] or
+[`DADict`], you can refer generically to any item within the object
+using an index variable.
+
+{% include side-by-side.html demo="index-variable" %}
+
+<a name="i"></a>The special variable `i` will stand in for the index
+of whichever list member your interview asks about.
+
+You can nest iterators up to six levels, using the variables `i`,
+`j`, `k`, `l`, `m`, and `n`, but you have to use them in this order.
+
+{% include side-by-side.html demo="nested-veggies" %}
+
+For more information about populating groups of things, see the
+[groups section].
+
+For more information about how **docassemble** identifies what
+question to ask in order to define a given variable, see the 
+[interview logic]({{ site.baseurl }}/docs/logic.html#variablesearching)
+section.
+
 # Special screens
 
 ## <a name="event"></a>Performing special actions requested by the user
@@ -940,6 +1003,9 @@ why this needs to be done manually as opposed to automatically:
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [object]: {{ site.baseurl }}/docs/objects.html
 [objects]: {{ site.baseurl }}/docs/objects.html
+[`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
+[`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
+[`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [Python identifiers]: https://docs.python.org/2/reference/lexical_analysis.html#identifiers
 [reserved variable names]: {{ site.baseurl }}/docs/reserved.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
@@ -966,6 +1032,7 @@ why this needs to be done manually as opposed to automatically:
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
 [`yesno`]: #yesno
 [groups]: {{ site.baseurl }}/docs/groups.html
+[groups section]: {{ site.baseurl }}/docs/groups.html
 [Python constant]: https://docs.python.org/2/library/constants.html
 [inserting images]: {{ site.baseurl }}/docs/markup.html#inserting uploaded images
 [`fields`]: #fields
@@ -988,3 +1055,6 @@ why this needs to be done manually as opposed to automatically:
 [dictionaries]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [PDF fill-in forms]: {{ site.baseurl }}/docs/documents.html#signature
 [documents]: {{ site.baseurl }}/docs/markup.html#inserting uploaded images
+[`generic object` modifier]: {{ site.baseurl }}/docs/modifiers.html#generic object
+[section on modifiers]: {{ site.baseurl }}/docs/modifiers.html#generic object
+[objects section]: {{ site.baseurl }}/docs/objects.html

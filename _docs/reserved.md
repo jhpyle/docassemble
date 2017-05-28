@@ -22,7 +22,8 @@ experience errors or unexpected results.
   part of the [scheduled tasks] system.
 * <span></span>[`loop`]: within a [Mako] "for" loop, this variable has
   special meaning.
-* <span></span>[`i`]: used as an iterator when [generic objects] are defined.
+* <span></span>[`i`], `j`, `k`, `l`, `m`, `n`: used as iterators when
+  dictionaries or lists are used.
 * <span></span>[`incoming_email`]: a [special variable] that is used
   as part of the [background processes] system.
 * <span></span>[`menu_items`]: used to add items to the menu.

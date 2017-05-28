@@ -1242,6 +1242,9 @@
   question: |
     You walk into a stinky swamp.
   event: bad_luck
+"dual-dict": |-
+  objects:
+    fruit: DADict
 "email-field": |-
   question: |
     What is your e-mail address?
@@ -2587,6 +2590,17 @@
   question: |
     Does ${ x } like cats?
   yesno: x.likes_cats
+"generic-object-ein": |-
+  generic object: Organization
+  question: |
+    What is the EIN of ${ x }?
+  fields:
+    - EIN: x.ein
+  ---
+  generic object: Organization
+  code: |
+    if x.tax_status == '501c3':
+      x.ein = retrieve_ein(x.name)
 "generic-object-phone-number": |-
   objects:
     - grantor: Individual
@@ -2775,6 +2789,13 @@
 
     Your car goes from 0 to 60 fast enough
     not to be rear-ended on the highway.
+"index-variable": |-
+  question: |
+    What is the ${ ordinal(i) }
+    person's name?
+  fields:
+    - First: people[i].name.first
+    - Last: people[i].name.last
 "initial": |-
   initial: True
   code: |
@@ -3506,6 +3527,42 @@
     ${ x } likes, besides
     ${ x.favorite_food }?
   yesno: x.favorite_food.there_is_another
+"nested-veggies": |-
+  mandatory: True
+  code: |
+    veggies.object_type = DAList
+    veggies.new('potato', 'turnip')
+    veggies.gathered = True
+    for item in veggies:
+      veggies[item].there_are_any = True
+  ---
+  question: |
+    Is there another ${ i }?
+  yesno: veggies[i].there_is_another
+  ---
+  question: |
+    How much does the
+    ${ ordinal(j) }
+    ${ i }
+    weigh?
+  fields:
+    - Grams: veggies[i][j]
+      datatype: number
+"nested-veggies-override": |-
+  question: |
+    How much does the other
+    ${ i } weigh?
+  fields:
+    - Grams: veggies[i][1]
+      datatype: number
+  ---
+  question: |
+    How much does the
+    ${ ordinal(j) }
+    ${ i } weigh?
+  fields:
+    - Grams: veggies[i][j]
+      datatype: number
 "nice-number": |-
   question: |
     There are ${ nice_number(toads) }

@@ -205,10 +205,10 @@ Consider the following example:
 
 The order of the questions is:
 
-#. Hello!
-#. What is your name?
-#. What is your favorite food?
-#. Do you like penguins?
+1. Hello!
+2. What is your name?
+3. What is your favorite food?
+4. Do you like penguins?
 
 The first two questions are asked because the corresponding
 [`question`] blocks are marked as [`mandatory`].  They are asked in
@@ -450,6 +450,86 @@ If this were an optional code block, it would not run to completion
 because `user_net_worth` would already be defined when **docassemble**
 came back from asking whether the user has a car.
 
+# <a name="variablesearching"></a>How **docassemble** finds questions for variables
+
+There can be multiple questions or code blocks in an interview that
+can define a given variable.  You can write [`generic object`]
+questions in order to define attributes of objects, and you can use
+[index variables] to refer to any given item in a [`DAList`] or
+[`DADict`] (or a subtype of these objects).  Which one will be used?
+
+In general, if you have multiple questions or code blocks that are
+capable of defining a variable, **docassemble** will try the more
+specific ones first, and then the more general ones.
+
+For example, if the interview needs a definition of
+`fruit['a'].seed_info.tally['b'].molecules[4].name`, it will look for
+questions that offer to define the following variables, in this order:
+
+{% highlight text %}
+fruit['a'].seed_info.tally['b'].molecules[4].name
+fruit[i].seed_info.tally['b'].molecules[4].name
+fruit['a'].seed_info.tally[i].molecules[4].name
+fruit['a'].seed_info.tally['b'].molecules[i].name
+fruit[i].seed_info.tally[j].molecules[4].name
+fruit[i].seed_info.tally['b'].molecules[j].name
+fruit['a'].seed_info.tally[i].molecules[j].name
+fruit[i].seed_info.tally[j].molecules[k].name
+{% endhighlight %}
+
+Then it will look for [`generic object`] blocks that offer to define
+the following variables, in this order:
+
+{% highlight text %}
+x['a'].seed_info.tally['b'].molecules[4].name
+x[i].seed_info.tally['b'].molecules[4].name
+x['a'].seed_info.tally[i].molecules[4].name
+x['a'].seed_info.tally['b'].molecules[i].name
+x[i].seed_info.tally[j].molecules[4].name
+x[i].seed_info.tally['b'].molecules[j].name
+x['a'].seed_info.tally[i].molecules[j].name
+x[i].seed_info.tally[j].molecules[k].name
+x.seed_info.tally['b'].molecules[4].name
+x.seed_info.tally[i].molecules[4].name
+x.seed_info.tally['b'].molecules[i].name
+x.seed_info.tally[i].molecules[j].name
+x.tally['b'].molecules[4].name
+x.tally[i].molecules[4].name
+x.tally['b'].molecules[i].name
+x.tally[i].molecules[j].name
+x['b'].molecules[4].name
+x[i].molecules[4].name
+x['b'].molecules[i].name
+x[i].molecules[j].name
+x.molecules[4].name
+x.molecules[i].name
+x[4].name
+x[i].name
+x.name
+{% endhighlight %}
+
+Moreover, when **docassemble** searches for a [`generic object`]
+question for a given variable, it first look for [`generic object`]
+questions with the object type of `x` (e.g., [`Individual`]).  Then it
+will look for [`generic object`] questions with the parent type of
+object type of `x` (e.g., [`Person`]).  It will keep going through the
+ancestors, stopping at the most general object type, [`DAObject`].
+
+Note that the order of questions or code blocks in the [YAML] matters
+where the variable name is the same; the blocks that appear later in
+the [YAML] will be tried first.  But when the variable name is
+different, the order of the blocks in the [YAML] does not matter.
+If your interview has a question that offers to define
+`seeds['apple']` and another question that offers to define
+`seeds[i]`, the `seeds['apple']` question will be tried first,
+regardless of where the question is located in the the [YAML].
+
+Here is an example in which a relatively specific question, which sets
+`veggies[i][1]`, will be used instead of a more general question,
+which sets `veggies[i][j]`, when applicable:
+
+{% include side-by-side.html demo="nested-veggies-override" %}
+
 # <a name="multiple interviews"></a>Combining multiple interviews into one
 
 If you have multiple interviews and you want the user to choose which
@@ -553,3 +633,10 @@ provide a list of interviews available on your server.
 [interview-flowers.yml]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/examples/interview-flowers.yml
 [`interview_url()`]: {{ site.baseurl }}/docs/functions.html#interview_url
 [`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
+[index variables]: {{ site.baseurl }}/docs/fields.html#index variables
+[`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
+[`Person`]: {{ site.baseurl }}/docs/objects.html#Person
+[`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
+[`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
+[`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
+[`generic object`]: {{ site.baseurl }}/docs/modifiers.html#generic object

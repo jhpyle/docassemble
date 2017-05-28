@@ -621,31 +621,6 @@ question: |
 ---
 {% endhighlight %}
 
-**docassemble** lets you ask generic questions to fill in information
-about each object in a list:
-
-{% highlight yaml %}
----
-question: |
-  Does ${ case.plaintiff[i] } agree to accept service?
-yesno: case.plaintiff[i].agrees_to_accept_service
----
-{% endhighlight %}
-
-<a name="i"></a>The special variable `i` will stand in for the index
-of whichever list member your interview asks about.
-
-You can also make use of the special variable `i`:
-
-{% highlight yaml %}
----
-question: |
-  Does ${ case.plaintiff[i] }, the ${ ordinal(i) } plaintiff,
-  agree to accept service?
-yesno: case.plaintiff[i].agrees_to_accept_service
----
-{% endhighlight %}
-
 For more information about "for loops" in [Mako], see the
 [markup section].
 

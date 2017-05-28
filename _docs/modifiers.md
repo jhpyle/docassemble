@@ -304,44 +304,38 @@ appears in [`signature`] questions.
 
 # <a name="generic object"></a>Reusable questions: `generic object`
 
-{% highlight yaml %}
----
-generic object: Individual
-question: |
-  So, ${ x.is_are_you() } a defendant in this case?
-yesno: x.is_defendant
----
-{% endhighlight %}
+{% include side-by-side.html demo="generic-object" %}
 
 `generic object` is a very powerful feature in **docassemble** that
 allows authors to express questions in general terms.
 
-The above example will cause **docassemble** to ask "So, is John Smith
-a defendant in this case?" if the interview logic calls for
-`neighbor.is_defendant` and `neighbor` is an object of type
-[`Individual`] whose name has been set to "John Smith."  Or, if the
-interview logic calls for `user.is_defendant`, **docassemble** will
-ask, "So, are you a defendant in this case?"
+The above example will cause **docassemble** to ask "Does Sally Smith
+like cats?" if the interview logic calls for `neighbor.likes_cats` and
+`neighbor` is an object of type [`Individual`] whose name has been set
+to "Sally Smith."  Or, it will ask "Does William Jones like cats?" if
+the interview logic calls for `teacher.likes_cats`, and `teacher` is
+an object of type [`Individual`] whose name has been set to "William
+Jones."
 
 <a name="x"></a>`x` is a special variable that should only be used in
-`generic object` questions.  This question definition tells
-**docassemble** that if it ever needs an `is_defendant` attribute for
+`generic object` questions.  The above question definition tells
+**docassemble** that if it ever needs the `likes_cats` attribute for
 any object of type [`Individual`], it can get an answer by asking this
 question.
 
-If your interview needs a definition for `user.is_defendant`, where
-`user` is an object of type `Individual`, **docassemble** will first
-look for a question that offers to define `user.is_defendant`.  If no
+If your interview needs a definition for `spouse.likes_cats`, where
+`spouse` is an object of type `Individual`, **docassemble** will first
+look for a question that offers to define `spouse.likes_cats`.  If no
 such question exists, it will then look for a question that offers to
-defined `x.is_defendant`, where the `generic object` is
-[`Individual`].  If no such question exists, it will look for `generic
-object` questions for the parent types of [`Individual`].  The
-variables that will be sought, in the order in which they will be sought, are:
+defined `x.likes_cats`, where the `generic object` is [`Individual`].
+If no such question exists, it will look for `generic object`
+questions for the parent types of [`Individual`].  The variables that
+will be sought, in the order in which they will be sought, are:
 
-* `user.is_defendant`
-* `x.is_defendant` where `generic object` is [`Individual`].
-* `x.is_defendant` where `generic object` is [`Person`].
-* `x.is_defendant` where `generic object` is [`DAObject`].
+* `spouse.likes_cats`
+* `x.likes_cats` where `generic object` is [`Individual`].
+* `x.likes_cats` where `generic object` is [`Person`].
+* `x.likes_cats` where `generic object` is [`DAObject`].
 
 This way, you can provide layers of `generic object` blocks to handle
 special cases as well as general cases, based on the object type.  For
@@ -366,18 +360,7 @@ organizations organized as non-profits.  For organizations not
 organized as non-profits, you will need to ask the user for the EIN.
 You could use the following two blocks to accomplish this:
 
-{% highlight yaml %}
-generic object: Organization
-question: |
-  What is the EIN of ${ x }?
-fields:
-  - EIN: x.ein
----
-generic object: Organization
-code: |
-  if x.tax_status == '501c3':
-    x.ein = retrieve_ein(x.name)
-{% endhighlight %}
+{% include side-by-side.html demo="generic-object-ein" %}
 
 Whenever the `.ein` of an organization is needed, the [`code`] block
 will be run, but the attribute will not be set if the organization is
@@ -472,6 +455,9 @@ by **docassemble**, so it can contain any valid [YAML].
 [default language]: {{ site.baseurl }}/docs/initial.html#default language
 [progress bar]: {{ site.baseurl }}/docs/initial.html#features
 [`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
+[`Person`]: {{ site.baseurl }}/docs/objects.html#Person
+[`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
+[`Organization`]: {{ site.baseurl }}/docs/objects.html#Organization
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`microphone`]: {{ site.baseurl }}/docs/fields.html#microphone
 [`field` with `choices`]: {{ site.baseurl }}/docs/fields.html#field with choices
@@ -482,3 +468,4 @@ by **docassemble**, so it can contain any valid [YAML].
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
 [fallback]: {{ site.baseurl }}/docs/logic.html#fallback
+[`code`]: {{ site.baseurl }}/docs/code.html#code

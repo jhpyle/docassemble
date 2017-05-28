@@ -339,8 +339,8 @@ package is `docassemble.missouri-family-law`, the name of the [GitHub]
 package should be `docassemble-missouri-family-law`.
 
 After you press ![Create Repository]({{ site.baseurl
-}}/img/github-create-repository.png), you will get a URL for your
-repository, which will be in a form like
+}}/img/github-create-repository.png), your browser will go to the URL
+for your new repository, which will be in a form like
 `https://github.com/jhpyle/docassemble-missouri-family-law`.  In this
 example, `jhpyle` is the username, and
 `docassemble-missouri-family-law` is the name of the repository.
@@ -362,10 +362,11 @@ directory of your new [GitHub] repository.
 
 The process of initializing a package as a [GitHub] repository
 requires using the shell.  (On Windows, you can use [PowerShell].)
-First use `cd` to change into the directory that contains the package
-you want to install (in this example, we'll use
-`docassemble-missouri-family-law`) and then run the [git] commands
-suggested by [GitHub].  For example:
+The web page at the URL for your repository on [GitHub] contains some
+instructions about how to initialize your repository.  First, use `cd`
+to change into the directory that contains the package you want to
+install (in this example, we'll use `docassemble-missouri-family-law`)
+and then run the [git] commands suggested by [GitHub].  For example:
 
 {% highlight text %}
 cd docassemble-missouri-family-law
@@ -376,7 +377,10 @@ git remote add origin https://github.com/jhpyle/docassemble-missouri-family-law.
 git push -u origin master
 {% endhighlight %}
 
-The last command will prompt you for your [GitHub] credentials.
+The last command will prompt you for your [GitHub] credentials.  After
+you put in the credentials, your package will be uploaded to
+[GitHub].  If you reload your [GitHub] repository's page at the
+[GitHub] URL, you will see the listing of files.
 
 Now, on the **docassemble** menu, you can go to Package Management ->
 Update a Package, and install the package using its [GitHub] URL.
