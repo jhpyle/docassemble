@@ -1,0 +1,40 @@
+metadata:
+  title: Link for sharing
+  example start: 1
+  example end: 4
+  documentation: "https://docassemble.org/docs/functions.html#interview_url"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  multi_user = False
+---
+question: |
+  Ready to proceed?
+subquestion: |
+  Here is an interview URL that launches another interview.
+  
+  `${ interview_url(i='docassemble.base:data/questions/examples/interview-url-session-two.yml') }`
+
+  To proceed with the interview,
+  click "Yes."
+yesno: ready_to_proceed
+---
+question: All done
+subquestion: |
+  Now we are done with the interview.
+sets: final_screen
+---
+subquestion: Goodbye
+question: |
+  So long!
+sets: kick_out_screen
+---
+mandatory: True
+code: |
+  if ready_to_proceed:
+    final_screen
+  else:
+    kick_out_screen

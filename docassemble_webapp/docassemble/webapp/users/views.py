@@ -8,6 +8,7 @@ from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUs
 from docassemble.base.functions import word, debug_status, get_default_timezone
 from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
+from sqlalchemy import or_, and_
 
 import random
 import string
@@ -174,7 +175,7 @@ def invite():
 
     user_role = Role.query.filter_by(name='user').first()
     invite_form = MyInviteForm(request.form)
-    invite_form.role_id.choices = [(str(r.id), str(r.name)) for r in db.session.query(Role).filter(Role.name != 'cron', Role.name != 'admin').order_by('name')]
+    invite_form.role_id.choices = [(str(r.id), str(r.name)) for r in db.session.query(Role).filter(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name')]
     invite_form.role_id.default = str(user_role.id)
     if str(invite_form.role_id.data) == 'None':
         invite_form.role_id.data = str(user_role.id)

@@ -1,0 +1,27 @@
+metadata:
+  title: Destination interview
+  short title: Destination
+  example start: 1
+  example end: 5
+  documentation: "https://docassemble.org/docs/functions.html#interview_url"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  multi_user = False
+---
+mandatory: True
+code: |
+  if ready_to_proceed:
+    all_done
+---
+question: |
+  Please press continue
+field: ready_to_proceed  
+---
+question: All done
+subquestion: |
+  Now we are done with the interview.
+event: all_done

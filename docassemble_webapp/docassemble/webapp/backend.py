@@ -318,8 +318,9 @@ def fetch_user_dict(user_code, filename, secret=None):
     user_dict = None
     steps = 0
     encrypted = True
-    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(UserDict.key == user_code and UserDict.filename == filename).subquery()
+    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).subquery()
     results = db.session.query(UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
+    #logmessage("01 query is " + str(results))
     for d in results:
         if d.dictionary:
             if d.encrypted:
@@ -334,7 +335,7 @@ def fetch_user_dict(user_code, filename, secret=None):
 
 def fetch_previous_user_dict(user_code, filename, secret):
     user_dict = None
-    max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code and UserDict.filename == filename).scalar()
+    max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).scalar()
     if max_indexno is not None:
         UserDict.query.filter_by(indexno=max_indexno).delete()
         db.session.commit()

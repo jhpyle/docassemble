@@ -80,7 +80,7 @@ class MachineLearner(object):
         if key is None:
             query = db.session.query(MachineLearning.dependent).filter(MachineLearning.group_id == self.group_id).group_by(MachineLearning.dependent)
         else:
-            query = db.session.query(MachineLearning.dependent).filter(_and(MachineLearning.group_id == self.group_id, MachineLearning.key == key)).group_by(MachineLearning.dependent)
+            query = db.session.query(MachineLearning.dependent).filter(and_(MachineLearning.group_id == self.group_id, MachineLearning.key == key)).group_by(MachineLearning.dependent)
         for record in query:
             if record.dependent is not None:
                 in_use.add(pickle.loads(codecs.decode(record.dependent, 'base64')))
