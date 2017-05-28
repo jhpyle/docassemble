@@ -745,8 +745,9 @@ obtain an `id` and `secret` for use with Facebook's [OAuth2] interface.
 
 # Start the server and background processes
 
-First, make sure that your system is not running services that should
-be stopped and started by [supervisor]:
+First, we need to disable the automatic starting and stopping of
+[Apache] on your server.  Your server will still run [Apache], but we
+need it to be controlled by [supervisor] rather than [systemd]:
 
 {% highlight bash %}
 sudo systemctl stop apache2.service
@@ -788,21 +789,35 @@ which it has not processed yet:
 sudo systemctl restart rabbitmq-server.service
 {% endhighlight %}
 
-Then, restart the [supervisor] service:
+Optionally, you can also control [PostgreSQL] and [Redis] with [supervisor]:
+
+{% highlight bash %}
+sudo systemctl stop postgresql.service
+sudo systemctl disable postgresql.service
+sudo systemctl stop redis.service
+sudo systemctl disable redis.service
+{% endhighlight %}
+
+If [supervisor] controls [PostgreSQL] and [Redis], then when
+[supervisor] stops, it will make a backup of the [PostgreSQL] database
+and the [Redis] database in `/usr/share/docassemble/backup/` (or in
+the cloud).
+
+Finally, restart the [supervisor] service:
 
 {% highlight bash %}
 sudo systemctl stop supervisor.service
 sudo systemctl start supervisor.service
 {% endhighlight %}
 
-You will find **docassemble** running at the URL for your site.
+You should find **docassemble** running at the URL for your site.
 
 <a name="certbot"></a>If you did not enable HTTPS in your [Apache]
-configuration, an easy way to do it is through [Let's Encrypt], also
-known as [certbot].  To install the software, follow the
-[certbot instructions] for your operating system.  For example, on
-Ubuntu 16.04, you can add the latest [certbot] to your software
-repository:
+configuration, an easy way to encrypt your site is through
+[Let's Encrypt], also known as [certbot].  To install the software,
+follow the [certbot instructions] for your operating system.  For
+example, on Ubuntu 16.04, you can add the latest [certbot] to your
+software repository by doing:
 
 {% highlight bash %}
 sudo apt-get install software-properties-common
@@ -834,12 +849,12 @@ answers" or navigate to `/user/sign-in`.  Log in with:
 * Email: admin@admin.com
 * Password: password
 
-It should immediately prompt you to change your password.
+It should immediately prompt you to change your password to something secure.
 
 # Debugging
 
 Run `sudo supervisorctl status` to see the status of the processes `supervisor` is
-controlling.  A healthy output looks like this:
+controlling.  A healthy output would look like this:
 
 {% highlight text %}
 apache2                          RUNNING   pid 1894, uptime 0:08:49
@@ -859,7 +874,8 @@ websockets                       RUNNING   pid 1589, uptime 0:09:05
 {% endhighlight %}
 
 The `postgres`, `rabbitmq`, and `redis` services are not being
-controlled by [supervisor] here, but they should be running.
+controlled by [supervisor] in this example, but they should be
+running.
 
 * If [PostgreSQL] is running, `pg_isready` should return "accepting
 connections."
@@ -1001,9 +1017,11 @@ If you encounter any errors, please register an "issue" on the
 
 # Using different web servers and/or SQL database backends
 
-**docassemble** is not dependent on [Apache] or [PostgreSQL].  Other web
-servers that can host Python [WSGI] applications (e.g., [nginx] with
-[uWSGI]) could be used.
+**docassemble** needs a web server and a SQL server, but it is not
+  dependent on [Apache] or [PostgreSQL].
+
+Other web servers that can host Python [WSGI] applications (e.g.,
+[nginx] with [uWSGI]) could be used.
 
 **docassemble** uses [SQLAlchemy] to communicate with the SQL back
 end, so you can edit the [configuration] to point to another type of
@@ -1011,6 +1029,12 @@ database system, if supported by [SQLAlchemy].  **docassemble** does
 not do fancy things with SQL, so most backends should work without a
 problem.  Any backend that you use must support column definitions
 with `server_default=db.func.now()`.
+
+One reason you might want to stay with [PostgreSQL], however, is that
+**docassemble** has utilities for automatically updating database
+columns if a new version of **docassemble** requires changes to
+columns in existing database tables.  If you use a non-[PostgreSQL]
+database, you will need to make these changes manually.
 
 # Running services on different machines
 
@@ -1087,9 +1111,13 @@ sudo systemctl start supervisor.service
 
 Other times, a **docassemble** upgrade involves changes to the
 [Apache] configuration, [supervisor] configuration, or auxillary
-files.  In this case, you will need to manually reinstall
-**docassemble**.
+files.  In this case, you will need to make the changes by hand or
+manually reinstall **docassemble**.
 
+All of these system administration headaches can be avoided by
+[using Docker].
+
+[using Docker]: {{ site.baseurl }}/docs/docker.html
 [schema]: {{ site.baseurl }}/docs/schema.html
 [install it using Docker]: {{ site.baseurl }}/docs/docker.html
 [Docker]: {{ site.baseurl }}/docs/docker.html
