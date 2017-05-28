@@ -33,3 +33,4 @@ recommended.)  For details of how **docassemble** works, see the
 [ZIP file]: https://github.com/jhpyle/docassemble/archive/master.zip
 [GitHub repository]: {{ site.github.repository_url }}
 [Python]: https://www.python.org/
+[PyPI]: https://pypi.python.org/pypi

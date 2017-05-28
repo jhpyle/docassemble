@@ -41,17 +41,14 @@ listed below.  Note that:
   should be asked.  The content of this file is listed below.
 * The code is not entirely self-explanatory, but for computer code, it
   is pretty close to plain English.
-* Note that complicated processes, such as asking a series of
-  questions that gather the names of the children of the parties
-  involved in the case, can be specified in just a few lines of code.
 * The questions and logic are not specified in any particular order.
   If **docassemble** needs to get the value of a variable, it knows
   where to find it.  This makes things easier for the author, who can
-  organize the questions however he or she wants.  Moreover, the
-  author can represent the underlying legal logic in modular,
-  bite-size pieces.  A question or a bit of logic that an author
-  writes for one interview can be packaged and reused in other
-  interviews.
+  organize the questions however he or she wants and use keyword
+  searching to navigate.  Moreover, the author can represent the
+  underlying legal logic in modular, bite-size pieces.  A question or
+  a bit of logic that an author writes for one interview can be
+  packaged and reused in other interviews.
 
 {% highlight yaml %}
 metadata:
@@ -64,7 +61,7 @@ metadata:
   authors:
     - name: Jonathan Pyle
       organization: none
-  revision_date: 2017-05-01
+  revision_date: 2017-05-26
 comment: |
   A "metadata" block contains information about the interview, such as
   the title of the interview as displayed in the navigation bar.

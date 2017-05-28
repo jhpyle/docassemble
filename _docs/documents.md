@@ -74,10 +74,11 @@ concentrate on the content and let **docassemble** handle the
 formatting.  For example, there are automatic methods for generating
 case captions in legal documents created from [Markdown], whereas if
 you create your legal document in .docx format, you will need to
-construct your caption in the .docx template file and make sure that
-it gets filled in correctly.  The [Markdown](#from markdown) method
-allows for more readable embedded if/then/else statements.  In the
-[.docx template](#docx template file) method, you have to write:
+construct your caption in the [.docx template file](#docx template
+file) and make sure that it gets filled in correctly.  The
+[Markdown](#from markdown) method allows for more readable embedded
+if/then/else statements.  In the [.docx template](#docx template file)
+method, you have to write:
 
 > I {% raw %}{% if employed %}have a job.{% else %}am unemployed.{% endif %}{% endraw %}
 
@@ -624,6 +625,17 @@ before a paragraph in order to get the results you want.  Other
 modifiers besides `p` include `tr` for table rows and `tc` for table
 columns.
 
+If your interview uses [dictionary] data structures, you may need to
+change the "[auto-format]" settings of your word processor so that
+"straight quotes" are used instead of "curly quotes" within [Jinja2]
+syntax.  This will fail:
+
+![curly quotes]({{ site.baseurl }}/img/jinja2-curly-quotes.png)
+
+But this will correct the problem:
+
+![straight quotes]({{ site.baseurl }}/img/jinja2-straight-quotes.png)
+
 Images can be inserted into .docx files.  This is illustrated in the
 example above: the variable `user.signature` is a graphics image (an
 image of the user's signature created with the [`signature` block]).
@@ -1080,3 +1092,5 @@ Including `allow emailing: False` will disable this:
 [Groups]: {{ site.baseurl }}/docs/groups.html
 [a tool]: #list field names
 [`signature` block]: {{ site.baseurl }}/docs/fields.html#signature
+[dictionary]: {{ site.baseurl }}/docs/groups.html#gather dictionary
+[auto-format]: https://support.office.com/en-us/article/Change-curly-quotes-to-straight-quotes-and-vice-versa-017963a0-bc5f-486b-9c9d-0ec511a8fb8f
