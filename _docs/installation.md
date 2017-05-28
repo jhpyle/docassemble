@@ -173,7 +173,7 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   tesseract-ocr-srp tesseract-ocr-swa tesseract-ocr-swe \
   tesseract-ocr-tam tesseract-ocr-tel tesseract-ocr-tgl \
   tesseract-ocr-tha tesseract-ocr-tur tesseract-ocr-ukr \
-  tesseract-ocr-viebuild-essential nodejs npm exim4-daemon-heavy \
+  tesseract-ocr-vie build-essential nodejs npm exim4-daemon-heavy \
   libsvm3 libsvm-dev liblinear1 liblinear-dev
 {% endhighlight %}
 
@@ -181,13 +181,15 @@ The libraries `libcurl4-openssl-dev` and `libssl-dev` are particularly
 important; **docassemble**'s [Python] dependencies will not install
 unless these libraries are present.
 
+On [Ubuntu], you may need to replace `liblinear1` with `liblinear3`.
+
 **docassemble** depends on version 5.0.1 or later of the
 [Perl Audio Converter] to convert uploaded sound files into other
 formats.  If your distribution offers an earlier version, you will
 need to install [pacpl] it from the source:
 
 {% highlight bash %}
-apt-get -q -y remove pacpl
+sudo apt-get -q -y remove pacpl
 git clone git://git.code.sf.net/p/pacpl/code pacpl-code 
 cd pacpl-code
 ./configure
@@ -205,8 +207,8 @@ your Linux distribution provides an earlier version, you can install
 from the source:
 
 {% highlight bash %}
-wget https://github.com/jgm/pandoc/releases/download/1.17.1/pandoc-1.17.1-2-amd64.deb
-sudo dpkg -i pandoc-1.17.1-2-amd64.deb
+wget https://github.com/jgm/pandoc/releases/download/1.19.2.1/pandoc-1.19.2.1-1-amd64.deb
+sudo dpkg -i pandoc-1.19.2.1-1-amd64.deb
 {% endhighlight %}
 
 On some systems, you may run into a situation where [LibreOffice]
@@ -221,8 +223,8 @@ To enable the use of [Azure blob storage] as a means of
 [data storage], you will need to run the following:
 
 {% highlight bash %}
-update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
-npm install -g azure-storage-cmd
+sudo update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
+sudo npm install -g azure-storage-cmd
 {% endhighlight %}
 
 **docassemble** uses locale settings to format numbers, get currency
@@ -422,11 +424,6 @@ sudo a2enmod proxy_http
 sudo a2enmod proxy_wstunnel
 {% endhighlight %}
 
-Make any necessary changes to the [Apache] configuration file,
-`/etc/apache2/sites-available/docassemble.conf`.  It is a good idea to
-set the ServerName directive, and may be required if your site hosts
-multiple named virtual hosts.
-
 Set up and edit the **docassemble** [configuration] file, the standard location of
 which is `/usr/share/docassemble/config.yml`:
 
@@ -435,16 +432,22 @@ sudo cp ~/docassemble/docassemble_base/config.yml /usr/share/docassemble/config/
 sudo vi /usr/share/docassemble/config/config.yml
 {% endhighlight %}
 
-At the very least, you should edit the `secretkey` and
-`password_secretkey` values and set them to something random and
-unique to your site.  By default, **docassemble** is available at the
-root of your site.  That is, if your domain is `example.com`,
-**docassemble** will be available at `http://example.com`.  If you
-would like it to be available at `http://example.com/docassemble`, you
+At the very least, you should edit the [`secretkey`] value and set it
+to something random and unique to your site.
+
+You should set [`external hostname`] to the domain of your site (e.g.,
+`assembly.example.com`) and set [`url root`] to the URL that web
+browsers should use to access your site (e.g.,
+`http://assembly.example.com`).
+
+By default, **docassemble** is available at the root of your site.
+That is, if your domain is `assembly.example.com`, **docassemble**
+will be available at `http://assembly.example.com`.  If you would like
+it to be available at `http://assembly.example.com/docassemble`, you
 will need to change the [`root`] directive to `/docassemble/` and the
-[`url root`] directive to `http://example.com/docassemble`.  Note that
-it is important to include `/` marks at both the beginning and end of
-[`root`].
+[`url root`] directive to `http://assembly.example.com/docassemble`.
+Note that it is important to include `/` marks at both the beginning
+and end of [`root`].
 
 Make sure that everything in the **docassemble** directory can be read
 and written by the web server:
@@ -453,19 +456,27 @@ and written by the web server:
 sudo chown -R www-data.www-data /usr/share/docassemble
 {% endhighlight %}
 
-The [configuration] file needs to be readable and writeable by the web
-server so that you can edit it through the web application.
-
-Then, edit the [Apache] site configuration and make any changes you
-need to make so that **docassemble** can coexist with your other web
-applications.  You should edit at least the `ServerAdmin` and
-`ServerName` lines.  If you changed the [`root`] directive in the
-[configuration], edit the `WSGIScriptAlias` lines in the [Apache] site
-configuration.
+Then, edit the [Apache] site configuration.
 
 {% highlight bash %}
-sudo vi /etc/apache2/sites-available/docassemble.conf
+sudo vi /etc/apache2/sites-available/docassemble-http.conf
 {% endhighlight %}
+
+Edit the `ServerAdmin` line and add your e-mail address.
+
+Replace `{% raw %}{{DAHOSTNAME}}{% endraw %}` with the domain of your
+site (e.g., `assembly.example.com`).
+
+Replace `{% raw %}{{POSTURLROOT}}{% endraw %}` with `/` and replace
+`{% raw %}{{WSGIROOT}}{% endraw %}` with `/`.
+
+However, if you changed the [`root`] directive to `/docassemble/` in
+the [configuration], replace `{% raw %}{{POSTURLROOT}}{% endraw %}`
+with `/docassemble/` and replace `{% raw %}{{WSGIROOT}}{% endraw %}`
+with `/docassemble`.
+
+Make any other changes you need to make so that **docassemble** can
+coexist with your other web applications.
 
 If your **docassemble** interviews are not thread-safe, for example
 because different interviews on your server use different locales,
@@ -492,13 +503,20 @@ configuration:
 sudo a2dissite 000-default
 {% endhighlight %}
 
-Note that the [Apache] configuration file will forward HTTP to HTTPS
-if the ssl [Apache] module is installed, but will run **docassemble**
-solely on HTTP otherwise.  Therefore, if you wish to use HTTPS, run
+If you have your own SSL certificates, you can enable SSL by running:
 
 {% highlight text %}
 sudo a2enmod ssl
 {% endhighlight %}
+
+You will then need to edit
+`/etc/apache2/sites-available/docassemble-ssl.conf` and make the same
+changes that you made to
+`/etc/apache2/sites-available/docassemble-http.conf`.
+
+Note that the [Apache] configuration file will forward HTTP to HTTPS
+if the `ssl` [Apache] module is installed, but will run
+**docassemble** solely on HTTP otherwise.
 
 The [Apache] configuration file looks for SSL certificates in
 `/etc/ssl/docassemble`.  The best practice is not to edit these file
@@ -512,11 +530,17 @@ locations:
 On startup, the [initialization script] will copy these files into
 `/etc/ssl/docassemble` with the appropriate ownership and permissions.
 
-If you wish to use plain HTTP, run
+If you ran `sudo a2enmod ssl` but wish to go back to using plain HTTP,
+run:
 
 {% highlight text %}
 sudo a2dismod ssl
 {% endhighlight %}
+
+If you do not have your own SSL certificates, it is easy to set up
+HTTPS using [Let's Encrypt].  Once you get your site working on HTTP,
+you can run a single command line that enables HTTPS on your system.
+This is explained [below](#certbot).
 
 # <a name="setup"></a>Setting up the SQL server
 
@@ -727,6 +751,11 @@ be stopped and started by [supervisor]:
 {% highlight bash %}
 sudo systemctl stop apache2.service
 sudo systemctl disable apache2.service
+{% endhighlight %}
+
+If you are using the [e-mail receiving] feature, disable the exim4
+service as well:
+{% highlight bash %}
 sudo systemctl stop exim4.service
 sudo systemctl disable exim4.service
 {% endhighlight %}
@@ -751,6 +780,14 @@ sudo rabbitmqctl status
 If it responds with "Error: unable to connect to node . . ." then
 there is a problem with [RabbitMQ].
 
+While [RabbitMQ] should have been started after you installed it, you
+still need to restart it because you gave it a new configuration file,
+which it has not processed yet:
+
+{% highlight bash %}
+sudo systemctl restart rabbitmq-server.service
+{% endhighlight %}
+
 Then, restart the [supervisor] service:
 
 {% highlight bash %}
@@ -758,9 +795,79 @@ sudo systemctl stop supervisor.service
 sudo systemctl start supervisor.service
 {% endhighlight %}
 
-You will find **docassemble** running at http://example.com/da.
+You will find **docassemble** running at the URL for your site.
 
-# Debugging problems
+<a name="certbot"></a>If you did not enable HTTPS in your [Apache]
+configuration, an easy way to do it is through [Let's Encrypt], also
+known as [certbot].  To install the software, follow the
+[certbot instructions] for your operating system.  For example, on
+Ubuntu 16.04, you can add the latest [certbot] to your software
+repository:
+
+{% highlight bash %}
+sudo apt-get install software-properties-common
+sudo add-apt-repository ppa:certbot/certbot
+{% endhighlight %}
+
+Then, to install [certbot], run:
+
+{% highlight bash %}
+sudo apt-get -y update
+sudo apt-get -y install python-certbot-apache 
+{% endhighlight %}
+
+Once [certbot] is installed, you can change your site from HTTP to
+HTTPS by running:
+
+{% highlight bash %}
+sudo certbot --apache
+{% endhighlight %}
+
+When it asks you to "choose whether HTTPS access is required or
+optional," select option 2, "Secure - Make all requests redirect to
+secure HTTPS access."
+
+Once your site is using HTTPS, you should change the password for the
+default admin user.  Click "Sign in or sign up to save
+answers" or navigate to `/user/sign-in`.  Log in with:
+
+* Email: admin@admin.com
+* Password: password
+
+It should immediately prompt you to change your password.
+
+# Debugging
+
+Run `sudo supervisorctl status` to see the status of the processes `supervisor` is
+controlling.  A healthy output looks like this:
+
+{% highlight text %}
+apache2                          RUNNING   pid 1894, uptime 0:08:49
+celery                           RUNNING   pid 2592, uptime 0:00:11
+cron                             STOPPED   Not started
+exim4                            RUNNING   pid 2198, uptime 0:04:07
+initialize                       RUNNING   pid 1111, uptime 0:09:17
+postgres                         STOPPED   Not started
+rabbitmq                         STOPPED   Not started
+redis                            STOPPED   Not started
+reset                            STOPPED   Not started
+sync                             EXITED    May 28 07:52 PM
+syslogng                         STOPPED   Not started
+update                           STOPPED   Not started
+watchdog                         RUNNING   pid 1110, uptime 0:09:17
+websockets                       RUNNING   pid 1589, uptime 0:09:05
+{% endhighlight %}
+
+The `postgres`, `rabbitmq`, and `redis` services are not being
+controlled by [supervisor] here, but they should be running.
+
+* If [PostgreSQL] is running, `pg_isready` should return "accepting
+connections."
+* If [RabbitMQ] is running, `sudo rabbitmqctl status` should run
+without error.
+* If [Redis] is running, `redis-cli ping` should return "PONG."
+
+You can also run `ps ax` to see which processes are actually running.
 
 Log files to check include:
 
@@ -771,7 +878,8 @@ every time)
 * `/usr/share/docassemble/log/docassemble.log`
 * `/tmp/flask.log`
 
-If you are debugging [background processes], check:
+If the `celery` process failed to start, or you are debugging
+[background processes], check:
 
 * `/usr/share/docassemble/log/worker.log`
 
@@ -797,10 +905,6 @@ a substitute for [SysV], [systemd], or other "init" system, but it is
 also designed to be work correctly on systems where the "init" system
 has already started some of the necessary background processes, such
 as [Apache], and [PostgreSQL], [redis], and [RabbitMQ].
-
-You can run `supervisorctl status` to see which processes `supervisor`
-is controlling.  You can run `ps ax` to see which processes are
-actually running.
 
 When **docassemble** is working, you should see processes like the
 following in the output of `ps ax`.
@@ -883,8 +987,10 @@ fully-functional **docassemble**, you will need to make sure that all
 of these services are running.
 
 If you need to run [Python] commands like [pip] in order to fix
-problems, you need to let the shell know about the virtual
-environment.  You can do this by first running:
+problems, you need to run `su www-data` so that you are running as the
+same user as [Apache].  In addition, you need to let the shell know
+about the virtual environment.  You can do this by running the
+following before you run any [Python] commands:
 
 {% highlight bash %}
 source /usr/share/docassemble/local/bin/activate
@@ -994,6 +1100,8 @@ files.  In this case, you will need to manually reinstall
 [configuration]: {{ site.baseurl }}/docs/config.html
 [`root`]: {{ site.baseurl }}/docs/config.html#root
 [`url root`]: {{ site.baseurl }}/docs/config.html#url root
+[`external hostname`]: {{ site.baseurl }}/docs/config.html#external hostname
+[`secretkey`]: {{ site.baseurl }}/docs/config.html#secretkey
 [`db`]: {{ site.baseurl }}/docs/config.html#db
 [`redis`]: {{ site.baseurl }}/docs/config.html#redis
 [`rabbitmq`]: {{ site.baseurl }}/docs/config.html#rabbitmq
@@ -1078,3 +1186,6 @@ files.  In this case, you will need to manually reinstall
 [Facebook Developers]: https://developers.facebook.com/
 [OAuth2]: https://oauth.net/2/
 [`oauth`]: {{ site.baseurl }}/docs/config.html#oauth
+[LibreOffice]: https://www.libreoffice.org/
+[certbot instructions]: https://certbot.eff.org/all-instructions/
+[certbot]: https://certbot.eff.org/
