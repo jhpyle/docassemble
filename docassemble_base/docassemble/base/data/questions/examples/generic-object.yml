@@ -1,6 +1,8 @@
 metadata:
   title: Generic object
   documentation: "https://docassemble.org/docs/modifiers.html#generic object"
+  example start: 1
+  example end: 1
 ---
 generic object: Individual
 question: |

@@ -1,0 +1,56 @@
+metadata:
+  title: Generic object fallback
+  short title: Fallback
+  documentation: "https://docassemble.org/docs/modifiers.html#generic object"
+  example start: 3
+  example end: 4
+---
+modules:
+  - docassemble.demo.ein
+  - docassemble.base.util
+---
+objects:
+  first_company: Organization
+  second_company: Organization
+---
+generic object: Organization
+question: |
+  What is the EIN of ${ x }?
+fields:
+  - EIN: x.ein
+---
+generic object: Organization
+code: |
+  if x.tax_status == '501c3':
+    x.ein = retrieve_ein(x.name)
+---
+generic object: Organization
+question: |
+  What is the tax status of
+  ${ x }?
+field: x.tax_status
+choices:
+  - Non-profit: 501c3
+  - For-profit: taxable
+---
+code: |
+  first_company.name.text = "ABC Incorporated"
+  second_company.name.text = "XYZ Incorporated"
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  ${ first_company } is
+  % if first_company.tax_status != '501c3':
+  not
+  % endif
+  a non-profit.
+  Its EIN is ${ first_company.ein }.
+
+  ${ second_company } is
+  % if second_company.tax_status != '501c3':
+  not
+  % endif
+  a non-profit.
+  Its EIN is ${ second_company.ein }.

@@ -2784,7 +2784,7 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
+        #logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
         origMissingVariable = missingVariable
         docassemble.base.functions.set_current_variable(origMissingVariable)
         if missingVariable in variable_stack:
@@ -2800,9 +2800,9 @@ class Interview:
         expression_as_list.append('')
         recurse_indices(expression_as_list, list_of_indices, [], variants, level_dict, [], generic_dict, [])
         for variant in variants:
-            totry.append({'real': missingVariable, 'vari': variant, 'iterators': level_dict[variant], 'generic': generic_dict[variant], 'is_generic': 0 if generic_dict[variant] == '' else 1, 'num_dots': variant.count('.')})
-        totry = sorted(sorted(sorted(totry, key=lambda x: len(x['iterators']), reverse=True), key=lambda x: x['num_dots'], reverse=True), key=lambda x: x['is_generic'])
-        logmessage("totry is " + str(totry))
+            totry.append({'real': missingVariable, 'vari': variant, 'iterators': level_dict[variant], 'generic': generic_dict[variant], 'is_generic': 0 if generic_dict[variant] == '' else 1, 'num_dots': variant.count('.'), 'num_iterators': variant.count('[')})
+        totry = sorted(sorted(sorted(sorted(totry, key=lambda x: len(x['iterators'])), key=lambda x: x['num_iterators'], reverse=True), key=lambda x: x['num_dots'], reverse=True), key=lambda x: x['is_generic'])
+        #logmessage("totry is " + "\n".join([x['vari'] for x in totry]))
         questions_to_try = list()
         for mv in totry:
             realMissingVariable = mv['real']
@@ -2831,7 +2831,7 @@ class Interview:
                     if lang in self.questions[missingVariable]:
                         for the_question in reversed(self.questions[missingVariable][lang]):
                             questions_to_try.append((the_question, False, 'None', mv['iterators'], missingVariable, None))
-        logmessage("questions to try is " + str(questions_to_try))
+        #logmessage("questions to try is " + str(questions_to_try))
         while True:
             docassemble.base.functions.reset_gathering_mode(origMissingVariable)
             try:

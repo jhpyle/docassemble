@@ -2,18 +2,73 @@ modules:
   - docassemble.base.util
 ---
 objects:
-  foo: DADict
+  fruit: DADict
 ---
 mandatory: True
 code: |
-  foo.object_type = DADict
-  foo.initializeObject('a')
+  veggies = DADict('veggies')
+  veggies.object_type = DAList
+  veggies.initializeObject('potato')
+  veggies.initializeObject('turnip')
+  fruit.object_type = DAObject
+  fruit.initializeObject('a')
+  fruit['a'].seed_info = DAObject("fruit['a']")
+  fruit['a'].seed_info.tally = dict()
+  fruit['a'].seed_info.tally['b'] = DAObject("fruit['a'].seed_info.tally['b']")
+  fruit['a'].seed_info.tally['b'].molecules = DAList("fruit['a'].seed_info.tally['b'].molecules")
+  fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[0]"))
+  fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[1]"))
+  fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[2]"))
+  fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[3]"))
+  fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[4]"))
+  fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[5]"))
+  fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[6]"))
+  fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[7]"))
+  fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[8]"))
+  fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[9]"))
 ---
 question: |
   What is the answer to ${ i }?
 fields:
   - Answer: foo['a'][i]
 ---
+question: |
+  The answer is ${ fruit['a'].seed_info.tally['b'].molecules[4].name }
+---
+code: |
+  veggies = DADict('veggies')
+  veggies.object_type = DAList
+  veggies.initializeObject('potato')
+  veggies.initializeObject('turnip')
+  veggies.auto_gather = False
+  veggies.gathered = True
+  for item in veggies:
+    veggies[item].there_are_any = True
+    veggies[item].ask_number = True
+---
+question: |
+  Is there another ${ i }?
+yesno: veggies[i].there_is_another
+---
+question: |
+  How much does the
+  ${ ordinal(j) }
+  ${ i }
+  weigh?
+fields:
+  - Grams: veggies[i][j]
+    datatype: number
+---
 mandatory: True
 question: |
-  The answer is ${ foo['a']['b'] }
+  Summary of weights.
+subquestion: |
+  % for veggie_name in veggies:
+  % for weight in veggies[veggie_name]:
+  One
+  ${ veggie_name }
+  weighs
+  ${ weight }
+  grams.
+  % endfor
+  % endfor

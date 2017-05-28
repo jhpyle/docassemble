@@ -1,0 +1,32 @@
+metadata:
+  title: Index variables
+  short title: Index
+  documentation: "https://docassemble.org/docs/fields.html#index variables"
+  example start: 3
+  example end: 3
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - people: PartyList
+---
+question: |
+  What is the ${ ordinal(i) }
+  person's name?
+fields:
+  - First: people[i].name.first
+  - Last: people[i].name.last
+---
+code: |
+  people.there_are_any = True
+---
+question: |
+  Are there more people involved?
+yesno: people.there_is_another
+---
+mandatory: True
+question: |
+  Here is the list of people.
+subquestion: |
+  ${ people }

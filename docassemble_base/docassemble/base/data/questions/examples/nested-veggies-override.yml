@@ -1,0 +1,52 @@
+metadata:
+  title: Specific and general index variable questions
+  short title: Specific
+  documentation: "https://docassemble.org/docs/logic.html#variablesearching"
+  example start: 5
+  example end: 6
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  veggies: DADict
+---
+mandatory: True
+code: |
+  veggies.object_type = DAList
+  veggies.new('potato', 'turnip')
+  veggies.gathered = True
+  for item in veggies:
+    veggies[item].there_are_any = True
+---
+question: |
+  Is there another ${ i }?
+yesno: veggies[i].there_is_another
+---
+question: |
+  How much does the other
+  ${ i } weigh?
+fields:
+  - Grams: veggies[i][1]
+    datatype: number
+---
+question: |
+  How much does the
+  ${ ordinal(j) }
+  ${ i } weigh?
+fields:
+  - Grams: veggies[i][j]
+    datatype: number
+---
+mandatory: True
+question: |
+  Summary of weights
+subquestion: |
+  % for veggie_name in veggies:
+    % for weight in veggies[veggie_name]:
+  A ${ veggie_name }
+  weighs
+  ${ weight } grams.
+    % endfor
+  
+  % endfor
