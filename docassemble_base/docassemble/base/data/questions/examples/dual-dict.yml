@@ -25,7 +25,6 @@ code: |
   fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[6]"))
   fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[7]"))
   fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[8]"))
-  fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[9]"))
 ---
 question: |
   What is the answer to ${ i }?
