@@ -143,6 +143,7 @@ def check_for_updates(doing_startup=False):
         sys.stderr.write("check_for_updates: real name of package " + str(package.name) + " is " + str(real_name) + "\n")
         if real_name is None:
             results[package.name] = 'install failed'
+            ok = False
             if package.name not in here_already:
                 sys.stderr.write("check_for_updates: removing package entry for " + package.name + "\n")
                 packages_to_delete.append(package)

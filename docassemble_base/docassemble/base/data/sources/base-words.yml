@@ -42,8 +42,10 @@
 "Configuration not updated.  There was a syntax error in the configuration YAML.": Null
 "Configuration": Null
 "Configuration YAML": Null
+"Connected to Google Drive": Null
 "Continue": Null
 "Control": Null
+"could not connect to Google Drive": Null
 "Country code": Null
 "Created new Markdown file called ": Null
 "Create Package": Null
@@ -63,6 +65,7 @@
 "Document": Null
 "docx_message": Null
 "Done": Null
+"-- Do not link --": Null
 "Download": Null
 "Edit module files": Null
 "Edit source files": Null
@@ -74,6 +77,7 @@
 "E-mail these documents": Null
 "E-mail this document": Null
 "E-mail was sent to": Null
+"Error accessing Google Drive": Null
 "Error: interview cannot be decrypted": Null
 "Error: interview not found": Null
 "Error: menu item is not a Python dict with keys of url and label": Null
@@ -97,12 +101,17 @@
 "First name": Null
 "First subdivision": Null
 "f": Null
+"Folder": Null
 "from": Null
 "Functions": Null
 "Get help through live chat by clicking here.": Null
 "Get package": Null
 "Get template": Null
 "GitHub URL": Null
+"Google Drive is not configured.": Null
+"Google Drive is not configured": Null
+"Google Drive": Null
+"Google Drive Test": Null
 "Help is available for this question": Null
 "Help is available": Null
 "Help": Null
@@ -290,10 +299,11 @@
 "That screen is already being controlled by another operator": Null
 "The configuration file was saved.": Null
 "The information was saved.": Null
+"The mapping was reset because the folder does not appear to exist anymore.": Null
 "The operator is no longer controlling your screen.": Null
 "The package information was saved.": Null
+"The package update logs are below.": Null
 "The package update was not fully successful.  The logs are below.": Null
-"The package update was successful.  The logs are below.": Null
 "The privilege could not be added because it already exists.": Null
 "The privilege was added.": Null
 "There are unsaved changes.  Are you sure you wish to leave this page?": Null
@@ -301,6 +311,7 @@
 "There was an error.": Null
 "There was an error updating the packages.": Null
 "The role could not be deleted.": Null
+"The supplied folder could not be found.": Null
 "Third subdivision": Null
 "This field is required.": Null
 "This image file does not exist": Null

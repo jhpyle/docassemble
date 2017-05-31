@@ -5,7 +5,7 @@
 
 <h1>{{ word('User Profile') }}</h1>
 
-<ul class="nav nav-pills">{% if current_user.social_id.startswith('local') %}<li><a href="{{ url_for('user.change_password') }}">{{ word('Change password') }}</a></li>{% endif %}{% if debug and (not current_user.is_anonymous) and (not current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('request_developer') }}">{{ word('Request Developer Account') }}</a></li>{% endif %}</ul>
+<ul class="nav nav-pills">{% if current_user.social_id.startswith('local') %}<li><a href="{{ url_for('user.change_password') }}">{{ word('Change password') }}</a></li>{% endif %}{% if in_debug() and (not current_user.is_anonymous) and (not current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('request_developer') }}">{{ word('Request Developer Account') }}</a></li>{% endif %}{% if config['USE_GOOGLE_DRIVE'] and (not current_user.is_anonymous) and (current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('google_drive_page') }}">{{ word('Google Drive Synchronization') }}</a></li>{% endif %}</ul>
 
 <form action="" method="POST" role="form" class="form">
     {{ form.hidden_tag() }}

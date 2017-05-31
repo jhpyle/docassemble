@@ -60,6 +60,14 @@ class SavedFile(object):
             if not os.path.isdir(self.directory):
                 os.makedirs(self.directory)        
         self.fixed = True
+    def delete_file(self, filename):
+        if cloud is not None:
+            prefix = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
+            for key in cloud.list_keys(prefix):
+                key.delete()
+        the_path = os.path.join(self.directory, filename)
+        if hasattr(self, 'directory') and os.path.isdir(self.directory) and os.path.isfile(the_path):
+            os.remove(the_path)
     def delete(self):
         if cloud is not None:
             prefix = str(self.section) + '/' + str(self.file_number) + '/'

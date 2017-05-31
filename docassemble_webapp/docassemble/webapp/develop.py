@@ -92,3 +92,7 @@ class PlaygroundPackagesForm(FlaskForm):
     install = SubmitField(word('Install'))
     publish = SubmitField(word('Publish'))
     delete = SubmitField(word('Delete'))
+
+class GoogleDriveForm(FlaskForm):
+    folder = SelectField(word('Folder'))
+    submit = SubmitField(word('Save'))

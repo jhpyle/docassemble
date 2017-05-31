@@ -1022,3 +1022,7 @@ textarea.translation-box {
     max-height: 30em;
     overflow-y: auto;
 }
+
+.navpillssmaller > li > a {
+    padding: 10px 12px;
+}

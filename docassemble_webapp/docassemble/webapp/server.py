@@ -327,11 +327,15 @@ from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
 #from flask_wtf.csrf import generate_csrf
-from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm
+from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm
 from flask_mail import Mail, Message
 import flask_user.signals
 from werkzeug import secure_filename, FileStorage
 from rauth import OAuth2Service
+import apiclient
+import oauth2client
+import strict_rfc3339
+import io
 from flask_kvsession import KVSessionExtension
 from simplekv.memory.redisstore import RedisStore
 from sqlalchemy import or_, and_
@@ -372,6 +376,7 @@ app.handle_url_build_error = my_default_url
 app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
 app.config['USE_AZURE_LOGIN'] = False
+app.config['USE_GOOGLE_DRIVE'] = False
 if 'oauth' in daconfig:
     app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
     if 'google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False):
@@ -386,6 +391,10 @@ if 'oauth' in daconfig:
         app.config['USE_AZURE_LOGIN'] = True
     else:
         app.config['USE_AZURE_LOGIN'] = False
+    if 'googledrive' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['googledrive'] and daconfig['oauth']['googledrive']['enable'] is False):
+        app.config['USE_GOOGLE_DRIVE'] = True
+    else:
+        app.config['USE_GOOGLE_DRIVE'] = False
 else:
     app.config['OAUTH_CREDENTIALS'] = dict()
 
@@ -2093,6 +2102,11 @@ class GoogleSignIn(OAuthSignIn):
         session['google_email'] = result.get('email', [None])[0]
         response = make_response(json.dumps('Successfully connected user.'), 200)
         response.headers['Content-Type'] = 'application/json'
+        oauth_session = self.service.get_auth_session(
+            data={'code': request.args['code'],
+                  'grant_type': 'authorization_code',
+                  'redirect_uri': self.get_callback_url()}
+        )
         return response
     
     def callback(self):
@@ -2240,6 +2254,8 @@ def oauth_authorize(provider):
 def oauth_callback(provider):
     if not current_user.is_anonymous:
         return redirect(url_for('interview_list'))
+    for argument in request.args:
+        logmessage("argument " + str(argument) + " is " + str(request.args[argument]))
     oauth = OAuthSignIn.get_provider(provider)
     social_id, username, email = oauth.callback()
     if social_id is None:
@@ -4789,7 +4805,9 @@ def utility_processor():
         return 'local$' + random_alphanumeric(32)
     if 'language' in session:
         docassemble.base.functions.set_language(session['language'])
-    return dict(random_social=random_social, word=word)
+    def in_debug():
+        return DEBUG
+    return dict(random_social=random_social, word=word, in_debug=in_debug)
 
 @app.route('/speakfile', methods=['GET'])
 def speak_file():
@@ -7152,6 +7170,358 @@ def restart_page():
     extra_meta = """\n    <meta http-equiv="refresh" content="5;URL='""" + next_url + """'">"""
     return render_template('pages/restart.html', extra_meta=Markup(extra_meta), extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting'))
 
+def get_gd_flow():
+    app_credentials = current_app.config['OAUTH_CREDENTIALS'].get('googledrive', dict())
+    client_id = app_credentials.get('id', None)
+    client_secret = app_credentials.get('secret', None)
+    if client_id is None or client_secret is None:
+        flash(word('Google Drive is not configured.'), 'error')
+        return redirect(url_for('interview_list'))
+    flow = oauth2client.client.OAuth2WebServerFlow(
+        client_id=client_id,
+        client_secret=client_secret,
+        scope='https://www.googleapis.com/auth/drive',
+        redirect_uri=url_for('google_drive_callback', _external=True),
+        access_type='offline',
+        approval_prompt='force')
+    return flow
+
+def get_gd_folder():
+    key = 'da:googledrive:mapping:userid:' + str(current_user.id)
+    return r.get(key)
+
+def set_gd_folder(folder):
+    key = 'da:googledrive:mapping:userid:' + str(current_user.id)
+    if folder is None:
+        r.delete(key)
+    else:
+        r.set(key, folder)
+
+class RedisCredStorage(oauth2client.client.Storage):
+    def __init__(self):
+        self.key = 'da:googledrive:userid:' + str(current_user.id)
+        self.lockkey = 'da:googledrive:lock:userid:' + str(current_user.id)        
+    def acquire_lock(self):
+        pipe = r.pipeline()
+        pipe.set(self.lockkey, 1)
+        pipe.expire(self.lockkey, 5)
+        pipe.execute()
+    def release_lock(self):
+        r.delete(self.lockkey)
+    def locked_get(self):
+        json_creds = r.get(self.key)
+        creds = None
+        if json_creds is not None:
+            try:
+                creds = oauth2client.client.Credentials.new_from_json(json_creds)
+            except:
+                logmessage("Could not read credentials from " + str(json_creds))
+        return creds
+    def locked_put(self, credentials):
+        r.set(self.key, credentials.to_json())
+    def locked_delete(self):
+        r.delete(self.key)
+
+@app.route('/google_drive_callback', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def google_drive_callback():
+    for key in request.args:
+        logmessage("Argument " + str(key) + ": " + str(request.args[key]))
+    if 'code' in request.args:
+        flow = get_gd_flow()
+        credentials = flow.step2_exchange(request.args['code'])
+        storage = RedisCredStorage()
+        storage.put(credentials)
+        error = None
+    elif 'error' in request.args:
+        error = request.args['error']
+    else:
+        error = word("could not connect to Google Drive")
+    if error:
+        flash(word('There was a Google Drive error: ' + error), 'error')
+        return redirect(url_for('interview_list'))
+    else:
+        flash(word('Connected to Google Drive'), 'success')
+    return redirect(url_for('google_drive_page'))
+
+def trash_gd_file(section, filename):
+    if section == 'template':
+        section == 'templates'
+    the_folder = get_gd_folder()
+    if the_folder is None:
+        logmessage('trash_gd_file: folder not configured')
+        return False
+    storage = RedisCredStorage()
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        logmessage('trash_gd_file: credentials missing or expired')
+        return False
+    http = credentials.authorize(httplib2.Http())
+    service = apiclient.discovery.build('drive', 'v3', http=http)
+    response = service.files().get(fileId=the_folder, fields="mimeType, id, name, trashed").execute()
+    trashed = response.get('trashed', False)
+    the_mime_type = response.get('mimeType', None)
+    if trashed is True or the_mime_type != "application/vnd.google-apps.folder":
+        logmessage('trash_gd_file: folder did not exist')
+        return False
+    subdir = None
+    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + str(section) + "' and '" + str(the_folder) + "' in parents").execute()
+    for the_file in response.get('files', []):
+        if 'id' in the_file:
+            subdir = the_file['id']
+            break
+    if subdir is None:
+        logmessage('trash_gd_file: section ' + str(section) + ' could not be found')
+        return False
+    id_of_filename = None
+    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType!='application/vnd.google-apps.folder' and trashed=false and name='" + str(filename) + "' and '" + str(subdir) + "' in parents").execute()
+    for the_file in response.get('files', []):
+        if 'id' in the_file:
+            id_of_filename = the_file['id']
+            break
+    if id_of_filename is None:
+        logmessage('trash_gd_file: file ' + str(filename) + ' could not be found in ' + str(section))
+        return False
+    file_metadata = { 'trashed': True }
+    service.files().update(fileId=id_of_filename,
+                           body=file_metadata).execute()
+    return True
+
+@app.route('/sync_with_google_drive', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def sync_with_google_drive():
+    if config['USE_GOOGLE_DRIVE'] is False:
+        flash(word("Google Drive is not configured"), "error")
+        return redirect(url_for('interview_list'))
+    storage = RedisCredStorage()
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        flow = get_gd_flow()
+        uri = flow.step1_get_authorize_url()
+        return redirect(uri)
+    http = credentials.authorize(httplib2.Http())
+    service = apiclient.discovery.build('drive', 'v3', http=http)
+    the_folder = get_gd_folder()
+    response = service.files().get(fileId=the_folder, fields="mimeType, id, name, trashed").execute()
+    the_mime_type = response.get('mimeType', None)
+    trashed = response.get('trashed', False)
+    if trashed is True or the_mime_type != "application/vnd.google-apps.folder":
+        flash(word("Error accessing Google Drive"), 'error')
+        return redirect(url_for('google_drive'))
+    local_files = dict()
+    local_modtimes = dict()
+    gd_files = dict()
+    gd_ids = dict()
+    gd_modtimes = dict()
+    gd_deleted = dict()
+    sections_modified = set()
+    commentary = ''
+    for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+        local_files[section] = set()
+        local_modtimes[section] = dict()
+        if section == 'questions':
+            the_section = 'playground'
+        elif section == 'templates':
+            the_section = 'playgroundtemplate'
+        else:
+            the_section = 'playground' + section
+        area = SavedFile(current_user.id, fix=True, section=the_section)
+        for f in os.listdir(area.directory):
+            local_files[section].add(f)
+            local_modtimes[section][f] = os.path.getmtime(os.path.join(area.directory, f))
+        subdirs = list()
+        page_token = None
+        while True:
+            response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + section + "' and '" + str(the_folder) + "' in parents").execute()
+            for the_file in response.get('files', []):
+                if 'id' in the_file:
+                    subdirs.append(the_file['id'])
+            page_token = response.get('nextPageToken', None)
+            if page_token is None:
+                break
+        if len(subdirs) == 0:
+            flash(word("Error accessing " + section + " in Google Drive"), 'error')
+            return redirect(url_for('google_drive'))
+        subdir = subdirs[0]
+        gd_files[section] = set()
+        gd_ids[section] = dict()
+        gd_modtimes[section] = dict()
+        gd_deleted[section] = set()
+        page_token = None
+        while True:
+            response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name, modifiedTime, trashed)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(subdir) + "' in parents").execute()
+            for the_file in response.get('files', []):
+                gd_ids[section][the_file['name']] = the_file['id']
+                gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])
+                if the_file['trashed']:
+                    gd_deleted[section].add(the_file['name'])
+                    continue
+                gd_files[section].add(the_file['name'])
+            page_token = response.get('nextPageToken', None)
+            if page_token is None:
+                break
+        for f in gd_files[section]:
+            if f not in local_files[section] or gd_modtimes[section][f] - local_modtimes[section][f] > 3:
+                sections_modified.add(section)
+                commentary += "Copied " + f + " from Google Drive.  "
+                the_path = os.path.join(area.directory, f)
+                with open(the_path, 'wb') as fh:
+                    response = service.files().get_media(fileId=gd_ids[section][f])
+                    downloader = apiclient.http.MediaIoBaseDownload(fh, response)
+                    done = False
+                    while done is False:
+                        status, done = downloader.next_chunk()
+                        #logmessage("Download %d%%." % int(status.progress() * 100))
+                os.utime(the_path, (gd_modtimes[section][f], gd_modtimes[section][f]))
+        for f in local_files[section]:
+            if f not in gd_deleted[section]:
+                if f not in gd_files[section]:
+                    commentary += "Copied " + f + " to Google Drive.  "
+                    the_path = os.path.join(area.directory, f)
+                    extension, mimetype = get_ext_and_mimetype(the_path)
+                    the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                    file_metadata = { 'name' : f, 'parents': [subdir], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
+                    media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
+                    the_new_file = service.files().create(body=file_metadata,
+                                                          media_body=media,
+                                                          fields='id').execute()
+                    new_id = the_new_file.get('id')
+                elif local_modtimes[section][f] - gd_modtimes[section][f] > 3:
+                    commentary += "Updated " + f + " on Google Drive.  "
+                    the_path = os.path.join(area.directory, f)
+                    extension, mimetype = get_ext_and_mimetype(the_path)
+                    the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                    file_metadata = { 'modifiedTime': the_modtime }
+                    media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
+                    service.files().update(fileId=gd_ids[section][f],
+                                           body=file_metadata,
+                                           media_body=media).execute()
+        for f in gd_deleted[section]:
+            if f in local_files[section]:
+                if local_modtimes[section][f] - gd_modtimes[section][f] > 3:
+                    commentary += "Undeleted and updated " + f + " on Google Drive.  "
+                    the_path = os.path.join(area.directory, f)
+                    extension, mimetype = get_ext_and_mimetype(the_path)
+                    the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                    file_metadata = { 'modifiedTime': the_modtime, 'trashed': False }
+                    media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
+                    service.files().update(fileId=gd_ids[section][f],
+                                           body=file_metadata,
+                                           media_body=media).execute()
+                else:
+                    sections_modified.add(section)
+                    commentary += "Deleted " + f + " from Playground.  "
+                    the_path = os.path.join(area.directory, f)
+                    if os.path.isfile(the_path):
+                        area.delete_file(f)
+        area.finalize()
+    if commentary != '':
+        flash(commentary, 'success')
+    next = request.args.get('next', url_for('playground_page'))
+    if 'modules' in sections_modified:
+        return redirect(url_for('restart_page', next=next))
+    return redirect(next)
+    #return render_template('pages/testgoogledrive.html', tab_title=word('Google Drive Test'), page_title=word('Google Drive Test'), commentary=commentary)
+
+@app.route('/google_drive', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def google_drive_page():
+    if config['USE_GOOGLE_DRIVE'] is False:
+        flash(word("Google Drive is not configured"), "error")
+        return redirect(url_for('interview_list'))
+    form = GoogleDriveForm(request.form)
+    storage = RedisCredStorage()
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        flow = get_gd_flow()
+        uri = flow.step1_get_authorize_url()
+        logmessage("uri is " + str(uri))
+        return redirect(uri)
+    http = credentials.authorize(httplib2.Http())
+    service = apiclient.discovery.build('drive', 'v3', http=http)
+    items = [dict(id='', name=word('-- Do not link --'))]
+    #items = []
+    page_token = None
+    while True:
+        response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and 'root' in parents").execute()
+        for the_file in response.get('files', []):
+            items.append(the_file)
+        page_token = response.get('nextPageToken', None)
+        if page_token is None:
+            break
+    item_ids = [x['id'] for x in items if x['id'] != '']
+    if request.method == 'POST' and form.submit.data:
+        if form.folder.data == '':
+            set_gd_folder(None)
+        elif form.folder.data == -1:
+            file_metadata = {
+                'name' : 'docassemble',
+                'mimeType' : 'application/vnd.google-apps.folder'
+            }
+            new_file = service.files().create(body=file_metadata,
+                                              fields='id').execute()
+            new_folder = new_file.get('id', None)
+            set_gd_folder(new_folder)
+            if new_folder is not None:
+                active_folder = dict(id=new_folder, name='docassemble')
+                items.append(active_folder)
+                item_ids.append(new_folder)
+        elif form.folder.data in item_ids:
+            set_gd_folder(form.folder.data)
+        else:
+            flash(word("The supplied folder could not be found."), 'error')
+            set_gd_folder(None)
+    the_folder = get_gd_folder()
+    active_folder = None
+    if the_folder is not None:
+        response = service.files().get(fileId=the_folder, fields="mimeType, trashed").execute()
+        the_mime_type = response.get('mimeType', None)
+        trashed = response.get('trashed', False)
+        if trashed is False and the_mime_type == "application/vnd.google-apps.folder":
+            active_folder = dict(id=the_folder, name=response.get('name', 'no name'))
+            if the_folder not in item_ids:
+                items.append(active_folder)
+        else:
+            set_gd_folder(None)
+            the_folder = None
+            flash(word("The mapping was reset because the folder does not appear to exist anymore."), 'error')
+    if the_folder is None:
+        for item in items:
+            if (item['name'].lower() == 'docassemble'):
+                active_folder = item
+                break
+    if active_folder is None:
+        active_folder = dict(id=-1, name='docassemble')
+        items.append(active_folder)
+        item_ids.append(-1)
+    if the_folder is not None:
+        subdirs = list()
+        page_token = None
+        while True:
+            response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and '" + str(the_folder) + "' in parents").execute()
+            for the_file in response.get('files', []):
+                subdirs.append(the_file)
+            page_token = response.get('nextPageToken', None)
+            if page_token is None:
+                break
+        todo = set(['questions', 'static', 'sources', 'templates', 'modules'])
+        done = set([x['name'] for x in subdirs if x['name'] in todo])
+        for key in todo - done:
+            file_metadata = {
+                'name' : key,
+                'mimeType' : 'application/vnd.google-apps.folder',
+                'parents': [the_folder]
+            }
+            new_file = service.files().create(body=file_metadata,
+                                              fields='id').execute()
+    if the_folder is None:
+        the_folder = ''
+    description = 'Select the folder from your Google Drive that you want to be synchronized with the Playground.'
+    return render_template('pages/googledrive.html', header=word('Google Drive'), tab_title=word('Google Drive'), items=items, the_folder=the_folder, page_title=word('Google Drive'), form=form)
+
 @app.route('/config', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin'])
@@ -7274,6 +7644,10 @@ def playground_download(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_files():
+    if config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
+        use_gd = False
+    else:
+        use_gd = True
     form = PlaygroundFilesForm(request.form)
     formtwo = PlaygroundFilesEditForm(request.form)
     if 'ajax' in request.form:
@@ -7323,6 +7697,8 @@ def playground_files():
             if os.path.exists(filename):
                 os.remove(filename)
                 area.finalize()
+                if use_gd:
+                    trash_gd_file(section, argument)
                 flash(word("Deleted file: ") + argument, "success")
                 return redirect(url_for('playground_files', section=section))
             else:
@@ -7591,7 +7967,7 @@ def playground_files():
     else:
         any_files = False
     back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
-    return render_template('pages/playgroundfiles.html', back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + ('damarkdown' if mode == 'markdown' else mode) + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file), 200
+    return render_template('pages/playgroundfiles.html', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + ('damarkdown' if mode == 'markdown' else mode) + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file), 200
 
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required
@@ -7688,8 +8064,7 @@ def playground_packages():
                             form[field].data = ''
                     if 'dependencies' in old_info and type(old_info['dependencies']) is list and len(old_info['dependencies']):
                         for item in old_info['dependencies']:
-                            pass
-                        #PPP
+                            pass#PPP
                     for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
                         if field in old_info and type(old_info[field]) is list and len(old_info[field]):
                             form[field].data = old_info[field]
@@ -8208,8 +8583,13 @@ def playground_variables():
 def playground_page():
     if 'ajax' in request.form:
         is_ajax = True
+        use_gd = False
     else:
         is_ajax = False
+        if config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
+            use_gd = False
+        else:
+            use_gd = True
         if request.method == 'GET' and needs_to_change_password():
             return redirect(url_for('user.change_password', next=url_for('playground_page')))
     fileform = PlaygroundUploadForm(request.form)
@@ -8316,6 +8696,8 @@ def playground_page():
                 os.remove(filename)
                 flash(word('File deleted.'), 'info')
                 playground.finalize()
+                if use_gd:
+                    trash_gd_file('questions', the_file)
                 if 'variablefile' in session and session['variablefile'] == the_file:
                     del session['variablefile']
                 return redirect(url_for('playground_page'))
@@ -8332,15 +8714,24 @@ def playground_page():
             the_time = formatted_current_time()
             with open(filename, 'w') as fp:
                 fp.write(form.playground_content.data.encode('utf8'))
-            for a_file in files:
-                docassemble.base.interview_cache.clear_cache('docassemble.playground' + str(current_user.id) + ':' + a_file)
-                a_filename = os.path.join(playground.directory, a_file)
-                if a_filename != filename and os.path.isfile(a_filename):
-                    with open(a_filename, 'a'):
-                        os.utime(a_filename, None)
+            # for a_file in files:
+            #     docassemble.base.interview_cache.clear_cache('docassemble.playground' + str(current_user.id) + ':' + a_file)
+            #     a_filename = os.path.join(playground.directory, a_file)
+            #     if a_filename != filename and os.path.isfile(a_filename):
+            #         with open(a_filename, 'a'):
+            #             os.utime(a_filename, None)
+            this_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + the_file
+            active_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + active_file
+            a_filename = os.path.join(playground.directory, active_file)
+            if a_filename != filename and os.path.isfile(a_filename):
+                with open(a_filename, 'a'):
+                    os.utime(a_filename, None)
             playground.finalize()
+            docassemble.base.interview_cache.clear_cache(this_interview_string)
+            if active_interview_string != this_interview_string:
+                docassemble.base.interview_cache.clear_cache(active_interview_string)
             if not form.submit.data:
-                the_url = url_for('index', reset=1, i='docassemble.playground' + str(current_user.id) + ':' + the_file)
+                the_url = url_for('index', reset=1, i=this_interview_string)
                 key = 'da:runplayground:' + str(current_user.id)
                 #logmessage("Setting key " + str(key) + " to " + str(the_url))
                 pipe = r.pipeline()
@@ -8348,7 +8739,7 @@ def playground_page():
                 pipe.expire(key, 12)
                 pipe.execute()
             try:
-                interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + active_file)
+                interview_source = docassemble.base.parse.interview_source_from_string(active_interview_string)
                 interview_source.set_testing(True)
                 interview = interview_source.get_interview()
                 interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
@@ -8628,7 +9019,7 @@ $( document ).ready(function() {
     else:
         kbOpt = ''
         kbLoad = ''
-    return render_template('pages/playground.html', userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
+    return render_template('pages/playground.html', use_gd=use_gd, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';
 

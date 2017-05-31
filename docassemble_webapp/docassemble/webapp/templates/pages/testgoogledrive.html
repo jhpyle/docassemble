@@ -1,0 +1,7 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+{% from "base_templates/form_macros.html" import render_field, render_submit_field with context %}
+<h1>{{ word('Google Drive Test') }}</h1>
+<p>{{ commentary }}</p>
+{% endblock %}
