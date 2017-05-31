@@ -1205,7 +1205,7 @@ password will be stored.  You may need to edit this if you run
 ## <a name="oauth"></a>Facebook, Google, and Azure login
 
 If you want to enable logging in with Facebook, Google, or Microsoft
-Azure, you will need to tell **docassemble** your oauth keys:
+Azure, you will need to tell **docassemble** your [OAuth2] keys:
 
 {% highlight yaml %}
 oauth:
@@ -1225,6 +1225,27 @@ oauth:
 
 You can disable these login methods by setting `enable` to `False` or
 by removing the configuration entirely.
+
+For more information about how to obtain these keys, see the
+[installation] page's sections on [Google], [Facebook], and [Azure].
+
+## <a name="googledrive"></a>Google Drive configuration
+
+To enable the [Google Drive synchronization] feature, add
+a `googledrive` entry to your [`oauth`](#oauth) configuration with
+your [OAuth2] keys for [Google Drive].
+
+{% highlight yaml %}
+oauth:
+  googledrive:
+    enable: True
+    id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
+    secret: DGE34gdgerg3GDG545tgdfRf
+{% endhighlight %}
+
+For more information about obtaining these keys, see the 
+[Google Drive]({{ site.baseurl }}/docs/installation.html#googledrive)
+section of the [installation] page.
 
 ## <a name="twilio"></a>Twilio configuration
 
@@ -1450,6 +1471,9 @@ and Facebook API keys.
 [Packages]: {{ site.baseurl }}/docs/packages.html
 [fork]: https://en.wikipedia.org/wiki/Fork_(software_development)
 [initial database setup]: {{ site.baseurl }}/docs/installation.html#setup
+[Google]: {{ site.baseurl }}/docs/installation.html#google
+[Facebook]: {{ site.baseurl }}/docs/installation.html#facebook
+[Azure]: {{ site.baseurl }}/docs/installation.html#azure
 [invited by an administrator]: {{ site.baseurl }}/docs/users.html#invite
 [`root`]: #root
 [`docassemble.webapp.fix_postgresql_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/fix_postgresql_tables.py
@@ -1496,3 +1520,6 @@ and Facebook API keys.
 [PyPI]: https://pypi.python.org/pypi
 [load balancer]: {{ site.baseurl }}/docs/scalability.html
 [forwards]: {{ site.baseurl }}/docs/docker.html#forwarding
+[Google Drive synchronization]: {{ site.baseurl }}/docs/playground.html#google drive
+[OAuth2]: https://oauth.net/2/
+[Google Drive]: https://drive.google.com

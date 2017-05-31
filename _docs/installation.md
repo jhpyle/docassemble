@@ -667,7 +667,7 @@ conversion.
 The [configuration] file also contains settings for connecting to a
 mail server.
 
-## Setting up Google logins
+## <a name="google"></a>Setting up Google logins
 
 To enable users to log in with their Google accounts, you need to
 obtain an `id` and `secret` for use with Google's [OAuth2] interface.
@@ -683,7 +683,7 @@ obtain an `id` and `secret` for use with Google's [OAuth2] interface.
 * Under Authorized redirect URIs, add the URL
   `https://docassemble.example.com/callback/google`.
 
-## Setting up Facebook logins
+## <a name="facebook"></a>Setting up Facebook logins
 
 To enable users to log in with their Facebook accounts, you need to
 obtain an `id` and `secret` for use with Facebook's [OAuth2] interface.
@@ -701,7 +701,7 @@ obtain an `id` and `secret` for use with Facebook's [OAuth2] interface.
 * Under App Domains, put in the domain of your site.  E.g.,
   `docassemble.example.com`.
 
-## Setting up Microsoft Azure logins
+## <a name="azure"></a>Setting up Microsoft Azure logins
 
 * Log into the [Azure Portal].
 * Go to the Azure Active Directory resource.
@@ -742,6 +742,23 @@ obtain an `id` and `secret` for use with Facebook's [OAuth2] interface.
   under the `azure` part of the [`oauth`] directive so that it
   includes the `id` and the `secret` you obtained in the steps above.
   Make sure that `enable` is not set to `False`.
+
+## <a name="google drive"></a>Setting up Google Drive integration
+
+To enable the [Google Drive synchronization] feature, you need to
+obtain an `id` and `secret` for use with Google's [OAuth2] interface.
+
+* Log in to the [Google Developers Console]
+* Enable the [Google Drive API].
+* Create an OAuth 2.0 client ID.
+* Note the "Client ID."  You need to set this value as the `id` in the
+  [`oauth`] configuration, under `googledrive`.
+* Note also the "Client secret."  You need to set this as the `secret`
+  in the [`oauth`] configuration.
+* Under Authorized JavaScript origins, add the URL for your
+  **docassemble** site.  (E.g. `https://docassemble.example.com`)
+* Under Authorized redirect URIs, add the URL
+  `https://docassemble.example.com/google_drive_callback`.
 
 # Start the server and background processes
 
@@ -1217,3 +1234,4 @@ All of these system administration headaches can be avoided by
 [LibreOffice]: https://www.libreoffice.org/
 [certbot instructions]: https://certbot.eff.org/all-instructions/
 [certbot]: https://certbot.eff.org/
+[Google Drive synchronization]: {{ site.baseurl }}/docs/playground.html#google drive

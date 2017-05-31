@@ -10,14 +10,14 @@ or more "files" and then run an interview with one click.
 
 # Components of the Playground page
 
-![playground]({{ site.baseurl }}/img/playground.png){: .full-width }
+![playground]({{ site.baseurl }}/img/playground.png){: .maybe-full-width }
 
 ## <a name="interview_files"></a>The [YAML] text editor
 
 The main area of the Playground consists of an in-browser text editor
 with which you can edit [YAML]&nbsp;[interview] files.
 
-![playground]({{ site.baseurl }}/img/playground-main.png)
+![playground]({{ site.baseurl }}/img/playground-main.png){: .maybe-full-width }
 
 To create a new [YAML] file, click the <i class="glyphicon
 glyphicon-plus-sign" aria-hidden="true"></i> icon.
@@ -319,7 +319,7 @@ interview, which [`include`]s the file you are editing.
 
 ## The buttons
 
-![buttons]({{ site.baseurl }}/img/playground-buttons.png){: .full-width }
+![buttons]({{ site.baseurl }}/img/playground-buttons.png){: .maybe-full-width }
 
 The "Save" button will save the interview and do nothing more.
 
@@ -352,7 +352,7 @@ can create a package in the [packages area].
 
 ## <a name="examples"></a>The examples area
 
-![example area]({{ site.baseurl }}/img/playground-example-area.png){: .full-width }
+![example area]({{ site.baseurl }}/img/playground-example-area.png){: .maybe-full-width }
 
 The part of the page below the text editor is an interactive area where
 you can browse example blocks that demonstrate various features of
@@ -398,6 +398,107 @@ interview it is generating.
 
 When you are done specifying the elements of your interview, the
 Wizard allows you to download the assembled interview as a [package].
+
+# <a name="google drive"></a>Google Drive integration
+
+The files in the Playground and its folders can synchronize with your
+[Google Drive] account.
+
+You might want to use this feature if you want to use the Playground
+for testing but:
+
+* You want to use a full-featured text editor like [Emacs],
+  [Notepad++], or [Sublime Text] to edit your [YAML] and [Markdown]
+  files.
+* You make frequent changes to .docx or .pdf file templates, and you
+  find it cumbersome to have to manually upload the documents each
+  time you make a change.
+
+With the [Google Drive] feature, a situation like this is possible:
+
+* Your **docassemble** development server is in the cloud.
+* You have a laptop with the [Google Drive] app installed, so that the
+  contents of your [Google Drive] are always in sync with a folder on
+  your laptop's hard drive.
+* Inside that folder on your hard drive, in a subfolder
+  "docassemble/templates," there are various [Microsoft Word] files
+  that you use for document templates in your interviews.
+* When you use [Microsoft Word] to edit a file and you click "save,"
+  the [Google Drive] app will automatically upload the new version of
+  the file to Google's servers.
+* Then, in your web browser, you can press a button in the Playground
+  that will cause **docassemble** to download the new version of the
+  Word file from Google's servers and save it in the
+  [Templates folder].
+* Now, when you click "Save and Run" to test your interview, the
+  updated version of your document will be used.
+
+The synchronization also works the other way; for example, if you
+upload a file to the [Static folder] in the web browser and then press
+the "sync" button, a copy will appear in your laptop in a few
+seconds.  Or if you edit an interview [YAML] file and press "Save" and
+then press the "sync" button, your changes will appear in the file on
+your laptop in a few seconds.
+
+Google Drive synchronization requires setup.  See [`googledrive`] in
+the [configuration] for instructions.
+
+Once those steps have been completed, anyone with a developer or
+administrator account can go to their Profile from the menu and click
+"Google Drive Sychronization."  From this page, you can select an
+existing folder in your Google Drive that will be used for
+synchronization.  Initially, you should choose the option
+"docassemble" and click "Save."  This will create a folder in the root
+of your Google Drive called "docassemble" containing the following
+subfolders:
+
+* "questions" (corresponding to the [question file editor] above)
+* "templates" (corresponding to the [Templates folder] above)
+* "static" (corresponding to the [Static files folder] above)
+* "sources" (corresponding to the [Sources folder] above)
+* "modules" (corresponding to the [Modules folder] above)
+
+Now, when you go to the Playground, you will see a button that looks
+like this:
+
+![Playground GD Sync]({{ site.baseurl }}/img/playground-gd-sync.png)
+
+When you go into a "folder," you will see a button that looks like this:
+
+![Playground Files GD Sync]({{ site.baseurl }}/img/playground-files-gd-sync.png) 
+
+Pressing any of these buttons will trigger a synchronization process.
+
+The synchronization process moves files between [Google Drive] and the
+Playground depending on which files were more recently modified, or
+which files are missing in one place and present in the other.  The
+process always applies to all folders, not just the folder currently
+being viewed.
+
+Note that the synchronization is not triggered automatically; you need
+to press the button when you want files to be synchronized.
+
+If you delete a file using the Playground, the corresponding file in
+[Google Drive] will be moved to the "trash."  This happens
+immediately; you do not need to press the synchronization button.
+
+If you delete a file using [Google Drive] and then press the
+synchronization button, the corresponding file in the Playground will
+be deleted, but only if the deleted file is still in the "trash" in
+[Google Drive].
+
+If you go into [Google Drive], "trash" a file, "empty the trash," and
+then synchronize, the file will still exist in the Playground.
+
+If you change a file in the Playground, then change the corresponding
+file in [Google Drive], and then press the synchronization button, the
+file will be copied from [Google Drive] to the Playground.  Whichever
+file has the later modification time will take precedence.
+
+If you go into [Google Drive] and move a file out of the "templates"
+folder into the "static" folder, when you synchronize, the file will
+appear in the [Static folder] of the Playground, but it will not
+disappear from the [Templates folder] of the Playground.
 
 # Recovering from infinite loops
 
@@ -474,10 +575,19 @@ Then the editing screen will load.
 [machine learning]: {{ site.baseurl }}/docs/ml.html
 [object]: {{ site.baseurl }}/docs/objects.html
 [text editor]: #interview_files
+[question file editor]: #interview_files
 [Templates folder]: #templates
 [Static folder]: #static
+[Static files folder]: #static
+[Sources folder]: #sources
+[Modules folder]: #modules
 [special variables]: {{ site.baseurl }}/docs/special.html
 [Markdown]: https://daringfireball.net/projects/markdown/
 [PyPI]: https://pypi.python.org/pypi
 [GitHub]: https://github.com/
 [packages section]: {{ site.baseurl }}/docs/packages.html#github
+[Google Drive]: https://drive.google.com
+[Emacs]: https://www.gnu.org/software/emacs/
+[Notepad++]: http://notepad-plus-plus.org/
+[Sublime Text]: http://www.sublimetext.com/
+[`googledrive`]: {{ site.baseurl }}/docs/config.html#googledrive
