@@ -898,8 +898,8 @@ def as_html(status, url_for, debug, root, validation_rules):
                     for key in choice:
                         if key == 'image':
                             continue
-                        if isinstance(choice[key], Question) and choice[key].question_type in ["exit", "continue", "restart", "refresh", "signin", "leave", "link"]:
-                            if choice[key].question_type == "continue":
+                        if isinstance(choice[key], Question) and choice[key].question_type in ["exit", "continue", "restart", "refresh", "signin", "register", "leave", "link"]:
+                            if choice[key].question_type in ["continue", "register"]:
                                 btn_class = ' btn-primary'
                             elif choice[key].question_type in ["leave", "link", "restart"]:
                                 btn_class = ' btn-warning'

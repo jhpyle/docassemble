@@ -315,18 +315,24 @@ def nice_utc_date(timestamp, timezone=tz.tzlocal()):
     return timestamp.strftime('%F %T')
 
 def fetch_user_dict(user_code, filename, secret=None):
+    #logmessage("fetch_user_dict: user_code is " + str(user_code) + " and filename is " + str(filename))
     user_dict = None
     steps = 0
     encrypted = True
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).subquery()
-    results = db.session.query(UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
-    #logmessage("01 query is " + str(results))
+    results = db.session.query(UserDict.indexno, UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
+    #logmessage("fetch_user_dict: 01 query is " + str(results))
     for d in results:
+        #logmessage("fetch_user_dict: indexno is " + str(d.indexno))
         if d.dictionary:
             if d.encrypted:
+                #logmessage("fetch_user_dict: entry was encrypted")
                 user_dict = decrypt_dictionary(d.dictionary, secret)
+                #logmessage("fetch_user_dict: decrypted dictionary")
             else:
+                #logmessage("fetch_user_dict: entry was not encrypted")
                 user_dict = unpack_dictionary(d.dictionary)
+                #logmessage("fetch_user_dict: unpacked dictionary")
                 encrypted = False
         if d.count:
             steps = d.count
@@ -346,6 +352,7 @@ def advance_progress(user_dict):
     return
 
 def reset_user_dict(user_code, filename):
+    logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename))
     UserDict.query.filter_by(key=user_code, filename=filename).delete()
     db.session.commit()
     UserDictKeys.query.filter_by(key=user_code, filename=filename).delete()

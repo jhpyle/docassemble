@@ -261,6 +261,15 @@ def unauthorized():
 def my_default_url(error, endpoint, values):
     return url_for('index')
 
+def make_safe_url(url):
+    parts = urlparse.urlsplit(url)
+    safe_url = parts.path
+    if parts.query != '':
+        safe_url += '?' + parts.query
+    if parts.fragment != '':
+        safe_url += '#' + parts.fragment
+    return safe_url
+
 import docassemble.webapp.setup
 from docassemble.webapp.app_object import app, csrf, flaskbabel
 from docassemble.webapp.db_object import db
@@ -270,7 +279,7 @@ from flask_user import UserManager, SQLAlchemyAdapter
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 from docassemble.webapp.users.views import user_profile_page
 user_manager = UserManager()
-user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated) #login_view_function=custom_login , after_login_endpoint=
+user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, make_safe_url_function=make_safe_url) #login_view_function=custom_login , after_login_endpoint=
 from flask_login import LoginManager
 lm = LoginManager()
 lm.init_app(app)
@@ -506,6 +515,8 @@ def get_url_from_file_reference(file_reference, **kwargs):
         return(file_reference)
     if file_reference in ['login', 'signin']:
         return(url_for('user.login', **kwargs))
+    elif file_reference in ['register']:
+        return(url_for('user.register', **kwargs))
     elif file_reference == 'help':
         return('javascript:show_help_tab()');
     elif file_reference == 'interviews':
@@ -623,6 +634,7 @@ def pad_to_16(the_string):
     return str(the_string) + (16 - len(the_string)) * '0'
 
 def decrypt_session(secret, user_code=None, filename=None):
+    #logmessage("decrypt_session: user_code is " + str(user_code) + " and filename is " + str(filename))
     nowtime = datetime.datetime.utcnow()
     if user_code == None or filename == None or secret is None:
         return
@@ -664,6 +676,7 @@ def decrypt_session(secret, user_code=None, filename=None):
     return
 
 def encrypt_session(secret, user_code=None, filename=None):
+    #logmessage("encrypt_session: user_code is " + str(user_code) + " and filename is " + str(filename))
     nowtime = datetime.datetime.utcnow()
     if user_code == None or filename == None or secret is None:
         return
@@ -715,47 +728,33 @@ def substitute_secret(oldsecret, newsecret):
     for the_record in db.session.query(UserDict.filename).filter_by(key=user_code).group_by(UserDict.filename).all():
         filenames.add(the_record.filename)
     for filename in filenames:
+        #logmessage("substitute_secret: filename is " + str(filename) + " and key is " + str(user_code))
         changed = False
-        for record in SpeakList.query.filter_by(key=user_code, filename=filename).all():
-            if record.encrypted:
-                phrase = decrypt_phrase(record.phrase, oldsecret)
-            else:
-                phrase = unpack_phrase(record.phrase)
-                record.encrypted = True
+        for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
+            phrase = decrypt_phrase(record.phrase, oldsecret)
             record.phrase = encrypt_phrase(phrase, newsecret)
             changed = True
         if changed:
             db.session.commit()
         changed = False
-        for record in Attachments.query.filter_by(key=user_code, filename=filename).all():
+        for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
             if record.dictionary:
-                if record.encrypted:
-                    the_dict = decrypt_dictionary(record.dictionary, oldsecret)
-                else:
-                    the_dict = unpack_dictionary(record.dictionary)
-                    record.encrypted = True
+                the_dict = decrypt_dictionary(record.dictionary, oldsecret)
                 record.dictionary = encrypt_dictionary(the_dict, newsecret)
                 changed = True
         if changed:
             db.session.commit()
         changed = False
-        for record in UserDict.query.filter_by(key=user_code, filename=filename).order_by(UserDict.indexno).all():
-            if record.encrypted:
-                the_dict = decrypt_dictionary(record.dictionary, oldsecret)
-            else:
-                the_dict = unpack_dictionary(record.dictionary)
-                record.encrypted = True
+        for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).all():
+            #logmessage("substitute_secret: record was encrypted")
+            the_dict = decrypt_dictionary(record.dictionary, oldsecret)
             record.dictionary = encrypt_dictionary(the_dict, newsecret)
             changed = True
         if changed:
             db.session.commit()
         changed = False
-        for record in ChatLog.query.filter_by(key=user_code, filename=filename).all():
-            if record.encrypted:
-                phrase = decrypt_phrase(record.message, oldsecret)
-            else:
-                phrase = unpack_phrase(record.message)
-                record.encrypted = True
+        for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
+            phrase = decrypt_phrase(record.message, oldsecret)
             record.message = encrypt_phrase(phrase, newsecret)
             changed = True
         if changed:
@@ -1068,6 +1067,7 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
     saved_file.finalize()
     
 def save_user_dict_key(user_code, filename, priors=False):
+    #logmessage("save_user_dict_key: called")
     interview_list = set([filename])
     found = set()
     if priors:
@@ -1086,6 +1086,7 @@ def save_user_dict_key(user_code, filename, priors=False):
     return
 
 def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None):
+    #logmessage("save_user_dict: called with encrypt " + str(encrypt))
     nowtime = datetime.datetime.utcnow()
     user_dict['_internal']['modtime'] = nowtime
     if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
@@ -2096,8 +2097,8 @@ class GoogleSignIn(OAuthSignIn):
         )
     def authorize(self):
         result = urlparse.parse_qs(request.data)
-        logmessage("GoogleSignIn, args: " + str([str(arg) + ": " + str(request.args[arg]) for arg in request.args]))
-        logmessage("GoogleSignIn, request: " + str(request.data))
+        #logmessage("GoogleSignIn, args: " + str([str(arg) + ": " + str(request.args[arg]) for arg in request.args]))
+        #logmessage("GoogleSignIn, request: " + str(request.data))
         session['google_id'] = result.get('id', [None])[0]
         session['google_email'] = result.get('email', [None])[0]
         response = make_response(json.dumps('Successfully connected user.'), 200)
@@ -2110,8 +2111,8 @@ class GoogleSignIn(OAuthSignIn):
         return response
     
     def callback(self):
-        logmessage("GoogleCallback, args: " + str([str(arg) + ": " + str(request.args[arg]) for arg in request.args]))
-        logmessage("GoogleCallback, request: " + str(request.data))
+        #logmessage("GoogleCallback, args: " + str([str(arg) + ": " + str(request.args[arg]) for arg in request.args]))
+        #logmessage("GoogleCallback, request: " + str(request.data))
         email = session.get('google_email', None)
         google_id = session.get('google_id', None)
         if 'google_id' in session:
@@ -2254,8 +2255,8 @@ def oauth_authorize(provider):
 def oauth_callback(provider):
     if not current_user.is_anonymous:
         return redirect(url_for('interview_list'))
-    for argument in request.args:
-        logmessage("argument " + str(argument) + " is " + str(request.args[argument]))
+    # for argument in request.args:
+    #     logmessage("argument " + str(argument) + " is " + str(request.args[argument]))
     oauth = OAuthSignIn.get_provider(provider)
     social_id, username, email = oauth.callback()
     if social_id is None:
@@ -2275,6 +2276,7 @@ def oauth_callback(provider):
     if 'i' in session and 'uid' in session:
         save_user_dict_key(session['uid'], session['i'], priors=True)
         session['key_logged'] = True
+    #logmessage("oauth_callback: calling substitute_secret")
     secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()))
     response = redirect(url_for('interview_list'))
     response.set_cookie('secret', secret)
@@ -2379,7 +2381,7 @@ def checkin():
                         parameters[from_safeid(param['name'])] = param['value']
                     except:
                         logmessage("checkin: failed to unpack " + str(param['name']))
-            logmessage("Action was " + str(do_action) + " and parameters were " + str(parameters))
+            #logmessage("Action was " + str(do_action) + " and parameters were " + str(parameters))
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters)))
@@ -2633,17 +2635,21 @@ def index():
         #     return response
     chatstatus = session.get('chatstatus', 'off')
     session_id = session.get('uid', None)
+    #logmessage("index: session uid is " + str(session_id))
     if current_user.is_anonymous:
+        #logmessage("index: is anonymous")
         if 'tempuser' not in session:
             new_temp_user = TempUser()
             db.session.add(new_temp_user)
             db.session.commit()
             session['tempuser'] = new_temp_user.id
     else:
+        #logmessage("index: is not anonymous")
         if 'user_id' not in session:
             session['user_id'] = current_user.id
     expire_visitor_secret = False
     if 'visitor_secret' in request.cookies:
+        #logmessage("index: there is a visitor secret")
         if 'session' in request.args:
             secret = request.cookies.get('secret', None)
             expire_visitor_secret = True
@@ -2654,13 +2660,17 @@ def index():
     use_cache = int(request.args.get('cache', 1))
     reset_interview = int(request.args.get('reset', 0))
     encrypted = session.get('encrypted', True)
+    #logmessage("index: session says encrypted is " + str(encrypted))
     if secret is None:
+        #logmessage("index: setting set_cookie to True")
         secret = random_string(16)
         set_cookie = True
     else:
+        #logmessage("index: setting set_cookie to False")
         secret = str(secret)
         set_cookie = False
     yaml_filename = session.get('i', default_yaml_filename)
+    #logmessage("index: yaml_filename from session/default is " + str(yaml_filename))
     steps = 0
     need_to_reset = False
     yaml_parameter = request.args.get('i', None)
@@ -2670,21 +2680,26 @@ def index():
         else:
             yaml_filename = final_default_yaml_filename
     session_parameter = request.args.get('session', None)
+    #logmessage("index: session_parameter is " + str(session_parameter))
     if yaml_parameter is not None:
+        #logmessage("index: yaml_parameter is not None: " + str(yaml_parameter))
         yaml_filename = yaml_parameter
         old_yaml_filename = session.get('i', None)
+        #logmessage("index: old_yaml_filename is " + str(old_yaml_filename))
         if old_yaml_filename != yaml_filename or reset_interview:
+            #logmessage("index: change in yaml filename detected")
             show_flash = False
             session['i'] = yaml_filename
             if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base"):
                 show_flash = True
             if session_parameter is None:
+                #logmessage("index: change in yaml filename detected and session_parameter is None")
                 if show_flash:
                     if current_user.is_authenticated:
                         message = "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu."
                     else:
                         message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
-                #logmessage("Calling with retain_code")
+                #logmessage("index: calling reset_session with retain_code")
                 user_code, user_dict = reset_session(yaml_filename, secret, retain_code=True)
                 save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
                 release_lock(user_code, yaml_filename)
@@ -2693,7 +2708,7 @@ def index():
                     del session['key_logged']
                 need_to_reset = True
             else:
-                #logmessage("Both i and session provided")
+                #logmessage("index: both i and session provided")
                 if show_flash:
                     if current_user.is_authenticated:
                         message = "Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu."
@@ -2702,24 +2717,29 @@ def index():
             if show_flash:
                 flash(word(message), 'info')
     elif not is_ajax:
+        #logmessage("index: need_to_reset is True")
         need_to_reset = True
     if session_parameter is not None:
-        #logmessage("session parameter is " + str(session_parameter))
+        #logmessage("index: session parameter is not None: " + str(session_parameter))
         session_id = session_parameter
         session['uid'] = session_id
         if yaml_parameter is not None:
+            #logmessage("index: yaml_parameter is not None: " + str(yaml_filename))
             session['i'] = yaml_filename
         if 'key_logged' in session:
             del session['key_logged']
         need_to_reset = True
     if session_id:
+        #logmessage("index: session_id is defined")
         user_code = session_id
         obtain_lock(user_code, yaml_filename)
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
         except:
+            #logmessage("index: there was an exception after fetch_user_dict")
+            #sys.stderr.write(str(the_err) + "\n")
             release_lock(user_code, yaml_filename)
-            #logmessage("01 Calling without retain_code")
+            logmessage("index: dictionary fetch failed, resetting without retain_code")
             user_code, user_dict = reset_session(yaml_filename, secret)
             encrypted = False
             session['encrypted'] = encrypted
@@ -2728,9 +2748,11 @@ def index():
                 del session['key_logged']
             need_to_reset = True
         if encrypted != is_encrypted:
+            #logmessage("index: change in encryption; encrypted is " + str(encrypted) + " but is_encrypted is " + str(is_encrypted))
             encrypted = is_encrypted
             session['encrypted'] = encrypted
         if user_dict is None:
+            #logmessage("index: user_dict is None")
             try:
                 release_lock(user_code, yaml_filename)
             except:
@@ -2741,7 +2763,7 @@ def index():
         user_dict
         user_code
     except:
-        #logmessage("02 Calling without retain_code")
+        #logmessage("index: 02 Calling without retain_code")
         user_code, user_dict = reset_session(yaml_filename, secret)
         encrypted = False
         session['encrypted'] = encrypted
@@ -2750,20 +2772,29 @@ def index():
         steps = 0
     action = None
     if user_dict.get('multi_user', False) is True and encrypted is True:
+        #logmessage("index: encryption mismatch, should be False")
         encrypted = False
         session['encrypted'] = encrypted
         decrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
+    # else:
+    #     logmessage("index: no encryption mismatch for should be False")        
     if user_dict.get('multi_user', False) is False and encrypted is False:
+        #logmessage("index: encryption mismatch, should be True")
         encrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
         encrypted = True
         session['encrypted'] = encrypted
+    # else:
+    #     logmessage("index: no encryption mismatch for should be True")        
     if current_user.is_authenticated and 'key_logged' not in session:
+        #logmessage("index: need to save user dict key")
         save_user_dict_key(user_code, yaml_filename)
         session['key_logged'] = True
     if 'action' in session:
+        #logmessage("index: action in session")
         action = json.loads(myb64unquote(session['action']))
         del session['action']
     if len(request.args):
+        #logmessage("index: there were args")
         if 'action' in request.args:
             session['action'] = request.args['action']
             response = do_redirect(url_for('index', i=yaml_filename), is_ajax)
@@ -2772,14 +2803,17 @@ def index():
             if expire_visitor_secret:
                 response.set_cookie('visitor_secret', '', expires=0)
             release_lock(user_code, yaml_filename)
+            #logmessage("index: returning action response")
             return response
         for argname in request.args:
             if argname in ['filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session', 'cache', 'reset']:
                 continue
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
+                #logmessage("index: there were args and we need to reset")
             need_to_reset = True
     if need_to_reset:
+        #logmessage("index: needed to reset, so redirecting; encrypted is " + str(encrypted))
         if use_cache == 0:
             docassemble.base.parse.interview_source_from_string(yaml_filename).reset_modtime()
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
@@ -2790,6 +2824,7 @@ def index():
             response.set_cookie('visitor_secret', '', expires=0)
         release_lock(user_code, yaml_filename)
         return response
+    #logmessage("index: made it through")
     post_data = request.form.copy()
     if current_user.is_anonymous:
         the_user_id = 't' + str(session['tempuser'])
@@ -3210,7 +3245,10 @@ def index():
         return do_refresh(is_ajax, yaml_filename)
     if interview_status.question.question_type == "signin":
         release_lock(user_code, yaml_filename)
-        return do_redirect(url_for('user.login'), is_ajax)
+        return do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax)
+    if interview_status.question.question_type == "register":
+        release_lock(user_code, yaml_filename)
+        return do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax)
     if interview_status.question.question_type == "leave":
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
@@ -3284,15 +3322,22 @@ def index():
         steps += 1
     if changed and interview_status.question.interview.use_progress_bar:
         advance_progress(user_dict)
+    #logmessage("index: saving user dict where encrypted is " + str(encrypted))
     save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
     if user_dict.get('multi_user', False) is True and encrypted is True:
+        #logmessage("index: post interview, encryption should be False")
         encrypted = False
         session['encrypted'] = encrypted
         decrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
+    # else:
+    #     logmessage("index: post interview, no detection of encryption should be False")
     if user_dict.get('multi_user', False) is False and encrypted is False:
+        #logmessage("index: post interview, encryption should be True")
         encrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
         encrypted = True
         session['encrypted'] = encrypted
+    # else:
+    #     logmessage("index: post interview, no detection of encryption should be True")
     if response_to_send is not None:
         release_lock(user_code, yaml_filename)
         return response_to_send
@@ -9413,6 +9458,7 @@ def fix_secret():
         secret = str(request.cookies.get('secret', None))
         newsecret = pad_to_16(MD5Hash(data=password).hexdigest())
         if secret is None or secret != newsecret:
+            #logmessage("fix_secret: calling substitute_secret")
             session['newsecret'] = substitute_secret(secret, newsecret)
     else:
         logmessage("fix_secret: password not in request")

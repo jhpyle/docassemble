@@ -1,0 +1,124 @@
+metadata:
+  title: Multi-user interview
+  short title: Multi
+  documentation: "https://docassemble.org/docs/roles.html#twouser"
+  example start: 1
+  example end: 14
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  firstparty: Individual
+  secondparty: Individual
+---
+initial: true
+code: |
+  multi_user = True
+  if user_logged_in():
+    if not defined('firstparty.email'):
+      firstparty.email = user_info().email
+    if user_info().email == firstparty.email:
+      firstparty.endpoint      
+    elif user_info().email == secondparty.email:
+      secondparty.endpoint
+    else:
+      user_kicked_out
+  else:
+    user_must_log_in
+---
+event: firstparty.endpoint
+code: |
+  firstparty.name.first
+  secondparty.name.first
+  firstparty.thing
+  firstparty.signature
+  if not defined('secondparty.signature'):
+    waiting_on_second_party
+  final_screen
+---
+event: secondparty.endpoint
+code: |
+  secondparty.consents
+  secondparty.signature
+  final_screen
+---
+question: |
+  What is your name?
+fields:
+  - First Name: firstparty.name.first
+  - Last Name: firstparty.name.last
+---
+question: |
+  What is the name and e-mail address
+  of the other party to the contract?
+fields:
+  - First Name: secondparty.name.first
+  - Last Name: secondparty.name.last
+  - E-mail: secondparty.email
+    datatype: email
+---
+question: |
+  If you agree to convey
+  ${ secondparty.thing }
+  to ${ firstparty },
+  press Continue.
+field: secondparty.consents
+---
+generic object: Individual
+question: |
+  What is your least valuable possession?
+fields:
+  - no label: x.thing
+---
+generic object: Individual
+question: |
+  Please sign your name below.
+signature: x.signature
+under: |
+  ${ x.name }
+---
+event: user_must_log_in
+question: |
+  In order to use this interview,
+  you need to log in.
+subquestion: |
+  If you have not yet created an
+  account, press register.
+buttons:
+  Register: register
+  Log in: signin
+prevent going back: True
+---
+event: user_kicked_out
+question: |
+  You are not authorized.
+subquestion: |
+  I'm not sure how you got here,
+  but you do not belong.  Scram!
+---
+event: waiting_on_second_party
+question: |
+  Done for now.
+subquestion: |
+  Please ask ${ secondparty } to go to
+  [this link](${ interview_url() })
+  and register with the e-mail
+  address ${ secondparty.email }.
+
+  After ${ secondparty } has done this,
+  you can come back to this interview
+  (using the
+  [same link](${ interview_url() }))
+  and retrieve the signed agreement.
+---
+event: final_screen
+question: |
+  Here is the signed contract.
+attachment:
+  name: |
+    An agreement between
+    ${ firstparty } and
+    ${ secondparty }
+  filename: agreement
+  docx template file: Agreement_To_Transfer.docx

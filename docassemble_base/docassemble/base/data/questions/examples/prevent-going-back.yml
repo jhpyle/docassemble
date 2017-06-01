@@ -2,7 +2,7 @@ metadata:
   title: Disable back button
   documentation: "https://docassemble.org/docs/modifiers.html#prevent_going_back"
 ---
-prevent_going_back: True
+prevent going back: True
 question: |
   Your application for ${ service }
   has been submitted.

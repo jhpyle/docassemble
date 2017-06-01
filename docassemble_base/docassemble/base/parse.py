@@ -540,7 +540,7 @@ class Question:
             self.language = data['language']
         else:
             self.language = self.from_source.get_language()
-        if 'prevent_going_back' in data and data['prevent_going_back']:
+        if 'prevent going back' in data and data['prevent going back']:
             self.can_go_back = False
         if 'usedefs' in data:
             defs = list()
@@ -637,7 +637,7 @@ class Question:
             self.is_initial = True
         else:
             self.is_initial = False
-        if 'command' in data and data['command'] in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin']:
+        if 'command' in data and data['command'] in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register']:
             self.question_type = data['command']
             self.content = TextObject(data.get('url', ''), names_used=self.mako_names)
             return
@@ -2019,11 +2019,11 @@ class Question:
         if 'role' in user_dict:
             current_role = user_dict['role']
             if len(self.role) > 0:
-                if current_role not in self.role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin']:
+                if current_role not in self.role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register']:
                     # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                     user_dict['role_needed'] = self.role
                     raise NameError("name 'role_event' is not defined")
-            elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin']:
+            elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register']:
                 # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
@@ -2077,7 +2077,7 @@ class Question:
                 elif type(value) == str:
                     if value in ['exit', 'leave'] and 'url' in the_dict:
                         result_dict[key] = Question({'command': value, 'url': the_dict['url']}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
-                    elif value in ['continue', 'restart', 'refresh', 'signin', 'exit', 'leave']:
+                    elif value in ['continue', 'restart', 'refresh', 'signin', 'register', 'exit', 'leave']:
                         result_dict[key] = Question({'command': value}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     elif key == 'url':
                         pass

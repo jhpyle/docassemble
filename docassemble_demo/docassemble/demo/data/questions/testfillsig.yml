@@ -69,7 +69,7 @@ yesno: user_agrees_to_release
 ---
 sets: final_screen
 question: Thank you
-prevent_going_back: True
+prevent going back: True
 subquestion: |
   % if user_agrees_to_release and user_agrees_to_submit:
   % if success_sending_email:
