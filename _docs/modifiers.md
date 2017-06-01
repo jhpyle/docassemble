@@ -210,20 +210,20 @@ The progress along the bar at any question needs to be set with the
 
 {% include side-by-side.html demo="progress" %}
 
-# <a name="prevent_going_back"></a>Disable the back button: `prevent_going_back`
+# <a name="prevent going back"></a>Disable the back button: `prevent going back`
 
 Normally, **docassemble** allows the user to click the back button to
 get back to earlier steps in the interview.  Sometimes, it is
 necessary to prevent the user from doing so.
 
-If you add a `prevent_going_back` directive to a [`question`], the web
+If you add a `prevent going back` directive to a [`question`], the web
 app will not offer the user a back button while showing the question.
 
 {% include side-by-side.html demo="prevent-going-back" %}
 
 There is also a [`prevent_going_back()` function] that accomplishes
 the same thing from [Python] code.  This may be more useful than the
-`prevent_going_back` modifier if the need to prevent the user from
+`prevent going back` modifier if the need to prevent the user from
 clicking the back button depends on the outcome of a process.
 
 # <a name="terms"></a><a name="auto terms"></a>Vocabulary `terms` and `auto terms`

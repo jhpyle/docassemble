@@ -1218,7 +1218,7 @@ All of these system administration headaches can be avoided by
 [Amazon Web Services]: https://aws.amazon.com
 [SMS]: {{ site.baseurl }}/docs/sms.html
 [data storage]: {{ site.baseurl }}/docs/docker.html#data storage
-[Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
+[Azure blob storage]: {{ site.baseurl }}/docs/docker.html#persistent azure
 [Microsoft Azure]: https://azure.microsoft.com/en-us/
 [SendGrid]: https://sendgrid.com/
 [Exim]: https://en.wikipedia.org/wiki/Exim

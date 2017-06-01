@@ -2859,6 +2859,33 @@
     [Fruit]: ${ interview_url(i='docassemble.demo:data/questions/interview-about-fruit.yml') }
     [Vegetables]: ${ interview_url(i='docassemble.demo:data/questions/interview-about-vegetables.yml') }
     [Flowers]: ${ interview_url(i='docassemble.demo:data/questions/interview-about-flowers.yml') }
+"interview-url-session": "modules:\n  - docassemble.base.util\n---\nmandatory: True\n\
+  code: |\n  multi_user = False\n---\nquestion: |\n  Ready to proceed?\nsubquestion:\
+  \ |\n  Here is an interview URL that launches another interview.\n  \n  `${ interview_url(i='docassemble.base:data/questions/examples/interview-url-session-two.yml')\
+  \ }`\n\n  To proceed with the interview,\n  click \"Yes.\"\nyesno: ready_to_proceed\n\
+  ---\nquestion: All done\nsubquestion: |\n  Now we are done with the interview.\n\
+  sets: final_screen"
+"interview-url-session-two": |-
+  modules:
+    - docassemble.base.util
+  ---
+  mandatory: True
+  code: |
+    multi_user = False
+  ---
+  mandatory: True
+  code: |
+    if ready_to_proceed:
+      all_done
+  ---
+  question: |
+    Please press continue
+  field: ready_to_proceed
+  ---
+  question: All done
+  subquestion: |
+    Now we are done with the interview.
+  event: all_done
 "interview-vegetables": |-
   question: |
     What is your favorite vegetable?
@@ -4292,7 +4319,7 @@
     app_submitted = True
     prevent_going_back()
 "prevent-going-back": |-
-  prevent_going_back: True
+  prevent going back: True
   question: |
     Your application for ${ service }
     has been submitted.
@@ -5547,6 +5574,38 @@
 "fish-example": "code: |\n  fishes = objects_from_file(\"fishes.yml\")\n---\nmandatory:\
   \ true\nquestion: |\n  Fish summary\nsubquestion: |\n  % for fish in fishes:\n \
   \ ${ fish } has\n  ${ fish.scales } scales.\n  \n  % endfor"
+"multi-user": "modules:\n  - docassemble.base.util\n---\nobjects:\n  firstparty: Individual\n\
+  \  secondparty: Individual\n---\ninitial: true\ncode: |\n  multi_user = True\n \
+  \ if user_logged_in():\n    if not defined('firstparty.email'):\n      firstparty.email\
+  \ = user_info().email\n    if user_info().email == firstparty.email:\n      firstparty.endpoint\
+  \      \n    elif user_info().email == secondparty.email:\n      secondparty.endpoint\n\
+  \    else:\n      user_kicked_out\n  else:\n    user_must_log_in\n---\nevent: firstparty.endpoint\n\
+  code: |\n  firstparty.name.first\n  secondparty.name.first\n  firstparty.thing\n\
+  \  firstparty.signature\n  if not defined('secondparty.signature'):\n    waiting_on_second_party\n\
+  \  final_screen\n---\nevent: secondparty.endpoint\ncode: |\n  secondparty.consents\n\
+  \  secondparty.signature\n  final_screen\n---\nquestion: |\n  What is your name?\n\
+  fields:\n  - First Name: firstparty.name.first\n  - Last Name: firstparty.name.last\n\
+  ---\nquestion: |\n  What is the name and e-mail address\n  of the other party to\
+  \ the contract?\nfields:\n  - First Name: secondparty.name.first\n  - Last Name:\
+  \ secondparty.name.last\n  - E-mail: secondparty.email\n    datatype: email\n---\n\
+  question: |\n  If you agree to convey\n  ${ secondparty.thing }\n  to ${ firstparty\
+  \ },\n  press Continue.\nfield: secondparty.consents\n---\ngeneric object: Individual\n\
+  question: |\n  What is your least valuable possession?\nfields:\n  - no label: x.thing\n\
+  ---\ngeneric object: Individual\nquestion: |\n  Please sign your name below.\nsignature:\
+  \ x.signature\nunder: |\n  ${ x.name }\n---\nevent: user_must_log_in\nquestion:\
+  \ |\n  In order to use this interview,\n  you need to log in.\nsubquestion: |\n\
+  \  If you have not yet created an\n  account, press register.\nbuttons:\n  Register:\
+  \ register\n  Log in: signin\nprevent going back: True\n---\nevent: user_kicked_out\n\
+  question: |\n  You are not authorized.\nsubquestion: |\n  I'm not sure how you got\
+  \ here,\n  but you do not belong.  Scram!\n---\nevent: waiting_on_second_party\n\
+  question: |\n  Done for now.\nsubquestion: |\n  Please ask ${ secondparty } to go\
+  \ to\n  [this link](${ interview_url() })\n  and register with the e-mail\n  address\
+  \ ${ secondparty.email }.\n\n  After ${ secondparty } has done this,\n  you can\
+  \ come back to this interview\n  (using the\n  [same link](${ interview_url() }))\n\
+  \  and retrieve the signed agreement.\n---\nevent: final_screen\nquestion: |\n \
+  \ Here is the signed contract.\nattachment:\n  name: |\n    An agreement between\n\
+  \    ${ firstparty } and\n    ${ secondparty }\n  filename: agreement\n  docx template\
+  \ file: Agreement_To_Transfer.docx"
 "objects-from-file": "code: |\n  people = objects_from_file(\"contacts.yml\")\n---\n\
   mandatory: true\nquestion: |\n  How to contact us\nsubquestion: |\n  % for person\
   \ in people:\n  You can e-mail ${ person } at\n  ${ person.email }.\n  \n  % endfor"

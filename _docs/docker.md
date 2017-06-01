@@ -349,19 +349,20 @@ You can set the following configuration options:
   environment variable if you are using [EC2] with an [IAM] role that
   allows access to your [S3] bucket.
 * <a name="AZUREENABLE"></a>`AZUREENABLE`: Set this to `True` if you
-  are using [Azure blob storage] as a repository for uploaded files,
-  [Playground] files, the [configuration] file, and other information.
-  This environment variable, along with others that begin with
-  `AZURE`, populates values in [`azure` section] of the
-  [configuration] file.  If this is unset, but [`AZUREACCOUNTNAME`],
-  [`AZUREACCOUNTKEY`], and [`AZURECONTAINER`] are set, it will be
-  assumed to be `True`.
+  are using [Azure blob storage](#persistent azure) as a repository
+  for uploaded files, [Playground] files, the [configuration] file,
+  and other information.  This environment variable, along with others
+  that begin with `AZURE`, populates values in [`azure` section] of
+  the [configuration] file.  If this is unset, but
+  [`AZUREACCOUNTNAME`], [`AZUREACCOUNTKEY`], and [`AZURECONTAINER`]
+  are set, it will be assumed to be `True`.
 * <a name="AZURECONTAINER"></a>`AZURECONTAINER`: If you are using
-  [Azure blob storage], set this to the container name.  Note that
-  **docassemble** will not create the bucket for you.  You will need
-  to create it for yourself beforehand.
+  [Azure blob storage](#persistent azure), set this to the container
+  name.  Note that **docassemble** will not create the container for you.
+  You will need to create it for yourself beforehand.
 * <a name="AZUREACCOUNTNAME"></a>`AZUREACCOUNTNAME`: If you are using
-  [Azure blob storage], set this to the account name.
+  [Azure blob storage](#persistent azure), set this to the account
+  name.
 * <a name="AZUREACCOUNTKEY"></a>`AZUREACCOUNTKEY`: If you are
   using [Azure blob storage], set this to the account key.
 * <a name="TIMEZONE"></a>`TIMEZONE`: You can use this to set the time
@@ -386,10 +387,10 @@ You can set the following configuration options:
   when the image is run.  See the [`debian packages`] configuration
   directive.
 
-Note that if you use [persistent volumes] and/or
-[S3]/[Azure blob storage], launching a new **docassemble** container
-with different variables is not necessarily going to change the way
-**docassemble** works.
+Note that if you use [persistent volumes] and/or [S3](#persistent
+s3)/[Azure blob storage](#persistent azure), launching a new
+**docassemble** container with different variables is not necessarily
+going to change the way **docassemble** works.
 
 For example, if [`USEHTTPS`] is `True` and [`USELETSENCRYPT`] is
 `True`, then the [Apache] configuration files, if stored on a
@@ -397,25 +398,27 @@ persistent volume, will not be overwritten if they already exist when
 a new container starts up.  So if you had been using [Let's Encrypt],
 but then you decide to change the [`DAHOSTNAME`], you will need to
 delete the saved configuration before running a new container.  If you
-are using [S3], you can go to the [S3 Console] and delete the "Apache"
-folder and the "letsencrypt.tar.gz" file.  If you are using
-[Azure blob storage], you can go to the [Azure Portal] and delete the
-"Apache" folder and the "letsencrypt.tar.gz" file.
+are using [S3](#persistent s3), you can go to the [S3 Console] and
+delete the "Apache" folder and the "letsencrypt.tar.gz" file.  If you
+are using [Azure blob storage](#persistent azure), you can go to the
+[Azure Portal] and delete the "Apache" folder and the
+"letsencrypt.tar.gz" file.
   
-Also, if a configuration file exists on [S3]/[Azure blob storage]
-(`config.yml`) or in a persistent volume
-(`/usr/share/docassemble/config/config.yml`), then the values in that
-configuration will take precedence over the corresponding environment
-variables that are passed to [Docker].  Once a configuration file
-exists, you should make changes to the configuration file rather than
-passing environment variables to [Docker].  However, if your
-configuration is on [S3]/[Azure blob storage], you will at least need
-to pass sufficient access keys (e.g., [`S3BUCKET`],
-[`AZURECONTAINER`], etc.)  to access the storage; otherwise your
-container will not know where to find the configuration.  Also, there
-are some environment variables that do not exist in the configuration
-file because they are server-specific.  These include
-[`CONTAINERROLE`] and [`SERVERHOSTNAME`].
+Also, if a configuration file exists on [S3](#persistent
+s3)/[Azure blob storage](#persistent azure) (`config.yml`) or in a
+persistent volume (`/usr/share/docassemble/config/config.yml`), then
+the values in that configuration will take precedence over the
+corresponding environment variables that are passed to [Docker].  Once
+a configuration file exists, you should make changes to the
+configuration file rather than passing environment variables to
+[Docker].  However, if your configuration is on [S3](#persistent
+s3)/[Azure blob storage](#persistent azure), you will at least need to
+pass sufficient access keys (e.g., [`S3BUCKET`], [`AZURECONTAINER`],
+etc.)  to access the storage; otherwise your container will not know
+where to find the configuration.  Also, there are some environment
+variables that do not exist in the configuration file because they are
+server-specific.  These include [`CONTAINERROLE`] and
+[`SERVERHOSTNAME`].
 
 # <a name="data storage"></a>Data storage
 
@@ -536,8 +539,8 @@ environment variable [`AZUREACCOUNTNAME`].  The "key1" corresponds
 with the [`AZUREACCOUNTKEY`] environment variable.  (You can also use
 "key2.")
 
-If you enable both [S3] and [Azure blob storage], only [S3] will be
-used.
+If you enable both [S3](#persistent s3) and
+[Azure blob storage](#persistent azure), only [S3] will be used.
 
 ## <a name="persistent"></a>Using persistent volumes
 
@@ -595,11 +598,12 @@ docker volume rm $(docker volume ls -qf dangling=true)
 {% endhighlight %}
 
 Ultimately, the better [data storage] solution is to use cloud storage
-([S3], [Azure blob storage]) because:
+([S3](#persistent s3), [Azure blob storage](#persistent azure)) because:
 
-1. [S3] and [Azure blob storage] make scaling easier.  They are the
-   "cloud" way of storing persistent data, at least until cloud-based
-   network file systems become more robust.
+1. [S3](#persistent s3) and [Azure blob storage](#persistent azure)
+   make scaling easier.  They are the "cloud" way of storing
+   persistent data, at least until cloud-based network file systems
+   become more robust.
 2. It is easier to upgrade your virtual machines to the latest
    software and operating system if you can just destroy them and
    recreate them, rather than running update scripts.  If your
@@ -721,10 +725,11 @@ setting this up.
 
 ## Configuration file
 
-Note that when you use the cloud ([S3] or [Azure blob storage]) for
-[data storage], **docassemble** will copy the `config.yml` file out of
-the cloud on startup, and save `config.yml` to the cloud whenever the
-configuration is modified.
+Note that when you use the cloud ([S3](#persistent s3) or
+[Azure blob storage](#persistent azure)) for [data storage],
+**docassemble** will copy the `config.yml` file out of the cloud on
+startup, and save `config.yml` to the cloud whenever the configuration
+is modified.
 
 This means that as long as there is a `config.yml` file in the cloud
 with the configuration you want, you can start **docassemble**
@@ -821,8 +826,8 @@ Using your own SSL certificates with [Docker] requires that your SSL
 certificates reside within each container.  There are several ways to
 accomplish this:
 
-* Use [S3] or [Azure blob storage] and upload the certificates to
-  your bucket/container.
+* Use [S3](#persistent s3) or [Azure blob storage](#persistent azure)
+  and upload the certificates to your bucket/container.
 * [Build your own private image] in which your SSL certificates are
   placed in `Docker/apache.key`, `Docker/apache.crt`, and
   `Docker/apache.ca.pem`.  During the build process, these files
@@ -856,13 +861,13 @@ server, the [supervisor] will run the
 `docassemble.webapp.install_certs` module before starting the web
 server.
 
-If you are using [S3] or [Azure blob storage], this module will copy
+If you are using [S3](#persistent s3) or [Azure blob storage](#persistent azure), this module will copy
 the files from the `certs/` prefix in your bucket/container to
 `/etc/ssl/docassemble`.  You can use the [S3 Console] or the
 [Azure Portal] to create a folder called `certs` and upload your
 certificate files into that folder.
 
-If you are not using [S3] or [Azure blob storage], the
+If you are not using [S3](#persistent s3) or [Azure blob storage](#persistent azure), the
 `docassemble.webapp.install_certs` module will copy the files from
 `/usr/share/docassemble/certs` to `/etc/ssl/docassemble`.
 
@@ -911,13 +916,14 @@ certificates.
 The process of installing your own [Exim] certificates is very similar to
 the process of installing [HTTPS] certificates.
 
-If you are using [S3] or [Azure blob storage], copy your certificate
-and private key to the `certs` folder of your [S3] bucket or
+If you are using [S3](#persistent s3) or
+[Azure blob storage](#persistent azure), copy your certificate and
+private key to the `certs` folder of your [S3] bucket or
 [Azure blob storage] container, using the filenames `exim.crt` and
 `exim.key`, respectively.
 
-If you are not using [S3] or [Azure blob storage], save these files
-as:
+If you are not using [S3](#persistent s3) or
+[Azure blob storage](#persistent azure), save these files as:
 
 * `/usr/share/docassemble/certs/exim.crt` (certificate)
 * `/usr/share/docassemble/certs/exim.key` (private key)
@@ -1302,7 +1308,7 @@ containers depend on the images.
 [configuration]: {{ site.baseurl }}/docs/config.html
 [`db` section]: {{ site.baseurl }}/docs/config.html#db
 [`s3` section]: {{ site.baseurl }}/docs/config.html#s3
-[`azure` section]: {{ site.baseurl }}/docs/config.html#s3
+[`azure` section]: {{ site.baseurl }}/docs/config.html#azure
 [Build your own private image]: #build
 [Redis]: http://redis.io/
 [RabbitMQ]: https://www.rabbitmq.com/

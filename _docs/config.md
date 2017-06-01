@@ -1416,7 +1416,7 @@ and Facebook API keys.
 [list of language codes]: http://www.voicerss.org/api/documentation.aspx
 [supervisor]: http://supervisord.org/
 [S3]: https://aws.amazon.com/s3/
-[Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
+[Azure blob storage]: {{ site.baseurl }}/docs/docker.html#persistent azure
 [Amazon S3]: https://aws.amazon.com/s3/
 [avconv]: https://libav.org/avconv.html
 [ffmpeg]: https://www.ffmpeg.org/

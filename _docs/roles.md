@@ -420,6 +420,15 @@ respondent logged in and the time the respondent entered his number of
 his cats -- but it is important to anticipate and control for rare
 cases.
 
+# <a name="twouser"></a>A two-user interview that does not use the roles system
+
+You do not need need to use the role-switching system to have a
+multi-user interview.  It helps, though, to use the [user login]
+system to keep track of who the user is.  Here is an example of an
+interview where two users each sign a document:
+
+{% include demo-side-by-side.html demo="multi-user" %}
+
 [`default role` initial block]: {{ site.baseurl }}/docs/initial.html#default role
 [`role` modifier]: {{ site.baseurl }}/docs/modifiers.html#role
 [fields]: {{ site.baseurl }}/docs/fields.html
