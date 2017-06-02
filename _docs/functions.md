@@ -7,7 +7,8 @@ short_title: Functions
 # What is a function?
 
 A function is a piece of code that takes one or more pieces of input
-and returns something as output.  For example:
+and returns something as output or does something behind the scenes.
+For example:
 
 {% include side-by-side.html demo="function" %}
 
@@ -2474,6 +2475,142 @@ elements should be added, you can set the optional keyword argument
 
 {% include demo-side-by-side.html demo="objects-from-file-gather" %}
 
+### Avoiding problems with whitespace
+
+If you include text in your [YAML] file and you wish to use this text
+within documents, you should understand a few rules about [YAML].
+
+This in [YAML]:
+
+{% highlight yaml %}
+claim: |
+  The landlord is not entitled 
+  to collect back rent.
+{% endhighlight %}
+
+becomes this in [Python]:
+
+{% highlight python %}
+{'claim': 'The landlord is not entitled\nto collect back rent.\n'}
+{% endhighlight %}
+
+Note that the newline after the word "entitled" was treated
+literally (`\n`), and a newline was added at the end.  This is not a problem
+when your text is treated as [Markdown], because [Markdown] treats
+single newlines as though they were spaces and only breaks a line when
+it sees two newlines together.  However, if you are inserting text
+into a [`docx template file`], the newlines will cause paragraph
+breaks, which may be what you want, or it may not be what you want.
+
+Here are some [YAML] tips that can help you out in situations like
+this.
+
+This in [YAML]:
+
+{% highlight yaml %}
+claim: |-
+  The landlord is not entitled 
+  to collect back rent.
+{% endhighlight %}
+
+becomes this in [Python]:
+
+{% highlight python %}
+{'claim': 'The landlord is not entitled\nto collect back rent.'}
+{% endhighlight %}
+
+Changing the quote mark from `|` to `|-` gets rid of the newline at the
+end, but not the one in the middle.
+
+This in [YAML]:
+
+{% highlight yaml %}
+claim: >
+  The landlord is not entitled 
+  to collect back rent.
+{% endhighlight %}
+
+becomes this in [Python]:
+
+{% highlight python %}
+{'claim': 'The landlord is not entitled to collect back rent.\n'}
+{% endhighlight %}
+
+The `>` treats newlines as spaces, but adds a newline at the end.
+
+{% highlight yaml %}
+claim: >-
+  The landlord is not entitled 
+  to collect back rent.
+{% endhighlight %}
+
+becomes this in [Python]:
+
+{% highlight python %}
+{'claim': 'The landlord is not entitled to collect back rent.'}
+{% endhighlight %}
+
+The `>-` quote mark treats newlines as spaces and refrains from adding
+a newline at the end.
+
+This in [YAML]:
+
+{% highlight yaml %}
+claim: The landlord is not entitled to collect back rent.
+{% endhighlight %}
+
+becomes this in [Python]:
+
+{% highlight python %}
+{'claim': 'The landlord is not entitled to collect back rent.'}
+{% endhighlight %}
+
+Similarly, this in [YAML]:
+
+{% highlight yaml %}
+claim: "The landlord is not entitled to collect back rent."
+{% endhighlight %}
+
+also becomes:
+
+{% highlight python %}
+{'claim': 'The landlord is not entitled to collect back rent.'}
+{% endhighlight %}
+
+The quotation marks do not change the text in this case.  Quotation
+marks can still be useful, however, if your text contains any
+punctuation marks that have special meaning in [YAML].
+
+If you want literal quotation marks, you could use quotes within
+quotes:
+
+This in [YAML]:
+
+{% highlight yaml %}
+quotation: '"It was the best of times, it was the worst of times."'
+{% endhighlight %}
+
+becomes this in [Python]:
+
+{% highlight python %}
+{'quotation': '"It was the best of times, it was the worst of times."'}
+{% endhighlight %}
+
+Similarly, this in [YAML]:
+
+{% highlight yaml %}
+quotation: >-
+  "It was the best of times, it was the worst of times."
+{% endhighlight %}
+
+also becomes:
+
+{% highlight python %}
+{'quotation': '"It was the best of times, it was the worst of times."'}
+{% endhighlight %}
+
+For more information, see [The YAML Format].
+
 ## <a name="ocr_file"></a>ocr_file()
 
 Given a PDF file, `ocr_file()` uses [optical character recognition] (OCR) to
@@ -3596,3 +3733,4 @@ $(document).on('daPageLoad', function(){
 [gathered]: {{ site.baseurl }}/docs/groups.html#gathering
 [`.instanceName`]: {{ site.baseurl }}/docs/objects.html#instanceName
 [`objects from file`]: {{ site.baseurl }}/docs/initial.html#objects from file
+[The YAML Format]: http://symfony.com/doc/current/components/yaml/yaml_format.html
