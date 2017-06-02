@@ -7337,7 +7337,7 @@ def trash_gd_file(section, filename):
 @login_required
 @roles_required(['admin', 'developer'])
 def sync_with_google_drive():
-    if config['USE_GOOGLE_DRIVE'] is False:
+    if app.config['USE_GOOGLE_DRIVE'] is False:
         flash(word("Google Drive is not configured"), "error")
         return redirect(url_for('interview_list'))
     storage = RedisCredStorage()
@@ -7474,7 +7474,7 @@ def sync_with_google_drive():
 @login_required
 @roles_required(['admin', 'developer'])
 def google_drive_page():
-    if config['USE_GOOGLE_DRIVE'] is False:
+    if app.config['USE_GOOGLE_DRIVE'] is False:
         flash(word("Google Drive is not configured"), "error")
         return redirect(url_for('interview_list'))
     form = GoogleDriveForm(request.form)
@@ -7689,7 +7689,7 @@ def playground_download(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_files():
-    if config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
+    if app.config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
         use_gd = False
     else:
         use_gd = True
@@ -8631,7 +8631,7 @@ def playground_page():
         use_gd = False
     else:
         is_ajax = False
-        if config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
+        if app.config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
             use_gd = False
         else:
             use_gd = True
