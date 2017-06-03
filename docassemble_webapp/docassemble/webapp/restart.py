@@ -1,7 +1,7 @@
 import sys
 import os
 import docassemble.base.config
-from docassemble.base.config import daconfig
+from docassemble.base.config import daconfig, da_config_file
 
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
@@ -13,7 +13,7 @@ def main():
     if cloud is not None:
         key = cloud.get_key('config.yml')
         if key.exists():
-            key.get_contents_to_filename(config_file)
+            key.get_contents_to_filename(da_config_file)
             sys.stderr.write("Wrote config file based on copy on cloud\n")
     wsgi_file = WEBAPP_PATH
     if os.path.isfile(wsgi_file):

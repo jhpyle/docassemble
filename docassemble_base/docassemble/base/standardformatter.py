@@ -1239,7 +1239,11 @@ def add_validation(extra_scripts, validation_rules):
       var validation_rules = """ + json.dumps(validation_rules) + """;
       validation_rules.submitHandler = daValidationHandler;
       $("#daform").validate(validation_rules);
+      $("button").click(function(event){
+        whichButton = this;
+      });
       $("#backbutton").submit(function(event){
+        $("#backbutton").addClass("dabackiconpressed");
         var informed = '';
         if (daInformedChanged){
           informed = '&informed=' + Object.keys(daInformed).join(',');

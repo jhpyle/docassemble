@@ -30,10 +30,12 @@ def load(**kwargs):
     global hostname
     global loaded
     global in_celery
+    global da_config_file
     if 'arguments' in kwargs and kwargs['arguments'] and len(kwargs['arguments']) > 1:
         filename = kwargs['arguments'][1]
     else:
         filename = kwargs.get('filename', os.getenv('DA_CONFIG_FILE', '/usr/share/docassemble/config/config.yml'))
+    da_config_file = filename
     if 'in_celery' in kwargs and kwargs['in_celery']:
         in_celery = True
     if not os.path.isfile(filename):

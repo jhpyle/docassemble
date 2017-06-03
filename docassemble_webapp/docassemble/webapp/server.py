@@ -1919,6 +1919,7 @@ def trigger_update(except_for=None):
     return
 
 def restart_on(host):
+    logmessage("restart_on: " + str(host.hostname))
     if host.hostname == hostname:
         the_url = 'http://localhost:9001'
     else:
@@ -1926,10 +1927,10 @@ def restart_on(host):
     if re.search(r':(web|all):', host.role):
         args = [SUPERVISORCTL, '-s', the_url, 'start reset']
         result = call(args)
-        # if result == 0:
-        #     logmessage("restart_on: sent reset to " + str(host.hostname))
-        # else:
-        #     logmessage("restart_on: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
+        if result == 0:
+            logmessage("restart_on: sent reset to " + str(host.hostname))
+        else:
+            logmessage("restart_on: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
     return
 
 def restart_all():
@@ -1938,16 +1939,17 @@ def restart_all():
     return
 
 def restart_this():
+    logmessage("restart_this: hostname is " + str(hostname))
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url:
-                #logmessage("restart_this: considering " + str(host.hostname) + " against " + str(hostname))
+                logmessage("restart_this: considering " + str(host.hostname) + " against " + str(hostname))
                 if host.hostname == hostname:
                     restart_on(host)
             #else:
             #    logmessage("restart_this: unable to get host url")
     else:
-        #logmessage("restart_this: touched wsgi file")
+        logmessage("restart_this: touching wsgi file")
         wsgi_file = WEBAPP_PATH
         if os.path.isfile(wsgi_file):
             with open(wsgi_file, 'a'):
@@ -1955,7 +1957,7 @@ def restart_this():
     return
 
 def restart_others():
-    #logmessage("restart_others: starting")
+    logmessage("restart_others: starting")
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url:
@@ -2331,6 +2333,7 @@ def restart_ajax():
     #else:
     #    logmessage("restart_ajax: user has no permission")
     if request.form.get('action', None) == 'restart' and current_user.has_role('admin', 'developer'):
+        logmessage("restart_ajax: restarting")
         restart_all()
         return jsonify(success=True)
 
@@ -3427,6 +3430,7 @@ def index():
             debug_readability_question = ''
         scripts += """    <script type="text/javascript" charset="utf-8">
       var map_info = null;
+      var whichButton = null;
       var socket = null;
       var foobar = null;
       var chatHistory = [];
@@ -3827,6 +3831,7 @@ def index():
         $("#daform").each(function(){
           $(this).find(':input').off('change', pushChanges);
         });
+        $("meta[name=viewport]").attr('content', "width=device-width, minimum-scale=1.0, maximum-scale=1.0");
         if (checkinInterval != null){
           clearInterval(checkinInterval);
         }
@@ -3834,7 +3839,17 @@ def index():
           $(form).find('input[type="submit"]').prop("disabled", true);
           $(form).find('button[type="submit"]').prop("disabled", true);
         }, 1);
-
+        if (whichButton != null){
+          if ($(whichButton).hasClass('btn-success')){
+            $(whichButton).removeClass("btn-success");
+            $(whichButton).addClass("btn-primary");
+          }
+          else{
+            $(whichButton).removeClass("btn-primary btn-info btn-warning btn-error btn-default");
+            $(whichButton).addClass("btn-success");
+          }
+        }
+        whichButton = null;
         if ($('input[name="_files"]').length){
           $("#uploadiframe").remove();
           var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
@@ -3915,6 +3930,7 @@ def index():
           $("body").html(data.body);
           $("body").removeClass();
           $("body").addClass(data.bodyclass);
+          $("meta[name=viewport]").attr('content', "width=device-width, initial-scale=1");
           daDoAction = data.do_action;
           daChatAvailable = data.livehelp.availability;
           daChatMode = data.livehelp.mode;

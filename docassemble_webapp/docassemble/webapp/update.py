@@ -147,6 +147,8 @@ def check_for_updates(doing_startup=False):
             if package.name not in here_already:
                 sys.stderr.write("check_for_updates: removing package entry for " + package.name + "\n")
                 packages_to_delete.append(package)
+        elif returnval != 0:
+            results[package.name] = 'could not be upgraded'
         else:
             results[package.name] = 'successfully installed'
             if real_name != package.name:
@@ -211,13 +213,10 @@ def add_dependencies(user_id):
         Package.query.filter_by(name=package.key).delete()
         db.session.commit()
         package_auth = PackageAuth(user_id=user_id)
-        if package.key in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
-            package_entry = Package(name=package.key, package_auth=package_auth, giturl=docassemble_git_url, packageversion=package.version, gitsubdir=re.sub(r'\.', '-', package.key), type='git', core=True)
+        if pip_info['Home-page'] is not None and re.search(r'/github.com/', pip_info['Home-page']):
+            package_entry = Package(name=package.key, package_auth=package_auth, type='git', giturl=pip_info['Home-page'], packageversion=package.version, dependency=True)
         else:
-            if pip_info['Home-page'] is not None and re.search(r'/github.com/', pip_info['Home-page']):
-                package_entry = Package(name=package.key, package_auth=package_auth, type='git', giturl=pip_info['Home-page'], packageversion=package.version, dependency=True)
-            else:
-                package_entry = Package(name=package.key, package_auth=package_auth, type='pip', packageversion=package.version, dependency=True)
+            package_entry = Package(name=package.key, package_auth=package_auth, type='pip', packageversion=package.version, dependency=True)
         db.session.add(package_auth)
         db.session.add(package_entry)
         db.session.commit()
@@ -267,7 +266,7 @@ def install_package(package):
         return 1, 'Unable to recognize package type: ' + package.name
     sys.stderr.write("install_package: running " + " ".join(commands) + "\n")
     logfilecontents += " ".join(commands) + "\n"
-    #returnval = pip.main(commands)
+    returnval = 1
     try:
         subprocess.call(commands)
         returnval = 0
@@ -276,6 +275,7 @@ def install_package(package):
     with open(pip_log.name, 'rU') as x:
         logfilecontents += x.read().decode('utf8')
     sys.stderr.write(logfilecontents + "\n")
+    sys.stderr.write('returnval is: ' + str(returnval) + "\n")
     sys.stderr.write('install_package: done' + "\n")
     shutil.rmtree(temp_dir)
     return returnval, logfilecontents
