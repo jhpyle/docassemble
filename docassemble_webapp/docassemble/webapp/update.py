@@ -213,7 +213,7 @@ def add_dependencies(user_id):
         Package.query.filter_by(name=package.key).delete()
         db.session.commit()
         package_auth = PackageAuth(user_id=user_id)
-        if pip_info['Home-page'] is not None and re.search(r'/github.com/', pip_info['Home-page']):
+        if package.key.startswith('docassemble.') and pip_info['Home-page'] is not None and re.search(r'/github.com/', pip_info['Home-page']):
             package_entry = Package(name=package.key, package_auth=package_auth, type='git', giturl=pip_info['Home-page'], packageversion=package.version, dependency=True)
         else:
             package_entry = Package(name=package.key, package_auth=package_auth, type='pip', packageversion=package.version, dependency=True)
