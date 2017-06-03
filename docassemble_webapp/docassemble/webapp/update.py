@@ -254,7 +254,10 @@ def install_package(package):
         saved_file = SavedFile(package.upload, extension='zip', fix=True)
         commands = ['pip', 'install', '--quiet', '--process-dependency-links', '--allow-all-external', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--log-file=' + pip_log.name, '--upgrade', saved_file.path + '.zip']
     elif package.type == 'git' and package.giturl is not None:
-        commands = ['pip', 'install', '--quiet', '--process-dependency-links', '--allow-all-external', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + package.giturl + '.git#egg=' + package.name]
+        if package.gitsubdir is not None:
+            commands = ['pip', 'install', '--quiet', '--process-dependency-links', '--allow-all-external', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + str(package.giturl) + '.git#egg=' + package.name + '&subdirectory=' + str(package.gitsubdir)]
+        else:
+            commands = ['pip', 'install', '--quiet', '--process-dependency-links', '--allow-all-external', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + str(package.giturl) + '.git#egg=' + package.name]
     elif package.type == 'pip':
         if package.limitation is None:
             limit = ""

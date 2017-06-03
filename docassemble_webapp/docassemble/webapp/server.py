@@ -3840,7 +3840,13 @@ def index():
           $(form).find('button[type="submit"]').prop("disabled", true);
         }, 1);
         if (whichButton != null){
-          if ($(whichButton).hasClass('btn-success')){
+          $(".btn-lg").each(function(){
+            if (this != whichButton){
+              $(this).removeClass("btn-primary btn-info btn-warning btn-error");
+              $(this).addClass("btn-default");
+            }
+          });
+          if ($(whichButton).hasClass("btn-success")){
             $(whichButton).removeClass("btn-success");
             $(whichButton).addClass("btn-primary");
           }
