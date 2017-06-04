@@ -315,6 +315,7 @@ div > ul.example-list {
     max-height: 35em;
     overflow-y: auto;
     position: relative;
+    font-size: 14px;
 }
 
 ul.example-list ul {
@@ -840,6 +841,7 @@ img.da-sig-spinner {
     border-width: 1px;
     border-color: #dddddd;
     border-style: solid;
+    font-size: 14px;
 }
 
 .search-error {
@@ -1036,8 +1038,10 @@ textarea.translation-box {
 
 .navpillssmaller > li > a {
     padding: 10px 12px;
+    font-size: 14px;
 }
 
 .btn-lg {
     margin-bottom: 5px;
 }
+

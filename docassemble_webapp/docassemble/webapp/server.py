@@ -3456,6 +3456,18 @@ def index():
       var daSubmitter = null;
       var daDoAction = """ + do_action + """;
       var daCsrf = """ + repr(str(generate_csrf())) + """;
+      function preloadImage(url){
+        var img = new Image();
+        img.src = url;
+      }
+      preloadImage('""" + str(url_for('static', filename='app/loader.gif')) + """');
+      preloadImage('""" + str(url_for('static', filename='app/chat.ico')) + """');
+      preloadImage('""" + str(url_for('static', filename='jquery-labelauty/source/images/checkbox-unchecked.png')) + """');
+      preloadImage('""" + str(url_for('static', filename='jquery-labelauty/source/images/input-unchecked.png')) + """');
+      preloadImage('""" + str(url_for('static', filename='jquery-labelauty/source/images/checkbox-checked.png')) + """');
+      preloadImage('""" + str(url_for('static', filename='jquery-labelauty/source/images/input-checked.png')) + """');
+      preloadImage('""" + str(url_for('static', filename='jquery-labelauty/source/images/radio-unchecked.png')) + """');
+      preloadImage('""" + str(url_for('static', filename='jquery-labelauty/source/images/radio-checked.png')) + """');
       function url_action(action, args){
           if (args == null){
               args = {};

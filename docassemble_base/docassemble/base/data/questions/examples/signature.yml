@@ -2,12 +2,6 @@ metadata:
   title: Signature
   documentation: "https://docassemble.org/docs/fields.html#signature"
 ---
-features:
-  progress bar: True
----
-interview help: |
-  Hello there.
----
 question: |
   Sign your name
 subquestion: |
