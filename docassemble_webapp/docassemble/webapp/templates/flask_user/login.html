@@ -75,12 +75,12 @@
 {% endif %}
 {% if config['USE_FACEBOOK_LOGIN'] %}
 <div class="row nomargin">
-  <div class="daiconbox col-md-6"><a class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><table><tr><tbody><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Facebook') }}</td></tr></tbody></table></a></div>
+  <div class="daiconbox col-md-6"><a class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Facebook') }}</td></tr></tbody></table></a></div>
 </div>
 {% endif %}
 {% if config['USE_AZURE_LOGIN'] %}
 <div class="row nomargin">
-  <div class="daiconbox col-md-6"><a class="nohover" href="{{ url_for('oauth_authorize', provider='azure') }}"><table style="height:100%"><tr><tbody><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/azure-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Azure') }}</td></tr></tbody></table></a></div>
+  <div class="daiconbox col-md-6"><a class="nohover" href="{{ url_for('oauth_authorize', provider='azure') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/azure-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Azure') }}</td></tr></tbody></table></a></div>
 </div>
 {% endif %}
 {% if False and config['USE_GOOGLE_LOGIN'] %}

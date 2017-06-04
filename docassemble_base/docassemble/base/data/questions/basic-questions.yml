@@ -236,7 +236,7 @@ subquestion: |
 ---
 generic object: Individual
 question: |
-  Please sign your name below.
+  Sign your name
 signature: x.signature
 need:
   - x.name.first

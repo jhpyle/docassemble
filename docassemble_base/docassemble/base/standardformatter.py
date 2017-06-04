@@ -49,25 +49,35 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
         sizing += 'height:auto;'    
     return('<img class="daicon" src="' + url + '" style="' + sizing + '"/>')
 
-def signature_html(status, debug, root, validation_rules):
-    if (status.continueLabel):
-        continue_label = markdown_to_html(status.continueLabel, trim=True)
-    else:
-        continue_label = word('Done')
-    output = '    <div class="sigpage" id="sigpage">\n      <div class="sigheader" id="sigheader">\n        <div class="siginnerheader">\n          <a id="new" class="signavbtn signav-left">' + word('Clear') + '</a>\n          <a id="save" class="signavbtn signav-right">' + continue_label + '</a>\n          <div class="sigtitle">' + word('Sign Your Name') + '</div>\n        </div>\n      </div>\n      <div class="sigtoppart" id="sigtoppart">\n        <div id="errormess" class="sigerrormessage signotshowing">' + word("You must sign your name to continue.") + '</div>\n        '
-    if status.questionText:
-        output += markdown_to_html(status.questionText, trim=True)
-    output += '\n      </div>'
-    if status.subquestionText:
-        output += '\n      <div class="sigmidpart">\n        ' + markdown_to_html(status.subquestionText) + '\n      </div>'
-    output += '\n      <div id="sigcontent"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n      <div class="sigbottompart" id="sigbottompart">\n        '
-    if (status.underText):
-        output += markdown_to_html(status.underText, trim=True)
-    output += '\n      </div>\n    </div>\n    <form action="' + root + '" id="dasigform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
-    output += tracker_tag(status)
-    output += '</form>\n'
-    add_validation(status.extra_scripts, validation_rules)
-    return output
+# def signature_html(status, debug, root, validation_rules):
+#     if (status.continueLabel):
+#         continue_label = markdown_to_html(status.continueLabel, trim=True)
+#     else:
+#         continue_label = word('Done')
+#     output = '    <div class="sigpage" id="sigpage">\n      <div class="sigshowsmallblock sigheader" id="sigheader">\n        <div class="siginnerheader">\n          <a id="new" class="signavbtn signav-left">' + word('Clear') + '</a>\n          <a id="save" class="signavbtn signav-right">' + continue_label + '</a>\n          <div class="sigtitle">'
+#     if status.questionText:
+#         output += markdown_to_html(status.questionText, trim=True)
+#     else:
+#         output += word('Sign Your Name')
+#     output += '</div>\n        </div>\n      </div>\n      <div class="sigtoppart" id="sigtoppart">\n        <div id="errormess" class="sigerrormessage signotshowing">' + word("You must sign your name to continue.") + '</div>\n        '
+#     output += '\n      </div>'
+#     if status.subquestionText:
+#         output += '\n      <div class="sigmidpart">\n        ' + markdown_to_html(status.subquestionText) + '\n      </div>'
+#     output += '\n      <div id="sigcontent"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n      <div class="sigbottompart" id="sigbottompart">\n        '
+#     if (status.underText):
+#         output += markdown_to_html(status.underText, trim=True)
+#     output += "\n      </div>"
+#     output += """
+#       <div class="form-actions sighidesmall sigbuttons">
+#         <a id="savetwo" class="btn btn-primary btn-lg">""" + continue_label + """</a>
+#         <a id="savetwo" class="btn btn-warning btn-lg">""" + word('Clear') + """</a>
+#       </div>
+# """
+#     output += '    </div>\n    <form action="' + root + '" id="dasigform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
+#     output += tracker_tag(status)
+#     output += '</form>\n'
+#     add_validation(status.extra_scripts, validation_rules)
+#     return output
 
 def get_choices_with_abb(status, field, terms=None, links=None):
     if terms is None:
@@ -518,7 +528,35 @@ def as_html(status, url_for, debug, root, validation_rules):
     master_output = ""
     master_output += '          <section id="question" class="tab-pane active col-lg-6 col-md-8 col-sm-10">\n'
     output = ""
-    if status.question.question_type in ["yesno", "yesnomaybe"]:
+    if status.question.question_type == "signature":
+        output += '            <div class="sigpage" id="sigpage">\n              <div class="sigshowsmallblock sigheader" id="sigheader">\n                <div class="siginnerheader">\n                  <a class="btn btn-sm btn-warning signav-left sigclear">' + word('Clear') + '</a>\n                  <a class="btn btn-sm btn-primary signav-right sigsave">' + continue_label + '</a>\n                  <div class="sigtitle">'
+        if status.questionText:
+            output += markdown_to_html(status.questionText, trim=True)
+        else:
+            output += word('Sign Your Name')
+        output += '</div>\n                </div>\n              </div>\n              <div class="sigtoppart" id="sigtoppart">\n                <div id="errormess" class="sigerrormessage signotshowing">' + word("You must sign your name to continue.") + '</div>\n'
+        if status.questionText:
+            output += '                <div class="sighidesmall">' + markdown_to_html(status.questionText, trim=True) + '</div>\n'
+        output += '              </div>'
+        if status.subquestionText:
+            output += '\n              <div class="sigmidpart">\n                ' + markdown_to_html(status.subquestionText) + '\n              </div>'
+        else:
+            output += '\n              <div class="sigmidpart"></div>'
+        output += '\n              <div id="sigcontent"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n              <div class="sigbottompart" id="sigbottompart">\n                '
+        if (status.underText):
+            output += markdown_to_html(status.underText, trim=True)
+        output += "\n              </div>"
+        output += """
+              <div class="form-actions sighidesmall sigbuttons">
+                <a class="btn btn-primary btn-lg sigsave">""" + continue_label + """</a>
+                <a class="btn btn-warning btn-lg sigclear">""" + word('Clear') + """</a>
+              </div>
+"""
+        output += '            </div>\n            <form action="' + root + '" id="dasigform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
+        output += tracker_tag(status)
+        output += '            </form>\n'
+        output += '            <div class="sigshowsmallblock"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></div>'
+    elif status.question.question_type in ["yesno", "yesnomaybe"]:
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" method="POST">\n              <fieldset>\n'
@@ -1069,10 +1107,11 @@ def as_html(status, url_for, debug, root, validation_rules):
             status.extra_scripts.append("""<script>
       $("#emailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + repr(str(word("An e-mail address is required."))) + """, 'email': """ + repr(str(word("You need to enter a complete e-mail address."))) + """}}, 'errorClass': 'help-inline'});
     </script>""")
-    if len(status.attributions):
-        output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
-    for attribution in sorted(status.attributions):
-        output += '            <div><attribution><small>' + markdown_to_html(attribution, strip_newlines=True) + '</small></attribution></div>\n'
+    if status.question.question_type != "signature":
+        if len(status.attributions):
+            output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
+        for attribution in sorted(status.attributions):
+            output += '            <div><attribution><small>' + markdown_to_html(attribution, strip_newlines=True) + '</small></attribution></div>\n'
     if debug or status.using_screen_reader:
         status.screen_reader_text['question'] = unicode(output)
     master_output += output

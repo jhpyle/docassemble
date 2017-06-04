@@ -3,6 +3,12 @@ body.dabody {
     margin: 0px;
     padding-top: 60px;
     padding-bottom: 40px;
+    font-size: 16px;
+}
+
+.form-control {
+    font-size: 16px;
+    padding: 2px 12px;
 }
 
 body.dainactive {
@@ -1030,4 +1036,8 @@ textarea.translation-box {
 
 .navpillssmaller > li > a {
     padding: 10px 12px;
+}
+
+.btn-lg {
+    margin-bottom: 5px;
 }

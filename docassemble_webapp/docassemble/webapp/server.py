@@ -352,7 +352,7 @@ import docassemble.base.parse
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
 import docassemble.webapp.update
-from docassemble.base.standardformatter import as_html, as_sms, signature_html, get_choices, get_choices_with_abb
+from docassemble.base.standardformatter import as_html, as_sms, get_choices, get_choices_with_abb
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
@@ -3831,7 +3831,7 @@ def index():
         $("#daform").each(function(){
           $(this).find(':input').off('change', pushChanges);
         });
-        $("meta[name=viewport]").attr('content', "width=device-width, minimum-scale=1.0, maximum-scale=1.0");
+        $("meta[name=viewport]").attr('content', "width=device-width, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0");
         if (checkinInterval != null){
           clearInterval(checkinInterval);
         }
@@ -4404,7 +4404,7 @@ def index():
           });
           $("#helptoggle").on("click", function(){
             //console.log("Got to helptoggle");
-            window.scrollTo(0, 0);
+            window.scrollTo(0, 1);
             $(this).removeClass('daactivetext')
           });
           $("#sourcetoggle").on("click", function(){
@@ -4526,7 +4526,9 @@ def index():
             $(self).remove();
           });
         }, 3000);
-        window.scrollTo(0, 0);
+        setTimeout(function () {
+          window.scrollTo(0, 1);
+        }, 10);
         if (daShowingSpinner){
           hideSpinner();
         }
@@ -4650,182 +4652,173 @@ def index():
     if interview_status.question.question_type == "signature":
         interview_status.extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature();});</script>')
         bodyclass="dasignature"
-        if not is_ajax:
-            #output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" />\n    <title>' + interview_status.question.interview.get_title().get('full', default_title) + '</title>\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">\n  </head>\n  <body class="dasignature">\n'
-            start_output = standard_header_start + '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dasignature">\n'
-        output = signature_html(interview_status, debug_mode, url_for('index', i=yaml_filename), validation_rules)
-        if not is_ajax:
-            end_output = scripts + "\n    " + "\n    ".join(interview_status.extra_scripts) + """\n  </body>\n</html>"""
     else:
         bodyclass="dabody"
-        if debug_mode:
-            interview_status.screen_reader_text = dict()
-        if 'speak_text' in interview_status.extras and interview_status.extras['speak_text']:
-            interview_status.initialize_screen_reader()
-            util_language = docassemble.base.functions.get_language()
-            util_dialect = docassemble.base.functions.get_dialect()
-            question_language = interview_status.question.language
-            if question_language != '*':
-                the_language = question_language
+        # if not is_ajax:
+        #     start_output = standard_header_start + '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dasignature">\n'
+        # output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode)
+        # output += signature_html(interview_status, debug_mode, url_for('index', i=yaml_filename), validation_rules)
+        # if not is_ajax:
+        #     end_output = scripts + "\n    " + "\n    ".join(interview_status.extra_scripts) + """\n  </body>\n</html>"""
+    if debug_mode:
+        interview_status.screen_reader_text = dict()
+    if 'speak_text' in interview_status.extras and interview_status.extras['speak_text']:
+        interview_status.initialize_screen_reader()
+        util_language = docassemble.base.functions.get_language()
+        util_dialect = docassemble.base.functions.get_dialect()
+        question_language = interview_status.question.language
+        if question_language != '*':
+            the_language = question_language
+        else:
+            the_language = util_language
+        if the_language == util_language and util_dialect is not None:
+            the_dialect = util_dialect
+        elif voicerss_config and 'languages' in voicerss_config and the_language in voicerss_config['languages']:
+            the_dialect = voicerss_config['languages'][the_language]
+        elif the_language in valid_voicerss_languages:
+            the_dialect = valid_voicerss_languages[the_language][0]
+        else:
+            logmessage("index: unable to determine dialect; reverting to default")
+            the_language = DEFAULT_LANGUAGE
+            the_dialect = DEFAULT_DIALECT
+        for question_type in ['question', 'help']:
+            for audio_format in ['mp3', 'ogg']:
+                interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
+    # else:
+    #     logmessage("speak_text was not here")
+    # if interview_status.question.question_type == "signature":
+    #     content = signature_html(interview_status, debug_mode, url_for('index', i=yaml_filename), validation_rules)
+    # else:
+    content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules)
+    #sms_content = as_sms(interview_status)
+    if debug_mode:
+        readability = dict()
+        for question_type in ['question', 'help']:
+            if question_type not in interview_status.screen_reader_text:
+                continue
+            phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')
+            if not phrase:
+                phrase = "The sky is blue."
+            readability[question_type] = [('Flesch Reading Ease', textstat.flesch_reading_ease(phrase)),
+                                          ('Flesch-Kincaid Grade Level', textstat.flesch_kincaid_grade(phrase)),
+                                          ('Gunning FOG Scale', textstat.gunning_fog(phrase)),
+                                          ('SMOG Index', textstat.smog_index(phrase)),
+                                          ('Automated Readability Index', textstat.automated_readability_index(phrase)),
+                                          ('Coleman-Liau Index', textstat.coleman_liau_index(phrase)),
+                                          ('Linsear Write Formula', textstat.linsear_write_formula(phrase)),
+                                          ('Dale-Chall Readability Score', textstat.dale_chall_readability_score(phrase)),
+                                          ('Readability Consensus', textstat.text_standard(phrase))]
+        readability_report = ''
+        for question_type in ['question', 'help']:
+            if question_type in readability:
+                readability_report += '          <table style="display: none;" class="table" id="readability-' + question_type +'">' + "\n"
+                readability_report += '            <tr><th>Formula</th><th>Score</th></tr>' + "\n"
+                for read_type, value in readability[question_type]:
+                    readability_report += '            <tr><td>' + read_type +'</td><td>' + str(value) + "</td></tr>\n"
+                readability_report += '          </table>' + "\n"
+    if interview_status.using_screen_reader:
+        for question_type in ['question', 'help']:
+            #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf8'), 'base64').decode().replace('\n', '')
+            if question_type not in interview_status.screen_reader_text:
+                continue
+            phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')
+            #logmessage("Phrase is " + repr(phrase))
+            if encrypted:
+                the_phrase = encrypt_phrase(phrase, secret)
             else:
-                the_language = util_language
-            if the_language == util_language and util_dialect is not None:
-                the_dialect = util_dialect
-            elif voicerss_config and 'languages' in voicerss_config and the_language in voicerss_config['languages']:
-                the_dialect = voicerss_config['languages'][the_language]
-            elif the_language in valid_voicerss_languages:
-                the_dialect = valid_voicerss_languages[the_language][0]
-            else:
-                logmessage("index: unable to determine dialect; reverting to default")
-                the_language = DEFAULT_LANGUAGE
-                the_dialect = DEFAULT_DIALECT
-            for question_type in ['question', 'help']:
-                for audio_format in ['mp3', 'ogg']:
-                    interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
-        # else:
-        #     logmessage("speak_text was not here")
-        content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules)
-        #sms_content = as_sms(interview_status)
-        if debug_mode:
-            readability = dict()
-            for question_type in ['question', 'help']:
-                if question_type not in interview_status.screen_reader_text:
-                    continue
-                phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')
-                if not phrase:
-                    phrase = "The sky is blue."
-                readability[question_type] = [('Flesch Reading Ease', textstat.flesch_reading_ease(phrase)),
-                                              ('Flesch-Kincaid Grade Level', textstat.flesch_kincaid_grade(phrase)),
-                                              ('Gunning FOG Scale', textstat.gunning_fog(phrase)),
-                                              ('SMOG Index', textstat.smog_index(phrase)),
-                                              ('Automated Readability Index', textstat.automated_readability_index(phrase)),
-                                              ('Coleman-Liau Index', textstat.coleman_liau_index(phrase)),
-                                              ('Linsear Write Formula', textstat.linsear_write_formula(phrase)),
-                                              ('Dale-Chall Readability Score', textstat.dale_chall_readability_score(phrase)),
-                                              ('Readability Consensus', textstat.text_standard(phrase))]
-            readability_report = ''
-            for question_type in ['question', 'help']:
-                if question_type in readability:
-                    readability_report += '          <table style="display: none;" class="table" id="readability-' + question_type +'">' + "\n"
-                    readability_report += '            <tr><th>Formula</th><th>Score</th></tr>' + "\n"
-                    for read_type, value in readability[question_type]:
-                        readability_report += '            <tr><td>' + read_type +'</td><td>' + str(value) + "</td></tr>\n"
-                    readability_report += '          </table>' + "\n"
-        if interview_status.using_screen_reader:
-            for question_type in ['question', 'help']:
-                #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf8'), 'base64').decode().replace('\n', '')
-                if question_type not in interview_status.screen_reader_text:
-                    continue
-                phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')
-                #logmessage("Phrase is " + repr(phrase))
-                if encrypted:
-                    the_phrase = encrypt_phrase(phrase, secret)
+                the_phrase = pack_phrase(phrase)
+            the_hash = MD5Hash(data=phrase).hexdigest()
+            content = re.sub(r'XXXTHEXXX' + question_type + 'XXXHASHXXX', the_hash, content)
+            existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).first()
+            if existing_entry:
+                if existing_entry.encrypted:
+                    existing_phrase = decrypt_phrase(existing_entry.phrase, secret)
                 else:
-                    the_phrase = pack_phrase(phrase)
-                the_hash = MD5Hash(data=phrase).hexdigest()
-                content = re.sub(r'XXXTHEXXX' + question_type + 'XXXHASHXXX', the_hash, content)
-                existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).first()
-                if existing_entry:
-                    if existing_entry.encrypted:
-                        existing_phrase = decrypt_phrase(existing_entry.phrase, secret)
-                    else:
-                        existing_phrase = unpack_phrase(existing_entry.phrase)
-                    if phrase != existing_phrase:
-                        logmessage("index: the phrase changed; updating it")
-                        existing_entry.phrase = the_phrase
-                        existing_entry.upload = None
-                        existing_entry.encrypted = encrypted
-                        db.session.commit()
-                else:
-                    new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted)
-                    db.session.add(new_entry)
+                    existing_phrase = unpack_phrase(existing_entry.phrase)
+                if phrase != existing_phrase:
+                    logmessage("index: the phrase changed; updating it")
+                    existing_entry.phrase = the_phrase
+                    existing_entry.upload = None
+                    existing_entry.encrypted = encrypted
                     db.session.commit()
-        # output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
-        if not is_ajax:
-            start_output = standard_header_start
-            if 'css' in interview_status.question.interview.external_files:
-                for fileref in interview_status.question.interview.external_files['css']:
-                    start_output += '\n    <link href="' + get_url_from_file_reference(fileref, question=interview_status.question) + '" rel="stylesheet">'
-            start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
-            start_output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dabody">\n'
-        output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
-        if interview_status.question.interview.use_progress_bar:
-            output += progress_bar(user_dict['_internal']['progress'])
-        output += content + "        </div>"
-        if debug_mode:
-            output += '\n        <div class="col-md-4" style="display: none" id="readability">' + readability_report + '</div>'
-        output += "\n      </div>\n"
-        if debug_mode:
-            output += '      <div class="row">' + "\n"
-            output += '        <div id="source" class="col-md-12 collapse">' + "\n"
-            #output += '          <h3>' + word('SMS version') + '</h3>' + "\n"
-            #output += '            <pre style="white-space: pre-wrap;">' + sms_content + '</pre>\n'
-            if interview_status.using_screen_reader:
-                output += '          <h3>' + word('Plain text of sections') + '</h3>' + "\n"
-                for question_type in ['question', 'help']:
-                    if question_type in interview_status.screen_reader_text:
-                        output += '<pre style="white-space: pre-wrap;">' + to_text(interview_status.screen_reader_text[question_type]) + '</pre>\n'
-            output += '          <h3>' + word('Source code for question') + '</h3>' + "\n"
-            if interview_status.question.source_code is None:
-                output += word('unavailable')
             else:
-                output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter())
-            # if len(interview_status.question.fields_used):
-            #     output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.fields_used)]) + "</p>"
-            # if len(interview_status.question.names_used):
-            #     output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.names_used)]) + "</p>"
-            # if len(interview_status.question.mako_names):
-            #     output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.mako_names)]) + "</p>"
-            if len(interview_status.seeking) > 1:
-                output += '          <h4>' + word('How question came to be asked') + '</h4>' + "\n"
-                # output += '<ul>\n'
-                # for foo in user_dict['_internal']['answered']:
-                #     output += "<li>" + str(foo) + "</li>"
-                # output += '</ul>\n'
-                for stage in interview_status.seeking:
-                    if 'question' in stage and 'reason' in stage and stage['question'] is not interview_status.question:
-                        if stage['reason'] == 'initial':
-                            output += "          <h5>" + word('Ran initial code') + "</h5>\n"
-                        elif stage['reason'] == 'mandatory question':
-                            output += "          <h5>" + word('Tried to ask mandatory question') + "</h5>\n"
-                        elif stage['reason'] == 'mandatory code':
-                            output += "          <h5>" + word('Tried to run mandatory code') + "</h5>\n"
-                        elif stage['reason'] == 'asking':
-                            output += "          <h5>" + word('Tried to ask question') + "</h5>\n"
-                        if stage['question'].from_source.path != interview.source.path:
-                            output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_source.path +")</small></p>\n"
-                        if stage['question'].source_code is None:
-                            output += word('unavailable')
-                        else:
-                            output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
-                        # if len(stage['question'].fields_used):
-                        #     output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].fields_used)]) + "</p>"
-                        # if len(stage['question'].names_used):
-                        #     output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].names_used)]) + "</p>"
-                        # if len(stage['question'].mako_names):
-                        #     output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].mako_names)]) + "</p>"
-                    elif 'variable' in stage:
-                        output += "          <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
+                new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted)
+                db.session.add(new_entry)
+                db.session.commit()
+    # output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
+    if not is_ajax:
+        start_output = standard_header_start
+        if 'css' in interview_status.question.interview.external_files:
+            for fileref in interview_status.question.interview.external_files['css']:
+                start_output += '\n    <link href="' + get_url_from_file_reference(fileref, question=interview_status.question) + '" rel="stylesheet">'
+        start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
+        start_output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n'
+    output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
+    if interview_status.question.interview.use_progress_bar:
+        output += progress_bar(user_dict['_internal']['progress'])
+    output += content + "        </div>"
+    if debug_mode:
+        output += '\n        <div class="col-md-4" style="display: none" id="readability">' + readability_report + '</div>'
+    output += "\n      </div>\n"
+    if debug_mode:
+        output += '      <div class="row">' + "\n"
+        output += '        <div id="source" class="col-md-12 collapse">' + "\n"
+        #output += '          <h3>' + word('SMS version') + '</h3>' + "\n"
+        #output += '            <pre style="white-space: pre-wrap;">' + sms_content + '</pre>\n'
+        if interview_status.using_screen_reader:
+            output += '          <h3>' + word('Plain text of sections') + '</h3>' + "\n"
+            for question_type in ['question', 'help']:
+                if question_type in interview_status.screen_reader_text:
+                    output += '<pre style="white-space: pre-wrap;">' + to_text(interview_status.screen_reader_text[question_type]) + '</pre>\n'
+        output += '          <h3>' + word('Source code for question') + '</h3>' + "\n"
+        if interview_status.question.source_code is None:
+            output += word('unavailable')
+        else:
+            output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter())
+        # if len(interview_status.question.fields_used):
+        #     output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.fields_used)]) + "</p>"
+        # if len(interview_status.question.names_used):
+        #     output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.names_used)]) + "</p>"
+        # if len(interview_status.question.mako_names):
+        #     output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.mako_names)]) + "</p>"
+        if len(interview_status.seeking) > 1:
+            output += '          <h4>' + word('How question came to be asked') + '</h4>' + "\n"
+            # output += '<ul>\n'
+            # for foo in user_dict['_internal']['answered']:
+            #     output += "<li>" + str(foo) + "</li>"
+            # output += '</ul>\n'
+            for stage in interview_status.seeking:
+                if 'question' in stage and 'reason' in stage and stage['question'] is not interview_status.question:
+                    if stage['reason'] == 'initial':
+                        output += "          <h5>" + word('Ran initial code') + "</h5>\n"
+                    elif stage['reason'] == 'mandatory question':
+                        output += "          <h5>" + word('Tried to ask mandatory question') + "</h5>\n"
+                    elif stage['reason'] == 'mandatory code':
+                        output += "          <h5>" + word('Tried to run mandatory code') + "</h5>\n"
+                    elif stage['reason'] == 'asking':
+                        output += "          <h5>" + word('Tried to ask question') + "</h5>\n"
+                    if stage['question'].from_source.path != interview.source.path:
+                        output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_source.path +")</small></p>\n"
+                    if stage['question'].source_code is None:
+                        output += word('unavailable')
+                    else:
+                        output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
+                    # if len(stage['question'].fields_used):
+                    #     output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].fields_used)]) + "</p>"
+                    # if len(stage['question'].names_used):
+                    #     output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].names_used)]) + "</p>"
+                    # if len(stage['question'].mako_names):
+                    #     output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].mako_names)]) + "</p>"
+                elif 'variable' in stage:
+                    output += "          <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
 #                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.functions.pickleable_objects(user_dict))]) + '</p>' + "\n"
-                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
-                # output += '          <h4>' + word('Variables as JSON') + '</h4>' + "\n        <pre>" + docassemble.base.functions.dict_as_json(user_dict) + '</pre>' + "\n"
-            output += '        </div>' + "\n"
-            output += '      </div>' + "\n"
-        output += '    </div>'
-#         output += """\
-#                        <div class="modal hide" id="please_wait" data-backdrop="static" data-keyboard="false">
-#                            <div class="modal-header">
-#                                <h1>""" + word("Please wait") + """</h1>
-#                            </div>
-#                            <div class="modal-body">
-#                                <div class="progress progress-striped active">
-#                                    <div class="bar" style="width: 100%;"></div>
-#                                </div>
-#                            </div>
-#                        </div>
-# """
-        if not is_ajax:
-            end_output = scripts + "\n" + "".join(interview_status.extra_scripts) + """\n  </body>\n</html>"""
+            output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
+            # output += '          <h4>' + word('Variables as JSON') + '</h4>' + "\n        <pre>" + docassemble.base.functions.dict_as_json(user_dict) + '</pre>' + "\n"
+        output += '        </div>' + "\n"
+        output += '      </div>' + "\n"
+    output += '    </div>'
+    if not is_ajax:
+        end_output = scripts + "\n" + "".join(interview_status.extra_scripts) + """\n  </body>\n</html>"""
     #logmessage(output.encode('utf8'))
     #logmessage("Request time interim: " + str(g.request_time()))
     if 'uid' in session and 'i' in session:

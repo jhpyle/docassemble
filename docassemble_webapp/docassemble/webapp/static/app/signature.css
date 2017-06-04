@@ -1,32 +1,39 @@
-body.dasignature {
-    position: fixed;
-    top: 0px;
-    left: 0px;
-    margin: 0px;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-    font-size: small;
-    background-color: #fff;
-    /* prevent text selection on ui */
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    /* prevent scrolling in windows phone */
-    -ms-touch-action: none;
-    /* prevent selection highlight */
-    -webkit-tap-highlight-color: rgba(0,0,0,0);
+@media (max-width: 767px) {
+    body.dasignature {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	margin: 0px;
+	width: 100%;
+	overflow: scroll;
+	font-size: small;
+	background-color: #fff;
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-ms-touch-action: none;
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+    }
+    .dasignature section {
+        padding: 36px 0px 0px 0px;
+    }
+    #sigcontent{
+	padding-left: 12px;
+	padding-right: 12px;
+    }
+    .sigmidpart p {
+	margin: 0;
+    }
 }
-        
+
 .sigheader, .sigfooter{
     position: absolute;
     background-color: #222;
-    text-align: center;
+    background-image: linear-gradient(to bottom,#3c3c3c 0,#222 100%);
+    background-repeat: repeat-x;
 }
 .sigheader {
-    /*position: fixed;*/
     top: 0px;
     left: 0px;
     right: 0px;
@@ -41,93 +48,35 @@ body.dasignature {
     padding:2px;    
 }
 .sigtitle {
-    width: auto;
-    line-height: 32px;
-    font-size: 20px;
-    font-weight: bold;
-    color: #eee;
-    text-shadow: 0px -1px #000;
-    padding:0 60px;
-}
-.signavbtn {
-    cursor: pointer;
-    padding: 6px 10px;
-    font-weight: bold;
-    line-height: 18px;
-    font-size: 14px;
-    color: #eee;
-    text-shadow: 0px -1px #000;
-    border: solid 1px #111;
-    border-radius: 4px;
-    background-color: #606060;
-    box-shadow: 0 0 1px 1px #555,inset 0 1px 0 0 #666;     
-}
-.signavbtn:hover, .signavbtn:active {
-    color: #222;
-    text-shadow: 0px 1px #aaa;
-    background-color: #aaa;
-    box-shadow: 0 0 1px 1px #444,inset 0 1px 0 0 #ccc;   
+    line-height: 26px;
+    font-size: 18px;
+    color: #9d9d9d;
+    text-decoration: none;
+    text-shadow: 0 -1px 0 rgba(0,0,0,.25);
 }
 
 .signav-left {
     float:left;
+    margin-right: 10px;
 }
 
 .signav-right {
     float:right
 }
 
-#sigcontent{
-    /*position: absolute;*/
-    /*top: 44px;
-    left: 0px;
-    right: 0px;
-    bottom: 46px;
-    overflow: hidden;*/
-    padding-left: 25px;
-    padding-right: 25px;
-    /* background-color:#fff; */
-}
 #sigcanvas{
     cursor:crosshair;
     border-style: solid;
     border-color: black;
     border-width: 1px;
-    /*background-color:#fff; */
 }
 .sigpalette-case {
     width:260px;
     margin:auto;
     text-align:center;
 }
-.sigpalette-box {
-    float:left;
-    padding:2px 6px 2px 6px;
-}
-.sigpalette {
-    border:2px solid #777;
-    height:36px;
-    width:36px;
-}
-.sigred{
-    background-color:#c22;
-}
-.sigblue{
-    background-color:#22c;
-}
-.siggreen{
-    background-color:#2c2;
-}
-.sigwhite{
-    background-color:#fff;
-}
-.sigblack{
-    background-color:#000;
-    border:2px dashed #fff;
-}
 .sigtoppart {
     text-align: center;
-    padding-top: 50px;
     padding-bottom: 6px;
 }
 .sigmidpart {
@@ -142,18 +91,38 @@ body.dasignature {
 .sigpage {
     width: 100%;
 }
-@media (min-width: 850px) {
+.dasignature > .navbar {
+    display: none;
+}
+.sighidesmall {
+    display: none;
+}
+.sigshowsmallblock {
+    display: block;
+}
+
+@media (min-width: 768px) {
+    .dasignature section {
+        padding: 60px 0px 0px 0px;
+    }
+    .dasignature > .navbar {
+        display: block;
+    }
+    .sighidesmall {
+	display: block;
+    }
+    .sigshowsmallblock {
+	display: none;
+    }
     .sigpage{
-	width: 850px;
+	width: 744px;
     }
     .siginnerheader{
-	width: 850px;
+	width: 744px;
     }
     .sigtoppart {
 	text-align: left;
-	padding-top: 70px;
-	padding-left: 25px;
-	padding-right: 25px;
+	padding-top: 0px;
 	margin-bottom: 10px;
 	font-size: 24px;
 	font-weight: 500;
@@ -164,8 +133,6 @@ body.dasignature {
 	text-align: left;
 	padding-top: 6px;
 	padding-bottom: 14px;
-	padding-left: 25px;
-	padding-right: 25px;
 	font-size: 14px;
 	line-height: 1.42857143;
 	color: #333;
@@ -175,6 +142,12 @@ body.dasignature {
 	font-size: 14px;
 	line-height: 1.42857143;
 	color: #333;
+    }
+}
+
+@media (min-width: 1024px) {
+    .sigtoppart {
+	padding-top: 40px;
     }
 }
 

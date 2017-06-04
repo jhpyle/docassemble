@@ -10,8 +10,8 @@ var waitlimit;
 var isEmpty;
 
 function daInitializeSignature(){
-  aspectRatio = 0.30;
-  theBorders = 50;
+  aspectRatio = 0.4;
+  theBorders = 24;
   waiter = 0;
   waitlimit = 2;
   isEmpty = 1;
@@ -20,6 +20,7 @@ function daInitializeSignature(){
       da_post({'success': 0});
     }
     newCanvas();
+    $(document).on("touchmove", function(event){event.preventDefault();});
   }, 1000);
   $(window).resize(function(){resizeCanvas()});
   
@@ -34,20 +35,20 @@ function daInitializeSignature(){
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
   });
-  $("#new").click(function() {
+  $(".sigclear").click(function() {
     newCanvas();
   });
-  $("#save").click(function() {
+  $(".sigsave").click(function() {
     if (isEmpty){
       $("#errormess").removeClass("signotshowing");
       setTimeout(function(){ $("#errormess").addClass("signotshowing"); }, 3000);
     }
     else{
-      document.getElementById('save').disabled = true;
+      $(".sigclear").attr('disabled', true);
+      $(".sigsave").attr('disabled', true);
       saveCanvas();
     }
   });
-  window.scrollTo(0,1);
 }
 
 // function to setup a new canvas for drawing
@@ -87,18 +88,18 @@ function saveCanvas(){
 }
 
 function newCanvas(){
-  console.log("running newCanvas");
+  //console.log("running newCanvas");
   var cwidth = $(window).width() - theBorders;
-  if (cwidth > 800 ){
-    cwidth = 800;
+  if (cwidth > 744 ){
+    cwidth = 744;
   }
   var cheight = cwidth*aspectRatio;
   var otherHeights = $("#sigtoppart").outerHeight(true) + $("#sigbottompart").outerHeight(true);
   if (cheight > $(window).height()-otherHeights){
     cheight = $(window).height()-otherHeights;
   }
-  if (cheight > 350){
-    cheight = 350;
+  if (cheight > 372){
+    cheight = 372;
   }
   $("#sigcontent").height(cheight);
   var canvas = '<canvas id="sigcanvas" width="'+(cwidth)+'px" height="'+(cheight)+'px"></canvas>';
@@ -125,9 +126,11 @@ function newCanvas(){
   //$(document).on("touchend", function(event){event.preventDefault();});
   //$(document).on("touchcancel", function(event){event.preventDefault();});
   //$(document).on("touchstart", function(event){event.preventDefault();});
-  $(document).on("touchmove", function(event){event.preventDefault();});	
+  //$("meta[name=viewport]").attr('content', "width=device-width, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0, user-scalable=0");
   isEmpty = 1;
-  //$("#save").prop("disabled", true);
+  setTimeout(function () {
+    window.scrollTo(0, 1);
+  }, 10);
 }
 
 // prototype to	start drawing on touch using canvas moveTo and lineTo
@@ -143,7 +146,7 @@ $.fn.drawTouch = function() {
     ctx.lineJoin="round";
     ctx.moveTo(x,y);
     if (isEmpty){
-      $("#save").prop("disabled", false);
+      $(".sigsave").prop("disabled", false);
       isEmpty = 0;
     }
   };
@@ -156,7 +159,6 @@ $.fn.drawTouch = function() {
       ctx.lineTo(x,y);
       ctx.stroke();
       if (isEmpty){
-	//$("#save").prop("disabled", false);
 	isEmpty = 0;
       }
     }
@@ -181,7 +183,6 @@ $.fn.drawTouch = function() {
     ctx.fill();
     ctx.moveTo(x,y);
     if (isEmpty){
-      //$("#save").prop("disabled", false);
       isEmpty = 0;
     }
     //ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
@@ -204,7 +205,6 @@ $.fn.drawPointer = function() {
     y = e.pageY-$("#sigcanvas").offset().top;
     ctx.moveTo(x,y);
     if (isEmpty){
-      //$("#save").prop("disabled", false);
       isEmpty = 0;
     }
     //ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
@@ -224,7 +224,6 @@ $.fn.drawPointer = function() {
       ctx.beginPath();
       ctx.moveTo(x,y);
       if (isEmpty){
-	//$("#save").prop("disabled", false);
 	isEmpty = 0;
       }
     }
@@ -253,7 +252,6 @@ $.fn.drawMouse = function() {
     ctx.lineJoin="round";
     ctx.moveTo(x,y);
     if (isEmpty){
-      //$("#save").prop("disabled", false);
       isEmpty = 0;
     }
   };
@@ -269,7 +267,6 @@ $.fn.drawMouse = function() {
       ctx.beginPath();
       ctx.moveTo(x,y);
       if (isEmpty){
-	//$("#save").prop("disabled", false);
 	isEmpty = 0;
       }
     }
