@@ -242,8 +242,19 @@ yesno: user_signature_verified
 ---
 {% endhighlight %}
 
-Signatures can be inserted into assembled [documents] as well as
+Signatures can be also be inserted into assembled [documents] in the
+same way.  They can also be inserted into [.docx fill-in forms] and
 [PDF fill-in forms].
+
+On a small screen, users need as much of the screen as possible to
+write their signature.  For this reason, **docassemble** will reduce
+the size of the navigation bar and put the [`question`] text into the
+navigation bar.  For this reason, you should make sure your
+[`question`] text is very brief -- no longer than "Sign your name."
+You should also make the [`subquestion`] text as brief as possible.
+Although you may be developing your app on a desktop or laptop
+monitor, your users are probably using smartphones, so test your app
+on a smartphone.
 
 # <a name="fields"></a>Setting multiple variables with one screen
 
@@ -1053,6 +1064,7 @@ why this needs to be done manually as opposed to automatically:
 [list]: https://docs.python.org/2/tutorial/datastructures.html
 [dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [dictionaries]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[.docx fill-in forms]: {{ site.baseurl }}/docs/documents.html#signature docx
 [PDF fill-in forms]: {{ site.baseurl }}/docs/documents.html#signature
 [documents]: {{ site.baseurl }}/docs/markup.html#inserting uploaded images
 [`generic object` modifier]: {{ site.baseurl }}/docs/modifiers.html#generic object

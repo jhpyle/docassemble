@@ -8,20 +8,21 @@ short_title: Security
 
 # Importance of using HTTPS
 
-It is important to deploy **docassemble** using HTTPS rather than
-HTTP.  **docassemble** sends passwords and security keys over the
-network in plain text.
+It is important for security purposes to deploy **docassemble** using
+HTTPS rather than HTTP.  If you use HTTP, passwords and security keys
+will be sent over the network in plain text.
 
 # <a name="server_encryption"></a>Server-side information storage
 
 User passwords and interview answers are stored in a SQL database in
-encrypted form.
+encrypted form, unless the [`multi_user`] variable is set to `True`,
+in which case the answers are not encrypted.
 
 Uploaded and assembled documents are stored on the server (and on
 [Amazon S3], if [S3] is being used, or [Microsoft Azure], if
 [Azure blob storage] is being used) without encryption.  These
 documents cannot be accessed from the internet without an appropriate
-security key in the cookie.
+access key in the cookie.
 
 When a user clicks an "Exit" button, **docassemble** will delete all of
 the information related to the interview from the server, including
@@ -75,3 +76,4 @@ for an interview belonging to a user who logs in with Google or Facebook.
 [S3]: https://aws.amazon.com/s3/
 [Microsoft Azure]: https://azure.microsoft.com/
 [Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
+[`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
