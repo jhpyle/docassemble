@@ -21,7 +21,7 @@
     <link rel="mask-icon" href="{{ url_for('favicon_safari_pinned_tab') }}" color="{{ config['FAVICON_MASK_COLOR'] }}">
     <meta name="theme-color" content="{{ config['FAVICON_THEME_COLOR'] }}">
   </head>
-  <body class="dabody">
+  <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %}">
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
         <div class="navbar-header">

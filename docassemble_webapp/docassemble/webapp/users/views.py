@@ -34,7 +34,7 @@ def privilege_list():
             output += '<li>' + str(role.name) + '</li>'
             
     output += '</ol>'
-    return render_template('users/rolelist.html', page_title=word('Privileges'), tab_title=word('Privileges'), privilegelist=output)
+    return render_template('users/rolelist.html', bodyclass='adminbody', page_title=word('Privileges'), tab_title=word('Privileges'), privilegelist=output)
 
 @app.route('/userlist', methods=['GET', 'POST'])
 @login_required
@@ -56,7 +56,7 @@ def user_list():
             active_string = ' (account disabled)'
         output += '<li>' + str(name_string) + '<a href="' + url_for('edit_user_profile_page', id=user.id) + '">' + str(user.email) + "</a>" + active_string + "</li>"
     output += '</ol>'
-    return render_template('users/userlist.html', page_title=word('User List'), tab_title=word('User List'), userlist=output)
+    return render_template('users/userlist.html', bodyclass='adminbody', page_title=word('User List'), tab_title=word('User List'), userlist=output)
 
 @app.route('/privilege/<id>/delete', methods=['GET'])
 @login_required
@@ -139,7 +139,7 @@ def add_privilege():
         flash(word('The privilege was added.'), 'success')
         return redirect(url_for('privilege_list'))
 
-    return render_template('users/new_role_page.html', page_title=word('Add Privilege'), tab_title=word('Add Privilege'), form=form)
+    return render_template('users/new_role_page.html', bodyclass='adminbody', page_title=word('Add Privilege'), tab_title=word('Add Privilege'), form=form)
 
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
@@ -218,4 +218,4 @@ def invite():
         flash(word('Invitation has been sent.'), 'success')
         return redirect(next)
 
-    return render_template('flask_user/invite.html', form=invite_form)
+    return render_template('flask_user/invite.html', bodyclass='adminbody', form=invite_form)

@@ -38,7 +38,7 @@ body.dacontrolled > .navbar-inverse {
 }
 
 .daiconbox {
-    font-size: 13px;
+    font-size: 14px;
     font-family: Roboto,arial,sans-serif;
     font-weight:700;
     border-style:solid;
@@ -315,7 +315,6 @@ div > ul.example-list {
     max-height: 35em;
     overflow-y: auto;
     position: relative;
-    font-size: 14px;
 }
 
 ul.example-list ul {
@@ -1038,10 +1037,24 @@ textarea.translation-box {
 
 .navpillssmaller > li > a {
     padding: 10px 12px;
-    font-size: 14px;
 }
 
 .btn-lg {
     margin-bottom: 5px;
 }
 
+.navbar {
+    font-size: 14px;
+}
+
+body.adminbody {
+    border: 0px;
+    margin: 0px;
+    padding-top: 60px;
+    padding-bottom: 40px;
+    font-size: 14px;
+}
+
+.adminbody .form-control {
+    font-size: 14px;
+}
