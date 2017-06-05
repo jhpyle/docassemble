@@ -574,7 +574,7 @@ configuration file in the [S3] bucket.  All that the `app` service
 needs to do is retrieve that configuration file.  Note also that it is
 not necessary to include any secret keys in the [JSON] configuration.
 This is because the [Launch Configuration] of your virtual machines
-includes the "IAM Role" of [`docassembleInstanceRole`]; the virtual
+includes the "IAM Role" of `docassembleInstanceRole`; the virtual
 machines themselves are authorized to access the [S3] bucket.
 
 Just one more thing needs to be done to make the **docassemble**
