@@ -379,7 +379,7 @@ click "Save."  Your rules should look like this (keeping in mind that
 [AWS] might have changed its user interface since the time this
 documentation was written).
 
-![HTTPS listener rules]({{ site.baseurl }}/img/aws-lb-443-rules.png }}){: .maybe-full-width }
+![HTTPS listener rules]({{ site.baseurl }}/img/aws-lb-443-rules.png){: .maybe-full-width }
 
 Now the `docassembleLb` load balancer will listen to port 443 and act
 on requests according to two "Rules."  The first rule says that if the
@@ -567,6 +567,15 @@ to `docassembleLb`, the name of the [Application Load Balancer] you
 created earlier.  Under "Container to load balance," select
 "app:80:80" and click "Add to ELB."  Set the "Target group name" to
 `web`, the "Target Group" you created earlier.  Then click "Save."
+
+Note that the `app` task definition is much briefer than the `backend`
+task definition.  This is because the `backend` service will save a
+configuration file in the [S3] bucket.  All that the `app` service
+needs to do is retrieve that configuration file.  Note also that it is
+not necessary to include any secret keys in the [JSON] configuration.
+This is because the [Launch Configuration] of your virtual machines
+includes the "IAM Role" of [`docassembleInstanceRole`]; the virtual
+machines themselves are authorized to access the [S3] bucket.
 
 Just one more thing needs to be done to make the **docassemble**
 server fully functional: you need to associate the `websocket` "Target
