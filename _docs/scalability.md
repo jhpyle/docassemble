@@ -10,7 +10,7 @@ with centralized services.  The limit to scalability will then be a
 question of how responsive a single SQL server can be and how
 responsive a single [Redis] server can be.
 
-# Quick start
+# Multi-server configuration on EC2 Container Service
 
 If you want to run **docassemble** in a scalable
 [multi-server arrangement], there are a variety of ways to do so, but
@@ -39,15 +39,19 @@ SSL certificates for the encrypted connection.
 The [Application Load Balancer] will convert the HTTPS requests into
 HTTP requests and send them to the web servers.  From the perspective
 of the web servers, all incoming requests will use the HTTP scheme.
-But from the perspective of the web browser, the web site uses the
-HTTPS scheme.
+But from the perspective of the user's web browser, the web site uses
+the HTTPS scheme.
 
 Within the [VPC], the web servers will communicate with the central
 server using a variety of TCP ports.
 
 The three servers will all be part of an [Auto Scaling Group].  This
-means that as more people use your site, you can expand beyond two web
-servers to any number of web servers.
+means that as more people use your site, you can expand beyond three
+virtual machines to any number of virtual machines.  The new virtual
+machines that are created will act as web servers, and the
+[Application Load Balancer] will distribute the traffic among them.
+If traffic dies down, some of those virtual machines can be turned
+off.
 
 The software will be deployed on the servers by the
 [EC2 Container Service] ([ECS]).  [ECS] is [Amazon]'s system for
@@ -84,13 +88,14 @@ the [Auto Scaling Group] and set the desired number of instances to zero.
 
 You can then restart your **docassemble** system and it will pick up
 exactly where it left off.  This is because **docassemble** will back
-up SQL, [Redis], and other information to [S3]/[Azure blob storage]
-when the containers shut down, and restore from the backups when they
-start up again.  To restart, you would edit the [Auto Scaling Group]
-to set the desired number of instances to 3.  When they are up and
-running, you would then update the "backend" service and set the
-"desired count" to 1.  Once that service is up and running, you would
-update the "app" service and set the "desired count" to 2.
+up SQL, [Redis], and other information to [S3] (or
+[Azure blob storage] if you prefer) when the containers shut down, and
+restore from the backups when they start up again.  To restart, you
+would edit the [Auto Scaling Group] to set the desired number of
+instances to 3.  When they are up and running, you would then update
+the "backend" service and set the "desired count" to 1.  Once that
+service is up and running, you would update the "app" service and set
+the "desired count" to 2.
 
 ## Instructions
 
@@ -120,8 +125,9 @@ resources, including a [CloudFormation] stack, an [Internet Gateway],
 for [ECS] instances, a [Launch Configuration], and an
 [Auto Scaling Group].
 
-Most of what the wizard creates is not needed and should be deleted.
-The running [EC2] instance may also cost you money.  To delete the
+The resources the wizard creates are helpful for educational purposes,
+but in the long term they are not needed and should be deleted.  The
+running [EC2] instance may also cost you money.  To delete the
 unnecessary resources:
 
 1. Go to the [ECS Console], find the service "sample-webapp," update
@@ -295,15 +301,20 @@ under "Stickiness," select "Enable load balancer generated cookie
 stickiness."  Keep other settings at their defaults.  Then click
 "Create."
 
-Finally, create a third "Target Group" called `http-redirect`.  The
-purpose of this target group is very limited: it will forward any HTTP
-requests to your HTTPS site.  Set the "Protocol" to HTTP, set the
-"Port" to 8081, and set the "VPC" to your default [VPC].  Under
-"Health check settings," set the "Protocol" to HTTP and the "Path" to
-`/health_check`.  Under "Advanced health check settings," change
-"Success codes" from 200 to 301.  This is because all requests to this
-target group should respond with an [HTTP redirect] response, the code
-for which is 301.  Then click "Create."
+Finally, create a third "Target Group" called `http-redirect`.  Set
+the "Protocol" to HTTP, set the "Port" to 8081, and set the "VPC" to
+your default [VPC].  Under "Health check settings," set the "Protocol"
+to HTTP and the "Path" to `/health_check`.  Under "Advanced health
+check settings," change "Success codes" from 200 to 301.  This is
+because all requests to this target group should respond with an
+[HTTP redirect] response, the code for which is 301.  Then click
+"Create."
+
+The purpose of the `http-redirect` target group is very limited: it
+will forward any HTTP requests to a special port on your
+**docassemble** web server, which will return a special "redirect"
+response that causes the user's browser to be redirected back to the
+HTTPS listener on your load balancer.
 
 Then go to the "Load Balancers" section of the [EC2 Console] and
 create a "Load Balancer."  Select "Application Load Balancer" as the
@@ -321,17 +332,28 @@ next to each one.  (If it gives you any trouble about adding subnets,
 just add as many subnets as it will let you add.)
 
 On the "Configure Security Settings" page, it will ask about SSL
-certificates and security policies.  Accept all of the defaults.  This
-should result in [Amazon] creating an SSL certificate for you.
+certificates and security policies.  If you have never been here
+before, accept all of the defaults.  This should result in [Amazon]
+creating an SSL certificate for you.  If you have created certificates
+in the past, either select the certificate you want to use, or click
+"Request a new certificate from ACM."
 
 On the "Configure Security Groups" page, select the `docassembleLbSg`
-[Security Group] you created earlier.
+[Security Group] you created earlier.  Select it as the only
+[Security Group] for the load balancer.
 
 On the "Configure Routing" page, set "Target group" to "Existing
-target group" and select `web` as the "Name" of the Target Group.
+target group" and select `http-redirect` as the "Name" of the Target
+Group.  The "Protocol" should be HTTP and the Port should be 8081.
 
 Skip past the "Register Targets" page.  On the "Review" page, click
 "Create" to create the Load Balancer.
+
+Note that load balancers, like [EC2] instances, will cost you money
+even you are not using them.  The cost is $5 per month or more.  So if
+you are not using your load balancer, delete it.  You do not need to
+delete the other resources you created (e.g., target groups, security
+groups) because they do not cost money to maintain.
 
 Once the `docassembleLb` load balancer is created, you need to make a
 few manual changes to it.
@@ -340,19 +362,36 @@ In the "Load Balancers" section, select the `docassembleLb` load
 balancer, and open the "Listeners" tab.  Click "Edit" next to the HTTP
 listener.  Set the "Default target group" to "http-redirect."
 
-Once those changes are saved, open up the HTTPS rule by clicking the
-right arrow icon.  Click "Add rule."  For the "Path pattern," enter
-`/ws/*`.  Under "Target group name," select `websocket`.  Keep
-"Priority" as 1.  Then click "Save."
+Once those changes are saved, edit the "rules" for the HTTPS listener.
 
-Now the `docassembleLb` load balancer will listen to 443 and act on
-requests according to two "Rules."  The first rule says that if the
+There will be one default rule set up, and it will incorrectly say
+that requests should be routed to the `http-redir` target group.  This
+is the proper setting for HTTP (port 80), but not for HTTPS (port
+443), so you need to change it.  Click the button to edit rules, and
+edit the default rule.  Change it so that it forwards to the `web`
+target group.  Then press "Update" to save your changes.
+
+We need to make one more change on this screen.  Click the button to
+add a new rule.  Make it the first rule in the list of rules.
+Construct the new rule so that it says, in effect, "if the path is
+`/ws/*`, forward the request to the `websocket` target group."  Then
+click "Save."  Your rules should look like this (keeping in mind that
+[AWS] might have changed its user interface since the time this
+documentation was written).
+
+![HTTPS listener rules]({{ site.baseurl }}/img/aws-lb-443-rules.png }}){: .maybe-full-width }
+
+Now the `docassembleLb` load balancer will listen to port 443 and act
+on requests according to two "Rules."  The first rule says that if the
 path of the HTTPS request starts with `/ws/`, which is
 **docassemble**'s path for [WebSocket] communication, then the request
 will be forwarded using the `websocket` "Target Group," which has the
 "stickiness" feature enabled.  The second rule says that all other
 traffic will use the `web` "Target Group," for which "stickiness" is
-not enabled.
+not enabled.  Your `docassembleLb` load balancer will also listen to
+port 80 and forward all those requests to port 8081 on your web
+servers, which will respond by redirecting the user to port 443 of
+your load balancer.
 
 Finally, go to the "Description" tab for the `docassembleLb` load
 balancer and make note of the "DNS name."  It will be something like
@@ -421,7 +460,7 @@ configuration below.  Edit the [`TIMEZONE`], [`DAHOSTNAME`], and
           "hostPort": 9001
         }
       ],
-      "essential": True,
+      "essential": true,
       "environment": [
         {
           "name": "CONTAINERROLE",
@@ -501,7 +540,7 @@ configuration below.  Edit the [`S3BUCKET`] environment variable.
           "hostPort": 9001
         }
       ],
-      "essential": True,
+      "essential": true,
       "environment": [
         {
           "name": "CONTAINERROLE",
@@ -552,30 +591,33 @@ It depends on the [boto3] library, so you may need to run `sudo pip
 install boto3` in order for it to work.  You need to initialize
 [boto3] by running `aws configure`.
 
-* `da-cli start_up 2` - bring up two `app` services and one `backend`
+Here are some ways that the command-line application can be used:
+
+* `./da-cli start_up 2` - bring up two `app` services and one `backend`
   service after bringing up three [EC2] instances with the
   `docassembleAsg` [Auto Scaling Group].  It also registers the
   appropriate instances for the `websocket` Target Group.
-* `da-cli shut_down` - bring the count of the `app` and `backend`
+* `./da-cli shut_down` - bring the count of the `app` and `backend`
   services down to zero, then bring the `docassembleAsg`
   [Auto Scaling Group] count down to zero.
-* `da-cli shutdown_unused_ec2_instances` - finds [EC2] instances in
+* `./da-cli shutdown_unused_ec2_instances` - finds [EC2] instances in
   the `docassembleAsg` [Auto Scaling Group] that are not being used to
   host a service, and terminates them.
-* `da-cli update_ec2_instances 4` - increases the `docassembleAsg`
+* `./da-cli update_ec2_instances 4` - increases the `docassembleAsg`
   [Auto Scaling Group] count to 4 and waits for the instances to
   become available.
-* `da-cli connect_string app` - prints a command that you can use to
+* `./da-cli connect_string app` - prints a command that you can use to
   SSH to each [EC2] instance running the service `app`.
-* `da-cli fix_web_sockets` - registers target instances for the
+* `./da-cli fix_web_sockets` - registers target instances for the
   `websocket` Target Group.
-* `da-cli update_desired_count app 4` - increases the desired count
+* `./da-cli update_desired_count app 4` - increases the desired count
   for the `app` service to 4.
 
 If your [AWS] resources go by names different from those in the above
 setup instructions, you can easily edit the `da-cli` script, which is
-a simple [Python] module.  The things you can do in the [AWS] web
-interface can be done using the [boto3] library.
+a simple [Python] module.  You might also want to extend the
+functionality of the script; anything that can be done in the [AWS]
+web interface can be done using the [boto3] library.
 
 # Single-server configuration on EC2 Container Service
 
@@ -606,7 +648,7 @@ then go to the [ECS Console] and set up a "service" that runs a single
           "hostPort": 443
         }
       ],
-      "essential": True,
+      "essential": true,
       "environment": [
         {
           "name": "DAHOSTNAME",
