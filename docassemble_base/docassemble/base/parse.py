@@ -2988,7 +2988,7 @@ class Interview:
                         if question.question_type == 'continue':
                             continue
                         return question.ask(user_dict, the_x, iterators)
-                raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
+                raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
             except NameError as errMess:
                 docassemble.base.functions.reset_context()
                 if isinstance(errMess, ForcedNameError):
@@ -3147,7 +3147,7 @@ class Interview:
             #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
             #     new_question.name = "Question_Temp"
             #     return(new_question.ask(user_dict, 'None', []))
-        raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.")
+        raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.")
 
 def reproduce_basics(interview, new_interview):
     new_interview.metadata = interview.metadata
