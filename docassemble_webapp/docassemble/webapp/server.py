@@ -4399,6 +4399,7 @@ def index():
           daSubmitter = this;
           return true;
         });
+        $("body").focus();
         $("#daform input, #daform textarea, #daform select").first().each(function(){
           $(this).focus();
           var inputType = $(this).attr('type');
