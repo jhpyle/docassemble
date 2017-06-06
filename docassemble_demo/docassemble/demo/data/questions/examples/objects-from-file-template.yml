@@ -1,0 +1,32 @@
+metadata:
+  title: Objects from file
+  short title: Import
+  documentation: "https://docassemble.org/docs/functions.html#objects_from_file"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  client: Individual
+---
+question: |
+  What is your name?
+fields:
+  - First: client.name.first
+  - Last: client.name.last
+---
+code: |
+  info = objects_from_file("claims.yml")
+---
+include:
+  - discovery.yml
+---
+mandatory: true
+question: |
+  Discovery
+subquestion: |
+  Please give me:
+    
+  ${ info['discovery']['correspondence'] }

@@ -1,0 +1,18 @@
+objects:
+  discovery: DADict
+---
+template: discovery['rent records']
+content: |
+  All records of any type whatsoever relating to the unit rented by ${
+  client }.
+---
+template: discovery['maintenance records']
+content: |
+  All records of any type whatsoever relating to repairs or
+  maintenance done on the unit rented by ${ client }.
+---
+template: discovery['correspondence']
+content: |
+  Any and all correspondence with ${ client }, whether in the form of
+  notes of phone calls, e-mails, letters, or other forms of
+  communication.

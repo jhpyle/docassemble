@@ -2176,7 +2176,7 @@ class Question:
         if attachment['variable_name']:
             string = "import docassemble.base.core"
             exec(string, user_dict)                        
-            string = attachment['variable_name'] + " = docassemble.base.core.DAFileCollection('" + attachment['variable_name'] + "')"
+            string = attachment['variable_name'] + " = docassemble.base.core.DAFileCollection(" + repr(attachment['variable_name']) + ")"
             # logmessage("Executing " + string + "\n")
             exec(string, user_dict)
             user_dict['_attachment_info'] = dict(name=attachment['name'].text(user_dict), filename=attachment['filename'].text(user_dict), description=attachment['description'].text(user_dict), attachment=dict(name=attachment['question_name'], number=attachment['indexno']))
@@ -2188,7 +2188,7 @@ class Question:
                 file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
                 if file_number is None:
                     raise Exception("Could not save numbered file")
-                string = variable_string + " = docassemble.base.core.DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+                string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(filename)) + ", number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
                 #logmessage("Executing " + string + "\n")
                 exec(string, user_dict)
         return(result)
@@ -2867,7 +2867,7 @@ class Interview:
                             decoration_list = []
                         else:
                             decoration_list = question.decorations
-                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ', decorations=' + repr([dec['image'].text(user_dict).rstrip() for dec in decoration_list]) + ')'
+                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + repr(from_safeid(question.fields[0].saveas)) + ", content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ', decorations=' + repr([dec['image'].text(user_dict).rstrip() for dec in decoration_list]) + ')'
                         #logmessage("Doing " + string)
                         exec(string, user_dict)
                         #question.mark_as_answered(user_dict)
@@ -2935,7 +2935,7 @@ class Interview:
                             else:
                                 table_content = question.fields[0].extras['empty_message'].text(user_dict) + "\n"
                         table_content += "\n"
-                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(table_content) + ")"
+                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + repr(from_safeid(question.fields[0].saveas)) + ", content=" + repr(table_content) + ")"
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue'})
