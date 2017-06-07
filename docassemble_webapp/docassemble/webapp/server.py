@@ -8162,7 +8162,6 @@ def playground_packages():
     if request.method == 'POST' and 'uploadfile' in request.files:
         the_files = request.files.getlist('uploadfile')
         need_to_restart = False
-        PPP
         if current_user.timezone:
             the_timezone = pytz.timezone(current_user.timezone)
         else:
