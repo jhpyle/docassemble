@@ -276,7 +276,7 @@ def make_package_zip(pkgname, info, author_info, tz_name):
             thefilename = os.path.join(root, file)
             zinfo = zipfile.ZipInfo(thefilename[trimlength:], date_time=datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=pytz.utc).astimezone(the_timezone).timetuple())
             zinfo.compress_type = zipfile.ZIP_DEFLATED
-            zinfo.external_attr = 0664 << 16L
+            zinfo.external_attr = 0644 << 16L
             with open(thefilename, 'rb') as fp:
                 zf.writestr(zinfo, fp.read())
             #zf.write(thefilename, thefilename[trimlength:])
