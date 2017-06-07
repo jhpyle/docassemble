@@ -7207,6 +7207,7 @@ class Fruit(DAObject):
                     info = zipfile.ZipInfo(thefilename[trimlength:])
                     info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=pytz.utc).astimezone(the_timezone).timetuple()
                     info.compress_type = zipfile.ZIP_DEFLATED
+                    info.external_attr = 0666 << 16L
                     with open(thefilename, 'rb') as fp:
                         zf.writestr(info, fp.read())
                     #zf.write(thefilename, thefilename[trimlength:])
