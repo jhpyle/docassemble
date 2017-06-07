@@ -322,7 +322,7 @@ class PlaygroundSection(object):
         if filename is None:
             filename = os.path.basename(from_file)
         to_path = self.get_file(filename)
-        shutil.copyfile(from_file, to_path)
+        shutil.copy2(from_file, to_path)
         self.area.finalize()
         return filename
     def is_fillable_docx(self, filename):
@@ -406,7 +406,11 @@ class Playground(PlaygroundSection):
         author_info['first name'] = self.current_info['user']['firstname']
         author_info['last name'] = self.current_info['user']['lastname']
         author_info['id'] = self.user_id
-        zip_file = make_package_zip(pkgname, info, author_info)
+        if self.current_info['user']['timezone']:
+            the_timezone = self.current_info['user']['timezone']
+        else:
+            the_timezone = docassemble.base.functions.get_default_timezone()
+        zip_file = make_package_zip(pkgname, info, author_info, the_timezone)
         file_number, extension, mimetype = docassemble.base.parse.save_numbered_file('docassemble-' + str(pkgname) + '.zip', zip_file.name)
         return file_number
     def variables_from(self, content):

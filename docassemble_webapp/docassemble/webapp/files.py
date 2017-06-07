@@ -1,5 +1,7 @@
+import sys
 import os
 import re
+import pytz
 import shutil
 import urllib
 import pycurl
@@ -262,21 +264,27 @@ def publish_package(pkgname, info, author_info):
     logmessage(output)
     return output
 
-def make_package_zip(pkgname, info, author_info):
-    directory = make_package_dir(pkgname, info, author_info)
+def make_package_zip(pkgname, info, author_info, tz_name):
+    directory = make_package_dir(pkgname, info, author_info, tz_name)
     trimlength = len(directory) + 1
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     temp_zip = tempfile.NamedTemporaryFile(suffix=".zip")
     zf = zipfile.ZipFile(temp_zip.name, mode='w')
+    the_timezone = pytz.timezone(tz_name)
     for root, dirs, files in os.walk(packagedir):
         for file in files:
             thefilename = os.path.join(root, file)
-            zf.write(thefilename, thefilename[trimlength:])
+            zinfo = zipfile.ZipInfo(thefilename[trimlength:], date_time=datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=pytz.utc).astimezone(the_timezone).timetuple())
+            zinfo.compress_type = zipfile.ZIP_DEFLATED
+            with open(thefilename, 'rb') as fp:
+                zf.writestr(zinfo, fp.read())
+            #zf.write(thefilename, thefilename[trimlength:])
     zf.close()
     shutil.rmtree(directory)
     return temp_zip
 
-def make_package_dir(pkgname, info, author_info):
+def make_package_dir(pkgname, info, author_info, tz_name):
+    the_timezone = pytz.timezone(tz_name)
     area = dict()
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
@@ -415,39 +423,48 @@ machine learning training files, and other source files.
     for the_file in info['interview_files']:
         orig_file = os.path.join(area['playground'].directory, the_file)
         if os.path.exists(orig_file):
-            shutil.copyfile(orig_file, os.path.join(questionsdir, the_file))
+            shutil.copy2(orig_file, os.path.join(questionsdir, the_file))
     for the_file in info['template_files']:
         orig_file = os.path.join(area['playgroundtemplate'].directory, the_file)
         if os.path.exists(orig_file):
-            shutil.copyfile(orig_file, os.path.join(templatesdir, the_file))
+            shutil.copy2(orig_file, os.path.join(templatesdir, the_file))
     for the_file in info['module_files']:
         orig_file = os.path.join(area['playgroundmodules'].directory, the_file)
         if os.path.exists(orig_file):
-            shutil.copyfile(orig_file, os.path.join(maindir, the_file))
+            shutil.copy2(orig_file, os.path.join(maindir, the_file))
     for the_file in info['static_files']:
         orig_file = os.path.join(area['playgroundstatic'].directory, the_file)
         if os.path.exists(orig_file):
-            shutil.copyfile(orig_file, os.path.join(staticdir, the_file))
+            shutil.copy2(orig_file, os.path.join(staticdir, the_file))
     for the_file in info['sources_files']:
         orig_file = os.path.join(area['playgroundsources'].directory, the_file)
         if os.path.exists(orig_file):
-            shutil.copyfile(orig_file, os.path.join(sourcesdir, the_file))
+            shutil.copy2(orig_file, os.path.join(sourcesdir, the_file))
     with open(os.path.join(packagedir, 'README.md'), 'a') as the_file:
         the_file.write(readme)
+    os.utime(os.path.join(packagedir, 'README.md'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'LICENSE.txt'), 'a') as the_file:
         the_file.write(licensetext)
+    os.utime(os.path.join(packagedir, 'LICENSE.txt'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'setup.py'), 'a') as the_file:
         the_file.write(setuppy)
+    os.utime(os.path.join(packagedir, 'setup.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'setup.cfg'), 'a') as the_file:
         the_file.write(setupcfg)
+    os.utime(os.path.join(packagedir, 'setup.cfg'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'a') as the_file:
         the_file.write(initpy)
+    os.utime(os.path.join(packagedir, 'docassemble', '__init__.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'a') as the_file:
         the_file.write('')
+    os.utime(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(templatesdir, 'README.md'), 'a') as the_file:
         the_file.write(templatereadme)
+    os.utime(os.path.join(templatesdir, 'README.md'), (info['modtime'], info['modtime']))
     with open(os.path.join(staticdir, 'README.md'), 'a') as the_file:
         the_file.write(staticreadme)
+    os.utime(os.path.join(staticdir, 'README.md'), (info['modtime'], info['modtime']))
     with open(os.path.join(sourcesdir, 'README.md'), 'a') as the_file:
         the_file.write(sourcesreadme)
+    os.utime(os.path.join(sourcesdir, 'README.md'), (info['modtime'], info['modtime']))
     return directory

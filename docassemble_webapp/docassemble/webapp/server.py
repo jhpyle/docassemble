@@ -1969,7 +1969,7 @@ def restart_others():
 
 def current_info(yaml=None, req=None, action=None, location=None, interface='web'):
     if current_user.is_authenticated and not current_user.is_anonymous:
-        ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], the_user_id=current_user.id, theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization)
+        ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], the_user_id=current_user.id, theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization, timezone=current_user.timezone)
     else:
         ext = dict(email=None, the_user_id='t' + str(session.get('tempuser', None)), theid=session.get('tempuser', None), roles=list())
     headers = dict()
@@ -6921,6 +6921,7 @@ def create_playground_package():
                         info['dependency_links'].append(str(new_url))
                 else:
                     logmessage("Package " + str(package) + " does not exist")
+            info['modtime'] = os.path.getmtime(filename)
             author_info = dict()
             author_info['author name and email'] = name_of_user(current_user, include_email=True)
             author_info['author name'] = name_of_user(current_user)
@@ -6936,7 +6937,11 @@ def create_playground_package():
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(session.get('uid', None), nice_name)
             saved_file = SavedFile(file_number, extension='zip', fix=True)
-            zip_file = docassemble.webapp.files.make_package_zip(pkgname, info, author_info)
+            if current_user.timezone:
+                the_timezone = current_user.timezone
+            else:
+                the_timezone = get_default_timezone()
+            zip_file = docassemble.webapp.files.make_package_zip(pkgname, info, author_info, the_timezone)
             saved_file.copy_from(zip_file.name)
             saved_file.finalize()
             # # Why do this here?  To reserve the name?  It is all done by install_zip_package
@@ -7192,10 +7197,19 @@ class Fruit(DAObject):
             #archive = tempfile.NamedTemporaryFile(delete=False)
             zf = zipfile.ZipFile(saved_file.path, mode='w')
             trimlength = len(directory) + 1
+            if current_user.timezone:
+                the_timezone = pytz.timezone(current_user.timezone)
+            else:
+                the_timezone = pytz.timezone(get_default_timezone())
             for root, dirs, files in os.walk(packagedir):
                 for file in files:
                     thefilename = os.path.join(root, file)
-                    zf.write(thefilename, thefilename[trimlength:])
+                    info = zipfile.ZipInfo(thefilename[trimlength:])
+                    info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=pytz.utc).astimezone(the_timezone).timetuple()
+                    info.compress_type = zipfile.ZIP_DEFLATED
+                    with open(thefilename, 'rb') as fp:
+                        zf.writestr(info, fp.read())
+                    #zf.write(thefilename, thefilename[trimlength:])
             zf.close()
             saved_file.save()
             saved_file.finalize()
@@ -8148,6 +8162,12 @@ def playground_packages():
     if request.method == 'POST' and 'uploadfile' in request.files:
         the_files = request.files.getlist('uploadfile')
         need_to_restart = False
+        PPP
+        if current_user.timezone:
+            the_timezone = pytz.timezone(current_user.timezone)
+        else:
+            the_timezone = pytz.timezone(get_default_timezone())
+        epoch_date = datetime.datetime(1970, 1, 1).replace(tzinfo=pytz.utc)
         if the_files:
             for up_file in the_files:
                 #try:
@@ -8171,11 +8191,16 @@ def playground_packages():
                             if '.git' in dirparts:
                                 continue
                             levels = re.findall(r'/', directory)
+                            time_tuple = zinfo.date_time
+                            #(datetime.datetime(*time_tuple).replace(tzinfo=the_timezone).astimezone(pytz.utc) - epoch_date).total_seconds()
+                            the_time = time.mktime(datetime.datetime(*time_tuple).timetuple())
                             for sec in ['templates', 'static', 'sources', 'questions']:
                                 if directory.endswith('data/' + sec) and filename != 'README.md':
                                     data_files[sec].append(filename)
-                                    with zf.open(zinfo) as source_fp, open(os.path.join(area[area_sec[sec]].directory, filename), 'wb') as target_fp:
+                                    target_filename = os.path.join(area[area_sec[sec]].directory, filename)
+                                    with zf.open(zinfo) as source_fp, open(target_filename, 'wb') as target_fp:
                                         shutil.copyfileobj(source_fp, target_fp)
+                                    os.utime(target_filename, (the_time, the_time))
                             if filename == 'README.md' and len(levels) == 0:
                                 readme_text = zf.read(zinfo)
                             if filename == 'setup.py' and len(levels) == 0:
@@ -8183,8 +8208,10 @@ def playground_packages():
                             elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py':
                                 need_to_restart = True
                                 data_files['modules'].append(filename)
-                                with zf.open(zinfo) as source_fp, open(os.path.join(area['playgroundmodules'].directory, filename), 'wb') as target_fp:
+                                target_filename = os.path.join(area['playgroundmodules'].directory, filename)
+                                with zf.open(zinfo) as source_fp, open(target_filename, 'wb') as target_fp:
                                     shutil.copyfileobj(source_fp, target_fp)
+                                    os.utime(target_filename, (the_time, the_time))
                         setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
                         for line in setup_py.splitlines():
                             m = re.search(r"^ *([a-z_]+) *= *\(?u?'(.*)'", line)
@@ -9839,9 +9866,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if sess_info['user_id'] is not None:
             user = load_user(sess_info['user_id'])
         if user is None:
-            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, sms_variable=sms_variable, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
+            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, sms_variable=sms_variable, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
         else:
-            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
+            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
         if action is not None:
             #logmessage("Setting action to " + str(action))
             ci.update(action)
