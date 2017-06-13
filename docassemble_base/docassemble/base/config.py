@@ -4,6 +4,7 @@ import re
 import sys
 import httplib2
 import socket
+import pkg_resources
 from docassemble.base.generate_key import random_string
 
 dbtableprefix = None
@@ -60,6 +61,13 @@ def load(**kwargs):
         else:
             daconfig[key] = val
     daconfig['config file'] = filename
+    daconfig['python version'] = unicode(pkg_resources.get_distribution("docassemble.base").version)
+    version_file = daconfig.get('version file', '/usr/share/docassemble/webapp/VERSION')
+    if os.path.isfile(version_file) and os.access(version_file, os.R_OK):
+        with open(version_file, 'rU') as fp:
+            daconfig['system version'] = fp.read().decode('utf8').strip()
+    else:
+        daconfig['system version'] = '0.1.12'
     if 'keymap' in daconfig and daconfig['keymap'] not in ['vim', 'emacs', 'sublime']:
         sys.stderr.write("WARNING!  You used a keymap that is not supported.  Available values are vim, emacs, and sublime.\n")
         del daconfig['keymap']

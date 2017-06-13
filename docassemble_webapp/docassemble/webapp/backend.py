@@ -112,16 +112,10 @@ def absolute_filename(the_file):
     return(None)
 
 
-#docassemble.base.parse.set_file_finder(get_info_from_file_reference)
-
 mail = Mail(app)
 
 def da_send_mail(the_message):
     mail.send(the_message)
-
-#docassemble.base.parse.set_da_send_mail(da_send_mail)
-
-#docassemble.base.parse.set_save_numbered_file(save_numbered_file)
 
 import docassemble.webapp.machinelearning
 import docassemble.base.functions

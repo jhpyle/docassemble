@@ -65,8 +65,13 @@
       {{ render_submit_field(form.submit, tabindex=180) }}
     </div>
 </form>
-{% if config['USE_GOOGLE_LOGIN'] or config['USE_FACEBOOK_LOGIN'] or config['USE_AZURE_LOGIN']%}
+{% if config['USE_GOOGLE_LOGIN'] or config['USE_FACEBOOK_LOGIN'] or config['USE_AZURE_LOGIN'] or config['USE_PHONE_LOGIN'] %}
 <p style="padding: 15px 15px 5px 15px;"><strong>or</strong></p>
+{% endif %}
+{% if config['USE_PHONE_LOGIN'] %}
+<div class="row nomargin">
+  <div class="daiconbox col-md-6"><a class="nohover" href="{{ url_for('phone_login') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/phone-login.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with your phone') }}</td></tr></tbody></table></a></div>
+</div>
 {% endif %}
 {% if config['USE_GOOGLE_LOGIN'] %}
 <div class="row nomargin">

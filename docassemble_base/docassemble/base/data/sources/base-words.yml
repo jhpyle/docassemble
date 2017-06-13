@@ -287,6 +287,7 @@
 "Stop Controlling": Null
 "Stop Observing": Null
 "Submit": Null
+"system": Null
 "System": Null
 "Telephone assistance": Null
 "Template files": Null
@@ -356,6 +357,7 @@
 "unavailable": Null
 "Unblock": Null
 "Undefined names": Null
+"Unknown": Null
 "Unnamed User": Null
 "Untitled": Null
 "Update": Null
@@ -379,6 +381,7 @@
 "Variables as JSON": Null
 "Variables defined": Null
 "Variables": Null
+"Version ": Null
 "Version": Null
 "View documentation": Null
 "v.": Null
@@ -413,6 +416,8 @@
 "You need to type in a name for the interview": Null
 "Your account has not been enabled.": Null
 "Your choices are:": Null
+"Your docassemble system does not need to be upgraded.": Null
+"Your docassemble system needs to be upgraded.": Null
 "Your document is attached.": Null
 "Your document, ": Null
 "Your documents are attached.": Null

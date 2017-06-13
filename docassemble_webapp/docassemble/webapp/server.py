@@ -1,3 +1,4 @@
+min_system_version = '0.1.12'
 import re
 import os
 import sys
@@ -326,6 +327,7 @@ import requests
 import redis
 import yaml
 import inspect
+from distutils.version import LooseVersion
 from subprocess import call, Popen, PIPE
 from pygments import highlight
 from pygments.lexers import YamlLexer
@@ -386,6 +388,9 @@ app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
 app.config['USE_AZURE_LOGIN'] = False
 app.config['USE_GOOGLE_DRIVE'] = False
+app.config['USE_PHONE_LOGIN'] = False
+if 'twilio' in daconfig and daconfig.get('phone login', False):
+    app.config['USE_PHONE_LOGIN'] = True
 if 'oauth' in daconfig:
     app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
     if 'google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False):
@@ -2151,6 +2156,7 @@ class FacebookSignIn(OAuthSignIn):
         if 'code' not in request.args:
             return None, None, None
         oauth_session = self.service.get_auth_session(
+            decoder=json.loads,
             data={'code': request.args['code'],
                   'grant_type': 'authorization_code',
                   'redirect_uri': self.get_callback_url()}
@@ -2286,7 +2292,7 @@ def oauth_callback(provider):
 
 @app.route('/user/google-sign-in')
 def google_page():
-    return render_template('flask_user/google_login.html', title=word("Sign In"), tab_title=word("Sign In"), page_title=word("Sign in"))
+    return render_template('flask_user/google_login.html', version_warning=None, title=word("Sign In"), tab_title=word("Sign In"), page_title=word("Sign in"))
 
 @app.route("/user/post-sign-in", methods=['GET'])
 def post_sign_in():
@@ -2313,7 +2319,7 @@ def cleanup_sessions():
 
 @app.route("/health_check", methods=['GET'])
 def health_check():
-    return render_template('pages/health_check.html', content="OK")
+    return render_template('pages/health_check.html', version_warning=None, content="OK")
 
 @app.route("/checkout", methods=['POST', 'GET'])
 def checkout():
@@ -4968,7 +4974,7 @@ def interview_start():
             logmessage("interview_dispatch: unable to load interview file " + yaml_filename)
             continue
         interview_info.append(dict(link=url_for('index', i=yaml_filename), display=interview_title))
-    return render_template('pages/start.html', interview_info=interview_info, title=daconfig.get('start page title', word('Available interviews')))
+    return render_template('pages/start.html', version_warning=None, interview_info=interview_info, title=daconfig.get('start page title', word('Available interviews')))
 
 @app.route('/start/<dispatch>', methods=['GET'])
 def redirect_to_interview(dispatch):
@@ -6613,7 +6619,7 @@ def monitor():
         })
     });
 </script>"""
-    return render_template('pages/monitor.html', bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Monitor'), page_title=word('Monitor')), 200
+    return render_template('pages/monitor.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Monitor'), page_title=word('Monitor')), 200
 
 @app.route('/updatingpackages', methods=['GET', 'POST'])
 @login_required
@@ -6698,7 +6704,7 @@ def update_package_wait():
       });
     </script>
 """
-    return render_template('pages/update_package_wait.html', bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=next_url)
+    return render_template('pages/update_package_wait.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=next_url)
 
 @app.route('/update_package_ajax', methods=['GET', 'POST'])
 @login_required
@@ -6819,7 +6825,7 @@ def update_package():
     package_list, package_auth = get_package_info()
     form.pippackage.data = None
     form.giturl.data = None
-    return render_template('pages/update_package.html', bodyclass='adminbody', form=form, package_list=package_list, tab_title=word('Update Package'), page_title=word('Update Package')), 200
+    return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, package_list=package_list, tab_title=word('Update Package'), page_title=word('Update Package')), 200
 
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():
@@ -6968,7 +6974,7 @@ def create_playground_package():
                 response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
-    return render_template('pages/create_playground_package.html', bodyclass='adminbody', form=form, current_package=current_package, package_names=file_list['playgroundpackages'], tab_title=word('Playground Packages'), page_title=word('Playground Packages')), 200
+    return render_template('pages/create_playground_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, current_package=current_package, package_names=file_list['playgroundpackages'], tab_title=word('Playground Packages'), page_title=word('Playground Packages')), 200
 
 @app.route('/createpackage', methods=['GET', 'POST'])
 @login_required
@@ -7230,7 +7236,7 @@ class Fruit(DAObject):
             response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             return response
-    return render_template('pages/create_package.html', bodyclass='adminbody', form=form, tab_title=word('Create Package'), page_title=word('Create Package')), 200
+    return render_template('pages/create_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, tab_title=word('Create Package'), page_title=word('Create Package')), 200
 
 @app.route('/restart', methods=['GET', 'POST'])
 @login_required
@@ -7258,7 +7264,7 @@ def restart_page():
 """
     next_url = request.args.get('next', url_for('interview_list'))
     extra_meta = """\n    <meta http-equiv="refresh" content="5;URL='""" + next_url + """'">"""
-    return render_template('pages/restart.html', bodyclass='adminbody', extra_meta=Markup(extra_meta), extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting'))
+    return render_template('pages/restart.html', version_warning=None, bodyclass='adminbody', extra_meta=Markup(extra_meta), extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting'))
 
 def get_gd_flow():
     app_credentials = current_app.config['OAUTH_CREDENTIALS'].get('googledrive', dict())
@@ -7610,7 +7616,7 @@ def google_drive_page():
     if the_folder is None:
         the_folder = ''
     description = 'Select the folder from your Google Drive that you want to be synchronized with the Playground.'
-    return render_template('pages/googledrive.html', bodyclass='adminbody', header=word('Google Drive'), tab_title=word('Google Drive'), items=items, the_folder=the_folder, page_title=word('Google Drive'), form=form)
+    return render_template('pages/googledrive.html', version_warning=version_warning, bodyclass='adminbody', header=word('Google Drive'), tab_title=word('Google Drive'), items=items, the_folder=the_folder, page_title=word('Google Drive'), form=form)
 
 @app.route('/config', methods=['GET', 'POST'])
 @login_required
@@ -7655,7 +7661,13 @@ def config_page():
     else:
         kbOpt = ''
         kbLoad = ''
-    return render_template('pages/config.html', bodyclass='adminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200
+    python_version = daconfig.get('python version', word('Unknown'))
+    system_version = daconfig.get('system version', word('Unknown'))
+    if python_version == system_version:
+        version = word("Version ") + unicode(python_version)
+    else:
+        version = word("Version ") + unicode(python_version) + ' (Python); ' + unicode(system_version) + ' (' + word('system') + ')'
+    return render_template('pages/config.html', version_warning=version_warning, version=version, bodyclass='adminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200
 
 @app.route('/view_source', methods=['GET'])
 @login_required
@@ -7677,7 +7689,7 @@ def view_source():
         logmessage("No source: " + str(errmess))
         abort(404)
     header = source_path
-    return render_template('pages/view_source.html', bodyclass='adminbody', tab_title="Source", page_title="Source", extra_css=Markup('\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), header=header, contents=Markup(highlight(source.content, YamlLexer(), HtmlFormatter(cssclass="highlight fullheight")))), 200
+    return render_template('pages/view_source.html', version_warning=None, bodyclass='adminbody', tab_title="Source", page_title="Source", extra_css=Markup('\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), header=header, contents=Markup(highlight(source.content, YamlLexer(), HtmlFormatter(cssclass="highlight fullheight")))), 200
 
 @app.route('/playgroundstatic/<userid>/<filename>', methods=['GET'])
 def playground_static(userid, filename):
@@ -8057,7 +8069,7 @@ def playground_files():
     else:
         any_files = False
     back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
-    return render_template('pages/playgroundfiles.html', bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + ('damarkdown' if mode == 'markdown' else mode) + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file), 200
+    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + ('damarkdown' if mode == 'markdown' else mode) + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file), 200
 
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required
@@ -8324,7 +8336,7 @@ def playground_packages():
     back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
     if pypi_message is not None:
         pypi_message = Markup(pypi_message)
-    return render_template('pages/playgroundpackages.html', bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    ' + kbLoad + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      $("#daPublish").click(function(event){if(!confirm("' + word("Are you sure that you want to publish this package to PyPI?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+    return render_template('pages/playgroundpackages.html', version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    ' + kbLoad + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      $("#daPublish").click(function(event){if(!confirm("' + word("Are you sure that you want to publish this package to PyPI?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
 
 def splitall(path):
     allparts = []
@@ -9121,7 +9133,7 @@ $( document ).ready(function() {
     else:
         kbOpt = ''
         kbLoad = ''
-    return render_template('pages/playground.html', bodyclass='adminbody', use_gd=use_gd, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
+    return render_template('pages/playground.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';
 
@@ -9137,7 +9149,7 @@ $( document ).ready(function() {
 def package_page():
     if request.method == 'GET' and needs_to_change_password():
         return redirect(url_for('user.change_password', next=url_for('interview_list')))
-    return render_template('pages/packages.html', bodyclass='adminbody', tab_title=word("Package Management"), page_title=word("Package Management")), 200
+    return render_template('pages/packages.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Package Management"), page_title=word("Package Management")), 200
 
 @app.errorhandler(Exception)
 def server_error(the_error):
@@ -9166,7 +9178,7 @@ def server_error(the_error):
         errmess = '<pre>' + errmess + '</pre>'
     else:
         errmess = '<blockquote>' + errmess + '</blockquote>'
-    return render_template('pages/501.html', tab_title=word("Error"), page_title=word("Error"), error=errmess, logtext=str(the_trace)), 501
+    return render_template('pages/501.html', version_warning=version_warning, tab_title=word("Error"), page_title=word("Error"), error=errmess, logtext=str(the_trace)), 501
 
 # @app.route('/testpost', methods=['GET', 'POST'])
 # def test_post():
@@ -9264,7 +9276,7 @@ def logs():
         content = "\n".join(lines)
     else:
         content = "No log files available"
-    return render_template('pages/logs.html', bodyclass='adminbody', tab_title=word("Logs"), page_title=word("Logs"), form=form, files=files, current_file=the_file, content=content, default_filter_string=default_filter_string), 200
+    return render_template('pages/logs.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Logs"), page_title=word("Logs"), form=form, files=files, current_file=the_file, content=content, default_filter_string=default_filter_string), 200
 
 @app.route('/reqdev', methods=['GET', 'POST'])
 @login_required
@@ -9294,7 +9306,7 @@ def request_developer():
             except:
                 flash(word('We were unable to submit your request.'), 'error')
         return redirect(url_for('interview_list'))
-    return render_template('users/request_developer.html', bodyclass='adminbody', tab_title=word("Developer Access"), page_title=word("Developer Access"), form=form)
+    return render_template('users/request_developer.html', version_warning=None, bodyclass='adminbody', tab_title=word("Developer Access"), page_title=word("Developer Access"), form=form)
 
 def docx_variable_fix(variable):
     variable = re.sub(r'\\', '', variable)
@@ -9391,7 +9403,7 @@ def utilities():
                         fields_output += "---"
                     else:
                         fields_output = word("Error: no fields could be found in the file")
-    return render_template('pages/utilities.html', bodyclass='adminbody', extra_css=Markup('\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script>$("#pdfdocxfile").fileinput();</script>'), tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type)
+    return render_template('pages/utilities.html', version_warning=version_warning, bodyclass='adminbody', extra_css=Markup('\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script>$("#pdfdocxfile").fileinput();</script>'), tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type)
 
 # @app.route('/save', methods=['GET', 'POST'])
 # def save_for_later():
@@ -9507,7 +9519,7 @@ def interview_list():
       });
     </script>
 """
-    return render_template('pages/interviews.html', extra_js=Markup(script), tab_title=word("Interviews"), page_title=word("Interviews"), numinterviews=len(interviews), interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
+    return render_template('pages/interviews.html', version_warning=version_warning, extra_js=Markup(script), tab_title=word("Interviews"), page_title=word("Interviews"), numinterviews=len(interviews), interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
 
 def fix_secret():
     password = request.form.get('password', request.form.get('new_password', None))
@@ -10663,6 +10675,12 @@ def define_examples():
     pg_ex['encoded_data_dict'] = safeid(json.dumps(data_dict))
     pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
 
+
+if LooseVersion(min_system_version) > LooseVersion(daconfig['system version']):
+    version_warning = word("Your docassemble system needs to be upgraded.")
+else:
+    version_warning = None
+    
 import docassemble.webapp.machinelearning
 docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)
 docassemble.base.util.set_svm_machine_learner(docassemble.webapp.machinelearning.SVMMachineLearner)
