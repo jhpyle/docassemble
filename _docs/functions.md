@@ -908,7 +908,10 @@ It uses the `name` and `email` attributes of the listed [`Individual`]s
 to form e-mail addresses.
 
 `send_email()` returns `False` if an error prevented the e-mail from
-being sent; otherwise it returns `True`.
+being delivered to the mail server; otherwise it returns `True`.  Note
+that this function might return `True` even though no e-mail is
+actually delivered to the recipient; the return value indicates only
+whether there was a problem sending the e-mail with [Flask-Mail].
 
 See [configuration] for information about how to configure the mail
 server that `send_email()` will use.
@@ -916,6 +919,11 @@ server that `send_email()` will use.
 Here is an example of sending an attachment via e-mail:
 
 {% include side-by-side.html demo="send-email-with-attachment" %}
+
+Sending e-mail can be slow.  If you call `send_email()` from within an
+interview, the user might have to look at a spinner.  In order to
+provide a better experience to users, you may wish to call
+`send_email()` from within a [background process].
 
 ## <a name="interview_email"></a>interview_email()
 

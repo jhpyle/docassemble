@@ -90,9 +90,12 @@ the same server or on a central server on the same local area network:
 
 * A SQL server;
 * A [Redis] server (port 6379) (multiple databases of which are used);
-* A [RabbitMQ] server (port 5672);
-* A [Celery] background process; and
-* An [SMTP] server for receiving e-mails (port 25).
+* A [RabbitMQ] server (port 5672); and
+* A [Celery] background process.
+
+If you wish to use the [e-mail receiving] feature, an [SMTP] server
+for receiving e-mails (port 25) will also need to be available on a
+central server.
 
 In addition, if you want to be able to view consolidated log files
 when you use a [multi-server arrangement], a central log server needs
@@ -112,18 +115,14 @@ to automatically renew the SSL certificates.)
 Finally, some of **docassemble**'s features depend on the following
 services:
 
-* An [SMTP] server for sending e-mails;
+* An [SMTP] server for [sending](#email) (as opposed to receiving)
+  e-mails;
 * [Twilio] for receiving text messages, sending text messages, and
   forwarding phone calls; and
 * [VoiceRSS] for converting text to an audio file.
 
 The authentication keys for these services can be set up in the
-[configuration].  Note that while it is easy to deploy an [SMTP]
-server, most cloud providers block outgoing [SMTP] connections, so you
-may have to use a special service to send e-mail.  For example, on
-[Amazon Web Services], you can use [Amazon SES], and on
-[Microsoft Azure], you can use [SendGrid].  To set up e-mail sending,
-see the [`mail`] directive in the [configuration].
+[configuration].
 
 # Installing underlying packages
 
@@ -369,6 +368,7 @@ application.  Still acting as `www-data`, do:
 cp ./docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
 cp ./docassemble/Docker/config/* /usr/share/docassemble/config/
 cp ./docassemble/Docker/*.sh /usr/share/docassemble/webapp/
+cp ./docassemble/Docker/VERSION /usr/share/docassemble/webapp/
 {% endhighlight %}
 
 The `docassemble.wsgi` file is the primary "executable" for the web
@@ -760,6 +760,72 @@ obtain an `id` and `secret` for use with Google's [OAuth2] interface.
 * Under Authorized redirect URIs, add the URL
   `https://docassemble.example.com/google_drive_callback`.
 
+## <a name="email"></a>Setting up e-mail sending
+
+If you plan to use the [roles] feature or the [`send_email()`]
+function, you will need an [SMTP] server.
+
+While it is easy to deploy an [SMTP] server, most cloud providers
+block outgoing [SMTP] connections.  As a result, you may have to use a
+special service to send e-mail, such as [Amazon SES], [SendGrid]
+(which is particularly easy to set up if you host on
+[Microsoft Azure]), [MailChimp], [Mailgun], and [Google Apps].  To set
+up e-mail sending, see the [`mail`] directive in the [configuration].
+
+If you have a Google account, you can use a Gmail [SMTP] server by
+setting the following in your [configuration]:
+
+{% highlight yaml %}
+mail:
+  server: smtp.gmail.com
+  username: yourgoogleusername
+  password: yourgooglepassword
+  use_ssl: True
+  port: 465
+  default_sender: '"Administrator" <no-reply@example.com>'
+{% endhighlight %}
+
+Note that for this to work, you will need to go into your Google
+settings and set "Allow less secure apps" to "ON."
+
+You can also use the [Amazon SES] service to send e-mail.  When you
+set it up, you will be given a username, password, and server.  In the
+**docassemble** configuration, you would write something like this:
+
+{% highlight yaml %}
+mail:
+  username: WJYAKIBAJVIFYAETTC3G
+  password: At6Cz2BH8Tx1zqPp0j3XhzlhbRnYsmBx7WwoItL9N5GU
+  server: email-smtp.us-east-1.amazonaws.com
+  default_sender: '"Example Inc." <no-reply@example.com>'
+{% endhighlight %}
+
+In order to send e-mail through [Amazon SES], you will need to verify
+your domain.  Among other things, this involves editing your [DNS]
+configuration to add a [TXT record] for the host `_amazonses`.
+
+To ensure that e-mails from your application are not blocked by spam
+filters, you should also add a [TXT record] with [SPF] information for
+your domain, indicating that [Amazon SES] is authorized to send e-mail
+for your domain:
+
+{% highlight text %}
+v=spf1 mx include:amazonses.com ~all
+{% endhighlight %}
+
+Initially, [Amazon SES] puts your account in a "sandbox" that allows
+you to send e-mails only to addresses you manually verify.  To get out
+of this "sandbox," you need to [submit a support request] describing
+your use case and your policies for dealing with reply e-mails.
+
+Instead of using [Amazon SES], you could use a third party mail
+service like [SendGrid], [Mailgun], or [MailChimp].  Note that in order
+to minimize the chances that e-mail you send from these services will
+be flagged as spam, you will need to spend some time configuring
+[SPF] records, [DKIM] records, [reverse DNS], and the like.  It is also
+possible to use an [SMTP] server from [Google Apps] if you have a
+[G Suite] account.
+
 # Start the server and background processes
 
 First, we need to disable the automatic starting and stopping of
@@ -1064,6 +1130,21 @@ arrangement, see the [scalability] section.
 
 # <a name="upgrade"></a>Upgrading **docassemble**
 
+To see what version of **docassemble** you are running, log in as an
+administrator and go to "Configuration" from the menu.  To find out
+the version number of the latest available **docassemble** software,
+visit to the [**docassemble** PyPI page].  The "Configuration" page
+might report that the "Python" version number and the "system" version
+number are different.  This may happen when you upgrade a
+**docassemble** extension package: the **docassemble** [Python]
+packages are dependencies and will be upgraded to the latest version
+available on [PyPI], while the parts of **docassemble** that are
+outside of these packages (the "system") remain as they were when you
+first installed **docassemble**.  Updates to the "system" files are
+rare, so it is usually not a problem for the "Python" version number
+to be ahead of the "system" version number.  If there is a
+compatibility issue, you will see a warning.
+
 To upgrade a local installation of **docassemble** and its
 dependencies, do the following.  (This assumes that in the past you
 cloned **docassemble** into the directory `docassemble` in the current
@@ -1083,6 +1164,7 @@ pip install --upgrade \
 cp ./docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
 cp ./Docker/config/* /usr/share/docassemble/config/
 cp ./Docker/*.sh /usr/share/docassemble/webapp/
+cp ./Docker/VERSION /usr/share/docassemble/webapp/
 python -m docassemble.webapp.fix_postgresql_tables
 python -m docassemble.webapp.create_tables
 exit
@@ -1186,12 +1268,10 @@ All of these system administration headaches can be avoided by
 [`docassemble.webapp`]: {{ site.github.repository_url }}/tree/master/docassemble_webapp
 [`docassemble.webapp.fix_postgresql_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/fix_postgresql_tables.py
 [`docassemble.webapp.create_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
-[VoiceRSS]: http://www.voicerss.org/
 [Twilio]: https://twilio.com
 [multi-server arrangement]: {{ site.baseurl }}/docs/scalability.html
 [through the web interface]: {{ site.baseurl }}/docs/packages.html#updating
 [Docker for Windows]: https://docs.docker.com/engine/installation/windows/
-[Amazon Web Services]: https://aws.amazon.com
 [AWS]: https://aws.amazon.com
 [Redis]: http://redis.io/
 [RabbitMQ]: https://www.rabbitmq.com/
@@ -1235,3 +1315,9 @@ All of these system administration headaches can be avoided by
 [certbot instructions]: https://certbot.eff.org/all-instructions/
 [certbot]: https://certbot.eff.org/
 [Google Drive synchronization]: {{ site.baseurl }}/docs/playground.html#google drive
+[MailChimp]: https://mailchimp.com/
+[Mailgun]: https://www.mailgun.com/
+[Google Apps]: https://support.google.com/a/answer/176600?hl=en
+[G Suite]: https://gsuite.google.com/
+[roles]: {{ site.baseurl }}/docs/roles.html
+[**docassemble** PyPI page]: https://pypi.python.org/pypi/docassemble.webapp

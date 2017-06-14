@@ -500,6 +500,10 @@ folder into the "static" folder, when you synchronize, the file will
 appear in the [Static folder] of the Playground, but it will not
 disappear from the [Templates folder] of the Playground.
 
+Note that this synchronization feature does not work with
+[Google Docs]; it will not convert a [Google Docs] file to a .docx
+file, for example.
+
 # Recovering from infinite loops
 
 If you accidentially write code that gets into an infinite loop, the
@@ -591,3 +595,4 @@ Then the editing screen will load.
 [Notepad++]: http://notepad-plus-plus.org/
 [Sublime Text]: http://www.sublimetext.com/
 [`googledrive`]: {{ site.baseurl }}/docs/config.html#googledrive
+[Google Docs]: https://docs.google.com

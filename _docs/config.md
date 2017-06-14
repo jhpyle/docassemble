@@ -477,22 +477,21 @@ mail:
   use tls: True
 {% endhighlight %}
 
-Note that any machine that connects to an SMTP server will need to
-identify itself to the SMTP server using a
-[fully qualified domain name].  E-mail sending will be slow if your
-**docassemble** application servers have trouble finding their fully
-qualified domain names.  To test this, do:
+If you are hosting **docassemble** in the cloud, you will probably
+have to use a separate SMTP server in order to send e-mail.
 
-{% highlight text %}
-$ python
->>> import socket
->>> print socket.getfqdn()
+A free option is [Mailgun].  You can sign up with [Mailgun], provide a
+credit card (which will only be charged if you exceed the free tier),
+configure some [DNS] entries, and then set your configuration to
+something like this:
+
+{% highlight yaml %}
+mail:
+  default sender: '"Example, Inc." <no-reply@mg.example.com>'
+  username: 'postmaster@mg.example.com'
+  password: '5a4a0c5f3da35f3bc10f0462364c26dd'
+  server: 'smtp.mailgun.org'
 {% endhighlight %}
-
-The `socket.getfqdn()` function should run instantaneously.  If it
-does not, you should configure your system so that it can find its
-fully qualified domain name faster.  On Linux, you can do this by
-editing `/etc/hosts`.
 
 ## <a name="default interview"></a>Default interview
 
@@ -994,15 +993,21 @@ then **docassemble** will determine the hostname by calling
 
 ### <a name="ec2 ip url"></a>ec2 ip url
 
-If `ec2` is set to `True`, docassemble will determine the hostname by
-calling `http://169.254.169.254/latest/meta-data/local-ipv4`.  If this
-URL does not work for some reason, but a different URL would work, you
-can change the URL that **docassemble** uses by setting the
+If `ec2` is set to `True`, **docassemble** will determine the hostname
+by calling `http://169.254.169.254/latest/meta-data/local-ipv4`.  If
+this URL does not work for some reason, but a different URL would
+work, you can change the URL that **docassemble** uses by setting the
 `ec2 ip url` configuration item.
 
 {% highlight yaml %}
 ec2 ip url: http://169.254.169.254/latest/meta-data/local-ipv4
 {% endhighlight %}
+
+### <a name="phone login">Phone number login</a>
+
+If `phone login` is set to `True`, then **docassemble** will allow
+users to log in with a phone number.  For this system to work, the
+[`twilio`] configuration must be set up.
 
 ## <a name="vim"></a>Vim-like editor in Playground
 
@@ -1523,3 +1528,5 @@ and Facebook API keys.
 [Google Drive synchronization]: {{ site.baseurl }}/docs/playground.html#google drive
 [OAuth2]: https://oauth.net/2/
 [Google Drive]: https://drive.google.com
+[Mailgun]: https://www.mailgun.com/
+[DNS]: https://en.wikipedia.org/wiki/Domain_Name_System

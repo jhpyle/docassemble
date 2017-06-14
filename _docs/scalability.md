@@ -144,13 +144,13 @@ the "Instance State" of the one running instance to "Terminate."
 VPC" is "No," and delete it.  (Be careful not to delete the default
 VPC!)
 
-Next, we need to create an [S3] "bucket" in which your **docassemble**
-system can store files, backups, and other things.  To do this, go to
-the [S3 Console], click "Create Bucket," and pick a name.  If your
-site is at docassemble.example.com, a good name for the bucket is
-`docassemble-example-com`.  (Client software will have trouble
-accessing your bucket if it contains `.` characters.)  Under "Region,"
-pick the region nearest you.
+<a name="s3"></a>Next, we need to create an [S3] "bucket" in which
+your **docassemble** system can store files, backups, and other
+things.  To do this, go to the [S3 Console], click "Create Bucket,"
+and pick a name.  If your site is at docassemble.example.com, a good
+name for the bucket is `docassemble-example-com`.  (Client software
+will have trouble accessing your bucket if it contains `.`
+characters.)  Under "Region," pick the region nearest you.
 
 Next, we need to create an [IAM] role for the [EC2] instances that
 will run **docassemble**.  This role will empower the server to
@@ -848,7 +848,7 @@ the **docassemble** configuration file:
 webapp: /usr/share/docassemble/docassemble.wsgi
 {% endhighlight %}
 
-# Synchronizing configuration and installs with supervisor
+# EC2 hostname discovery
 
 If you are using Amazon EC2, set the following in the [configuration]:
 
@@ -858,6 +858,9 @@ ec2: True
 
 This can also be set with the `EC2` environment variable if
 [using Docker].
+
+This setting is necessary so that the server can correctly identify
+its own hostname.
 
 # SQL server
 
@@ -892,59 +895,16 @@ If you installed the web servers before installing the SQL server,
 note that the [`create_tables`] module will need to be run in order to
 create the database tables that **docassemble** expects.
 
-# E-mail sending
+# <a name="email"></a>E-mail sending
 
-If you are launching **docassemble** within [EC2], note that Amazon does
-not allow e-mail to be sent from [SMTP] servers operating within an [EC2]
-instance, unless you obtain special permission.  Therefore, you may
-wish to use an [SMTP] server on the internet with which you can connect
-through [SMTP Authentication]. 
+If you are launching **docassemble** within [EC2], note that Amazon
+does not allow e-mail to be sent directly from [SMTP] servers
+operating within an [EC2] instance unless you obtain special
+permission.  Therefore, you may wish to use an [SMTP] server on the
+internet with which you can connect through [SMTP Authentication].
 
-If you have a Google account, you can use Google's [SMTP] server by
-setting the following in your [configuration]:
-
-{% highlight yaml %}
-mail:
-  server: smtp.gmail.com
-  username: yourgoogleusername
-  password: yourgooglepassword
-  use_ssl: True
-  port: 465
-  default_sender: '"Administrator" <no-reply@example.com>'
-{% endhighlight %}
-
-Note that for this to work, you will need to go into your Google
-settings and set "Allow less secure apps" to "ON."
-
-You can also use the [Amazon SES] service to send e-mail.  When you
-set it up, you will be given a username, password, and server.  In the
-**docassemble** configuration, you would write something like this:
-
-{% highlight yaml %}
-mail:
-  username: WJYAKIBAJVIFYAETTC3G
-  password: At6Cz2BH8Tx1zqPp0j3XhzlhbRnYsmBx7WwoItL9N5GU
-  server: email-smtp.us-east-1.amazonaws.com
-  default_sender: '"Example Inc." <no-reply@example.com>'
-{% endhighlight %}
-
-In order to send e-mail through [Amazon SES], you will need to verify
-your domain.  Among other things, this involves editing your [DNS]
-configuration to add a [TXT record] for the host `_amazonses`.
-
-To ensure that e-mails from your application are not blocked by spam
-filters, you should also add a [TXT record] with [SPF] information for
-your domain, indicating that [Amazon SES] is authorized to send e-mail
-for your domain:
-
-{% highlight text %}
-v=spf1 mx include:amazonses.com ~all
-{% endhighlight %}
-
-Initially, [Amazon SES] puts your account in a "sandbox" that allows
-you to send e-mails only to addresses you manually verify.  To get out
-of this "sandbox," you need to [submit a support request] describing
-your use case.
+For more information on setting up e-mail sending, see the
+[installation section].
 
 # Using S3 without passing access keys in the configuration
 
@@ -959,6 +919,8 @@ s3:
   enable: True
   bucket: yourbucketname
 {% endhighlight %}
+
+Instructions on how to set this up are available [above](#s3).
 
 # Performance
 
@@ -1026,6 +988,7 @@ number of PostgreSQL connections will be 12.
 [Apache configuration]: {{ site.baseurl }}/docs/installation.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [installation]: {{ site.baseurl }}/docs/installation.html
+[installation section]: {{ site.baseurl }}/docs/installation.html#email
 [SQLAlchemy]: http://www.sqlalchemy.org/
 [S3]: https://aws.amazon.com/s3/
 [Amazon S3]: https://aws.amazon.com/s3/
@@ -1128,3 +1091,9 @@ number of PostgreSQL connections will be 12.
 [submit a support request]: http://docs.aws.amazon.com/ses/latest/DeveloperGuide/request-production-access.html
 [Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
 [sendmail]: https://en.wikipedia.org/wiki/Sendmail
+[MailChimp]: https://mailchimp.com/
+[Mailgun]: https://www.mailgun.com/
+[Google Apps]: https://support.google.com/a/answer/176600?hl=en
+[SendGrid]: https://sendgrid.com/
+[DKIM]: https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail
+[reverse DNS]: https://en.wikipedia.org/wiki/Reverse_DNS_lookup
