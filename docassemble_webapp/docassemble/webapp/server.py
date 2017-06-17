@@ -261,7 +261,7 @@ def custom_login():
 
         if user:
             safe_next = user_manager.make_safe_url_function(login_form.next.data)
-            if user.otp_secret is not None:
+            if daconfig.get('two factor authentication', False) is True and user.otp_secret is not None:
                 session['validated_user'] = user.id
                 return redirect(url_for('mfa_login', next=safe_next))
             return flask_user.views._do_login_user(user, safe_next, login_form.remember_me.data)
@@ -2510,7 +2510,7 @@ def phone_login_verify():
 
 @app.route('/mfa_setup', methods=['POST', 'GET'])
 def mfa_setup():
-    if daconfig.get('second factor authentication', False) is not True or current_user.is_anonymous or not current_user.has_role(*daconfig['second factor authentication roles']) or not current_user.social_id.startswith('local'):
+    if daconfig.get('two factor authentication', False) is not True or current_user.is_anonymous or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
         abort(404)
     form = MFASetupForm(request.form)
     if request.method == 'POST' and form.submit.data:
@@ -2526,7 +2526,7 @@ def mfa_setup():
         user = load_user(current_user.id)
         user.otp_secret = otp_secret
         db.session.commit()
-        flash(word("You are now set up with second factor authentication."), 'success')
+        flash(word("You are now set up with two factor authentication."), 'success')
         return redirect(url_for('user_profile_page'))
     otp_secret = pyotp.random_base32()
     if current_user.email:
@@ -2548,11 +2548,11 @@ def mfa_setup():
         viewbox = ''
     the_qrcode = '<svg class="mfasvg"' + viewbox + '><g transform="scale(1.0)">' + the_qrcode + '</g></svg>'
     session['otp_secret'] = otp_secret
-    return render_template('flask_user/mfa_setup.html', form=form, version_warning=None, title=word("Second factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("Scan the barcode with your phone's authenticator app and enter the verification code."), the_qrcode=Markup(the_qrcode))
+    return render_template('flask_user/mfa_setup.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("Scan the barcode with your phone's authenticator app and enter the verification code."), the_qrcode=Markup(the_qrcode))
 
 @app.route('/mfa_reconfigure', methods=['POST', 'GET'])
 def mfa_reconfigure():
-    if daconfig.get('second factor authentication', False) is not True or current_user.is_anonymous or not current_user.has_role(*daconfig['second factor authentication roles']) or not current_user.social_id.startswith('local'):
+    if daconfig.get('two factor authentication', False) is not True or current_user.is_anonymous or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
         abort(404)
     user = load_user(current_user.id)
     if user.otp_secret is None:
@@ -2564,16 +2564,16 @@ def mfa_reconfigure():
         elif form.disable.data:
             user.otp_secret = None
             db.session.commit()
-            flash(word("Your account no longer uses second factor authentication."), 'success')
+            flash(word("Your account no longer uses two-factor authentication."), 'success')
             return redirect(url_for('user_profile_page'))
         elif form.cancel.data:
             return redirect(url_for('user_profile_page'))
-    return render_template('flask_user/mfa_reconfigure.html', form=form, version_warning=None, title=word("Second factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("Your account already has second factor authentication enabled.  Would you like to reconfigure or disable second factor authentication?"))
+    return render_template('flask_user/mfa_reconfigure.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("Your account already has two-factor authentication enabled.  Would you like to reconfigure or disable two-factor authentication?"))
 
 @app.route('/mfa_login', methods=['POST', 'GET'])
 def mfa_login():
-    if daconfig.get('second factor authentication', False) is not True:
-        logmessage("mfa_login: second factor authentication not configured")
+    if daconfig.get('two factor authentication', False) is not True:
+        logmessage("mfa_login: two factor authentication not configured")
         abort(404)
     if 'validated_user' not in session:
         logmessage("mfa_login: validated_user not in session")
@@ -2595,7 +2595,7 @@ def mfa_login():
         safe_next = user_manager.make_safe_url_function(form.next.data)
         return flask_user.views._do_login_user(user, safe_next, False)
     #PPP
-    return render_template('flask_user/mfa_login.html', form=form, version_warning=None, title=word("Second factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("This account uses two-factor authentication."))
+    return render_template('flask_user/mfa_login.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("This account uses two-factor authentication."))
 
 @app.route('/user/google-sign-in')
 def google_page():

@@ -264,7 +264,6 @@
 "Scan": Null
 "Scan the barcode with your phone's authenticator app and enter the verification code.": Null
 "Search": Null
-"Second factor authentication": Null
 "Second subdivision": Null
 "Section": Null
 "Select a value between": Null
@@ -340,6 +339,7 @@
 "true": Null
 "Turn off chat": Null
 "Twice Per Month": Null
+"Two-factor authentication": Null
 "Type a currency value.": Null
 "Type a currency value, or type skip.": Null
 "Type a date.": Null
@@ -388,7 +388,7 @@
 "user": Null
 "User": Null
 "User Profile": Null
-"Uses second factor authentication": Null
+"Uses two-factor authentication": Null
 "Utilities": Null
 "Valid characters are: A-Z, a-z, 0-9, hyphen": Null
 "Valid characters are: A-Z, a-z, 0-9": Null
@@ -411,7 +411,7 @@
 "Yes": Null
 "y": Null
 "You are not authorized to access": Null
-"You are now set up with second factor authentication.": Null
+"You are now set up with two factor authentication.": Null
 "You can also follow this link: ": Null
 "You can press the following button:": Null
 "You can type link1, etc. to visit a link": Null
@@ -435,10 +435,10 @@
 "You need to select one.": Null
 "You need to type in a name for the file": Null
 "You need to type in a name for the interview": Null
-"Your account already has second factor authentication enabled.  Would you like to reconfigure or disable second factor authentication?": Null
+"Your account already has two-factor authentication enabled.  Would you like to reconfigure or disable two-factor authentication?": Null
 "Your account has been disabled.": Null
 "Your account has not been enabled.": Null
-"Your account no longer uses second factor authentication.": Null
+"Your account no longer uses two-factor authentication.": Null
 "Your choices are:": Null
 "Your docassemble system needs to be upgraded.": Null
 "Your document is attached.": Null

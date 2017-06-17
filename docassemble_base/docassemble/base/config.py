@@ -164,12 +164,12 @@ def load(**kwargs):
         daconfig['verification code digits'] = 5
     if 'verification code timeout' not in daconfig or type(daconfig['verification code timeout']) not in [int, float] or daconfig['verification code timeout'] < 1:
         daconfig['verification code timeout'] = 180
-    if 'second factor authentication roles' in daconfig:
-        if type(daconfig['second factor authentication roles']) is not list:
-            sys.stderr.write("second factor authentication roles must be in the form of a list\n")
-            daconfig['second factor authentication roles'] = ['admin', 'developer']
+    if 'two factor authentication roles' in daconfig:
+        if type(daconfig['two factor authentication roles']) is not list:
+            sys.stderr.write("two factor authentication roles must be in the form of a list\n")
+            daconfig['two factor authentication roles'] = ['admin', 'developer']
     else:
-        daconfig['second factor authentication roles'] = ['admin', 'developer']
+        daconfig['two factor authentication roles'] = ['admin', 'developer']
     loaded = True
     return
 

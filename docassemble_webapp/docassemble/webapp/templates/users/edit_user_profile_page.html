@@ -6,10 +6,10 @@
 <h1>{{ word('Edit User Profile') }}</h1>
 
 {%- if form.uses_mfa.data %}
-<p>{{ word("This user has enabled second factor authentication.") }}</p>
+<p>{{ word("This user has enabled two-factor authentication.") }}</p>
 <ul class="nav nav-pills nav-stacked">
   <li>
-    <a href="?disable_mfa=1">{{ word('Disable second factor authentication') }}</a>
+    <a href="?disable_mfa=1">{{ word('Disable two-factor authentication') }}</a>
   </li>
 </ul>
 {%- endif %}

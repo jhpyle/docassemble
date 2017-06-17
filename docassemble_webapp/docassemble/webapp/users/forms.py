@@ -63,7 +63,7 @@ class EditUserProfileForm(UserProfileForm):
     email = StringField(word('E-mail'), validators=[Email(word('Must be a valid e-mail address')), DataRequired(word('E-mail is required'))])
     role_id = SelectMultipleField(word('Privileges'), coerce=int)
     active = BooleanField(word('Active'))
-    uses_mfa = BooleanField(word('Uses second factor authentication'))
+    uses_mfa = BooleanField(word('Uses two-factor authentication'))
 
 class PhoneUserProfileForm(UserProfileForm):
     def validate(self):
