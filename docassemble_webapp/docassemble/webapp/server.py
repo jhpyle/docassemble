@@ -2226,11 +2226,11 @@ class GoogleSignIn(OAuthSignIn):
         session['google_email'] = result.get('email', [None])[0]
         response = make_response(json.dumps('Successfully connected user.'), 200)
         response.headers['Content-Type'] = 'application/json'
-        oauth_session = self.service.get_auth_session(
-            data={'code': request.args['code'],
-                  'grant_type': 'authorization_code',
-                  'redirect_uri': self.get_callback_url()}
-        )
+        # oauth_session = self.service.get_auth_session(
+        #     data={'code': request.args['code'],
+        #           'grant_type': 'authorization_code',
+        #           'redirect_uri': self.get_callback_url()}
+        # )
         return response
     
     def callback(self):
