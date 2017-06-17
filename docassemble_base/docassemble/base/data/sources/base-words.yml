@@ -21,6 +21,7 @@
 "attachment_message_plural": Null
 "attachment_message_singular": Null
 "Authentication failed.": Null
+"Authentication": Null
 "Available interviews": Null
 "back": Null
 "Back": Null
@@ -61,6 +62,7 @@
 "Dependencies": Null
 "Description": Null
 "Developer Access": Null
+"Disable": Null
 "Documentation": Null
 "Document": Null
 "docx_message": Null
@@ -246,6 +248,7 @@
 "Ran initial code": Null
 "README file": Null
 "Reason for needing developer account (optional)": Null
+"Reconfigure": Null
 "Remove": Null
 "Restarting": Null
 "Restart": Null
@@ -259,7 +262,9 @@
 "Saved at": Null
 "Save": Null
 "Scan": Null
+"Scan the barcode with your phone's authenticator app and enter the verification code.": Null
 "Search": Null
+"Second factor authentication": Null
 "Second subdivision": Null
 "Section": Null
 "Select a value between": Null
@@ -320,6 +325,7 @@
 "The role could not be deleted.": Null
 "The supplied folder could not be found.": Null
 "Third subdivision": Null
+"This account uses two-factor authentication.": Null
 "This field is required.": Null
 "This image file does not exist": Null
 "Time Zone": Null
@@ -382,6 +388,7 @@
 "user": Null
 "User": Null
 "User Profile": Null
+"Uses second factor authentication": Null
 "Utilities": Null
 "Valid characters are: A-Z, a-z, 0-9, hyphen": Null
 "Valid characters are: A-Z, a-z, 0-9": Null
@@ -397,12 +404,14 @@
 "v.": Null
 "was saved at": Null
 "WebRTC": Null
+"We just sent you a text message with a verification code.  Enter the verification code to proceed.": Null
 "We were unable to submit your request.": Null
 "x": Null
 "yes": Null
 "Yes": Null
 "y": Null
 "You are not authorized to access": Null
+"You are now set up with second factor authentication.": Null
 "You can also follow this link: ": Null
 "You can press the following button:": Null
 "You can type link1, etc. to visit a link": Null
@@ -426,8 +435,10 @@
 "You need to select one.": Null
 "You need to type in a name for the file": Null
 "You need to type in a name for the interview": Null
+"Your account already has second factor authentication enabled.  Would you like to reconfigure or disable second factor authentication?": Null
 "Your account has been disabled.": Null
 "Your account has not been enabled.": Null
+"Your account no longer uses second factor authentication.": Null
 "Your choices are:": Null
 "Your docassemble system needs to be upgraded.": Null
 "Your document is attached.": Null
@@ -441,4 +452,5 @@
 "Your screen is being controlled by an operator.": Null
 "Your verification code is invalid or expired.  Please try again.": Null
 "Your verification code is": Null
+"Your verification code was invalid.": Null
 "Zip File": Null
