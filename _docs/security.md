@@ -36,6 +36,11 @@ For this reason, it is recommended that you not allow developer
 accounts on production servers, and that you only install
 **docassemble** add-on packages that you have carefully reviewed.
 
+# <a name="mfa"></a>Two-factor authentication
+
+**docassemble** blocks brute-force password-guessing attacks.  It also
+supports [two-factor authentication].
+
 # Additional protections
 
 It is recommended that you run [fail2ban] on servers that host
@@ -77,3 +82,4 @@ for an interview belonging to a user who logs in with Google or Facebook.
 [Microsoft Azure]: https://azure.microsoft.com/
 [Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
 [`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
+[two-factor authentication]: {{ site.baseurl }}/docs/config.html#mfa

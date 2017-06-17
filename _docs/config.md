@@ -1003,11 +1003,49 @@ work, you can change the URL that **docassemble** uses by setting the
 ec2 ip url: http://169.254.169.254/latest/meta-data/local-ipv4
 {% endhighlight %}
 
-### <a name="phone login">Phone number login</a>
+## <a name="phone login"></a>Phone number login
 
 If `phone login` is set to `True`, then **docassemble** will allow
 users to log in with a phone number.  For this system to work, the
-[`twilio`] configuration must be set up.
+[`twilio`] configuration must be set up.  The user needs to put in his
+or her phone number, and then a random verification code will be sent
+to that phone number via [SMS].  The user needs to type in that code
+in order to log in.  As with the
+[external authetication methods](#oauth), registration happens
+automatically upon the first login.  Subsequent logins will also
+require entering a random verification code.
+
+The details of how this login system functions, such as the number of
+digits in the verification code and the number of seconds that the
+code remains valid, can be [configured](#brute force).
+
+## <a name="mfa"></a>Two-factor authentication
+
+For added security, you can allow users who log in with passwords to
+enable two-factor authentication on their accounts.  The two-factor
+authentication system requires [Google Authenticator], [Authy], or
+another compatible app.
+
+To give your users the option of using two-factor authentication, set
+`two factor authentication` to `True`.  Logged-in users will then see
+an option on their "Profile" page for configuring two-factor
+authentication.  By default, only administrators and developers see an
+option on their user profile to configure second-factor
+authentication.  To configure which roles have the option of using
+second factor authentication, set `two factor authentication roles` to
+the full list of roles.
+
+{% highlight yaml %}
+two factor authentication: True
+two factor authentication roles:
+  - admin
+  - developer
+  - user
+  - advocate
+{% endhighlight %}
+
+Two-factor authentication is not available to users who sign in with
+[external authetication methods](#oauth).
 
 ## <a name="vim"></a>Vim-like editor in Playground
 
@@ -1353,6 +1391,28 @@ If no configuration is named `default`, the first configuration will
 be used as the default.  The [call forwarding] feature uses the
 default configuration.
 
+## <a name="brute force"></a>Protecting against multiple login attempts
+
+By default, users who unsuccessfully log in are blocked after 10
+failed attempts.  This threshold can be configured with `attempt
+limit`.
+
+The time period for blocking defaults to 86,400 seconds (one day).
+The number of seconds of blocking can be configured with `ban period`.
+
+When you use the [phone login] feature, the user needs to enter a 5
+digit code that they receive via SMS.  The number of digits in this
+code can be configured with `verification code digits`.  The code is
+only valid for a limited period of time.  This period of time defaults
+to 180 seconds and is configurable with `verification code timeout`.
+
+{% highlight yaml %}
+attempt limit: 5
+ban period: 3600
+verification code digits: 6
+verification code timeout: 360
+{% endhighlight %}
+
 # <a name="get_config"></a>Adding your own configuration variables
 
 Feel free to use the configuration file to pass your own variables to
@@ -1530,3 +1590,7 @@ and Facebook API keys.
 [Google Drive]: https://drive.google.com
 [Mailgun]: https://www.mailgun.com/
 [DNS]: https://en.wikipedia.org/wiki/Domain_Name_System
+[phone login]: #phone login
+[`twilio`]: #twilio
+[Google Authenticator]: https://en.wikipedia.org/wiki/Google_Authenticator
+[Authy]: https://authy.com/
