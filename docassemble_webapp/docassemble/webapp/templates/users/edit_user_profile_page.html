@@ -5,6 +5,15 @@
 
 <h1>{{ word('Edit User Profile') }}</h1>
 
+{%- if form.uses_mfa.data %}
+<p>{{ word("This user has enabled second factor authentication.") }}</p>
+<ul class="nav nav-pills nav-stacked">
+  <li>
+    <a href="?disable_mfa=1">{{ word('Disable second factor authentication') }}</a>
+  </li>
+</ul>
+{%- endif %}
+
 <form action="" method="POST" role="form" class="form">
     {{ form.hidden_tag() }}
     

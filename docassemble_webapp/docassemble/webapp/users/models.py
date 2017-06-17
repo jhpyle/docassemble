@@ -21,7 +21,8 @@ class UserModel(db.Model, UserMixin):
     user_auth = db.relationship('UserAuthModel', uselist=False, primaryjoin="UserAuthModel.user_id==UserModel.id")
     roles = db.relationship('Role', secondary='user_roles', backref=db.backref('user', lazy='dynamic'))
     password = db.Column(db.String(255), nullable=False, server_default='') # work around a bug
-    email_is_phone_number = db.Column(db.Boolean(), nullable=True, server_default='0')
+    otp_secret = db.Column(db.String(255), nullable=True)
+    #email_is_phone_number = db.Column(db.Boolean(), nullable=True, server_default='0')
 
 class UserAuthModel(db.Model, UserMixin):
     __tablename__ = dbtableprefix + 'user_auth'

@@ -156,6 +156,20 @@ def load(**kwargs):
         daconfig['ocr languages'] = dict()
     if 'zh' not in daconfig['ocr languages']:
         daconfig['ocr languages']['zh'] = 'chi-tra'
+    if 'attempt limit' not in daconfig or type(daconfig['attempt limit']) not in [int, float] or daconfig['attempt limit'] < 2:
+        daconfig['attempt limit'] = 10
+    if 'ban period' not in daconfig or type(daconfig['ban period']) not in [int, float] or daconfig['ban period'] < 2:
+        daconfig['ban period'] = 86400
+    if 'verification code digits' not in daconfig or type(daconfig['verification code digits']) not in [int, float] or daconfig['verification code digits'] < 1 or daconfig['verification code digits'] > 32:
+        daconfig['verification code digits'] = 5
+    if 'verification code timeout' not in daconfig or type(daconfig['verification code timeout']) not in [int, float] or daconfig['verification code timeout'] < 1:
+        daconfig['verification code timeout'] = 180
+    if 'second factor authentication roles' in daconfig:
+        if type(daconfig['second factor authentication roles']) is not list:
+            sys.stderr.write("second factor authentication roles must be in the form of a list\n")
+            daconfig['second factor authentication roles'] = ['admin', 'developer']
+    else:
+        daconfig['second factor authentication roles'] = ['admin', 'developer']
     loaded = True
     return
 

@@ -212,15 +212,15 @@ else
 	tar -xf /usr/share/docassemble/backup/letsencrypt.tar.gz
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ -d /usr/share/docassemble/backup/apache ]; then
-	rsync -auv /usr/share/docassemble/backup/apache/* /etc/apache2/sites-available/
+	rsync -auv /usr/share/docassemble/backup/apache/ /etc/apache2/sites-available/
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ -d /usr/share/docassemble/backup/apachelogs ]; then
-	rsync -auv /usr/share/docassemble/backup/apachelogs/* /var/log/apache2/
+	rsync -auv /usr/share/docassemble/backup/apachelogs/ /var/log/apache2/
 	chown root.adm /var/log/apache2/*
 	chmod 640 /var/log/apache2/*
     fi
     if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [ -d /usr/share/docassemble/backup/log ]; then
-	rsync -auv /usr/share/docassemble/backup/log/* ${LOGDIRECTORY:-/usr/share/docassemble/log}/
+	rsync -auv /usr/share/docassemble/backup/log/ ${LOGDIRECTORY:-/usr/share/docassemble}/log/
 	chown -R www-data.www-data /usr/share/docassemble/log
     fi
     if [ -f /usr/share/docassemble/backup/config.yml ]; then
@@ -616,7 +616,8 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	    tar -zcf /usr/share/docassemble/backup/letsencrypt.tar.gz etc/letsencrypt
 	fi
 	rm -rf /usr/share/docassemble/backup/apache
-	rsync -auv /etc/apache2/sites-available /usr/share/docassemble/backup/apache
+	mkdir -p /usr/share/docassemble/backup/apache
+	rsync -auv /etc/apache2/sites-available/ /usr/share/docassemble/backup/apache/
     fi
 fi
 
@@ -713,9 +714,10 @@ function deregister {
     else
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
 	    rm -rf /usr/share/docassemble/backup/log
-	    rsync -auv /usr/share/docassemble/log /usr/share/docassemble/backup/log
+	    rsync -auv /usr/share/docassemble/log /usr/share/docassemble/backup/
 	    rm -rf /usr/share/docassemble/backup/apachelogs
-	    rsync -auv /var/log/apache2 /usr/share/docassemble/backup/apachelogs
+	    mkdir -p /usr/share/docassemble/backup/apachelogs
+	    rsync -auv /var/log/apache2/ /usr/share/docassemble/backup/apachelogs/
 	fi
 	rm -f /usr/share/docassemble/backup/config.yml
 	cp /usr/share/docassemble/config/config.yml /usr/share/docassemble/backup/config.yml

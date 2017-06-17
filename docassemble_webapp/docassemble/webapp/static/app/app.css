@@ -47,7 +47,7 @@ body.dacontrolled > .navbar-inverse {
     border-color: rgba(0, 0, 0, 0.17);
     border-radius: 2px;
     box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.05);
-    text-align:center;
+    text-align: center;
     margin-top: 5px;
     padding: 0;
 }
@@ -1057,4 +1057,8 @@ body.adminbody {
 
 .adminbody .form-control {
     font-size: 14px;
+}
+
+svg.mfasvg {
+    width: 300px;
 }

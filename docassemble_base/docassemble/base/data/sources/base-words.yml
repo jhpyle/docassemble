@@ -77,6 +77,7 @@
 "E-mail these documents": Null
 "E-mail this document": Null
 "E-mail was sent to": Null
+"Enter code": Null
 "Error accessing Google Drive": Null
 "Error: interview cannot be decrypted": Null
 "Error: interview not found": Null
@@ -108,6 +109,7 @@
 "Get package": Null
 "Get template": Null
 "GitHub URL": Null
+"Go": Null
 "Google Drive is not configured.": Null
 "Google Drive is not configured": Null
 "Google Drive": Null
@@ -211,12 +213,15 @@
 "Per Week": Null
 "Per Year": Null
 "Phone help is available": Null
+"Phone number": Null
 "pip log": Null
 "Plain text of sections": Null
 "Playground not saved.  There was an error.": Null
 "Playground": Null
 "Playground Packages": Null
 "Playground YAML": Null
+"Please choose a different e-mail address.": Null
+"Please enter a valid phone number": Null
 "Please enter the four digit code, followed by the pound sign.": Null
 "Please log in.": Null
 "Please send an audio clip.": Null
@@ -267,6 +272,7 @@
 "Sign In": Null
 "Sign in or sign up to save answers": Null
 "Sign in to save answers": Null
+"Sign in with your mobile phone": Null
 "Sign Out": Null
 "Sign Your Name": Null
 "skip": Null
@@ -310,6 +316,7 @@
 "There is already a username and password on this system with the e-mail address": Null
 "There was an error.": Null
 "There was an error updating the packages.": Null
+"There was a problem sending you a text message.  Please log in another way.": Null
 "The role could not be deleted.": Null
 "The supplied folder could not be found.": Null
 "Third subdivision": Null
@@ -381,6 +388,9 @@
 "Variables as JSON": Null
 "Variables defined": Null
 "Variables": Null
+"Verification code": Null
+"Verify": Null
+"Verify your phone": Null
 "Version ": Null
 "Version": Null
 "View documentation": Null
@@ -393,6 +403,7 @@
 "Yes": Null
 "y": Null
 "You are not authorized to access": Null
+"You can also follow this link: ": Null
 "You can press the following button:": Null
 "You can type link1, etc. to visit a link": Null
 "You can type link1 to visit the link": Null
@@ -401,6 +412,7 @@
 "You can type question to read the question again.": Null
 "You can upload a file here": Null
 "You do not have permission to install this package.": Null
+"You have made too many login attempts.": Null
 "You have registered successfully.": Null
 "You have signed in successfully.": Null
 "You have signed out successfully.": Null
@@ -414,9 +426,9 @@
 "You need to select one.": Null
 "You need to type in a name for the file": Null
 "You need to type in a name for the interview": Null
+"Your account has been disabled.": Null
 "Your account has not been enabled.": Null
 "Your choices are:": Null
-"Your docassemble system does not need to be upgraded.": Null
 "Your docassemble system needs to be upgraded.": Null
 "Your document is attached.": Null
 "Your document, ": Null
@@ -427,4 +439,6 @@
 "Your password is insecure and needs to be changed": Null
 "Your request was submitted.": Null
 "Your screen is being controlled by an operator.": Null
+"Your verification code is invalid or expired.  Please try again.": Null
+"Your verification code is": Null
 "Zip File": Null

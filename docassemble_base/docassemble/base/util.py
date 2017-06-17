@@ -1077,7 +1077,7 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
         body = BeautifulSoup(body_html, "html.parser").get_text('\n')
     if body is None:
         body = word("blank message")
-    if this_thread.current_info['url_root'] is not None:
+    if this_thread.current_info.get('url_root', None) is not None:
         url_start = re.sub(r'/$', r'', this_thread.current_info['url_root'])
     else:
         url_start = get_config('url root')

@@ -3,7 +3,7 @@ from docassemble.webapp.db_object import db
 from flask import redirect, render_template, render_template_string, request, flash, current_app
 from flask import url_for as url_for
 from flask_user import current_user, login_required, roles_required, emails
-from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm
+from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm
 from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
 from docassemble.base.functions import word, debug_status, get_default_timezone
 from docassemble.base.logger import logmessage
@@ -91,6 +91,10 @@ def edit_user_profile_page(id):
     the_tz = (user.timezone if user.timezone else get_default_timezone())
     if user is None:
         abort(404)
+    if 'disable_mfa' in request.args and int(request.args['disable_mfa']) == 1:
+        user.otp_secret = None
+        db.session.commit()
+        return redirect(url_for('edit_user_profile_page', id=id))
     the_role_id = list()
     for role in user.roles:
         the_role_id.append(str(role.id))
@@ -102,6 +106,10 @@ def edit_user_profile_page(id):
     form.timezone.default = the_tz
     if str(form.timezone.data) == 'None':
         form.timezone.data = the_tz
+    if user.otp_secret is None:
+        form.uses_mfa.data = False
+    else:
+        form.uses_mfa.data = True
     if request.method == 'POST' and form.validate():
         form.populate_obj(user)
         roles_to_remove = list()
@@ -145,7 +153,10 @@ def add_privilege():
 @login_required
 def user_profile_page():
     the_tz = (current_user.timezone if current_user.timezone else get_default_timezone())
-    form = UserProfileForm(request.form, obj=current_user)
+    if current_user.social_id and current_user.social_id.startswith('phone$'):
+        form = PhoneUserProfileForm(request.form, obj=current_user)
+    else:
+        form = UserProfileForm(request.form, obj=current_user)
     form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
     form.timezone.default = the_tz
     if str(form.timezone.data) == 'None':

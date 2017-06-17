@@ -1,0 +1,25 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+{% from "base_templates/form_macros.html" import render_submit_field, render_field %}
+<h1>{{ title }}</h1>
+
+<p>{{ description }}</p>
+
+<div class="row">
+  <div class="col-md-12 dacenter">
+    {{ the_qrcode }}
+  </div>
+</div>
+  
+<form action="" method="POST" role="form" class="form">
+  {{ form.hidden_tag() }}
+  <div class="form-group">
+    {{ render_field(form.verification_code, tabindex=50) }}
+  </div>
+  <div class="form-actions">
+    {{ render_submit_field(form.submit, tabindex=100) }}
+  </div>
+</form>
+
+{% endblock %}

@@ -1,10 +1,12 @@
 import sys
+import re
 from flask_user.forms import RegisterForm, LoginForm
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, validators
-from wtforms.validators import DataRequired, Email
+from wtforms.validators import DataRequired, Email, Optional
 
 from docassemble.base.functions import word
+from docassemble.base.config import daconfig
 
 def fix_nickname(form, field):
     field.data = form.first_name.data + ' ' + form.last_name.data
@@ -18,12 +20,12 @@ class MySignInForm(LoginForm):
         r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
         key = 'da:failedlogin:ip:' + str(request.remote_addr)
         failed_attempts = r.get(key)
-        if failed_attempts is not None and int(failed_attempts) > 10:
+        if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
             abort(404)
         result = super(MySignInForm, self).validate()
         if result is False:
             r.incr(key)
-            r.expire(key, 86400)
+            r.expire(key, daconfig['ban period'])
         elif failed_attempts is not None:
             r.delete(key)
         return result
@@ -61,6 +63,21 @@ class EditUserProfileForm(UserProfileForm):
     email = StringField(word('E-mail'), validators=[Email(word('Must be a valid e-mail address')), DataRequired(word('E-mail is required'))])
     role_id = SelectMultipleField(word('Privileges'), coerce=int)
     active = BooleanField(word('Active'))
+    uses_mfa = BooleanField(word('Uses second factor authentication'))
+
+class PhoneUserProfileForm(UserProfileForm):
+    def validate(self):
+        if self.email.data:
+            from flask_login import current_user
+            if current_user.social_id.startswith('phone$'):
+                from docassemble.webapp.users.models import UserModel
+                from flask import flash
+                existing_user = UserModel.query.filter_by(email=self.email.data, active=True).first()
+                if existing_user is not None and existing_user.id != current_user.id:
+                    flash(word("Please choose a different e-mail address."), 'error')
+                    return False
+        return super(PhoneUserProfileForm, self).validate()
+    email = StringField(word('E-mail'), validators=[Optional(), Email(word('Must be a valid e-mail address'))])
 
 class RequestDeveloperForm(FlaskForm):
     reason = StringField(word('Reason for needing developer account (optional)'))
@@ -74,3 +91,58 @@ class MyInviteForm(FlaskForm):
     next = HiddenField()
     submit = SubmitField(word('Invite'))
 
+class PhoneLoginForm(FlaskForm):
+    phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255)])
+    #next = HiddenField()
+    submit = SubmitField(word('Go'))
+
+class PhoneLoginVerifyForm(FlaskForm):
+    phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255)])
+    verification_code = StringField(word('Verification code'), [validators.Length(min=daconfig['verification code digits'], max=daconfig['verification code digits'])])
+    #next = HiddenField()
+    submit = SubmitField(word('Verify'))
+    def validate(self):
+        import redis
+        import docassemble.base.util
+        from docassemble.base.logger import logmessage
+        from flask import request, abort
+        result = True
+        r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
+        key = 'da:failedlogin:ip:' + str(request.remote_addr)
+        failed_attempts = r.get(key)
+        if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
+            abort(404)
+        verification_key = 'da:phonelogin:' + str(self.phone_number.data) + ':code'
+        verification_code = r.get(verification_key)
+        #r.delete(verification_key)
+        supplied_verification_code = re.sub(r'[^0-9]', '', self.verification_code.data)
+        logmessage("Supplied code is " + str(supplied_verification_code))
+        if verification_code is None:
+            logmessage("Verification code with " + str(verification_key) + " is None")
+            result = False
+        elif verification_code != supplied_verification_code:
+            logmessage("Verification code with " + str(verification_key) + " which is " + str(verification_code) + " does not match supplied code, which is " + str(self.verification_code.data))
+            result = False
+        else:
+            logmessage("Code matched")
+        if result is False:
+            logmessage("Problem with form")
+            r.incr(key)
+            r.expire(key, 86400)
+        elif failed_attempts is not None:
+            r.delete(key)
+        return result
+
+class MFASetupForm(FlaskForm):
+    verification_code = StringField(word('Verification code'))
+    submit = SubmitField(word('Verify'))
+
+class MFALoginForm(FlaskForm):
+    verification_code = StringField(word('Verification code'))
+    next = HiddenField()
+    submit = SubmitField(word('Verify'))
+
+class MFAReconfigureForm(FlaskForm):
+    reconfigure = SubmitField(word('Reconfigure'))
+    disable = SubmitField(word('Disable'))
+    cancel = SubmitField(word('Cancel'))

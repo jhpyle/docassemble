@@ -9,6 +9,7 @@ import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load()
 import docassemble.base.functions
+from urllib import unquote
 from docassemble.base.config import daconfig, hostname, in_celery
 
 DEBUG = daconfig.get('debug', False)
@@ -78,6 +79,7 @@ default_yaml_filename = daconfig.get('default interview', None)
 final_default_yaml_filename = daconfig.get('default interview', 'docassemble.demo:data/questions/questions.yml')
 keymap = daconfig.get('keymap', None)
 
+detect_mobile = re.compile('Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune')
 alphanumeric_only = re.compile('[\W_]+')
 phone_pattern = re.compile(r"^[\d\+\-\(\) ]+$")
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
@@ -185,6 +187,90 @@ else:
 #connect_string = docassemble.webapp.database.connection_string()
 #alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
 
+def _call_or_get(function_or_property):
+    return function_or_property() if callable(function_or_property) else function_or_property
+
+def _endpoint_url(endpoint):
+    url = '/'
+    if endpoint:
+        url = url_for(endpoint)
+    return url
+
+def _get_safe_next_param(param_name, default_endpoint):
+    if param_name in request.args:
+        safe_next = current_app.user_manager.make_safe_url_function(unquote(request.args[param_name]))
+    else:
+        safe_next = _endpoint_url(default_endpoint)
+    return safe_next
+
+# def _do_login_user(user, safe_next, remember_me=False):
+#     if not user: return unauthenticated()
+
+#     if not _call_or_get(user.is_active):
+#         flash(word('Your account has not been enabled.'), 'error')
+#         return redirect(url_for('user.login'))
+
+#     user_manager = current_app.user_manager
+#     if user_manager.enable_email and user_manager.enable_confirm_email \
+#             and not current_app.user_manager.enable_login_without_confirm_email \
+#             and not user.has_confirmed_email():
+#         url = url_for('user.resend_confirm_email')
+#         flash(flask_user.translations.gettext('Your email address has not yet been confirmed. Check your email Inbox and Spam folders for the confirmation email or <a href="%(url)s">Re-send confirmation email</a>.', url=url), 'error')
+#         return redirect(url_for('user.login'))
+
+#     login_user(user, remember=remember_me)
+
+#     signals.user_logged_in.send(current_app._get_current_object(), user=user)
+
+#     flash(word('You have signed in successfully.'), 'success')
+
+#     return redirect(safe_next)
+
+def custom_login():
+    """ Prompt for username/email and password and sign the user in."""
+    user_manager =  current_app.user_manager
+    db_adapter = user_manager.db_adapter
+
+    safe_next = _get_safe_next_param('next', user_manager.after_login_endpoint)
+    safe_reg_next = _get_safe_next_param('reg_next', user_manager.after_register_endpoint)
+
+    if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
+        return redirect(safe_next)
+
+    login_form = user_manager.login_form(request.form)
+    register_form = user_manager.register_form()
+    if request.method != 'POST':
+        login_form.next.data     = register_form.next.data     = safe_next
+        login_form.reg_next.data = register_form.reg_next.data = safe_reg_next
+
+    if request.method=='POST' and login_form.validate():
+        user = None
+        user_email = None
+        if user_manager.enable_username:
+            user = user_manager.find_user_by_username(login_form.username.data)
+            user_email = None
+            if user and db_adapter.UserEmailClass:
+                user_email = db_adapter.find_first_object(db_adapter.UserEmailClass,
+                        user_id=int(user.get_id()),
+                        is_primary=True,
+                        )
+            if not user and user_manager.enable_email:
+                user, user_email = user_manager.find_user_by_email(login_form.username.data)
+        else:
+            user, user_email = user_manager.find_user_by_email(login_form.email.data)
+
+        if user:
+            safe_next = user_manager.make_safe_url_function(login_form.next.data)
+            if user.otp_secret is not None:
+                session['validated_user'] = user.id
+                return redirect(url_for('mfa_login', next=safe_next))
+            return flask_user.views._do_login_user(user, safe_next, login_form.remember_me.data)
+
+    return user_manager.render_function(user_manager.login_template,
+            form=login_form,
+            login_form=login_form,
+            register_form=register_form)
+
 def logout():
     secret = request.cookies.get('secret', None)
     if secret is None:
@@ -274,17 +360,17 @@ def make_safe_url(url):
 import docassemble.webapp.setup
 from docassemble.webapp.app_object import app, csrf, flaskbabel
 from docassemble.webapp.db_object import db
-from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm
+from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm
 from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
 from flask_user import UserManager, SQLAlchemyAdapter
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 from docassemble.webapp.users.views import user_profile_page
 user_manager = UserManager()
-user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, make_safe_url_function=make_safe_url) #login_view_function=custom_login , after_login_endpoint=
+user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, make_safe_url_function=make_safe_url, login_view_function=custom_login) # , after_login_endpoint=
 from flask_login import LoginManager
 lm = LoginManager()
 lm.init_app(app)
-lm.login_view = 'user.login'
+lm.login_view = 'custom_login'
 
 #from twilio.rest import Capability as TwilioCapability
 from twilio.rest import Client as TwilioRestClient
@@ -327,6 +413,10 @@ import requests
 import redis
 import yaml
 import inspect
+import pyotp
+import qrcode
+import qrcode.image.svg
+import StringIO
 from distutils.version import LooseVersion
 from subprocess import call, Popen, PIPE
 from pygments import highlight
@@ -341,6 +431,8 @@ from flask_user import signals, user_logged_in, user_changed_password, user_regi
 from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm
 from flask_mail import Mail, Message
 import flask_user.signals
+import flask_user.translations
+import flask_user.views
 from werkzeug import secure_filename, FileStorage
 from rauth import OAuth2Service
 import apiclient
@@ -364,7 +456,7 @@ from docassemble.webapp.backend import cloud, initial_dict, can_access_file_numb
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
-from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric
+from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
 import docassemble.webapp.backend
 import docassemble.base.util
 from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile
@@ -382,6 +474,30 @@ store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db
 
 kv_session = KVSessionExtension(store, app)
 
+if 'twilio' in daconfig:
+    twilio_config = dict()
+    twilio_config['account sid'] = dict()
+    twilio_config['number'] = dict()
+    twilio_config['name'] = dict()
+    if type(daconfig['twilio']) is not list:
+        config_list = [daconfig['twilio']]
+    else:
+        config_list = daconfig['twilio']
+    for tconfig in config_list:
+        if type(tconfig) is dict and 'account sid' in tconfig and 'number' in tconfig:
+            twilio_config['account sid'][unicode(tconfig['account sid'])] = 1
+            twilio_config['number'][unicode(tconfig['number'])] = tconfig
+            if 'default' not in twilio_config['name']:
+                twilio_config['name']['default'] = tconfig
+            if 'name' in tconfig:
+                twilio_config['name'][tconfig['name']] = tconfig
+        else:
+            logmessage("do_sms: improper setup in twilio configuration")    
+    if 'default' not in twilio_config['name']:
+        twilio_config = None
+else:
+    twilio_config = None
+
 app.debug = False
 app.handle_url_build_error = my_default_url
 app.config['USE_GOOGLE_LOGIN'] = False
@@ -389,7 +505,7 @@ app.config['USE_FACEBOOK_LOGIN'] = False
 app.config['USE_AZURE_LOGIN'] = False
 app.config['USE_GOOGLE_DRIVE'] = False
 app.config['USE_PHONE_LOGIN'] = False
-if 'twilio' in daconfig and daconfig.get('phone login', False):
+if twilio_config is not None and daconfig.get('phone login', False) is True:
     app.config['USE_PHONE_LOGIN'] = True
 if 'oauth' in daconfig:
     app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
@@ -1283,7 +1399,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
             else:
                 navbar += '            <li><a href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>' + "\n"
         else:
-            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + current_user.email + '<span class="caret"></span></a><ul class="dropdown-menu">'
+            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '<span class="caret"></span></a><ul class="dropdown-menu">'
             if custom_menu:
                 navbar += custom_menu
             if current_user.has_role('admin', 'developer', 'advocate'):
@@ -1312,20 +1428,20 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     return(navbar)
 
 def delete_session():
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update', 'phone_number', 'otp_secret', 'validated_user']:
         if key in session:
             del session[key]
     return
 
 def backup_session():
     backup = dict()
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update', 'phone_number', 'otp_secret', 'validated_user']:
         if key in session:
             backup[key] = session[key]
     return backup
 
 def restore_session(backup):
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update', 'phone_number', 'otp_secret', 'validated_user']:
         if key in backup:
             session[key] = backup[key]
 
@@ -2142,13 +2258,13 @@ class FacebookSignIn(OAuthSignIn):
             name='facebook',
             client_id=self.consumer_id,
             client_secret=self.consumer_secret,
-            authorize_url='https://graph.facebook.com/oauth/authorize',           
-            access_token_url='https://graph.facebook.com/oauth/access_token',
-            base_url='https://graph.facebook.com/'
+            authorize_url='https://graph.facebook.com/v2.9/oauth/authorize',           
+            access_token_url='https://graph.facebook.com/v2.9/oauth/access_token',
+            base_url='https://graph.facebook.com/v2.9/'
         )
     def authorize(self):
         return redirect(self.service.get_authorize_url(
-            scope='email',
+            scope='public_profile,email',
             response_type='code',
             redirect_uri=self.get_callback_url())
         )
@@ -2161,7 +2277,7 @@ class FacebookSignIn(OAuthSignIn):
                   'grant_type': 'authorization_code',
                   'redirect_uri': self.get_callback_url()}
         )
-        me = oauth_session.get('me').json()
+        me = oauth_session.get('me', params={'fields': 'id,name,email'}).json()
         return (
             'facebook$' + me['id'],
             me.get('email').split('@')[0],
@@ -2289,6 +2405,197 @@ def oauth_callback(provider):
     response = redirect(url_for('interview_list'))
     response.set_cookie('secret', secret)
     return response
+
+@app.route('/phone_login', methods=['POST', 'GET'])
+def phone_login():
+    if not app.config['USE_PHONE_LOGIN']:
+        abort(404)
+    form = PhoneLoginForm(request.form)
+    #next = request.args.get('next', url_for('interview_list'))
+    if request.method == 'POST' and form.submit.data:
+        ok = True
+        if form.validate():
+            phone_number = form.phone_number.data
+            if docassemble.base.functions.phone_number_is_valid(phone_number):
+                phone_number = docassemble.base.functions.phone_number_in_e164(phone_number)
+            else:
+                ok = False
+        else:
+            ok = False
+        if ok:
+            verification_code = random_digits(daconfig['verification code digits'])
+            message = word("Your verification code is") + " " + str(verification_code) + "."
+            user_agent = request.headers.get('User-Agent', '')
+            if detect_mobile.search(user_agent):
+                message += '  ' + word("You can also follow this link: ") + url_for('phone_login_verify', _external=True, p=phone_number, c=verification_code)
+            tracker_prefix = 'da:phonelogin:ip:' + str(request.remote_addr) + ':phone:'
+            tracker_key = tracker_prefix + str(phone_number)
+            pipe = r.pipeline()
+            pipe.incr(tracker_key)
+            pipe.expire(tracker_key, daconfig['ban period'])
+            pipe.execute()
+            total_attempts = 0
+            for key in r.keys(tracker_prefix + '*'):
+                val = r.get(key)
+                total_attempts += int(val)
+            if total_attempts > daconfig['attempt limit']:
+                logmessage("IP address " + str(request.remote_addr) + " attempted to log in too many times.")
+                flash(word("You have made too many login attempts."), 'error')
+                return redirect(url_for('user.login'))
+            total_attempts = 0
+            for key in r.keys('da:phonelogin:ip:*:phone:' + phone_number):
+                val = r.get(key)
+                total_attempts += int(val)
+            if total_attempts > daconfig['attempt limit']:
+                logmessage("Too many attempts were made to log in to phone number " + str(phone_number))
+                flash(word("You have made too many login attempts."), 'error')
+                return redirect(url_for('user.login'))
+            key = 'da:phonelogin:' + str(phone_number) + ':code'
+            pipe = r.pipeline()
+            pipe.set(key, verification_code)
+            pipe.expire(key, daconfig['verification code timeout'])
+            pipe.execute()
+            logmessage("Writing code " + str(verification_code) + " to " + key)
+            docassemble.base.functions.this_thread.current_info = current_info(req=request)
+            success = docassemble.base.util.send_sms(to=phone_number, body=message)
+            if success:
+                session['phone_number'] = phone_number
+                return redirect(url_for('phone_login_verify'))
+            else:
+                flash(word("There was a problem sending you a text message.  Please log in another way."), 'error')
+                return redirect(url_for('user.login'))
+        else:
+            flash(word("Please enter a valid phone number"), 'error')
+    return render_template('flask_user/phone_login.html', form=form, version_warning=None, title=word("Sign in with your mobile phone"), tab_title=word("Sign In"), page_title=word("Sign in"))
+
+@app.route('/pv', methods=['POST', 'GET'])
+def phone_login_verify():
+    if not app.config['USE_PHONE_LOGIN']:
+        abort(404)
+    phone_number = session.get('phone_number', request.args.get('p', None))
+    if phone_number is None:
+        abort(404)
+    form = PhoneLoginVerifyForm(request.form)
+    form.phone_number.data = phone_number
+    if 'c' in request.args and 'p' in request.args:
+        submitted = True
+        form.verification_code.data = request.args.get('c', None)
+    else:
+        submitted = False
+    if submitted or (request.method == 'POST' and form.submit.data):
+        if form.validate():
+            social_id = 'phone$' + str(phone_number)
+            user = UserModel.query.filter_by(social_id=social_id).first()
+            if user and user.active is False:
+                flash(word("Your account has been disabled."), 'error')
+                return redirect(url_for('user.login'))
+            if not user:
+                user = UserModel(social_id=social_id, nickname=phone_number, active=True)
+                db.session.add(user)
+                db.session.commit()
+            login_user(user, remember=False)
+            r.delete('da:phonelogin:ip:' + str(request.remote_addr) + ':phone:' + phone_number)
+            if 'i' in session and 'uid' in session:
+                save_user_dict_key(session['uid'], session['i'], priors=True)
+                session['key_logged'] = True
+            secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()))
+            response = redirect(url_for('interview_list'))
+            response.set_cookie('secret', secret)
+            return response
+        else:
+            logmessage("IP address " + str(request.remote_addr) + " made a failed login attempt using phone number " + str(phone_number) + ".")
+            flash(word("Your verification code is invalid or expired.  Please try again."), 'error')
+            return redirect(url_for('user.login'))
+    return render_template('flask_user/phone_login_verify.html', form=form, version_warning=None, title=word("Verify your phone"), tab_title=word("Enter code"), page_title=word("Enter code"), description=word("We just sent you a text message with a verification code.  Enter the verification code to proceed."))
+
+@app.route('/mfa_setup', methods=['POST', 'GET'])
+def mfa_setup():
+    if daconfig.get('second factor authentication', False) is not True or current_user.is_anonymous or not current_user.has_role(*daconfig['second factor authentication roles']) or not current_user.social_id.startswith('local'):
+        abort(404)
+    form = MFASetupForm(request.form)
+    if request.method == 'POST' and form.submit.data:
+        if 'otp_secret' not in session:
+            abort(404)
+        otp_secret = session['otp_secret']
+        del session['otp_secret']
+        supplied_verification_code = re.sub(r'[^0-9]', '', form.verification_code.data)
+        totp = pyotp.TOTP(otp_secret)
+        if not totp.verify(supplied_verification_code):
+            flash(word("Your verification code was invalid."), 'error')
+            return redirect(url_for('user_profile_page'))
+        user = load_user(current_user.id)
+        user.otp_secret = otp_secret
+        db.session.commit()
+        flash(word("You are now set up with second factor authentication."), 'success')
+        return redirect(url_for('user_profile_page'))
+    otp_secret = pyotp.random_base32()
+    if current_user.email:
+        the_name = current_user.email
+    else:
+        the_name = re.sub(r'.*\$', '', current_user.social_id)
+    the_url = pyotp.totp.TOTP(otp_secret).provisioning_uri(the_name, issuer_name=app.config['APP_NAME'])
+    im = qrcode.make(the_url, image_factory=qrcode.image.svg.SvgPathImage)
+    output = StringIO.StringIO()
+    im.save(output)
+    the_qrcode = output.getvalue()
+    the_qrcode = re.sub("<\?xml version='1.0' encoding='UTF-8'\?>\n", '', the_qrcode)
+    the_qrcode = re.sub(r'height="[0-9]+mm" ', '', the_qrcode)
+    the_qrcode = re.sub(r'width="[0-9]+mm" ', '', the_qrcode)
+    m = re.search(r'(viewBox="[^"]+")', the_qrcode)
+    if m:
+        viewbox = ' ' + m.group(1)
+    else:
+        viewbox = ''
+    the_qrcode = '<svg class="mfasvg"' + viewbox + '><g transform="scale(1.0)">' + the_qrcode + '</g></svg>'
+    session['otp_secret'] = otp_secret
+    return render_template('flask_user/mfa_setup.html', form=form, version_warning=None, title=word("Second factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("Scan the barcode with your phone's authenticator app and enter the verification code."), the_qrcode=Markup(the_qrcode))
+
+@app.route('/mfa_reconfigure', methods=['POST', 'GET'])
+def mfa_reconfigure():
+    if daconfig.get('second factor authentication', False) is not True or current_user.is_anonymous or not current_user.has_role(*daconfig['second factor authentication roles']) or not current_user.social_id.startswith('local'):
+        abort(404)
+    user = load_user(current_user.id)
+    if user.otp_secret is None:
+        return redirect(url_for('mfa_setup'))
+    form = MFAReconfigureForm(request.form)
+    if request.method == 'POST':
+        if form.reconfigure.data:
+            return redirect(url_for('mfa_setup'))
+        elif form.disable.data:
+            user.otp_secret = None
+            db.session.commit()
+            flash(word("Your account no longer uses second factor authentication."), 'success')
+            return redirect(url_for('user_profile_page'))
+        elif form.cancel.data:
+            return redirect(url_for('user_profile_page'))
+    return render_template('flask_user/mfa_reconfigure.html', form=form, version_warning=None, title=word("Second factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("Your account already has second factor authentication enabled.  Would you like to reconfigure or disable second factor authentication?"))
+
+@app.route('/mfa_login', methods=['POST', 'GET'])
+def mfa_login():
+    if daconfig.get('second factor authentication', False) is not True:
+        logmessage("mfa_login: second factor authentication not configured")
+        abort(404)
+    if 'validated_user' not in session:
+        logmessage("mfa_login: validated_user not in session")
+        abort(404)
+    user = load_user(session['validated_user'])
+    if user is None or user.otp_secret is None or not user.social_id.startswith('local'):
+        logmessage("mfa_login: user not setup for MFA where validated_user was " + str(session['validated_user']))
+        abort(404)
+    form = MFALoginForm(request.form)
+    if not form.next.data:
+        form.next.data = _get_safe_next_param('next', url_for('interview_list'))
+    if request.method == 'POST' and form.submit.data:
+        del session['validated_user']
+        supplied_verification_code = re.sub(r'[^0-9]', '', form.verification_code.data)
+        totp = pyotp.TOTP(user.otp_secret)
+        if not totp.verify(supplied_verification_code):
+            flash(word("Your verification code was invalid."), 'error')
+            return redirect(url_for('user.login'))
+        safe_next = user_manager.make_safe_url_function(form.next.data)
+        return flask_user.views._do_login_user(user, safe_next, False)
+    #PPP
+    return render_template('flask_user/mfa_login.html', form=form, version_warning=None, title=word("Second factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("This account uses two-factor authentication."))
 
 @app.route('/user/google-sign-in')
 def google_page():
@@ -4880,6 +5187,11 @@ def word_filter(text):
 
 @app.context_processor
 def utility_processor():
+    def user_designator(the_user):
+        if the_user.email:
+            return the_user.email
+        else:
+            return re.sub(r'.*\$', '', the_user.social_id)
     def word(text):
         return docassemble.base.functions.word(text)
     def random_social():
@@ -4888,7 +5200,7 @@ def utility_processor():
         docassemble.base.functions.set_language(session['language'])
     def in_debug():
         return DEBUG
-    return dict(random_social=random_social, word=word, in_debug=in_debug)
+    return dict(random_social=random_social, word=word, in_debug=in_debug, user_designator=user_designator)
 
 @app.route('/speakfile', methods=['GET'])
 def speak_file():
@@ -10559,30 +10871,6 @@ for path in [FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY]: #PACKAGE_
         sys.exit("Unable to create files in directory: " + path)
 if not os.access(WEBAPP_PATH, os.W_OK):
     sys.exit("Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH)
-
-if 'twilio' in daconfig:
-    twilio_config = dict()
-    twilio_config['account sid'] = dict()
-    twilio_config['number'] = dict()
-    twilio_config['name'] = dict()
-    if type(daconfig['twilio']) is not list:
-        config_list = [daconfig['twilio']]
-    else:
-        config_list = daconfig['twilio']
-    for tconfig in config_list:
-        if type(tconfig) is dict and 'account sid' in tconfig and 'number' in tconfig:
-            twilio_config['account sid'][unicode(tconfig['account sid'])] = 1
-            twilio_config['number'][unicode(tconfig['number'])] = tconfig
-            if 'default' not in twilio_config['name']:
-                twilio_config['name']['default'] = tconfig
-            if 'name' in tconfig:
-                twilio_config['name'][tconfig['name']] = tconfig
-        else:
-            logmessage("do_sms: improper setup in twilio configuration")    
-    if 'default' not in twilio_config['name']:
-        twilio_config = None
-else:
-    twilio_config = None
 
 r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
 #docassemble.base.functions.set_server_redis(r)

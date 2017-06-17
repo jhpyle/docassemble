@@ -37,7 +37,7 @@
         <div class="collapse navbar-collapse" id="navbar-collapse">
           <ul class="nav navbar-nav navbar-right">
             {%- if not current_user.is_anonymous %}
-            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ current_user.email }}<span class="caret"></span></a>
+            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ user_designator(current_user) }}<span class="caret"></span></a>
 	      <ul class="dropdown-menu">
 		{%- if current_user.has_roles(['admin', 'developer', 'advocate']) %}
 		<li><a href="{{ url_for('monitor') }}">{{ word('Monitor') }}</a></li>
@@ -88,15 +88,40 @@
     <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='app/jasny-bootstrap.min.js') }}"></script>
     <script>
+      var whichButton = null;
       $( document ).ready(function(){
         {%- if request.path in ["/user/sign-in", "/user/register", "/user/forgot-password"] %}
         $("#email").focus();
+        {%- else %}
+        $(".form").find('input[type=text],textarea,select').filter(':visible:first').focus();
         {%- endif %}
+        setTimeout(function () {
+          window.scrollTo(0, 1);
+        }, 10);
         setTimeout(function(){
           $("#flash .alert-success").hide(300, function(){
             $(self).remove();
           });
         }, 3000);
+        $(".btn-lg").click(function(){
+          whichButton = this;
+        });
+        $(".form").on('submit', function(){
+          $(".btn-lg").each(function(){
+            if (this != whichButton){
+              $(this).removeClass("btn-primary btn-info btn-warning btn-error");
+              $(this).addClass("btn-default");
+            }
+            if ($(whichButton).hasClass("btn-success")){
+              $(whichButton).removeClass("btn-success");
+              $(whichButton).addClass("btn-primary");
+            }
+            else{
+              $(whichButton).removeClass("btn-primary btn-info btn-warning btn-error btn-default");
+              $(whichButton).addClass("btn-success");
+            }
+          });
+        });
       });
     </script>
     {{ extra_js }}

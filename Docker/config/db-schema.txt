@@ -149,3 +149,4 @@ user|organization|character varying|255|
 user|timezone|character varying|64|
 user|password|character varying|255|'x'::character varying
 user|language|character varying|64|
+user|email_is_phone_number|boolean||false

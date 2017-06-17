@@ -35,7 +35,6 @@
     {# Password field #}
     {% set field = form.password %}
     <div class="form-group {% if field.errors %}has-error{% endif %}">
-        {# Label on left, "Forgot your Password?" on right #}
         <div class="row">
             <div class="col-xs-6">
                 <label for="{{ field.id }}" class="control-label">{{ word(field.label.text) }}</label>
@@ -70,22 +69,22 @@
 {% endif %}
 {% if config['USE_PHONE_LOGIN'] %}
 <div class="row nomargin">
-  <div class="daiconbox col-md-6"><a class="nohover" href="{{ url_for('phone_login') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/phone-login.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with your phone') }}</td></tr></tbody></table></a></div>
+  <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('phone_login') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/phone-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with your mobile phone') }}</td></tr></tbody></table></a></div>
 </div>
 {% endif %}
 {% if config['USE_GOOGLE_LOGIN'] %}
 <div class="row nomargin">
-  <div class="daiconbox col-md-6"><a class="nohover" href="{{ url_for('google_page') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/google-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Google') }}</td></tr></tbody></table></a></div>
+  <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('google_page') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/google-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Google') }}</td></tr></tbody></table></a></div>
 </div>
 {% endif %}
 {% if config['USE_FACEBOOK_LOGIN'] %}
 <div class="row nomargin">
-  <div class="daiconbox col-md-6"><a class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Facebook') }}</td></tr></tbody></table></a></div>
+  <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Facebook') }}</td></tr></tbody></table></a></div>
 </div>
 {% endif %}
 {% if config['USE_AZURE_LOGIN'] %}
 <div class="row nomargin">
-  <div class="daiconbox col-md-6"><a class="nohover" href="{{ url_for('oauth_authorize', provider='azure') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/azure-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Azure') }}</td></tr></tbody></table></a></div>
+  <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='azure') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/azure-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Azure') }}</td></tr></tbody></table></a></div>
 </div>
 {% endif %}
 {% if False and config['USE_GOOGLE_LOGIN'] %}
