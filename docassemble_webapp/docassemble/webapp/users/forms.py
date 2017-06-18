@@ -159,3 +159,10 @@ class MFASMSSetupForm(FlaskForm):
 class MFAVerifySMSSetupForm(FlaskForm):
     verification_code = StringField(word('Verification code'))
     submit = SubmitField(word('Verify'))
+
+class MyResendConfirmEmailForm(FlaskForm):
+    email = StringField(word('Your e-mail address'), validators=[
+        validators.DataRequired(word('E-mail address is required')),
+        validators.Email(word('Invalid e-mail address')),
+        ])
+    submit = SubmitField(word('Send confirmation email'))
