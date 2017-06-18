@@ -238,7 +238,7 @@ def custom_resend_confirm_email():
         if user:
             flask_user.views._send_confirm_email(user, user_email)
         return redirect(flask_user.views._endpoint_url(user_manager.after_resend_confirm_email_endpoint))
-    return render(user_manager.resend_confirm_email_template, form=form)
+    return user_manager.render_function(user_manager.resend_confirm_email_template, form=form)
 
 def custom_login():
     """ Prompt for username/email and password and sign the user in."""
@@ -296,7 +296,7 @@ def custom_login():
                and user.has_role(*daconfig['email confirmation roles']) \
                and not user.has_confirmed_email():
                 url = url_for('user.resend_confirm_email', email=user.email)
-                flash(word('Your e-mail address has not yet been confirmed.') + ' <a href="' + url + '">' + word('Click here to confirm your e-mail') + '</a>.', 'warning')
+                flash(word('You cannot log in until your e-mail address has been confirmed.') + ' <a href="' + url + '">' + word('Click here to confirm your e-mail') + '</a>.', 'info')
                 return redirect(url_for('user.login'))
             return flask_user.views._do_login_user(user, safe_next, login_form.remember_me.data)
 

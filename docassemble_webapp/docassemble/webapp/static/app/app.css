@@ -37,6 +37,10 @@ body.dacontrolled > .navbar-inverse {
     overflow-y: auto;
 }
 
+.alert a {
+    cursor: pointer;
+}
+
 .daiconbox {
     font-size: 14px;
     font-family: Roboto,arial,sans-serif;
