@@ -95,6 +95,10 @@ def edit_user_profile_page(id):
         user.otp_secret = None
         db.session.commit()
         return redirect(url_for('edit_user_profile_page', id=id))
+    if 'reset_email_confirmation' in request.args and int(request.args['reset_email_confirmation']) == 1:
+        user.confirmed_at = None
+        db.session.commit()
+        return redirect(url_for('edit_user_profile_page', id=id))
     the_role_id = list()
     for role in user.roles:
         the_role_id.append(str(role.id))

@@ -75,6 +75,7 @@
 "Edit source files": Null
 "Edit text files": Null
 "Edit User Profile": Null
+"E-mail address is required": Null
 "E-mail address": Null
 "E-mail is required": Null
 "E-mail": Null
@@ -133,6 +134,7 @@
 "Interview files": Null
 "Interviews": Null
 "in the": Null
+"Invalid e-mail address": Null
 "Invalid E-mail": Null
 "Invalid phone number.": Null
 "Invitation has been sent.": Null
@@ -228,6 +230,8 @@
 "Please choose a different e-mail address.": Null
 "Please enter a valid phone number": Null
 "Please enter the four digit code, followed by the pound sign.": Null
+"Please enter the verification code from the text message we just sent you.": Null
+"Please enter the verification code from your authentication app.": Null
 "Please log in.": Null
 "Please send an audio clip.": Null
 "Please send an audio clip, or type skip.": Null
@@ -273,6 +277,7 @@
 "Select box": Null
 "Select file": Null
 "Select...": Null
+"Send confirmation email": Null
 "Send": Null
 "Show attributes": Null
 "Sign in": Null
@@ -419,6 +424,7 @@
 "You are not authorized to access": Null
 "You are now set up with two factor authentication.": Null
 "You can also follow this link: ": Null
+"You cannot log in until your e-mail address has been confirmed.": Null
 "You can press the following button:": Null
 "You can type link1, etc. to visit a link": Null
 "You can type link1 to visit the link": Null
@@ -452,7 +458,7 @@
 "Your documents are attached.": Null
 "Your documents, ": Null
 "Your documents will be e-mailed to": Null
-"Your e-mail address has not yet been confirmed.": Null
+"Your e-mail address": Null
 "Your information was saved.": Null
 "Your password is insecure and needs to be changed": Null
 "Your request was submitted.": Null

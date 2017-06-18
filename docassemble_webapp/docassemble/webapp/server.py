@@ -292,8 +292,8 @@ def custom_login():
                         return redirect(url_for('user.login'))
                 return redirect(url_for('mfa_login', next=safe_next))
             if user_manager.enable_email and user_manager.enable_confirm_email \
-               and len(daconfig['email confirmation roles']) \
-               and user.has_role(*daconfig['email confirmation roles']) \
+               and len(daconfig['email confirmation privileges']) \
+               and user.has_role(*daconfig['email confirmation privileges']) \
                and not user.has_confirmed_email():
                 url = url_for('user.resend_confirm_email', email=user.email)
                 flash(word('You cannot log in until your e-mail address has been confirmed.') + '<br><a href="' + url + '">' + word('Click here to confirm your e-mail') + '</a>.', 'error')
@@ -2545,7 +2545,7 @@ def phone_login_verify():
 @login_required
 @app.route('/mfa_setup', methods=['POST', 'GET'])
 def mfa_setup():
-    if daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
+    if daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication privileges']) or not current_user.social_id.startswith('local'):
         abort(404)
     form = MFASetupForm(request.form)
     if request.method == 'POST' and form.submit.data:
@@ -2588,7 +2588,7 @@ def mfa_setup():
 @login_required
 @app.route('/mfa_reconfigure', methods=['POST', 'GET'])
 def mfa_reconfigure():
-    if daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
+    if daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication privileges']) or not current_user.social_id.startswith('local'):
         abort(404)
     user = load_user(current_user.id)
     if user.otp_secret is None:
@@ -2613,7 +2613,7 @@ def mfa_reconfigure():
 @login_required
 @app.route('/mfa_choose', methods=['POST', 'GET'])
 def mfa_choose():
-    if daconfig.get('two factor authentication', False) is not True or current_user.is_anonymous or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
+    if daconfig.get('two factor authentication', False) is not True or current_user.is_anonymous or not current_user.has_role(*daconfig['two factor authentication privileges']) or not current_user.social_id.startswith('local'):
         abort(404)
     if twilio_config is None:
         return redirect(url_for('mfa_setup'))
@@ -2631,7 +2631,7 @@ def mfa_choose():
 @login_required
 @app.route('/mfa_sms_setup', methods=['POST', 'GET'])
 def mfa_sms_setup():
-    if twilio_config is None or daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
+    if twilio_config is None or daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication privileges']) or not current_user.social_id.startswith('local'):
         abort(404)
     form = MFASMSSetupForm(request.form)
     user = load_user(current_user.id)
@@ -2662,7 +2662,7 @@ def mfa_sms_setup():
 @login_required
 @app.route('/mfa_verify_sms_setup', methods=['POST', 'GET'])
 def mfa_verify_sms_setup():
-    if 'phone_number' not in session or twilio_config is None or daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
+    if 'phone_number' not in session or twilio_config is None or daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication privileges']) or not current_user.social_id.startswith('local'):
         abort(404)
     form = MFAVerifySMSSetupForm(request.form)
     if request.method == 'POST' and form.submit.data:
@@ -2728,7 +2728,12 @@ def mfa_login():
                 r.delete(fail_key)
         safe_next = user_manager.make_safe_url_function(form.next.data)
         return flask_user.views._do_login_user(user, safe_next, False)
-    return render_template('flask_user/mfa_login.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("This account uses two-factor authentication."))
+    description = word("This account uses two-factor authentication.")
+    if user.otp_secret.startswith(':phone:'):
+        description += "  " + word("Please enter the verification code from the text message we just sent you.")
+    else:
+        description += "  " + word("Please enter the verification code from your authentication app.")
+    return render_template('flask_user/mfa_login.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=description)
 
 @app.route('/user/google-sign-in')
 def google_page():

@@ -164,18 +164,18 @@ def load(**kwargs):
         daconfig['verification code digits'] = 6
     if 'verification code timeout' not in daconfig or type(daconfig['verification code timeout']) not in [int, float] or daconfig['verification code timeout'] < 1:
         daconfig['verification code timeout'] = 180
-    if 'two factor authentication roles' in daconfig:
-        if type(daconfig['two factor authentication roles']) is not list:
-            sys.stderr.write("two factor authentication roles must be in the form of a list\n")
-            daconfig['two factor authentication roles'] = ['admin', 'developer']
+    if 'two factor authentication privileges' in daconfig:
+        if type(daconfig['two factor authentication privileges']) is not list:
+            sys.stderr.write("two factor authentication privileges must be in the form of a list\n")
+            daconfig['two factor authentication privileges'] = ['admin', 'developer']
     else:
-        daconfig['two factor authentication roles'] = ['admin', 'developer']
-    if 'email confirmation roles' in daconfig:
-        if type(daconfig['email confirmation roles']) is not list:
-            sys.stderr.write("email confirmation roles must be in the form of a list\n")
-            daconfig['email confirmation roles'] = []
+        daconfig['two factor authentication privileges'] = ['admin', 'developer']
+    if 'email confirmation privileges' in daconfig:
+        if type(daconfig['email confirmation privileges']) is not list:
+            sys.stderr.write("email confirmation privileges must be in the form of a list\n")
+            daconfig['email confirmation privileges'] = []
     else:
-        daconfig['email confirmation roles'] = []
+        daconfig['email confirmation privileges'] = []
     loaded = True
     return
 

@@ -5,14 +5,19 @@
 
 <h1>{{ word('Edit User Profile') }}</h1>
 
-{%- if form.uses_mfa.data %}
 <p>{{ word("This user has enabled two-factor authentication.") }}</p>
 <ul class="nav nav-pills nav-stacked">
+{%- if form.uses_mfa.data %}
   <li>
     <a href="?disable_mfa=1">{{ word('Disable two-factor authentication') }}</a>
   </li>
-</ul>
 {%- endif %}
+{%- if form.confirmed_at.data is not None %}
+  <li>
+    <a href="?reset_email_confirmation=1">{{ word('Reset e-mail confirmation') }}</a>
+  </li>
+{%- endif %}
+</ul>
 
 <form action="" method="POST" role="form" class="form">
     {{ form.hidden_tag() }}
@@ -27,7 +32,7 @@
 
     {{ render_field(form.last_name, tabindex=250) }}
 
-    {{ render_field(form.country, tabindex=260, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }} 
+    {{ render_field(form.country, tabindex=260, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }}
 
     {{ render_field(form.subdivisionfirst, tabindex=270) }}
 
