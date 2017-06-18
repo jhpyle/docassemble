@@ -287,6 +287,12 @@ if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s3cmd ls s3://${S3BUCKET}/config
     s3cmd -q put $DA_CONFIG_FILE s3://${S3BUCKET}/config.yml
 fi
 
+# echo "17.5"
+
+if [ "${S3ENABLE:-false}" == "true" ]; then
+    s3cmd sync /usr/share/docassemble/files s3://${S3BUCKET}/
+fi
+
 # echo "18"
 
 if [ "${AZUREENABLE:-false}" == "true" ]; then
@@ -299,6 +305,15 @@ fi
 if [ "${AZUREENABLE:-false}" == "true" ] && [[ ! $(python -m docassemble.webapp.list-cloud config.yml) ]]; then
     echo "Saving config" >&2
     blob-cmd -f cp $DA_CONFIG_FILE "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml"
+fi
+
+# echo "19.5"
+
+if [ "${AZUREENABLE:-false}" == "true" ] && [[ ! $(python -m docassemble.webapp.list-cloud files) ]]; then
+    for the_file in $(find /usr/share/docassemble/files -type f); do
+	target_file=${the_file#/usr/share/docassemble/files/}
+	blob-cmd -f cp "$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/files/${target_file}"
+    done
 fi
 
 # echo "20"

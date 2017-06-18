@@ -1,5 +1,9 @@
 # Change Log
 
+## [Unreleased] - 2017-06-18
+### Fixed
+- Stable transition from non-cloud to cloud
+
 ## [0.1.15] - 2017-06-18
 ### Added
 - SMS option for two-factor authentication
