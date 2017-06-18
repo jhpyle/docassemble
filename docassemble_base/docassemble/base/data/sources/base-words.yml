@@ -12,6 +12,7 @@
 "Anonymous": Null
 "anonymous visitor": Null
 "Apply": Null
+"App": Null
 ", are attached": Null
 "Are you sure that you want to delete this file?": Null
 "Are you sure that you want to delete this package?": Null
@@ -20,7 +21,6 @@
 "Are you sure you want to delete all saved interviews?": Null
 "attachment_message_plural": Null
 "attachment_message_singular": Null
-"Authentication App": Null
 "Authentication failed.": Null
 "Authentication": Null
 "Available interviews": Null
@@ -38,6 +38,7 @@
 "Choices:": Null
 "Classes": Null
 "Clear": Null
+"Click here to confirm your e-mail": Null
 "Click here to get help over the phone.": Null
 "Configuration not updated.": Null
 "Configuration not updated.  There was an error.": Null
@@ -451,6 +452,7 @@
 "Your documents are attached.": Null
 "Your documents, ": Null
 "Your documents will be e-mailed to": Null
+"Your e-mail address has not yet been confirmed.": Null
 "Your information was saved.": Null
 "Your password is insecure and needs to be changed": Null
 "Your request was submitted.": Null

@@ -170,6 +170,12 @@ def load(**kwargs):
             daconfig['two factor authentication roles'] = ['admin', 'developer']
     else:
         daconfig['two factor authentication roles'] = ['admin', 'developer']
+    if 'email confirmation roles' in daconfig:
+        if type(daconfig['email confirmation roles']) is not list:
+            sys.stderr.write("email confirmation roles must be in the form of a list\n")
+            daconfig['email confirmation roles'] = []
+    else:
+        daconfig['email confirmation roles'] = []
     loaded = True
     return
 

@@ -226,6 +226,20 @@ def _get_safe_next_param(param_name, default_endpoint):
 
 #     return redirect(safe_next)
 
+def custom_resend_confirm_email():
+    user_manager =  current_app.user_manager
+    db_adapter = user_manager.db_adapter
+    form = user_manager.resend_confirm_email_form(request.form)
+    if request.method=='GET' and 'email' in request.args:
+        form.email.data = request.args['email']
+    if request.method=='POST' and form.validate():
+        email = form.email.data
+        user, user_email = user_manager.find_user_by_email(email)
+        if user:
+            flask_user.views._send_confirm_email(user, user_email)
+        return redirect(flask_user.views._endpoint_url(user_manager.after_resend_confirm_email_endpoint))
+    return render(user_manager.resend_confirm_email_template, form=form)
+
 def custom_login():
     """ Prompt for username/email and password and sign the user in."""
     user_manager =  current_app.user_manager
@@ -277,6 +291,13 @@ def custom_login():
                         flash(word("Unable to send verification code."), 'error')
                         return redirect(url_for('user.login'))
                 return redirect(url_for('mfa_login', next=safe_next))
+            if user_manager.enable_email and user_manager.enable_confirm_email \
+               and len(daconfig['email confirmation roles']) \
+               and user.has_role(*daconfig['email confirmation roles']) \
+               and not user.has_confirmed_email():
+                url = url_for('user.resend_confirm_email', email=user.email)
+                flash(word('Your e-mail address has not yet been confirmed.') + ' <a href="' + url + '">' + word('Click here to confirm your e-mail') + '</a>.', 'warning')
+                return redirect(url_for('user.login'))
             return flask_user.views._do_login_user(user, safe_next, login_form.remember_me.data)
 
     return user_manager.render_function(user_manager.login_template,
@@ -379,7 +400,7 @@ from flask_user import UserManager, SQLAlchemyAdapter
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 from docassemble.webapp.users.views import user_profile_page
 user_manager = UserManager()
-user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, make_safe_url_function=make_safe_url, login_view_function=custom_login) # , after_login_endpoint=
+user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, make_safe_url_function=make_safe_url, login_view_function=custom_login, resend_confirm_email_view_function=custom_resend_confirm_email) # , after_login_endpoint=
 from flask_login import LoginManager
 lm = LoginManager()
 lm.init_app(app)

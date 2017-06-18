@@ -1,6 +1,7 @@
 import sys
 import pip
 import re
+import datetime
 import docassemble.base.config
 from docassemble.base.config import daconfig
 if __name__ == "__main__":
@@ -44,7 +45,8 @@ def get_user(db, role, defaults):
         subdivisionfirst = defaults.get('subdivisionfirst', ''),
         subdivisionsecond = defaults.get('subdivisionsecond', ''),
         subdivisionthird = defaults.get('subdivisionthird', ''),
-        organization = defaults.get('organization', '')
+        organization = defaults.get('organization', ''),
+        confirmed_at = datetime.datetime.now()
     )
     the_user.roles.append(role)
     db.session.add(user_auth)
@@ -73,6 +75,11 @@ def populate_tables():
     advocate_role = get_role(db, 'advocate')
     admin = get_user(db, admin_role, admin_defaults)
     cron = get_user(db, cron_role, cron_defaults)
+    if admin.confirmed_at is None:
+        admin.confirmed_at = datetime.datetime.now()
+    if cron.confirmed_at is None:
+        cron.confirmed_at = datetime.datetime.now()
+    db.session.commit()
     add_dependencies(admin.id)
     # docassemble_git_url = daconfig.get('docassemble git url', 'https://github.com/jhpyle/docassemble')
     # installed_packages = get_installed_distributions()
@@ -87,7 +94,6 @@ def populate_tables():
     #         package_entry = Package(name=package.key, package_auth=package_auth, packageversion=package.version, type='pip', core=True)
     #     db.session.add(package_auth)
     #     db.session.add(package_entry)
-    db.session.commit()
     return
 
 if __name__ == "__main__":
