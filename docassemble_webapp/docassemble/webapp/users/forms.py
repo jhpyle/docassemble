@@ -146,3 +146,16 @@ class MFAReconfigureForm(FlaskForm):
     reconfigure = SubmitField(word('Reconfigure'))
     disable = SubmitField(word('Disable'))
     cancel = SubmitField(word('Cancel'))
+
+class MFAChooseForm(FlaskForm):
+    auth = SubmitField(word('App'))
+    sms = SubmitField(word('SMS'))
+    cancel = SubmitField(word('Cancel'))
+
+class MFASMSSetupForm(FlaskForm):
+    phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255)])
+    submit = SubmitField(word('Verify'))
+
+class MFAVerifySMSSetupForm(FlaskForm):
+    verification_code = StringField(word('Verification code'))
+    submit = SubmitField(word('Verify'))

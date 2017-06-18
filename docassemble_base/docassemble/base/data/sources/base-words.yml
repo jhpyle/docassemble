@@ -20,6 +20,7 @@
 "Are you sure you want to delete all saved interviews?": Null
 "attachment_message_plural": Null
 "attachment_message_singular": Null
+"Authentication App": Null
 "Authentication failed.": Null
 "Authentication": Null
 "Available interviews": Null
@@ -132,6 +133,7 @@
 "Interviews": Null
 "in the": Null
 "Invalid E-mail": Null
+"Invalid phone number.": Null
 "Invitation has been sent.": Null
 "Invite": Null
 ", is already in use by someone else": Null
@@ -280,6 +282,7 @@
 "Sign Out": Null
 "Sign Your Name": Null
 "skip": Null
+"SMS": Null
 "SMS version": Null
 "Social ID": Null
 "something": Null
@@ -320,6 +323,7 @@
 "There is already a username and password on this system with the e-mail address": Null
 "There was an error.": Null
 "There was an error updating the packages.": Null
+"There was a problem sending the text message.": Null
 "There was a problem sending you a text message.  Please log in another way.": Null
 "The role could not be deleted.": Null
 "The supplied folder could not be found.": Null
@@ -367,6 +371,7 @@
 "(Unable to extract images from PDF file)": Null
 "Unable to send e-mail.  Error was: ": Null
 "Unable to send e-mail to": Null
+"Unable to send verification code.": Null
 "unavailable": Null
 "Unblock": Null
 "Undefined names": Null
@@ -453,4 +458,6 @@
 "Your verification code is invalid or expired.  Please try again.": Null
 "Your verification code is": Null
 "Your verification code was invalid.": Null
+"Your verification code was invalid or expired.": Null
+"Your verification code was missing or expired": Null
 "Zip File": Null

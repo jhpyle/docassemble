@@ -263,6 +263,19 @@ def custom_login():
             safe_next = user_manager.make_safe_url_function(login_form.next.data)
             if daconfig.get('two factor authentication', False) is True and user.otp_secret is not None:
                 session['validated_user'] = user.id
+                if user.otp_secret.startswith(':phone:'):
+                    phone_number = re.sub(r'^:phone:', '', user.otp_secret)
+                    verification_code = random_digits(daconfig['verification code digits'])
+                    message = word("Your verification code is") + " " + str(verification_code) + "."
+                    key = 'da:mfa:phone:' + str(phone_number) + ':code'
+                    pipe = r.pipeline()
+                    pipe.set(key, verification_code)
+                    pipe.expire(key, daconfig['verification code timeout'])
+                    pipe.execute()
+                    success = docassemble.base.util.send_sms(to=phone_number, body=message)
+                    if not success:
+                        flash(word("Unable to send verification code."), 'error')
+                        return redirect(url_for('user.login'))
                 return redirect(url_for('mfa_login', next=safe_next))
             return flask_user.views._do_login_user(user, safe_next, login_form.remember_me.data)
 
@@ -360,7 +373,7 @@ def make_safe_url(url):
 import docassemble.webapp.setup
 from docassemble.webapp.app_object import app, csrf, flaskbabel
 from docassemble.webapp.db_object import db
-from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm
+from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm
 from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
 from flask_user import UserManager, SQLAlchemyAdapter
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
@@ -2455,7 +2468,7 @@ def phone_login():
             pipe.set(key, verification_code)
             pipe.expire(key, daconfig['verification code timeout'])
             pipe.execute()
-            logmessage("Writing code " + str(verification_code) + " to " + key)
+            #logmessage("Writing code " + str(verification_code) + " to " + key)
             docassemble.base.functions.this_thread.current_info = current_info(req=request)
             success = docassemble.base.util.send_sms(to=phone_number, body=message)
             if success:
@@ -2508,9 +2521,10 @@ def phone_login_verify():
             return redirect(url_for('user.login'))
     return render_template('flask_user/phone_login_verify.html', form=form, version_warning=None, title=word("Verify your phone"), tab_title=word("Enter code"), page_title=word("Enter code"), description=word("We just sent you a text message with a verification code.  Enter the verification code to proceed."))
 
+@login_required
 @app.route('/mfa_setup', methods=['POST', 'GET'])
 def mfa_setup():
-    if daconfig.get('two factor authentication', False) is not True or current_user.is_anonymous or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
+    if daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
         abort(404)
     form = MFASetupForm(request.form)
     if request.method == 'POST' and form.submit.data:
@@ -2550,17 +2564,22 @@ def mfa_setup():
     session['otp_secret'] = otp_secret
     return render_template('flask_user/mfa_setup.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("Scan the barcode with your phone's authenticator app and enter the verification code."), the_qrcode=Markup(the_qrcode))
 
+@login_required
 @app.route('/mfa_reconfigure', methods=['POST', 'GET'])
 def mfa_reconfigure():
-    if daconfig.get('two factor authentication', False) is not True or current_user.is_anonymous or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
+    if daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
         abort(404)
     user = load_user(current_user.id)
     if user.otp_secret is None:
-        return redirect(url_for('mfa_setup'))
+        if twilio_config is None:
+            return redirect(url_for('mfa_setup'))
+        return redirect(url_for('mfa_choose'))
     form = MFAReconfigureForm(request.form)
     if request.method == 'POST':
         if form.reconfigure.data:
-            return redirect(url_for('mfa_setup'))
+            if twilio_config is None:
+                return redirect(url_for('mfa_setup'))
+            return redirect(url_for('mfa_choose'))
         elif form.disable.data:
             user.otp_secret = None
             db.session.commit()
@@ -2569,6 +2588,79 @@ def mfa_reconfigure():
         elif form.cancel.data:
             return redirect(url_for('user_profile_page'))
     return render_template('flask_user/mfa_reconfigure.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("Your account already has two-factor authentication enabled.  Would you like to reconfigure or disable two-factor authentication?"))
+
+@login_required
+@app.route('/mfa_choose', methods=['POST', 'GET'])
+def mfa_choose():
+    if daconfig.get('two factor authentication', False) is not True or current_user.is_anonymous or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
+        abort(404)
+    if twilio_config is None:
+        return redirect(url_for('mfa_setup'))
+    user = load_user(current_user.id)
+    form = MFAChooseForm(request.form)
+    if request.method == 'POST':
+        if form.sms.data:
+            return redirect(url_for('mfa_sms_setup'))
+        elif form.auth.data:
+            return redirect(url_for('mfa_setup'))
+        else:
+            return redirect(url_for('user_profile_page'))
+    return render_template('flask_user/mfa_choose.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=Markup(word("""Which type of two-factor authentication would you like to use?  The first option is to use an authentication app like <a target="_blank" href="https://en.wikipedia.org/wiki/Google_Authenticator">Google Authenticator</a> or <a target="_blank" href="https://authy.com/">Authy</a>.  The second option is to receive a text (SMS) message containing a verification code.""")))
+
+@login_required
+@app.route('/mfa_sms_setup', methods=['POST', 'GET'])
+def mfa_sms_setup():
+    if twilio_config is None or daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
+        abort(404)
+    form = MFASMSSetupForm(request.form)
+    user = load_user(current_user.id)
+    if request.method == 'GET' and user.otp_secret is not None and user.otp_secret.startswith(':phone:'):
+        form.phone_number.data = re.sub(r'^:phone:', '', user.otp_secret)
+    if request.method == 'POST' and form.submit.data:
+        phone_number = form.phone_number.data
+        if docassemble.base.functions.phone_number_is_valid(phone_number):
+            phone_number = docassemble.base.functions.phone_number_in_e164(phone_number)
+            verification_code = random_digits(daconfig['verification code digits'])
+            message = word("Your verification code is") + " " + str(verification_code) + "."
+            success = docassemble.base.util.send_sms(to=phone_number, body=message)
+            if success:
+                session['phone_number'] = phone_number
+                key = 'da:mfa:phone:' + str(phone_number) + ':code'
+                pipe = r.pipeline()
+                pipe.set(key, verification_code)
+                pipe.expire(key, daconfig['verification code timeout'])
+                pipe.execute()
+                return redirect(url_for('mfa_verify_sms_setup'))
+            else:
+                flash(word("There was a problem sending the text message."), 'error')
+                return redirect(url_for('user_profile_page'))
+        else:
+            flash(word("Invalid phone number."), 'error')            
+    return render_template('flask_user/mfa_sms_setup.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("""Enter your phone number.  A confirmation code will be sent to you."""))
+
+@login_required
+@app.route('/mfa_verify_sms_setup', methods=['POST', 'GET'])
+def mfa_verify_sms_setup():
+    if 'phone_number' not in session or twilio_config is None or daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication roles']) or not current_user.social_id.startswith('local'):
+        abort(404)
+    form = MFAVerifySMSSetupForm(request.form)
+    if request.method == 'POST' and form.submit.data:
+        phone_number = session['phone_number']
+        del session['phone_number']
+        key = 'da:mfa:phone:' + str(phone_number) + ':code'
+        verification_code = r.get(key)
+        r.delete(key)
+        supplied_verification_code = re.sub(r'[^0-9]', '', form.verification_code.data)
+        if verification_code is None:
+            flash(word('Your verification code was missing or expired'), 'error')
+            return redirect(url_for('user_profile_page'))
+        if verification_code == supplied_verification_code:
+            user = load_user(current_user.id)
+            user.otp_secret = ':phone:' + phone_number
+            db.session.commit()
+            flash(word("You are now set up with two factor authentication."), 'success')
+            return redirect(url_for('user_profile_page'))
+    return render_template('flask_user/mfa_verify_sms_setup.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word('We just sent you a text message with a verification code.  Enter the verification code to proceed.'))
 
 @app.route('/mfa_login', methods=['POST', 'GET'])
 def mfa_login():
@@ -2587,14 +2679,34 @@ def mfa_login():
         form.next.data = _get_safe_next_param('next', url_for('interview_list'))
     if request.method == 'POST' and form.submit.data:
         del session['validated_user']
+        fail_key = 'da:failedlogin:ip:' + str(request.remote_addr)
+        failed_attempts = r.get(fail_key)
+        if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
+            abort(404)
         supplied_verification_code = re.sub(r'[^0-9]', '', form.verification_code.data)
-        totp = pyotp.TOTP(user.otp_secret)
-        if not totp.verify(supplied_verification_code):
-            flash(word("Your verification code was invalid."), 'error')
-            return redirect(url_for('user.login'))
+        if user.otp_secret.startswith(':phone:'):
+            phone_number = re.sub(r'^:phone:', '', user.otp_secret)
+            key = 'da:mfa:phone:' + str(phone_number) + ':code'
+            verification_code = r.get(key)
+            r.delete(key)
+            if verification_code is None or supplied_verification_code != verification_code:
+                r.incr(fail_key)
+                r.expire(fail_key, 86400)
+                flash(word("Your verification code was invalid or expired."), 'error')
+                return redirect(url_for('user.login'))
+            elif failed_attempts is not None:
+                r.delete(fail_key)
+        else:
+            totp = pyotp.TOTP(user.otp_secret)
+            if not totp.verify(supplied_verification_code):
+                r.incr(fail_key)
+                r.expire(fail_key, 86400)
+                flash(word("Your verification code was invalid."), 'error')
+                return redirect(url_for('user.login'))
+            elif failed_attempts is not None:
+                r.delete(fail_key)
         safe_next = user_manager.make_safe_url_function(form.next.data)
         return flask_user.views._do_login_user(user, safe_next, False)
-    #PPP
     return render_template('flask_user/mfa_login.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("This account uses two-factor authentication."))
 
 @app.route('/user/google-sign-in')
