@@ -46,9 +46,15 @@ You can also change these defaults during [installation] by editing the
 [configuration] before running the [`create_tables.py`] script from the
 [`docassemble.webapp`] package.
 
-Users can log in with Facebook or Google.  This requires obtaining API
-keys with those companies.  See the documentation for the [`oauth`]
-configuration directive for details.
+Users can log in with Facebook, Google, or Microsoft Azure.  This
+requires obtaining API keys with those companies.  See the
+documentation for the [`oauth`] configuration directive for details.
+Users can also log in with their mobile phone by receiving a
+verification code via [SMS].  See the documentation for the
+[`phone login`] and [`twilio`] configuration directives for details.
+
+Users who log in with an e-mail address and password have the
+additional option of using [two-factor authentication].
 
 If you do not want your users to be able to log in, you can hide the
 Login button by setting the [`show_login`] setting in the
@@ -276,3 +282,7 @@ immediately.  (The [`process_action()`] function will run after
 [`user_has_privilege()`]: {{ site.baseurl }}/docs/functions.html#user_logged_in
 [functions]: {{ site.baseurl }}/docs/functions.html
 [`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
+[SMS]: https://en.wikipedia.org/wiki/Short_Message_Service
+[`phone login`]: {{ site.baseurl }}/docs/config.html#phone login
+[`twilio`]: {{ site.baseurl }}/docs/config.html#twilio
+[two-factor authentication]: {{ site.baseurl }}/docs/config.html#mfa

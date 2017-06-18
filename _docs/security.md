@@ -18,6 +18,13 @@ User passwords and interview answers are stored in a SQL database in
 encrypted form, unless the [`multi_user`] variable is set to `True`,
 in which case the answers are not encrypted.
 
+If users log in with [external authentication methods] or the
+[phone login] feature, interview answers are still encrypted (unless
+the [`multi_user`] variable is set to `True`), but a resourceful
+hacker could figure out the encryption key.  Therefore, if server-side
+encryption is important to you, it is recommended that you do not
+enable [external authentication methods] or the [phone login] feature.
+
 Uploaded and assembled documents are stored on the server (and on
 [Amazon S3], if [S3] is being used, or [Microsoft Azure], if
 [Azure blob storage] is being used) without encryption.  These
@@ -83,3 +90,5 @@ for an interview belonging to a user who logs in with Google or Facebook.
 [Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
 [`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
 [two-factor authentication]: {{ site.baseurl }}/docs/config.html#mfa
+[external authentication methods]: {{ site.baseurl }}/docs/config.html#oauth
+[phone login]: {{ site.baseurl }}/docs/config.html#phone login

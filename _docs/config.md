@@ -1023,8 +1023,10 @@ code remains valid, can be [configured](#brute force).
 
 For added security, you can allow users who log in with passwords to
 enable two-factor authentication on their accounts.  The two-factor
-authentication system requires [Google Authenticator], [Authy], or
-another compatible app.
+authentication system can use [Google Authenticator], [Authy], or
+another compatible app.  Or, if you have set up a [`twilio`]
+configuration, the system can send a verification code to the user
+in an [SMS] message.
 
 To give your users the option of using two-factor authentication, set
 `two factor authentication` to `True`.  Logged-in users will then see
@@ -1033,7 +1035,7 @@ authentication.  By default, only administrators and developers see an
 option on their user profile to configure second-factor
 authentication.  To configure which roles have the option of using
 second factor authentication, set `two factor authentication roles` to
-the full list of roles.
+the full list of roles you want to be able to use the feature.
 
 {% highlight yaml %}
 two factor authentication: True
@@ -1045,7 +1047,8 @@ two factor authentication roles:
 {% endhighlight %}
 
 Two-factor authentication is not available to users who sign in with
-[external authetication methods](#oauth).
+[external authentication methods](#oauth) or who are using the
+[phone login] feature.
 
 ## <a name="vim"></a>Vim-like editor in Playground
 
