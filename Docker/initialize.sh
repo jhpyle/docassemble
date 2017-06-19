@@ -287,12 +287,25 @@ if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s3cmd ls s3://${S3BUCKET}/config
     s3cmd -q put $DA_CONFIG_FILE s3://${S3BUCKET}/config.yml
 fi
 
-# echo "17.5"
-
-if [ "${S3ENABLE:-false}" == "true" ]; then
-    s3cmd sync /usr/share/docassemble/files s3://${S3BUCKET}/
+if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s3cmd ls s3://${S3BUCKET}/files) ]]; then
+    if [ -d /usr/share/docassemble/files ]; then
+	for the_file in $(ls /usr/share/docassemble/files); do
+	    if [[ $the_file =~ ^[0-9]+ ]]; then
+		for sub_file in $(find /usr/share/docassemble/files/$the_file -type f); do
+		    file_number=${sub_file#/usr/share/docassemble/files/}
+		    file_number=${file_number:0:15}
+		    file_directory=/usr/share/docassemble/files/$file_number
+		    target_file=${sub_file#${file_directory}}
+		    file_number=${file_number//\//}
+		    file_number=$((16#$file_number))
+		    s3cmd -q put $sub_file s3://${S3BUCKET}/files/$file_number/$target_file
+		done
+	    else
+	       s3cmd -q sync /usr/share/docassemble/files/$the_file/ s3://${S3BUCKET}/$the_file/
+	    fi
+	done
+    fi
 fi
-
 # echo "18"
 
 if [ "${AZUREENABLE:-false}" == "true" ]; then
@@ -310,10 +323,26 @@ fi
 # echo "19.5"
 
 if [ "${AZUREENABLE:-false}" == "true" ] && [[ ! $(python -m docassemble.webapp.list-cloud files) ]]; then
-    for the_file in $(find /usr/share/docassemble/files -type f); do
-	target_file=${the_file#/usr/share/docassemble/files/}
-	blob-cmd -f cp "$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/files/${target_file}"
-    done
+    if [ -d /usr/share/docassemble/files ]; then
+	for the_file in $(ls /usr/share/docassemble/files); do
+	    if [[ $the_file =~ ^[0-9]+ ]]; then
+		for sub_file in $(find /usr/share/docassemble/files/$the_file -type f); do
+		    file_number=${sub_file#/usr/share/docassemble/files/}
+		    file_number=${file_number:0:15}
+		    file_directory=/usr/share/docassemble/files/$file_number/
+		    target_file=${sub_file#${file_directory}}
+		    file_number=${file_number//\//}
+		    file_number=$((16#$file_number))
+		    echo blob-cmd -f cp $sub_file "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/files/$file_number/$target_file"
+		done
+	    else
+		for sub_file in $(find /usr/share/docassemble/files/$the_file -type f); do
+		    target_file=${sub_file#/usr/share/docassemble/files/}
+		    echo blob-cmd -f cp $sub_file "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$target_file"
+		done
+	    fi
+	done
+    fi
 fi
 
 # echo "20"

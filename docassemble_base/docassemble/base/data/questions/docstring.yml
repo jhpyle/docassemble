@@ -199,9 +199,6 @@ locals:
 long:
   doc: |
     This is a built-in Python function.
-map:
-  doc: |
-    This is a built-in Python function.
 memoryview:
   doc: |
     This is a built-in Python function.

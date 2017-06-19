@@ -76,7 +76,7 @@ def load(**kwargs):
         if daconfig['vim'] and 'keymap' not in daconfig:
             daconfig['keymap'] = 'vim'
     s3_config = daconfig.get('s3', None)
-    if not s3_config or ('enable' in s3_config and not s3_config['enable']): # or not ('access key id' in s3_config and s3_config['access key id']) or not ('secret access key' in s3_config and s3_config['secret access key']):
+    if not s3_config or ('enable' in s3_config and not s3_config['enable']):
         S3_ENABLED = False
     else:
         S3_ENABLED = True
