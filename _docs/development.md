@@ -1,6 +1,6 @@
 ---
 layout: docs
-title: Overview of development process
+title: Overview of the development process
 short_title: Overview
 ---
 
@@ -28,12 +28,12 @@ The [Playground] allows you to edit your interview in the browser and
 then immediately test the interview by pressing "Save and Run."
 
 Even when you are in the middle of testing an interview, you can make
-changes to the interview source, then refresh the screen in the tab of
-your web browser containing your test interview, and you can
-immediately see the effect of your changes.  (Note, however, that
-there are some circumstances when you will need to backtrack or
-restart your interview to see changes, for example if you change a
-[`mandatory`] block that your interview has already processed.)
+changes to the interview source, reload the screen in the tab of your
+web browser containing your test interview, and immediately see the
+effect of your changes.  (Note, however, that there are some
+circumstances when you will need to backtrack or restart your
+interview to see changes, for example if you change a [`mandatory`]
+block that your interview has already processed.)
 
 If you are using [.docx templates] and you are making frequent changes
 to your .docx template, you may find it cumbersome to repetitively
@@ -51,24 +51,30 @@ favorite text editor that you like to use to edit text files like
 # Workflow for upgrading docassemble
 
 As you continue to use **docassemble**, you will probably want to take
-advantage of updates to the software.  Most **docassemble** software
-upgrades can be accomplished by going to "Package Management" from the
-menu, then selecting "Update a package," then clicking the "Update"
-button next to the package "docassemble.webapp."
+advantage of updates to the software.  To see what version you are
+running, go to "Configuration" from the menu.  You can find the
+current version of **docassemble** on the [PyPI page] or the
+[GitHub page].
+
+Most **docassemble** software upgrades can be accomplished by going to
+"Package Management" from the menu, selecting "Update a package," and
+clicking the "Update" button next to the package called
+"docassemble.webapp."
 
 However, sometimes new versions of the **docassemble** software
 require an update to the whole system.  You will see a notification on
 the screen if the underlying system needs an upgrade.  The problem
-with doing an update to the underyling system that if your user
+with doing an update to the underyling system is that if your user
 profiles and [Playground] data are stored in the **docassemble**
 [Docker] container, then removing and reinstalling the container will
 delete all that data.
 
 You can back up your [Playground] data by creating a [package]
 containing all of your work product, then downloading that [package]
-as a ZIP file.  You can then stop and remove the [Docker] container,
-install a new version of **docassemble**, and upload that ZIP file
-into the [Playground] on the new system.
+as a ZIP file.  You can then [stop] and [remove] the [Docker]
+container, [pull] the latest version, [run] a new version of
+**docassemble**, and upload that ZIP file into the [Playground] on the
+new system.
 
 There are other, less cumbersome ways to ensure that your [Playground]
 data and other data persist through the process of removing and
@@ -89,36 +95,49 @@ reinstalling the [Docker] container:
 #. Instead of storing your information in the cloud, you could store
    it in a [Docker volume] on the same computer that runs your
    [Docker] container.  The disadvantage is that the data will be
-   located in a hard-to-find directory on the computer's hard drive,
+   located in a [hard-to-find directory] on the computer's hard drive,
    and if you want to move **docassemble** to a different server, you
-   will need to figure out how to move this directory.
-   
-Once you set this up, when it comes time to upgrade, you will be able
-to stop your [Docker] container, remove it, pull the new image from
-[Docker Hub], and run the new image, and your user profiles,
-[Playground] data, and installed packages will automatically appear in
-the new container.
+   will need to manually move this directory.
 
-To transition to one of these systems, create a [package] in your
-[Playground] containing all of the work you have developed so far, and
-then download this package as a ZIP file.  This will back up your
-work.  Then you can stop and remove the container, pull the new
-**docassemble** image from [Docker Hub], and run it with the
-configuration necessary to use one of the above [data storage]
-techniques.  Then, log in to the Playground, go to the
-[packages folder], and upload the ZIP file.
+To transition to using [S3] for persistent storage, you need to create
+a [bucket] on [S3], add an [`s3`] directive to your [configuration]
+that refers to the [bucket], and then immediately [stop] the container
+and [start] it again.  Similarly, to transition to
+[Azure blob storage], you need to create a container on the
+[Azure Portal], add an [`azure`] directive to your [configuration]
+that refers to the container, and then immediately [stop] the
+container and [start] it again.
+
+Transitioning to using a [Docker volume] for persistent storage is not
+as seamless.  Start by creating a [package] in your [Playground]
+containing all of the work you have developed so far.  Then download
+this package as a ZIP file.  This will back up your work.  Then you
+can stop and remove the container, pull the new **docassemble** image
+from [Docker Hub], and run it with the configuration necessary to use
+one of the above [data storage] techniques.  Then, log in to the
+Playground, go to the [packages folder], and upload the ZIP file.
+You will need to recreate your user accounts on the new system.
+
+Once you set up persistent storage, all you need to do to upgrade the
+full system is [stop] your [Docker] container, [remove] it, [pull] the
+new image from [Docker Hub], and [run] the new image.  Your user
+profiles, [Playground] data, and installed packages will automatically
+appear in the new container.
 
 # Workflow for testing
 
 Thorough testing of your interviews should be part of your workflow.
-People other than yourself should do testing.
+You should involve people other than yourself in the testing, because
+they will likely use the system in a different way than you do and
+thereby uncover problems that you would not encounter.
 
 If your development server is accessible over the network, you can
 involve testers in your interview while it is still in the
-[Playground].  In the [Playground], right-click on the "<i
+[Playground].  Every interview in the [Playground] is accessible at a
+hyperlink.  To get this hyperlink, right-click on the "<i
 class="glyphicon glyphicon-link" aria-hidden="true"></i> Share" button
-and copy the URL to your clipboard, then paste it into an e-mail to
-your testers.
+in the [Playground], copy the URL to your clipboard, then paste the
+URL into an e-mail to your testers.
 
 If your development server is your desktop computer, and you access it
 in your browser at `http://localhost`, other users will not be able to
@@ -139,26 +158,40 @@ dedicated machine (or virtual machine) that is connected to the
 internet.  When you do so, you should enable HTTPS so that passwords
 are encrypted.
 
+If you are using [S3] or [Azure blob storage], moving from a local
+server to a cloud server is relatively easy because your configuration
+and data is already in the cloud.  You just need to [stop] your local
+[Docker] container and then start a [Docker] container on the cloud
+server using environment variables that point to your persistent
+storage in the cloud (e.g., [`S3ENABLE`], [`S3BUCKET`],
+[`AZUREENABLE`], [`AZUREACCOUNTNAME`], [`AZURECONTAINER`], etc.).
+
+If you are not using cloud storage or [Docker volume]s, you can move
+your server from your local machine to a machine in the cloud using
+[Docker] tools.  You will need to [stop] your container, [commit] your
+container to an image, [save] the image as a file, move the file to
+the new server, [load] the file on the new server to create the image
+there, and then [run] the image.
+
 # Production environment workflow
 
-When you are ready to make your interviews public, you will need a
-**docassemble** server that is connected to the internet.
+If end users are using your interviews, you will need to make sure
+that they are reliable, so that your users do not encounter the types
+of problems that tend to appear unexpectedly in a development
+environment.
 
-If end users are using your interviews, you need to make sure that
-they are reliable, so that your users do not encounter the random
-problems that can occur in a development environment.
-
-Therefore, we recommend running two servers:
+Therefore, it is recommended that you run two servers:
 
 1. a development server; and
 2. a production server.
 
 On your development server, you will make sure your interviews run as
 intended, and then you will put your interview into a [package] and
-save that package somewhere: maybe on [PyPI], on [Github], or in a ZIP
-file.  You will then install that [package] on the production server
-by going to "Package Management" from the menu, then selecting "Update
-a package.  Your users will access interviews at links like
+save that package somewhere: on [PyPI], on [Github], or in a ZIP file.
+You will then install that [package] on the production server by
+logging into the production server as an administrator, going to
+"Package Management" from the menu, then selecting "Update a package."
+Your users will access the interviews at links like
 `https://docassemble.example.com?i=docassemble.bankruptcy:data/questions/chapter7.yml`,
 where `docassemble.example.com` is the address of your production
 server, `docassemble.bankruptcy` is the name of your [package], and
@@ -171,34 +204,24 @@ effects.
 
 To minimize the risk that your end users will see errors, you should
 make sure the development server and the production server are as
-similar as possible.  They should both be running the same version of
-**docassemble**.  They should both have the same [configuration],
-except for minor differences like server name.  They should both have
-the same [Python] packages installed, with identical version numbers
-for each package.
+similar as possible.  Ideally, they should both be running the same
+version of **docassemble**, they should both have the same
+[configuration], except for minor differences like server name, and
+they should both have the same set of [Python] packages installed,
+with the same version numbers for each package.  This protects against
+the risk that an interview will fail on your production server when it
+works without a problem on your development server.
 
-If you are particularly risk-averse, you should have three servers:
-
-1. a development server where you develop interviews using the
-[Playground],
-2. a production server; and
-3. a testing server which is virtually identical to the production
-   server and exists primarily to test the installation of your
-   interview [packages] to make sure they work as intended before you
-   install them on the production server.
-   
-This arrangement is helpful because it protects against the risk that
-an interview will fail on your production server when it works without
-a problem on your development server.  For example, if you forget to
-specify a [Python] package as a dependency in your **docassemble**
-[extension package], your package will still work on the development
-server even though it will fail on the production server.  This could
-also happen if your interview depends on a [configuration] setting
-that exists on your development server but not on your production
-server, There could be other, hard-to-predict reasons why an interview
-might work on one server but not on another.  If you ensure that your
-testing server is virtually identical to your production server, you
-will protect against these types of problems.
+For example, if you forget to specify a [Python] package as a
+dependency in your **docassemble** [extension package], your package
+will still work on the development server even though it will fail on
+the production server.  Problems could also occur if your interview
+depends on a [configuration] setting that exists on your development
+server but not on your production server.  There could be other,
+hard-to-predict reasons why an interview might work on one server but
+not on another.  If you ensure that your development server is
+virtually identical to your production server, you will protect
+against these types of problems.
 
 It is also important to separate the development server and the
 production server because there is a risk that the process of
@@ -209,25 +232,76 @@ install any [Python] package, and can change the contents of many
 files on which **docassemble** depends for its stable operation.  A
 user who has administrator privileges can edit the [configuration],
 and it is possible to edit the [configuration] in such a way that the
-system will not start.
+system will crash.
+
+Since a development server is often used for experimentation, it can
+be difficult to keep its configuration matched with that of the
+production server.  It may be easier to use three servers:
+
+1. a development server where you develop interviews using the
+   [Playground],
+2. a production server; and
+3. a testing server which is virtually identical to the production
+   server and exists primarily to test the installation of your
+   interview [packages] to make sure they work as intended before you
+   install them on the production server.
+
+It is a good idea to use the [`metadata`] block or the [README area]
+of your package to make a note about where the original development
+files are located.  For convenience, you may find yourself using
+multiple servers for development and experimentation, and if time
+passes, you may forget where the authoritative version of the package
+lives.
 
 # Workflow for collaboration
 
-If you are working as part of a team of developers on a single
-interview, you can use [Google Drive integration] so that you all
-share the same [Playground], even though you log in under different
-accounts.  One developer should set up [Google Drive integration], and
-then share the "docassemble" folder with the other developers.  The
-other developers would then set up [Google Drive integration] and
-select the shared folder as the folder to use.  If more than one
-developer tries to edit the same file at the same time, there will be
-problems; one developer's synchronization may overwrite files another
-developer was editing.
+## Sharing files with Google Drive
 
-It is important that developers use different accounts to log into the
-[Playground].  If two web browsers use the [Playground] at the same
-time, there is a danger that one developer's changes could be erased
-by another developer's activity.
+If you are working as part of a team of developers on a single
+interview, you can use [Google Drive integration] so that all members
+of the team share the same [Playground], even though you log in under
+different accounts.  One developer would set up
+[Google Drive integration], and then share his or her "docassemble"
+folder with the other developers.  The other developers would then set
+up [Google Drive integration] and select the shared folder as the
+folder to use.  If more than one developer tries to edit the same file
+at the same time, there will be problems; one developer's
+synchronization may overwrite files another developer was editing.
+However, if the interview is split up into separate files, and each
+developer works only on designated files, this should not be a
+problem.
+
+It is important that developers use different **docassemble** accounts
+to log into the [Playground].  If two web browsers use the
+[Playground] at the same time, there is a danger that one developer's
+changes could be erased by another developer's activity.
+
+## Using version control
+
+As you work on interview development, you should use version control
+to track your changes.  One difficulty is that the ideal environment
+for testing, which is **docassemble**'s Playground, is not directly
+integrated with [GitHub] or any other version control system.  If you
+use [Google Drive integration], you could run version control inside
+your Google Drive, but the file structure of the `docassemble`
+directory is specific to your [Playground], and you will probably want
+your version control to be specific to a [package].
+
+To take advantage of version control, you can use the following process:
+
+* Develop and test your interview in the [Playground].
+* Create a [package] containing your interview and its associated files.
+* When you are ready to make your first commit, download the package
+  as a ZIP file and unpack it on your computer.
+* Initialize the version control system inside the root directory of
+  the package (i.e. the directory containing `README.md` and
+  `setup.py`) (e.g., by running `git init`).
+* Then do your first commit (e.g., `git commit -m 'first commit'`).
+* Work on the interview some more in the [Playground].
+* When you are ready to make your next commit, download the package as
+  a ZIP file and unpack it into the same place on your computer as
+  before, overwriting the existing files.
+* Do your next commit (e.g., `git commit -m 'second commit'`).
 
 [configuration]: {{ site.baseurl }}/docs/config.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
@@ -245,3 +319,36 @@ by another developer's activity.
 [.docx templates]: {{ site.baseurl }}/docs/documents.html#docx template file
 [Google Drive integration]: {{ site.baseurl }}/docs/googledrive.html
 [Markdown]: https://daringfireball.net/projects/markdown/
+[PyPI page]: https://pypi.python.org/pypi/docassemble.webapp/
+[GitHub page]: https://github.com/jhpyle/docassemble/releases
+[stop]: https://docs.docker.com/engine/reference/commandline/stop/
+[remove]: https://docs.docker.com/engine/reference/commandline/rm/
+[pull]: https://docs.docker.com/engine/reference/commandline/pull/
+[run]: https://docs.docker.com/engine/reference/commandline/run/
+[start]: https://docs.docker.com/engine/reference/commandline/start/
+[commit]: https://docs.docker.com/engine/reference/commandline/commit/
+[save]: https://docs.docker.com/engine/reference/commandline/save/
+[load]: https://docs.docker.com/engine/reference/commandline/load/
+[hard-to-find directory]: https://docs.docker.com/engine/reference/commandline/volume_inspect/
+[`s3`]: {{ site.baseurl }}/docs/config.html#s3
+[`azure`]: {{ site.baseurl }}/docs/config.html#azure
+[bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
+[Azure Portal]: https://portal.azure.com/
+[`S3ENABLE`]: {{ site.baseurl }}/docs/docker.html#S3ENABLE
+[`S3BUCKET`]: {{ site.baseurl }}/docs/docker.html#S3BUCKET
+[`AZUREENABLE`]: {{ site.baseurl }}/docs/docker.html#AZUREENABLE
+[`AZUREACCOUNTNAME`]: {{ site.baseurl }}/docs/docker.html#AZUREACCOUNTNAME
+[`AZURECONTAINER`]: {{ site.baseurl }}/docs/docker.html#AZURECONTAINER
+[`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
+[README area]: {{ site.baseurl }}/docs/playground.html#README
+[package]: {{ site.baseurl }}/docs/packages.html
+[packages]: {{ site.baseurl }}/docs/packages.html
+[`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
+[Amazon Web Services]: https://aws.amazon.com
+[AWS]: https://aws.amazon.com
+[S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
+[packages folder]: {{ site.baseurl }}/docs/playground.html#packages
+[PyPI]: https://pypi.python.org/pypi
+[GitHub]: https://github.com/
+[data storage]: {{ site.baseurl }}/docs/docker.html#data storage
+

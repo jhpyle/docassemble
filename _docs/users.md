@@ -264,7 +264,6 @@ immediately.  (The [`process_action()`] function will run after
 [special variables]: {{ site.baseurl }}/docs/special.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [installation]: {{ site.baseurl }}/docs/installation.html
-[roles]: {{ site.baseurl }}/docs/roles.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [`oauth`]: {{ site.baseurl }}/docs/config.html#oauth
 [`show login`]: {{ site.baseurl }}/docs/config.html#show login

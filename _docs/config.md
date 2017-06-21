@@ -698,6 +698,27 @@ allow_registration: False
 
 The default behavior is to allow any user to register.
 
+## <a name="email confirmation"></a>E-mail confirmation
+
+If you want to verify e-mail addresses of users, you can set the
+`email confirmation privileges` directive to a list of [privileges] for which
+e-mail confirmation should be a requirement of logging in.
+
+{% highlight yaml %}
+email confirmation privileges:
+  - admin
+  - developer
+  - advocate
+{% endhighlight %}
+
+By default, e-mail confirmation is not required for any privileges (i.e.,
+the `email confirmation privileges` is an empty list.  Also, the default
+administrative user is confirmed when initially created, so you will
+never need to confirm that user's e-mail.
+
+Before you enable this feature, make sure you have a working
+[email configuration](#mail).
+
 ## <a name="xsendfile"></a>Support for xsendfile
 
 If your web server is not configured to support X-SENDFILE headers,
@@ -941,7 +962,7 @@ For more information, see the documentation of the [`ocr_file()`] function.
 ### <a name="s3"></a>s3
 
 If you are using [Amazon S3] to store shared files, enter your access
-keys and bucket name as follows:
+keys and [bucket] name as follows:
 
 {% highlight yaml %}
 s3:
@@ -951,7 +972,7 @@ s3:
   bucket: yourbucketname
 {% endhighlight %}
 
-You will need to create the bucket before using it; **docassemble**
+You will need to create the [bucket] before using it; **docassemble**
 will not create it for you.
 
 ### <a name="azure"></a>azure
@@ -1025,21 +1046,21 @@ For added security, you can allow users who log in with passwords to
 enable two-factor authentication on their accounts.  The two-factor
 authentication system can use [Google Authenticator], [Authy], or
 another compatible app.  Or, if you have set up a [`twilio`]
-configuration, the system can send a verification code to the user
-in an [SMS] message.
+configuration, the system can send a verification code to the user in
+an [SMS] message.
 
 To give your users the option of using two-factor authentication, set
 `two factor authentication` to `True`.  Logged-in users will then see
 an option on their "Profile" page for configuring two-factor
 authentication.  By default, only administrators and developers see an
 option on their user profile to configure second-factor
-authentication.  To configure which roles have the option of using
-second factor authentication, set `two factor authentication roles` to
-the full list of roles you want to be able to use the feature.
+authentication.  To configure which privileges have the option of using
+second factor authentication, set `two factor authentication privileges` to
+the full list of [privileges] you want to be able to use the feature.
 
 {% highlight yaml %}
 two factor authentication: True
-two factor authentication roles:
+two factor authentication privileges:
   - admin
   - developer
   - user
@@ -1597,3 +1618,5 @@ and Facebook API keys.
 [`twilio`]: #twilio
 [Google Authenticator]: https://en.wikipedia.org/wiki/Google_Authenticator
 [Authy]: https://authy.com/
+[privileges]: {{ site.baseurl }}/docs/roles.html
+[bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html

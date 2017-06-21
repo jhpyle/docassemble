@@ -6,13 +6,9 @@ short_title: Security
 
 **docassemble** is designed with user privacy in mind.
 
-# Importance of using HTTPS
+# Security features
 
-It is important for security purposes to deploy **docassemble** using
-HTTPS rather than HTTP.  If you use HTTP, passwords and security keys
-will be sent over the network in plain text.
-
-# <a name="server_encryption"></a>Server-side information storage
+## <a name="server_encryption"></a>Server-side information storage
 
 User passwords and interview answers are stored in a SQL database in
 encrypted form, unless the [`multi_user`] variable is set to `True`,
@@ -36,22 +32,28 @@ the information related to the interview from the server, including
 the database, uploaded documents, and assembled documents.  However,
 temporary files in /tmp will persist until cleaned out by [tmpreaper].
 
+## Sign-in security
+
+**docassemble** blocks brute-force password-guessing attacks.
+
+**docassemble** also supports [two-factor authentication].
+
+By default, users do not need to verify their e-mail addresses, but
+you can require them to do so.  See the documentation for the
+[`email confirmation privileges`] configuration directive.
+
+# Importance of using HTTPS
+
+It is important for security purposes to deploy **docassemble** using
+HTTPS rather than HTTP.  If you use HTTP, passwords and security keys
+will be sent over the network in plain text.
+
 # Separate development and production servers
 
 Users with "developer" access can run arbitrary code on the server.
 For this reason, it is recommended that you not allow developer
 accounts on production servers, and that you only install
 **docassemble** add-on packages that you have carefully reviewed.
-
-# <a name="mfa"></a>Two-factor authentication
-
-**docassemble** blocks brute-force password-guessing attacks.  It also
-supports [two-factor authentication].
-
-# Additional protections
-
-It is recommended that you run [fail2ban] on servers that host
-**docassemble**.
 
 # Issues to look out for
 
@@ -92,3 +94,4 @@ for an interview belonging to a user who logs in with Google or Facebook.
 [two-factor authentication]: {{ site.baseurl }}/docs/config.html#mfa
 [external authentication methods]: {{ site.baseurl }}/docs/config.html#oauth
 [phone login]: {{ site.baseurl }}/docs/config.html#phone login
+[`email confirmation privileges`]: {{ site.baseurl }}/docs/config.html#email confirmation

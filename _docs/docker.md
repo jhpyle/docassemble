@@ -1162,6 +1162,9 @@ files:
 * <span></span>[`docassemble/Docker/apache.logrotate`]: This replaces the standard
   apache logrotate configuration.  It does not compress old log files,
   so that it is easier to view them in the web application.
+* <span></span>[`docassemble/Docker/process-email.sh`]: This is a
+  script that is run when an e-mail is received, if the
+  [e-mail receiving] feature is configured.
 * <span></span>[`docassemble/Docker/run-apache.sh`]: This is a script
   that is run by [supervisor] to start the [Apache] server.
 * <span></span>[`docassemble/Docker/run-celery.sh`]: This is a script
@@ -1183,6 +1186,8 @@ files:
   and the [WebSocket] server on a signal from a peer server.
 * <span></span>[`docassemble/Docker/sync.sh`]: This is a script that is
   run by [supervisor] to synchronize log files.
+* <span></span>[`docassemble/Docker/update.sh`]: This is a script that is
+  run by [supervisor] to update the software on the container.
 
 To build the image, run:
 
@@ -1377,7 +1382,7 @@ containers depend on the images.
 [`docker build`]: https://docs.docker.com/engine/reference/commandline/build/
 [`docker ps`]: https://docs.docker.com/engine/reference/commandline/ps/
 [`docker volume`]: https://docs.docker.com/engine/reference/commandline/volume/
-[`docker volume inspect`]: https://docs.docker.com/engine/reference/commandline/volume/
+[`docker volume inspect`]: https://docs.docker.com/engine/reference/commandline/volume_inspect/
 [Amazon Web Services]: https://aws.amazon.com
 [AWS]: https://aws.amazon.com
 [S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
