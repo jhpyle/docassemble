@@ -1560,8 +1560,10 @@ For example:
 * `format_date("2016-04-01")` returns `April 1, 2016`.
 * `format_date("March 3, 2016")` returns `March 3, 2016`.
 * `format_date('April 5, 2014', format='full')` returns `Saturday, April 5, 2014`.
-* `format_date('April 5, 2014', format='E')` returns `Sat`.
 * `format_date('April 5, 2014', format='EEEE')` returns `Saturday`.
+* `format_date('April 5, 2014', format='E')` returns `Sat`.
+* `format_date('April 5, 2014', format='e')` returns `6` (numbers range from
+  1 to 7).
 * `format_date('April 5, 2014', format='short')` returns `4/5/14`.
 * `format_date('April 5, 2014', format='M/d/yyyy')` returns `4/5/2014`.
 * `format_date('April 5, 2014', format='MM/dd/yyyy')` returns
