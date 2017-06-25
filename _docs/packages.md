@@ -46,7 +46,7 @@ docassemble-baseball
 |   |   |       `-- game-summary.md
 |   |   `-- __init__.py
 |   `-- __init__.py
-|-- LICENSE.txt
+|-- LICENSE
 |-- README.md
 |-- setup.cfg
 `-- setup.py
@@ -133,22 +133,14 @@ in the [Playground].
 To create your own **docassemble** package off-line, start by downloading a
 **docassemble** package template from your **docassemble** server.
 
-1. Click "Log in" in the upper right hand corner and log in as:
- 
-   * **E-mail**: admin@admin.com
-   * **Password**: password
-
-   Or, if you have already [reconfigured user roles] on your system,
-   log in as any user with the privileges of an Administrator or a
-   Developer.
-2. On the menu in the upper right hand corner, select Package Management.
-3. Click "Create a package."
-4. Enter a name for the package, such as `missouri-family-law` and click "Get template."
-5. Save the resulting .zip file to your computer.
+1. On the menu in the upper right hand corner, select Package Management.
+2. Click "Create a package."
+3. Enter a name for the package, such as `baseball` and click "Get template."
+4. Save the resulting .zip file to your computer.
 
 Then you will have a ZIP file called
-`docassemble-missouri-family-law.zip`, which contains a directory
-`docassemble-missouri-family-law`.  You can extract this directory to
+`docassemble-baseball.zip`, which contains a directory
+`docassemble-baseball`.  You can extract this directory to
 a convenient location on your computer, so that you can make changes
 to the files and/or add files of your own.
 
@@ -208,8 +200,9 @@ From the menu, go to Package Management.  Then click "Update a package."
 
 **docassemble** installs packages using the [pip] package manager.
 This installation process may take a long time.  A log of the output
-of [pip] will be shown when the installation is complete, and in the
-background, the server will restart.
+of [pip] will be shown when the installation is complete.  The server
+will restart so that any old versions of the package that are still in
+memory will be refreshed.
 
 ## <a name="github_install"></a>Installing through GitHub
 
@@ -217,20 +210,22 @@ One way to install [Python] packages on a server is through [GitHub].
 
 1. Find the [GitHub] URL of the package you want to install.  This is
 in the location bar when you are looking at a [GitHub] repository.
-For example, the [GitHub] URL of the `docassemble-missouri-family-law`
-package may be `https://github.com/jhpyle/docassemble-missouri-family-law`.
+For example, the [GitHub] URL of the `docassemble-baseball`
+package may be `https://github.com/jhpyle/docassemble-baseball`.
 2. In the **docassemble** web app, go to Package Management.
 3. Click "Update a package."
-4. Enter `https://github.com/jhpyle/docassemble-missouri-family-law`
+4. Enter `https://github.com/jhpyle/docassemble-baseball`
    into the "GitHub URL" field.
 5. Click "Update."
+
+![GitHub Install]({{ site.baseurl }}/img/github-install.png){: .maybe-full-width }
 
 ## <a name="zip_install"></a>Installing through a .zip file
 
 You can also install [Python] packages from ZIP files.  For example,
-if you have a package `docassemble-missouri-family-law`, the ZIP file
-will be called `docassemble-missouri-family-law.zip`.  It will contain
-a single directory called `docassemble-missouri-family-law`, which in
+if you have a package `docassemble-baseball`, the ZIP file
+will be called `docassemble-baseball.zip`.  It will contain
+a single directory called `docassemble-baseball`, which in
 turn contains `setup.py`, a subdirectory called `docassemble`, and
 other files.
 
@@ -239,34 +234,38 @@ other files.
 3. Under "Zip File," upload the `.zip` file you want to install.
 4. Click "Update."
 
+![Zip Install]({{ site.baseurl }}/img/zip-install.png){: .maybe-full-width }
+
 ## <a name="pypi_install"></a>Installing through PyPI
 
 You can also install [Python] packages from [PyPI].  [PyPI] is the
 central repository for [Python] software.  Anyone can register on
 [PyPI] and upload software to it.  For example, if you want to install
-the `docassemble-missouri-family-law` package:
+the `docassemble-baseball` package:
 
-1. Make sure the `docassemble-missouri-family-law` package exists on [PyPI].
+1. Make sure the `docassemble-baseball` package exists on [PyPI].
 2. In the **docassemble** web app, go to Package Management.
 3. Click "Update a package."
-4. Type `docassemble.missouri-family-law` into the "Package on PyPI"
+4. Type `docassemble.baseball` into the "Package on PyPI"
    field.
 5. Click "Update."
+
+![PyPI Install]({{ site.baseurl }}/img/pypi-install.png){: .maybe-full-width }
 
 # Running interviews from installed packages
 
 Once a **docassemble** extension package is installed, you can start
 using its interviews.  For example, if you installed
-`docassemble.missouri-family-law`, and there was an interview file in
+`docassemble.baseball`, and there was an interview file in
 that package called `questions.yml`, you would point your browser to
-`http://localhost/?i=docassemble.missouri-family-law:data/questions/questions.yml`
+`http://localhost/?i=docassemble.baseball:data/questions/questions.yml`
 (substituting the actual domain and base URL of your **docassemble**
 site).
 
 # <a name="updating"></a>Updating Python packages
 
 To upgrade a package that you installed from a [GitHub] URL or from
-[PyPI], you can click the "Update" button next to the package name on
+[PyPI], you can press the "Update" button next to the package name on
 the "Update a package" screen.  You will only see these Update buttons
 if you are an administrator or if you are the person who caused the
 packages to be installed.  Also, the "Update" buttons will not appear
@@ -283,23 +282,26 @@ In order to publish to [PyPI], you will first need to create an
 account on [PyPI].  You will need to choose a username and password
 and verify your e-mail address.
 
-Then, go to "Configuration" on the menu and add the username and
-password into the **docassemble** [configuration] like so:
+Then, go to "Configuration" on the menu and enable the PyPI publishing
+feature in **docassemble** [configuration] like so:
 
 {% highlight yaml %}
-pypi username: johndoe
-pypi password: xX_s3cret_Xx
+pypi: True
 {% endhighlight %}
 
-After you save the [configuration], go to the ["Packages" folder] of
-the **docassemble** [Playground] and open the package you want to
-publish (e.g., `docassemble-missouri-family-law`).
+After you save the [configuration], go to "Profile" on the menu and
+fill in "PyPI Username" and "PyPI Password" with the username and
+password you obtained from [PyPI].
 
-Press the ![Publish]({{ site.baseurl
-}}/img/playground-packages-publish-button.png) button to publish the
+Next, go to the ["Packages" folder] of the **docassemble**
+[Playground] and open the package you want to publish (e.g.,
+`docassemble-baseball`).
+
+Press the ![PyPI]({{ site.baseurl
+}}/img/playground-packages-button-pypi.png) button to publish the
 package to [PyPI].
 
-If your package already exists on [PyPI], then clicking the Publish
+If your package already exists on [PyPI], then pressing the Publish
 button will increment the version of your package.  This is necessary
 because you cannot overwrite files that already exist on [PyPI].
 
@@ -311,79 +313,78 @@ If the publishing was successful, then at the bottom of the page
 describing your package, you should see a message that the package now
 exists on [PyPI].
 
-![PyPI Info]({{ site.baseurl }}/img/playground-packages-published.png)
+![PyPI Published]({{ site.baseurl }}/img/playground-packages-pypi-published.png){: .maybe-full-width }
 
 You can click on the link to see what the package looks like on [PyPI].
 
+![PyPi Page]({{ site.baseurl }}/img/playground-packages-on-pypi.png){: .maybe-full-width }
+
 Now, on the **docassemble** menu (of this server or another server),
 you can go to Package Management -> Update a Package, and
-[install](#pypi_install) the package by specifying a "Package on PyPI"
-and typing in `docassemble.missouri-family-law`.
+[install the package](#pypi_install) by typing in
+"docassemble.baseball" into the "Package on PyPI" field.
+
+![PyPi Install]({{ site.baseurl }}/img/pypi-install.png){: .maybe-full-width }
 
 ## <a name="github"></a>Publishing on GitHub
 
 You can publish your package on [GitHub] in addition to (or instead
-of) publishing it on [PyPI].  Publishing on both sites is recommended,
-however.  [PyPI] is the simplest and safest way to distribute [Python]
-packages, while [GitHub] is a version control system with many
-features for facilitating sharing and collaboration.
+of) publishing it on [PyPI].  (Publishing on both sites is
+recommended.  [PyPI] is the simplest and safest way to distribute
+[Python] packages, while [GitHub] is a version control system with
+many features for facilitating sharing and collaboration.)
 
-If you do not have [git] on your computer, install it.  If you use
-Windows, install [git for Windows], choosing all of the default
-options when installing.
+To configure integration with [GitHub], follow the steps in the
+[setting up GitHub integration] section, and edit the
+[GitHub section of the configuration].
 
-Sign up for a [GitHub] account if you do not already have one.
+When that configuration is done, each user who is a developer will
+need to connect their [GitHub] accounts with their accounts on your
+**docassemble** server.  From the menu, the user should go to
+"Profile," click "GitHub integration," and follow the instructions.
+If the user is not currently logged in to [GitHub] in the same
+browser, [GitHub] will ask for log in information.  (Users without
+[GitHub] accounts can [create one].)  Users will need to give consent
+to giving the **docassemble** server to have privileges of making
+changes to repositories and SSH keys within the [GitHub] account.
 
-Then create a [GitHub] repository.  If your **docassemble** extension
-package is `docassemble.missouri-family-law`, the name of the [GitHub]
-package should be `docassemble-missouri-family-law`.
+(Note: it is not possible to connect more than one **docassemble**
+account on a single **docassemble** server with the same [GitHub]
+account.  However, it is possible to connect accounts on multiple
+servers with the same [GitHub] account, so long as the [`appname`] on
+each **docassemble** server is different.)
 
-After you press ![Create Repository]({{ site.baseurl
-}}/img/github-create-repository.png), your browser will go to the URL
-for your new repository, which will be in a form like
-`https://github.com/jhpyle/docassemble-missouri-family-law`.  In this
-example, `jhpyle` is the username, and
-`docassemble-missouri-family-law` is the name of the repository.
+To publish a package on [GitHub], go to the [Packages area] of the
+[Playground] and press the ![GitHub]({{ site.baseurl
+}}/img/playground-packages-button-github.png) button.  You will be asked
+for a "commit message."  This is a brief, one-line message that
+describes the changes made to your package since the last time you
+"committed" changes.  Each "commit" is like a snapshot, and the history
+of "commit" messages is a record of the development of your project.
 
-In the "Packages" folder of the **docassemble** [Playground], edit
-your package and add the [GitHub] URL as the "URL" of the package.
-This will ensure that if your package is a dependency for another
-package, that other package will be able to install your package as
-one of its dependencies when it is installed on a server.
+![Commit]({{ site.baseurl }}/img/playground-packages-github-commit.png){: .maybe-full-width }
 
-Then save your package and then download it as a ZIP file.  Extract
-the files from the ZIP file to a convenient place on your computer.
+When you press the "Commit" button after writing the commit message,
+your package will be "pushed" to a [GitHub] repository in your
+account.  If a repository does not already exist on [GitHub] with the
+name of your package, a new repository will be created.
 
-You will see a directory with the name of your package (e.g.,
-`docassemble-missouri-family-law`.  This directory will contain a
-directory called `docassemble` and a file called `setup.py`.  The top
-directory (e.g., `docassemble-missouri-family-law`) will be the root
-directory of your new [GitHub] repository.
+![GitHub published]({{ site.baseurl }}/img/playground-packages-github-published.png){: .maybe-full-width }
 
-The process of initializing a package as a [GitHub] repository
-requires using the shell.  (On Windows, you can use [PowerShell].)
-The web page at the URL for your repository on [GitHub] contains some
-instructions about how to initialize your repository.  First, use `cd`
-to change into the directory that contains the package you want to
-install (in this example, we'll use `docassemble-missouri-family-law`)
-and then run the [git] commands suggested by [GitHub].  For example:
+You can follow the hyperlink to your package's page on [GitHub].
 
-{% highlight text %}
-cd docassemble-missouri-family-law
-git init
-git add .
-git commit -m "first commit"
-git remote add origin https://github.com/jhpyle/docassemble-missouri-family-law.git
-git push -u origin master
-{% endhighlight %}
+![GitHub repository]({{ site.baseurl }}/img/playground-packages-github-repository.png){: .maybe-full-width }
 
-The last command will prompt you for your [GitHub] credentials.  After
-you put in the credentials, your package will be uploaded to
-[GitHub].  If you reload your [GitHub] repository's page at the
-[GitHub] URL, you will see the listing of files.
+After your first commit, [GitHub] reports that there have been two
+commits; this is because the initial creation of the repository caused
+a commit (containing a `LICENSE` file only) and then the addition of
+the files of your package caused a second commit.
 
-Now, on the **docassemble** menu, you can go to Package Management ->
-Update a Package, and install the package using its [GitHub] URL.
+Once your package is on [GitHub], then on the **docassemble** menu,
+you can go to Package Management -> Update a Package and [install
+the package](#github_install) using its [GitHub] URL.
+
+![GitHub Install]({{ site.baseurl }}/img/github-install.png){: .maybe-full-width }
 
 # Best practices for packaging your interviews
 
@@ -448,3 +449,7 @@ interviews that might have a very different purpose.
 [data files]: {{ site.baseurl }}/docs/playground.html#sources
 [git]: https://git-scm.com/
 ["Packages" folder]: {{ site.baseurl }}/docs/playground.html#packages
+[Setting up GitHub integration]: {{ site.baseurl }}/docs/installation.html
+[GitHub section of the configuration]: {{ site.baseurl }}/docs/config.html#github
+[create one]: https://github.com/join
+[`appname`]: {{ site.baseurl }}/docs/config.html#appname

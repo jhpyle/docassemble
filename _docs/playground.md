@@ -28,7 +28,7 @@ will be used as the name of the file in the Playground.  If a file
 exists with the same name, it will be overwritten.
 
 To download the [YAML] file that is currently displayed, click <i
-class="glyphicon glyphicon-upload" aria-hidden="true"></i> Download.
+class="glyphicon glyphicon-download" aria-hidden="true"></i> Download.
 Note that if there are unsaved changes, the changes will _not_ be
 reflected in the downloaded file; you would need to press the Save
 button first in order to download the changed file.
@@ -178,21 +178,31 @@ You can keep track of one or more packages in the Packages folder.  Each
 package has its own tab.  To create a new package, click "<i
 class="glyphicon glyphicon-plus-sign" aria-hidden="true"></i> Add."
 
-To view a different package, select it from the pull-down menu.
+To view a different package, select it from the <i class="glyphicon glyphicon-briefcase"
+aria-hidden="true"></i> pull-down menu.
+
+To download the current package as a Zip file, click "<i class="glyphicon glyphicon-download" aria-hidden="true"></i>
+Download."
 
 If you have an existing package that was created using
 **docassemble**, you can upload its contents into the Playground by
 clicking "<i class="glyphicon glyphicon-upload"
-aria-hidden="true"></i> Upload."  Note: this will work as expected if
-all of your modules are in the folder
-`docassemble-packagename/docassemble/packagename`, and templates are
-in the folder
-`docassemble-packagename/docassemble/packagename/data/templates`,
-etc.  If you created subfolders within these folders, **docassemble**
-will not know where to put your files.
+aria-hidden="true"></i> Upload" and uploading a ZIP file.  The ZIP
+file should contain a single directory called, for example,
+`docassemble-packagename`, and this directory needs to contain the
+`setup.py` file and a `docassemble` directory.  If the directory
+structure is different, **docassemble** may not be able to read your
+ZIP file.  Note: this will work as expected if all of your modules are
+in the folder `docassemble-packagename/docassemble/packagename`, and
+templates are in the folder
+`docassemble-packagename/docassemble/packagename/data/templates`, etc.
+If you created subfolders within these folders, **docassemble** will
+not know where to put your files.
 
-To download the current package as a Zip file, click "<i class="glyphicon glyphicon-download"
-aria-hidden="true"></i> Download."
+If there is a package on [GitHub] and you would like to bring the
+contents of that package into your Playground, click "<i class="glyphicon glyphicon-cloud"
+aria-hidden="true"></i> Pull."  This works in much the same way as the
+Upload feature, and has the same limitations.
 
 {% include scroll-image.html image="playground-packages-page-clipped.png" %}
 
@@ -214,10 +224,8 @@ Packages are defined with the following elements:
   another, you will need to edit the `LICENSE` file manually.
 * **Description**: This is a short description of your package (no
   more than 255 characters).
-* **URL**: This is a URL indicating where your software can be found.
-  If you distribute your package on [GitHub], you will need to set
-  this to the [GitHub] URL for your package.  See the
-  [packages section] for more information about why this is necessary.
+* **URL**: This is a URL indicating where information about your
+  software can be found.
 * **Dependencies**: From the list of Python [packages] installed on
   the system, indicate the ones that are required for your package to
   operate.  When your package is installed on another system, these
@@ -228,6 +236,8 @@ Packages are defined with the following elements:
   Playground, indicate which ones should be included in your package.
 * **Static files**: From the [static files] defined in your
   Playground, indicate which ones should be included in your package.
+* **Source files**: From the [source files] defined in your
+  Playground, indicate which ones should be included in your package.
 * **Modules**: From the [modules] defined in your
   Playground, indicate which ones should be included in your package.
 * <a name="README"></a>**README file**: This is a text box into which
@@ -235,18 +245,35 @@ Packages are defined with the following elements:
   included in your package.  If you leave this blank, the `README.md`
   file will list the package name, package description, and author.
 
+The page also gives a report about whether the package exists on
+[PyPI] or whether it exists as a repository in your [GitHub] account.
+
 At the bottom of the page, you can press one of the following buttons:
 
 * **Save**: Saves the package definition and does nothing more.
 * **Install**: Saves the package definition, creates a ZIP file
   containing the package, and installs that ZIP file on the server.
-* **Publish**: Publishes the package on [PyPI] so that other people
-  can install it.
+* **PyPI**: Publishes the package on [PyPI] so that other people
+  can install it.  This will not be displayed unless you have set up
+  the [PyPI configuration].
+* **GitHub**: Publishes the package on [GitHub] so that you can manage
+  versions of your package, and also so that other people can install
+  it and .  This will not be displayed unless you have set up the
+  [GitHub configuration].
 * **Delete**: Deletes the package definition.  If you installed the
   package on the system, it does not uninstall the package.
 
-To change the author information that is included in the package, edit
-your [profile].
+When you press Save, Install, PyPI, or GitHub, **docassemble** creates
+a [Python] package from the information on this page, but it also uses
+information about you, such as your name and e-mail address, to
+indicate the author of the package.  To change the author information
+that is included in the package, edit your [profile].
+
+If the references to [PyPI] and [GitHub] do not appear for you, an
+administrator on your system will need to enable these features.  See
+[sharing packages on PyPI]({{ site.baseurl }}/docs/config.html#pypi)
+[setting up GitHub integration]({{ site.baseurl }}/docs/installation.html#github) 
+for more information.
 
 For more information on managing [Python packages] within
 **docassemble**, see [packages].
@@ -562,6 +589,7 @@ Then the editing screen will load.
 [templates]: #templates
 [template files]: #templates
 [static files]: #static
+[source files]: #sources
 [modules]: #modules
 [packages area]: #packages
 [emoji]: {{ site.baseurl }}/docs/markup.html#emoji
@@ -596,3 +624,5 @@ Then the editing screen will load.
 [Sublime Text]: http://www.sublimetext.com/
 [`googledrive`]: {{ site.baseurl }}/docs/config.html#googledrive
 [Google Docs]: https://docs.google.com
+[GitHub configuration]: {{ site.baseurl }}/docs/config.html#github
+[PyPI configuration]: {{ site.baseurl }}/docs/config.html#pypi

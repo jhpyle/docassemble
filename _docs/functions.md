@@ -1538,15 +1538,16 @@ current time and the last access time.
 
 # Functions for working with dates and times
 
-## <a name="month_of"></a><a name="day_of"></a><a name="year_of"></a>month_of(), day_of(), and year_of()
+## <a name="month_of"></a><a name="day_of"></a><a name="year_of"></a><a name="dow_of"></a>month_of(), day_of(), year_of(), and dow_of()
 
 These functions read a date and provide the parts of the date.
 
 {% include side-by-side.html demo="date-parts" %}
 
-The `month_of` function has an optional setting: if called as, e.g.,
-`month_of(some_date, as_word=True)`, it will return the month as a
-word (according to the current language and locale).
+The `month_of()` and `dow_of()` functions have an optional setting: if
+called with the optional parameter `as_word=True`, they will return the result as a
+word (according to the current language and locale) rather than as a
+number.
 
 ## <a name="format_date"></a>format_date()
 

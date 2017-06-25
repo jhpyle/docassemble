@@ -1245,12 +1245,10 @@ timezone: America/Los_Angeles
 ## <a name="pypi"></a>Sharing packages on PyPI
 
 If you want users of your server to be able to publish packages to
-[PyPI] from the [packages folder] of the [Playground], you will need
-to provide a [PyPI] username and password in the configuration:
+[PyPI] from the [packages folder] of the [Playground], set `pypi` to `True`:
 
 {% highlight yaml %}
-pypi username: johndoe
-pypi password: xX_s3cret_Xx
+pypi: True
 {% endhighlight %}
 
 You can also tweak the operation of **docassemble**'s interaction with
@@ -1262,17 +1260,18 @@ pypi url: https://pypi.python.org/pypi
 pypirc path: /var/www/.pypirc
 {% endhighlight %}
 
-The `pypi url` directive refers to the web site to use for publishing.
+The `pypi url` directive refers to the repository to use for publishing.
 It should not have a trailing slash.
 
-The `pypirc path` directive refers to the file where the username and
-password will be stored.  You may need to edit this if you run
+The `pypirc path` directive refers to the file where the repository
+URL will be stored.  You may need to edit this if you run
 **docassemble** on a non-standard operating system.
 
 ## <a name="oauth"></a>Facebook, Google, and Azure login
 
 If you want to enable logging in with Facebook, Google, or Microsoft
-Azure, you will need to tell **docassemble** your [OAuth2] keys:
+Azure, you will need to tell **docassemble** your [OAuth2] keys for
+these services:
 
 {% highlight yaml %}
 oauth:
@@ -1312,6 +1311,29 @@ oauth:
 
 For more information about obtaining these keys, see the 
 [Google Drive]({{ site.baseurl }}/docs/installation.html#googledrive)
+section of the [installation] page.
+
+Note that in [YAML], dictionary keys must be unique.  So you can
+only have one `ouath:` line in your configuration.  Put all of your
+[OAuth2] configuration details (for Google logins, Google Drive
+integration, etc.) within a single `oauth` directive.
+
+## <a name="github"></a>GitHub configuration
+
+To enable the [GitHub integration] feature, add
+a `github` entry to your [`oauth`](#oauth) configuration with
+your [OAuth2] keys for [GitHub].
+
+{% highlight yaml %}
+oauth:
+  github:
+    enable: True
+    id: 78df98b2573io5d78a1b
+    secret: 75dc98473847a7c938f8beeee87f322fcb980232
+{% endhighlight %}
+
+For more information about obtaining these keys, see the 
+[GitHub integration]({{ site.baseurl }}/docs/installation.html#github)
 section of the [installation] page.
 
 ## <a name="twilio"></a>Twilio configuration
@@ -1610,6 +1632,7 @@ and Facebook API keys.
 [load balancer]: {{ site.baseurl }}/docs/scalability.html
 [forwards]: {{ site.baseurl }}/docs/docker.html#forwarding
 [Google Drive synchronization]: {{ site.baseurl }}/docs/playground.html#google drive
+[GitHub integration]: {{ site.baseurl }}/docs/packages.html#github
 [OAuth2]: https://oauth.net/2/
 [Google Drive]: https://drive.google.com
 [Mailgun]: https://www.mailgun.com/

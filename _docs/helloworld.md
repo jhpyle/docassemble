@@ -377,7 +377,7 @@ Otherwise, edit the "New" package.
 
 Call your new package "helloworld."
 
-![Package called helloworld]({{ site.baseurl }}/img/playground-package-example-helloworld.png)
+![Package called helloworld]({{ site.baseurl }}/img/playground-packages-example-helloworld.png)
 
 On this screen, you can define the characteristics of your package and
 indicate which resources from the [Playground] should be included in
@@ -417,9 +417,13 @@ If you unpack the contents of the ZIP file, you will have a folder
 called `docassemble-helloworld`.  You can make changes to the files,
 then re-ZIP the `docassemble-helloworld` folder, and install the
 revised package on a **docassemble** server using the
-[Package Management] tool.
+[Package Management] tool.  Or, if you want to edit the revised
+contents of your package in the [Playground] again, click the
+![Upload]({{ site.baseurl
+}}/img/playground-packages-button-upload.png) button to upload your
+ZIP file.
 
-## Storing on PyPI
+## <a name="pypi"></a>Storing on PyPI
 
 You can share your package on [PyPI], the central repository for
 [Python] software, so that other people can install your package on
@@ -431,27 +435,36 @@ you try this yourself on a package called `docassemble.helloworld`,
 you will probably get an error because package names on [PyPI] are
 unique and the `docassemble.helloworld` package has already been
 uploaded (by me!).  However, these instructions will work if you adapt
-them to a package of your own.
+them to a unique package of your own.
 
-First, you need to create a username and password on [PyPI].  Then, go
-to "Configuration" on the menu and add the username and password into
-the **docassemble** [configuration] like so:
+First, you need to create a username and password on [PyPI].
+
+The **docassemble** [configuration] on your server will need to be set
+up to allow publishing to [PyPI].  To configure this, a user with
+`admin` [privileges] needs to go to "Configuration" on the menu and
+add the following to the [configuration]:
 
 {% highlight yaml %}
-pypi username: johndoe
-pypi password: xX_s3cret_Xx
+pypi: True
 {% endhighlight %}
 
-After you save the [configuration], go to the ["Packages" folder] of
-the **docassemble** [Playground] and open your
-`docassemble-helloworld` package that you created [above](#packaging).
-At the bottom of the screen you will see a message about whether the
-package is published on [PyPI].
+If this configuration has been done, you can go to "Profile" from the
+menu and scroll down to the "PyPI Username" and "PyPI Password"
+fields.  Fill in these fields with the username and password you just
+obtained.
+
+![PyPI username and password]({{ site.baseurl }}/img/profile-pypi-username-password.png)
+
+Then, go to the ["Packages" folder] of the **docassemble**
+[Playground] and open your `docassemble-helloworld` package that you
+created [above](#packaging).  At the bottom of the screen you will see
+a message about whether the package is published on [PyPI] and/or
+[GitHub].
 
 ![PyPI Info]({{ site.baseurl }}/img/playground-packages-not-published-yet.png)
 
-Press the ![Publish]({{ site.baseurl
-}}/img/playground-packages-publish-button.png) button to publish the
+Press the ![PyPI]({{ site.baseurl
+}}/img/playground-packages-button-pypi.png) button to publish the
 package to [PyPI].
 
 When the publishing is done, you will see an informational message
@@ -460,9 +473,11 @@ if there are any errors.
 
 If the publishing was successful, then at the bottom of the page
 describing your package, you should see a message that the package now
-exists on [PyPI].
+exists on [PyPI].  (However, sometimes the [PyPI] server is slow to
+reflect the existence of the package, so you may need to give it a
+minute or two.)
 
-![PyPI Info]({{ site.baseurl }}/img/playground-packages-published.png)
+![PyPI Info]({{ site.baseurl }}/img/playground-packages-pypi-published.png)
 
 If you click the link, you can see what the package looks like on the
 [PyPI] web site.
@@ -478,70 +493,65 @@ the package by specifying a "Package on PyPI."
 For more information about uploading packages to [PyPI], see
 the [PyPI subsection] of the [packages] section.
 
-## Storing on Github
+## <a name="github"></a>Storing on Github
 
 You can also share your package on [GitHub], a popular
 [version control system] that facilitates collaboration.
 
-If your package is on [GitHub], you will be able to go to
-[Package Management] on a **docassemble** server and install your
-package using the URL to the [GitHub] repository.
+You will need an account on [GitHub].  If you do not have one, you can
+[create one].
 
-In order to publish files on [GitHub], you will need the [git]
-application.  If you do not have [git] on your computer, install it.
-If you use Windows, install [git for Windows], choosing all of the
-default options when installing.
+Your **docassemble** configuration will need to be configured to allow
+[GitHub] integration.  The instructions for setting that up are
+[in the installation section]({{ site.baseurl
+}}/docs/installation.html#github).
 
-To share your interview on [GitHub], first create a [GitHub]
-repository.
+Once your server allows [GitHub integration], you can go to "Profile"
+on the menu and click the link for "GitHub integration."  Follow
+the instructions to connect your [GitHub] account with your
+**docassemble** account.
 
-The name of the repository for a **docassemble** extension package
-should be in the form of `docassemble-helloworld`.
+Once you have connected your [GitHub] account with your
+**docassemble** account, go to the ["Packages" folder] of the
+**docassemble** [Playground] and open your `docassemble-helloworld`
+package that you created [above](#packaging).  At the bottom of the
+screen you will see a message about whether the package is published
+on [GitHub].
 
-![GitHub Repository]({{ site.baseurl }}/img/github-helloworld.png){: .maybe-full-width }
+![GitHub Info]({{ site.baseurl }}/img/playground-packages-github-not-published-yet.png)
 
-After you press ![Create Repository]({{ site.baseurl
-}}/img/github-create-repository.png), you will get a URL for your
-repository, which will be in a form like
-`https://github.com/jhpyle/docassemble-helloworld`, where your
-[GitHub] username will be in place of `jhpyle`, and your repository
-name will be in place of `docassemble-helloworld`.
+Press the ![GitHub]({{ site.baseurl
+}}/img/playground-packages-button-github.png) button.
 
-In the ["Packages" folder] of the **docassemble** [Playground], edit
-your package and add the [GitHub] URL as the "URL" of the package.
+You will be asked for a "commit message."  This is a brief, one-line
+message that describes the changes made to your package since the last
+time you "committed" changes.  Each "commit" is like a snapshot, and
+the history of "commit" messages is a record of the development of
+your project.  You can give your first commit a simple name:
 
-![GitHub URL]({{ site.baseurl }}/img/playground-packages-github-url.png)
+![Commit]({{ site.baseurl }}/img/playground-packages-github-commit-helloworld.png){: .maybe-full-width }
 
-![Save]({{ site.baseurl }}/img/playground-packages-button-save.png)
-your package and then ![Download]({{ site.baseurl
-}}/img/playground-packages-button-download.png) it as a ZIP file.
+However, your subsequent "commits" should have meaningful names that
+describe succinctly how that snapshot is different from the previous
+snapshot.  You should also use the README text box to describe to
+other people the history of all of your changes.
 
-Extract the files from the ZIP file to a convenient place on your
-computer.  Windows will suggest extracting to
-`C:\Users\yourusername\Desktop\docassemble-helloworld`, but you should
-change that path to `C:\Users\yourusername`; after extraction, your
-package directory will be
-`C:\Users\yourusername\docassemble-helloworld`.
+When you press the "Commit" button, your package will be "pushed" to a
+"repository" in your [GitHub] account.  If a repository does not
+already exist on [GitHub] with the name of your package, a new
+repository will be created.
 
-You will see a `docassemble-helloworld` directory containing a
-directory called `docassemble` and a file called `setup.py`.  The
-`docassemble-helloworld` directory will be the root directory of your
-new [GitHub] repository.
+When the uploading is done, you will see an informational message with
+the output of the uploading commands.  Check this message to see if
+there are any errors.
 
-Using a shell (e.g., [PowerShell] on Windows), run the following commands.
+If the publishing was successful, then at the bottom of the page
+describing your package, you should see a message that the package now
+exists on [GitHub].
 
-{% highlight text %}
-cd docassemble-helloworld
-git init
-git add .
-git commit -m "first commit"
-git remote add origin https://github.com/jhpyle/docassemble-helloworld.git
-git push -u origin master
-{% endhighlight %}
+![PyPI Info]({{ site.baseurl }}/img/playground-packages-github-published.png)
 
-With the files pushed, the repository will look like the following,
-with the `setup.py` file and the `docassemble` directory at the top
-level.
+If you click the link, you can see what the package looks like on [GitHub]:
 
 ![GitHub Repository]({{ site.baseurl }}/img/github-helloworld-repository.png){: .maybe-full-width }
 
@@ -593,3 +603,5 @@ the [GitHub subsection] of the [packages] section.
 [static]: {{ site.baseurl }}/docs/playground.html#static
 [DOCX template]: {{ site.baseurl }}/docs/documents.html#docx template file
 [decorating]: {{ site.baseurl }}/docs/modifiers.html#decoration
+[create one]: https://github.com/join
+[GitHub integration]: {{ site.baseurl }}/docs/packages.html#github

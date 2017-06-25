@@ -902,14 +902,24 @@
   mandatory: True
 "date-parts": |-
   mandatory: True
-  question: The date, explained.
+  question: |
+    The date ${ some_date }, explained.
   subquestion: |
     The year is ${ year_of(some_date) }.
 
     The month is ${ month_of(some_date) }.
 
+    The month as a word is
+    ${ month_of(some_date, as_word=True) }.
+
     The day of month is
     ${ day_of(some_date) }.
+
+    The day of week is
+    ${ dow_of(some_date) }.
+
+    The day of week as a word is
+    ${ dow_of(some_date, as_word=True) }.
 "dead-end": |-
   mandatory: True
   code: |
@@ -5571,6 +5581,11 @@
     Is Topeka the capital of Kansas?
   yesnomaybe: topeka_is_capital_of_kansas
 
+"discovery": |-
+  template: discovery['rent records']
+  content: |
+    All records of any type whatsoever relating to the unit rented by ${
+    client }.
 "fish-example": "code: |\n  fishes = objects_from_file(\"fishes.yml\")\n---\nmandatory:\
   \ true\nquestion: |\n  Fish summary\nsubquestion: |\n  % for fish in fishes:\n \
   \ ${ fish } has\n  ${ fish.scales } scales.\n  \n  % endfor"
@@ -5621,6 +5636,15 @@
   \ of\n  ${ fruitseeds.number_as_word() }\n  fruit\nsubquestion: |\n  % for fruit\
   \ in fruitseeds:\n  The seeds of ${ fruit } are\n  ${ fruitseeds[fruit] }\n  in\
   \ number.\n  \n  % endfor"
+"objects-from-file-template": |-
+  objects:
+    client: Individual
+  ---
+  question: |
+    What is your name?
+  fields:
+    - First: client.name.first
+    - Last: client.name.last
 "raw-data-example": "code: |\n  raw_data = objects_from_file(\"raw_data.yml\", recursive=False)\n\
   ---\nmandatory: true\nquestion: |\n  The imported data\nsubquestion: |\n  % for\
   \ item in raw_data:\n  The `inventory` of\n  \"${ item.title }\" is:\n  \n  > `${\
