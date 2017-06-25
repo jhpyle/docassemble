@@ -481,7 +481,7 @@ def as_html(status, url_for, debug, root, validation_rules):
     if 'css' in status.extras and status.extras['css'] is not None:
         status.extra_css.append(status.extras['css'])
     if status.continueLabel:
-        continue_label = markdown_to_html(status.continueLabel, trim=True)
+        continue_label = markdown_to_html(status.continueLabel, trim=True, do_terms=False)
     else:
         continue_label = word('Continue')        
     # if status.question.script is not None:
@@ -632,7 +632,7 @@ def as_html(status, url_for, debug, root, validation_rules):
         if (len(fieldlist)):
             output += "".join(fieldlist)
         if status.continueLabel:
-            resume_button_label = markdown_to_html(status.continueLabel, trim=True)
+            resume_button_label = markdown_to_html(status.continueLabel, trim=True, do_terms=False)
         else:
             resume_button_label = word('Resume')
         output += '                <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + resume_button_label + '</button></div>\n'
@@ -843,7 +843,7 @@ def as_html(status, url_for, debug, root, validation_rules):
                     if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
                         random.shuffle(pairlist)
                     for pair in pairlist:
-                        formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                        formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
                         if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue):
                             ischecked = ' checked="checked"'
                         else:
@@ -866,7 +866,7 @@ def as_html(status, url_for, debug, root, validation_rules):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
+                            formatted_key = markdown_to_html(key, status=status, trim=True, escape=True, do_terms=False)
                             if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(choice[key]) == unicode(defaultvalue):
                                 ischecked = ' checked="checked"'
                             else:
@@ -887,7 +887,7 @@ def as_html(status, url_for, debug, root, validation_rules):
                     for key in choice:
                         if key == 'image':
                             continue
-                        formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
+                        formatted_key = markdown_to_html(key, status=status, trim=True, escape=True, do_terms=False)
                         output += '                <div class="row"><div class="col-md-12"><input alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ==" type="radio" value="' + str(indexno) + '"/></div></div>\n'
                         id_index += 1
                     indexno += 1
@@ -1354,7 +1354,7 @@ def input_for(status, field, wide=False, embedded=False):
                 if pair[0] is not None:
                     inner_field = safeid(from_safeid(saveas_string) + "[" + myb64quote(pair[0]) + "]")
                     #sys.stderr.write("I've got a " + repr(pair[1]) + "\n")
-                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
                     if len(pair) > 2 and pair[2]:
                         ischecked = ' checked'
                     elif defaultvalue is None:
@@ -1384,7 +1384,7 @@ def input_for(status, field, wide=False, embedded=False):
             for pair in pairlist:
                 if pair[0] is not None:
                     #sys.stderr.write(str(saveas_string) + "\n")
-                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
                     if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
@@ -1415,14 +1415,14 @@ def input_for(status, field, wide=False, embedded=False):
             output += '</select> '
     elif hasattr(field, 'datatype'):
         if field.datatype == 'boolean':
-            label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=True)
+            label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=True, do_terms=False)
             if hasattr(field, 'inputtype') and field.inputtype in ['yesnoradio', 'noyesradio']:
                 output += '<p class="sr-only">' + word('Choices:') + '</p>'
                 inner_fieldlist = list()
                 id_index = 0
                 if field.sign > 0:
                     for pair in [['True', status.question.yes()], ['False', status.question.no()]]:
-                        formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                        formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
                         if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                             ischecked = ' checked="checked"'
                         else:
@@ -1431,7 +1431,7 @@ def input_for(status, field, wide=False, embedded=False):
                         id_index += 1
                 else:
                     for pair in [['False', status.question.yes()], ['True', status.question.no()]]:
-                        formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                        formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
                         if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                             ischecked = ' checked="checked"'
                         else:
@@ -1453,7 +1453,7 @@ def input_for(status, field, wide=False, embedded=False):
             output += '<p class="sr-only">' + word('Choices:') + '</p>'
             if field.sign > 0:
                 for pair in [['True', status.question.yes()], ['False', status.question.no()], ['None', status.question.maybe()]]:
-                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
                     if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
@@ -1462,7 +1462,7 @@ def input_for(status, field, wide=False, embedded=False):
                     id_index += 1
             else:
                 for pair in [['False', status.question.yes()], ['True', status.question.no()], ['None', status.question.maybe()]]:
-                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
                     if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:

@@ -72,6 +72,11 @@ class PlaygroundFilesEditForm(FlaskForm):
     submit = SubmitField(word('Save'))
     delete = SubmitField(word('Delete'))
 
+class PullPlaygroundPackage(FlaskForm):
+    github_url = StringField(word('GitHub URL'))
+    pull = SubmitField(word('Pull'))
+    cancel = SubmitField(word('Cancel'))
+
 class PlaygroundPackagesForm(FlaskForm):
     original_file_name = StringField(word('Original Name'))
     file_name = StringField(word('Package Name'), validators=[validators.Length(min=1, max=50),
@@ -87,12 +92,20 @@ class PlaygroundPackagesForm(FlaskForm):
     static_files = SelectMultipleField(word('Static files'))
     sources_files = SelectMultipleField(word('Source files'))
     readme = TextAreaField(word('README file'), default='')
+    commit_message = StringField(word('Commit message'), default="")
     submit = SubmitField(word('Save'))
     download = SubmitField(word('Download'))
     install = SubmitField(word('Install'))
-    publish = SubmitField(word('Publish'))
+    pypi = SubmitField(word('PyPI'))
+    github = SubmitField(word('GitHub'))
+    cancel = SubmitField(word('Cancel'))
     delete = SubmitField(word('Delete'))
 
 class GoogleDriveForm(FlaskForm):
     folder = SelectField(word('Folder'))
     submit = SubmitField(word('Save'))
+
+class GitHubForm(FlaskForm):
+    configure = SubmitField(word('Configure'))
+    unconfigure = SubmitField(word('Disable'))
+    cancel = SubmitField(word('Cancel'))

@@ -40,11 +40,14 @@
 "Clear": Null
 "Click here to confirm your e-mail": Null
 "Click here to get help over the phone.": Null
+"Commit message": Null
+"Commit": Null
 "Configuration not updated.": Null
 "Configuration not updated.  There was an error.": Null
 "Configuration not updated.  There was a syntax error in the configuration YAML.": Null
 "Configuration": Null
 "Configuration YAML": Null
+"Configure": Null
 "Connected to Google Drive": Null
 "Continue": Null
 "Control": Null
@@ -113,9 +116,12 @@
 "Get help through live chat by clicking here.": Null
 "Get package": Null
 "Get template": Null
+"GitHub Integration": Null
+"GitHub integration was successfully configured.": Null
+"GitHub integration was successfully disconnected.": Null
+"GitHub": Null
 "GitHub URL": Null
 "Go": Null
-"Google Drive is not configured.": Null
 "Google Drive is not configured": Null
 "Google Drive": Null
 "Google Drive Test": Null
@@ -248,7 +254,12 @@
 "Privileges": Null
 "Problem detected.": Null
 "Profile": Null
-"Publish": Null
+"published on GitHub": Null
+"published on PyPI": Null
+"Pushed commit to GitHub.": Null
+"PyPI": Null
+"PyPI Password": Null
+"PyPI Username": Null
 "question": Null
 "Question": Null
 "quit": Null
@@ -316,6 +327,7 @@
 "tex_message": Null
 "That package name is already in use by someone else.  Please change the name.": Null
 "That screen is already being controlled by another operator": Null
+"The author is": Null
 "The configuration file was saved.": Null
 "The information was saved.": Null
 "The mapping was reset because the folder does not appear to exist anymore.": Null
@@ -333,10 +345,14 @@
 "There was a problem sending you a text message.  Please log in another way.": Null
 "The role could not be deleted.": Null
 "The supplied folder could not be found.": Null
+"The version on PyPI is": Null
 "Third subdivision": Null
 "This account uses two-factor authentication.": Null
 "This field is required.": Null
 "This image file does not exist": Null
+"This package is not yet published on GitHub.": Null
+"This package is not yet published on PyPI.": Null
+"This package is": Null
 "Time Zone": Null
 "t": Null
 "to proceed.": Null
@@ -372,6 +388,8 @@
 "Type your selection.": Null
 "Type your selection, or type skip to move on without selecting.": Null
 "Type your selection(s), separated by commas, or type none.": Null
+"Unable to determine if the package is published on GitHub.": Null
+"Unable to determine if the package is published on PyPI.": Null
 "(Unable to display map)": Null
 "Unable to e-mail your documents to": Null
 "(Unable to extract images from PDF file)": Null
@@ -459,6 +477,7 @@
 "Your documents, ": Null
 "Your documents will be e-mailed to": Null
 "Your e-mail address": Null
+"Your GitHub integration has already been configured.": Null
 "Your information was saved.": Null
 "Your password is insecure and needs to be changed": Null
 "Your request was submitted.": Null
@@ -468,4 +487,5 @@
 "Your verification code was invalid.": Null
 "Your verification code was invalid or expired.": Null
 "Your verification code was missing or expired": Null
+"Your version is": Null
 "Zip File": Null

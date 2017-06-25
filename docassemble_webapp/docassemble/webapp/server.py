@@ -422,6 +422,7 @@ import time
 import pip.utils.logging
 import pip
 import shutil
+import filecmp
 import codecs
 import weakref
 import types
@@ -453,6 +454,7 @@ import qrcode.image.svg
 import StringIO
 from distutils.version import LooseVersion
 from subprocess import call, Popen, PIPE
+import subprocess
 from pygments import highlight
 from pygments.lexers import YamlLexer
 from pygments.formatters import HtmlFormatter
@@ -462,7 +464,7 @@ from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
 #from flask_wtf.csrf import generate_csrf
-from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm
+from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, GitHubForm, PullPlaygroundPackage
 from flask_mail import Mail, Message
 import flask_user.signals
 import flask_user.translations
@@ -539,6 +541,7 @@ app.config['USE_FACEBOOK_LOGIN'] = False
 app.config['USE_AZURE_LOGIN'] = False
 app.config['USE_GOOGLE_DRIVE'] = False
 app.config['USE_PHONE_LOGIN'] = False
+app.config['USE_GITHUB'] = False
 if twilio_config is not None and daconfig.get('phone login', False) is True:
     app.config['USE_PHONE_LOGIN'] = True
 if 'oauth' in daconfig:
@@ -559,6 +562,10 @@ if 'oauth' in daconfig:
         app.config['USE_GOOGLE_DRIVE'] = True
     else:
         app.config['USE_GOOGLE_DRIVE'] = False
+    if 'github' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['github'] and daconfig['oauth']['github']['enable'] is False):
+        app.config['USE_GITHUB'] = True
+    else:
+        app.config['USE_GITHUB'] = False
 else:
     app.config['OAUTH_CREDENTIALS'] = dict()
 
@@ -1003,7 +1010,7 @@ def copy_playground_modules():
             shutil.rmtree(local_dir)
         #sys.stderr.write("Copying " + str(mod_dir.directory) + " to " + str(local_dir) + "\n")
         shutil.copytree(mod_dir.directory, local_dir)
-        with open(os.path.join(local_dir, '__init__.py'), 'a') as the_file:
+        with open(os.path.join(local_dir, '__init__.py'), 'w') as the_file:
             the_file.write(init_py_file)
 
 def proc_example_list(example_list, examples):
@@ -1462,20 +1469,20 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     return(navbar)
 
 def delete_session():
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update', 'phone_number', 'otp_secret', 'validated_user']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next']:
         if key in session:
             del session[key]
     return
 
 def backup_session():
     backup = dict()
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update', 'phone_number', 'otp_secret', 'validated_user']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next']:
         if key in session:
             backup[key] = session[key]
     return backup
 
 def restore_session(backup):
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update', 'phone_number', 'otp_secret', 'validated_user']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next']:
         if key in backup:
             session[key] = backup[key]
 
@@ -2734,6 +2741,240 @@ def mfa_login():
     else:
         description += "  " + word("Please enter the verification code from your authentication app.")
     return render_template('flask_user/mfa_login.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=description)
+
+def get_github_flow():
+    app_credentials = current_app.config['OAUTH_CREDENTIALS'].get('github', dict())
+    client_id = app_credentials.get('id', None)
+    client_secret = app_credentials.get('secret', None)
+    if client_id is None or client_secret is None:
+        raise DAError('GitHub integration is not configured')
+    flow = oauth2client.client.OAuth2WebServerFlow(
+        client_id=client_id,
+        client_secret=client_secret,
+        scope='repo admin:public_key',
+        redirect_uri=url_for('github_oauth_callback', _external=True),
+        auth_uri='http://github.com/login/oauth/authorize',
+        token_uri='https://github.com/login/oauth/access_token',
+        access_type='offline',
+        prompt='consent')
+    return flow
+
+def delete_ssh_keys():
+    area = SavedFile(current_user.id, fix=True, section='playgroundpackages')
+    area.delete_file('.ssh-private')
+    area.delete_file('.ssh-public')
+    area.delete_file('.ssh_command.sh')
+    area.finalize()
+
+def get_ssh_keys(email):
+    area = SavedFile(current_user.id, fix=True, section='playgroundpackages')
+    private_key_file = os.path.join(area.directory, '.ssh-private')
+    public_key_file = os.path.join(area.directory, '.ssh-public')
+    if not (os.path.isfile(private_key_file) and os.path.isfile(private_key_file)):
+        from Crypto.PublicKey import RSA
+        key = RSA.generate(4096)
+        pubkey = key.publickey()
+        area.write_content(key.exportKey('PEM'), filename=private_key_file, save=False)
+        area.write_content(pubkey.exportKey('OpenSSH') + " " + str(email) + "\n", filename=public_key_file, save=False)
+        area.finalize()
+    return (private_key_file, public_key_file)
+
+def get_next_link(resp):
+    if 'link' in resp and resp['link']:
+        link_info = links_from_header.extract(resp['link'])
+        if 'next' in link_info:
+            return link_info['next']
+    return None
+
+@app.route('/github_menu', methods=['POST', 'GET'])
+@login_required
+@roles_required(['admin', 'developer'])
+def github_menu():
+    if not app.config['USE_GITHUB']:
+        abort(404)
+    form = GitHubForm(request.form)
+    if request.method == 'POST':
+        if form.configure.data:
+            return redirect(url_for('github_configure'))
+        elif form.unconfigure.data:
+            return redirect(url_for('github_unconfigure'))
+        elif form.cancel.data:
+            return redirect(url_for('user_profile_page'))
+    uses_github = r.get('da:using_github:userid:' + str(current_user.id))
+    if uses_github:
+        description = "Your GitHub integration is currently turned on.  You can disconnect GitHub integration if you no longer wish to use it."
+    else:
+        description = "If you have a GitHub account, you can turn on GitHub integration.  This will allow you to use GitHub as a version control system for packages from inside the Playground."
+    return render_template('pages/github.html', form=form, version_warning=None, title=word("GitHub Integration"), tab_title=word("GitHub"), page_title=word("GitHub"), description=description, uses_github=uses_github, bodyclass='adminbody')
+
+@app.route('/github_configure', methods=['POST', 'GET'])
+@login_required
+@roles_required(['admin', 'developer'])
+def github_configure():
+    if not app.config['USE_GITHUB']:
+        abort(404)
+    storage = RedisCredStorage(app='github')
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        session['github_state'] = random_string(16)
+        session['github_next'] = 'configure'
+        flow = get_github_flow()
+        uri = flow.step1_get_authorize_url(state=session['github_state'])
+        return redirect(uri)
+    http = credentials.authorize(httplib2.Http())
+    found = False
+    resp, content = http.request("https://api.github.com/user", "GET")
+    if int(resp['status']) == 200:
+        user_info = json.loads(content)
+        if 'email' not in user_info:
+            raise DAError("github_configure: could not get e-mail address of user")
+    else:
+        raise DAError("github_configure: could not get information about user")
+    resp, content = http.request("https://api.github.com/user/keys", "GET")
+    if int(resp['status']) == 200:
+        for key in json.loads(content):
+            if key['title'] == app.config['APP_NAME']:
+                found = True
+    else:
+        raise DAError("github_configure: could not get information about ssh keys")
+    while found is False:
+        next_link = get_next_link(resp)
+        if next_link:
+            resp, content = http.request(next_link, "GET")
+            if int(resp['status']) == 200:
+                for key in json.loads(content):
+                    if key['title'] == app.config['APP_NAME']:
+                        found = True
+            else:
+                raise DAError("github_configure: could not get additional information about ssh keys")
+        else:
+            break
+    if found:
+        flash(word("Your GitHub integration has already been configured."), 'info')
+    if not found:
+        (private_key_file, public_key_file) = get_ssh_keys(user_info['email'])
+        with open(public_key_file, 'rb') as fp:
+            public_key = fp.read()
+        headers = {'Content-Type': 'application/json'}
+        body = json.dumps(dict(title=app.config['APP_NAME'], key=public_key))
+        resp, content = http.request("https://api.github.com/user/keys", "POST", headers=headers, body=body)
+        if int(resp['status']) == 201:
+            flash(word("GitHub integration was successfully configured."), 'info')
+        else:
+            raise DAError("github_configure: error setting public key")
+    r.set('da:using_github:userid:' + str(current_user.id), 1)
+    return redirect(url_for('user_profile_page'))
+
+@app.route('/github_unconfigure', methods=['POST', 'GET'])
+@login_required
+@roles_required(['admin', 'developer'])
+def github_unconfigure():
+    if not app.config['USE_GITHUB']:
+        abort(404)
+    storage = RedisCredStorage(app='github')
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        session['github_state'] = random_string(16)
+        session['github_next'] = 'unconfigure'
+        flow = get_github_flow()
+        uri = flow.step1_get_authorize_url(state=session['github_state'])
+        return redirect(uri)
+    http = credentials.authorize(httplib2.Http())
+    found = False
+    resp, content = http.request("https://api.github.com/user/keys", "GET")
+    if int(resp['status']) == 200:
+        for key in json.loads(content):
+            if key['title'] == app.config['APP_NAME']:
+                found = True
+                id_to_remove = key['id']
+    else:
+        raise DAError("github_configure: could not get information about ssh keys")
+    while found is False:
+        next_link = get_next_link(resp)
+        if next_link:
+            resp, content = http.request(next_link, "GET")
+            if int(resp['status']) == 200:
+                for key in json.loads(content):
+                    if key['title'] == app.config['APP_NAME']:
+                        found = True
+                        id_to_remove = key['id']
+            else:
+                raise DAError("github_configure: could not get additional information about ssh keys")
+        else:
+            break
+    if found:
+        resp, content = http.request("https://api.github.com/user/keys/" + str(id_to_remove), "DELETE")
+        if int(resp['status']) != 204:
+            raise DAError("github_configure: error deleting public key " + str(id_to_remove) + ": " + str(resp['status']) + " content: " + str(content))
+    delete_ssh_keys()
+    r.delete('da:github:userid:' + str(current_user.id))
+    r.delete('da:using_github:userid:' + str(current_user.id))
+    flash(word("GitHub integration was successfully disconnected."), 'info')
+    return redirect(url_for('user_profile_page'))
+
+@app.route('/github_oauth_callback', methods=['POST', 'GET'])
+@login_required
+@roles_required(['admin', 'developer'])
+def github_oauth_callback():
+    failed = False
+    if not app.config['USE_GITHUB']:
+        logmessage('start_github_oauth: server does not use github')
+        failed = True
+    elif 'github_state' not in session or 'github_next' not in session:
+        logmessage('start_github_oauth: github_state or github_next not in session')
+        failed = True
+    elif 'code' not in request.args or 'state' not in request.args:
+        logmessage('start_github_oauth: code and state not in args')
+        failed = True
+    elif request.args['state'] != session['github_state']:
+        logmessage('start_github_oauth: state did not match')
+        failed = True
+    if failed:
+        r.delete('da:github:userid:' + str(current_user.id))
+        r.delete('da:using_github:userid:' + str(current_user.id))
+        abort(404)
+    flow = get_github_flow()
+    credentials = flow.step2_exchange(request.args['code'])
+    storage = RedisCredStorage(app='github')
+    storage.put(credentials)
+    next_page = session['github_next']
+    del session['github_state']
+    del session['github_next']
+    if next_page == 'configure':
+        return redirect(url_for('github_configure'))
+    elif next_page == 'unconfigure':
+        return redirect(url_for('github_unconfigure'))
+    elif next_page.startswith('package:'):
+        return redirect(url_for('create_playground_package', package=re.sub(r'^package:', '', next_page), github='1', commit_message=re.sub(r'^package:[^:]*:', '', next_page)))
+    elif next_page.startswith('playgroundpackages:'):
+        return redirect(url_for('playground_packages', file=re.sub(r'^playgroundpackages:', '', next_page)))
+    logmessage('start_github_oauth: unknown next page ' + str(next_page))
+    r.delete('da:github:userid:' + str(current_user.id))
+    r.delete('da:using_github:userid:' + str(current_user.id))
+    abort(404)
+
+    # resp, content = http.request("https://api.github.com/user", "GET")
+    # if int(resp['status']) >= 200 and int(resp['status']) < 300:
+    #     user_info = json.loads(content)
+    # else:
+    #     raise DAError("Could not get information about the GitHub user")
+    # github_user_name = user_info.get('login', None)
+    # if github_user_name is None:
+    #     raise DAError("Could not get the GitHub user name")
+    # logmessage("GitHub user name is " + str(github_user_name))
+    #headers = {'Content-Type': 'application/json'}
+    #body = json.dumps(dict())
+    # resp, content = http.request("https://api.github.com/user/repos", "GET")
+    # if int(resp['status']) >= 200 and int(resp['status']) < 300:
+    #     repositories = json.loads(content)
+    #     for repository in repositories:
+            #name
+            #full_name
+            #html_url
+            #ssh_url
+            
+#    else:
+#        raise DAError("Could not get information about the GitHub user's repositories: " + str(resp['status']) + " content: " + str(content))
 
 @app.route('/user/google-sign-in')
 def google_page():
@@ -7315,12 +7556,63 @@ def update_package():
 def create_playground_package():
     form = CreatePlaygroundPackageForm(request.form)
     current_package = request.args.get('package', None)
-    do_publish = request.args.get('publish', False)
+    do_pypi = request.args.get('pypi', False)
+    do_github = request.args.get('github', False)
     do_install = request.args.get('install', False)
+    if do_github:
+        if not app.config['USE_GITHUB']:
+            abort(404)
+        if current_package is None:
+            logmessage('create_playground_package: package not specified')
+            abort(404)
+    if app.config['USE_GITHUB']:
+        github_package_name = 'docassemble-' + re.sub(r'^docassemble-', r'', current_package)
+        #github_package_name = re.sub(r'[^A-Za-z\_\-]', '', github_package_name)
+        if github_package_name in ['docassemble-base', 'docassemble-webapp', 'docassemble-demo']:
+            abort(404)
+        commit_message = request.args.get('commit_message', 'a commit')
+        storage = RedisCredStorage(app='github')
+        credentials = storage.get()
+        if not credentials or credentials.invalid:
+            session['github_state'] = random_string(16)
+            session['github_next'] = 'package:' + str(current_package) + ':' + str(commit_message)
+            flow = get_github_flow()
+            uri = flow.step1_get_authorize_url(state=session['github_state'])
+            return redirect(uri)
+        http = credentials.authorize(httplib2.Http())
+        resp, content = http.request("https://api.github.com/user", "GET")
+        if int(resp['status']) == 200:
+            user_info = json.loads(content)
+            github_user_name = user_info.get('login', None)
+            github_email = user_info.get('email', None)
+        else:
+            raise DAError("create_playground_package: could not get information about GitHub User")
+        if github_user_name is None or github_email is None:
+            raise DAError("create_playground_package: login and/or email not present in user info from GitHub")
+        all_repositories = dict()
+        resp, content = http.request("https://api.github.com/user/repos", "GET")
+        if int(resp['status']) != 200:
+            raise DAError("create_playground_package: could not get information about repositories")
+        else:
+            repositories = json.loads(content)
+            for repository in repositories:
+                all_repositories[repository['name']] = repository
+            while True:
+                next_link = get_next_link(resp)
+                if next_link:
+                    resp, content = http.request(next_link, "GET")
+                    if int(resp['status']) != 200:
+                        raise DAError("create_playground_package: could not get additional information about repositories")
+                    else:
+                        repositories = json.loads(content)
+                        for repository in repositories:
+                            all_repositories[repository['name']] = repository
+                else:
+                    break
     area = dict()
     area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
     file_list = dict()
-    file_list['playgroundpackages'] = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f))])
+    file_list['playgroundpackages'] = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f)) and not f.startswith('.')])
     the_choices = list()
     for file_option in file_list['playgroundpackages']:
         the_choices.append((file_option, file_option))
@@ -7385,9 +7677,98 @@ def create_playground_package():
             author_info['first name'] = current_user.first_name
             author_info['last name'] = current_user.last_name
             author_info['id'] = current_user.id
-            if do_publish:
-                logmessages = docassemble.webapp.files.publish_package(pkgname, info, author_info)
+            if do_pypi:
+                if current_user.pypi_username is None or current_user.pypi_password is None:
+                    flash("Could not publish to PyPI because username and password were not defined")
+                    return redirect(url_for('playground_packages', file=current_package))
+                if current_user.timezone:
+                    the_timezone = current_user.timezone
+                else:
+                    the_timezone = get_default_timezone()
+                logmessages = docassemble.webapp.files.publish_package(pkgname, info, author_info, the_timezone)
                 flash(logmessages, 'info')
+                time.sleep(3.0)
+                return redirect(url_for('playground_packages', file=current_package))
+            if do_github:
+                if github_package_name in all_repositories:
+                    first_time = False
+                else:
+                    first_time = True
+                    headers = {'Content-Type': 'application/json'}
+                    the_license = 'mit' if re.search(r'MIT License', info.get('license', '')) else None
+                    body = json.dumps(dict(name=github_package_name, description=info.get('description', None), homepage=info.get('url', None), license_template=the_license))
+                    resp, content = http.request("https://api.github.com/user/repos", "POST", headers=headers, body=body)
+                    if int(resp['status']) != 201:
+                        raise DAError("create_playground_package: unable to create GitHub repository: status " + str(resp['status']) + " " + str(content))
+                    all_repositories[github_package_name] = json.loads(content)
+                directory = tempfile.mkdtemp()
+                (private_key_file, public_key_file) = get_ssh_keys(github_email)
+                os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
+                os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
+                git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
+                ssh_url = all_repositories[github_package_name].get('ssh_url', None)
+                if ssh_url is None:
+                    raise DAError("create_playground_package: could not obtain ssh_url for package")
+                output = ''
+                output += "Doing " + git_prefix + "git clone " + ssh_url + "\n"
+                try:
+                    output += subprocess.check_output(git_prefix + "git clone " + ssh_url, cwd=directory, stderr=subprocess.STDOUT, shell=True)
+                except subprocess.CalledProcessError as err:
+                    output += err.output
+                    raise DAError("create_playground_package: error running git clone.  " + output)
+                if current_user.timezone:
+                    the_timezone = current_user.timezone
+                else:
+                    the_timezone = get_default_timezone()
+                docassemble.webapp.files.make_package_dir(pkgname, info, author_info, the_timezone, directory=directory)
+                packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
+                if not os.path.isdir(packagedir):
+                    raise DAError("create_playground_package: package directory did not exist")
+                # try:
+                #     output += subprocess.check_output(["git", "init"], cwd=packagedir, stderr=subprocess.STDOUT)
+                # except subprocess.CalledProcessError as err:
+                #     output += err.output
+                #     raise DAError("create_playground_package: error running git init.  " + output)
+                try:
+                    output += subprocess.check_output(["git", "config", "user.email", repr(str(github_email))], cwd=packagedir, stderr=subprocess.STDOUT)
+                except subprocess.CalledProcessError as err:
+                    output += err.output
+                    raise DAError("create_playground_package: error running git config user.email.  " + output)
+                try:
+                    output += subprocess.check_output(["git", "config", "user.name", repr(str(current_user.first_name) + " " + str(current_user.last_name))], cwd=packagedir, stderr=subprocess.STDOUT)
+                except subprocess.CalledProcessError as err:
+                    output += err.output
+                    raise DAError("create_playground_package: error running git config user.email.  " + output)
+                try:
+                    output += subprocess.check_output(["git", "add", "."], cwd=packagedir, stderr=subprocess.STDOUT)
+                except subprocess.CalledProcessError as err:
+                    output += err.output
+                    raise DAError("create_playground_package: error running git add.  " + output)
+                try:
+                    output += subprocess.check_output(["git", "commit", "-m", str(commit_message)], cwd=packagedir, stderr=subprocess.STDOUT)
+                except subprocess.CalledProcessError as err:
+                    output += err.output
+                    raise DAError("create_playground_package: error running git commit.  " + output)
+                if False:
+                    try:
+                        output += subprocess.check_output(["git", "remote", "add", "origin", ssh_url], cwd=packagedir, stderr=subprocess.STDOUT)
+                    except subprocess.CalledProcessError as err:
+                        output += err.output
+                        raise DAError("create_playground_package: error running git remote add origin.  " + output)
+                    output += git_prefix + "git push -u origin master\n"
+                    try:
+                        output += subprocess.check_output(git_prefix + "git push -u origin master", cwd=packagedir, stderr=subprocess.STDOUT, shell=True)
+                    except subprocess.CalledProcessError as err:
+                        output += err.output
+                        raise DAError("create_playground_package: error running first git push.  " + output)
+                else:
+                    output += git_prefix + "git push\n"
+                    try:
+                        output += subprocess.check_output(git_prefix + "git push", cwd=packagedir, stderr=subprocess.STDOUT, shell=True)
+                    except subprocess.CalledProcessError as err:
+                        output += err.output
+                        raise DAError("create_playground_package: error running git push.  " + output)
+                flash(word("Pushed commit to GitHub.") + "  " + output, 'info')
                 time.sleep(3.0)
                 return redirect(url_for('playground_packages', file=current_package))
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
@@ -7621,31 +8002,35 @@ class Fruit(DAObject):
             templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
             staticdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'static')
             sourcesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'sources')
-            os.makedirs(questionsdir)
-            os.makedirs(templatesdir)
-            os.makedirs(staticdir)
-            os.makedirs(sourcesdir)
-            with open(os.path.join(packagedir, 'README.md'), 'a') as the_file:
+            if not os.path.isdir(questionsdir):
+                os.makedirs(questionsdir)
+            if not os.path.isdir(templatesdir):
+                os.makedirs(templatesdir)
+            if not os.path.isdir(staticdir):
+                os.makedirs(staticdir)
+            if not os.path.isdir(sourcesdir):
+                os.makedirs(sourcesdir)
+            with open(os.path.join(packagedir, 'README.md'), 'w') as the_file:
                 the_file.write(readme)
-            with open(os.path.join(packagedir, 'LICENSE.txt'), 'a') as the_file:
+            with open(os.path.join(packagedir, 'LICENSE'), 'w') as the_file:
                 the_file.write(licensetext)
-            with open(os.path.join(packagedir, 'setup.py'), 'a') as the_file:
+            with open(os.path.join(packagedir, 'setup.py'), 'w') as the_file:
                 the_file.write(setuppy)
-            with open(os.path.join(packagedir, 'setup.cfg'), 'a') as the_file:
+            with open(os.path.join(packagedir, 'setup.cfg'), 'w') as the_file:
                 the_file.write(setupcfg)
-            with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'a') as the_file:
+            with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'w') as the_file:
                 the_file.write(initpy)
-            with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'a') as the_file:
+            with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w') as the_file:
                 the_file.write('')
-            with open(os.path.join(packagedir, 'docassemble', pkgname, 'objects.py'), 'a') as the_file:
+            with open(os.path.join(packagedir, 'docassemble', pkgname, 'objects.py'), 'w') as the_file:
                 the_file.write(objectfile)
-            with open(os.path.join(templatesdir, 'README.md'), 'a') as the_file:
+            with open(os.path.join(templatesdir, 'README.md'), 'w') as the_file:
                 the_file.write(templatereadme)
-            with open(os.path.join(staticdir, 'README.md'), 'a') as the_file:
+            with open(os.path.join(staticdir, 'README.md'), 'w') as the_file:
                 the_file.write(staticreadme)
-            with open(os.path.join(sourcesdir, 'README.md'), 'a') as the_file:
+            with open(os.path.join(sourcesdir, 'README.md'), 'w') as the_file:
                 the_file.write(sourcesreadme)
-            with open(os.path.join(questionsdir, 'questions.yml'), 'a') as the_file:
+            with open(os.path.join(questionsdir, 'questions.yml'), 'w') as the_file:
                 the_file.write(questionfiletext)
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(session.get('uid', None), nice_name)
@@ -7721,8 +8106,7 @@ def get_gd_flow():
     client_id = app_credentials.get('id', None)
     client_secret = app_credentials.get('secret', None)
     if client_id is None or client_secret is None:
-        flash(word('Google Drive is not configured.'), 'error')
-        return redirect(url_for('interview_list'))
+        raise DAError('Google Drive is not configured.')
     flow = oauth2client.client.OAuth2WebServerFlow(
         client_id=client_id,
         client_secret=client_secret,
@@ -7744,9 +8128,9 @@ def set_gd_folder(folder):
         r.set(key, folder)
 
 class RedisCredStorage(oauth2client.client.Storage):
-    def __init__(self):
-        self.key = 'da:googledrive:userid:' + str(current_user.id)
-        self.lockkey = 'da:googledrive:lock:userid:' + str(current_user.id)        
+    def __init__(self, app='googledrive'):
+        self.key = 'da:' + app + ':userid:' + str(current_user.id)
+        self.lockkey = 'da:' + app + ':lock:userid:' + str(current_user.id)        
     def acquire_lock(self):
         pipe = r.pipeline()
         pipe.set(self.lockkey, 1)
@@ -7777,7 +8161,7 @@ def google_drive_callback():
     if 'code' in request.args:
         flow = get_gd_flow()
         credentials = flow.step2_exchange(request.args['code'])
-        storage = RedisCredStorage()
+        storage = RedisCredStorage(app='googledrive')
         storage.put(credentials)
         error = None
     elif 'error' in request.args:
@@ -7798,7 +8182,7 @@ def trash_gd_file(section, filename):
     if the_folder is None:
         logmessage('trash_gd_file: folder not configured')
         return False
-    storage = RedisCredStorage()
+    storage = RedisCredStorage(app='googledrive')
     credentials = storage.get()
     if not credentials or credentials.invalid:
         logmessage('trash_gd_file: credentials missing or expired')
@@ -7841,7 +8225,7 @@ def sync_with_google_drive():
     if app.config['USE_GOOGLE_DRIVE'] is False:
         flash(word("Google Drive is not configured"), "error")
         return redirect(url_for('interview_list'))
-    storage = RedisCredStorage()
+    storage = RedisCredStorage(app='googledrive')
     credentials = storage.get()
     if not credentials or credentials.invalid:
         flow = get_gd_flow()
@@ -7979,7 +8363,7 @@ def google_drive_page():
         flash(word("Google Drive is not configured"), "error")
         return redirect(url_for('interview_list'))
     form = GoogleDriveForm(request.form)
-    storage = RedisCredStorage()
+    storage = RedisCredStorage(app='googledrive')
     credentials = storage.get()
     if not credentials or credentials.invalid:
         flow = get_gd_flow()
@@ -8521,6 +8905,21 @@ def playground_files():
     back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
     return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + ('damarkdown' if mode == 'markdown' else mode) + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file), 200
 
+@app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
+@login_required
+@roles_required(['developer', 'admin'])
+def pull_playground_package():
+    form = PullPlaygroundPackage(request.form)
+    if request.method == 'POST':
+        if form.pull.data:
+            return redirect(url_for('playground_packages', pull='1', github_url=form.github_url.data))
+        if form.cancel.data:
+            return redirect(url_for('playground_packages'))
+    if 'file' in request.args:
+        form.github_url.data = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['file'])
+    description = word("Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.")
+    return render_template('pages/pull_playground_package.html', form=form, description=description, version_warning=version_warning, bodyclass='adminbody', title=word("Pull GitHub Package"), tab_title=word("Pull"), page_title=word("Pull")), 200
+
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -8533,13 +8932,19 @@ def playground_packages():
     else:
         no_file_specified = False
     scroll = False
-    pypi_username = daconfig.get('pypi username', False)
-    pypi_password = daconfig.get('pypi password', False)
+    allow_pypi = daconfig.get('pypi', False)
+    pypi_username = current_user.pypi_username
+    pypi_password = current_user.pypi_password
     pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
-    if pypi_username and pypi_password:
+    if allow_pypi is True and pypi_username is not None and pypi_password is not None:
         can_publish_to_pypi = True
     else:
         can_publish_to_pypi = False
+    if app.config['USE_GITHUB']:
+        can_publish_to_github = r.get('da:using_github:userid:' + str(current_user.id))
+    else:
+        can_publish_to_github = None
+    github_message = None
     pypi_message = None
     pypi_version = None        
     package_list, package_auth = get_package_info()
@@ -8563,7 +8968,7 @@ def playground_packages():
     section_field = {'playground': form.interview_files, 'playgroundtemplate': form.template_files, 'playgroundstatic': form.static_files, 'playgroundsources': form.sources_files, 'playgroundmodules': form.module_files}
     for sec in ['playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(current_user.id, fix=True, section=sec)
-        file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f))])
+        file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f)) and not f.startswith('.')])
     for sec, field in section_field.iteritems():
         the_list = []
         for item in file_list[sec]:
@@ -8579,7 +8984,7 @@ def playground_packages():
         validated = True
     the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '-', the_file)
     the_file = re.sub(r'^docassemble-', r'', the_file)
-    files = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f))])
+    files = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f)) and not f.startswith('.')])
     editable_files = list()
     mode = "yaml"
     for a_file in files:
@@ -8595,13 +9000,51 @@ def playground_packages():
             else:
                 the_file = ''
     if the_file != '' and not user_can_edit_package(pkgname='docassemble.' + the_file):
-        flash(word('Sorry, that package name,') + the_file + word(', is already in use by someone else'), 'error')
+        flash(word('Sorry, that package name,') + ' ' + the_file + word(', is already in use by someone else'), 'error')
         the_file = ''
     if request.method == 'GET' and the_file in editable_files:
         session['playgroundpackages'] = the_file
     if the_file == '' and len(file_list['playgroundpackages']) and not is_new:
         the_file = file_list['playgroundpackages'][0]
     old_info = dict()
+    on_github = False
+    github_http = None
+    if the_file != '' and can_publish_to_github and not is_new:
+        github_package_name = 'docassemble-' + the_file
+        try:
+            storage = RedisCredStorage(app='github')
+            credentials = storage.get()
+            if not credentials or credentials.invalid:
+                session['github_state'] = random_string(16)
+                session['github_next'] = 'playgroundpackages:' + the_file
+                flow = get_github_flow()
+                uri = flow.step1_get_authorize_url(state=session['github_state'])
+                return redirect(uri)
+            http = credentials.authorize(httplib2.Http())
+            resp, content = http.request("https://api.github.com/user", "GET")
+            if int(resp['status']) == 200:
+                info = json.loads(content)
+                github_user_name = info.get('login', None)
+                github_author_name = info.get('name', None)
+                github_email = info.get('email', None)
+            else:
+                raise DAError("create_playground_package: could not get information about GitHub User")
+            if github_user_name is None:
+                raise DAError("playground_packages: login not present in user info from GitHub")
+            resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name, "GET")
+            if int(resp['status']) == 200:
+                repo_info = json.loads(content)
+                github_http = repo_info['html_url']
+                github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on GitHub") + '</a>.'
+                if github_author_name:
+                    github_message += "  " + word("The author is") + " " + github_author_name + "."
+                on_github = True
+            else:
+                github_message = word('This package is not yet published on GitHub.')
+        except Exception as e:
+            logmessage('playground_packages: GitHub error.  ' + str(e))
+            github_message = word('Unable to determine if the package is published on GitHub.')
+            github_user_name = None
     if request.method == 'GET' and the_file != '':
         if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
             filename = os.path.join(area['playgroundpackages'].directory, the_file)
@@ -8654,7 +9097,6 @@ def playground_packages():
                                 continue
                             levels = re.findall(r'/', directory)
                             time_tuple = zinfo.date_time
-                            #(datetime.datetime(*time_tuple).replace(tzinfo=the_timezone).astimezone(pytz.utc) - epoch_date).total_seconds()
                             the_time = time.mktime(datetime.datetime(*time_tuple).timetuple())
                             for sec in ['templates', 'static', 'sources', 'questions']:
                                 if directory.endswith('data/' + sec) and filename != 'README.md':
@@ -8705,6 +9147,92 @@ def playground_packages():
         if need_to_restart:
             return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file)))
         return redirect(url_for('playground_packages', file=the_file))
+    if request.method == 'GET' and 'pull' in request.args and int(request.args['pull']) == 1 and 'github_url' in request.args:
+        github_url = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['github_url'])
+
+        area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
+        readme_text = ''
+        setup_py = ''
+        need_to_restart = False
+        extracted = dict()
+        data_files = dict(templates=list(), static=list(), sources=list(), interviews=list(), modules=list(), questions=list())
+        directory = tempfile.mkdtemp()
+        output = ''
+        output += "Doing git clone " + str(github_url) + "\n"
+        try:
+            output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as err:
+            output += err.output
+            raise DAError("playground_packages: error running git clone.  " + output)
+        initial_directories = len(splitall(directory)) + 1
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                orig_file = os.path.join(root, file)
+                #output += "Original file is " + orig_file + "\n"
+                thefilename = os.path.join(*splitall(orig_file)[initial_directories:])
+                (directory, filename) = os.path.split(thefilename)
+                if filename.startswith('#') or filename.endswith('~'):
+                    continue
+                dirparts = splitall(directory)
+                if '.git' in dirparts:
+                    continue
+                levels = re.findall(r'/', directory)
+                for sec in ['templates', 'static', 'sources', 'questions']:
+                    if directory.endswith('data/' + sec) and filename != 'README.md':
+                        data_files[sec].append(filename)
+                        target_filename = os.path.join(area[area_sec[sec]].directory, filename)
+                        #output += "Copying " + orig_file + "\n"
+                        copy_if_different(orig_file, target_filename)
+                if filename == 'README.md' and len(levels) == 0:
+                    with open(orig_file, 'rU') as fp:
+                        readme_text = fp.read().decode('utf8')
+                if filename == 'setup.py' and len(levels) == 0:
+                    with open(orig_file, 'rU') as fp:
+                        setup_py = fp.read().decode('utf8')
+                elif len(levels) >= 1 and filename.endswith('.py') and filename != '__init__.py':
+                    need_to_restart = True
+                    data_files['modules'].append(filename)
+                    target_filename = os.path.join(area['playgroundmodules'].directory, filename)
+                    #output += "Copying " + orig_file + "\n"
+                    copy_if_different(orig_file, target_filename)
+        #output += "setup.py is " + str(len(setup_py)) + " characters long\n"
+        setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
+        for line in setup_py.splitlines():
+            m = re.search(r"^ *([a-z_]+) *= *\(?u?'(.*)'", line)
+            if m:
+                extracted[m.group(1)] = m.group(2)
+            m = re.search(r'^ *([a-z_]+) *= *\(?u?"(.*)"', line)
+            if m:
+                extracted[m.group(1)] = m.group(2)
+            m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
+            if m:
+                the_list = list()
+                for item in re.split(r', *', m.group(2)):
+                    inner_item = re.sub(r"'$", '', item)
+                    inner_item = re.sub(r"^u?'", '', inner_item)
+                    inner_item = re.sub(r'"+$', '', item)
+                    inner_item = re.sub(r'^u?"+', '', inner_item)
+                    the_list.append(inner_item)
+                extracted[m.group(1)] = the_list
+        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
+        #output += "info_dict is set\n"
+        package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
+        if not user_can_edit_package(pkgname='docassemble.' + package_name):
+            index = 1
+            orig_package_name = package_name
+            while index < 100 and not user_can_edit_package(pkgname='docassemble.' + package_name):
+                index += 1
+                package_name = orig_package_name + str(index)
+        with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w') as fp:
+            the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
+            fp.write(the_yaml.encode('utf8'))
+        area['playgroundpackages'].finalize()
+        for sec in area:
+            area[sec].finalize()
+        the_file = package_name
+        if need_to_restart:
+            return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file)))
+        return redirect(url_for('playground_packages', file=the_file))
     if request.method == 'POST' and form.delete.data and the_file != '' and the_file == form.file_name.data and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
         os.remove(os.path.join(area['playgroundpackages'].directory, the_file))
         area['playgroundpackages'].finalize()
@@ -8713,30 +9241,32 @@ def playground_packages():
     if not is_new:
         pkgname = 'docassemble.' + the_file
         pypi_info = pypi_status(pkgname)
-        if not pypi_info['error']:
+        if pypi_info['error']:
+            pypi_message = word("Unable to determine if the package is published on PyPI.")
+        else:
             if pypi_info['exists'] and 'info' in pypi_info['info']:
                 pypi_version = pypi_info['info']['info'].get('version', None)
-                pypi_message = 'This package is <a target="_blank" href="' + pypi_url + '/' + pkgname + '/' + pypi_version + '">published on PyPI</a>.'
+                pypi_message = word('This package is') + ' <a target="_blank" href="' + pypi_url + '/' + pkgname + '/' + pypi_version + '">' + word("published on PyPI") + '</a>.'
                 pypi_author = pypi_info['info']['info'].get('author', None)
                 if pypi_author:
-                    pypi_message += "  The author is " + pypi_author + "."
+                    pypi_message += "  " + word("The author is") + " " + pypi_author + "."
                 if pypi_version != form['version'].data:
-                    pypi_message += "  The version on PyPI is " + str(pypi_version) + ".  Your version is " + str(form['version'].data) + "."
+                    pypi_message += "  " + word("The version on PyPI is") + " " + str(pypi_version) + ".  " + word("Your version is") + " " + str(form['version'].data) + "."
             else:
-                pypi_message = 'This package is not yet published on PyPI.'
+                pypi_message = word('This package is not yet published on PyPI.')
     if request.method == 'POST' and validated:
         new_info = dict()
         for field in ['license', 'description', 'version', 'url', 'readme', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
             new_info[field] = form[field].data
         #logmessage("found " + str(new_info))
-        if form.submit.data or form.download.data or form.install.data or form.publish.data:
+        if form.submit.data or form.download.data or form.install.data or form.pypi.data or form.github.data:
             if the_file != '':
                 area['playgroundpackages'].finalize()
                 if form.original_file_name.data and form.original_file_name.data != the_file:
                     old_filename = os.path.join(area['playgroundpackages'].directory, form.original_file_name.data)
                     if os.path.isfile(old_filename):
                         os.remove(old_filename)
-                if form.publish.data and pypi_version is not None:
+                if form.pypi.data and pypi_version is not None:
                     versions = pypi_version.split(".")
                     while True:
                         versions[-1] = str(int(versions[-1]) + 1)
@@ -8752,11 +9282,14 @@ def playground_packages():
                 if form.download.data:
                     return redirect(url_for('create_playground_package', package=the_file))
                 if form.install.data:
-                    return redirect(url_for('create_playground_package', package=the_file, install=True))
-                if form.publish.data:
-                    return redirect(url_for('create_playground_package', package=the_file, publish=True))
+                    return redirect(url_for('create_playground_package', package=the_file, install='1'))
+                if form.pypi.data:
+                    return redirect(url_for('create_playground_package', package=the_file, pypi='1'))
+                if form.github.data:
+                    return redirect(url_for('create_playground_package', package=the_file, github='1', commit_message=form.commit_message.data))
                 the_time = formatted_current_time()
                 flash(word('The package information was saved.'), 'success')
+                
     form.original_file_name.data = the_file
     form.file_name.data = the_file
     if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
@@ -8773,6 +9306,42 @@ def playground_packages():
     else:
         extra_command = ""
     extra_command += upload_js() + "\n";
+    extra_command += """\
+      $("#daCancel").click(function(event){
+        var whichButton = this;
+        $("#commit_message_div").hide();
+        $(".btn-lg").each(function(){
+          if (this != whichButton && $(this).is(":hidden")){
+            $(this).show();
+          }
+        });
+        $("#daGitHub").html('""" + word("GitHub") + """');
+        $(this).hide();
+        event.preventDefault();
+        return false;
+      });
+      $("#daGitHub").click(function(event){
+        var whichButton = this;
+        if ($("#commit_message").val().length == 0 || $("#commit_message_div").is(":hidden")){
+          if ($("#commit_message_div").is(":visible")){
+            $("#commit_message").parent().addClass("has-error");
+          }
+          else{
+            $("#commit_message_div").show();
+            $(".btn-lg").each(function(){
+              if (this != whichButton && $(this).is(":visible")){
+                $(this).hide();
+              }
+            });
+            $(this).html('""" + word("Commit") + """');
+            $("#daCancel").show();
+          }
+          $("#commit_message").focus();
+          event.preventDefault();
+          return false;
+        }
+      });
+"""
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
         kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js") + '"></script>\n    '
@@ -8786,7 +9355,13 @@ def playground_packages():
     back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
     if pypi_message is not None:
         pypi_message = Markup(pypi_message)
-    return render_template('pages/playgroundpackages.html', version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    ' + kbLoad + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      $("#daPublish").click(function(event){if(!confirm("' + word("Are you sure that you want to publish this package to PyPI?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+    if github_message is not None:
+        github_message = Markup(github_message)
+    return render_template('pages/playgroundpackages.html', version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_http=github_http, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    ' + kbLoad + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      $("#daPyPI").click(function(event){if(!confirm("' + word("Are you sure that you want to publish this package to PyPI?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+
+def copy_if_different(source, destination):
+    if (not os.path.isfile(destination)) or filecmp.cmp(source, destination) is False:
+        shutil.copyfile(source, destination)
 
 def splitall(path):
     allparts = []
@@ -10907,11 +11482,11 @@ def get_email_obj(email, short_record, user):
 
 def write_pypirc():
     pypirc_file = daconfig.get('pypirc path', '/var/www/.pypirc')
-    pypi_username = daconfig.get('pypi username', None)
-    pypi_password = daconfig.get('pypi password', None)
+    #pypi_username = daconfig.get('pypi username', None)
+    #pypi_password = daconfig.get('pypi password', None)
     pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
-    if pypi_username is None or pypi_password is None:
-        return
+    # if pypi_username is None or pypi_password is None:
+    #     return
     if os.path.isfile(pypirc_file):
         with open(pypirc_file, 'rU') as fp:
             existing_content = fp.read()
@@ -10923,9 +11498,10 @@ index-servers =
   pypi
 
 [pypi]
-repository: """ + pypi_url + """
-username: """ + pypi_username + """
-password: """ + pypi_password + "\n"
+repository: """ + pypi_url + "\n"
+#     """
+# username: """ + pypi_username + """
+# password: """ + pypi_password + "\n"
     if existing_content != content:
         with open(pypirc_file, 'w') as fp:
             fp.write(content)
@@ -10942,6 +11518,8 @@ def pypi_status(packagename):
             result['exists'] = False
         else:
             result['error'] = e.code
+    except Exception, e:
+        result['error'] = str(e)
     else:
         try:
             result['info'] = json.load(handle)

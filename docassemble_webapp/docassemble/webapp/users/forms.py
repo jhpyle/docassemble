@@ -2,8 +2,9 @@ import sys
 import re
 from flask_user.forms import RegisterForm, LoginForm
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, validators
+from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, PasswordField, validators
 from wtforms.validators import DataRequired, Email, Optional
+from wtforms.widgets import PasswordInput
 
 from docassemble.base.functions import word
 from docassemble.base.config import daconfig
@@ -57,6 +58,8 @@ class UserProfileForm(FlaskForm):
     organization = StringField(word('Organization'), [validators.Length(min=0, max=64)])
     language = StringField(word('Language'), [validators.Length(min=0, max=64)])
     timezone = SelectField(word('Time Zone'))
+    pypi_username = StringField(word('PyPI Username'))
+    pypi_password = StringField(word('PyPI Password'), widget=PasswordInput(hide_value=False))
     submit = SubmitField(word('Save'))
 
 class EditUserProfileForm(UserProfileForm):

@@ -150,3 +150,5 @@ user|timezone|character varying|64|
 user|password|character varying|255|'x'::character varying
 user|language|character varying|64|
 user|otp_secret|character varying|255|
+user|pypi_username|character varying|255|
+user|pypi_password|character varying|255|

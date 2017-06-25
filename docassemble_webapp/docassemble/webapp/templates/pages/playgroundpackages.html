@@ -46,8 +46,16 @@
       {%- endif %}
     </ul>
   </li>
+  {%- if current_file != '' %}
   <li role="presentation">
-    <a tabindex="5" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a package to the Playground') }}">
+    <a tabindex="6" href="{{ url_for('create_playground_package', package=current_file) }}" title="{{ word('Download the current package') }}">
+      <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+      {{ word("Download") }}
+    </a>
+  </li>
+  {% endif %}
+  <li role="presentation">
+    <a tabindex="5" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a package ZIP file to the Playground') }}">
       <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
         {{ fileform.hidden_tag() }}
         <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
@@ -60,14 +68,12 @@
       </form>
     </a>
   </li>
-  {%- if current_file != '' %}
   <li role="presentation">
-    <a tabindex="6" href="{{ url_for('create_playground_package', package=current_file) }}" title="{{ word('Download the current package') }}">
-      <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-      {{ word("Download") }}
+    <a tabindex="7" id="daPull" href="{{ url_for('pull_playground_package', file=github_http) if github_http else url_for('pull_playground_package') }}" title="{{ word('Pull a repository from GitHub into the Playground') }}">
+      <span class="glyphicon glyphicon-cloud" aria-hidden="true"></span>
+      {{ word("Pull") }}
     </a>
   </li>
-  {% endif %}
 </ul>
 
 <form action="{{ url_for('playground_packages') }}" method="POST" class="form" role="form" id="form">
@@ -113,12 +119,28 @@
     </div>
   </div>
   {%- endif %}
+  {%- if github_message %}
+  <div class="panel panel-default">
+    <div class="panel-body">
+      {{ github_message|safe }}
+    </div>
+  </div>
+  {%- endif %}
+  {%- if can_publish_to_github %}
+  <div id="commit_message_div" style="display:none">
+    {{ render_field(form.commit_message) }}
+  </div>
+  {%- endif %}
   <div class="form-actions">
     {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }}
     {%- if current_file != '' %}
     {{ render_submit_field(form.install, class="btn btn-success btn-lg") }}
     {%- if can_publish_to_pypi %}
-    {{ render_submit_field(form.publish, id="daPublish", class="btn btn-warning btn-lg") }}
+    {{ render_submit_field(form.pypi, id="daPyPI", class="btn btn-warning btn-lg", title=word('Publish on PyPI')) }}
+    {%- endif %}
+    {%- if can_publish_to_github %}
+    {{ render_submit_field(form.github, id="daGitHub", class="btn btn-warning btn-lg", title=word('Push a commit to GitHub')) }}
+    {{ render_submit_field(form.cancel, id="daCancel", class="btn btn-default btn-lg", style="display:none") }}
     {%- endif %}
     {{ render_submit_field(form.delete, id="daDelete", class="btn btn-default btn-lg") }}
     {%- else %}

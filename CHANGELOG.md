@@ -1,8 +1,19 @@
 # Change Log
 
-## [Unreleased] - 2017-06-18
+## [0.1.16] - 2017-06-24
+### Added
+- GitHub integration
+- dow_of() function
+### Changed
+- Changed PyPI username and passwords from a configuration setting to
+  a user setting
 ### Fixed
-- Stable transition from non-cloud to cloud
+- More stable transition when transitioning server from non-cloud data
+  storate to cloud data storage
+- month_of() now uses defined language/locale rather than system
+  locale when word_of is True
+- Executables that run as root no longer writable by www-data
+- Turned off auto-start on sync supervisor process
 
 ## [0.1.15] - 2017-06-18
 ### Added

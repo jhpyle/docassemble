@@ -109,7 +109,7 @@
         $(".form").on('submit', function(){
           $(".btn-lg").each(function(){
             if (this != whichButton){
-              $(this).removeClass("btn-primary btn-info btn-warning btn-error");
+              $(this).removeClass("btn-primary btn-info btn-warning btn-error btn-success");
               $(this).addClass("btn-default");
             }
             if ($(whichButton).hasClass("btn-success")){

@@ -247,18 +247,29 @@ def get_ext_and_mimetype(filename):
         mimetype = 'audio/3gpp'
     return(extension, mimetype)
 
-def publish_package(pkgname, info, author_info):
-    directory = make_package_dir(pkgname, info, author_info)
+def publish_package(pkgname, info, author_info, tz_name):
+    from flask_login import current_user
+    directory = make_package_dir(pkgname, info, author_info, tz_name)
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     output = "Publishing docassemble." + pkgname + " to PyPI . . .\n\n"
     try:
-        output += subprocess.check_output(['python', 'setup.py', 'register', '-r', 'pypi'], cwd=packagedir, stderr=subprocess.STDOUT)
+        output += subprocess.check_output(['python', 'setup.py', 'sdist', 'bdist_wheel'], cwd=packagedir, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as err:
         output += err.output
-    try:
-        output += subprocess.check_output(['python', 'setup.py', 'sdist', 'upload', '-r', 'pypi'], cwd=packagedir, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as err:
-        output += err.output
+    dist_file = None
+    dist_dir = os.path.join(packagedir, 'dist')
+    if not os.path.isdir(dist_dir):
+        output += "dist directory " + str(dist_dir) + " did not exist after calling sdist"
+    else:
+        for f in os.listdir(dist_dir):
+            try:
+                output += subprocess.check_output(['twine', 'register', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', f)], cwd=packagedir, stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError as err:
+                output += err.output
+        try:
+            output += subprocess.check_output(['twine', 'upload', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', '*')], cwd=packagedir, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as err:
+            output += err.output
     output = re.sub(r'\n', '<br>', output)
     shutil.rmtree(directory)
     logmessage(output)
@@ -284,7 +295,7 @@ def make_package_zip(pkgname, info, author_info, tz_name):
     shutil.rmtree(directory)
     return temp_zip
 
-def make_package_dir(pkgname, info, author_info, tz_name):
+def make_package_dir(pkgname, info, author_info, tz_name, directory=None):
     the_timezone = pytz.timezone(tz_name)
     area = dict()
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
@@ -410,17 +421,22 @@ this directory.
 This directory is used to store word translation files, 
 machine learning training files, and other source files.
 """
-    directory = tempfile.mkdtemp()
+    if directory is None:
+        directory = tempfile.mkdtemp()
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     maindir = os.path.join(packagedir, 'docassemble', str(pkgname))
     questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
     templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
     staticdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'static')
     sourcesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'sources')
-    os.makedirs(questionsdir)
-    os.makedirs(templatesdir)
-    os.makedirs(staticdir)
-    os.makedirs(sourcesdir)
+    if not os.path.isdir(questionsdir):
+        os.makedirs(questionsdir)
+    if not os.path.isdir(templatesdir):
+        os.makedirs(templatesdir)
+    if not os.path.isdir(staticdir):
+        os.makedirs(staticdir)
+    if not os.path.isdir(sourcesdir):
+        os.makedirs(sourcesdir)
     for the_file in info['interview_files']:
         orig_file = os.path.join(area['playground'].directory, the_file)
         if os.path.exists(orig_file):
@@ -441,31 +457,31 @@ machine learning training files, and other source files.
         orig_file = os.path.join(area['playgroundsources'].directory, the_file)
         if os.path.exists(orig_file):
             shutil.copy2(orig_file, os.path.join(sourcesdir, the_file))
-    with open(os.path.join(packagedir, 'README.md'), 'a') as the_file:
+    with open(os.path.join(packagedir, 'README.md'), 'w') as the_file:
         the_file.write(readme)
     os.utime(os.path.join(packagedir, 'README.md'), (info['modtime'], info['modtime']))
-    with open(os.path.join(packagedir, 'LICENSE.txt'), 'a') as the_file:
+    with open(os.path.join(packagedir, 'LICENSE'), 'w') as the_file:
         the_file.write(licensetext)
-    os.utime(os.path.join(packagedir, 'LICENSE.txt'), (info['modtime'], info['modtime']))
-    with open(os.path.join(packagedir, 'setup.py'), 'a') as the_file:
+    os.utime(os.path.join(packagedir, 'LICENSE'), (info['modtime'], info['modtime']))
+    with open(os.path.join(packagedir, 'setup.py'), 'w') as the_file:
         the_file.write(setuppy)
     os.utime(os.path.join(packagedir, 'setup.py'), (info['modtime'], info['modtime']))
-    with open(os.path.join(packagedir, 'setup.cfg'), 'a') as the_file:
+    with open(os.path.join(packagedir, 'setup.cfg'), 'w') as the_file:
         the_file.write(setupcfg)
     os.utime(os.path.join(packagedir, 'setup.cfg'), (info['modtime'], info['modtime']))
-    with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'a') as the_file:
+    with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'w') as the_file:
         the_file.write(initpy)
     os.utime(os.path.join(packagedir, 'docassemble', '__init__.py'), (info['modtime'], info['modtime']))
-    with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'a') as the_file:
+    with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w') as the_file:
         the_file.write('')
     os.utime(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), (info['modtime'], info['modtime']))
-    with open(os.path.join(templatesdir, 'README.md'), 'a') as the_file:
+    with open(os.path.join(templatesdir, 'README.md'), 'w') as the_file:
         the_file.write(templatereadme)
     os.utime(os.path.join(templatesdir, 'README.md'), (info['modtime'], info['modtime']))
-    with open(os.path.join(staticdir, 'README.md'), 'a') as the_file:
+    with open(os.path.join(staticdir, 'README.md'), 'w') as the_file:
         the_file.write(staticreadme)
     os.utime(os.path.join(staticdir, 'README.md'), (info['modtime'], info['modtime']))
-    with open(os.path.join(sourcesdir, 'README.md'), 'a') as the_file:
+    with open(os.path.join(sourcesdir, 'README.md'), 'w') as the_file:
         the_file.write(sourcesreadme)
     os.utime(os.path.join(sourcesdir, 'README.md'), (info['modtime'], info['modtime']))
     return directory

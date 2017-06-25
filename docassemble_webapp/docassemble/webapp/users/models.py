@@ -22,6 +22,8 @@ class UserModel(db.Model, UserMixin):
     roles = db.relationship('Role', secondary='user_roles', backref=db.backref('user', lazy='dynamic'))
     password = db.Column(db.String(255), nullable=False, server_default='') # work around a bug
     otp_secret = db.Column(db.String(255), nullable=True)
+    pypi_username = db.Column(db.String(255), nullable=True)
+    pypi_password = db.Column(db.String(255), nullable=True)
     #email_is_phone_number = db.Column(db.Boolean(), nullable=True, server_default='0')
 
 class UserAuthModel(db.Model, UserMixin):

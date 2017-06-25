@@ -115,8 +115,8 @@
 </div>
 {%- endmacro %}
 
-{% macro render_submit_field(field, label=None, id=None, tabindex=None, class="btn btn-primary btn-lg") %}
-    {%- if not label %}{% set label=field.label.text|word %}{% endif %}<button type="submit" name="{{ field.id }}" {% if id %}id="{{ id }}" {% endif %}class="{{ class }}" value="{{ label }}"{% if tabindex %} tabindex="{{ tabindex }}"{% endif %}>{{label}}</button>
+{% macro render_submit_field(field, label=None, id=None, tabindex=None, class="btn btn-primary btn-lg", title=None, style=None) %}
+    {%- if not label %}{% set label=field.label.text|word %}{% endif %}<button type="submit" name="{{ field.id }}" {% if id %}id="{{ id }}" {% endif %}class="{{ class }}" value="{{ label }}"{% if tabindex %} tabindex="{{ tabindex }}"{% endif %}{% if title %} title="{{ title }}"{% endif %}{% if style %} style="{{ style }}"{% endif %}>{{label}}</button>
 {%- endmacro %}
 
 {% macro myrender_field(field, label=None, label_visible=True, right_url=None, right_label=None) %}

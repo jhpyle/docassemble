@@ -8,14 +8,24 @@ modules:
   - docassemble.base.util
 ---
 mandatory: True
-question: The date, explained.
+question: |
+  The date ${ some_date }, explained.
 subquestion: |
   The year is ${ year_of(some_date) }.
 
   The month is ${ month_of(some_date) }.
 
+  The month as a word is
+  ${ month_of(some_date, as_word=True) }.
+
   The day of month is
   ${ day_of(some_date) }.
+
+  The day of week is
+  ${ dow_of(some_date) }.
+
+  The day of week as a word is
+  ${ dow_of(some_date, as_word=True) }.
 ---
 question: |
   Give me a date.

@@ -1,0 +1,21 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+{% from "base_templates/form_macros.html" import render_submit_field %}
+<h1>{{ title }}</h1>
+
+<p>{{ description }}</p>
+
+<form action="" method="POST" role="form" class="form">
+  {{ form.hidden_tag() }}
+  <div class="form-actions">
+    {% if uses_github %}
+    {{ render_submit_field(form.unconfigure, tabindex=100, class="btn btn-danger btn-lg") }}
+    {% else %}
+    {{ render_submit_field(form.configure, tabindex=100, class="btn btn-success btn-lg") }}
+    {% endif %}
+    {{ render_submit_field(form.cancel, tabindex=110, class="btn btn-warning btn-lg") }}
+  </div>
+</form>
+
+{% endblock %}

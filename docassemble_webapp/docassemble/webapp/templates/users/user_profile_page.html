@@ -5,7 +5,7 @@
 
 <h1>{{ word('User Profile') }}</h1>
 
-<ul class="nav nav-pills nav-stacked">{% if current_user.social_id.startswith('local') %}<li><a href="{{ url_for('user.change_password') }}">{{ word('Change password') }}</a></li>{% endif %}{% if in_debug() and (current_user.email) and (not current_user.is_anonymous) and (not current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('request_developer') }}">{{ word('Request Developer Account') }}</a></li>{% endif %}{% if config['USE_GOOGLE_DRIVE'] and (not current_user.is_anonymous) and (current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('google_drive_page') }}">{{ word('Google Drive Synchronization') }}</a></li>{% endif %}{% if config['USE_MFA'] and current_user.has_roles(config['MFA_ROLES']) and current_user.social_id.startswith('local') %}<li><a href="{{ url_for('mfa_reconfigure') }}">{{ word('Second factor authentication') }}</a></li>{% endif %}</ul>
+<ul class="nav nav-pills nav-stacked">{% if current_user.social_id.startswith('local') %}<li><a href="{{ url_for('user.change_password') }}">{{ word('Change password') }}</a></li>{% endif %}{% if in_debug() and (current_user.email) and (not current_user.is_anonymous) and (not current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('request_developer') }}">{{ word('Request Developer Account') }}</a></li>{% endif %}{% if config['USE_GOOGLE_DRIVE'] and (not current_user.is_anonymous) and (current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('google_drive_page') }}">{{ word('Google Drive synchronization') }}</a></li>{% endif %}{% if config['USE_MFA'] and current_user.has_roles(config['MFA_ROLES']) and current_user.social_id.startswith('local') %}<li><a href="{{ url_for('mfa_reconfigure') }}">{{ word('Second factor authentication') }}</a></li>{% endif %}{% if config['USE_GITHUB'] and (not current_user.is_anonymous) and (current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('github_menu') }}">{{ word('GitHub integration') }}</a></li>{% endif %}</ul>
 
 <form action="" method="POST" role="form" class="form">
     {{ form.hidden_tag() }}
@@ -35,7 +35,10 @@
       {{ render_field(form.language, tabindex=310) }}
     
       {{ render_field(form.timezone, tabindex=320) }}
-    
+
+      {{ render_field(form.pypi_username, tabindex=322) }}
+
+      {{ render_field(form.pypi_password, tabindex=324) }}
     {% endif %}
     <br>
     <div class="form-actions">
