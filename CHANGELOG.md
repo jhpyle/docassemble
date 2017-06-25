@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.1.17] - 2017-06-24
+### Changed
+- Updated the required system version to 0.1.17
+### Fixed
+- If you updated the Python packages to 0.1.15 or 1.1.16 without
+  updating the system, you may have experienced an error.  Now, if
+  changes to the Python packages alter the necessary PostgreSQL
+  columns or tables, those columns and tables will be changed upon
+  reboot after the updating of the Python packages, and will not have
+  to wait until an upgrade of the system.
+- Fixed reference in Dockerfile to non-existent file
+
 ## [0.1.16] - 2017-06-24
 ### Added
 - GitHub integration

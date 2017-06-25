@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 import docassemble.base.config
 
 if __name__ == "__main__":
@@ -7,6 +8,13 @@ if __name__ == "__main__":
 
 def main():
     from docassemble.base.config import daconfig
+    container_role = os.environ.get('CONTAINERROLE', None)
+    if container_role and re.search(r':(all|cron):', container_role):
+        import docassemble.webapp.fix_postgresql_tables
+        docassemble.webapp.fix_postgresql_tables.main()
+        import docassemble.webapp.create_tables
+        docassemble.webapp.create_tables.main()
+
     webapp_path = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
     import docassemble.webapp.cloud
     cloud = docassemble.webapp.cloud.get_cloud()

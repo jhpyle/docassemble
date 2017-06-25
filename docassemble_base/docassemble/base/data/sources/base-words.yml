@@ -85,6 +85,7 @@
 "E-mail these documents": Null
 "E-mail this document": Null
 "E-mail was sent to": Null
+"Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.": Null
 "Enter code": Null
 "Error accessing Google Drive": Null
 "Error: interview cannot be decrypted": Null
@@ -256,6 +257,8 @@
 "Profile": Null
 "published on GitHub": Null
 "published on PyPI": Null
+"Pull GitHub Package": Null
+"Pull": Null
 "Pushed commit to GitHub.": Null
 "PyPI": Null
 "PyPI Password": Null

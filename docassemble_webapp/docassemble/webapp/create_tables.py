@@ -96,9 +96,12 @@ def populate_tables():
     #     db.session.add(package_entry)
     return
 
-if __name__ == "__main__":
+def main():
     with app.app_context():
         #db.drop_all()
         db.create_all()
         populate_tables()
         db.engine.dispose()
+
+if __name__ == "__main__":
+    main()

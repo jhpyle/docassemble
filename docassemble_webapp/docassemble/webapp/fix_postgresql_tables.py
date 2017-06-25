@@ -4,6 +4,7 @@ import os
 import stat
 import sys
 import psycopg2
+import pkg_resources
 import docassemble.base.config
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
@@ -54,7 +55,10 @@ def main():
     if db_table_prefix is None:
         db_table_prefix = os.getenv('DBTABLEPREFIX', '')
     if schema_file is None:
-        schema_file = os.getenv('DBSCHEMAFILE', '/usr/share/docassemble/config/db-schema.txt')
+        #schema_file = os.getenv('DBSCHEMAFILE', '/usr/share/docassemble/config/db-schema.txt')
+        schema_file = os.getenv('DBSCHEMAFILE', None)
+        if not (schema_file and os.path.isfile(schema_file)):
+            schema_file = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), "docassemble/webapp/data/db-schema.txt")
 
     conn = psycopg2.connect(database=db_name, user=db_user, password=db_password, host=db_host, port=db_port)
     cur = conn.cursor()
