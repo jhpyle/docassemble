@@ -4,13 +4,274 @@ title: Interview logic
 short_title: Interview Logic
 ---
 
-Like [`question`] questions, [`code`] questions are not "asked" unless
-they contain variables that **docassemble** needs.  All [`question`] and
-[`code`] blocks are only called when and if they are needed.
+# Introduction
 
-For your interview to start asking questions, you need to mark at
-least one [`question`] block or [`code`] block with the modifier
-`mandatory: True`.
+Unlike other guided interview systems, in which the interview author
+maps out a decision tree or flowchart to indicate which questions
+should be asked and in which order, **docassemble** implicitly figures
+out what questions to ask and when to ask them.
+
+For example, if the point of your interview is to assemble a document,
+and one of the fields in the document is the user's Social Security
+Number (SSN), the interview will ask the user for his or her SSN;
+**docassemble** does not need to be told to ask for the SSN.
+
+However, if your document only displays the SSN conditionally,
+**docassemble** will only ask for the SSN if that condition is met.
+For example, your document template might include:
+
+{% highlight text %}
+The petitioner is ${ petitioner }.  Petitioner is a
+% if petitioner.is_citizen:
+citizen of the United States.
+Petitioner's SSN is ${ petitioner.ssn }.
+% else:
+lawful resident of the United States.
+% endif
+{% endhighlight %}
+
+This will cause the interview to ask for the petitioner's name and
+whether the petitioner is a citizen, because that information is
+necessary.  The interview will ask for the SSN only if the petitioner
+is a citizen.
+
+In other guided interview systems, the logic of the document assembly
+is separate from the logic that determines what interview questions
+are asked.  In the case of the template above, the dependence of the
+SSN on citizenship would need to be mapped out both in the document
+and in the specification of the interview questions.  In
+**docassemble**, however, the logic of the interview is determined
+implicitly from the requirements of the end result (in this case, a
+document).  So the logic only needs to be specified in one place.
+
+# End goals and the satisfaction of prerequisites
+
+By default, all questions in a **docassemble** interview are asked
+only if and when they are needed.
+
+However, in order to start asking questions, **docassemble** needs to
+be given some direction.  You need to provide this direction by
+marking at least one [`question`] block or [`code`] block as
+[`mandatory`] (or one [`code`] block as [`initial`]).
+
+If **docassemble** does not know what question to ask, it will give
+you an error that looks like this:
+
+{% include side-by-side.html demo="no-mandatory" %}
+
+To prevent this error in this interview, we can mark as `mandatory`
+the final `question` block -- the screen that is the endpoint for the
+interview.
+
+{% include side-by-side.html demo="with-mandatory" %}
+
+Now **docassemble** knows what to do: it needs to present the final
+screen.
+
+Note that the two questions in the interview ("How are you doing?"
+and "What is your favorite color?") were not marked as `mandatory`,
+but are nevertheless still asked during the interview.  Since the text
+of the final `question` depends on the answers to these questions, the
+questions are asked automatically.  The order in which the questions
+are asked depends on the order in which **docassemble** needs the
+answers (not the order in which the questions appear in the
+interview text).
+
+The interview above effectively tells **docassemble** the following:
+
+1. If a definition of `how_doing` is needed, but `how_doing` is
+   undefined, you can get a definition of `how_doing` by asking the "How
+   are you doing?" question.
+2. If a definition of `favorite_color` is needed, but `favorite_color`
+   is undefined, you can get a definition of `favorite_color` by
+   asking the "What is your favorite color?" question.
+3. You must present the "Your favorite color is . . ."  screen to the
+   user.
+   
+Here is what happens in this interview:
+
+1. The user clicks on a link and goes to the **docassemble** interview.
+1. **docassemble** tries to present the "Your favorite color is . . ."
+   screen to the user.
+2. **docassemble** realizes it needs the definition of the
+   `favorite_color` variable, but it is undefined, so it asks the
+   "What is your favorite color?" question.
+3. When the user answers the question, the variable `favorite_color`
+   is set to the user's answer.
+4. **docassemble** again tries to present the "Your favorite color is
+   . . ." screen to the user.
+5. **docassemble** realizes it needs the definition of the `how_doing`
+   variable, but it is undefined, so it asks the "How
+   are you doing?" question.
+6. When the user answers the question, the variable `how_doing`
+   is set to the user's answer.
+7. **docassemble** again tries to present the "Your favorite color is
+   . . ." screen to the user.
+8. **docassemble** does not encounter any undefined variables, so it
+   is able to present the "Your favorite color is . . ." screen to
+   the user.
+9. The interview is now over because the "Your favorite color is
+   . . ."  screen does not allow the user to press any buttons to move
+   forward.
+
+By making only the final screen `mandatory`, this interview takes
+advantage of **docassemble**'s feature for automatically satifying
+prerequisites.  The author simply needs to provide a collection of
+questions, in any order, and **docassemble** will figure out if and
+when to ask those questions, depending on what is necessary during any
+given interview.
+
+Alternatively, you could make every question `mandatory`:
+
+{% include side-by-side.html demo="all-mandatory" %}
+
+Here is what happens in this version of the interview:
+
+1. The user clicks a link to the **docassemble** interview.
+2. **docassemble** presents the mandatory "How are you doing?"
+   question to the user.
+3. When the user answers the question, the variable `how_doing`
+   is set to the user's answer.
+4. **docassemble** presents the mandatory "What is your favorite color?"
+   question to the user.
+5. When the user answers the question, the variable `favorite_color`
+   is set to the user's answer.
+6. **docassemble** presents the mandatory "Your favorite color is
+   . . ." screen to the user.  It does not need to ask any questions
+   because the variables this screen depends on, `favorite_color` and
+   `how_doing`, are already defined.
+
+The approach of marking everything as `mandatory` bypasses
+**docassemble**'s process of automatically satisfying prerequisites.
+
+When interview authors first start using **docassemble**, they tend to
+use the approach of marking all questions as `mandatory` and listing
+them one after another.  For simple, linear interviews, this approach
+is attractive; it gives the author tight control over the interview
+flow.
+
+But what if there are questions that only need to be asked in certain
+circumstances?  If you make all the questions `mandatory`, some of
+your users will spend time providing information that is never used.
+
+Furthermore, when the complexity of your interview increases, you will
+find that the questions can no longer be represented in a simple
+linear list, because your interview has branching paths.
+
+And as the complexity increases even more, you will find that the
+questions cannot even feasibly be represented in a flowchart, because
+any flowchart that can accommodate every possible path of a
+complicated interview would look like a plate of spaghetti.
+
+The automatic satisfaction of prerequisites is a powerful feature of
+**docassemble**.  It allows interview authors to build any level of
+complexity into their interviews.  It frees the author from having to
+envision all of the possible paths that could lead to the endpoint of
+an interview.  This allows the interview author to concentrate on the
+substance of the interview's end goal rather than the process of
+gathering the information.
+
+The most "scalable" approach to building an interview is to allow
+**docassemble**'s prerequisite-satisfying algorithm to do the heavy
+lifting.  This means using `mandatory` as little as possible.
+
+## Changing the order of questions
+
+You may encounter situations where you don't like the order
+in which **docassemble** asks questions.  You can always tweak the
+order of questions.  For example, suppose you want to make sure that
+your interview asks "How are you doing?" as the first question, rather
+than "What is your favorite color?"
+
+One approach to change the order of questions is to use the
+[`need` directive] (explained in more detail [below](#need)):
+
+{% include side-by-side.html demo="with-mandatory-tweak-a" %}
+
+In this example, the [`need` directive] effectively tells
+**docassemble** that before **docassemble** tries to present the "Your
+favorite color is . . ." screen to the user, it needs to make sure
+that the variables `how_doing` and `favorite_color` are defined.  It
+also indicates that **docassemble** should seek the definitions of
+these variables in a specific order.  Thus, "How are you doing?" is asked
+first.
+
+Another approach to tweaking the order of questions is to use a
+[`code`] block as the single `mandatory` block that will control the
+course of the interview.
+
+{% include side-by-side.html demo="with-mandatory-tweak-b" %}
+
+In this example, the [`code`] block effectively tells **docassemble**:
+
+1. Before doing anything else, make sure that `how_doing` is defined.
+2. Next, do what is necessary to show the [special screen] called
+   `final_screen`.
+
+The prerequisite-satisfying process also works with [`code`] blocks.
+
+{% include side-by-side.html demo="code" %}
+
+In this example, when **docassemble** seeks the definition of
+`fruits`, it sees that it will find it by running the [`code`] block.
+When it tries to run this block, it will find that it does not know the
+definition of `peaches`, so it will ask a question to gather it.  Then
+it will find that it does not know the definition of `pears`, so it
+will ask a question to gather it.
+
+The following subsections explain in detail the `mandatory` directive
+and other directives that control interview flow.
+
+Before you move on, however, there are two important things to know
+about how **docassemble** satisfies prerequisites.
+
+First, remember that **docassemble** asks questions when a variable
+that is _undefined_.  In the above example, if `fruits` had already
+been defined, **docassemble** would not have run the [`code`] block;
+it would have proceeded to display the final screen.  There are some
+exceptions to this.  The [`reconsider`] directive
+[discussed below](#reconsider) is one such exception; the
+[`force_ask()`] function is another.
+
+Second, note that the process of satisfying a prerequisite is
+triggered whenever **docassemble** needs to know the value of a variable,
+but finds the variable is undefined.  If you write [Python] code
+(which is what [`code`] blocks are), keep in mind that under the rules
+of [Python], the mere mention of a variable name can trigger the
+process.
+
+Suppose that in the example above, the [`code`] block was the following:
+
+{% highlight yaml %}
+---
+code: |
+  fruit = peaches + pears
+  apples
+---
+{% endhighlight %}
+
+The statement `apples` does not "do" anything -- it is just a
+reference to a variable -- but it is still part of the [Python] code,
+and the [Python] interpreter will evaluate it.  If [Python] finds that
+the variable is undefined, the prerequisite-satisfying process will be
+triggered.
+
+On the other hand, if `apples` is placed in a context that the
+[Python] interpreter will not evaluate, the prerequisite-satisfying
+process will not be triggered.
+
+{% highlight yaml %}
+---
+code: |
+  fruit = peaches + pears
+  if fruit > 113121:
+    apples
+---
+{% endhighlight %}
+
+In this case, [Python] will not "need" the value of `apples` unless
+the number of peaches and pears exceeds 113,121, so the mention of
+`apples` does not necessarily trigger the asking of a question.
 
 # Directives that control interview logic
 
@@ -67,10 +328,11 @@ sets: user_will_not_sit_down
 ---
 {% endhighlight %}
 
-Here, the `mandatory` block of [`code`] contains simple [Python] code that
+Here, the single `mandatory` block contains simple [Python] code that
 contains the entire logic of the interview.
 
-If a `mandatory` directive is not present, it is treated as `False`.
+If a `mandatory` directive is not present within a block, it is as
+though `mandatory` was set to `False`.
 
 The value of `mandatory` can be a [Python] expression.  If it is a
 [Python] expression, the [`question`] or [`code`] block will be
@@ -80,10 +342,11 @@ treated as mandatory if the expression evaluates to a true value.
 
 ## <a name="initial"></a>`initial`
 
-The `initial` modifier is very similar to [`mandatory`].  It causes a
-[`code`] block to be run every time **docassemble** processes your
-interview.  [`mandatory`] blocks, by contrast, are never run again if
-they are successfully "asked" once.
+The `initial` modifier is very similar to [`mandatory`].  It can only
+be used on a [`code`] block.  It causes the [`code`] block to be run
+every time **docassemble** processes your interview.  [`mandatory`]
+blocks, by contrast, are never run again if they are successfully
+"asked" once.
 
 {% highlight yaml %}
 ---
@@ -93,9 +356,39 @@ code: |
 ---
 {% endhighlight %}
 
+`initial` blocks are useful in a variety of contexts:
+
+* When you are using a [multi-user interview] and you want to set
+  interview variables to particular values depending on the user who
+  is currently using the interview.
+* When you are using the [actions] feature and you want to make sure
+  the [actions] are processed only in particular circumstances.
+
+## <a name="need"></a>`need`
+
+The `need` directive allows you to manually specify the prerequisites
+of a [`question`] or [`code`] block.  This can be helpful for tweaking
+the order in which questions are asked.
+
+{% include side-by-side.html demo="need-directive" %}
+
+In this example, the ordinary course of the interview logic would ask
+"What is your favorite animal?" as the first question.  However,
+everyone knows that the first question you should ask of a child is
+"How old are you?"  The `need` directive indicates that before
+**docassemble** should even try to present the "Thank you for that
+information" screen, it should ensure that `number_of_years_old` old
+is defined, then ensure that `favorite_animal`, and then try to
+present the screen.
+
+The variables listed in a `need` directive do not have to actually be
+used by the question.  Also, if your question uses variables that are
+not mentioned in the `need` list, **docassemble** will still pursue
+definitions of those variables.
+
 ## <a name="reconsider"></a>`reconsider`
 
-The `reconsider` modifier can only be used on [`code`] blocks.
+The `reconsider` directive can only be used on [`code`] blocks.
 
 If `reconsider` is set to `True`, then **docassemble** will always
 "reconsider" the values of any of the variables set by the `code`
@@ -620,6 +913,7 @@ provide a list of interviews available on your server.
 [`default role`]: {{ site.baseurl }}/docs/initial.html#default role
 [`template`]: {{ site.baseurl }}/docs/template.html
 [`event`]: {{ site.baseurl }}/docs/fields.html#event
+[special screen]: {{ site.baseurl }}/docs/fields.html#event
 [`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
 [`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
 [`action_menu_item()`]: {{ site.baseurl }}/docs/functions.html#action_menu_item
@@ -640,3 +934,8 @@ provide a list of interviews available on your server.
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [`generic object`]: {{ site.baseurl }}/docs/modifiers.html#generic object
+[multi-user interview]: {{ site.baseurl }}/docs/roles.html
+[actions]: {{ site.baseurl }}/docs/functions.html#actions
+[`need` directive]: #need
+[`reconsider`]: #reconsider
+[`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask

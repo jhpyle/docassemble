@@ -87,6 +87,31 @@
         | 123 Riverside Drive
         | Fort Franklin, AR 92302
   mandatory: True
+"all-mandatory": |-
+  mandatory: True
+  question: |
+    How are you doing?
+  field: how_doing
+  choices:
+    - Fine
+    - Ill
+  ---
+  mandatory: True
+  question: |
+    What is your favorite color?
+  fields:
+    Color: favorite_color
+  ---
+  mandatory: True
+  question: |
+    Your favorite color is
+    ${ favorite_color }.
+  subquestion: |
+    % if how_doing == 'Fine':
+    I am glad you are doing well.
+    % else:
+    I am sorry you aren't feeling 100%.
+    % endif
 "all_variables": "mandatory: True\nquestion: |\n  Interview dictionary\nsubquestion:\
   \ |\n  The variables in the dictionary are:\n    \n  `${ all_variables() }`"
 "allow-emailing-false": |-
@@ -599,6 +624,22 @@
 "code": |-
   code: |
     fruits = peaches + pears
+  ---
+  question: |
+    How many peaches do you have?
+  fields:
+    - no label: peaches
+      datatype: integer
+  ---
+  question: |
+    How many pears do you have?
+  fields:
+    - no label: pears
+      datatype: integer
+  ---
+  question: |
+    You have ${ fruits } pieces of fruit.
+  mandatory: True
 "code-example-01": |-
   code: |
     answer = 2 + 2
@@ -3504,6 +3545,23 @@
   mandatory: True
   code: |
     need(fruit, all_done)
+"need-directive": |-
+  mandatory: True
+  need:
+    - number_of_years_old
+    - favorite_animal
+  question: |
+    Thank you for that information.
+  subquestion: |
+    My favorite animal is
+    ${ favorite_animal },
+    too!
+
+    % if number_of_years_old < 10:
+    You're growing so fast.  Pretty
+    soon you'll be driving a
+    ${ favorite_color } car!
+    % endif
 "nested-for-loop": |-
   mandatory: True
   code: |
@@ -3613,6 +3671,28 @@
     What is your Zodiac sign?
   fields:
     - no label: target_variable
+"no-mandatory": |-
+  question: |
+    How are you doing?
+  field: how_doing
+  choices:
+    - Fine
+    - Ill
+  ---
+  question: |
+    What is your favorite color?
+  fields:
+    Color: favorite_color
+  ---
+  question: |
+    Your favorite color is
+    ${ favorite_color }.
+  subquestion: |
+    % if how_doing == 'Fine':
+    I am glad you are doing well.
+    % else:
+    I am sorry you aren't feeling 100%.
+    % endif
 "note": "question: |\n  Please fill in the following information.\nfields:\n  - Favorite\
   \ fruit: fruit\n  - Favorite vegetable: vegetable\n  - note: |\n      In case you\
   \ did not know, a \n      mushroom is a fungus, not a\n      vegetable.\n  - Favorite\
@@ -5551,6 +5631,83 @@
     before proceeding with the interview.
   video: |
     [VIMEO 96044910]
+"with-mandatory": |-
+  question: |
+    How are you doing?
+  field: how_doing
+  choices:
+    - Fine
+    - Ill
+  ---
+  question: |
+    What is your favorite color?
+  fields:
+    Color: favorite_color
+  ---
+  mandatory: True
+  question: |
+    Your favorite color is
+    ${ favorite_color }.
+  subquestion: |
+    % if how_doing == 'Fine':
+    I am glad you are doing well.
+    % else:
+    I am sorry you aren't feeling 100%.
+    % endif
+"with-mandatory-tweak-a": |-
+  question: |
+    How are you doing?
+  field: how_doing
+  choices:
+    - Fine
+    - Ill
+  ---
+  question: |
+    What is your favorite color?
+  fields:
+    Color: favorite_color
+  ---
+  mandatory: True
+  need:
+    - how_doing
+    - favorite_color
+  question: |
+    Your favorite color is
+    ${ favorite_color }.
+  subquestion: |
+    % if how_doing == 'Fine':
+    I am glad you are doing well.
+    % else:
+    I am sorry you aren't feeling 100%.
+    % endif
+"with-mandatory-tweak-b": |-
+  mandatory: True
+  code: |
+    how_doing
+    final_screen
+  ---
+  question: |
+    How are you doing?
+  field: how_doing
+  choices:
+    - Fine
+    - Ill
+  ---
+  question: |
+    What is your favorite color?
+  fields:
+    Color: favorite_color
+  ---
+  event: final_screen
+  question: |
+    Your favorite color is
+    ${ favorite_color }.
+  subquestion: |
+    % if how_doing == 'Fine':
+    I am glad you are doing well.
+    % else:
+    I am sorry you aren't feeling 100%.
+    % endif
 "yaml-markdown-python": |-
   question: |
     What is your favorite number?

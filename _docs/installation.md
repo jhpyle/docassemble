@@ -453,8 +453,8 @@ Make sure that files in the **docassemble** directory can be read
 and written by the web server:
 
 {% highlight bash %}
-sudo chown www-data.www-data /usr/share/docassemble/config/config.yml
-sudo chown www-data.www-data /usr/share/docassemble/webapp/docassemble.wsgi
+sudo chown www-data.www-data /usr/share/docassemble/config/config.yml.dist \
+  /usr/share/docassemble/webapp/docassemble.wsgi
 sudo chown -R www-data.www-data /usr/share/docassemble/local \
   /usr/share/docassemble/log /usr/share/docassemble/files
 sudo chmod ogu+r /usr/share/docassemble/config/config.yml.dist

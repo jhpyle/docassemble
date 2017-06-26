@@ -28,7 +28,7 @@ be determined by **docassemble**.  All you need to do is give
 The end goal might be as simple as "show the exit screen."  This will
 instruct **docassemble** to try to show the exit screen.  But
 **docassemble** will doubtless find that in order to show the exit
-screen, it will need a piece of information.  It will look for a
+screen, it will need some piece of information.  It will look for a
 question in the [YAML] file that will provide that information, and it
 will try to ask that question.  But it may find that in order to ask
 that question, it needs to know another piece of information, and it
