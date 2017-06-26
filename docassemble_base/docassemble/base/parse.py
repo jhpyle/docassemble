@@ -2368,7 +2368,7 @@ def interview_source_from_string(path, **kwargs):
             new_source = InterviewSourceFile(filepath=the_filename, path=path)
             if new_source.update():
                 return(new_source)
-    raise DAError("YAML file " + str(path) + " not found")
+    raise DAError("YAML file " + str(path) + " not found", code=404)
 
 def is_boolean(field_data):
     if 'choices' not in field_data:

@@ -1,6 +1,7 @@
 class DAError(Exception):
-    def __init__(self, value):
+    def __init__(self, value, code=501):
         self.value = value
+        self.error_code = code
     def __str__(self):
         return str(self.value)
 

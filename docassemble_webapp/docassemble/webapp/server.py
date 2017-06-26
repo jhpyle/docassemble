@@ -10179,12 +10179,16 @@ def package_page():
 @app.errorhandler(Exception)
 def server_error(the_error):
     errmess = unicode(type(the_error).__name__) + ": " + unicode(the_error)
-    if type(the_error) is DAError:
+    if isinstance(the_error, DAError):
         the_trace = None
         logmessage(errmess)
     else:
         the_trace = traceback.format_exc()
         logmessage(the_trace)
+    if isinstance(the_error, DAError):
+        error_code = the_error.error_code
+    else:
+        error_code = 501
     flask_logtext = []
     if os.path.exists(LOGFILE):
         with open(LOGFILE) as the_file:
@@ -10192,18 +10196,11 @@ def server_error(the_error):
                 if re.match('Exception', line):
                     flask_logtext = []
                 flask_logtext.append(line)
-    # apache_logtext = []
-    # with open(APACHE_LOGFILE) as the_file:
-    #     for line in the_file:
-    #         if re.search('configured -- resuming normal operations', line):
-    #             apache_logtext = []
-    #         apache_logtext.append(line)
-    # errmess = re.sub(r'\n', '<br>', errmess)
     if re.search(r'\n', errmess):
         errmess = '<pre>' + errmess + '</pre>'
     else:
         errmess = '<blockquote>' + errmess + '</blockquote>'
-    return render_template('pages/501.html', version_warning=version_warning, tab_title=word("Error"), page_title=word("Error"), error=errmess, logtext=str(the_trace)), 501
+    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, logtext=str(the_trace)), error_code
 
 # @app.route('/testpost', methods=['GET', 'POST'])
 # def test_post():
