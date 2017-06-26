@@ -1,0 +1,28 @@
+metadata:
+  title: Interview
+  example start: 1
+  example end: 3
+  documentation: "https://docassemble.org/docs/logic.html"
+---
+question: |
+  How are you doing?
+field: how_doing
+choices:
+  - Fine
+  - Ill
+---
+question: |
+  What is your favorite color?
+fields:
+  Color: favorite_color
+---
+mandatory: True
+question: |
+  Your favorite color is
+  ${ favorite_color }.
+subquestion: |
+  % if how_doing == 'Fine':
+  I am glad you are doing well.
+  % else:
+  I am sorry you aren't feeling 100%.
+  % endif

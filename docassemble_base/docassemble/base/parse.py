@@ -632,11 +632,24 @@ class Question:
             if type(data['css']) not in (str, unicode):
                 raise DAError("A css section must be plain text." + self.idebug(data))
             self.css = TextObject(definitions + unicode(data['css']), names_used=self.mako_names)
-        if ('initial' in data and data['initial'] is True) or ('default role' in data):
-            #logmessage("Setting a code block to initial\n")
-            self.is_initial = True
+        if 'initial' in data and 'code' not in data:
+            raise DAError("Only a code block can be marked as initial." + self.idebug(data))
+        if ('initial' in data and data['initial'] is True) or 'default role' in data:
+            if 'default role' in data or data['initial'] is True:
+                self.is_initial = True
+                self.initial_code = None
+            elif data['initial'] in (False, None):
+                self.is_initial = False
+                self.initial_code = None
+            else:
+                self.is_initial = False
+                if type(data['initial']) in (str, unicode):
+                    self.initial_code = compile(data['initial'], '', 'eval')
+                else:
+                    self.initial_code = None
         else:
             self.is_initial = False
+            self.initial_code = None
         if 'command' in data and data['command'] in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register']:
             self.question_type = data['command']
             self.content = TextObject(data.get('url', ''), names_used=self.mako_names)
@@ -2540,12 +2553,13 @@ class Interview:
                         #logmessage("util was not imported")
                         exec(import_and_run_process_action, user_dict)
                 for question in self.questions_list:
-                    if question.question_type == 'code' and question.is_initial:
+                    if question.question_type == 'code' and (question.is_initial or (question.initial_code is not None and eval(question.initial_code, user_dict))):
                         #logmessage("Running some code:\n\n" + question.sourcecode)
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'initial'})
                         docassemble.base.functions.this_thread.current_question = question
                         exec(question.compute, user_dict)
+                        continue
                     if question.name and question.name in user_dict['_internal']['answered']:
                         #logmessage("Skipping " + question.name + " because answered")
                         continue
@@ -2583,30 +2597,31 @@ class Interview:
                                     #logmessage("Running " + command)
                                     exec(command, user_dict)
                         question.mark_as_answered(user_dict)
-                    if question.question_type == 'code' and (question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict))):
-                        if debug:
-                            interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
-                        #logmessage("Running some code:\n\n" + question.sourcecode)
-                        #logmessage("Question name is " + question.name)
-                        docassemble.base.functions.this_thread.current_question = question
-                        exec(question.compute, user_dict)
-                        #logmessage("Code completed")
-                        if question.name:
-                            user_dict['_internal']['answered'].add(question.name)
-                            #logmessage("Question " + str(question.name) + " marked as answered")
-                    if (question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict))) and hasattr(question, 'content') and question.name:
-                        if debug:
-                            interview_status.seeking.append({'question': question, 'reason': 'mandatory question'})
-                        if question.name and question.name in user_dict['_internal']['answers']:
-                            #logmessage("in answers")
-                            #question.mark_as_answered(user_dict)
-                            interview_status.populate(question.follow_multiple_choice(user_dict).ask(user_dict, 'None', []))
-                        else:
-                            interview_status.populate(question.ask(user_dict, 'None', []))
-                        if interview_status.question.question_type == 'continue':
-                            user_dict['_internal']['answered'].add(question.name)
-                        else:
-                            raise MandatoryQuestion()
+                    if (question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict))):
+                        if question.question_type == 'code':
+                            if debug:
+                                interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
+                            #logmessage("Running some code:\n\n" + question.sourcecode)
+                            #logmessage("Question name is " + question.name)
+                            docassemble.base.functions.this_thread.current_question = question
+                            exec(question.compute, user_dict)
+                            #logmessage("Code completed")
+                            if question.name:
+                                user_dict['_internal']['answered'].add(question.name)
+                                #logmessage("Question " + str(question.name) + " marked as answered")
+                        elif hasattr(question, 'content') and question.name:
+                            if debug:
+                                interview_status.seeking.append({'question': question, 'reason': 'mandatory question'})
+                            if question.name and question.name in user_dict['_internal']['answers']:
+                                #logmessage("in answers")
+                                #question.mark_as_answered(user_dict)
+                                interview_status.populate(question.follow_multiple_choice(user_dict).ask(user_dict, 'None', []))
+                            else:
+                                interview_status.populate(question.ask(user_dict, 'None', []))
+                            if interview_status.question.question_type == 'continue':
+                                user_dict['_internal']['answered'].add(question.name)
+                            else:
+                                raise MandatoryQuestion()
             except NameError as errMess:
                 docassemble.base.functions.reset_context()
                 if isinstance(errMess, ForcedNameError):

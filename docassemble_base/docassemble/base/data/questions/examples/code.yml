@@ -1,6 +1,8 @@
 metadata:
   title: Code
   documentation: "https://docassemble.org/docs/code.html#code"
+  example start: 1
+  example end: 4
 ---
 code: |
   fruits = peaches + pears

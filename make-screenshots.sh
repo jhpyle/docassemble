@@ -7,7 +7,7 @@ do
     area=${area##*_}
     file=${path##*/}
     file=${file%.*}
-    if [ "$file" = "audio" -o "$file" = "video" -o "$file" = "vimeo" -o "$file" = "video-static" -o "$file" = "immediate-file" -o "$file" = "table" -o "$file" = "table-alt" -o "$file" = "table-python" -o "$file" = "table-if-then" -o "$file" = "table-mako" ]
+    if [ "$file" = "audio" -o "$file" = "video" -o "$file" = "vimeo" -o "$file" = "video-static" -o "$file" = "immediate-file" -o "$file" = "table" -o "$file" = "table-alt" -o "$file" = "table-python" -o "$file" = "table-if-then" -o "$file" = "table-mako" -o "$file" = "no-mandatory" ]
     then
 	continue
     fi

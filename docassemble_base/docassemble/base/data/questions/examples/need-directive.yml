@@ -1,0 +1,37 @@
+metadata:
+  title: Need directive
+  example start: 4
+  example end: 4
+  documentation: "https://docassemble.org/docs/logic.html#need"
+---
+question: |
+  What is your favorite color?
+fields:
+  - Favorite color: favorite_color
+---
+question: |
+  What is your favorite animal?
+fields:
+  - Favorite animal: favorite_animal
+---
+question: |
+  How old are you?
+fields:
+  - Age in years: number_of_years_old
+---
+mandatory: True
+need:
+  - number_of_years_old
+  - favorite_animal
+question: |
+  Thank you for that information.
+subquestion: |
+  My favorite animal is
+  ${ favorite_animal },
+  too!
+
+  % if number_of_years_old < 10:
+  You're growing so fast.  Pretty
+  soon you'll be driving a
+  ${ favorite_color } car!
+  % endif
