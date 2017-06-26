@@ -64,7 +64,7 @@ so this danger will only arise if you install additional modules.
 [`import`]: https://docs.python.org/3/reference/import.html
 [Docker]: https://www.docker.com/
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
-[requirements]: {{ site.baseurl }}/docs/requirements.html
+[requirements]: {{ site.baseurl }}/docs/installation.html
 [MIT License]: https://en.wikipedia.org/wiki/MIT_License
 [subprocess]: https://docs.python.org/2/library/subprocess.html
 [`eval()`]: https://docs.python.org/2/library/functions.html#eval
