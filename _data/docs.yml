@@ -29,6 +29,7 @@
     - sms
 - title: Development
   docs:
+    - development
     - playground
     - packages
     - errors

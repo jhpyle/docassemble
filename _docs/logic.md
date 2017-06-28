@@ -348,13 +348,32 @@ every time **docassemble** processes your interview.  [`mandatory`]
 blocks, by contrast, are never run again if they are successfully
 "asked" once.
 
-{% highlight yaml %}
----
-initial: True
-code: |
-  my_counter = 0
----
-{% endhighlight %}
+{% include side-by-side.html demo="initial" %}
+
+Note in this example that from screen to screen, the `counter`
+increments from 1 to 2 and then to 4.  The counter does not count the
+number of screens displayed, but rather the number of times the
+interview logic was evaluated.  The "passes" through the interview are:
+
+1. The interview logic is evaluated, but the evaluation stops when the
+   undefined variable `fruit` is encountered.  The interview then
+   tries to run the `code` block to get `fruit`, but encounters an
+   undefined variable `peaches`, so it asks a question to gather
+   `peaches`.
+2. The interview logic is evaluated, but the evaluation stops when the
+   undefined variable `fruit` is encountered.  The interview then
+   tries to run the `code` block to get `fruit`, but encounters an
+   undefined variable `pears`, so it asks a question to gather
+   `pears`.
+3. The interview logic is evaluated, but the evaluation stops when the
+   undefined variable `fruit` is encountered.  The interview then runs
+   the `code` block, and this time, `fruit` is successfully defined.
+4. The interview logic is evaluated again, and the final question is
+   displayed.
+
+Like [`mandatory`], `initial` can be set to `True`, `False`, or to
+[Python] code that will be evaluated to see whether it evaluates to a
+true or false value.
 
 `initial` blocks are useful in a variety of contexts:
 

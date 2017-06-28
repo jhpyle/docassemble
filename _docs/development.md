@@ -80,7 +80,7 @@ There are other, less cumbersome ways to ensure that your [Playground]
 data and other data persist through the process of removing and
 reinstalling the [Docker] container:
 
-#. You can sign up with [Amazon Web Services] and create an
+1. You can sign up with [Amazon Web Services] and create an
    [S3 bucket] to store the contents of your [Playground], so that the
    contents persist "in the cloud" after you remove the
    **docassemble** container.  This requires figuring out how [AWS]
@@ -90,9 +90,9 @@ reinstalling the [Docker] container:
    storage is that you can continue to use your personal laptop or
    desktop, but when you want to transition your **docassemble**
    server to the cloud, the process of transitioning will be seamless.
-#. Instead of using [S3], you could use [Azure blob storage], another
+2. Instead of using [S3], you could use [Azure blob storage], another
    cloud storage service.
-#. Instead of storing your information in the cloud, you could store
+3. Instead of storing your information in the cloud, you could store
    it in a [Docker volume] on the same computer that runs your
    [Docker] container.  The disadvantage is that the data will be
    located in a [hard-to-find directory] on the computer's hard drive,
@@ -279,30 +279,94 @@ changes could be erased by another developer's activity.
 ## Using version control
 
 As you work on interview development, you should use version control
-to track your changes.  One difficulty is that the ideal environment
-for testing, which is **docassemble**'s Playground, is not directly
-integrated with [GitHub] or any other version control system.  If you
-use [Google Drive integration], you could run version control inside
-your Google Drive, but the file structure of the `docassemble`
-directory is specific to your [Playground], and you will probably want
-your version control to be specific to a [package].
+to track your changes.
 
-To take advantage of version control, you can use the following process:
+If you enable the [GitHub integration] feature, you will have a
+"GitHub" button on your [packages folder] page.  Every time you want
+to take a snapshot of your code, press the "GitHub" button, type a
+"commit message" that describes what changed in the latest snapshot,
+and then press "Commit."  Your changes will be "committed" to your
+package's repository on [GitHub].
 
-* Develop and test your interview in the [Playground].
-* Create a [package] containing your interview and its associated files.
-* When you are ready to make your first commit, download the package
-  as a ZIP file and unpack it on your computer.
-* Initialize the version control system inside the root directory of
-  the package (i.e. the directory containing `README.md` and
-  `setup.py`) (e.g., by running `git init`).
-* Then do your first commit (e.g., `git commit -m 'first commit'`).
-* Work on the interview some more in the [Playground].
-* When you are ready to make your next commit, download the package as
-  a ZIP file and unpack it into the same place on your computer as
-  before, overwriting the existing files.
-* Do your next commit (e.g., `git commit -m 'second commit'`).
+You can also bring files from a package's [GitHub] repository into the
+[Playground] using the ["Pull" button].
 
+This enables a workflow like the following (assuming you know how to
+use [git]):
+
+1. Start a [package] in the [Playground].
+2. Push the [package] to [GitHub] using the "GitHub" button in the
+   [packages folder].
+3. On your computer, [clone] the [GitHub] repository and make changes
+   to the package by editing files with a text editor, by copying
+   files into the `data` folders, or other means.
+4. When you want to use the [Playground] again for testing, [push]
+   your changes to [GitHub], and then go into the [packages folder]
+   and use the ["Pull" button] to bring the updated package files into
+   the [Playground].
+
+This also facilitates collaboration:
+
+1. You could do all your development in the [Playground], while
+committing snapshots to [GitHub] as you go.
+2. If another person has an idea for a change to your package, he or
+she could open a [pull request] on the [GitHub] repository for your
+package.
+3. If you like the changes that person made, you could [merge] the
+pull request on [GitHub], and then to bring the changes into your
+[Playground], you could press the ["Pull" button].
+
+## Using separate packages
+
+Developers can work independently while still working collaboratively.
+
+The open-source software community does this all the time: for
+example, one [Python] developer will create a package, and then other
+developers will make that package a "dependency" for their own
+packages and [`import`] it into their code.  The initial developer can
+continue to make improvements to the software package, and the other
+developers can take advantage of these changes.  Every time the
+developers reinstall their own packages, [Python] downloads and
+installs the latest version of the dependencies.  The other developers
+can use the first developer's code without needing to copy and paste
+it, or even look at it.
+
+This kind of collaboration is possible among **docassemble** interview
+developers as well, since interviews can be uploaded as
+[Python packages] to [PyPI] and [GitHub].
+
+1. Developer One creates an interview, packages it, and presses the
+   "PyPI" button to upload the package to [PyPI] as
+   `docassemble.bankruptcy`.
+2. Developer Two, using a different **docassemble** server, goes to
+   "Package Management" from the menu, selects "Update a package," and
+   installs the `docassemble.bankruptcy` package from [PyPI].
+4. Developer Two then develops an interview file that makes reference
+   to files in the `docassemble.bankruptcy` package.  For example, the
+   interview might [`include`] the file
+   `docassemble.bankruptcy:data/questions/common_questions.yml`, a
+   file that contains some standard [`question`]s that might be asked
+   of a debtor.
+3. Developer Two then goes to the [packages folder] of the
+   [Playground], creates a package called `debtconsult`, and makes
+   `docassemble.bankruptcy` a dependency of that package.
+4. Developer Two then presses the "PyPI" button to upload the package
+   to [PyPI] as `docassemble.debtconsult`.
+5. Months later, Developer Three, using yet another **docassemble**
+   server, goes to "Package Management" from the menu, selects "Update
+   a package," and installs the `docassemble.debtconsult` package from
+   [PyPI].  This will cause the latest versions of both
+   `docassemble.bankruptcy` and `docassemble.debtconsult` to be
+   installed.
+
+In order to facilitate collaboration, Developer One should prepare
+interview files in a "modular" way, putting general purpose [`question`]s
+and [`code`] blocks in separate [YAML] files that are [`include`]d in
+special-purpose interview files.
+
+[`include`]: {{ site.baseurl }}/docs/initial.html#include
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`code`]: {{ site.baseurl }}/docs/code.html#code
 [configuration]: {{ site.baseurl }}/docs/config.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [extension package]: {{ site.baseurl }}/docs/packages.html
@@ -343,6 +407,7 @@ To take advantage of version control, you can use the following process:
 [README area]: {{ site.baseurl }}/docs/playground.html#README
 [package]: {{ site.baseurl }}/docs/packages.html
 [packages]: {{ site.baseurl }}/docs/packages.html
+[GitHub integration]: {{ site.baseurl }}/docs/packages.html#github
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [Amazon Web Services]: https://aws.amazon.com
 [AWS]: https://aws.amazon.com
@@ -351,4 +416,11 @@ To take advantage of version control, you can use the following process:
 [PyPI]: https://pypi.python.org/pypi
 [GitHub]: https://github.com/
 [data storage]: {{ site.baseurl }}/docs/docker.html#data storage
-
+["Pull" button]: {{ site.baseurl }}/docs/playground.html#pull
+[clone]: https://git-scm.com/docs/git-clone
+[push]: https://git-scm.com/docs/git-push
+[git]: https://git-scm.com
+[pull request]: https://help.github.com/articles/about-pull-requests/
+[merge]: https://help.github.com/articles/merging-a-pull-request/
+[`import`]: https://docs.python.org/2/tutorial/modules.html
+[Python packages]: https://docs.python.org/2/tutorial/modules.html#packages

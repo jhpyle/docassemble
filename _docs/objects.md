@@ -892,22 +892,101 @@ has the following attributes:
 * `mimetype`: the MIME type of the file.
 * `extension`: the file extension (e.g., `pdf` or `rtf`).
 * `number`: the internal integer number used by **docassemble** to
-keep track of documents stored in the system.
+  keep track of documents stored in the system.  (You will likely never need to
+  use this.)
 * `ok`: this is `True` if the `number` has been defined, and is
-  otherwise `False`.
+  otherwise `False`.  (You will likely never need to use this,
+  either.)
 
-<a name="DAFile.show"></a>The `.show()` method inserts markup that
+You might work with `DAFile` objects in the following contexts:
+
+* Your interview contains a [document upload field].  The variable
+  representing the upload will be set to a [`DAFileList`] object after
+  the upload has been done.  If the
+  variable name is `pretty_picture`, then `pretty_picture[0]` will be
+  a `DAFile` object.
+* Your interview assembles a document and the document is assigned to
+  a [`variable name`].  If the variable name is
+  `motion_to_reconsider`, then `motion_to_reconsider` will be a
+  [`DAFileCollection`] object, the attributes of which represent the
+  various formats of the document.  For example,
+  `motion_to_reconsider.pdf` (the `.pdf` here is an attribute, not a
+  file extension) will be a `DAFile` object representing the PDF
+  version of the document.
+* Your interview contains code that needs to create a file.  You can
+  use an [`objects`] block to create a blank [`DAFile`] object.  Then
+  you would call [`.initialize()`](#DAFile.initialize) to give the
+  file a name and a presence on the file system.
+  
+You can call [`.path()`](#DAFile.path) on a `DAFile` object to get the
+actual file path.  Using the file path, can manipulate the underlying
+file directly in whatever way you want.  However, the `DAFile` object
+has a number of built-in methods for doing common things with files,
+so it is a good idea to use the methods whenever possible.
+
+While the `DAFile` object is saved in your interview dictionary like
+any other variable, the content of the file may be stored on
+[Amazon S3], [Azure blob storage], or the file system, depending on
+the server's configuration.  The path you obtain from
+[`.path()`](#DAFile.path) might be different from one screen of your
+interview to another.  You should not save the path to a variable and
+expect to be able to use that variable across screens of the
+interview.  Rather, you should always access the file through the
+`DAFile` object, using its built-in methods (such as
+[`.path()`](#DAFile.path)).  These methods contain code that
+automatically accounts for the fact that the file might be stored in
+the cloud.  For example, if you use [Amazon S3], then when you call
+[`.path()`](#DAFile.path)), this will cause the file to be retrieved
+from [Amazon S3] and placed into a temporary directory.
+
+The methods of `DAFile` are the following:
+
+<a name="DAFile.initialize"></a>The `.initialize()` method transforms
+a fresh, uninitialized `DAFile` object (e.g., a `DAFile` object
+created by the [`objects`] block) into an object that can actually be
+used as a file.  The method takes the optional keyword parameters
+`filename` or `extension`.  The `.initialize()` method can be used as
+follows (where `myfile` is a `DAFile` object):
+
+* `myfile.initialize(filename='image.jpg')` - `filename` will be
+  `image.jpg`, `extension` will be `jpg`, `mimetype` will be
+  `image/jpeg`.
+* `myfile.initialize(extension='jpg')` - `filename` will be
+  `file.jpg`, `extension` will be `jpg`, `mimetype` will be
+  `image/jpeg`.
+* `myfile.initialize()` - `filename` will be `file.txt`, `extension`
+  will be `txt`, `mimetype` will be `text/plain`.
+
+If the object has already been initialized, the `.initialize()` method
+can safely be called on it, but this will only have the effect of
+calling `.retrieve()` on it, and the `filename` and `extension`
+parameters will not overwrite existing values.
+
+The following example uses the [Python Imaging Library] to create a
+JPEG image.
+
+{% include side-by-side.html demo="dafile" %}
+
+<a name="DAFile.show"></a>The `.show()` method returns markup that
 displays the file as an image.  This method takes an optional keyword
-argument, `width`.
+argument, `width`, which can be set to, e.g., `'1in'`, `'44mm'`, or
+`'20pt'`.  See [inserting images] for more information about this
+markup.
 
-When included in a [Mako] template, a `DAFile` object will effectively
-call `show()` on itself.
+In the context of a [Mako] template, writing `${ myfile }` is
+equivalent to writing `${ myfile. show() }` (where `myfile` is a
+`DAFile` object).
+
+<a name="DAFile.path"></a>The `.path()` method returns a complete file
+path that you can use to read the file or write to the file.
 
 <a name="DAFile.url_for"></a>The `.url_for()` method returns a URL at
-which the file can be accessed.
-
-<a name="DAFile.path">The `.path()` method returns a complete file
-path that you can use to read the file or write to the file.</a>
+which the file can be accessed.  The URL should only be used in the
+context of the user's session and the user's web browser.  For
+example, if you are using cloud storage as your form of
+[data storage], the URL will link directly to the cloud and will
+expire after an hour.  If you are not using cloud storage, the server
+will only allow access to the file to the current user.
 
 <a name="DAFile.retrieve"></a>The `.retrieve()` command ensures that a
 stored file is ready for use on the system.  Calling `.retrieve` is
@@ -916,16 +995,6 @@ or [Azure blob storage], documents are stored in the cloud, and the
 server accesses them by copying them from the cloud to the server and
 then copying them back to the cloud.  If the file does not exist yet,
 calling `.retrieve()` will generate an error.
-
-<a name="DAFile.initialize"></a>The `.initialize()` method brings a
-file into existence if it does not exist.  It also has the effect of
-calling `retrieve()`.  The method takes an optional keyword argument
-`filename` that sets the `filename` attribute of the object.
-
-The following example uses the [Python Imaging Library] to create a
-JPEG image.
-
-{% include side-by-side.html demo="dafile" %}
 
 <a name="DAFile.slurp"></a>The `.slurp()` method reads the contents of
 the file and returns them as a value.
@@ -963,6 +1032,9 @@ the_file.write(contents)
 <a name="DAFile.copy_into"></a>The `.copy_into()` method overwrites
 any existing contents of the file with the contents of the file given
 as an argument.
+
+<a name="DAFile.from_url"></a>The `.from_url()` method overwrites
+any existing contents of the file with the contents of the given URL.
 
 {% highlight python %}
 the_file.copy_into(other_file.path())
@@ -2342,3 +2414,7 @@ and not an instance of the `Attorney` class.
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [MIME type]: https://en.wikipedia.org/wiki/Media_type
 [Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
+[document upload field]: {{ site.baseurl }}/docs/fields.html#interview_email
+[`variable name`]: {{ site.baseurl }}/docs/documents.html#variable name
+[inserting images]: {{ site.baseurl }}/docs/markup.html#inserting images
+[data storage]: {{ site.baseurl }}/docs/docker.html#data storage

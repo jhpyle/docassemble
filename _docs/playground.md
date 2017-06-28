@@ -181,7 +181,8 @@ class="glyphicon glyphicon-plus-sign" aria-hidden="true"></i> Add."
 To view a different package, select it from the <i class="glyphicon glyphicon-briefcase"
 aria-hidden="true"></i> pull-down menu.
 
-To download the current package as a Zip file, click "<i class="glyphicon glyphicon-download" aria-hidden="true"></i>
+To download the current package as a Zip file, click 
+"<i class="glyphicon glyphicon-download" aria-hidden="true"></i>
 Download."
 
 If you have an existing package that was created using
@@ -199,10 +200,11 @@ templates are in the folder
 If you created subfolders within these folders, **docassemble** will
 not know where to put your files.
 
-If there is a package on [GitHub] and you would like to bring the
-contents of that package into your Playground, click "<i class="glyphicon glyphicon-cloud"
-aria-hidden="true"></i> Pull."  This works in much the same way as the
-Upload feature, and has the same limitations.
+<a name="pull"></a>If there is a package on [GitHub] or [PyPI] and you
+would like to bring the contents of that package into your Playground,
+click "<i class="glyphicon glyphicon-cloud" aria-hidden="true"></i>
+Pull."  This imports package files in much the same way as the Upload
+feature does, and has the same limitations.
 
 {% include scroll-image.html image="playground-packages-page-clipped.png" %}
 
