@@ -74,6 +74,7 @@ class PlaygroundFilesEditForm(FlaskForm):
 
 class PullPlaygroundPackage(FlaskForm):
     github_url = StringField(word('GitHub URL'))
+    pypi = StringField(word('PyPI package'))
     pull = SubmitField(word('Pull'))
     cancel = SubmitField(word('Cancel'))
 

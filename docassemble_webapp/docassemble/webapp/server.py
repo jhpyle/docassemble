@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 import ruamel.yaml
+import tarfile
 from textstat.textstat import textstat
 import docassemble.base.config
 if not docassemble.base.config.loaded:
@@ -7512,7 +7513,7 @@ def update_package():
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
             else:
-                flash(word('You need to either supply a Git URL or upload a file.'), 'error')
+                flash(word('You need to supply a Git URL, upload a file, or supply the name of a package on PyPI.'), 'error')
     package_list, package_auth = get_package_info()
     form.pippackage.data = None
     form.giturl.data = None
@@ -7851,9 +7852,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
             readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
+            manifestin = """\
+include README.md
+"""
             setupcfg = """\
 [metadata]
-description-file = README.md
+description-file = README
 """
             setuppy = """\
 #!/usr/bin/env python
@@ -7862,10 +7866,10 @@ import os
 import sys
 from setuptools import setup, find_packages
 from fnmatch import fnmatchcase
-from distutils.util import convert_path
+from distutils2.util import convert_path
 
 standard_exclude = ('*.py', '*.pyc', '*~', '.*', '*.bak', '*.swp*')
-standard_exclude_directories = ('.*', 'CVS', '_darcs', './build', './dist', 'EGG-INFO', '*.egg-info')
+standard_exclude_directories = ('.*', 'CVS', '_darcs', './build', './dist', 'EGG-INFO', '*.egg-info', '.git', '.gitignore')
 def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
     out = {}
     stack = [(convert_path(where), '', package)]
@@ -8018,6 +8022,8 @@ class Fruit(DAObject):
                 the_file.write(setuppy)
             with open(os.path.join(packagedir, 'setup.cfg'), 'w') as the_file:
                 the_file.write(setupcfg)
+            with open(os.path.join(packagedir, 'MANIFEST.in'), 'w') as the_file:
+                the_file.write(manifestin)
             with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'w') as the_file:
                 the_file.write(initpy)
             with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w') as the_file:
@@ -8634,7 +8640,10 @@ def playground_files():
                 os.remove(filename)
                 area.finalize()
                 if use_gd:
-                    trash_gd_file(section, argument)
+                    try:
+                        trash_gd_file(section, argument)
+                    except Exception as the_err:
+                        logmessage("playground_files: unable to delete file on Google Drive.  " + str(the_err))
                 flash(word("Deleted file: ") + argument, "success")
                 return redirect(url_for('playground_files', section=section))
             else:
@@ -8844,6 +8853,12 @@ def playground_files():
         }, "slow");
       }
       $( document ).ready(function() {
+        $("#uploadbutton").click(function(event){
+          if ($("#uploadfile").val() == ""){
+            event.preventDefault();
+            return false;
+          }
+        });
         daTextArea = document.getElementById("file_content");
         daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: """ + ('{name: "markdown", underscoresBreakWords: false}' if mode == 'markdown' else repr(str(mode))) + """, """ + kbOpt + """tabSize: 2, tabindex: 580, autofocus: false, lineNumbers: true, matchBrackets: true});
         $(window).bind("beforeunload", function(){
@@ -8912,13 +8927,18 @@ def pull_playground_package():
     form = PullPlaygroundPackage(request.form)
     if request.method == 'POST':
         if form.pull.data:
-            return redirect(url_for('playground_packages', pull='1', github_url=form.github_url.data))
+            if form.github_url.data and form.pypi.data:
+                flash(word("You cannot pull from GitHub and PyPI at the same time.  Please fill in one and leave the other blank."), 'error')
+            elif form.github_url.data:
+                return redirect(url_for('playground_packages', pull='1', github_url=form.github_url.data))
+            elif form.pypi.data:
+                return redirect(url_for('playground_packages', pull='1', pypi=form.pypi.data))
         if form.cancel.data:
             return redirect(url_for('playground_packages'))
-    if 'file' in request.args:
+    elif 'file' in request.args:
         form.github_url.data = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['file'])
     description = word("Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.")
-    return render_template('pages/pull_playground_package.html', form=form, description=description, version_warning=version_warning, bodyclass='adminbody', title=word("Pull GitHub Package"), tab_title=word("Pull"), page_title=word("Pull")), 200
+    return render_template('pages/pull_playground_package.html', form=form, description=description, version_warning=version_warning, bodyclass='adminbody', title=word("Pull GitHub or PyPI Package"), tab_title=word("Pull"), page_title=word("Pull")), 200
 
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required
@@ -9147,9 +9167,7 @@ def playground_packages():
         if need_to_restart:
             return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file)))
         return redirect(url_for('playground_packages', file=the_file))
-    if request.method == 'GET' and 'pull' in request.args and int(request.args['pull']) == 1 and 'github_url' in request.args:
-        github_url = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['github_url'])
-
+    if request.method == 'GET' and 'pull' in request.args and int(request.args['pull']) == 1 and ('github_url' in request.args or 'pypi' in request.args):
         area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
         readme_text = ''
         setup_py = ''
@@ -9158,12 +9176,46 @@ def playground_packages():
         data_files = dict(templates=list(), static=list(), sources=list(), interviews=list(), modules=list(), questions=list())
         directory = tempfile.mkdtemp()
         output = ''
-        output += "Doing git clone " + str(github_url) + "\n"
-        try:
-            output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as err:
-            output += err.output
-            raise DAError("playground_packages: error running git clone.  " + output)
+        if 'github_url' in request.args:
+            github_url = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['github_url'])
+            output += "Doing git clone " + str(github_url) + "\n"
+            try:
+                output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError as err:
+                output += err.output
+                raise DAError("playground_packages: error running git clone.  " + output)
+        elif 'pypi' in request.args:
+            pypi_package = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['pypi'])
+            pypi_package = 'docassemble.' + re.sub(r'^docassemble\.', '', pypi_package)
+            package_file = tempfile.NamedTemporaryFile(suffix='.tar.gz', delete=False)
+            try:
+                http = httplib2.Http()
+                resp, content = http.request("https://pypi.python.org/pypi/" + str(pypi_package) + "/json", "GET")
+                pypi_url = None
+                if int(resp['status']) == 200:
+                    pypi_response = json.loads(content)
+                    for file_option in pypi_response['releases'][pypi_response['info']['version']]:
+                        if file_option['packagetype'] == 'sdist':
+                            pypi_url = file_option['url']
+                            break
+                else:
+                    flash(word("The package you specified could not be downloaded from PyPI."), 'error')
+                    return redirect(url_for('playground_packages'))
+                if pypi_url is None:
+                    flash(word("The package you specified could not be downloaded from PyPI as a tar.gz file."), 'error')
+                    return redirect(url_for('playground_packages'))
+            except Exception as err:
+                raise DAError("playground_packages: error getting information about PyPI package.  " + str(err))
+            try:
+                urllib.urlretrieve(pypi_url, package_file.name)
+            except Exception as err:
+                raise DAError("playground_packages: error downloading PyPI package.  " + str(err))
+            try:
+                tar = tarfile.open(package_file.name)
+                tar.extractall(path=directory)
+                tar.close()
+            except Exception as err:
+                raise DAError("playground_packages: error unpacking PyPI package.  " + str(err))
         initial_directories = len(splitall(directory)) + 1
         for root, dirs, files in os.walk(directory):
             for file in files:
@@ -9230,6 +9282,7 @@ def playground_packages():
         for sec in area:
             area[sec].finalize()
         the_file = package_name
+        flash(word("The package was unpacked into the Playground."), 'success')
         if need_to_restart:
             return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file)))
         return redirect(url_for('playground_packages', file=the_file))
@@ -9753,9 +9806,20 @@ def playground_page():
             for up_file in the_files:
                 try:
                     filename = secure_filename(up_file.filename)
+                    extension, mimetype = get_ext_and_mimetype(filename)
+                    if extension not in ['yml', 'yaml']:
+                        flash(word("Sorry, only YAML files can be uploaded here.  To upload other types of files, use the Folders."), 'error')
+                        return redirect(url_for('playground_page'))
                     filename = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', filename)
                     filename = os.path.join(playground.directory, filename)
                     up_file.save(filename)
+                    try:
+                        with open(filename, 'rU') as fp:
+                            fp.read().decode('utf8')
+                    except:
+                        os.remove(filename)
+                        flash(word("There was a problem reading the YAML file you uploaded.  Are you sure it is a YAML file?  File was not saved."), 'error')
+                        return redirect(url_for('playground_page'))
                     playground.finalize()
                     return redirect(url_for('playground_page', file=os.path.basename(filename)))
                 except Exception as errMess:
@@ -9836,7 +9900,10 @@ def playground_page():
                 flash(word('File deleted.'), 'info')
                 playground.finalize()
                 if use_gd:
-                    trash_gd_file('questions', the_file)
+                    try:
+                        trash_gd_file('questions', the_file)
+                    except Exception as the_err:
+                        logmessage("playground_page: unable to delete file on Google Drive.  " + str(the_err))
                 if 'variablefile' in session and session['variablefile'] == the_file:
                     del session['variablefile']
                 return redirect(url_for('playground_page'))

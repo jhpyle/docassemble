@@ -1,5 +1,18 @@
 # Change Log
 
+## [0.1.18] - 2017-06-28
+### Added
+- Pull package into Playground with PyPI
+### Changed
+- "initial" directive now accepts code, just like "mandatory"
+- Error page now returns 404 instead of 501 when user tries to access
+  an interview file that does not exist.
+### Fixed
+- Added MANIFEST.in so that README.md is included when packages are
+  bundled using setup.py
+- Uploading files to Playground now checks to make sure the file is
+  YAML and is readable.
+
 ## [0.1.17] - 2017-06-24
 ### Changed
 - Updated the required system version to 0.1.17

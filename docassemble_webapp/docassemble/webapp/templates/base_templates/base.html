@@ -108,13 +108,13 @@
         });
         $(".form").on('submit', function(){
           $(".btn-lg").each(function(){
+            var the_button = this;
+            setTimeout(function(){
+              $(the_button).prop("disabled", true);
+            }, 1);
             if (this != whichButton){
               $(this).removeClass("btn-primary btn-info btn-warning btn-error btn-success");
               $(this).addClass("btn-default");
-            }
-            if ($(whichButton).hasClass("btn-success")){
-              $(whichButton).removeClass("btn-success");
-              $(whichButton).addClass("btn-primary");
             }
             else{
               $(whichButton).removeClass("btn-primary btn-info btn-warning btn-error btn-default");

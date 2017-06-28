@@ -11,6 +11,8 @@
   <div class="form-actions">
     {{ render_field(form.github_url, tabindex=100, placeholder='https://github.com/username/docassemble-packagename') }}
 
+    {{ render_field(form.pypi, tabindex=100, prelabel='docassemble.') }}
+
     {{ render_submit_field(form.pull, tabindex=110, class="btn btn-primary btn-lg") }}
     
     {{ render_submit_field(form.cancel, tabindex=110, class="btn btn-warning btn-lg") }}

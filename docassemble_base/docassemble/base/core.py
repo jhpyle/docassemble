@@ -8,6 +8,7 @@ import sys
 import shutil
 import inspect
 import yaml
+import pycurl
 import mimetypes
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article
 import docassemble.base.functions
@@ -1363,6 +1364,20 @@ class DAFile(DAObject):
         """Makes the contents of the file the same as those of the given filename."""
         self.retrieve()
         shutil.copyfile(filename, self.path())
+    def from_url(self, url):
+        """Makes the contents of the file the contents of the given URL."""
+        self.retrieve()
+        cookiefile = tempfile.NamedTemporaryFile(suffix='.txt')
+        the_path = self.path()
+        f = open(the_path, 'wb')
+        c = pycurl.Curl()
+        c.setopt(c.URL, url)
+        c.setopt(c.FOLLOWLOCATION, True)
+        c.setopt(c.WRITEDATA, f)
+        c.setopt(pycurl.USERAGENT, 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36')
+        c.setopt(pycurl.COOKIEFILE, cookiefile.name)
+        c.perform()
+        c.close()
     def _make_pngs_for_pdf(self):
         if not hasattr(self, '_taskscreen'):
             setattr(self, '_taskscreen', server.make_png_for_pdf(self, 'screen'))

@@ -263,12 +263,16 @@ def publish_package(pkgname, info, author_info, tz_name):
     else:
         for f in os.listdir(dist_dir):
             try:
+                #output += str(['twine', 'register', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', f)]) + "\n"
                 output += subprocess.check_output(['twine', 'register', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', f)], cwd=packagedir, stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as err:
+                output += "Error calling twine register.\n"
                 output += err.output
         try:
+            #output += str(['twine', 'upload', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', '*')])
             output += subprocess.check_output(['twine', 'upload', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', '*')], cwd=packagedir, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as err:
+            output += "Error calling twine upload.\n"
             output += err.output
     output = re.sub(r'\n', '<br>', output)
     shutil.rmtree(directory)
@@ -335,6 +339,9 @@ SOFTWARE.
         readme = info['readme']
     else:
         readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + author_info['author name and email'] + "\n\n"
+    manifestin = """\
+include README.md
+"""
     setupcfg = """\
 [metadata]
 description-file = README.md
@@ -469,6 +476,9 @@ machine learning training files, and other source files.
     with open(os.path.join(packagedir, 'setup.cfg'), 'w') as the_file:
         the_file.write(setupcfg)
     os.utime(os.path.join(packagedir, 'setup.cfg'), (info['modtime'], info['modtime']))
+    with open(os.path.join(packagedir, 'MANIFEST.in'), 'w') as the_file:
+        the_file.write(manifestin)
+    os.utime(os.path.join(packagedir, 'MANIFEST.in'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'w') as the_file:
         the_file.write(initpy)
     os.utime(os.path.join(packagedir, 'docassemble', '__init__.py'), (info['modtime'], info['modtime']))

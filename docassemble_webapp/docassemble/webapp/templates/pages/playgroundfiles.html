@@ -46,7 +46,7 @@
   {{ myrender_hidden_field(form.section, value=section) }}
   {{ render_file_field(form.uploadfile, tabindex=60, multiple=True) }}
   <div class="form-actions">
-    {{ render_submit_field(form.submit, tabindex=565) }}
+    {{ render_submit_field(form.submit, tabindex=565, id="uploadbutton") }}
   </div>
 </form>
 {%- endif %}

@@ -1,16 +1,24 @@
 metadata:
   title: Initial code
   documentation: "https://docassemble.org/docs/logic.html#initial"
-  example start: 1
-  example end: 6
+  example start: 2
+  example start: 3
 ---
 mandatory: True
 code: |
   counter = 0
 ---
-initial: True
+initial: use_counter
 code: |
   counter = counter + 1
+---
+question: |
+  Do you want to turn on the
+  counter?
+yesno: use_counter
+---
+code: |
+  fruits = peaches + pears
 ---
 question: |
   How many peaches do you have?
@@ -20,9 +28,6 @@ subquestion: |
 fields:
   - no label: peaches
     datatype: integer
----
-code: |
-  fruits = peaches + pears
 ---
 question: |
   How many pears do you have?

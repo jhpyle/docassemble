@@ -21,13 +21,20 @@
   {% endfor %}
 </div>
 {%- endmacro %}
-{% macro render_field(field, type=None, label=None, label_visible=True, right_url=None, right_label=None, right_message=None) %}
+{% macro render_field(field, type=None, label=None, label_visible=True, right_url=None, right_label=None, right_message=None, prelabel=None) %}
 <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
   {%- if field.type != 'HiddenField' and label_visible %}
   {%- if not label %}{% set label=field.label.text|word %}{% endif %}
   <label for="{{ field.id }}" class="control-label">{{ label|safe }}</label>
   {%- endif %}
+  {%- if prelabel %}
+  <div class="input-group">
+    <span class="input-group-addon">{{ prelabel }}</span>
+    {{ field(class_='form-control', **kwargs) }}
+  </div>
+  {%- else %}
   {{ field(class_='form-control', **kwargs) }}
+  {%- endif %}
   {%- if field.errors %}
   {%- for e in field.errors %}
   <p class="help-block">{{ e }}</p>

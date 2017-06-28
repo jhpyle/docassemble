@@ -634,7 +634,7 @@ class Question:
             self.css = TextObject(definitions + unicode(data['css']), names_used=self.mako_names)
         if 'initial' in data and 'code' not in data:
             raise DAError("Only a code block can be marked as initial." + self.idebug(data))
-        if ('initial' in data and data['initial'] is True) or 'default role' in data:
+        if 'initial' in data or 'default role' in data:
             if 'default role' in data or data['initial'] is True:
                 self.is_initial = True
                 self.initial_code = None

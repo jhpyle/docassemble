@@ -257,10 +257,11 @@
 "Profile": Null
 "published on GitHub": Null
 "published on PyPI": Null
-"Pull GitHub Package": Null
+"Pull GitHub or PyPI Package": Null
 "Pull": Null
 "Pushed commit to GitHub.": Null
 "PyPI": Null
+"PyPI package": Null
 "PyPI Password": Null
 "PyPI Username": Null
 "question": Null
@@ -338,6 +339,9 @@
 "The package information was saved.": Null
 "The package update was not fully successful.  The logs are below.": Null
 "The package update was successful.  The logs are below.": Null
+"The package was unpacked into the Playground.": Null
+"The package you specified could not be downloaded from PyPI as a tar.gz file.": Null
+"The package you specified could not be downloaded from PyPI.": Null
 "The privilege could not be added because it already exists.": Null
 "The privilege was added.": Null
 "There are unsaved changes.  Are you sure you wish to leave this page?": Null
@@ -446,6 +450,7 @@
 "You are now set up with two factor authentication.": Null
 "You can also follow this link: ": Null
 "You cannot log in until your e-mail address has been confirmed.": Null
+"You cannot pull from GitHub and PyPI at the same time.  Please fill in one and leave the other blank.": Null
 "You can press the following button:": Null
 "You can type link1, etc. to visit a link": Null
 "You can type link1 to visit the link": Null
@@ -460,12 +465,12 @@
 "You have signed out successfully.": Null
 "You must attach a file.": Null
 "You must sign your name to continue.": Null
-"You need to either supply a Git URL or upload a file.": Null
 "You need to enter a complete e-mail address.": Null
 "You need to enter a number.": Null
 "You need to enter a valid date.": Null
 "You need to log in before you can access": Null
 "You need to select one.": Null
+"You need to supply a Git URL, upload a file, or supply the name of a package on PyPI.": Null
 "You need to type in a name for the file": Null
 "You need to type in a name for the interview": Null
 "Your account already has two-factor authentication enabled.  Would you like to reconfigure or disable two-factor authentication?": Null
