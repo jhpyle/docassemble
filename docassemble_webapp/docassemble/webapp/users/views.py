@@ -52,9 +52,13 @@ def user_list():
         if name_string:
             name_string = str(name_string) + ', '
         active_string = ''
+        if user.email is None:
+            user_indicator = user.nickname
+        else:
+            user_indicator = user.email
         if not user.active:
             active_string = ' (account disabled)'
-        output += '<li>' + str(name_string) + '<a href="' + url_for('edit_user_profile_page', id=user.id) + '">' + str(user.email) + "</a>" + active_string + "</li>"
+        output += '<li>' + str(name_string) + '<a href="' + url_for('edit_user_profile_page', id=user.id) + '">' + str(user_indicator) + "</a>" + active_string + "</li>"
     output += '</ol>'
     return render_template('users/userlist.html', version_warning=None, bodyclass='adminbody', page_title=word('User List'), tab_title=word('User List'), userlist=output)
 
