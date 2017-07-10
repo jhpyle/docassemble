@@ -7,7 +7,7 @@ short_title: Configuration
 # Location of the configuration file
 
 **docassemble** reads its configuration directives from a [YAML] file,
-which by default is located in `/usr/share/docassemble/config.yml`.
+which by default is located in `/usr/share/docassemble/config/config.yml`.
 If you are using [Docker] and [S3] or [Azure blob storage],
 **docassemble** will attempt to copy the configuration file from your
 [S3] bucket or [Azure blob storage] container before starting.
@@ -1490,7 +1490,7 @@ first.
 # Using a configuration file in a different location
 
 If you want **docassemble** to read its configuration from a location
-other than `/usr/share/docassemble/config.yml`, you can set the
+other than `/usr/share/docassemble/config/config.yml`, you can set the
 `DA_CONFIG_FILE` environment variable to another file location.  You
 might want to do this if you have multiple virtual hosts, each running
 a different [WSGI] application on a single server.

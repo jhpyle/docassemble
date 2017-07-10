@@ -425,7 +425,7 @@ sudo a2enmod proxy_wstunnel
 {% endhighlight %}
 
 Set up and edit the **docassemble** [configuration] file, the standard location of
-which is `/usr/share/docassemble/config.yml`:
+which is `/usr/share/docassemble/config/config.yml`:
 
 {% highlight bash %}
 sudo cp ~/docassemble/docassemble_base/config.yml /usr/share/docassemble/config/config.yml

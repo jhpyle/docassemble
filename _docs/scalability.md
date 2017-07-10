@@ -695,7 +695,7 @@ that [`CONTAINERROLE`] is not specified, but it will default to `all`.
 # How it works
 
 Each **docassemble** application server reads its [configuration] from
-`/usr/share/docassemble/config.yml`.  The default configuration for
+`/usr/share/docassemble/config/config.yml`.  The default configuration for
 connecting to the central SQL database is:
 
 {% highlight yaml %}
