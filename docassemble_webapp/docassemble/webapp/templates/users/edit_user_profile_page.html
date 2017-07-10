@@ -5,7 +5,7 @@
 
 <h1>{{ word('Edit User Profile') }}</h1>
 
-<p>{{ word("This user has enabled two-factor authentication.") }}</p>
+{%- if form.uses_mfa.data or form.confirmed_at.data is not none %}
 <ul class="nav nav-pills nav-stacked">
 {%- if form.uses_mfa.data %}
   <li>
@@ -18,6 +18,7 @@
   </li>
 {%- endif %}
 </ul>
+{%- endif %}
 
 <form action="" method="POST" role="form" class="form">
     {{ form.hidden_tag() }}
