@@ -12,7 +12,7 @@
     <a href="?disable_mfa=1">{{ word('Disable two-factor authentication') }}</a>
   </li>
 {%- endif %}
-{%- if form.confirmed_at.data is not None %}
+{%- if form.confirmed_at.data is not none %}
   <li>
     <a href="?reset_email_confirmation=1">{{ word('Reset e-mail confirmation') }}</a>
   </li>

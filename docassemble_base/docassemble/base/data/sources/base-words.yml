@@ -308,6 +308,7 @@
 "Social ID": Null
 "something": Null
 "Sorry, no help is available for this question.": Null
+"Sorry, only YAML files can be uploaded here.  To upload other types of files, use the Folders.": Null
 "Sorry, that package name does not exist in the playground": Null
 "Sorry, that package name is already in use by someone else": Null
 "Sorry, that package name,": Null
@@ -348,6 +349,7 @@
 "There is already a username and password on this system with the e-mail address": Null
 "There was an error.": Null
 "There was an error updating the packages.": Null
+"There was a problem reading the YAML file you uploaded.  Are you sure it is a YAML file?  File was not saved.": Null
 "There was a problem sending the text message.": Null
 "There was a problem sending you a text message.  Please log in another way.": Null
 "The role could not be deleted.": Null

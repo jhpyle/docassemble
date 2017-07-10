@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.19] - 2017-07-10
+### Fixed
+- Fixed bug in edit user profile page.
+
 ## [0.1.18] - 2017-06-28
 ### Added
 - Pull package into Playground with PyPI

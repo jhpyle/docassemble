@@ -2,7 +2,7 @@ import sys
 import re
 from flask_user.forms import RegisterForm, LoginForm
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, PasswordField, validators
+from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, PasswordField, validators
 from wtforms.validators import DataRequired, Email, Optional
 from wtforms.widgets import PasswordInput
 
@@ -60,6 +60,7 @@ class UserProfileForm(FlaskForm):
     timezone = SelectField(word('Time Zone'))
     pypi_username = StringField(word('PyPI Username'))
     pypi_password = StringField(word('PyPI Password'), widget=PasswordInput(hide_value=False))
+    confirmed_at = DateField(word('Confirmation Date'))
     submit = SubmitField(word('Save'))
 
 class EditUserProfileForm(UserProfileForm):
