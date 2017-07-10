@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.20] - 2017-07-10
+### Fixed
+- Fixed another bug in edit user profile page.
+
 ## [0.1.19] - 2017-07-10
 ### Fixed
 - Fixed bug in edit user profile page.
