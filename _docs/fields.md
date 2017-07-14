@@ -282,7 +282,7 @@ label.
 
 The following are the keys that have special meaning:
 
-### <a name="datatype summary"></a>`datatype`
+### <a name="summary datatype"></a>`datatype`
 
 `datatype` affects how the data will be collected, validated and
 stored.  For a full explanation of how this is used, see the
@@ -393,7 +393,7 @@ with the situation gracefully.  If there is only a single field listed
 under `fields`, then the variable that will be set by the user's
 selection will be set to `None`, and the question will be skipped.  If
 the `datatype` is `checkboxes`, the variable will be set to an empty
-dictionary.
+[`DADict`] (a type of [dictionary] specific to **docassemble**).
 
 ### <a name="exclude"></a>`exclude`
 
@@ -505,12 +505,14 @@ and the variable name using the `field` key.
 ## <a name="datatype"></a>Possible data types for fields
 
 There are many possible `datatype` values, which affect what the user
-sees and how the input is stored in a variable.
+sees and how the input is stored in a variable.  The following
+sections describe the available `datatype`s.
 
-## Text fields
+## Text
 
-<a name="text"></a>A `datatype: text` provides a single-line text input box.  This is the
-default, so you never need to specify it unless you want to.
+<a name="text"></a>A `datatype: text` provides a single-line text
+input box.  This is the default, so you never need to specify it
+unless you want to.
 
 {% include side-by-side.html demo="text-field" %}
 
@@ -518,22 +520,35 @@ default, so you never need to specify it unless you want to.
 
 {% include side-by-side.html demo="text-box-field" %}
 
-<a name="date"></a>`datatype: date` provides a date entry input box
-and requires a valid date.
-
-{% include side-by-side.html demo="date-field" %}
-
-<a name="email"></a>`datatype: email` provides an e-mail address input
-box.
-
-{% include side-by-side.html demo="email-field" %}
+## Passwords
 
 <a name="password"></a>`datatype: password` provides an input box
 suitable for passwords.
 
 {% include side-by-side.html demo="password-field" %}
 
-## Numeric fields
+## <a name="date"></a>Dates
+
+`datatype: date` provides a date entry input box and requires a valid
+date.  The input method depends on the browser.
+
+{% include side-by-side.html demo="date-field" %}
+
+Note that the resulting variable is plain text, not a special [Python]
+date object of any kind.
+
+For more information about working with dates, see the documentation
+for the [date functions].  These functions are flexible and will work
+correctly if you give them dates as text, as long as a date can be
+discerned from the text.
+
+## <a name="email"></a>E-mail addresses
+
+`datatype: email` provides an e-mail address input box.
+
+{% include side-by-side.html demo="email-field" %}
+
+## Numbers
 
 <a name="integer"></a>`datatype: integer` indicates that the input
 should be a valid whole number.
@@ -543,11 +558,19 @@ should be a valid numeric value.
 
 {% include side-by-side.html demo="number-field" %}
 
+## Currency
+
 <a name="currency"></a>`datatype: currency` indicates that the input
 should be a valid numeric value.  In addition, the input box shows a
 currency symbol based on locale defined in the [configuration].
 
 {% include side-by-side.html demo="money-field" %}
+
+The variable will be set to a number, just as if `datatype: number`
+was used.  For information about how to display currency values, see
+the [`currency()`] function.
+
+## Sliders
 
 <a name="range"></a>`datatype: range` shows a slider that the user can use to
 select a number within a given range.  The range must be supplied by
@@ -616,19 +639,32 @@ buttons offering choices "Yes," "No," and "I don't know."
 
 {% include side-by-side.html demo="fields-noyesmaybe" %}
 
-## Multiple-choice fields
-
-### <a name="fields checkboxes"></a>Checkboxes
+## <a name="fields checkboxes"></a>Checkboxes
 
 `datatype: checkboxes` will show the [`choices`](#choices) list as
-checkboxes.  The variable will be a [dictionary] with items set to
-`True` or `False` depending on whether the option was checked.  No
-validation is done to see if the user selected at least one,
-regardless of the value of `required`.
+checkboxes.  The variable will be a [`DADict`] (a type of [dictionary]
+specific to **docassemble**) with items set to `True` or `False`
+depending on whether the option was checked.  No validation is done to
+see if the user selected at least one, regardless of the value of
+`required`.
 
 {% include side-by-side.html demo="fields-checkboxes" %}
 
-#### <a name="fields checkboxes defaults"></a>Default values for checkboxes
+As you can see in this example, the keys of the resulting dictionary
+are the names of fruit, the values that are checked are `True`, and
+the values that were not checked are `False`.
+
+In the example above, the keys of the dictionary are the same as the
+labels displayed to the user.  If you want labels to be different
+from the keys, you can specify the choices in the following manner:
+
+{% include side-by-side.html demo="fields-checkboxes-different-labels" %}
+
+You can generate checkbox choices with code:
+
+{% include side-by-side.html demo="fields-checkboxes-code" %}
+
+### <a name="fields checkboxes defaults"></a>Default values for checkboxes
 
 To set default values in a checkbox list, you have a few options.
 
@@ -659,11 +695,11 @@ defaults directly within your code when you use a [list] of
 
 {% include side-by-side.html demo="fields-checkboxes-default-5" %}
 
-This also works if you use a [list] of [list]s:
+This also works if your code returns a [list] of [list]s:
 
 {% include side-by-side.html demo="fields-checkboxes-default-6" %}
 
-### <a name="radio"></a>Radio buttons
+## <a name="radio"></a>Radio buttons
 
 `datatype: radio` shows a [`choices`](#choices) list as a list of
 radio buttons instead of as a dropdown [select] tag (which is the
@@ -671,7 +707,7 @@ default).  The variable will be set to the value of the choice.
 
 {% include side-by-side.html demo="radio-list" %}
 
-### <a name="object"></a>Multiple-choice with objects
+## <a name="object"></a>Multiple-choice with objects
 
 `datatype: object` is used when you would like to use a variable to
 refer to an existing object.  You need to include `choices`, which can
@@ -706,8 +742,13 @@ variable will be set to `True` after the elements are set.  See
 
 ## <a name="min"></a>Input validation
 
-For some field types, you can require input validation by adding the
-following to the definition of a field:
+Some datatypes, such as numbers and e-mail addresses, have validation
+features that prevent the user from moving to the next page if the
+input value does not meet the requirements of the data type.  The
+[jQuery Validation Plugin](http://jqueryvalidation.org) is used.
+
+For some field types, you can require additional input validation by
+adding the following to the definition of a field:
 
 * `min`: for `currency` and `number` data types, require a minimum
   value.  This is passed directly to the
@@ -729,7 +770,7 @@ following to the definition of a field:
 
 {% include side-by-side.html demo="minlength" %}
 
-## Example
+## A comprehensive example
 
 Here is a lengthy example that illustrates many of these features.
 
@@ -1070,3 +1111,6 @@ why this needs to be done manually as opposed to automatically:
 [`generic object` modifier]: {{ site.baseurl }}/docs/modifiers.html#generic object
 [section on modifiers]: {{ site.baseurl }}/docs/modifiers.html#generic object
 [objects section]: {{ site.baseurl }}/docs/objects.html
+[`currency()`]: {{ site.baseurl }}/docs/functions.html#currency
+[`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
+[date functions]: {{ site.baseurl }}/docs/functions.html#date functions

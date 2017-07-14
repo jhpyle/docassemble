@@ -1536,7 +1536,7 @@ The function `last_access_delta()` works just like
 [`datetime.timedelta`] object giving the difference between the
 current time and the last access time.
 
-# Functions for working with dates and times
+# <a name="date functions"></a>Functions for working with dates and times
 
 ## <a name="month_of"></a><a name="day_of"></a><a name="year_of"></a><a name="dow_of"></a>month_of(), day_of(), year_of(), and dow_of()
 

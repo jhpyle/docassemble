@@ -843,6 +843,38 @@ code: |
 ---
 {% endhighlight %}
 
+<a name="DADict.all_true"></a><a name="DADict.all_false"></a>The
+[`DADict`] object also uses some methods that are unique to it.  The
+`all_true()` and `all_false()` methods are useful when working with
+[checkbox groups].  If you use `datatype: checkboxes` to set a
+variable called `choices`, then `choices` will be a [`DADict`] object.
+
+If you call `choices.all_true()`, the result will be `True` if all of
+the checkboxes were selected (i.e., all of the values of the
+dictionary are `True`).
+
+If you call `choices.all_false()`, the result will be `True` if none
+of the values were selected (i.e., all of the values of the dictionary
+are `False`).
+
+You can also call these methods with parameters.  Calling
+`choices.all_true('red', 'green')` will return `True` if the user
+selected the choices for `'red'` and `'green'`.  Calling
+`choices.all_true('red', 'green', exclusive=True)` will return `True`
+if `'red'` and `'green'` were selected and these were the only choices
+selected.
+
+Here is an example that illustrates uses of `.all_true()`:
+
+{% include side-by-side.html demo="all-true" %}
+
+Here is an example that uses `.all_false()`:
+
+{% include side-by-side.html demo="all-false" %}
+
+For more information about using checkboxes, see the documentation for
+[checkbox groups].
+
 For more information about using [`DADict`] objects, see the section
 on [groups].
 
@@ -2414,7 +2446,8 @@ and not an instance of the `Attorney` class.
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [MIME type]: https://en.wikipedia.org/wiki/Media_type
 [Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
-[document upload field]: {{ site.baseurl }}/docs/fields.html#interview_email
+[document upload field]: {{ site.baseurl }}/docs/fields.html#file
 [`variable name`]: {{ site.baseurl }}/docs/documents.html#variable name
 [inserting images]: {{ site.baseurl }}/docs/markup.html#inserting images
 [data storage]: {{ site.baseurl }}/docs/docker.html#data storage
+[checkbox groups]: {{ site.baseurl }}/docs/fields.html#fields checkboxes

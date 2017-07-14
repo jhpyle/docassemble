@@ -87,6 +87,15 @@
         | 123 Riverside Drive
         | Fort Franklin, AR 92302
   mandatory: True
+"all-false": "question: |\n  Please tell me what you think.\nfields:\n  - \"Select\
+  \ the fruits you like\": likes_fruit\n    datatype: checkboxes\n    choices:\n \
+  \     - Apples\n      - Peaches\n      - Pears\n      - Plums\n---\nmandatory: True\n\
+  question: |\n  Summary of your answer\nsubquestion: |\n  It is\n  % if likes_fruit.all_false():\n\
+  \  true\n  % else:\n  not true\n  % endif\n  that you don't like any of the fruit.\n\
+  \  \n  It is\n  % if likes_fruit.all_false('Apples', 'Pears'):\n  true\n  % else:\n\
+  \  not true\n  % endif\n  that you do not like apples or pears.\n\n  It is\n  %\
+  \ if likes_fruit.all_false('Apples', 'Pears', exclusive=True):\n  true\n  % else:\n\
+  \  not true\n  % endif\n  that apples and pears are the only fruits you do not like."
 "all-mandatory": |-
   mandatory: True
   question: |
@@ -112,6 +121,15 @@
     % else:
     I am sorry you aren't feeling 100%.
     % endif
+"all-true": "question: |\n  Please tell me what you think.\nfields:\n  - \"Select\
+  \ the fruits you like\": likes_fruit\n    datatype: checkboxes\n    choices:\n \
+  \     - Apples\n      - Peaches\n      - Pears\n      - Plums\n---\nmandatory: True\n\
+  question: |\n  Summary of your answer\nsubquestion: |\n  It is\n  % if likes_fruit.all_true():\n\
+  \  true\n  % else:\n  not true\n  % endif\n  that you like all fruit.\n  \n  It\
+  \ is\n  % if likes_fruit.all_true('Apples', 'Pears'):\n  true\n  % else:\n  not\
+  \ true\n  % endif\n  that you like apples and pears.\n\n  It is\n  % if likes_fruit.all_true('Apples',\
+  \ 'Pears', exclusive=True):\n  true\n  % else:\n  not true\n  % endif\n  that apples\
+  \ and pears are the only fruits you like."
 "all_variables": "mandatory: True\nquestion: |\n  Interview dictionary\nsubquestion:\
   \ |\n  The variables in the dictionary are:\n    \n  `${ all_variables() }`"
 "allow-emailing-false": |-
@@ -1690,6 +1708,34 @@
         - Peaches
         - Pears
     - "What is your favorite fruit overall?": favorite_fruit
+"fields-checkboxes-code": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: checkboxes
+      code: |
+        [
+          {'apple': 'Apples'},
+          {'peach': 'Peaches'},
+          {'pear': 'Pears'}
+        ]
+    - "What is your favorite fruit overall?": favorite_fruit
+  ---
+  question: |
+    Thank you for your thoughts.
+  subquestion: |
+    % if likes_fruit['apple']:
+    You like apples.
+    % endif
+    % if likes_fruit['peach']:
+    You like peaches.
+    % endif
+    % if likes_fruit['pear']:
+    You like pears.
+    % endif
+    Your favorite, though, is ${ favorite_fruit }.
+  mandatory: True
 "fields-checkboxes-default-0": |-
   question: |
     Please tell me what you think.
@@ -1785,6 +1831,35 @@
           ['pear', 'Pears']
         ]
     - "What is your favorite fruit overall?": favorite_fruit
+"fields-checkboxes-different-labels": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: checkboxes
+      choices:
+        - Apples: apple
+        - Peaches: peach
+        - Pears: pear
+    - "What is your favorite fruit overall?": favorite_fruit
+  ---
+  question: |
+    Thank you for your thoughts.
+  subquestion: |
+    % if likes_fruit['apple']:
+    You like apples.
+    % endif
+    % if likes_fruit['peach']:
+    You like peaches.
+    % endif
+    % if likes_fruit['pear']:
+    You like pears.
+    % endif
+    Your favorite, though, is ${ favorite_fruit }.
+
+    In Python, `likes_fruit` is
+    `${ variable_as_code }`.
+  mandatory: True
 "fields-choices": |-
   question: |
     What is your favorite fruit?
@@ -2848,9 +2923,46 @@
     - First: people[i].name.first
     - Last: people[i].name.last
 "initial": |-
+  mandatory: True
+  code: |
+    counter = 0
+  ---
   initial: True
   code: |
     counter = counter + 1
+  ---
+  question: |
+    How many peaches do you have?
+  subquestion: |
+    The value of the counter
+    is ${ counter }.
+  fields:
+    - no label: peaches
+      datatype: integer
+  ---
+  code: |
+    fruits = peaches + pears
+  ---
+  question: |
+    How many pears do you have?
+  subquestion: |
+    The value of the counter
+    is ${ counter }.
+  fields:
+    - no label: pears
+      datatype: integer
+  ---
+  question: |
+    You have ${ fruits } pieces of fruit.
+  subquestion: |
+    The value of the counter
+    is ${ counter }.
+  mandatory: True
+"initial-code": |-
+  question: |
+    Do you want to turn on the
+    counter?
+  yesno: use_counter
 "interface": |-
   question: |
     You are using the ${ interface() }
