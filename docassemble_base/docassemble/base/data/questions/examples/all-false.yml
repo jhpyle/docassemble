@@ -1,0 +1,45 @@
+metadata:
+  title: Checkbox method
+  documentation: "https://docassemble.org/docs/objects.html#all_false"
+  example start: 1
+  example end: 2
+---
+question: |
+  Please tell me what you think.
+fields:
+  - "Select the fruits you like": likes_fruit
+    datatype: checkboxes
+    choices:
+      - Apples
+      - Peaches
+      - Pears
+      - Plums
+---
+mandatory: True
+question: |
+  Summary of your answer
+subquestion: |
+  It is
+  % if likes_fruit.all_false():
+  true
+  % else:
+  not true
+  % endif
+  that you don't like any of the fruit.
+  
+  It is
+  % if likes_fruit.all_false('Apples', 'Pears'):
+  true
+  % else:
+  not true
+  % endif
+  that you do not like apples or pears.
+
+  It is
+  % if likes_fruit.all_false('Apples', 'Pears', exclusive=True):
+  true
+  % else:
+  not true
+  % endif
+  that apples and pears are the only fruits you do not like.
+  

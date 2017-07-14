@@ -102,6 +102,7 @@
     - exists
     - periodic-value
     - dafile
+    - all-true
 - Question settings:
     - under
     - help

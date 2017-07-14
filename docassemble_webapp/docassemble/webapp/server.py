@@ -496,7 +496,7 @@ from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_packa
 from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
 import docassemble.webapp.backend
 import docassemble.base.util
-from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile
+from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile, DAObject
 
 mimetypes.add_type('application/x-yaml', '.yml')
 mimetypes.add_type('application/x-yaml', '.yaml')
@@ -3792,7 +3792,22 @@ def index():
                     eval(key, user_dict)
                 except:
                     #logmessage("setting key " + str(key) + " to empty dict")
-                    the_string = key + ' = dict()'
+                    use_initialize = False
+                    m = re.search(r'(.*)\.([^.]+)', key)
+                    if re.search(r'\.', key):
+                        core_key_name = re.sub(r'\..*', '', key)
+                        attribute_name = re.sub(r'\..*', '', key)
+                        logmessage("Core key is " + str(core_key_name))
+                        try:
+                            core_key = eval(core_key, user_dict)
+                            if isinstance(core_key, DAObject):
+                                use_initialize = True
+                        except:
+                            pass
+                    if use_initialize:
+                        the_string = core_key_name + ".initializeAttributecore\n" + key + ' = docassemble.base.core.DADict(' + repr(key) +')'
+                    else:
+                        the_string = "import docassemble.base.core\n" + key + ' = docassemble.base.core.DADict(' + repr(key) +')'
                     try:
                         exec(the_string, user_dict)
                         known_variables[key] = True
@@ -3865,7 +3880,11 @@ def index():
                 #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
         if set_to_empty:
             if set_to_empty == 'checkboxes':
-                data = 'dict()'
+                try:
+                    exec("import docassemble.base.core", user_dict)
+                except Exception as errMess:
+                    error_messages.append(("error", "Error: " + str(errMess)))
+                data = 'docassemble.base.core.DADict(' + repr(key) + ')'
             else:
                 data = 'None'
         if do_append and not set_to_empty:
@@ -11188,7 +11207,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     try:
                         eval(saveas, user_dict)
                     except:
-                        the_string = saveas + ' = dict()'
+                        the_string = "import docassemble.base.core\n" + saveas + ' = docassemble.base.core.DADict(' + repr(saveas) + ')'
                         #logmessage("do_sms: doing " + the_string)
                         try:
                             exec(the_string, user_dict)

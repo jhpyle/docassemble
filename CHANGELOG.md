@@ -1,8 +1,16 @@
 # Change Log
 
+## [0.1.21] - 2017-07-14
+### Changed
+- checkboxes now create DADict objects rather than dict objects
+### Added
+- all_true() and all_false() methods for DADict
+### Fixed
+- Fixed bug when user invitation e-mail fails to send
+
 ## [0.1.20] - 2017-07-10
 ### Fixed
-- Fixed another bug in edit user profile page.
+- Fixed another bug in edit user profile page
 
 ## [0.1.19] - 2017-07-10
 ### Fixed

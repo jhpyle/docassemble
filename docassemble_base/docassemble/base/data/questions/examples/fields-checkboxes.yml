@@ -27,4 +27,10 @@ subquestion: |
   You like pears.
   % endif
   Your favorite, though, is ${ favorite_fruit }.
+
+  In Python, `likes_fruit` is
+  `${ variable_as_code }`.
 mandatory: True
+---
+code: |
+  variable_as_code = str(likes_fruit.elements)

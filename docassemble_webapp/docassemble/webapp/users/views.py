@@ -230,7 +230,7 @@ def invite():
             emails.send_invite_email(user_invite, accept_invite_link)
         except Exception as e:
             logmessage("Failed to send e-mail")
-            user_invite.delete()
+            db.session.delete(user_invite)
             db.session.commit()
             flash(word('Unable to send e-mail.  Error was: ') + str(e), 'error')
             return redirect(url_for('invite'))

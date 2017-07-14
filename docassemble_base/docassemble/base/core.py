@@ -624,6 +624,68 @@ class DADict(DAObject):
             if isinstance(value, DAObject):
                 value._reset_gathered_recursively()
         return super(DADict, self)._reset_gathered_recursively()
+    def all_false(self, *pargs, **kwargs):
+        """Returns True if the values of all keys are False.  If one or more
+        keys are provided as arguments, returns True if all of the
+        values of those keys are False.  If the optional keyword
+        argument 'exclusive' is True, returns True only if those keys
+        are the only false values.
+
+        """
+        the_list = list()
+        exclusive = kwargs.get('exclusive', False)
+        for parg in pargs:
+            if hasattr(parg, '__iter__'):
+                the_list.extend([x for x in arg])
+            else:
+                the_list.append(parg)
+        if len(the_list) == 0:
+            for value in self.elements.values():
+                if value is not False:
+                    return False
+            return True
+        for key in the_list:
+            if key not in self.elements:
+                return False
+        for key, value in self.elements.iteritems():
+            if key in the_list:
+                if value is not False:
+                    return False
+            else:
+                if exclusive and value is False:
+                    return False
+        return True
+    def all_true(self, *pargs, **kwargs):
+        """Returns True if the values of all keys are True.  If one or more
+        keys are provided as arguments, returns True if all of the
+        values of those keys are True.  If the optional keyword
+        argument 'exclusive' is True, returns True only if those keys
+        are the only true values.
+
+        """
+        the_list = list()
+        exclusive = kwargs.get('exclusive', False)
+        for parg in pargs:
+            if hasattr(parg, '__iter__'):
+                the_list.extend([x for x in arg])
+            else:
+                the_list.append(parg)
+        if len(the_list) == 0:
+            for value in self.elements.values():
+                if value is not True:
+                    return False
+            return True
+        for key in the_list:
+            if key not in self.elements:
+                return False
+        for key, value in self.elements.iteritems():
+            if key in the_list:
+                if value is not True:
+                    return False
+            else:
+                if exclusive and value is True:
+                    return False
+        return True
     def initializeObject(self, *pargs, **kwargs):
         """Creates a new object and creates an entry in the dictionary for it.
         The first argument is the name of the dictionary key to set.

@@ -533,6 +533,8 @@ class Question:
                         if key not in self.interview.external_files:
                             self.interview.external_files[key] = list()
                         self.interview.external_files[key].append(the_file)
+        if 'question' in data and 'code' in data:
+            raise DAError("A block can be a question block or a code block but cannot be both at the same time." + self.idebug(data))
         if 'default language' in data:
             should_append = False
             self.from_source.set_language(data['default language'])
