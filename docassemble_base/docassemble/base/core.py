@@ -10,7 +10,7 @@ import inspect
 import yaml
 import pycurl
 import mimetypes
-from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article
+from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article, force_gather
 import docassemble.base.functions
 import docassemble.base.file_docx
 
@@ -160,6 +160,20 @@ class DAObject(object):
         else:
             object.__setattr__(self, name, objectType(self.instanceName + "." + name, *pargs, **kwargs))
             self.attrList.append(name)
+    def reInitializeAttribute(self, *pargs, **kwargs):
+        """Redefines an attribute for the object, setting it to a newly initialized object.
+        The first argument is the name of the attribute and the second argument is type
+        of the new object that will be initialized.  E.g., 
+        client.initializeAttribute('mother', Individual) initializes client.mother as an
+        Individual with instanceName "client.mother"."""
+        pargs = [x for x in pargs]
+        name = pargs.pop(0)
+        objectType = pargs.pop(0)
+        object.__setattr__(self, name, objectType(self.instanceName + "." + name, *pargs, **kwargs))
+        if name in self.__dict__:
+            return
+        else:
+            self.attrList.append(name)
     def attribute_defined(self, name):
         """Returns True or False depending on whether the given attribute is defined."""
         return hasattr(self, name)
@@ -220,6 +234,10 @@ class DAList(DAObject):
             del kwargs['complete_attribute']
         if not hasattr(self, 'complete_attribute'):
             self.complete_attribute = None
+        if 'ask_object_type' in kwargs:
+            self.ask_object_type = True
+        if not hasattr(self, 'ask_object_type'):
+            self.ask_object_type = False
         return super(DAList, self).init(*pargs, **kwargs)
     def _trigger_gather(self):
         """Triggers the gathering process."""
@@ -235,11 +253,28 @@ class DAList(DAObject):
             delattr(self, 'there_is_another')
         if hasattr(self, 'gathered'):
             delattr(self, 'gathered')
+        if hasattr(self, 'new_object_type'):
+            delattr(self, 'new_object_type')
         if recursive:
             self._reset_gathered_recursively()
     def clear(self):
         """Removes all the items from the list."""
         self.elements = list()
+    # def populated(self):
+    #     """Ensures that existing elements have been populated."""
+    #     if self.object_type is not None:
+    #         item_object_type = self.object_type
+    #     else:
+    #         item_object_type = None
+    #     if self.complete_attribute is not None:
+    #         complete_attribute = self.complete_attribute
+    #     else:
+    #         complete_attribute = None
+    #     for elem in self.elements:
+    #         str(elem)
+    #         if item_object_type is not None and complete_attribute is not None:
+    #             getattr(elem, complete_attribute)
+    #     return True
     def _set_instance_name_recursively(self, thename):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
         indexno = 0
@@ -263,8 +298,9 @@ class DAList(DAObject):
         """Creates a new object and adds it to the list.
         Takes an optional argument, which is the type of object
         the new object should be.  If no object type is provided,
-        the object type given by .objectFunction is used, and if 
+        the object type given by .object_type is used, and if 
         that is not set, DAObject is used."""
+        #sys.stderr.write("Called appendObject where len is " + str(len(self.elements)) + "\n")
         objectFunction = None
         if len(pargs) > 0:
             pargs = [x for x in pargs]
@@ -381,12 +417,36 @@ class DAList(DAObject):
             return self._target_or_actual()
         self._trigger_gather()
         return len(self.elements)
+    def number_gathered(self):
+        """Returns the number of elements in the list that have been gathered so far."""
+        return len(self.elements)
+    def current_index(self):
+        """Returns the index number of the last element added to the list, or 0 if no elements have been added."""
+        if len(self.elements) == 0:
+            return 0
+        return len(self.elements) - 1
     def number_as_word(self):
         """Returns the number of elements in the list, spelling out the number if ten 
         or below.  Forces the gathering of the elements if necessary."""
         return nice_number(self.number())
+    def _validate(self, item_object_type, complete_attribute):
+        if self.ask_object_type:
+            for indexno in range(len(self.elements)):
+                if self.elements[indexno] is None:
+                    if type(self.new_object_type) is type:
+                        object_type_to_use = self.new_object_type
+                    else:
+                        raise Exception("new_object_type must be an object type")
+                    self.elements[indexno] = object_type_to_use(self.instanceName + '[' + str(indexno) + ']')
+            if hasattr(self, 'new_object_type'):
+                delattr(self, 'new_object_type')
+        for elem in self.elements:
+            str(elem)
+            if item_object_type is not None and complete_attribute is not None:
+                getattr(elem, complete_attribute)
     def gather(self, number=None, item_object_type=None, minimum=None, complete_attribute=None):
         """Causes the elements of the list to be gathered and named.  Returns True."""
+        #sys.stderr.write("Gather\n")
         if hasattr(self, 'gathered') and self.gathered:
             return True
         if item_object_type is None and self.object_type is not None:
@@ -409,28 +469,32 @@ class DAList(DAObject):
             if item_object_type is not None:
                 self.appendObject(item_object_type)
             str(self.__getitem__(the_length))
-            if item_object_type is not None and complete_attribute is not None:
-                getattr(self.__getitem__(the_length), complete_attribute)
-        for elem in self.elements:
-            str(elem)
-            if item_object_type is not None and complete_attribute is not None:
-                getattr(elem, complete_attribute)
+            self._validate(item_object_type, complete_attribute)
+            # if item_object_type is not None and complete_attribute is not None:
+            #     getattr(self.__getitem__(the_length), complete_attribute)
+        self._validate(item_object_type, complete_attribute)
+        # for elem in self.elements:
+        #     str(elem)
+        #     if item_object_type is not None and complete_attribute is not None:
+        #         getattr(elem, complete_attribute)
         the_length = len(self.elements)
         if number is not None:
             while the_length < int(number):
                 if item_object_type is not None:
                     self.appendObject(item_object_type)
                 str(self.__getitem__(the_length))
-                if item_object_type is not None and complete_attribute is not None:
-                    getattr(self.__getitem__(the_length), complete_attribute)
+                self._validate(item_object_type, complete_attribute)
+                # if item_object_type is not None and complete_attribute is not None:
+                #     getattr(self.__getitem__(the_length), complete_attribute)
         elif minimum != 0:
             while self.there_is_another:
                 del self.there_is_another
                 if item_object_type is not None:
                     self.appendObject(item_object_type)
                 str(self.__getitem__(the_length))
-                if item_object_type is not None and complete_attribute is not None:
-                    getattr(self.__getitem__(the_length), complete_attribute)
+                self._validate(item_object_type, complete_attribute)
+                # if item_object_type is not None and complete_attribute is not None:
+                #     getattr(self.__getitem__(the_length), complete_attribute)
         if self.auto_gather:
             self.gathered = True
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
@@ -480,16 +544,20 @@ class DAList(DAObject):
         if isinstance(value, DAObject) and not value.has_nonrandom_instance_name:
             value.has_nonrandom_instance_name = True
             value.instanceName = self.instanceName + '[' + str(index) + ']'
+            #value._set_instance_name_recursively(self.instanceName + '[' + str(index) + ']')
         return self.elements.__setitem__(index, value)
     def __getitem__(self, index):
         try:
             return self.elements[index]
         except:
-            if self.object_type is None:
+            if self.object_type is None and not self.ask_object_type:
                 var_name = object.__getattribute__(self, 'instanceName') + '[' + str(index) + ']'
+                #force_gather(var_name)
                 raise NameError("name '" + var_name + "' is not defined")
             else:
+                #sys.stderr.write("Calling fill up to\n")
                 self._fill_up_to(index)
+            #sys.stderr.write("Assuming it is there!\n")
             return self.elements[index]
     def __str__(self):
         self._trigger_gather()
@@ -728,6 +796,8 @@ class DADict(DAObject):
             delattr(self, 'there_is_another')
         if hasattr(self, 'gathered'):
             delattr(self, 'gathered')
+        if hasattr(self, 'new_object_type'):
+            delattr(self, 'new_object_type')
         if recursive:
             self._reset_gathered_recursively()
     def does_verb(self, the_verb, **kwargs):
@@ -796,14 +866,14 @@ class DADict(DAObject):
                 return capitalize(output)
             else:
                 return output
-    def possessive(self, target):
+    def possessive(self, target, **kwargs):
         """If the variable name is "plaintiff" and the target is "fish,"
         returns "plaintiff's fish" if there is one item in the dictionary,
         and "plaintiffs' fish" if there is more than one item in the
         list.
 
         """
-        return possessify(self.as_noun(), target, plural=(self.number() > 1))
+        return possessify(self.as_noun(**kwargs), target, plural=(self.number() > 1))
     def number(self):
         """Returns the number of keys in the dictionary.  Forces the gathering of the
         dictionary items if necessary."""
@@ -811,10 +881,28 @@ class DADict(DAObject):
             return self._target_or_actual()
         self._trigger_gather()
         return len(self.elements)
+    def number_gathered(self):
+        """Returns the number of elements in the list that have been gathered so far."""
+        return len(self.elements)
     def number_as_word(self):
         """Returns the number of keys in the dictionary, spelling out the number if ten 
         or below.  Forces the gathering of the dictionary items if necessary."""
         return nice_number(self.number())
+    def _validate(self, item_object_type, complete_attribute):
+        if self.ask_object_type:
+            for key, elem in self.elements:
+                if elem is None:
+                    if type(self.new_object_type) is type:
+                        object_type_to_use = self.new_object_type
+                    else:
+                        raise Exception("new_object_type must be an object type")
+                    self.elements[key] = object_type_to_use(self.instanceName + '[' + repr(key) + ']')
+            if hasattr(self, 'new_object_type'):
+                delattr(self, 'new_object_type')
+        for elem in sorted(self.elements.values()):
+            str(elem)
+            if item_object_type is not None and complete_attribute is not None:
+                getattr(elem, complete_attribute)
     def gather(self, item_object_type=None, number=None, minimum=None, complete_attribute=None):
         """Causes the dictionary items to be gathered and named.  Returns True."""
         if hasattr(self, 'gathered') and self.gathered:
@@ -824,10 +912,11 @@ class DADict(DAObject):
         if complete_attribute is None and self.complete_attribute is not None:
             complete_attribute = self.complete_attribute
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
-        for elem in sorted(self.elements.values()):
-            str(elem)
-            if item_object_type is not None and complete_attribute is not None:
-                getattr(elem, complete_attribute)
+        self._validate(item_object_type, complete_attribute)
+        # for elem in sorted(self.elements.values()):
+        #     str(elem)
+        #     if item_object_type is not None and complete_attribute is not None:
+        #         getattr(elem, complete_attribute)
         if number is None and self.ask_number:
             number = self.target_number
         if minimum is None:
@@ -863,6 +952,7 @@ class DADict(DAObject):
                     self.__getitem__(the_name)
             if hasattr(self, 'there_is_another'):
                 delattr(self, 'there_is_another')
+        self._validate(item_object_type, complete_attribute)
         if self.auto_gather:
             self.gathered = True
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
@@ -1067,6 +1157,8 @@ class DASet(DAObject):
             delattr(self, 'there_is_another')
         if hasattr(self, 'gathered'):
             delattr(self, 'gathered')
+        if hasattr(self, 'new_object_type'):
+            delattr(self, 'new_object_type')
         if recursive:
             self._reset_gathered_recursively()
     def _reset_gathered_recursively(self):
@@ -1175,6 +1267,9 @@ class DASet(DAObject):
         if self.ask_number:
             return self._target_or_actual()
         self._trigger_gather()
+        return len(self.elements)
+    def number_gathered(self):
+        """Returns the number of elements in the list that have been gathered so far."""
         return len(self.elements)
     def number_as_word(self):
         """Returns the number of items in the set, spelling out the number if

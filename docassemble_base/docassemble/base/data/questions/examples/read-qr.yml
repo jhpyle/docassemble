@@ -1,0 +1,25 @@
+metadata:
+  title: Read QR code
+  example start: 2
+  example end: 3
+  documentation: "https://docassemble.org/docs/functions.html#read_qr"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Please upload a file (or files) with
+  a QR code.
+fields:
+  - File: user_upload
+    datatype: files
+---
+question: |
+  Codes found
+subquestion: |
+  The following codes were found:
+
+  % for code in read_qr(user_upload):
+  * ${ code }
+  % endfor
+mandatory: True

@@ -1,4 +1,4 @@
-debug: False
+debug: True
 exitpage: https://docassemble.org
 db:
   prefix: {{DBPREFIX}}

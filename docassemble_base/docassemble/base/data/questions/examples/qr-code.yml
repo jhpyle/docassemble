@@ -14,8 +14,5 @@ subquestion: |
   If you have a QR code reader on
   your phone, point it here:
 
-  ${ qr_code('http://wsj.com') }
-sets: all_done
----
+  ${ qr_code('https://news.google.com') }
 mandatory: True
-code: all_done

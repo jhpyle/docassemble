@@ -717,9 +717,9 @@ def delete_record(key, id):
 def url_of(file_reference, **kwargs):
     """Returns a URL to a file within a docassemble package."""
     if 'package' not in kwargs:
-        kwargs['package'] = get_current_package()
+        kwargs['_package'] = get_current_package()
     if 'question' not in kwargs:
-        kwargs['question'] = get_current_question()
+        kwargs['_question'] = get_current_question()
     return server.url_finder(file_reference, **kwargs)
 
 def server_capabilities():

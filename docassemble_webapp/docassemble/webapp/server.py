@@ -1,4 +1,4 @@
-min_system_version = '0.1.17'
+min_system_version = '0.1.22'
 import re
 import os
 import sys
@@ -660,6 +660,12 @@ def fix_http(url):
     else:
         return url
 
+def remove_question_package(args):
+    if '_question' in args:
+        del args['_question']
+    if '_package' in args:
+        del args['_package']
+    
 def get_url_from_file_reference(file_reference, **kwargs):
     if isinstance(file_reference, DAFile) and hasattr(file_reference, 'number'):
         file_number = file_reference.number
@@ -677,16 +683,21 @@ def get_url_from_file_reference(file_reference, **kwargs):
     if re.search(r'^http', file_reference):
         return(file_reference)
     if file_reference in ['login', 'signin']:
+        remove_question_package(kwargs)
         return(url_for('user.login', **kwargs))
     elif file_reference in ['register']:
+        remove_question_package(kwargs)
         return(url_for('user.register', **kwargs))
     elif file_reference == 'help':
         return('javascript:show_help_tab()');
     elif file_reference == 'interviews':
+        remove_question_package(kwargs)
         return(url_for('interview_list', **kwargs))
     elif file_reference == 'interview_list':
+        remove_question_package(kwargs)
         return(url_for('interview_list', **kwargs))
     elif file_reference == 'playground':
+        remove_question_package(kwargs)
         return(url_for('playground_page', **kwargs))
     elif file_reference == 'playgroundtemplate':
         return(url_for('playground_files', section='template'))
@@ -697,12 +708,16 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'playgroundmodules':
         return(url_for('playground_files', section='modules'))
     elif file_reference == 'playgroundpackages':
+        remove_question_package(kwargs)
         return(url_for('playground_packages', **kwargs))
     elif file_reference == 'playgroundfiles':
+        remove_question_package(kwargs)
         return(url_for('playground_files', **kwargs))
     elif file_reference == 'create_playground_package':
+        remove_question_package(kwargs)
         return(url_for('create_playground_package', **kwargs))
     if re.match('[0-9]+', file_reference):
+        remove_question_package(kwargs)
         file_number = file_reference
         if can_access_file_number(file_number):
             the_file = SavedFile(file_number)
@@ -710,8 +725,8 @@ def get_url_from_file_reference(file_reference, **kwargs):
         else:
             url = 'about:blank'
     else:
-        question = kwargs.get('question', None)
-        package_arg = kwargs.get('package', None)
+        question = kwargs.get('_question', None)
+        package_arg = kwargs.get('_package', None)
         root = daconfig.get('root', '/')
         fileroot = daconfig.get('fileserver', root)
         if 'ext' in kwargs:
@@ -3397,6 +3412,7 @@ def index():
                         message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
                 #logmessage("index: calling reset_session with retain_code")
                 user_code, user_dict = reset_session(yaml_filename, secret, retain_code=True)
+                reset_user_dict(user_code, yaml_filename)
                 save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
                 release_lock(user_code, yaml_filename)
                 session_id = session.get('uid', None)
@@ -3747,7 +3763,8 @@ def index():
         except:
             continue
         if key.startswith('_field_') and orig_key in known_varnames:
-            post_data[known_varnames[orig_key]] = post_data[orig_key]
+            if not (known_varnames[orig_key] in post_data and post_data[known_varnames[orig_key]] != '' and post_data[orig_key] == ''):
+                post_data[known_varnames[orig_key]] = post_data[orig_key]
     for orig_key in post_data:
         if orig_key in ['_checkboxes', '_empties', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
             continue
@@ -3836,6 +3853,10 @@ def index():
                     data = "None"
                 else:
                     data = "False"
+            elif known_datatypes[real_key] == 'date':
+                if type(data) in [str, unicode]:
+                    data = data.strip()
+                data = repr(data)
             elif known_datatypes[real_key] == 'integer':
                 if data == '':
                     data = 0

@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.1.22]
+### Added
+- read_qr() function
+### Changed
+- The default for the debug configuration directive is now True
+### Fixed
+- The "disable others" field modifier can now be used on a field with
+  the same variable name as that of another field on the same page
+- Term definition Markdown is now converted to HTML
+
 ## [0.1.21] - 2017-07-14
 ### Changed
 - checkboxes now create DADict objects rather than dict objects
@@ -7,6 +17,7 @@
 - all_true() and all_false() methods for DADict
 ### Fixed
 - Fixed bug when user invitation e-mail fails to send
+- Error message when code and question blocks are combined
 
 ## [0.1.20] - 2017-07-10
 ### Fixed

@@ -393,7 +393,7 @@ def as_sms(status, links=None, menu_items=None):
                 houtput += "\n"
             if help_section['heading'] is not None:
                 houtput += '== ' + to_text(markdown_to_html(help_section['heading'], trim=False, status=status, strip_newlines=True), terms, links, status) + ' =='
-            else:
+            elif len(status.helpText) > 1:
                 houtput += '== ' + word('Help with this question') + ' =='
             houtput += "\n" + to_text(markdown_to_html(help_section['content'], trim=False, status=status, strip_newlines=True), terms, links, status)
         if len(terms):
@@ -697,10 +697,10 @@ def as_html(status, url_for, debug, root, validation_rules):
                 helptext_start = ''
                 helptext_end = ''
             if hasattr(field, 'disableothers') and field.disableothers and hasattr(field, 'saveas'):
-                onchange.append(field.saveas)
+                onchange.append(safeid('_field_' + str(field.number)))
             if hasattr(field, 'saveas'):
                 varnames[safeid('_field_' + str(field.number))] = field.saveas
-                if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras:
+                if (hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras) or (hasattr(field, 'disableothers') and field.disableothers):
                     the_saveas = safeid('_field_' + str(field.number))
                 else:
                     the_saveas = field.saveas
@@ -759,7 +759,7 @@ def as_html(status, url_for, debug, root, validation_rules):
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
                     fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
                 else:
-                    fieldlist.append('                <div class="form-group' + req_tag + '"><label for="' + escape_id(field.saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group' + req_tag + '"><label for="' + escape_id(the_saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
             if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras:
                 fieldlist.append('                </div>\n')
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n              <fieldset>\n'
@@ -1107,6 +1107,8 @@ def as_html(status, url_for, debug, root, validation_rules):
             status.extra_scripts.append("""<script>
       $("#emailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + repr(str(word("An e-mail address is required."))) + """, 'email': """ + repr(str(word("You need to enter a complete e-mail address."))) + """}}, 'errorClass': 'help-inline'});
     </script>""")
+        if (status.underText):
+            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
     if status.question.question_type != "signature":
         if len(status.attributions):
             output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
@@ -1169,7 +1171,7 @@ def as_html(status, url_for, debug, root, validation_rules):
         for help_section in status.helpText:
             if help_section['heading'] is not None:
                 output += '            <div class="page-header"><h3>' + help_section['heading'] + '</h3></div>\n'
-            else:
+            elif len(status.helpText) > 1:
                 output += '            <div class="page-header"><h3>' + word('Help with this question') + '</h3></div>\n'
             if help_section['audiovideo'] is not None:
                 uses_audio_video = True
@@ -1319,7 +1321,7 @@ def input_for(status, field, wide=False, embedded=False):
         placeholdertext = ' placeholder=' + json.dumps(unicode(status.hints[field.number].replace('\n', ' ')))
     else:
         placeholdertext = ''
-    if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras and hasattr(field, 'saveas'):
+    if (hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras and hasattr(field, 'saveas')) or (hasattr(field, 'disableothers') and field.disableothers):
         saveas_string = safeid('_field_' + str(field.number))
     else:
         saveas_string = field.saveas

@@ -1612,7 +1612,8 @@ class Question:
             if 'name' not in target:
                 target['name'] = word("Document")
             if 'filename' not in target:
-                target['filename'] = docassemble.base.functions.space_to_underscore(target['name'])
+                #target['filename'] = docassemble.base.functions.space_to_underscore(target['name'])
+                target['filename'] = ''
             if 'description' not in target:
                 target['description'] = ''
             if 'initial yaml' in target:
@@ -1794,12 +1795,14 @@ class Question:
             exec("x = " + the_x, user_dict)
         if len(iterators):
             for indexno in range(len(iterators)):
+                #logmessage("Running " + list_of_indices[indexno] + " = " + iterators[indexno])
                 exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
         if self.need is not None:
             for need_code in self.need:
                 exec(need_code, user_dict)
         question_text = self.content.text(user_dict)
         #logmessage("Asking " + str(question_text))
+        #sys.stderr.write("Asking " + str(question_text) + "\n")
         if self.subcontent is not None:
             subquestion = self.subcontent.text(user_dict)
         else:
@@ -1830,7 +1833,11 @@ class Question:
                 the_audio_video = process_audio_video_list(self.audiovideo['help'], user_dict)
             else:
                 the_audio_video = None
-            help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict), 'audiovideo': the_audio_video}]
+            help_content = self.helptext.text(user_dict)
+            if re.search(r'[^\s]', help_content) or the_audio_video is not None:
+                help_text_list = [{'heading': None, 'content': help_content, 'audiovideo': the_audio_video}]
+            else:
+                help_text_list = list()
         else:
             help_text_list = list()
         interview_help_text_list = self.interview.processed_helptext(user_dict, self.language)
@@ -2194,7 +2201,11 @@ class Question:
             string = attachment['variable_name'] + " = docassemble.base.core.DAFileCollection(" + repr(attachment['variable_name']) + ")"
             # logmessage("Executing " + string + "\n")
             exec(string, user_dict)
-            user_dict['_attachment_info'] = dict(name=attachment['name'].text(user_dict), filename=attachment['filename'].text(user_dict), description=attachment['description'].text(user_dict), attachment=dict(name=attachment['question_name'], number=attachment['indexno']))
+            the_name = attachment['name'].text(user_dict)
+            the_filename = attachment['filename'].text(user_dict)
+            if the_filename == '':
+                the_filename = docassemble.base.functions.space_to_underscore(the_name)
+            user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(user_dict), attachment=dict(name=attachment['question_name'], number=attachment['indexno']))
             exec(attachment['variable_name'] + '.info = _attachment_info', user_dict)
             del user_dict['_attachment_info']
             for doc_format in result['file']:
@@ -2213,7 +2224,11 @@ class Question:
             docassemble.base.functions.set_language(attachment['options']['language'])
         else:
             old_language = None
-        result = {'name': attachment['name'].text(user_dict), 'filename': attachment['filename'].text(user_dict), 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
+        the_name = attachment['name'].text(user_dict)
+        the_filename = attachment['filename'].text(user_dict)
+        if the_filename == '':
+            the_filename = docassemble.base.functions.space_to_underscore(the_name)
+        result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
         result['markdown'] = dict();
         result['content'] = dict();
         result['file'] = dict();
@@ -2499,6 +2514,7 @@ class Interview:
                 result.append(help_item)
         return result
     def assemble(self, user_dict, *args):
+        #sys.stderr.write("assemble\n")
         user_dict['_internal']['tracker'] += 1
         if len(args):
             interview_status = args[0]
@@ -2625,6 +2641,7 @@ class Interview:
                             else:
                                 raise MandatoryQuestion()
             except NameError as errMess:
+                logmessage("Error in NameError is " + str(errMess))
                 docassemble.base.functions.reset_context()
                 if isinstance(errMess, ForcedNameError):
                     follow_mc = False
@@ -2801,7 +2818,8 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        #logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
+        logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
+        #sys.stderr.write("I don't have " + str(missingVariable) + " for language " + str(language) + "\n")
         origMissingVariable = missingVariable
         docassemble.base.functions.set_current_variable(origMissingVariable)
         if missingVariable in variable_stack:
@@ -2971,9 +2989,10 @@ class Interview:
                         if is_generic:
                             if the_x != 'None':
                                 exec("x = " + the_x, user_dict)
-                            if len(iterators):
-                                for indexno in range(len(iterators)):
-                                    exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
+                        if len(iterators):
+                            for indexno in range(len(iterators)):
+                                #logmessage("code: running " + list_of_indices[indexno] + " = " + iterators[indexno])
+                                exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
                         was_defined = False
                         try:
                             exec("__oldvariable__ = " + str(missing_var), user_dict)
@@ -3024,6 +3043,7 @@ class Interview:
                 docassemble.base.functions.pop_current_variable()
                 return(question_result)
             except UndefinedError as errMess:
+                logmessage("UndefinedError: " + str(errMess))
                 docassemble.base.functions.reset_context()
                 newMissingVariable = extract_missing_name(errMess)
                 question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=True)

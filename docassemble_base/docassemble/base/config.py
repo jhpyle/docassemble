@@ -7,6 +7,15 @@ import socket
 import pkg_resources
 from docassemble.base.generate_key import random_string
 
+# def trenv(key):
+#     if os.environ[key] == 'null':
+#         return None
+#     elif os.environ[key] == 'true':
+#         return True
+#     elif os.environ[key] == 'false':
+#         return False
+#     return os.environ[key]
+
 dbtableprefix = None
 daconfig = dict()
 s3_config = dict()
@@ -31,6 +40,7 @@ def load(**kwargs):
     global hostname
     global loaded
     global in_celery
+    # changed = False
     if 'arguments' in kwargs and kwargs['arguments'] and len(kwargs['arguments']) > 1:
         filename = kwargs['arguments'][1]
     else:
@@ -68,6 +78,12 @@ def load(**kwargs):
             daconfig['system version'] = fp.read().decode('utf8').strip()
     else:
         daconfig['system version'] = '0.1.12'
+    # for key in [['REDIS', 'redis'], ['RABBITMQ', 'rabbitmq'], ['EC2', 'ec2'], ['LOGSERVER', 'log server'], ['LOGDIRECTORY', 'log'], ['USEHTTPS', 'use https'], ['USELETSENCRYPT', 'use lets encrypt'], ['BEHINDHTTPSLOADBALANCER', 'behind https load balancer'], ['LETSENCRYPTEMAIL', 'lets encrypt email'], ['DAHOSTNAME', 'external hostname']]:
+    #     if key[0] in os.environ:
+    #         val = trenv(os.environ[key[0]])
+    #         if key[1] not in daconfig or daconfig[key[1]] != val:
+    #             daconfig[key[1]] = val
+    #             changed = True
     if 'keymap' in daconfig and daconfig['keymap'] not in ['vim', 'emacs', 'sublime']:
         sys.stderr.write("WARNING!  You used a keymap that is not supported.  Available values are vim, emacs, and sublime.\n")
         del daconfig['keymap']
@@ -75,6 +91,14 @@ def load(**kwargs):
         sys.stderr.write("WARNING!  The configuration directive vim is deprecated.  Please use keymap instead.\n")
         if daconfig['vim'] and 'keymap' not in daconfig:
             daconfig['keymap'] = 'vim'
+    # for key in [['S3BUCKET', 'bucket'], ['S3SECRETACCESSKEY', 'secret access key'], ['S3ACCESSKEY', 'access key id'], ['S3ENABLE', 'enable']]:
+    #     if key[0] in os.environ:
+    #         if 's3' not in daconfig:
+    #             daconfig['s3'] = dict()
+    #         val = trenv(os.environ[key[0]])
+    #         if key[1] not in daconfig['s3'] or daconfig['s3'][key[1]] != val:
+    #             daconfig['s3'][key[1]] = val
+    #             changed = True
     s3_config = daconfig.get('s3', None)
     if not s3_config or ('enable' in s3_config and not s3_config['enable']):
         S3_ENABLED = False
@@ -85,6 +109,14 @@ def load(**kwargs):
         GC_ENABLED = False
     else:
         GC_ENABLED = True
+    # for key in [['AZURECONTAINER', 'container'], ['AZUREACCOUNTKEY', 'account key'], ['AZUREACCOUNTNAME', 'account name'], ['AZUREENABLE', 'enable']]:
+    #     if key[0] in os.environ:
+    #         if 'azure' not in daconfig:
+    #             daconfig['azure'] = dict()
+    #         val = trenv(os.environ[key[0]])
+    #         if key[1] not in daconfig['azure'] or daconfig['azure'][key[1]] != val:
+    #             daconfig['azure'][key[1]] = val
+    #             changed = True
     azure_config = daconfig.get('azure', None)
     if type(azure_config) is not dict or ('enable' in azure_config and not azure_config['enable']) or 'account name' not in azure_config or azure_config['account name'] is None or 'account key' not in azure_config or azure_config['account key'] is None:
         AZURE_ENABLED = False
@@ -92,6 +124,12 @@ def load(**kwargs):
         AZURE_ENABLED = True
     if 'db' not in daconfig:
         daconfig['db'] = dict(name="docassemble", user="docassemble", password="abc123")
+    # for key in [['DBPREFIX', 'prefix'], ['DBNAME', 'name'], ['DBUSER', 'user'], ['DBPASSWORD', 'password'], ['DBHOST', 'host'], ['DBPORT', 'port'], ['DBTABLEPREFIX', 'table prefix']]:
+    #     if key[0] in os.environ:
+    #         val = trenv(os.environ[key[0]])
+    #         if key[1] not in daconfig['db'] or daconfig['db'][key[1]] != val:
+    #             daconfig['db'][key[1]] = val
+    #             changed = True
     dbtableprefix = daconfig['db'].get('table prefix', None)
     if not dbtableprefix:
         dbtableprefix = ''
