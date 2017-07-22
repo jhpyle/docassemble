@@ -466,6 +466,8 @@ If `disable others` is set to `True`, then when the user changes the
 value of the field to something, all the other fields in the question
 will be disabled.
 
+{% include side-by-side.html demo="disable others" %}
+
 ### <a name="note"></a>`note`
 
 The value of `note` is [Markdown] text that will appear on the screen;
@@ -502,13 +504,11 @@ and the variable name using the `field` key.
 
 {% include side-by-side.html demo="label" %}
 
-## <a name="datatype"></a>Possible data types for fields
+## Plain text
 
 There are many possible `datatype` values, which affect what the user
-sees and how the input is stored in a variable.  The following
-sections describe the available `datatype`s.
-
-## Text
+sees and how the input is stored in a variable.  This section and the
+following sections describe the available `datatype`s.
 
 <a name="text"></a>A `datatype: text` provides a single-line text
 input box.  This is the default, so you never need to specify it
@@ -529,18 +529,20 @@ suitable for passwords.
 
 ## <a name="date"></a>Dates
 
-`datatype: date` provides a date entry input box and requires a valid
-date.  The input method depends on the browser.
+`datatype: date` provides a date entry input box.  The style of the
+input box depends on the browser.  Input validation is applied, but it
+is not strict; April 32 is considered invalid, but April 31 is
+considered valid.
 
 {% include side-by-side.html demo="date-field" %}
 
 Note that the resulting variable is plain text, not a special [Python]
 date object of any kind.
 
-For more information about working with dates, see the documentation
-for the [date functions].  These functions are flexible and will work
-correctly if you give them dates as text, as long as a date can be
-discerned from the text.
+For more information about working with date variables, see the
+documentation for the [date functions].  These functions are flexible
+and will work correctly if you give them dates as text, as long as a
+date can be discerned from the text.
 
 ## <a name="email"></a>E-mail addresses
 

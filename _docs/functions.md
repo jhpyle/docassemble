@@ -764,45 +764,6 @@ code: |
 ---
 {% endhighlight %}
 
-## <a name="qr_code"></a>qr_code()
-
-The `qr_code()` function allows you to include the `[QR ...]` [markup] statement
-using [Python].
-
-These two questions are equivalent:
-
-{% highlight yaml %}
----
-question: |
-  Here is a QR code.
-subquestion: |
-  Go to Google:
-
-  ${ qr_code('http://google.com', width='200px') }
-
-  Or go to Yahoo:
-
-  ${ qr_code('http://yahoo.com') }
-sets: qr_example
----
-{% endhighlight %}
-
-{% highlight yaml %}
----
-question: |
-  Here is a QR code.
-subquestion: |
-  Go to Google:
-
-  [QR http://google.com, 200px]
-
-  Or go to Yahoo:
-
-  [QR http://yahoo.com]
-sets: qr_example
----
-{% endhighlight %}
-
 ## <a name="url_of"></a>url_of()
 
 This function returns a URL to a file within a **docassemble**
@@ -851,6 +812,83 @@ The `url_of()` function also has a few special uses.
 * `url_of('interviews')` returns a URL to the page listing the
   on-going interviews of a signed-in user.
 * `url_of('playground')` returns a URL to the [Playground].
+
+# QR code functions
+
+## <a name="qr_code"></a>qr_code()
+
+The `qr_code()` function allows you to include the `[QR ...]` [markup] statement
+using [Python].
+
+These two questions are equivalent:
+
+{% highlight yaml %}
+question: |
+  Here is a QR code.
+subquestion: |
+  Go to Google:
+
+  ${ qr_code('http://google.com', width='200px') }
+
+  Or go to Yahoo:
+
+  ${ qr_code('http://yahoo.com') }
+{% endhighlight %}
+
+{% highlight yaml %}
+question: |
+  Here is a QR code.
+subquestion: |
+  Go to Google:
+
+  [QR http://google.com, 200px]
+
+  Or go to Yahoo:
+
+  [QR http://yahoo.com]
+{% endhighlight %}
+
+For more information about what the `[QR ...]` [markup] statement
+does, see the [QR markup documentation].
+
+Note that if you want to include a QR code that points to an interview
+or an interview action, there are shorthand functions for that.  See
+[`interview_url_as_qr()`](#interview_url_as_qr) and
+[`interview_url_action_as_qr()`](#interview_url_action_as_qr).
+
+## <a name="read_qr"></a>read_qr()
+
+This function reads QR codes from one or more image files and returns
+a [Python list] with the encoded text string or strings.
+
+{% include side-by-side.html demo="read-qr" %}
+
+The first argument must be a [`DAFile`] or [`DAFileList`] object.  If
+the argument is a [`DAFileList`] with more than one file, all files
+(and all pages within all files) will be scanned for QR codes.
+
+The function accepts image files (JPEG, PNG, etc.) as well as PDF
+files.  If you provide PDF files, the following optional parameters
+customize the reading of the PDF files (they are passed directly to
+[pdftoppm]).
+
+* `f` indicates the first page of the PDF file to read.  By
+  default, all pages are read.
+* `l` indicates the last page of the PDF file to read.  By
+  default, all pages are read.
+* `x`: for cropping PDF pages.  Indicates the x-coordinate of the crop
+  area's top left corner, in pixels.  (By default, PDF files are
+  converted at 300 dpi unless another value is given by the
+  [`ocr dpi`] configuration directive.)
+* `y`: for cropping PDF pages.  Indicates the y-coordinate of the crop
+  area's top left corner, in pixels.
+* `W`: for cropping PDF pages.  Indicates the width of the crop area
+  in pixels (default is 0).
+* `H`: for cropping PDF pages.  Indicates the height of the crop area
+  in pixels (default is 0).
+
+The function returns a [Python list] with the codes found, in the
+order in which they were found.
 
 # E-mail functions
 
@@ -3747,3 +3785,4 @@ $(document).on('daPageLoad', function(){
 [`.instanceName`]: {{ site.baseurl }}/docs/objects.html#instanceName
 [`objects from file`]: {{ site.baseurl }}/docs/initial.html#objects from file
 [The YAML Format]: http://symfony.com/doc/current/components/yaml/yaml_format.html
+[QR markup documentation]: {{ site.baseurl }}/docs/markup.html#qr

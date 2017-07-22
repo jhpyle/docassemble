@@ -173,7 +173,7 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   tesseract-ocr-tam tesseract-ocr-tel tesseract-ocr-tgl \
   tesseract-ocr-tha tesseract-ocr-tur tesseract-ocr-ukr \
   tesseract-ocr-vie build-essential nodejs npm exim4-daemon-heavy \
-  libsvm3 libsvm-dev liblinear1 liblinear-dev
+  libsvm3 libsvm-dev liblinear1 liblinear-dev libzbar-dev
 {% endhighlight %}
 
 The libraries `libcurl4-openssl-dev` and `libssl-dev` are particularly

@@ -1054,6 +1054,23 @@
     The current date is ${ format_date(current_datetime()) }.
   buttons:
     - Ok: continue
+"disable-others": |-
+  question: |
+    What is your favorite color?
+  fields:
+    - Favorite color: favorite_color
+      choices:
+        - Red
+        - Blue
+        - Green
+        - Purple
+      disable others: True
+    - Other: favorite_color
+  ---
+  question: |
+    Your favorite color is
+    ${ favorite_color }.
+  mandatory: True
 "document": |-
   question: Here is your document.
   attachments:
@@ -4583,12 +4600,12 @@
     If you have a QR code reader on
     your phone, point it here:
 
-    ${ qr_code('http://wsj.com') }
-  sets: all_done
+    ${ qr_code('https://news.google.com') }
+  mandatory: True
 "qr-code-demo": "mandatory: True\nquestion: Here is a URL for you in a QR code\nsubquestion:\
-  \ |\n  [QR http://news.google.com, 200px]\nattachment:\n  name: Your QR code\n \
-  \ filename: your_code\n  content: |\n    Use the QR reader on your smartphone to\
-  \ take a picture of this:\n    \n    [QR http://news.google.com]"
+  \ |\n  [QR https://news.google.com, 200px]\nattachment:\n  name: Your QR code\n\
+  \  filename: your_code\n  content: |\n    Use the QR reader on your smartphone to\
+  \ take a picture of this:\n    \n    [QR https://news.google.com]"
 "quantity-noun": |-
   mandatory: True
   question: |
@@ -4717,6 +4734,23 @@
       datatype: range
       min: 1
       max: 10
+"read-qr": |-
+  question: |
+    Please upload a file (or files) with
+    a QR code.
+  fields:
+    - File: user_upload
+      datatype: files
+  ---
+  question: |
+    Codes found
+  subquestion: |
+    The following codes were found:
+
+    % for code in read_qr(user_upload):
+    * ${ code }
+    % endfor
+  mandatory: True
 "reconsider": |-
   code: |
     cat_food_cans_needed = number_of_cats * 4

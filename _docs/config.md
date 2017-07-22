@@ -89,7 +89,8 @@ mail:
 
 ## <a name="debug"></a>Development vs. production
 
-Set the `debug` directive to `True` on development servers.  The default is `False`.
+Set the `debug` directive to `True` on development servers and `False`
+on production servers.  The default is `True`.
 
 {% highlight yaml %}
 debug: True

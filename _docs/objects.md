@@ -640,9 +640,9 @@ Other methods available on a `DAList` are:
   items in the `extension_list` to the end of the list.  Just like the
   [Python list] method of the same name.
 * <a name="DAList.first"></a>`first()` - returns the first element of
-  the list; error triggered if list is empty
+  the list; error triggered if list is empty.
 * <a name="DAList.last"></a>`last()` - returns the last element of the
-  list; error triggered if list is empty
+  list; error triggered if list is empty.
 * <a name="DAList.does_verb"></a><a name="DADict.does_verb"></a><a
   name="DASet.does_verb"></a>`does_verb(verb)` - like the
   `verb_present()` function from [`docassemble.base.util`], except
@@ -717,7 +717,7 @@ Other methods available on a `DAList` are:
   elements overlap between the current list, considered as a set, and
   the other_set.  Otherwise, returns `False`.
 * <a name="DAList.issubset"></a><a
-  name="DADict.issubset"></a></a>`issubset()` - returns `True` if the
+  name="DADict.issubset"></a>`issubset()` - returns `True` if the
   current list, considered as a set, is a subset of the other_set.
   Otherwise, returns `False`.
 * <a name="DAList.issuperset"></a><a

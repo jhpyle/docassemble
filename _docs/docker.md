@@ -195,9 +195,9 @@ This command will cause **docassemble** to use default values for all
 configuration options.  You can also communicate specific
 configuration options to the container.
 
-The recommended way to do this is to create a text file called `env.list`
-in the current working directory containing variable definitions in
-standard shell script format.  For example:
+The recommended way to do this is to create a text file called
+`env.list` in the current working directory containing environment
+variable definitions in standard shell script format.  For example:
 
 {% highlight text %}
 DAHOSTNAME=docassemble.example.com
@@ -225,11 +225,16 @@ these are specified in [JSON] text that is entered into the web
 interface.  (See the [scalability] section for more information about
 using [ECS].)
 
-You can set the following configuration options:
+In your `env.list` file, you can set a variety of options.
+
+The following two options are specific to the particular server being
+started (which, in a [multi-server arrangement], will vary from server
+to server).
 
 * <a name="CONTAINERROLE"></a>`CONTAINERROLE`: either `all` or a
   colon-separated list of services (e.g. `web:celery`,
-  `sql:log:redis`, etc.).  The options are:
+  `sql:log:redis`, etc.) that should be started by the server.  The
+  available options are:
   * `all`: the [Docker] container will run all of the services of
     **docassemble** on a single container.
   * `web`: The [Docker] container will serve as a web server.
@@ -250,13 +255,75 @@ You can set the following configuration options:
   application server can query the central SQL server to get a list of
   hostnames of other application servers.  This is necessary so that
   any one application server can send a signal to the other
-  application servers to install a new package or new version of a
+  application servers to install a new package or a new version of a
   package, so that all servers are running the same software.  If you
   are running **docassemble** in a [multi-server arrangement], and you
   are starting an application server, set `SERVERHOSTNAME` to the
   hostname with which other application servers can find that server.
   Note that you do not need to worry about setting `SERVERHOSTNAME` if
-  you are using [EC2].
+  you are using [EC2], because [Docker] containers running on [EC2]
+  can discover their actual hostnames by querying a specific IP
+  address.
+
+The other options you can set in `env.list` are global for your entire
+**docassemble** installation, rather than specific to the server being
+started.
+
+The following eight options indicate where an existing configuration
+file can be found on [S3](#persistent s3) or
+[Azure blob storage](#persistent azure).  If a [configuration] file
+exists in the cloud at the indicated location, that [configuration]
+file will be used to set the [configuration] of your **docassemble**
+installation.  If no [configuration] file yet exists in the cloud at the
+indicated location, **docassemble** will create an initial
+[configuration] file and store it in the indicated location.
+
+* <a name="S3ENABLE"></a>`S3ENABLE`: Set this to `True` if you are
+  using [S3] as a repository for uploaded files, [Playground] files,
+  the [configuration] file, and other information.  This environment
+  variable, along with others that begin with `S3`, populates values
+  in [`s3` section] of the initial [configuration] file.  If this is
+  unset, but [`S3BUCKET`] is set, it will be assumed to be `True`.
+* <a name="S3BUCKET"></a>`S3BUCKET`: If you are using [S3], set this
+  to the bucket name.  Note that **docassemble** will not create the
+  bucket for you.  You will need to create it for yourself
+  beforehand.  The bucket should be empty.
+* <a name="S3ACCESSKEY"></a>`S3ACCESSKEY`: If you are using [S3], set
+  this to the [S3] access key.  You can ignore this environment
+  variable if you are using [EC2] with an [IAM] role that allows
+  access to your [S3] bucket.
+* <a name="S3SECRETACCESSKEY"></a>`S3SECRETACCESSKEY`: If you are
+  using [S3], set this to the [S3] access secret.  You can ignore this
+  environment variable if you are using [EC2] with an [IAM] role that
+  allows access to your [S3] bucket.
+* <a name="AZUREENABLE"></a>`AZUREENABLE`: Set this to `True` if you
+  are using [Azure blob storage](#persistent azure) as a repository
+  for uploaded files, [Playground] files, the [configuration] file,
+  and other information.  This environment variable, along with others
+  that begin with `AZURE`, populates values in [`azure` section] of
+  the [configuration] file.  If this is unset, but
+  [`AZUREACCOUNTNAME`], [`AZUREACCOUNTKEY`], and [`AZURECONTAINER`]
+  are set, it will be assumed to be `True`.
+* <a name="AZURECONTAINER"></a>`AZURECONTAINER`: If you are using
+  [Azure blob storage](#persistent azure), set this to the container
+  name.  Note that **docassemble** will not create the container for you.
+  You will need to create it for yourself beforehand.
+* <a name="AZUREACCOUNTNAME"></a>`AZUREACCOUNTNAME`: If you are using
+  [Azure blob storage](#persistent azure), set this to the account
+  name.
+* <a name="AZUREACCOUNTKEY"></a>`AZUREACCOUNTKEY`: If you are
+  using [Azure blob storage], set this to the account key.
+
+The following options are useful for pre-populating a fresh
+[configuration] with particular values.  These environment variables
+are effective only during an initial `run` of the [Docker] container,
+when a [configuration] file does not already exist.  If you are using
+[persistent volumes], or you have set the options above for
+[S3](#persistent s3)/[Azure blob storage](#persistent azure) and a
+[configuration] file exists in your cloud storage, the values in that
+[configuration] file will take precedence over any values you specify
+in `env.list`.
+
 * <a name="DBHOST"></a>`DBHOST`: The hostname of the [PostgreSQL]
   server.  Keep undefined or set to `null` in order to use the
   [PostgreSQL] server on the same host.  This environment variable,
@@ -331,40 +398,6 @@ You can set the following configuration options:
   should use the `https` scheme even though requests appear to be
   coming in as HTTP requests.  See the [`behind https load balancer`]
   configuration directive.
-* <a name="S3ENABLE"></a>`S3ENABLE`: Set this to `True` if you are
-  using [S3] as a repository for uploaded files, [Playground] files,
-  the [configuration] file, and other information.  This environment
-  variable, along with others that begin with `S3`, populates values
-  in [`s3` section] of the [configuration] file.  If this is unset,
-  but [`S3BUCKET`] is set, it will be assumed to be `True`.
-* <a name="S3BUCKET"></a>`S3BUCKET`: If you are using [S3], set this
-  to the bucket name.  Note that **docassemble** will not create the
-  bucket for you.  You will need to create it for yourself beforehand.
-* <a name="S3ACCESSKEY"></a>`S3ACCESSKEY`: If you are using [S3], set
-  this to the [S3] access key.  You can ignore this environment
-  variable if you are using [EC2] with an [IAM] role that allows
-  access to your [S3] bucket.
-* <a name="S3SECRETACCESSKEY"></a>`S3SECRETACCESSKEY`: If you are
-  using [S3], set this to the [S3] access secret.  You can ignore this
-  environment variable if you are using [EC2] with an [IAM] role that
-  allows access to your [S3] bucket.
-* <a name="AZUREENABLE"></a>`AZUREENABLE`: Set this to `True` if you
-  are using [Azure blob storage](#persistent azure) as a repository
-  for uploaded files, [Playground] files, the [configuration] file,
-  and other information.  This environment variable, along with others
-  that begin with `AZURE`, populates values in [`azure` section] of
-  the [configuration] file.  If this is unset, but
-  [`AZUREACCOUNTNAME`], [`AZUREACCOUNTKEY`], and [`AZURECONTAINER`]
-  are set, it will be assumed to be `True`.
-* <a name="AZURECONTAINER"></a>`AZURECONTAINER`: If you are using
-  [Azure blob storage](#persistent azure), set this to the container
-  name.  Note that **docassemble** will not create the container for you.
-  You will need to create it for yourself beforehand.
-* <a name="AZUREACCOUNTNAME"></a>`AZUREACCOUNTNAME`: If you are using
-  [Azure blob storage](#persistent azure), set this to the account
-  name.
-* <a name="AZUREACCOUNTKEY"></a>`AZUREACCOUNTKEY`: If you are
-  using [Azure blob storage], set this to the account key.
 * <a name="TIMEZONE"></a>`TIMEZONE`: You can use this to set the time
   zone of the server.  The value of the variable is stored in
   `/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` is
@@ -387,38 +420,77 @@ You can set the following configuration options:
   when the image is run.  See the [`debian packages`] configuration
   directive.
 
-Note that if you use [persistent volumes] and/or [S3](#persistent
-s3)/[Azure blob storage](#persistent azure), launching a new
-**docassemble** container with different variables is not necessarily
-going to change the way **docassemble** works.
+## Changing the configuration
 
-For example, if [`USEHTTPS`] is `True` and [`USELETSENCRYPT`] is
-`True`, then the [Apache] configuration files, if stored on a
-persistent volume, will not be overwritten if they already exist when
-a new container starts up.  So if you had been using [Let's Encrypt],
-but then you decide to change the [`DAHOSTNAME`], you will need to
-delete the saved configuration before running a new container.  If you
-are using [S3](#persistent s3), you can go to the [S3 Console] and
-delete the "Apache" folder and the "letsencrypt.tar.gz" file.  If you
-are using [Azure blob storage](#persistent azure), you can go to the
+If you already have an existing **docassemble** installation and you
+want to `run` a new [Docker] container using it, but you want to
+change the [configuration] of the container, there are some things you
+will need to keep in mind.
+
+The existing [configuration] file takes precedence over the
+environment variables that you set using [Docker].
+  
+If you want to change the [configuration], and the server is running,
+you can edit the [configuration] using the web interface.
+
+If the server is not running, and you are using [persistent volumes],
+you can use [`docker volume inspect`] to find the location of the
+persistent volume, and find
+
+When **docassemble** starts up on a [Docker] container, it:
+
+* 
+* Creates a [configuration] file from a template, using environment
+  variables for initial values, if a [configuration] file does not
+  already exist.
+* Initializes a PostgreSQL database, if one is not already initialized.
+* Configures the [Apache] configuration, if one is not already
+  configured.
+* Runs [Let's Encrypt] if the configuration indicates that
+  [Let's Encrypt] should be used, and [Let's Encrypt] has not yet been
+  configured.
+  
+When **docassemble** stops, it saves the [configuration] file, a
+backup of the PostgreSQL database, and backups of the [Apache] and
+[Let's Encrypt] configuration.  If you are using [persistent volumes],
+the information will be stored there.  If you are using
+[S3](#persistent s3) or [Azure blob storage](#persistent azure), the
+information will be stored in the cloud.
+
+When **docassemble** starts again, it will retrieve the
+[configuration] file, the backup of the PostgreSQL database, and
+backups of the [Apache] and [Let's Encrypt] configuration from storage
+and use them for the container.
+
+Suppose you have an existing installation that uses HTTPS and
+[Let's Encrypt], but you want to change the [`DAHOSTNAME`].  The
+[Apache] configuration files will not be overwritten if they already
+exist when a new container starts up.  So if you had been using
+[Let's Encrypt], but then you decide to change the [`DAHOSTNAME`], you
+will need to delete the saved configuration before running a new
+container.  If you are using [S3](#persistent s3), you can go to the
+[S3 Console] and delete the "Apache" folder and the
+"letsencrypt.tar.gz" file.  If you are using
+[Azure blob storage](#persistent azure), you can go to the
 [Azure Portal] and delete the "Apache" folder and the
 "letsencrypt.tar.gz" file.
   
 Also, if a configuration file exists on [S3](#persistent
 s3)/[Azure blob storage](#persistent azure) (`config.yml`) or in a
-persistent volume (`/usr/share/docassemble/config/config.yml`), then
-the values in that configuration will take precedence over the
-corresponding environment variables that are passed to [Docker].  Once
-a configuration file exists, you should make changes to the
-configuration file rather than passing environment variables to
-[Docker].  However, if your configuration is on [S3](#persistent
-s3)/[Azure blob storage](#persistent azure), you will at least need to
-pass sufficient access keys (e.g., [`S3BUCKET`], [`AZURECONTAINER`],
-etc.)  to access the storage; otherwise your container will not know
-where to find the configuration.  Also, there are some environment
-variables that do not exist in the configuration file because they are
-server-specific.  These include [`CONTAINERROLE`] and
-[`SERVERHOSTNAME`].
+[persistent volume], then the values in that configuration will take
+precedence over the corresponding environment variables that are
+passed to [Docker].  Once a configuration file exists, you should make
+changes to the configuration file rather than passing environment
+variables to [Docker].  However, if your configuration is on
+[S3](#persistent s3)/[Azure blob storage](#persistent azure), you will
+at least need to pass sufficient access keys (e.g., [`S3BUCKET`],
+[`AZURECONTAINER`], etc.) to access that storage; otherwise your
+container will not know where to find the configuration.
+
+Also, there are some environment variables that do not exist in the
+configuration file because they are specific to the individual server
+being started.  These include the [`CONTAINERROLE`] and
+[`SERVERHOSTNAME`] environment variables.
 
 # <a name="data storage"></a>Data storage
 
