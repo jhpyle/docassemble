@@ -1,14 +1,19 @@
 # Change Log
 
-## [0.1.22]
+## [0.1.22] - 2017-07-22
 ### Added
 - read_qr() function
+- new_object_type option for groups
 ### Changed
 - The default for the debug configuration directive is now True
 ### Fixed
 - The "disable others" field modifier can now be used on a field with
   the same variable name as that of another field on the same page
 - Term definition Markdown is now converted to HTML
+- Fixed bug with code blocks using iterators
+- Fixed problem with document attachments affecting data storage and
+  multiple application servers
+- Playground run now resets page counter
 
 ## [0.1.21] - 2017-07-14
 ### Changed

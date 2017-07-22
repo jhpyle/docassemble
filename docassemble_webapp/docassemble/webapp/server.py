@@ -3814,7 +3814,7 @@ def index():
                     if re.search(r'\.', key):
                         core_key_name = re.sub(r'\..*', '', key)
                         attribute_name = re.sub(r'\..*', '', key)
-                        logmessage("Core key is " + str(core_key_name))
+                        #logmessage("Core key is " + str(core_key_name))
                         try:
                             core_key = eval(core_key, user_dict)
                             if isinstance(core_key, DAObject):
@@ -4032,7 +4032,11 @@ def index():
         else:
             # Duplicative to save here?  Just for the 404?
             #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
-            the_path = interview_status.question.response_filename
+            if interview_status.question.response_file is not None:
+                the_path = interview_status.question.response_file.path()
+            else:
+                logmessage("index: could not send file because the response was None")
+                abort(404)                
             if not os.path.isfile(the_path):
                 logmessage("index: could not send file because file (" + the_path + ") not found")
                 abort(404)

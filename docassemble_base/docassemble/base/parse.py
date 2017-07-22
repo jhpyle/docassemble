@@ -458,6 +458,27 @@ def docx_variable_fix(variable):
     variable = re.sub(r'^([A-Za-z\_][A-Za-z\_0-9]*).*', r'\1', variable)
     return variable
 
+class FileInPackage:
+    def __init__(self, fileref, area, package):
+        if area == 'template':
+            docassemble.base.functions.package_template_filename(fileref, package=package)
+        self.fileref = fileref
+        self.area = area
+        self.package = package
+    def path(self):
+        if self.area == 'template':
+            return docassemble.base.functions.package_template_filename(self.fileref, package=self.package)
+
+class FileOnServer:
+    def __init__(self, fileref, question):
+        self.fileref = fileref
+        self.question = question
+    def path(self):
+        info = docassemble.base.functions.server.file_finder(self.fileref, question=self.question)
+        if 'fullpath' in info and info['fullpath']:
+            return info['fullpath']
+        raise DAError("Could not find the file " + str(self.fileref))
+
 class Question:
     def idebug(self, data):
         return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n" + ruamel.yaml.dump(data)
@@ -602,7 +623,7 @@ class Question:
                         for yaml_file in the_list:
                             if type(yaml_file) is not str:
                                 raise DAError('An initial yaml file must be a string.' + self.idebug(data))
-                            self.interview.attachment_options['initial_yaml'].append(docassemble.base.functions.package_template_filename(yaml_file, package=self.package))
+                            self.interview.attachment_options['initial_yaml'].append(FileInPackage(yaml_file, 'template', self.package))
                     elif key == 'additional yaml':
                         if 'additional_yaml' not in self.interview.attachment_options:
                             self.interview.attachment_options['additional_yaml'] = list()
@@ -613,19 +634,19 @@ class Question:
                         for yaml_file in the_list:
                             if type(yaml_file) is not str:
                                 raise DAError('An additional yaml file must be a string.' + self.idebug(data))
-                            self.interview.attachment_options['additional_yaml'].append(docassemble.base.functions.package_template_filename(yaml_file, package=self.package))
+                            self.interview.attachment_options['additional_yaml'].append(FileInPackage(yaml_file, 'template', self.package))
                     elif key == 'template file':
                         if type(value) is not str:
                             raise DAError('The template file must be a string.' + self.idebug(data))
-                        self.interview.attachment_options['template_file'] = docassemble.base.functions.package_template_filename(value, package=self.package)
+                        self.interview.attachment_options['template_file'] = FileInPackage(value, 'template', self.package)
                     elif key == 'rtf template file':
                         if type(value) is not str:
                             raise DAError('The rtf template file must be a string.' + self.idebug(data))
-                        self.interview.attachment_options['rtf_template_file'] = docassemble.base.functions.package_template_filename(value, package=self.package)
+                        self.interview.attachment_options['rtf_template_file'] = FileInPackage(value, 'template', self.package)
                     elif key == 'docx reference file':
                         if type(value) is not str:
                             raise DAError('The docx reference file must be a string.' + self.idebug(data))
-                        self.interview.attachment_options['docx_reference_file'] = docassemble.base.functions.package_template_filename(value, package=self.package)
+                        self.interview.attachment_options['docx_reference_file'] = FileInPackage(value, 'template', self.package)
         if 'script' in data:
             if type(data['script']) not in (str, unicode):
                 raise DAError("A script section must be plain text." + self.idebug(data))
@@ -993,15 +1014,15 @@ class Question:
         elif 'response filename' in data:
             self.question_type = 'sendfile'
             if str(type(data['response filename'])) == "<class 'docassemble.base.core.DAFile'>":
-                self.response_filename = data['response filename'].path()
+                self.response_file = data['response filename']
                 if hasattr(data['response filename'], 'mimetype') and data['response filename'].mimetype:
                     self.content_type = TextObject(data['response filename'].mimetype)
             else:
                 info = docassemble.base.functions.server.file_finder(data['response filename'], question=self)
                 if 'fullpath' in info and info['fullpath']:
-                    self.response_filename = info['fullpath']
+                    self.response_file = FileOnServer(data['response filename'], self) #info['fullpath']
                 else:
-                    self.response_filename = None
+                    self.response_file = None
                 if 'mimetype' in info and info['mimetype']:
                     self.content_type = TextObject(info['mimetype'])
                 else:
@@ -1010,7 +1031,10 @@ class Question:
             if 'content type' in data:
                 self.content_type = TextObject(definitions + unicode(data['content type']), names_used=self.mako_names)
             elif not (hasattr(self, 'content_type') and self.content_type):
-                self.content_type = TextObject(get_mimetype(self.response_filename))
+                if self.response_file is not None:
+                    self.content_type = TextObject(get_mimetype(self.response_file.path()))
+                else:
+                    self.content_type = TextObject('text/plain; charset=utf-8')
         elif 'redirect url' in data:
             self.question_type = 'redirect'
             self.content = TextObject(definitions + unicode(data['redirect url']), names_used=self.mako_names)
@@ -1623,7 +1647,7 @@ class Question:
                 for yaml_file in target['initial yaml']:
                     if type(yaml_file) is not str:
                         raise DAError('An initial yaml file must be a string.' + self.idebug(target))
-                    options['initial_yaml'].append(docassemble.base.functions.package_template_filename(yaml_file, package=self.package))
+                    options['initial_yaml'].append(FileInPackage(yaml_file, 'template', self.package))
             if 'additional yaml' in target:
                 if type(target['additional yaml']) is not list:
                     target['additional yaml'] = [target['additional yaml']]
@@ -1631,19 +1655,19 @@ class Question:
                 for yaml_file in target['additional yaml']:
                     if type(yaml_file) is not str:
                         raise DAError('An additional yaml file must be a string.' + self.idebug(target))
-                    options['additional_yaml'].append(docassemble.base.functions.package_template_filename(yaml_file, package=self.package))
+                    options['additional_yaml'].append(FileInPackage(yaml_file, 'template', self.package))
             if 'template file' in target:
                 if type(target['template file']) is not str:
                     raise DAError('The template file must be a string.' + self.idebug(target))
-                options['template_file'] = docassemble.base.functions.package_template_filename(target['template file'], package=self.package)
+                options['template_file'] = FileInPackage(target['template file'], 'template', self.package)
             if 'rtf template file' in target:
                 if type(target['rtf template file']) is not str:
                     raise DAError('The rtf template file must be a string.' + self.idebug(target))
-                options['rtf_template_file'] = docassemble.base.functions.package_template_filename(target['rtf template file'], package=self.package)
+                options['rtf_template_file'] = FileInPackage(target['rtf template file'], 'template', self.package)
             if 'docx reference file' in target:
                 if type(target['docx reference file']) is not str:
                     raise DAError('The docx reference file must be a string.' + self.idebug(target))
-                options['docx_reference_file'] = docassemble.base.functions.package_template_filename(target['docx reference file'], package=self.package)
+                options['docx_reference_file'] = FileInPackage(target['docx reference file'], 'template', self.package)
             if 'usedefs' in target:
                 if type(target['usedefs']) is str:
                     the_list = [target['usedefs']]
@@ -1730,9 +1754,9 @@ class Question:
                 elif type(target['fields']) is not dict:
                     raise DAError('fields supplied to attachment must be a dictionary' + self.idebug(target))
                 target['content'] = ''
-                options[template_type + '_template_file'] = docassemble.base.functions.package_template_filename(target[template_type + ' template file'], package=self.package)
+                options[template_type + '_template_file'] = FileInPackage(target[template_type + ' template file'], 'template', package=self.package)
                 if template_type == 'docx':
-                    docx_template = docassemble.base.file_docx.DocxTemplate(options['docx_template_file'])
+                    docx_template = docassemble.base.file_docx.DocxTemplate(options['docx_template_file'].path())
                     the_env = Environment()
                     the_xml = docx_template.get_xml()
                     the_xml = docx_template.patch_xml(the_xml)
@@ -1877,10 +1901,13 @@ class Question:
                 extras['reload_after'] = number
         if self.question_type == 'response':
             extras['content_type'] = self.content_type.text(user_dict)
-            if hasattr(self, 'binaryresponse'):
-                extras['binaryresponse'] = self.binaryresponse
+            # if hasattr(self, 'binaryresponse'):
+            #     extras['binaryresponse'] = self.binaryresponse
         elif self.question_type == 'sendfile':
-            extras['response_filename'] = self.response_filename
+            # if self.response_file:
+            #     extras['response_filename'] = self.response_file.path()
+            # else:
+            #     extras['response_filename'] = None
             extras['content_type'] = self.content_type.text(user_dict)
         elif self.question_type == 'review':
             extras['ok'] = dict()
@@ -2148,7 +2175,7 @@ class Question:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
-                        result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'], data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True))
+                        result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True))
                     elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
                         #logmessage("field_data is " + str(result['field_data']))
                         docassemble.base.functions.set_context('docx', template=result['template'])
@@ -2167,28 +2194,28 @@ class Question:
                     converter.output_format = doc_format
                     converter.input_content = result['markdown'][doc_format]
                     if 'initial_yaml' in attachment['options']:
-                        converter.initial_yaml = attachment['options']['initial_yaml']
+                        converter.initial_yaml = [x.path() for x in attachment['options']['initial_yaml']]
                     elif 'initial_yaml' in self.interview.attachment_options:
-                        converter.initial_yaml = self.interview.attachment_options['initial_yaml']
+                        converter.initial_yaml = [x.path() for x in self.interview.attachment_options['initial_yaml']]
                     if 'additional_yaml' in attachment['options']:
-                        converter.additional_yaml = attachment['options']['additional_yaml']
+                        converter.additional_yaml = [x.path() for x in attachment['options']['additional_yaml']]
                     elif 'additional_yaml' in self.interview.attachment_options:
-                        converter.additional_yaml = self.interview.attachment_options['additional_yaml']
+                        converter.additional_yaml = [x.path() for x in self.interview.attachment_options['additional_yaml']]
                     if doc_format == 'rtf':
                         if 'rtf_template_file' in attachment['options']:
-                            converter.template_file = attachment['options']['rtf_template_file']
+                            converter.template_file = attachment['options']['rtf_template_file'].path()
                         elif 'rtf_template_file' in self.interview.attachment_options:
-                            converter.template_file = self.interview.attachment_options['rtf_template_file']
+                            converter.template_file = self.interview.attachment_options['rtf_template_file'].path()
                     elif doc_format == 'docx':
                         if 'docx_reference_file' in attachment['options']:
-                            converter.reference_file = attachment['options']['docx_reference_file']
+                            converter.reference_file = attachment['options']['docx_reference_file'].path()
                         elif 'docx_reference_file' in self.interview.attachment_options:
-                            converter.reference_file = self.interview.attachment_options['docx_reference_file']
+                            converter.reference_file = self.interview.attachment_options['docx_reference_file'].path()
                     else:
                         if 'template_file' in attachment['options']:
-                            converter.template_file = attachment['options']['template_file']
+                            converter.template_file = attachment['options']['template_file'].path()
                         elif 'template_file' in self.interview.attachment_options:
-                            converter.template_file = self.interview.attachment_options['template_file']
+                            converter.template_file = self.interview.attachment_options['template_file'].path()
                     converter.metadata = result['metadata']
                     converter.convert(self)
                     result['file'][doc_format] = converter.output_filename
@@ -2250,7 +2277,7 @@ class Question:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
                     if doc_format == 'docx':
-                        result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'])
+                        result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'].path())
                         if type(attachment['options']['fields']) in [str, unicode]:
                             result['field_data'] = user_dict
                         else:
@@ -2641,7 +2668,7 @@ class Interview:
                             else:
                                 raise MandatoryQuestion()
             except NameError as errMess:
-                logmessage("Error in NameError is " + str(errMess))
+                #logmessage("Error in NameError is " + str(errMess))
                 docassemble.base.functions.reset_context()
                 if isinstance(errMess, ForcedNameError):
                     follow_mc = False
@@ -2818,7 +2845,7 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
+        #logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
         #sys.stderr.write("I don't have " + str(missingVariable) + " for language " + str(language) + "\n")
         origMissingVariable = missingVariable
         docassemble.base.functions.set_current_variable(origMissingVariable)
@@ -3043,7 +3070,7 @@ class Interview:
                 docassemble.base.functions.pop_current_variable()
                 return(question_result)
             except UndefinedError as errMess:
-                logmessage("UndefinedError: " + str(errMess))
+                #logmessage("UndefinedError: " + str(errMess))
                 docassemble.base.functions.reset_context()
                 newMissingVariable = extract_missing_name(errMess)
                 question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=True)
