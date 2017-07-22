@@ -10,6 +10,7 @@ import qrcode.image.svg
 import StringIO
 import tempfile
 from docassemble.base.functions import server, word
+import docassemble.base.functions
 from docassemble.base.pandoc import MyPandoc
 from mdx_smartypants import SmartypantsExt
 from bs4 import BeautifulSoup
@@ -953,6 +954,7 @@ def qr_include_string(match):
         width = DEFAULT_IMAGE_WIDTH
     im = qrcode.make(string)
     the_image = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    docassemble.base.functions.this_thread.temporary_resources.add(the_image.name)
     im.save(the_image.name)
     output = '\\mbox{\\includegraphics[width=' + width + ']{' + the_image.name + '}}'
     if width == '\\textwidth':
@@ -971,6 +973,7 @@ def qr_include_docx(match):
         width = DEFAULT_IMAGE_WIDTH
     im = qrcode.make(string)
     the_image = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    docassemble.base.functions.this_thread.temporary_resources.add(the_image.name)
     im.save(the_image.name)
     output = '![](' + the_image.name + '){width=' + width + '}'
     return(output)

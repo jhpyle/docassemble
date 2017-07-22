@@ -104,7 +104,7 @@ if 'dispatch' not in daconfig:
     daconfig['dispatch'] = dict()
 default_title = daconfig.get('default title', daconfig.get('brandname', 'docassemble'))
 default_short_title = daconfig.get('default short title', default_title)
-os.environ['PYTHON_EGG_CACHE'] = tempfile.mkdtemp()
+os.environ['PYTHON_EGG_CACHE'] = tempfile.gettempdir()
 PNG_RESOLUTION = daconfig.get('png resolution', 300)
 PNG_SCREEN_RESOLUTION = daconfig.get('png screen resolution', 72)
 PDFTOPPM_COMMAND = daconfig.get('pdftoppm', 'pdftoppm')
@@ -3724,7 +3724,7 @@ def index():
                             file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
                             extension, mimetype = get_ext_and_mimetype(filename)
                             saved_file = SavedFile(file_number, extension=extension, fix=True)
-                            temp_file = tempfile.NamedTemporaryFile(suffix='.' + extension, delete=False)
+                            temp_file = tempfile.NamedTemporaryFile(suffix='.' + extension)
                             the_file.save(temp_file.name)
                             process_file(saved_file, temp_file.name, mimetype, extension)
                             #sys.stderr.write("Upload was processed\n")
@@ -7815,6 +7815,7 @@ def create_playground_package():
                         raise DAError("create_playground_package: error running git push.  " + output)
                 flash(word("Pushed commit to GitHub.") + "  " + output, 'info')
                 time.sleep(3.0)
+                shutil.rmtree(directory)
                 return redirect(url_for('playground_packages', file=current_package))
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(session.get('uid', None), nice_name)
@@ -8085,7 +8086,6 @@ class Fruit(DAObject):
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(session.get('uid', None), nice_name)
             saved_file = SavedFile(file_number, extension='zip', fix=True)
-            #archive = tempfile.NamedTemporaryFile(delete=False)
             zf = zipfile.ZipFile(saved_file.path, mode='w')
             trimlength = len(directory) + 1
             if current_user.timezone:
@@ -9231,7 +9231,7 @@ def playground_packages():
         elif 'pypi' in request.args:
             pypi_package = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['pypi'])
             pypi_package = 'docassemble.' + re.sub(r'^docassemble\.', '', pypi_package)
-            package_file = tempfile.NamedTemporaryFile(suffix='.tar.gz', delete=False)
+            package_file = tempfile.NamedTemporaryFile(suffix='.tar.gz')
             try:
                 http = httplib2.Http()
                 resp, content = http.request("https://pypi.python.org/pypi/" + str(pypi_package) + "/json", "GET")
@@ -9266,15 +9266,15 @@ def playground_packages():
                 orig_file = os.path.join(root, file)
                 #output += "Original file is " + orig_file + "\n"
                 thefilename = os.path.join(*splitall(orig_file)[initial_directories:])
-                (directory, filename) = os.path.split(thefilename)
+                (the_directory, filename) = os.path.split(thefilename)
                 if filename.startswith('#') or filename.endswith('~'):
                     continue
-                dirparts = splitall(directory)
+                dirparts = splitall(the_directory)
                 if '.git' in dirparts:
                     continue
-                levels = re.findall(r'/', directory)
+                levels = re.findall(r'/', the_directory)
                 for sec in ['templates', 'static', 'sources', 'questions']:
-                    if directory.endswith('data/' + sec) and filename != 'README.md':
+                    if the_directory.endswith('data/' + sec) and filename != 'README.md':
                         data_files[sec].append(filename)
                         target_filename = os.path.join(area[area_sec[sec]].directory, filename)
                         #output += "Copying " + orig_file + "\n"
@@ -9327,6 +9327,7 @@ def playground_packages():
             area[sec].finalize()
         the_file = package_name
         flash(word("The package was unpacked into the Playground."), 'success')
+        shutil.rmtree(directory)
         if need_to_restart:
             return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file)))
         return redirect(url_for('playground_packages', file=the_file))
@@ -10552,6 +10553,15 @@ def after_reset():
         #logmessage("after_reset: fixing cookie")
         response.set_cookie('secret', session['newsecret'])
         del session['newsecret']
+    return response
+
+@app.before_request
+def reset_thread_local():
+    docassemble.base.functions.reset_thread_local()
+
+@app.after_request
+def remove_temporary_files(response):
+    docassemble.base.functions.close_files()
     return response
 
 def needs_to_change_password():

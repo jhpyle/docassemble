@@ -77,7 +77,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
     if pdf_url is None:
         pdf_url = ''
     fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
-    fdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".fdf", delete=False)
+    fdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".fdf")
     fdf_file.write(fdf)
     fdf_file.close()
     pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=False)

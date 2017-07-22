@@ -1,0 +1,49 @@
+metadata:
+  title: "List: mixed"
+  short title: "List: mixed"
+  documentation: "https://docassemble.org/docs/groups.html#mixed object types"
+  example start: 1
+  example end: 6
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - food: DAList
+---
+mandatory: True
+code: |
+  food.ask_object_type = True
+---
+mandatory: True
+question: |
+  There are ${ food.number_as_word() }
+  food items in all.
+subquestion: |
+  The foods are ${ food }.
+---
+question: |
+  Are there any food items that you would like
+  to add to the list?
+yesno: food.there_are_any
+---
+question: |
+  What type of 
+buttons:
+  - Person:
+      code: |
+        plaintiff.new_object_type = Individual
+  - Business:
+      code: |
+        plaintiff.new_object_type = Person
+
+---
+question: |
+  What food should be added to the list?
+fields:
+  - Fruit: fruit[i]
+---
+question: |
+  So far, the fruits include ${ food }.
+  Are there any others?
+yesno: food.there_is_another

@@ -2836,7 +2836,7 @@ class Interview:
                 raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
         if docassemble.base.functions.get_info('prevent_going_back'):
             interview_status.can_go_back = False
-        docassemble.base.functions.close_files()
+        #docassemble.base.functions.close_files()
         return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())
