@@ -107,12 +107,12 @@ def close_files():
     while len(this_thread.open_files):
         file_object = this_thread.open_files.pop()
         file_object.commit()
-    while len(this_thread.temporary_resources):
-        the_resource = this_thread.temporary_resources.pop()
-        if os.path.isdir(the_resource):
-            shutil.rmtree(the_resource)
-        elif os.path.isfile(the_resource):
-            os.remove(the_resource)
+    # while len(this_thread.temporary_resources):
+    #     the_resource = this_thread.temporary_resources.pop()
+    #     if os.path.isdir(the_resource):
+    #         shutil.rmtree(the_resource)
+    #     elif os.path.isfile(the_resource):
+    #         os.remove(the_resource)
             
 def set_gathering_mode(mode, instanceName):
     if mode:
@@ -1122,9 +1122,9 @@ def get_default_timezone():
     """
     return server.default_timezone
 
-def reset_thread_local():
-    this_thread.open_files = set()
-    this_thread.temporary_resources = set()
+# def reset_thread_local():
+#     this_thread.open_files = set()
+#     this_thread.temporary_resources = set()
 
 def reset_local_variables():
     this_thread.language = server.default_language
@@ -1132,6 +1132,7 @@ def reset_local_variables():
     this_thread.prevent_going_back = False
     this_thread.gathering_mode = dict()
     this_thread.current_variable = list()
+    this_thread.open_files = set()
 
 def prevent_going_back():
     """Instructs docassemble to disable the user's back button, so that the user cannot

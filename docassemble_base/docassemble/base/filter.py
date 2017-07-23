@@ -953,7 +953,7 @@ def qr_include_string(match):
     except:
         width = DEFAULT_IMAGE_WIDTH
     im = qrcode.make(string)
-    the_image = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    the_image = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False)
     docassemble.base.functions.this_thread.temporary_resources.add(the_image.name)
     im.save(the_image.name)
     output = '\\mbox{\\includegraphics[width=' + width + ']{' + the_image.name + '}}'
@@ -972,7 +972,7 @@ def qr_include_docx(match):
     except:
         width = DEFAULT_IMAGE_WIDTH
     im = qrcode.make(string)
-    the_image = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    the_image = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False)
     docassemble.base.functions.this_thread.temporary_resources.add(the_image.name)
     im.save(the_image.name)
     output = '![](' + the_image.name + '){width=' + width + '}'

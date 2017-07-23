@@ -2181,12 +2181,12 @@ class Question:
                         docassemble.base.functions.set_context('docx', template=result['template'])
                         result['template'].render(result['field_data'], jinja_env=Environment(undefined=StrictUndefined))
                         docassemble.base.functions.reset_context()
-                        docx_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".docx", delete=False)
+                        docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                         result['template'].save(docx_file.name)
                         if 'docx' in result['formats_to_use']:
                             result['file']['docx'] = docx_file.name
                         if 'pdf' in result['formats_to_use']:
-                            pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=False)
+                            pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
                             docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name)
                             result['file']['pdf'] = pdf_file.name
                 else:
@@ -2812,6 +2812,7 @@ class Interview:
             except AttributeError as the_error:
                 docassemble.base.functions.reset_context()
                 #logmessage(str(the_error.args))
+                docassemble.base.functions.close_files()
                 raise DAError('Got error ' + str(the_error) + " " + traceback.format_exc(the_error))
             except MandatoryQuestion:
                 docassemble.base.functions.reset_context()
@@ -2829,14 +2830,16 @@ class Interview:
                     the_question = question
                 except:
                     pass
+                docassemble.base.functions.close_files()
                 if the_question is not None:
                     raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
                 raise DAError("no question available: " + str(qError))
             else:
+                docassemble.base.functions.close_files()
                 raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
         if docassemble.base.functions.get_info('prevent_going_back'):
             interview_status.can_go_back = False
-        #docassemble.base.functions.close_files()
+        docassemble.base.functions.close_files()
         return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())

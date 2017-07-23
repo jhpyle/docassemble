@@ -1,49 +1,64 @@
 metadata:
-  title: "List: mixed"
-  short title: "List: mixed"
+  title: "List: mixed object types"
+  short title: "Mixed list"
   documentation: "https://docassemble.org/docs/groups.html#mixed object types"
   example start: 1
-  example end: 6
+  example end: 8
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 objects:
-  - food: DAList
+  - location: DAList
 ---
 mandatory: True
 code: |
-  food.ask_object_type = True
+  location.there_are_any = True
+  location.ask_object_type = True
+---
+question: |
+  Do you know the full address of the
+  ${ ordinal(location.current_index()) }
+  location?
+buttons:
+  - Yes:
+      code: |
+        location.new_object_type = Address
+  - No:
+      code: |
+        location.new_object_type = City
+---
+question: |
+  What is the address of the
+  ${ ordinal(i) } location?
+fields:
+  - Address: location[i].address
+  - Unit: location[i].unit
+    required: False
+  - City: location[i].city
+  - State: location[i].state
+    code: |
+      states_list()
+  - Zip: location[i].zip
+    required: False
+---
+question: |
+  What is the city of the
+  ${ ordinal(i) } location?
+fields:
+  - City: location[i].city
+  - State: location[i].state
+    code: |
+      states_list()
+---
+question: |
+  Would you like to add another location?
+yesno: location.there_is_another
 ---
 mandatory: True
 question: |
-  There are ${ food.number_as_word() }
-  food items in all.
+  The locations
 subquestion: |
-  The foods are ${ food }.
----
-question: |
-  Are there any food items that you would like
-  to add to the list?
-yesno: food.there_are_any
----
-question: |
-  What type of 
-buttons:
-  - Person:
-      code: |
-        plaintiff.new_object_type = Individual
-  - Business:
-      code: |
-        plaintiff.new_object_type = Person
-
----
-question: |
-  What food should be added to the list?
-fields:
-  - Fruit: fruit[i]
----
-question: |
-  So far, the fruits include ${ food }.
-  Are there any others?
-yesno: food.there_is_another
+  % for loc in location:
+  * ${ loc }
+  % endfor

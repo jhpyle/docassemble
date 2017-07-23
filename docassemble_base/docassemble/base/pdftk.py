@@ -80,7 +80,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
     fdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".fdf")
     fdf_file.write(fdf)
     fdf_file.close()
-    pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=False)
+    pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name]
     if not editable:
         subprocess_arguments.append('flatten')

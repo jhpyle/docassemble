@@ -10555,14 +10555,14 @@ def after_reset():
         del session['newsecret']
     return response
 
-@app.before_request
-def reset_thread_local():
-    docassemble.base.functions.reset_thread_local()
+# @app.before_request
+# def reset_thread_local():
+#     docassemble.base.functions.reset_thread_local()
 
-@app.after_request
-def remove_temporary_files(response):
-    docassemble.base.functions.close_files()
-    return response
+# @app.after_request
+# def remove_temporary_files(response):
+#     docassemble.base.functions.close_files()
+#     return response
 
 def needs_to_change_password():
     if not current_user.has_role('admin'):

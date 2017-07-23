@@ -83,10 +83,10 @@ class MyPandoc(object):
             #logmessage("Before: " + repr(self.input_content))
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content, metadata=metadata_as_dict, question=question)
             #logmessage("After: " + repr(self.input_content))
-        temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md", delete=False)
+        temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".md", delete=False)
         temp_file.write(self.input_content.encode('utf8'))
         temp_file.close()
-        temp_outfile = tempfile.NamedTemporaryFile(mode="wb", suffix="." + str(self.output_format), delete=False)
+        temp_outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix="." + str(self.output_format), delete=False)
         temp_outfile.close()
         current_temp_dir = 'epsconv'
         latex_conversion_directory = os.path.join(tempfile.gettempdir(), 'latex_convert')

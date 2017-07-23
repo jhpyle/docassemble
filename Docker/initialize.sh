@@ -492,6 +492,11 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
 	    echo "Restoring postgres database $db" >&2
 	    pg_restore -F c -C -c $db | su -c psql postgres
 	done
+        if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
+	    cd /
+	    rm -rf $PGBACKUPDIR
+	fi
+	
     fi
     dbexists=`su -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='${DBNAME:-docassemble}'\"" postgres`
     if [ -z "$dbexists" ]; then
@@ -638,6 +643,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	    rm -f /tmp/letsencrypt.tar.gz
 	    tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
 	    s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz
+	    rm -f /tmp/letsencrypt.tar.gz
 	fi
 	s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
@@ -647,6 +653,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	    tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
 	    echo "Saving let's encrypt" >&2
 	    blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
+	    rm -f /tmp/letsencrypt.tar.gz
 	fi
 	for the_file in $(find /etc/apache2/sites-available/ -type f); do
 	    target_file=`basename $the_file`

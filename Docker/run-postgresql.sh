@@ -45,11 +45,13 @@ function stopfunc {
     su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
     if [ "${S3ENABLE:-false}" == "true" ]; then
 	s3cmd sync "$PGBACKUPDIR/" s3://${S3BUCKET}/postgres/
+	rm -rf "$PGBACKUPDIR"
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	for the_file in $(find "$PGBACKUPDIR" -type f); do
 	    target_file=`basename $the_file`
 	    blob-cmd -f cp "$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/${target_file}"
 	done
+	rm -rf "$PGBACKUPDIR"
     fi
     echo "stopping postgres" >&2
     pg_ctlcluster --force $PGVERSION main stop

@@ -45,6 +45,7 @@ if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
 	    blob-cmd -f cp "$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/postgres/'
 	done
     fi
+    rm -rf "$PGBACKUPDIR"
 fi
 if [ "${S3ENABLE:-false}" == "true" ]; then
     if [ "${EC2:-false}" == "true" ]; then
