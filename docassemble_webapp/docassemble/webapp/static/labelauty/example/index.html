@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Labelauty Demo</title>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		<script src="../source/jquery-labelauty.js"></script>
+		<link rel="stylesheet" type="text/css" href="../source/jquery-labelauty.css">
+
+	</head>
+	<body>
+		<h1>Start of Example</h1>
+		<form>
+			<input checked type="checkbox" aria-label="Should this synchronize your files?" data-labelauty="Don't synchronize files|Synchronize my files"/>
+			<input type="checkbox" data-labelauty="Don't delete my files|Delete my files"/>
+			<input checked type="checkbox"/>
+
+			<input checked type="radio" name="radio-input" aria-label="Should this synchronize your files?" data-labelauty="Don't synchronize files|Synchronize my files"/>
+			<input type="radio" name="radio-input" data-labelauty="Don't delete my files|Delete my files"/>
+			<input checked type="radio" name="radio-input"/>
+		</form>
+
+		<h2 tabindex="0">End of Example</h2>
+		<script>
+			$(document).ready(function(){
+				$(":checkbox").labelauty();
+				$(":radio").labelauty();
+			});
+		</script>
+	</body>
+</html>
