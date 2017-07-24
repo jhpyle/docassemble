@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.24] - 2017-07-24
+### Fixed
+- Minor git issue
+
 ## [0.1.23] - 2017-07-23
 ### Changed
 - Additional deletion of temporary files through cron job
