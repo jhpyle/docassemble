@@ -1,0 +1,36 @@
+metadata:
+  title: Gathering a list of e-mail recipients
+  short title: E-mail list
+  documentation: "https://docassemble.org/docs/groups.html#list of objects"
+  example start: 1
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - recipient: DAEmailRecipientList
+---
+mandatory: True
+code: |
+  recipient.there_are_any = True
+---
+mandatory: True
+question: |
+  The list of recipients
+subquestion: |
+  % for x in recipient:
+  * ${ x }
+  % endfor
+---
+question: |
+  What is the ${ ordinal(i) } e-mail
+  address?
+fields:
+  - E-mail: recipient[i].address
+    datatype: email
+---
+question: |
+  Would you like to add another
+  e-mail recipient?
+yesno: recipient.there_is_another

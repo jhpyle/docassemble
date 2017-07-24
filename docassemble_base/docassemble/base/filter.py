@@ -12,7 +12,6 @@ import tempfile
 from docassemble.base.functions import server, word
 import docassemble.base.functions
 from docassemble.base.pandoc import MyPandoc
-from mdx_smartypants import SmartypantsExt
 from bs4 import BeautifulSoup
 import ruamel.yaml
 
@@ -22,7 +21,6 @@ import PIL
 
 DEFAULT_PAGE_WIDTH = '6.5in'
 
-smartyext = SmartypantsExt(configs=dict())
 term_start = re.compile(r'\[\[')
 term_match = re.compile(r'\[\[([^\]]*)\]\]')
 noquote_match = re.compile(r'"')
@@ -954,7 +952,7 @@ def qr_include_string(match):
         width = DEFAULT_IMAGE_WIDTH
     im = qrcode.make(string)
     the_image = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False)
-    docassemble.base.functions.this_thread.temporary_resources.add(the_image.name)
+    #docassemble.base.functions.this_thread.temporary_resources.add(the_image.name)
     im.save(the_image.name)
     output = '\\mbox{\\includegraphics[width=' + width + ']{' + the_image.name + '}}'
     if width == '\\textwidth':
@@ -973,7 +971,7 @@ def qr_include_docx(match):
         width = DEFAULT_IMAGE_WIDTH
     im = qrcode.make(string)
     the_image = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False)
-    docassemble.base.functions.this_thread.temporary_resources.add(the_image.name)
+    #docassemble.base.functions.this_thread.temporary_resources.add(the_image.name)
     im.save(the_image.name)
     output = '![](' + the_image.name + '){width=' + width + '}'
     return(output)
@@ -1061,7 +1059,8 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         converter.convert(question)
         result = converter.output_content.decode('utf8')
     else:
-        result = markdown.markdown(a, extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables'], output_format='html5')
+        #result = docassmarkdown.markdown(a, extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables'], output_format='html5')
+        result = docassemble.base.functions.this_thread.markdown.reset().convert(a)
     result = re.sub(r'<table>', r'<table class="table table-striped">', result)
     #result = re.sub(r'<table>', r'<table class="datable">', result)
     result = re.sub('<a href="(?!\?|javascript:)', '<a target="_blank" href="', result)

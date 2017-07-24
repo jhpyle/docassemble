@@ -48,7 +48,7 @@ class SavedFile(object):
             self.modtimes = dict()
             self.keydict = dict()
             self.directory = tempfile.mkdtemp(prefix='SavedFile')
-            docassemble.base.functions.this_thread.temporary_resources.add(self.directory)
+            #docassemble.base.functions.this_thread.temporary_resources.add(self.directory)
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
             #logmessage("fix: prefix is " + prefix)
             for key in cloud.list_keys(prefix):
@@ -432,7 +432,7 @@ machine learning training files, and other source files.
 """
     if directory is None:
         directory = tempfile.mkdtemp()
-        docassemble.base.functions.this_thread.temporary_resources.add(directory)
+        #docassemble.base.functions.this_thread.temporary_resources.add(directory)
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     maindir = os.path.join(packagedir, 'docassemble', str(pkgname))
     questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')

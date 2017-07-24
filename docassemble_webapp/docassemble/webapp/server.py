@@ -1,5 +1,6 @@
 min_system_version = '0.1.22'
 import re
+re._MAXCACHE = 10000
 import os
 import sys
 import tempfile
@@ -535,7 +536,7 @@ if 'twilio' in daconfig:
 else:
     twilio_config = None
 
-app.debug = False
+app.debug = True
 app.handle_url_build_error = my_default_url
 app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False

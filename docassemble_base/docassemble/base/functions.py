@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import types
+import markdown
+from mdx_smartypants import SmartypantsExt
 import pattern.en
 import re
 #import operator
@@ -44,6 +46,7 @@ __all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_l
 # except:
 #     default_timezone = 'America/New_York'
 # daconfig = dict()
+smartyext = SmartypantsExt(configs=dict())
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 newlines = re.compile(r'[\r\n]+')
 single_newline = re.compile(r'[\r\n]')
@@ -862,7 +865,8 @@ class ThreadVariables(threading.local):
     gathering_mode = dict()
     current_variable = list()
     open_files = set()
-    temporary_resources = set()
+    markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables'], output_format='html5')
+    #temporary_resources = set()
     prevent_going_back = False
     def __init__(self, **kw):
         if self.initialized:

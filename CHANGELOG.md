@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.1.23] - 2017-07-23
+### Changed
+- Additional deletion of temporary files through cron job
+### Fixed
+- Improved performance by optimizing markdown and regex
+- Newer version of labelauty, with modifications to include benefits
+  of older version, for compatibility with IE/Edge
+
 ## [0.1.22] - 2017-07-22
 ### Added
 - read_qr() function

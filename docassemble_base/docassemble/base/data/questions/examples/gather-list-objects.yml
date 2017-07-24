@@ -1,9 +1,9 @@
 metadata:
-  title: "List: mixed object types"
-  short title: "Mixed list"
-  documentation: "https://docassemble.org/docs/groups.html#mixed object types"
+  title: Gathering a list of objects
+  short title: List of objects
+  documentation: "https://docassemble.org/docs/groups.html#list of objects"
   example start: 1
-  example end: 8
+  example end: 6
 ---
 modules:
   - docassemble.base.util
@@ -14,7 +14,7 @@ objects:
 mandatory: True
 code: |
   location.there_are_any = True
-  location.ask_object_type = True
+  location.object_type = Address
 ---
 mandatory: True
 question: |
@@ -23,18 +23,6 @@ subquestion: |
   % for loc in location:
   * ${ loc }
   % endfor
----
-question: |
-  Do you know the full address of the
-  ${ ordinal(location.current_index()) }
-  location?
-buttons:
-  - Yes:
-      code: |
-        location.new_object_type = Address
-  - No:
-      code: |
-        location.new_object_type = City
 ---
 question: |
   What is the address of the
@@ -49,15 +37,6 @@ fields:
       states_list()
   - Zip: location[i].zip
     required: False
----
-question: |
-  What is the city of the
-  ${ ordinal(i) } location?
-fields:
-  - City: location[i].city
-  - State: location[i].state
-    code: |
-      states_list()
 ---
 question: |
   Would you like to add another location?

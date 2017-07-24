@@ -893,7 +893,6 @@ def as_html(status, url_for, debug, root, validation_rules):
                     indexno += 1
                     validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': True}
                     validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
-            output += '                <br/>\n'
             output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
             output += '                <button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button>\n'
         else:
