@@ -1,6 +1,0 @@
-./docassemble
-./docassemble_base
-./docassemble_webapp
-./docassemble_demo
-greenlet==0.4.10
-eventlet==0.19.0

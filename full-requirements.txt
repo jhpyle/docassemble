@@ -1,5 +1,0 @@
-git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng
-./docassemble
-./docassemble_base
-./docassemble_demo
-./docassemble_webapp
