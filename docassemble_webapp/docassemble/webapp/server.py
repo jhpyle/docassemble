@@ -536,7 +536,7 @@ if 'twilio' in daconfig:
 else:
     twilio_config = None
 
-app.debug = True
+app.debug = False
 app.handle_url_build_error = my_default_url
 app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
