@@ -1,0 +1,6 @@
+{% extends "base_templates/page_base.html" %}
+
+{% block main %}
+<h1>Error</h1>
+
+<p>There was an error.</p>

@@ -1,0 +1,48 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+<h1>{%trans%}Sign in{%endtrans%}</h1>
+
+{% if config['USE_GOOGLE_LOGIN'] %}
+<div class="g-signin2" data-width="250" data-longtitle="true" data-onsuccess="onSignIn"></div>
+{% endif %}
+{% if config['USE_GOOGLE_LOGIN'] %}
+<script>
+function myOnLoadCallback() {
+  console.log("myOnLoadCallback()");
+}
+</script>
+<script src="https://apis.google.com/js/platform.js?onload=myOnLoadCallback" async defer></script>
+<script>
+function onSignIn(googleUser) {
+  var profile = googleUser.getBasicProfile();
+  console.log('ID: ' + profile.getId());
+  console.log('Name: ' + profile.getName());
+  console.log('Image URL: ' + profile.getImageUrl());
+  console.log('Email: ' + profile.getEmail());
+  if (profile.getId()){
+    $.ajax({
+      type: 'POST',
+      url: '{{ url_for('oauth_authorize', provider='google') }}',
+      contentType: 'application/octet-stream; charset=utf-8',
+      success: function(result) {
+	console.log(result);
+	window.location = '{{ url_for('oauth_callback', provider='google', _external=True) }}';
+      },
+      dataType: "json",
+      data: {
+	"id": profile.getId(),
+	"name": profile.getName(),
+	"image": profile.getImageUrl(),
+	"email": profile.getEmail()
+      }
+    });
+  }
+  else if (authResult['error']) {
+    console.log('There was an error: ' + authResult['error']);
+  }
+}
+</script>
+{% endif %}
+
+{% endblock %}

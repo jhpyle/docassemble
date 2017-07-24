@@ -1,0 +1,25 @@
+---
+question: Hello, ${ planet }!
+subquestion: |
+  I surmise that your planet has no more than ${ inhabitant_count }
+  inhabitants.
+buttons:
+  - Exit: exit
+mandatory: true
+---
+question: |
+  What is your planet's name?
+fields:
+  - Your Planet: planet
+---
+code: |
+  if favorite_number == 42:
+    inhabitant_count = 2
+  else:
+    inhabitant_count = 2000 + favorite_number * 45
+---
+question: What is your favorite number?
+fields:
+  - Number: favorite_number
+    datatype: number
+---

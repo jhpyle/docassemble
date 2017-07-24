@@ -1,0 +1,24 @@
+{% extends "base_templates/page_base.html" %}  {# base_templates/page_base.html extends base_templates/base.html #}
+
+{% block main %}
+<h1>User Profile</h1>
+
+<p><a href="{{ url_for('user.change_username') }}">Change username</a></p>
+<p><a href="{{ url_for('user.change_password') }}">Change password</a></p>
+
+{% from "base_templates/form_macros.html" import render_field, render_submit_field %}
+<form action="" method="POST" class="form" role="form">
+  <div class="row">
+    <div class="col-sm-6 col-md-5 col-lg-4">
+    {{ form.hidden_tag() }}
+
+    {{ render_field(form.first_name, tabindex=240) }}
+
+    {{ render_field(form.last_name, tabindex=250) }}
+
+    {{ render_submit_field(form.submit, tabindex=280) }}
+    </div>
+  </div>
+</form>
+
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+
+<h1>Roles</h1>
+
+{{ rolelist|safe }}
+
+<p><a href="{{ url_for('add_role') }}">Add a new role</a></p>
+
+{% endblock %}

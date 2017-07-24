@@ -1,0 +1,474 @@
+---
+metadata:
+  title: Conflict Check for Potential Clients
+  short title: Conflict Check
+  description: |
+    This interview gives the law office information to determine 
+    whether or not a conflict of interest exists according to
+    the lawyer ethics rules.  
+  authors:
+    name: James Ryland Miller
+    organization: Law Office of James Ryland Miller, PLLC
+  revision_date: 2017-02-03
+---
+mandatory: True
+code: |
+  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
+---
+mandatory: True
+code: |
+  user_welcomed
+  if understand_no_acr == False:
+    stop_reason = 'no_acr'
+    stopinterview
+  if understand_dutyreport == False:
+    stop_reason = 'dutyreport'
+    stopinterview
+  if understand_nopriv == False:
+    stop_reason = 'nopriv'
+    stopinterview
+  if is_email_consent_true == False:
+    stop_reason = 'email_consent'
+    stopinterview
+  if age < 18:
+    stop_reason = 'underage'
+    stopinterview
+  if offered_chance_to_review and readytosend:
+    conclusion
+  else:
+    exitall
+---
+code: |
+  age = date_difference(starting=birthdate).weeks // 52
+---
+event: stopinterview
+question: You cannot continue the interview
+subquestion: |
+  % if stop_reason == 'no_acr':
+  You cannot continue the interview without understanding that no
+  attorney-client relationship is being formed by your use of this 
+  interview.
+  % endif
+  % if stop_reason == 'dutyreport':
+  You cannot continue the interview without understanding that the
+  law office and its attorneys have an affirmative duty to report
+  child abuse to the government. 
+  % endif
+  % if stop_reason == 'nopriv':
+  You cannot continue the interview without understanding that your
+  answers to this interview are *not* protected by the attorney-client
+  privilege. 
+  % endif
+  % if stop_reason == 'email_consent':
+  You cannot continue the interview if you do not consent to receive emails
+  from the law office at the email addresses provided.
+  % endif
+  % if stop_reason == 'underage':
+  You cannot continue the interview if you are under the age of 18 years.
+  % endif
+choices:
+  - Exit: exit
+  - Let me try again: restart
+---
+question: >-
+  Welcome! 
+subquestion: |
+  Welcome to the Law Office of James Ryland Miller, PLLC's automated interview 
+  for Conflict Checks.  At the end of the interview, you will have
+  
+  1. a chance to review your answers before submitting to the law office; and
+  
+  1. a chance to download a copy of the document that will be 
+     sent to the law office for your records. 
+     
+  However, if you make a mistake, **you will have to start over from the beginning**
+  or you will **have to back up to your mistake**. 
+     
+  If you do not complete the entire interview, no information will be sent to the law
+  office. The interview software will conclude with a message stating if the
+  information has been successfully sent. 
+  
+  I'm going to ask you some questions to see if a conflict of interest exists. 
+  If a conflict exists, we may not be able to help you. Some conflicts can be handled
+  by disclosure and agreements; however, not all conflicts can be handled that
+  way. 
+  
+  Please note: **you should not send confidential information at this time**. If the 
+  law office determines that no conflict exists, then the law office may send
+  initial consult paperwork that will then ask for confidential information. 
+buttons:
+  - Continue:
+      code: |
+        user_welcomed = True
+  - No thanks: exit
+---
+question: | 
+  No Attorney Client Relationship
+subquestion: |
+  Do you understand that by using this interview, no attorney-client
+  relationship is being formed? 
+under: |
+  This means that neither the Law Office of James Ryland Miller, 
+  PLLC nor any of its attorneys are *your* attorney at this time. 
+  The law office only takes legal action or renders legal advice
+  *after* both lawyer and client sign a written fee agreement. 
+  This interview does not count as such a written fee agreement.
+yesno: understand_no_acr
+---
+event: noacr
+question: |
+  You cannot continue the interview
+subquestion: |
+  You cannot continue the interview without understanding that no
+  attorney-client relationship is being formed by your use of this 
+  interview.
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+question: | 
+  Duty to Report Child Abuse
+subquestion: |
+  Do you understand that the law office and its attorneys have an 
+  affirmative duty to report child abuse to the government? 
+under: |
+  In Texas, certain professionals are required by law to report
+  child abuse or suspected child abuse to the government within
+  a certain time period. Texas attorneys are even required to 
+  violate attorney-client privilege to report this information.
+
+  While this office does not currently practice family law nor
+  criminal law; it still has the same duty to report child abuse.
+yesno: understand_dutyreport
+---
+question: No Attorney Client Privilege
+subquestion: |
+  Do you understand that your answers to this interview are not 
+  protected by the attorney-client privilege? 
+under: |
+  This means that you should not reply with information that is 
+  confidential until an attorney-client relationship is formed
+  by a written agreement signed by both lawyer and client.
+yesno: understand_nopriv
+---
+template: template_signature
+content: |
+  By signing your name below, you agree that the information
+  you supplied during this interview is true and correct, that
+  no information provided is confidential, that no information
+  is subject to attorney-client privilege, that no attorney-client
+  relationship is being formed during this interview, and that 
+  you have signed voluntarily. Your signature also **does not** create 
+  a contract for legal services.
+---
+question: |
+  Please sign your name below.
+subquestion: |
+  ${ template_signature }
+signature: potentialclientsignature
+under: ${ name }
+---
+question: |
+  Is this your signature?
+subquestion: |
+  ${ potentialclientsignature }
+yesno: potentialclientsignature_verified
+---
+question: |
+  Review your prior answers
+subquestion: |
+  ${ template_main }
+  
+  **If any answers are incorrect, you can
+  [review them](${ url_action('review_answers') }).**
+buttons:
+  - Restart: restart
+  - Exit: exit
+  - Review:
+      code: |
+        offered_chance_to_review = True
+        force_ask(review_answers)
+  - Continue:
+      code: |
+        offered_chance_to_review = True
+---
+template: template_main
+content: |
+  # Today's date
+  **${ today() }**
+  
+  # Personal information
+  
+  * Name: ${ bold(name) }
+  * Primary Email Address: ${ bold(email_primary) }
+  * Secondary Email Address: ${ bold(email_secondary) }
+  * I consent to receive emails from the law office to the above addresses ${ bold(is_email_consent_true) }
+  * Address: ${ bold(address) }
+  * Mobile Phone: ${ bold(mobilephone) }
+  * Work Phone: ${ bold(workphone) }
+  * Home Phone: ${ bold(homephone) }
+  * Birthday: ${ bold(birthdate) }
+  * Age as of today's date: ${ bold(age) }
+  * Employer:
+    % if unemployed:
+    **Unemployed**
+    % else:
+    ${ bold(employer) }
+    % endif
+  * Do you understand that no attorney-client relationship is being formed at this time?: ${ bold(understand_no_acr) }
+  * Do you understand that there is no attorney-client privilege covering the information you've given in this interview?: ${ bold(understand_nopriv) }
+  * Do you understand that the law office has an affirmative duty to report child abuse?: ${ bold(understand_dutyreport) }
+  * Are you seeking legal services only for yourself? ${ bold(is_seeking_only_for_self) }
+  % if is_seeking_only_for_self == False:
+  * If not, who else are you seeking legal services for: ${ bold(seeking_for_also) }
+  % endif
+    
+  # Third Parties
+  
+  * Names of all opposing parties: ${ bold(opposeparties) }
+  * Generally Describe how they are opposed to you: ${ bold(describedopposed) }
+  * Names of any person you know who is a current or past
+    client of the law office: ${ bold(otherclientsknown) }
+  * Who referred you to us: ${ bold(referralsource) }
+  * May we thank the referrer and mention your name: ${ bold(cancontactreferrer) }
+    
+  # General Description of Your Legal matter
+  
+  ${ bold(legalgeneraldescription) }
+--- 
+event: review_answers
+question: Revisit Your Answers
+review:
+  - Revisit Name: name
+    button: |
+      Full Name: ${ bold(name) }
+  - Revisit Primary Email: email_primary
+    button: |
+      Primary Email: ${ bold(email_primary) }
+  - Revisit Secondary Email: email_secondary
+    button: |
+      Secondary Email Address: ${ bold(email_secondary) }
+  - Revisit Address: address
+    button: |
+      Address: ${ bold(address) }
+  - Revisit Phone Numbers: mobilephone
+    button: |
+      * Mobile Phone: ${ bold(mobilephone) }
+      * Work Phone: ${ bold(workphone) }
+      * Home Phone: ${ bold(homephone) }
+  - Revisit birthdate: birthdate
+    button: |
+      Birthday: ${ bold(birthdate) }
+  - Revisit Employer: employer
+    button: |
+      Employer: ${ bold(employer) } 
+  - Revisit Seeking Services only for yourself: is_seeking_only_for_self
+    button: |
+      Are you seeking legal services only for yourself? ${ bold(is_seeking_only_for_self) }
+---
+question: Consent to receieve emails
+subquestion: |
+  By clicking yes, you consent to receive emails from the law office 
+  at the email addresses you have provided or will provide later in 
+  this interview. You must consent to receive emails in order to 
+  complete this interview.
+yesno: is_email_consent_true
+---
+question: Are you seeking legal services for anyone other than yourself?
+subquestion: |
+  For example, are you also seeking legal services for your spouse, another
+  person, or a legal entity such as a Corporation or LLC? 
+noyes: is_seeking_only_for_self
+---
+question: Who else are you seeking legal services for?
+subquestion: |
+  Please generally describe who you are seeking services for. 
+  Examples include "my spouse also needs estate planning", 
+  "my children need legal help", or "my parents have a legal issue".
+fields:
+  - Generally Describe: seeking_for_also
+    datatype: area
+---
+event: conclusion
+question: Congratulations!
+subquestion: | 
+  We have attempted to email the law office. 
+  
+  % if success_sending_email:
+  **Success**! We sent an e-mail to the Law Office with your document attached. 
+  Please allow 2 business days for a response from the Law Office.
+  
+  You are all done with the interview. While we strive to reply 
+  within 2 business days, sometimes due to emergencies it may take
+  longer for a reply. We appreciate your patience. If you have not
+  received a reply via email within 2 business days, please contact 
+  us via telephone at **817-840-7743** or an email to 
+  **contact at lawjrm dot com** to let us know something went wrong.
+
+  In some situations where a conflict of interest *does* exist, we
+  may not respond at all, even after a follow up phone call or an
+  email. We apologize in advance if this happens; but, our loyalty 
+  is required to be to our past and current clients over and above
+  potential new clients. 
+  % else:
+  Oops, for some reason we could not send an e-mail to the Law Office.
+  Please contact us at contact@lawjrm.com to let us know something went wrong!
+  % endif
+
+  In the meantime, our website has many articles on specific
+  areas of law, and we encourage everyone to see if an article 
+  exists for their issue. We also list our prices for most legal
+  work on our website. 
+buttons:
+  - Our Articles: exit
+    url: http://lawjrm.com/articles.html
+  - Our Prices: exit
+    url: http://lawjrm.com/price.html
+---
+question: What is your full legal name
+subquestion: In other words, your legal name as you would put on your tax returns.
+fields:
+  - Your Full Legal Name: name
+---
+question: What is your current home residence address?
+subquestion: |
+  This must be your actual home residence address 
+  and **not a PO box** or mailing-only address.
+fields:
+  - Address: address
+---
+question: Who is your current employer?
+subquestion: |
+  The employer's name only is just fine. 
+fields:
+  - "I am unemployed": unemployed
+    datatype: yesno
+  - "Employer's Name": employer
+    hide if: unemployed
+---
+question: What are you telephone numbers? 
+subquestion: Your mobile phone number is required; the other two are optional.
+fields:
+  - Mobile Phone: mobilephone
+  - Home Phone: homephone
+    required: false
+  - Work Phone: workphone
+    required: false
+---
+question: Who referred you to our law office?
+fields:
+  - Referred by: referralsource
+---
+question: Do you know any other clients of the law office? 
+subquestion: |
+  For example, any friends or family members who are current
+  or past clients of the law office? Please just separate their 
+  names with a comma. 
+fields:
+  - Known Clients: otherclientsknown
+---
+question: Who are all of the opposing parties in your matter?
+subquestion: |
+  Please list all parties who are opposing you in your legal matter.
+  For example, if you are trying to buy a home, the seller would be
+  the opposing party. Please separate each name with a comma. 
+fields:
+  - Opposing Parties: opposeparties
+---
+question: What is your birthdate? 
+subquestion: |
+  Please note that if you are under the age of 18, you are not able to continue
+  this interview. 
+fields:
+  - Birthday: birthdate
+    datatype: date
+    hint: MM/DD/YYYY
+---
+question: If you listed a referral source, may we thank them? 
+yesno: cancontactreferrer
+---
+question: Please generally describe the legal services you are seeking
+subquestion: |
+  Please *do not* send confidential information. Examples include, "I'm interested
+  in estate planning and wills", or "I need to sell my house." 
+fields:
+  - General Description of Legal Matter: legalgeneraldescription
+    datatype: area
+---
+question: Generally Describe Your Opposing Parties
+subquestion: |
+  The opposing parties you have named are: ${ opposeparties }.
+fields:
+  - General Description of your opposing parties: describedopposed
+    datatype: area
+---
+question: Email Addresses
+subquestion: |
+  Please provide at minimum one email address. Please double check to make sure
+  it's correct as this is our main way we use to reply. 
+  
+  You may provide a secondary email address as well, but it is not required. 
+  
+fields:
+  - Primary Email Address: email_primary
+    datatype: email
+  - Secondary Email Address: email_secondary
+    datatype: email
+    required: false
+---
+code: |
+  success_sending_email = send_email(to=["jrm@lawjrm.com"], template=template_transmittal_email, attachments=[ccd])
+---
+question: Your document is ready for final review.
+subquestion: |
+  Please review the final document that will be sent to the Law Office.
+  This is your last chance to exit without sending information to the
+  Law Office. 
+  
+  Are you ready to send your responses to the Law Office?
+yesno: readytosend
+attachment:
+  - name: Conflict Check Document
+    description: This is the document that will be emailed to the law office.
+    filename: Conflict_Check_Document
+    valid formats:
+      - pdf
+    variable name: ccd
+    content: ${ template_ccd }
+allow emailing: True
+---
+template: template_ccd
+content: |
+  [BOLDCENTER]CONFLICT CHECK DOCUMENT FOR POTENTIAL NEW CLIENTS
+
+  ${ template_main }
+  
+  # Client Signature
+  
+  [NOINDENTATION]${ template_signature }
+  
+  ## Signature of ${ name } from Interview Dated ${ today() }
+  
+  Signature of client: ${ potentialclientsignature }.
+ 
+  Signature verified by client: **${ potentialclientsignature_verified }**
+
+  [BOLDCENTER]The remaining space on this page intentionally left blank.
+---
+template: template_transmittal_email
+subject: |
+  CONFLICT CHECK: ${ name }
+content: |
+  Please see attached conflict check document generated
+  from your interview on ${ today() }. 
+
+  From,
+  
+  noreply@lawjrm.com courtesy of Docassemble. 
+---
+event: exitall
+question: Exit without submitting page
+subquestion: |
+  If you're at this page; you've quit the interview without submitting any documents
+  to the law office. 
+---

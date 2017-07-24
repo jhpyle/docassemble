@@ -1,0 +1,11 @@
+Metadata-Version: 1.1
+Name: docassemble.webapp
+Version: 0.1.22
+Summary: The web application components of the docassemble system.
+Home-page: https://docassemble.org
+Author: Jonathan Pyle
+Author-email: jhpyle@gmail.com
+License: MIT
+Download-URL: https://download.docassemble.org/docassemble-webapp.tar.gz
+Description: UNKNOWN
+Platform: UNKNOWN

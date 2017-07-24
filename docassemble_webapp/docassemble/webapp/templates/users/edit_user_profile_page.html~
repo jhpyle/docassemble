@@ -1,0 +1,47 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+{% from "base_templates/form_macros.html" import render_field, render_submit_field, render_checkbox_field %}
+
+<h1>User Profile</h1>
+
+<ul class="nav nav-pills"><li><a href="{{ url_for('user.change_password') }}">Change password</a></li></ul>
+
+<!--{% from "base_templates/form_macros.html" import render_field, render_submit_field %}-->
+<form action="" method="POST" role="form" class="form">
+  <!--<div class="row">
+    <div class="col-sm-6 col-md-5 col-lg-4">-->
+    {{ form.hidden_tag() }}
+
+    {% if current_user.has_roles(['admin']) %}
+
+    {{ render_checkbox_field(form.active) }}
+
+    {{ render_field(form.email, tabindex=235) }}
+
+    {% endif %}
+  
+    {{ render_field(form.first_name, tabindex=240) }}
+
+    {{ render_field(form.last_name, tabindex=250) }}
+
+    {% if current_user.has_roles(['admin', 'developer']) %}
+
+      {{ render_field(form.country, tabindex=260, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }} 
+
+      {{ render_field(form.subdivisionfirst, tabindex=270) }}
+  
+      {{ render_field(form.subdivisionsecond, tabindex=280) }}
+
+      {{ render_field(form.subdivisionthird, tabindex=290) }}
+  
+      {{ render_field(form.organization, tabindex=300) }}
+
+    {% endif %}
+    <br>
+    <div class="form-actions">
+      {{ render_submit_field(form.submit, tabindex=310) }}
+    </div>
+</form>
+
+{% endblock %}

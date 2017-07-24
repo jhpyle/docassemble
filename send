@@ -1,0 +1,12 @@
+#! /bin/bash
+
+urlencode() {
+  python -c 'import urllib, sys; print urllib.quote(sys.argv[1], sys.argv[2])' "$1" '&=/'
+}
+
+encoded=$(urlencode "Body=$1&FromZip=19406&From=+12153919686&SmsMessageSid=MMc17581302aae77027e920ba94922db0c&FromCity=KING OF PRUSSIA&ApiVersion=2010-04-01&To=+12672140104&NumMedia=1&MediaUrl0=https://api.twilio.com/2010-04-01/Accounts/ACfad8e668b5f9e15d499ab823523b9358/Messages/MMc17581302aae77027e920ba94922db0c/Media/MEf3733c53d9beb89668982e40507fe9ff&MediaContentType0=image/jpeg&NumSegments=1&AccountSid=ACfad8e668b5f9e15d499ab823523b9358&SmsSid=SM91c2e48095d1d1909852d2e1fcfebbfb&ToCity=&FromState=PA&FromCountry=US&MessageSid=SM91c2e48095d1d1909852d2e1fcfebbfb&SmsStatus=received&ToZip=&ToCountry=US&ToState=PA")
+#encoded=$(urlencode "Body=$1&FromZip=19406&From=+12153919686&SmsMessageSid=SM91c2e48095d1d1909852d2e1fcfebbfb&FromCity=KING OF PRUSSIA&ApiVersion=2010-04-01&To=+12672140104&NumMedia=0&NumSegments=1&AccountSid=ACfad8e668b5f9e15d499ab823523b9358&SmsSid=SM91c2e48095d1d1909852d2e1fcfebbfb&ToCity=&FromState=PA&FromCountry=US&MessageSid=SM91c2e48095d1d1909852d2e1fcfebbfb&SmsStatus=received&ToZip=&ToCountry=US&ToState=PA")
+
+#curl -s --data "$encoded" https://demo.docassemble.org/sms
+curl -s --data "$encoded" http://localhost/sms
+echo

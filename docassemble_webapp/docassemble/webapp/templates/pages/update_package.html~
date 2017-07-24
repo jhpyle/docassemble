@@ -1,0 +1,19 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+{% from "base_templates/form_macros.html" import render_field, render_submit_field %}
+
+<h1>Create package</h1>
+
+<form action="" method="POST" class="form" role="form">
+  {{ form.hidden_tag() }}
+  <div class="form-group">
+    {{ render_field(form.name, tabindex=50) }}
+  </div>
+  <div class="form-actions">
+    {{ render_submit_field(form.submit, tabindex=100) }}
+  </div>
+
+</form>
+
+{% endblock %}

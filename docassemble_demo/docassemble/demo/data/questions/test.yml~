@@ -1,0 +1,28 @@
+---
+question: |
+  It's a nice evening, isn't it?
+yesno: user_agrees_it_is_a_nice_evening
+---
+question: Do you want to go to the dance with me?
+yesno: user_wants_to_go_to_dance
+---
+mandatory: true
+code: |
+  if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
+    life_is_good
+---
+question: Which of these statements is true?
+choices:
+  - "I am old-fashioned":
+      question: |
+        My darling, would you do me the honor of accompanying me to
+        the dance this fine evening?
+      yesno: user_wants_to_go_to_dance
+  - "I don't care for flowerly language": continue
+---
+question: That is splendid news!
+sets:
+  - life_is_good
+---
+
+#localhost?i=docassemble.demo:data/questions/test.yml

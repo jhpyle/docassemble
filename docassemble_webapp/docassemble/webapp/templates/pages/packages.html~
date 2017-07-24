@@ -1,0 +1,12 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+
+<h1>Packages</h1>
+
+<ul>
+  <li><a href="{{ url_for('update_package') }}">Create a package</a>: download a zip file containing a template for a package.</li>
+  <li><a href="{{ url_for('create_package') }}">Update a package</a>: upload a zip file containing a package, or synchronize with the Github repository for a package.</li>
+</ul>
+
+{% endblock %}

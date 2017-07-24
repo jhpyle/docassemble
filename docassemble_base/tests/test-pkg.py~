@@ -1,0 +1,3 @@
+import docassemble.parse
+
+docassemble.parse.standard_rtf_template_file()
