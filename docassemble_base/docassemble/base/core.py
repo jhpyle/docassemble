@@ -370,14 +370,14 @@ class DAList(DAObject):
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun
-    def possessive(self, target):
+    def possessive(self, target, **kwargs):
         """If the variable name is "plaintiff" and the target is "fish,"
         returns "plaintiff's fish" if there is one item in the list,
         and "plaintiffs' fish" if there is more than one item in the
         list.
 
         """
-        return possessify(self.as_noun(), target, plural=(self.number() > 1))
+        return possessify(self.as_noun(**kwargs), target, plural=(self.number() > 1))
     def as_noun(self, *pargs, **kwargs):
         """Returns a human-readable expression of the object based on its instanceName,
         using singular or plural depending on whether the list has one element or more
