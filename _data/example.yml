@@ -2472,6 +2472,149 @@
     fruits in all.
   subquestion: |
     The fruits are ${ fruit }.
+"gather-list-email-recipients": |-
+  modules:
+    - docassemble.base.util
+  ---
+  objects:
+    - recipient: DAEmailRecipientList
+  ---
+  mandatory: True
+  code: |
+    recipient.there_are_any = True
+"gather-list-friend-bad-order": |-
+  modules:
+    - docassemble.base.util
+  ---
+  objects:
+    - friend: DAList
+  ---
+  mandatory: True
+  code: |
+    friend.there_are_any = True
+    friend.object_type = Individual
+  ---
+  mandatory: True
+  question: |
+    Your friends
+  subquestion: |
+    % for x in friend:
+    * ${ x } likes
+    ${ noun_plural(x.favorite_animal).lower() }
+    and is
+    ${ x.age_in_years() }
+    years old.
+    % endfor
+  ---
+  question: |
+    What is the name of your ${ ordinal(i) }
+    friend?
+  fields:
+    - First Name: friend[i].name.first
+  ---
+  question: |
+    What is
+    ${ friend[i].possessive('birthdate') }?
+  fields:
+    - Birthdate: friend[i].birthdate
+  ---
+  question: |
+    What is
+    ${ friend[i].possessive('favorite animal') }?
+  fields:
+    - Favorite animal: friend[i].favorite_animal
+  ---
+  question: |
+    Do you have any other friends?
+  yesno: friend.there_is_another
+"gather-list-friend-good-order": |-
+  modules:
+    - docassemble.base.util
+  ---
+  objects:
+    - friend: DAList
+  ---
+  mandatory: True
+  code: |
+    friend.there_are_any = True
+    friend.object_type = Individual
+    friend.complete_attribute = 'complete'
+  ---
+  mandatory: True
+  question: |
+    Your friends
+  subquestion: |
+    % for x in friend:
+    * ${ x } likes
+    ${ noun_plural(x.favorite_animal).lower() }
+    and is
+    ${ x.age_in_years() }
+    years old.
+    % endfor
+  ---
+  code: |
+    friend[i].birthdate
+    friend[i].favorite_animal
+    friend[i].complete = True
+  ---
+  question: |
+    What is the name of your ${ ordinal(i) }
+    friend?
+  fields:
+    - First Name: friend[i].name.first
+  ---
+  question: |
+    What is
+    ${ friend[i].possessive('birthdate') }?
+  fields:
+    - Birthdate: friend[i].birthdate
+  ---
+  question: |
+    What is
+    ${ friend[i].possessive('favorite animal') }?
+  fields:
+    - Favorite animal: friend[i].favorite_animal
+  ---
+  question: |
+    Do you have any other friends?
+  yesno: friend.there_is_another
+"gather-list-objects": |-
+  modules:
+    - docassemble.base.util
+  ---
+  objects:
+    - location: DAList
+  ---
+  mandatory: True
+  code: |
+    location.there_are_any = True
+    location.object_type = Address
+  ---
+  mandatory: True
+  question: |
+    The locations
+  subquestion: |
+    % for loc in location:
+    * ${ loc }
+    % endfor
+  ---
+  question: |
+    What is the address of the
+    ${ ordinal(i) } location?
+  fields:
+    - Address: location[i].address
+    - Unit: location[i].unit
+      required: False
+    - City: location[i].city
+    - State: location[i].state
+      code: |
+        states_list()
+    - Zip: location[i].zip
+      required: False
+  ---
+  question: |
+    Would you like to add another location?
+  yesno: location.there_is_another
 "gather-manual-gathered": |-
   code: |
     fruit.append('apple', 'orange', 'grape')
@@ -3549,6 +3692,64 @@
     - Code: launch_code
       minlength: 5
       maxlength: 15
+"mixed-list": |-
+  modules:
+    - docassemble.base.util
+  ---
+  objects:
+    - location: DAList
+  ---
+  mandatory: True
+  code: |
+    location.there_are_any = True
+    location.ask_object_type = True
+  ---
+  mandatory: True
+  question: |
+    The locations
+  subquestion: |
+    % for loc in location:
+    * ${ loc }
+    % endfor
+  ---
+  question: |
+    Do you know the full address of the
+    ${ ordinal(location.current_index()) }
+    location?
+  buttons:
+    - Yes:
+        code: |
+          location.new_object_type = Address
+    - No:
+        code: |
+          location.new_object_type = City
+  ---
+  question: |
+    What is the address of the
+    ${ ordinal(i) } location?
+  fields:
+    - Address: location[i].address
+    - Unit: location[i].unit
+      required: False
+    - City: location[i].city
+    - State: location[i].state
+      code: |
+        states_list()
+    - Zip: location[i].zip
+      required: False
+  ---
+  question: |
+    What is the city of the
+    ${ ordinal(i) } location?
+  fields:
+    - City: location[i].city
+    - State: location[i].state
+      code: |
+        states_list()
+  ---
+  question: |
+    Would you like to add another location?
+  yesno: location.there_is_another
 "ml-ajax": |-
   modules:
     - docassemble.base.util

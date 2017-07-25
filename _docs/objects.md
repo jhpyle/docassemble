@@ -559,7 +559,7 @@ will not return `friend.object_name()`; rather, it will return
 ## <a name="DAList"></a>DAList
 
 A `DAList` acts like an ordinary [Python list], except that
-**docassemble** can ask questions to define elements of the list.
+**docassemble** can ask questions to define items of the list.
 
 Here is a simple "Mad Libs" interview that uses `DAList`s to keep
 track of words:
@@ -594,7 +594,7 @@ The `appendObject()` method is similar to the `initializeAttribute()`
 method we discussed earlier.  Running
 `recipient.appendObject(Individual)` creates a new object of the class
 [`Individual`] and adds it to the list.  In the example above, the first
-such object is the fourth element in the list, which means that the
+such object is the fourth item in the list, which means that the
 intrinsic name of the new object is `recipient[3]`.
 
 A `DAList` can be given a default object type, so that
@@ -639,20 +639,20 @@ Other methods available on a `DAList` are:
 * <a name="DAList.extend"></a>`extend(extension_list)` - adds the
   items in the `extension_list` to the end of the list.  Just like the
   [Python list] method of the same name.
-* <a name="DAList.first"></a>`first()` - returns the first element of
+* <a name="DAList.first"></a>`first()` - returns the first item of
   the list; error triggered if list is empty.
-* <a name="DAList.last"></a>`last()` - returns the last element of the
+* <a name="DAList.last"></a>`last()` - returns the last item of the
   list; error triggered if list is empty.
 * <a name="DAList.does_verb"></a><a name="DADict.does_verb"></a><a
   name="DASet.does_verb"></a>`does_verb(verb)` - like the
   `verb_present()` function from [`docassemble.base.util`], except
   that it uses the singular or plural form depending on whether the
-  list has more than one element or not.
+  list has more than one item or not.
 * <a name="DAList.did_verb"></a><a name="DADict.did_verb"></a><a
   name="DASet.did_verb"></a>`did_verb(verb)` - like the `verb_past()`
   function from [`docassemble.base.util`], except that it uses the
   singular or plural form depending on whether the list has more than
-  one element or not.
+  one item or not.
 * <a name="DAList.as_singular_noun"></a><a
   name="DADict.as_singular_noun"></a><a
   name="DASet.as_singular_noun"></a>`as_singular_noun()` - if the
@@ -661,24 +661,31 @@ Other methods available on a `DAList` are:
 * <a name="DAList.as_noun"></a><a name="DADict.as_noun"></a><a
   name="DASet.as_noun"></a>`as_noun()` - if the variable name is
   `case.plaintiff`, returns `plaintiffs` or `plaintiff` depending on
-  the number of elements in the list; if the variable name is
+  the number of items in the list; if the variable name is
   `applicant`, returns `applicants` or `applicant` depending on the
-  number of elements in the list.
+  number of items in the list.
 * <a name="DAList.number"></a><a name="DADict.number"></a><a
   name="DASet.number"></a>`number()` - returns the total number of
-  elements in the list.  If necessary it will trigger questions that
-  ask for all of the elements of the list to be populated.
+  items in the list.  If necessary it will trigger questions that
+  ask for all of the items of the list to be populated.
 * <a name="DAList.number_as_word"></a><a
   name="DADict.number_as_word"></a><a
   name="DASet.number_as_word"></a>`number_as_word()` - same as
   `number()`, except that the [`nice_number()`] function is applied to
   the result.
+* <a name="DAList.current_index"></a>`current_index()` - similar to
+  `number()`, except it returns the index value of the last item in
+  the list.  If there is one item in the list, `current_index()`
+  returns 0.  If there are two items, it returns 1.  If there are
+  no items in the list, it returns 0.  This is useful in questions
+  where an iterator `i` is not available, such as question that set
+  `.new_object_type`.
 * <a name="DAList.remove"></a>`remove()` -
-  removes the given elements from the list, if they are in the list.
+  removes the given items from the list, if they are in the list.
 * <a name="DAList.comma_and_list"></a><a
   name="DADict.comma_and_list"></a><a
   name="DASet.comma_and_list"></a>`comma_and_list()` - returns the
-  elements of the list run through the [`comma_and_list()`] function.
+  items of the list run through the [`comma_and_list()`] function.
 * <a name="DAList.possessive"></a>`possessive()` - if the variable
   name is `plaintiff` and the target is `"fish"`, returns "plaintiff's
   fish" if there is one item in the list, and "plaintiffs' fish" if
@@ -702,19 +709,19 @@ Other methods available on a `DAList` are:
   a pronoun like "you," "she," "he," or "they" as appropriate,
   depending on the number of items in the list.
 * <a name="DAList.union"></a><a name="DADict.union"></a>`union()` -
-  returns a [Python set] consisting of the elements of current list,
-  considered as a set, combined with the elements of the other_set.
+  returns a [Python set] consisting of the items of current list,
+  considered as a set, combined with the items of the other_set.
 * <a name="DAList.intersection"></a><a
   name="DADict.intersection"></a>`intersection()` - returns a
-  [Python set] consisting of the elements of the current list,
+  [Python set] consisting of the items of the current list,
   considered as a set, that also exist in the other_set.
 * <a name="DAList.difference"></a><a
   name="DADict.difference"></a>`difference()` - returns a [Python set]
-  consisting of the elements of the current list, considered as a set,
+  consisting of the items of the current list, considered as a set,
   that do not exist in the other_set.
 * <a name="DAList.isdisjoint"></a><a
   name="DADict.isdisjoint"></a>`isdisjoint()` - returns `True` if no
-  elements overlap between the current list, considered as a set, and
+  items overlap between the current list, considered as a set, and
   the other_set.  Otherwise, returns `False`.
 * <a name="DAList.issubset"></a><a
   name="DADict.issubset"></a>`issubset()` - returns `True` if the
@@ -725,12 +732,12 @@ Other methods available on a `DAList` are:
   other_set is a subset of the current list, considered as a set.
   Otherwise, returns `False`.
 * <a name="DAList.gather"></a><a name="DADict.gather"></a><a
-  name="DASet.gather"></a>`gather()` - causes the elements of the list
+  name="DASet.gather"></a>`gather()` - causes the items of the list
   to be gathered and named.  Returns `True`.
 * <a name="DAList.reset_gathered"></a><a name="DADict.reset_gathered"></a><a
   name="DASet.reset_gathered"></a>`reset_gathered()` - causes the
   list to be considered not-yet-gathered.  This can be used to query
-  the user to add elements to a list that may already be considered
+  the user to add items to a list that may already be considered
   complete.  If called with the optional keyword argument `recursive`
   set to `True` (the default is `False`), the lists inside the list
   are also marked as not-yet-gathered.
@@ -747,8 +754,8 @@ The `DAList` uses the following attributes:
   type, such as `DAObject` or `Individual`, then new items will be
   created as objects of this type.
 * `gathered`: a boolean value, initially undefined.  It is set to
-  `True` when then all of the elements of the list are defined.
-* `elements`: a [Python list] containing the elements of the list.
+  `True` when then all of the items of the list are defined.
+* `items`: a [Python list] containing the items of the list.
 * `are_there_any`: a boolean value, initially undefined, indicating
   whether any values should be gathered.  The expectation is that the
   interview will define a [question] or [code block] that defines this
@@ -1112,7 +1119,7 @@ the filename (before an extension is added), and a description.  The
 
 ## <a name="DAFileList"></a>DAFileList
 
-A `DAFileList` is a [`DAList`], the elements of which are expected to be
+A `DAFileList` is a [`DAList`], the items of which are expected to be
 [`DAFile`] objects.
 
 When a question has a field with a `datatype` for a file upload (see
@@ -1169,8 +1176,8 @@ type `DAEmail`.  These objects have the following attributes:
 * `headers`: a [`DAFile`] object referring to a file containing a
   [JSON] representation of the headers of the e-mail.  The format of
   the [JSON] file is a [list], where each item in the [list] is a
-  [list] with two elements, the first of which is the name of the
-  header (e.g., `To`, `From`), and the second element is the value.
+  [list] with two items, the first of which is the name of the
+  header (e.g., `To`, `From`), and the second item is the value.
 
 ## <a name="DAEmailRecipient"></a>DAEmailRecipient
 
@@ -1687,9 +1694,8 @@ You can use the function
 
 If you refer to an address in a [Mako] template, it returns `.block()`.
 
-<a name="Address.block"></a>
-The `.block()` method returns a formatted address.  All attributes
-except `unit` are required.
+<a name="Address.block"></a> The `.block()` method returns a formatted
+address.  The attributes `address`, `city`, and `state` are needed.
 
 <a name="Address.geolocate"></a>
 The `.geolocate()` method determines the latitude and longitude of the
@@ -1897,10 +1903,10 @@ an individual's assets.
 The `FinancialList` uses the following attributes:
 
 * `gathering`: a boolean value that is initialized to `False`.  Set
-this to `True` when your process of initializing the elements of the
+this to `True` when your process of initializing the items of the
 list is ongoing and will span multiple questions.
 * `gathered`: a boolean value that is initially undefined.  Set this
-to `True` when you have finished determining what the elements of the
+to `True` when you have finished determining what the items of the
 list are going to be.
 
 The `FinancialList` has three methods:
@@ -1973,20 +1979,20 @@ omitted.)
 `user.asset.total()`.
 2. The `.total()` method checks to see if `user.asset.gathered` is
 `True`.  Since `user.asset.gathered` is initially undefined, this
-triggers the code block that defines the elements of `user.asset`.
-Note that we say the elements are "gathered" even though the
-attributes of each element, `exists` and `value`, are still undefined.
-3. The `.total()` method then goes through each element and checks to
-see if the element `exists`.  This triggers the question that will
+triggers the code block that defines the items of `user.asset`.
+Note that we say the items are "gathered" even though the
+attributes of each item, `exists` and `value`, are still undefined.
+3. The `.total()` method then goes through each item and checks to
+see if the item `exists`.  This triggers the question that will
 define `user.asset.checking.exists` and the other values.
-4. If the `.total()` method finds that an element exists, it adds its
+4. If the `.total()` method finds that an item exists, it adds its
 `value` to a subtotal.  This triggers the question that will
 define `user.asset.checking.value`.
-5. The `.total()` method does this for every element in `user.asset`
+5. The `.total()` method does this for every item in `user.asset`
 and finally returns a total.
 
 Note that in this example, we did not have to worry about setting
-`user.asset.gathering` because the process of populating the elements
+`user.asset.gathering` because the process of populating the items
 of the asset list did not span multiple questions.
 
 ## <a name="PeriodicFinancialList"></a>PeriodicFinancialList
@@ -1997,10 +2003,10 @@ a periodic nature, such as an individual's income.
 The `PeriodicFinancialList` uses the following attributes:
 
 * `gathering`: a boolean value that is initialized to `False`.  Set
-this to `True` when your process of initializing the elements of the
+this to `True` when your process of initializing the items of the
 list is ongoing and will span multiple questions.
 * `gathered`: a boolean value that is initially undefined.  Set this
-to `True` when you have finished gathering all of the elements.
+to `True` when you have finished gathering all of the items.
 
 The `PeriodicFinancialList` has three methods:
 
@@ -2062,8 +2068,9 @@ fields:
 
 ## <a name="OfficeList"></a>OfficeList
 
-An `OfficeList` object is a type of [`DAList`], the elements of which are expected to be
-[`Address`] objects.  It is used in [`Organization`] objects.
+An `OfficeList` object is a type of [`DAList`], the items of which are
+expected to be [`Address`] objects.  It is used in [`Organization`]
+objects.
 
 # Classes for special purposes
 

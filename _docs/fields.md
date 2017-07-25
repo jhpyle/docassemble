@@ -466,7 +466,7 @@ If `disable others` is set to `True`, then when the user changes the
 value of the field to something, all the other fields in the question
 will be disabled.
 
-{% include side-by-side.html demo="disable others" %}
+{% include side-by-side.html demo="disable-others" %}
 
 ### <a name="note"></a>`note`
 

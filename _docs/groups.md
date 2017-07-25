@@ -139,13 +139,13 @@ be `case.plaintiff[1]`.
 
 When you want to gather information from the user into a list,
 dictionary, or set, you should use the objects [`DAList`], [`DADict`],
-and [`DASet`] instead of [Python]'s basic [list], [dict], and [set]
-data types.  These objects have special attributes that help
-interviews find the right questions to ask the user in order to
-populate the items of the group.  (If you want to, you can use
-[Python]'s basic [list], [dict], and [set] data types in your
-interviews; nothing will stop you -- but there are no special features
-to help you populate these objects with user input.)
+and [`DASet`] (or subtypes thereof) instead of [Python]'s basic
+[list], [dict], and [set] data types.  These objects have special
+attributes that help interviews find the right questions to ask the
+user in order to populate the items of the group.  (If you want to,
+you can use [Python]'s basic [list], [dict], and [set] data types in
+your interviews; nothing will stop you -- but there are no special
+features to help you populate these objects with user input.)
 
 ### <a name="gather list"></a>Lists
 
@@ -186,7 +186,7 @@ it.  However, it encounters `fruit.number_as_word()`, which returns
 the number of items in the list.  But in order to know how many items
 are in the list, **docassemble** needs to ask the user what those
 items are.  So the reference to `fruit.number_as_word()` will trigger
-the process of asking these questions.  (The reference to ${ fruit }
+the process of asking these questions.  (The reference to `${ fruit }`
 would also trigger the same process, but **docassemble** will
 encounter `fruit.number_as_word()` first.)
 
@@ -254,9 +254,8 @@ Note that the variable `i` is special in **docassemble**.  When the
 interview seeks a definition for `fruit[0]`, the interview will first
 look for a question that offers to define `fruit[0]`.  If it does not
 find one, it will take a more general approach and look for a question
-that offers to define `fruit[i]`.  It finds just such a question.  As
-a result, the single question that offers to define `fruit[i]` can be
-reused as many times as necessary.
+that offers to define `fruit[i]`.  The question that offers to define
+`fruit[i]` will be reused as many times as necessary.
 
 #### Customizing the way information is gathered
 
@@ -283,12 +282,164 @@ You can avoid the `.there_are_any` question by setting the
 
 {% include side-by-side.html demo="gather-fruit-at-least-two" %}
 
+#### <a name="list of objects"></a>Gathering a list of objects
+
+The examples above have gathered simple variables (e.g., `'apple'`,
+`'orange'`) into a list.  You can also gather [objects] into a list.
+You can do this by setting the `.object_type` of a [`DAList`] (or
+subtype thereof) to the type of object you want the items of the list
+to be.
+
+In this example, we gather [`Address`] objects into a [`DAList`] by
+setting the `.object_type` attribute to `Address`.
+
+{% include side-by-side.html demo="gather-list-objects" %}
+
+There are some list types that have an `.object_type` by default.  For
+example, [`DAEmailRecipientList`] lists have an `.object_type` of
+[`DAEmailRecipient`].
+
+{% include side-by-side.html demo="gather-list-email-recipients" %}
+
+During the gathering process, **docassemble** only gathers the
+attributes necessary to display each object as text.  So if you do:
+
+{% highlight yaml %}
+objects:
+  - friend: DAList
+---
+mandatory: True
+code: |
+  friend.object_type = Individual
+{% endhighlight %}
+
+then the list will consist of [`Individual`]s, and **docassemble**
+will gather `friend[i].name.first` for each item in the list.  This is
+because of the way that the [`Individual`] object works: if `x` is an
+[`Individual`], then its textual representation (e.g., including 
+`${ x }` in a [Mako] template, or calling `str(x)` in [Python] code) will
+run `x.name.full()`, which, at a minimum, requires a definition for
+`x.name.first`.  (See the documentation for [`Individual`] for more
+details.)  Other object types behave differently.  For example,
+if `x` is an [`Address`], including `${ x }` in a [Mako] template will
+result in `x.block()`, which depends on the `address`, `city`, and
+`state` attributes.
+
+If your interview has a list of [`Individual`]s and uses attributes of
+the [`Individual`]s besides the name, **docassemble** will eventually
+gather those additional attributes, but it will ask for the names
+first and only when it is done asking for the names of each individual
+in the list will it start asking about the other attributes.  Here is
+an interview that does this:
+
+{% include side-by-side.html demo="gather-list-friend-bad-order" %}
+
+If you would prefer that all of the questions about each individual be
+asked together, you can use the `.complete_attribute` attribute to
+tell **docassemble** that an item is not completely gathered until a
+particular attribute of that item is defined, and write a
+[`code` block] that defines this attribute.  You can use this
+[`code` block] to ensure that all the questions you want to be asked
+are asked during the gathering process.
+
+In the above example, we can accomplish this by doing
+`friend.complete_attribute = 'complete'`.  Then we include a `code`
+block that sets `friend[i].complete = True`.  This tells
+**docassemble** that an item `friend[i]` is not fully gathered until
+`friend[i].complete` is defined.  Thus, before **docassemble** moves
+on to the next item in a list, it will run this code block.  This
+`code` block will cause other attributes of `friend[i]` to be defined,
+including `.birthdate` and `.favorite_animal`.  Here is what the
+revised interview looks like:
+
+{% include side-by-side.html demo="gather-list-friend-good-order" %}
+
+You can use any attribute you want as the `complete_attribute`.
+Defining a `complete_attribute` simply means that in addition to
+ensuring that a list item is displayable (i.e., gathering the name of
+an `Individual`), **docassemble** will also seek a definition of the
+attribute indicated by `complete_attribute`.  If `.birthdate` was the
+only other element we wanted to define during the gathering process,
+we could have written `friend.complete_attribute = 'birthdate'` and
+skipped the [`code` block] entirely.
+
+#### <a name="mixed object types"></a>Mixed object types
+
+If you want to gather a list of objects that are not all the same
+object type, you can do so by setting the `.ask_object_type` attribute
+of the list to `True` providing a block that defines the
+`.new_object_type` attribute of the list.
+
+{% include side-by-side.html demo="mixed-list" %}
+
+In this example, we have a list called `location`, which is a type of
+[`DAList`].  We have a [`mandatory`] <span></span> [`code` block] that
+sets `location.ask_object_type` to `True`.  This instructs
+**docassemble** that `location` is a list of objects, and that when a
+new item is added to the list, **docassemble** should to look for the
+value of `location.new_object_type` to figure out what type of object
+the new item should be.  By contrast, the `.object_type` attribute
+instructs **docassemble** that the object type for every new object
+should be the value of `.object_type`.
+
+Thus, before **docassemble** adds a new item to the list, it will seek
+a definition of `location.new_object_type` and then the item it adds
+to the list will be an object of the type indicated by the value of
+`location.new_object_type`.  After each item is added, **docassemble**
+forgets about the value of `location.new_object_type`, so the
+question will be asked again for each item in the list.
+
+There are a few things to note about the [`question`] that defines
+`location.new_object_type`.
+
+{% highlight yaml %}
+question: |
+  Do you know the full address of the
+  ${ ordinal(location.current_index()) }
+  location?
+buttons:
+  - Yes:
+      code: |
+        location.new_object_type = Address
+  - No:
+      code: |
+        location.new_object_type = City
+{% endhighlight %}
+
+This a question about an item in a list, but note that we do not have
+a variable `i` to indicate which item it is, since `.new_object_type`
+is an attribute of the list `location`, not an attribute of the new
+object (`location[i]`).  Thus, we have to use the
+[`.current_index()` method] to obtain the number.
+
+Note also that we are using the method of
+[embedding a code block within a multiple choice question] in order to
+set the value of `location.new_object_type` based on user input.  You
+might think it would be simpler to just write the following:
+
+{% highlight yaml %}
+question: |
+  Do you know the full address of the
+  ${ ordinal(location.current_index()) }
+  location?
+field: location.new_object_type
+buttons:
+  - Yes: Address
+  - No: City
+{% endhighlight %}
+
+However, this would set `location.new_object_type` to a piece of text
+(`'Address'` or `'City'`), instead of the object type (`Address` or
+`City`).  Thus, when setting `.new_object_type` (or `.object_type`),
+make sure to use [Python] code.
+
 ### <a name="gather dictionary"></a>Dictionaries
 
 The process of gathering the items in a [`DADict`] dictionary is
-slightly different.  Like the gathering process for [`DAList`]
-objects, the gathering process for [`DADict`] objects will call upon
-the attributes `.there_are_any` and `.there_is_another`.
+slightly different from the process of gathering the items of a
+[`DAList`].  Like the gathering process for [`DAList`] objects, the
+gathering process for [`DADict`] objects will call upon the attributes
+`.there_are_any` and `.there_is_another`.
 
 In addition, the process will look for the attribute `.new_item_name`
 to get the key to be added to the dictionary.  In the example below,
@@ -311,6 +462,8 @@ the gathering process; only the value of the
 `.new_item_name` attribute will be sought.  So if you want to use
 `.new_item_value`, you need to set it using a question that
 simultaneously sets `.new_item_name`, as in the example above.
+
+#### <a name="dict of objects"></a>Gathering a dictionary of objects
 
 You can also populate the contents of a [`DADict`] in which each value
 is itself an object.
@@ -335,7 +488,8 @@ object as text is what you see if you include the object in a [Mako] template:
 `str(pet['cat'])`.)  The attributes necessary to represent the object
 as text depend on the type of object.  In the case of a [`DAObject`],
 no attributes are required to represent the object as text.  In the
-case of an [`Individual`], the individual's name is required.
+case of an [`Individual`], the individual's name is required
+(`.name.first` at a minimum).
 
 Since a [`DAObject`] does not have any necessary attributes, then in
 the example above, the `pet` object is considered "gathered"
@@ -411,42 +565,6 @@ length of the group or iterate through it, **docassemble** will assume
 that nothing more needs to be done to populate the items in the group.
 You can still add more items to the list if you want to, using
 [`code` block]s.
-
-The `.gather()` method only asks enough questions about each item in
-order to display it.  For example, if you have a [`PartyList`] called
-`witness`, the items will be [`Individual`]s, and the bare minimum
-information needed to display an [`Individual`] is the
-[`Individual`]'s `.name.first`.  So if you have a question that offers
-to set the `.name.first` attribute, this question will be asked during
-the gathering process.  However, questions that set other attributes
-of the object will not be asked during the gathering process.  If your
-interview uses these attributes, the questions to gather them will be
-asked after the list is gathered.  This might not be an ideal ordering
-of the questions in your interview.
-
-You can tweak the way information is gathered about the items in a
-list by setting the `.complete_attribute` to the name of an attribute
-that is defined whenever all the necessary attributes have been set.
-This way, you can include a [`code` block] that sets the attribute
-after ensuring that all necessary attributes have been defined.  This
-[`code` block] will be run during the process of gathering each item.
-Here is an example:
-
-{% include side-by-side.html demo="gather-manual-gathered-object" %}
-
-Note that when `.complete_attribute` is set to the text
-`'complete'`, the attribute that will be used is `.complete`.  You can
-use any attribute name here.
-
-In fact, this particular example could be simplified, since there is
-just one question that needs to be asked to gather the necessary
-attributes.
-
-{% include side-by-side.html demo="gather-manual-gathered-object-simple" %}
-
-This way, you do not need to use a [`code` block].  However, if your
-interview needs to ask multiple questions about each item in the
-group, it is better to use an artificial attribute like `.complete`.
 
 ## Detailed explanation of gathering process
 
@@ -656,7 +774,13 @@ For more information about "for loops" in [Mako], see the
 [dict]: https://docs.python.org/2/library/stdtypes.html#dict
 [set]: https://docs.python.org/2/library/stdtypes.html#set
 [object]: {{ site.baseurl }}/docs/objects.html
+[objects]: {{ site.baseurl }}/docs/objects.html
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [selecting objects]: {{ site.baseurl }}/docs/fields.html#objects
 [disable the automatic gathering system]: #manual
 [`generic object`]: {{ site.baseurl }}/docs/modifiers.html#generic object
+[`Address`]: {{ site.baseurl }}/docs/objects.html#Address
+[`DAEmailRecipientList`]: {{ site.baseurl }}/docs/objects.html#DAEmailRecipientList
+[`DAEmailRecipient`]: {{ site.baseurl }}/docs/objects.html#DAEmailRecipient
+[`.current_index()` method]: "https://docassemble.org/docs/objects.html#DAList.current_index"
+[embedding a code block within a multiple choice question]: http://docassemble.org/docs/fields.html#code%20button
