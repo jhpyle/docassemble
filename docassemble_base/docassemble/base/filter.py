@@ -848,13 +848,13 @@ def image_url_string(match, emoji=False, question=None, playground=False):
             width_string = "max-width:" + width
         if emoji:
             width_string += ';vertical-align: middle'
-        the_url = server.url_finder(file_reference, question=question)
+        the_url = server.url_finder(file_reference, _question=question)
         if the_url is None:
             return ('[ERROR: File reference ' + str(file_reference) + ' cannot be displayed]')
         if file_info.get('extension', '') in ['png', 'jpg', 'gif', 'svg', 'jpe', 'jpeg']:
             return('<img class="daicon" style="' + width_string + '" src="' + the_url + '"/>')
         elif file_info['extension'] == 'pdf':
-            image_url = server.url_finder(file_reference, size="screen", page=1, question=question, ext=file_info.get('extension', None))
+            image_url = server.url_finder(file_reference, size="screen", page=1, _question=question, ext=file_info.get('extension', None))
             if image_url is None:
                 return ('[ERROR: File reference ' + str(file_reference) + ' cannot be displayed]')
             output = '<a href="' + the_url + '"><img class="daicon" style="' + width_string + '" src="' + image_url + '"/></a>'
@@ -1160,15 +1160,15 @@ def get_audio_urls(the_audio, question=None):
                 file_info = server.file_finder(file_ref, question=question)
                 if 'path' in file_info:
                     if file_info['mimetype'] == 'audio/ogg':
-                        output.append([server.url_finder(file_ref, question=question), file_info['mimetype']])
+                        output.append([server.url_finder(file_ref, _question=question), file_info['mimetype']])
                     elif os.path.isfile(file_info['path'] + '.ogg'):
-                        output.append([server.url_finder(file_ref, ext='ogg', question=question), 'audio/ogg'])
+                        output.append([server.url_finder(file_ref, ext='ogg', _question=question), 'audio/ogg'])
                     if file_info['mimetype'] == 'audio/mpeg':
-                        output.append([server.url_finder(file_ref, question=question), file_info['mimetype']])
+                        output.append([server.url_finder(file_ref, _question=question), file_info['mimetype']])
                     elif os.path.isfile(file_info['path'] + '.mp3'):
-                        output.append([server.url_finder(file_ref, ext='mp3', question=question), 'audio/mpeg'])
+                        output.append([server.url_finder(file_ref, ext='mp3', _question=question), 'audio/mpeg'])
                     if file_info['mimetype'] not in ['audio/mpeg', 'audio/ogg']:
-                        output.append([server.url_finder(file_ref, question=question), file_info['mimetype']])
+                        output.append([server.url_finder(file_ref, _question=question), file_info['mimetype']])
             else:
                 the_list.append({'text': file_ref, 'package': audio_item['package']})
         if not found_upload:
@@ -1208,7 +1208,7 @@ def get_audio_urls(the_audio, question=None):
             full_file = parts[0] + ':data/static/' + parts[1]
             file_info = server.file_finder(full_file, question=question)
             if 'fullpath' in file_info:
-                url = server.url_finder(full_file, question=question)
+                url = server.url_finder(full_file, _question=question)
                 output.append([url, mimetype])
     return output
 
@@ -1231,15 +1231,15 @@ def get_video_urls(the_video, question=None):
                 file_info = server.file_finder(file_ref, question=question)
                 if 'path' in file_info:
                     if file_info['mimetype'] == 'video/ogg':
-                        output.append([server.url_finder(file_ref, question=question), file_info['mimetype']])
+                        output.append([server.url_finder(file_ref, _question=question), file_info['mimetype']])
                     elif os.path.isfile(file_info['path'] + '.ogv'):
-                        output.append([server.url_finder(file_ref, ext='ogv', question=question), 'video/ogg'])
+                        output.append([server.url_finder(file_ref, ext='ogv', _question=question), 'video/ogg'])
                     if file_info['mimetype'] == 'video/mp4':
-                        output.append([server.url_finder(file_ref, question=question), file_info['mimetype']])
+                        output.append([server.url_finder(file_ref, _question=question), file_info['mimetype']])
                     elif os.path.isfile(file_info['path'] + '.mp4'):
-                        output.append([server.url_finder(file_ref, ext='mp4', question=question), 'video/mp4'])
+                        output.append([server.url_finder(file_ref, ext='mp4', _question=question), 'video/mp4'])
                     if file_info['mimetype'] not in ['video/mp4', 'video/ogg']:
-                        output.append([server.url_finder(file_ref, question=question), file_info['mimetype']])
+                        output.append([server.url_finder(file_ref, _question=question), file_info['mimetype']])
             else:
                 the_list.append({'text': file_ref, 'package': video_item['package']})
         if not found_upload:
@@ -1279,7 +1279,7 @@ def get_video_urls(the_video, question=None):
             full_file = parts[0] + ':data/static/' + parts[1]
             file_info = server.file_finder(full_file, question=question)
             if 'fullpath' in file_info:
-                url = server.url_finder(full_file, question=question)
+                url = server.url_finder(full_file, _question=question)
                 output.append([url, mimetype])
     return output
 

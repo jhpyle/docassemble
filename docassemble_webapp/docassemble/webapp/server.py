@@ -487,7 +487,7 @@ import docassemble.webapp.update
 from docassemble.base.standardformatter import as_html, as_sms, get_choices, get_choices_with_abb
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.webapp.screenreader import to_text
-from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
+from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
 from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists
@@ -1401,7 +1401,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
 """
     if status.question.can_go_back and steps > 1:
         navbar += """\
-          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon" type="submit"><i class="glyphicon glyphicon-chevron-left dalarge"></i>""" + word('Back') + """</button></form></span>
+          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon" type="submit" title=""" + '"' + word("Go back to the previous question") + '"' + """><i class="glyphicon glyphicon-chevron-left dalarge"></i>""" + word('Back') + """</button></form></span>
 """
     navbar += """\
           <a href="#question" data-toggle="tab" class="navbar-brand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
@@ -1807,14 +1807,18 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         error_message = "Not checking variables because in debug mode."
         error_type = Exception
     else:
-        try:
-            interview.assemble(user_dict, interview_status)
-            has_error = False
-        except Exception as errmess:
+        if not interview.success:
             has_error = True
-            error_message = str(errmess)
-            error_type = type(errmess)
-            logmessage("get_vars_in_use: failed assembly with error type " + str(error_type) + " and message: " + error_message)
+            error_type = DAErrorCompileError
+        else:
+            try:
+                interview.assemble(user_dict, interview_status)
+                has_error = False
+            except Exception as errmess:
+                has_error = True
+                error_message = str(errmess)
+                error_type = type(errmess)
+                logmessage("get_vars_in_use: failed assembly with error type " + str(error_type) + " and message: " + error_message)
     fields_used = set()
     names_used = set()
     field_origins = dict()
@@ -1920,6 +1924,8 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         if error_type is DAErrorNoEndpoint:
             error_style = 'warning'
             message_to_use = title_documentation['incomplete']['doc']
+        elif error_type is DAErrorCompileError:
+            message_to_use = title_documentation['compilefail']['doc']
         elif error_type is DAErrorMissingVariable:
             message_to_use = error_message
         else:

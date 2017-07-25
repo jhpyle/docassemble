@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.27]
+### Fixed
+- Better error message in Playground when interview has a syntax error
+
 ## [0.1.26] - 2017-07-25
 ### Fixed
 - Minor git issue again

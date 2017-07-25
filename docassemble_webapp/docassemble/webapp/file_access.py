@@ -80,8 +80,10 @@ def get_info_from_file_reference(file_reference, **kwargs):
             if folder is not None and not re.search(r'/', file_reference):
                 file_reference = 'data/' + str(folder) + '/' + file_reference
             if the_package is not None:
+                #logmessage("package is " + str(the_package))
                 file_reference = the_package + ':' + file_reference
             else:
+                #logmessage("package was null")
                 file_reference = 'docassemble.base:' + file_reference
         result['fullpath'] = docassemble.base.functions.static_filename_path(file_reference)
     #logmessage("path is " + str(result['fullpath']))

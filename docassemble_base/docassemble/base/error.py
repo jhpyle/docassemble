@@ -19,6 +19,9 @@ class DAErrorNoEndpoint(DAError):
 class DAErrorMissingVariable(DAError):
     pass
 
+class DAErrorCompileError(DAError):
+    pass
+
 class MandatoryQuestion(Exception):
     def __init__(self):
         self.value = 'Mandatory Question'

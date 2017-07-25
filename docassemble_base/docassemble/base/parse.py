@@ -2464,6 +2464,7 @@ class Interview:
         self.uses_action = False
         self.imports_util = False
         self.table_width = 65
+        self.success = True
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
     def get_title(self):
@@ -2514,17 +2515,20 @@ class Interview:
                         self.names_used.update(question.fields_used)
                 except Exception as errMess:
                     logmessage('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
+                    self.success = False
                     pass
             else:
                 try:
                     document = ruamel.yaml.safe_load(source_code)
                 except Exception as errMess:
+                    self.success = False
                     raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
                 if document is not None:
                     try:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code)
                         self.names_used.update(question.fields_used)
                     except SyntaxException as qError:
+                        self.success = False
                         raise Exception("SyntaxException: " + str(qError) + "\n\nIn file " + str(source.path) + " from package " + str(source_package) + ":\n" + source_code)
     def processed_helptext(self, user_dict, language):
         result = list()
@@ -3203,7 +3207,7 @@ class Interview:
                     pass
                 if the_question is not None:
                     raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
-                raise DAError("no question available in askfo: " + str(qError))
+                raise DAError("no question available in askfor: " + str(qError))
             # except SendFileError as qError:
             #     #logmessage("Trapped SendFileError2")
             #     question_data = dict(extras=dict())

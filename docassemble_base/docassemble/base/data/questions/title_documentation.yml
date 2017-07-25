@@ -70,6 +70,9 @@ incomplete:
     <a target="_blank"
     href="https://docassemble.org/docs/logic.html#mandatory">mandatory
     code block or question</a>.
+compilefail:
+  doc: >-
+    A syntax error was encountered.  Click "Save and Run" to see the error.
 generic error:
   doc: >-
     Your interview has an error.  Click "Save and Run" to see the error.
