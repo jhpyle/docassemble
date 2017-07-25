@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.26] - 2017-07-25
+### Fixed
+- Minor git issue again
+
 ## [0.1.25] - 2017-07-24
 ### Changed
 - Back button style
