@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.1.25] - 2017-07-24
+### Changed
+- Back button style
+### Fixed
+- labelauty issue
+
 ## [0.1.24] - 2017-07-24
 ### Fixed
 - Minor git issue

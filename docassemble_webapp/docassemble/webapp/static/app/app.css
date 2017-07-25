@@ -178,6 +178,12 @@ a.sourceactive {
     border: none;
     margin: 0;
     padding: 0;
+    color: #337ab7;
+    margin-left: -10px;
+}
+
+.dabackicon:hover {
+    color: #539ac7
 }
 
 .dabackiconpressed {
@@ -186,6 +192,7 @@ a.sourceactive {
 
 .dalarge {
     font-size: 1.2em;
+    vertical-align: top;
 }
 
 .datab {
