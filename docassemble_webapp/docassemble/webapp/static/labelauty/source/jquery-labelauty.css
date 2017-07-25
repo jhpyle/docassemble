@@ -54,7 +54,7 @@ input.labelauty + label
 input.labelauty + label > span.labelauty-unchecked,
 input.labelauty + label > span.labelauty-checked
 {
-	display: inline-block;
+	display: inline;
 	line-height: 16px;
 	vertical-align: bottom;
 }
@@ -123,7 +123,7 @@ input.labelauty:checked + label > span.labelauty-unchecked
 
 input.labelauty:checked + label > span.labelauty-checked
 {
-	display: inline-block;
+	display: inline;
 }
 
 input.labelauty.no-label:checked + label > span.labelauty-checked

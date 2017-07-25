@@ -160,7 +160,7 @@ def email_attachments(yaml_filename, user_info, user_code, secret, url, url_root
                         elif the_format == "docx":
                             mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                         attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(the_format), 'path': str(the_filename), 'mimetype': str(mime_type), 'attachment': the_attachment})
-                        sys.stderr.write("Need to attach to the e-mail a file called " + str(the_attachment['filename']) + '.' + str(the_format) + ", which is located on the server at " + str(the_filename) + ", with mime type " + str(mime_type) + "\n")
+                        #sys.stderr.write("Need to attach to the e-mail a file called " + str(the_attachment['filename']) + '.' + str(the_format) + ", which is located on the server at " + str(the_filename) + ", with mime type " + str(mime_type) + "\n")
                         attached_file_count += 1
                 if attached_file_count > 0:
                     doc_names = list()
@@ -173,7 +173,7 @@ def email_attachments(yaml_filename, user_info, user_code, secret, url, url_root
                     else:
                         body = worker_controller.functions.word("Your document, ") + " " + subject + worker_controller.functions.word(", is attached") + "."
                     html = "<p>" + body + "</p>"
-                    sys.stderr.write("Need to send an e-mail with subject " + subject + " to " + str(email_address) + " with " + str(attached_file_count) + " attachment(s)\n")
+                    #sys.stderr.write("Need to send an e-mail with subject " + subject + " to " + str(email_address) + " with " + str(attached_file_count) + " attachment(s)\n")
                     msg = worker_controller.Message(subject, recipients=[email_address], body=body, html=html)
                     for attach_info in attachment_info:
                         with open(attach_info['path'], 'rb') as fp:

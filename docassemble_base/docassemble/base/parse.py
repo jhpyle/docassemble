@@ -1454,7 +1454,7 @@ class Question:
                                 field_info['label'] = TextObject(definitions + interpret_label(field[key]), names_used=self.mako_names)
                             else:
                                 if 'label' in field_info:
-                                    raise DAError("Syntax error: field label " + str(key) + " overwrites previous label, " + str(field_info['label']) + self.idebug(data))
+                                    raise DAError("Syntax error: field label '" + str(key) + "' overwrites previous label, '" + str(field_info['label']) + "'" + self.idebug(data))
                                 field_info['label'] = TextObject(definitions + interpret_label(key), names_used=self.mako_names)
                                 field_info['saveas'] = field[key]
                         if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ['object', 'object_radio', 'object_checkboxes']:
