@@ -4,7 +4,7 @@ title: Machine learning
 short_title: Machine Learning
 ---
 
-**docassemble** allows you to [machine learning] into your
+**docassemble** allows you to use [machine learning] in your
 interviews.
 
 # What is machine learning?
@@ -70,9 +70,10 @@ with which the model is trained is known as the "independent
 variable."  The dependent variable depends on, or "is a function of"
 the independent variable or variables.  In the "sentiment analysis"
 application discussed above, sentences like "I am happy today," are
-independent variables.  They are used to train a model or they are
-plugged into a model in order to obtain a prediction.  The
-classification of "happy" or "unhappy" is the "dependent" variable.
+"independent" variables, while terms like "happy" or "unhappy" are
+"dependent" variables.  The classification variable (the value of
+which is "happy" or "unhappy") _depends on_ the input variable (the
+value of which which is "I am happy today," or "My life sucks," etc.).
 The terminology of "dependent" and "independent" variables is the
 terminology of [regression analysis] in the field of statistics.
 (Machine learning is actually just a kind of regression analysis.)
@@ -81,9 +82,9 @@ Once a model has been "trained," it can be "tested" to see how
 accurate its predictions are.  For example, the "sentiment analysis"
 model discussed above could be tested by running 100 predictions on a
 variety of happy and unhappy phrases and measuring how often the
-"predictions" are correct.  If the model correctly classifies "happy"
+"predictions" are correct.  If the model correctly classifies happy
 statements as "happy" about 95% of the time, and also classifies
-"unhappy" statements as "unhappy" about 95% of the time, then it
+unhappy statements as "unhappy" about 95% of the time, then it
 performs pretty well.
 
 When "testing" the performance of a trained model, it is important to
@@ -98,32 +99,387 @@ It is helpful to understand the concepts of "models," "training,"
 "testing," and "prediction," and the difference between "dependent"
 and "independent" variables.  Once you understand these general
 concepts, you can make use of machine learning without knowing any
-further information about how models work or the statistics underlying
-them.  All that you need to do is make sure you "train" the model with
-a sufficiently diverse set of data.  If you had the most sophisticated
-model in the world but you only trained it with "happy" sentences, it
-wouldn't be able to recognize an "unhappy" sentence.
+further information about how particular models work or the statistics
+underlying them.  All that you need to do is make sure you "train" the
+model with a sufficiently diverse set of data.  If you had the most
+sophisticated model in the world but you only trained it with "happy"
+sentences, it wouldn't be able to recognize an "unhappy" sentence.
 
 Some models are complex and proprietary, but nevertheless are very
 easy to use.  IBM Watson, for example, which famously won a Jeopardy!
 competition, is available over the internet to the general public for
 a fee.  Nobody outside of IBM knows exactly how it works, but
 nevertheless numerous customers have developed applications that use
-IBM Watson to classify text.  You do not need to know how it works in
-order to evaluate whether it is any good; all you need to do is
-thoroughly train and test it.
+IBM Watson to classify text.  You do not need to know how a model
+works in order to evaluate whether it is any good; all you need to do
+is thoroughly train and test it.
 
-# How to use machine learning
+# <a name="howtouse"></a>How to use machine learning
 
-You can use machine learning in your **docassemble** interviews.
-Instead of asking a multiple-choice question, you could ask the user
-to express something in their own words, then use a trained model to
-guess at the user's meaning and ask the user "It sounds like you are
-saying _x_.  Is that correct?"
+In your **docassemble** interviews, instead of asking a
+multiple-choice question, you can ask the user to express something in
+their own words, then use a machine learning model, which you will
+need to train, to guess at the user's meaning.
 
-To use **docassemble**'s built-in machine learning service, make sure
-you include the following at the start of your interview, just as you
-do when using [functions].
+## Setting variables
+
+You can use machine learning in your **docassemble** interviews by
+using the `ml` or `mlarea` [data types].
+
+{% include demo-side-by-side.html demo="predict-happy-sad" %}
+
+The variable `mood` will be an [object] of type [`DAModel`].  The
+object will have several attributes:
+
+* `mood.prediction` is what the machine learning model guesses is the
+  most likely classification of the input.  The value of `.prediction`
+  is a text string (e.g., `'happy'` or `'sad'`).  These values are not
+  in the interview, but come from the training process (more on that
+  later).  Writing `${ mood }` in a [Mako] template (as in the example
+  above) or `str(mood)` in [Python] code will return
+  `mood.prediction`.  If there is no training data upon which to make
+  a prediction, the value is `None`.
+* `mood.probability` is the probability (a number between 0 and 1) of
+  the most likely prediction, according to the machine learning model.
+* `mood.predictions` is a [list] of [2-tuples] representing all of the
+  model's predictions that have non-zero probability.  The first item
+  of the tuple is the prediction (e.g., `'happy'`) and the second item
+  is the probability (e.g., `0.4`)
+* `mood.text` is the literal text that the user provided
+
+The probabilities can give you a sense of how reliable the
+classification is.
+
+If a model is well-trained and shows good test results, you can use
+the probabilities as a gauge of whether the classification is a
+"borderline" case or not.  You might want to have logic in your
+interview that asks additional questions if there are two
+`.predictions` and they both have probabilities around 0.5, whereas
+you might skip those questions if the first probability is greater
+than 0.95.
+
+Note that if your model is not well-trained, it will report
+probabilities of 1.0 even when the classification is false.
+
+If you want the user to have more space to write, you can use
+`datatype: mlarea`:
+
+{% include demo-side-by-side.html demo="predict-happy-sad-area" %}
+
+Whenever a machine learning variable is set, the user's input will be
+saved as a not-yet-classified item in the training data for the
+machine learning model associated with the variable, so that it can be
+[trained](#train) later.  If you do not want the input to be saved in
+the training data, you can set `keep for training` to `False`:
+
+{% highlight yaml %}
+question: |
+  Describe how you feel.
+fields:
+  - no label: mood
+    datatype: ml
+    keep for training: False
+{% endhighlight %}
+
+The value of `keep for training` can also be [Python] code that
+evaluates to a true or false value.  For example:
+
+{% highlight yaml %}
+question: |
+  Describe how you feel.
+fields:
+  - no label: mood
+    datatype: ml
+    keep for training: not is_confidential
+---
+question: |
+  Are you a CIA agent?
+yesno: is_confidential
+{% endhighlight %}
+
+If you use the variables created by `datatype: ml` and `datatype:
+mlarea` in [Python] code, don't forget that they are objects, and you
+need to refer to the attribute `.prediction` to get the prediction:
+
+{% highlight yaml %}
+code: |
+  if mood.prediction == 'happy':
+    recommended_genre = 'drama'
+  else:
+    recommended_genre = 'comedy'
+{% endhighlight %}
+
+If you write `if mood == 'happy'`, the result will always be `False`,
+because `mood` itself is an [object].
+
+## <a name="train"></a>Training
+
+To train the machine learning model, select "Train" from the main menu.
+Users need to have [privileges] of `admin`, `developer`, or `trainer` in
+order to access the training area.
+
+Training sets are organized by [package], then by interview, and then
+by variable name.  In the example interview above, the interview is
+available at `docassemble.demo:data/questions/predict-happy-sad.yml`.
+To train the machine learning model associated with the variable
+`mood`, you would go into the `docassemble.demo` package, then into
+the `predict-happy-sad` interview, and then select the model for
+`mood`.
+
+The training page for `mood` allows you to manage a list of "items" in
+the training set for the model.  Each item has an "Input" value and an
+"Actual" value.  The "Input" value is the "independent variable" and
+the "Actual" value is the "dependent" variable.
+
+Items in the training set that do not have "Actual" values yet are
+considered not yet "classified."  By default, only not-yet-classified
+items are shown.  You can click the "Show entries that are already
+classified" link to toggle whether already-classified items are
+hidden.  This will also affect the item counts that you see when you
+are browsing through the "packages," "interviews," and "models."
+
+"Prediction" values are shown for each "Input" value.
+
+There are three ways to set or edit the "Actual" values:
+
+1. Type in the value in the "Actual" text box;
+2. Select the correct value from the pull-down list next to the text
+   box; or
+3. Press one of the "Prediction" buttons.
+
+You can also delete an item by checking the "Delete" checkbox.
+
+Changes take effect when you press the "Save" button.
+
+## <a name="packaging"></a>Packaging your training sets
+
+When you [package] your interview for publishing, you will probably
+also want to include the training data along with it, since the
+functionality of your interview depends on that training data.
+
+**docassemble** has a number of features to facilitate the packaging
+of machine learning training data.
+
+In the [Playground], if you develop an interview in the file
+`name-change.yml`, then a file called `ml-name-change.json` will be
+created in the [Sources folder].  This file will contain the
+items in the training set that have been classified, in [JSON] format.
+
+When you go to the [Packages folder] of the [Playground] to build a
+package for your interview, include the file `ml-name-change.json` in
+your [package].  Then, when your package is installed on another
+server, the training data will be shipped with it.  When someone runs
+the `name-change.yml` interview on that server, the training data in
+the `ml-name-change.json` file will be used.
+
+If you have a [package] containing an interview called
+`name-change.yml`, that interview will live in the `data/questions`
+directory of the [package].  The training data will live in the
+`data/sources` directory of the [package] in the file called
+`ml-name-change.json`.  The naming convention for these data files is
+to start with the name of the interview [YAML] file, add `ml-` to the
+beginning, and replace `.yml` with `.json`.
+
+### Details about how automatic importing works
+
+For efficiency, training data are stored in a database.
+
+When an interview runs, and it contains machine learning variables,
+**docassemble** figures out the machine learning storage area for the
+interview.  If the interview is called `predict-happy-sad.yml` and it
+is part of the `docassemble.demo` package, **docassemble** will see if
+there are any models in the database with a name that begins with
+`docassemble.demo:data/sources/ml-predict-happy-sad.json`.  Or, if the
+[`machine learning storage`] directive is set, **docassemble** will
+use that name instead.  If no models are found, **docassemble** will
+read the [JSON] file and import into its database the training data
+for the models found in the file.
+
+However, if at least one model _is_ found, the [JSON] file will be
+ignored.
+
+When you download a file like `ml-name-change.json` from the
+[Sources folder] of the playground, or use the [Packages folder] to
+include the file in a package you are downloading or publishing, then
+before using the file, **docassemble** will overwrite the file's
+contents with an export from the current state of the database.
+
+## <a name="variable sharing"></a>Sharing training sets for specific variables
+
+You might have multiple machine learning variables in your interview
+that represent the same concept but have different variable names.  It
+would be duplicative to have to train each variable separately.  You
+can avoid this duplication by using the `using` modifier to specify
+what training set a machine learning variable should use:
+
+{% include demo-side-by-side.html demo="predict-activity" %}
+
+In this example, the two questions, "What kind of work do you do now?"
+and "What kind of work do you see yourself doing in five years?" refer
+to separate things, but for purposes of training a machine learning
+model, the underlying concept is the same: classifying a description
+of a job.  By adding `using: present_activity` to the specification of the
+variable `future_activity`, we indicate that the `future_activity`
+variable should use the same training set as the variable
+`present_activity`.
+
+Training set names are just names; if you do not use the `using`
+modifier, the default name for the training set will be the same as
+the name of the variable.  You can use any name you want; it does not
+have to be the name of an existing variable.
+
+For example, here is another way of sharing a common training set
+across two variables:
+
+{% include demo-side-by-side.html demo="predict-activity-activity" %}
+
+In this interview, there is no variable named `activity`.  The name
+`activity` is just a name.  In fact, `activity` is a better name for
+the common training set than `present_activity`.
+
+The `using` modifier can also be used to share training sets across
+interviews.  For example, suppose you are writing an interview that
+uses several machine learning variables, one of which is
+`legal_problem`.  You had previously developed an interview called
+`triage.yml` that included a variable called `legal_issue`, and you
+spent significant time training that variable to spot legal issues.
+Your variable `legal_problem` represents the same concept as
+`legal_issue`.  You don't want to repeat all that training work for
+your new variable `legal_problem`.  Luckily, you can use `using` so
+that `legal_problem` uses the training data of the `triage.yml`
+interview.
+
+{% highlight yaml %}
+question: |
+  What is your legal problem?
+fields:
+  - Problem: legal_problem
+    datatype: mlarea
+    using: ml-triage.json:legal_issue
+{% endhighlight %}
+
+Note that you need to refer to the name of the [JSON] file for the
+other interview's data set.  The name of the [JSON] file and the name
+of the variable need to be separated by a colon.
+
+You can also use `using` to refer to data sets in other packages:
+
+{% highlight yaml %}
+question: |
+  What is your legal problem?
+fields:
+  - Problem: legal_problem
+    datatype: mlarea
+    using: docassemble.issuespotting:data/sources/ml-triage.json:legal_issue
+{% endhighlight %}
+
+Here, the `using` designator points to a file in a package, using the
+file naming convention employed throughout **docassemble** (the package
+name followed by colon, followed by the path to the file within the
+package).  The standard file designator is followed by a colon and
+the name of the "model" within that file.
+
+## Using another interview's training sets
+
+If you have an interview that uses machine learning, and you would
+like all of its `datatype: ml` and `datatype: mlarea` variables to use
+the data sets of a different interview, you can tell your interview to
+use that other interview's data sets.  Include the [initial block]
+called [`machine learning storage`].
+
+{% highlight yaml %}
+---
+machine learning storage: ml-some-other-interview.json
+---
+{% endhighlight %}
+
+The above example assumes that there is a data set in the current
+package (or the same [Playground]) by the name of
+`ml-some-other-interview.json`.
+
+You can also tell your interview to use the data sets of an interview
+in another package:
+
+{% highlight yaml %}
+---
+machine learning storage: docassemble.someotherpackage:data/sources/ml-some-interview.json
+---
+{% endhighlight %}
+
+The above example assumes that there is a data set in the
+`docassemble.someotherpackage` package by the name of
+`ml-some-other-interview.json`.
+
+Note that there is no "permissions" system for the training data on a
+**docassemble** server.  Anyone can change another package's training
+data, and other people can change your package's training data.
+
+## Using training sets by other names
+
+The default name of a training set starts with the name of an
+interview file, like `some-interview.yml`, then add `ml-` to the
+beginning, replace `.yml` with `.json`, and to locate this file in the
+`data/sources` subdirectory of the [package] (or the [Sources folder]
+of the [Playground]).
+
+However, it is allowable to use training set names that do not
+correspond with a particular interview.  For example, you might want
+to include the following in all of the interviews in a [package]:
+
+{% highlight yaml %}
+---
+machine learning storage: ml-common.json
+---
+{% endhighlight %}
+
+Then all of the interviews in your package would share the same
+training data storage area.  If any of the variable names overlapped
+across interviews, they would use the same training data.  It would
+not matter that there is no interview named `common.yml` in your
+[package].
+
+However, there is one small downside to using data training sets
+with names that do not correspond with the name of your interview:
+when you go to [train](#train) models within that file, and the
+training data set is empty, **docassemble** will not be able to
+automatically figure out the names of the variables that need to be
+trained.  You will need to run your interview (getting `None`
+predictions for each variable) before you can start
+[training](#train) the variables.
+
+## Using global training sets
+
+It is also possible to store machine learning training data in areas
+that are not part of a package by using the special prefix `global`:
+
+{% highlight yaml %}
+question: |
+  Describe how you feel.
+fields:
+  - no label: mood
+    datatype: ml
+    using: global:feelings
+{% endhighlight %}
+
+Normally, the full name of a model has package and file
+information in it, such as
+`docassemble.demo:data/sources/ml-predict-happy-sad.json:mood`.
+In this example, however, the name of the model will simply be
+`feelings`.  In the [training interface](#train), the model can be
+located under the "Global" category.
+
+# Lower-level interface
+
+If you are an advanced interview author and you want to be able to
+control **docassemble**'s machine learning system more directly, you
+can follow the steps in this section and the following sections.  Most
+authors, however, will be able to use machine learning with the `ml`
+and `mlarea` data types, as described in the
+[previous section](#howtouse).
+
+To access **docassemble**'s machine learning system, make sure you
+include the following at the start of your interview, just as you do
+when using [functions].
 
 {% highlight yaml %}
 ---
@@ -200,10 +556,17 @@ When you create a machine learning object by doing `ml =
 SimpleTextMachineLearner('demo')`, `'demo'` refers to the name of a
 training set.  The training set is stored in the **docassemble**
 database on the server.  Any other interview that runs on the server
-can use the same training data.  If you want to make sure that your
-training data is unique to your interview, use a specific name that
-nobody else would use, like
-`docassemble.oklahoma.familylaw:custody.reason`.
+can use the same training data.
+
+If you want your training data to be unique to your interview, follow
+the standard naming convention for machine learning data sets, which
+is to refer to a [JSON] file in the [sources folder] of a package
+(whether or not the file actually exists), followed by a colon,
+followed by a name.  For example:
+`docassemble.oklahomafamilylaw:data/sources/ml-custody.json:reason_for_custody`.
+This is the convention used by the [higher-level interface](#howtouse)
+described above.  (The reference to a [JSON] file facilitates the
+automatic importing of data from packages.)
 
 There are several ways to add data to a training set.
 
@@ -331,7 +694,7 @@ argument is the dependent variable.
 The [`.add_to_training_set()`] method is explained in more detail in
 the next section, which explains all of the methods available.
 
-# <a name="SimpleTextMachineLearner"></a>SimpleTextMachineLearner
+# <a name="SimpleTextMachineLearner"></a>The `SimpleTextMachineLearner` object
 
 The `SimpleTextMachineLearner` is an object for interacting with
 **docassemble**'s machine learning features.  It uses the k-nearest
@@ -699,14 +1062,14 @@ subquestion: |
   % endfor
 {% endhighlight %}
 
-# <a name="SVNMachineLearner"></a>SVNMachineLearner
+# <a name="SVNMachineLearner"></a>The `SVNMachineLearner` object
 
 The `SVNMachineLearner` works just like `SimpleTextMachineLearner`
 except that is uses the Support Vector Machines algorithm from the
 [`pattern.vector`] package.  The prediction list always has a length
 of one.
 
-# <a name="MachineLearningEntry"></a>MachineLearningEntry
+# <a name="MachineLearningEntry"></a>The `MachineLearningEntry` object
 
 The attributes of a `MachineLearningEntry` object are:
 
@@ -871,3 +1234,15 @@ object.)
 [confusion matrix]: https://en.wikipedia.org/wiki/Confusion_matrix
 [confusion matrices]: https://en.wikipedia.org/wiki/Confusion_matrix
 [`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
+[data types]: {{ site.baseurl }}/docs/fields.html#datatype
+[object]: {{ site.baseurl }}/docs/objects.html#DAModel
+[`DAModel`]: {{ site.baseurl }}/docs/objects.html#DAModel
+[Mako]: {{ site.baseurl }}/docs/markup.html#mako
+[2-tuples]: https://docs.python.org/2/tutorial/datastructures.html#tuples-and-sequences
+[privileges]: {{ site.baseurl }}/docs/users.html
+[package]: {{ site.baseurl }}/docs/packages.html
+[Sources folder]: {{ site.baseurl }}/docs/playground.html#sources
+[Packages folder]: {{ site.baseurl }}/docs/playground.html#packages
+[`machine learning storage`]: {{ site.baseurl }}/docs/initial.html#machine learning storage
+[`datatype`]: {{ site.baseurl }}/docs/fields.html#datatype
+[initial block]: {{ site.baseurl }}/docs/initial.html

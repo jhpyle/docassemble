@@ -504,7 +504,7 @@ and the variable name using the `field` key.
 
 {% include side-by-side.html demo="label" %}
 
-## Plain text
+## <a name="datatype"></a>Plain text
 
 There are many possible `datatype` values, which affect what the user
 sees and how the input is stored in a variable.  This section and the
@@ -741,6 +741,22 @@ variable will be set to `True` after the elements are set.  See
 [groups] for more information.
 
 {% include side-by-side.html demo="object-checkboxes" %}
+
+## <a name="ml"></a>Machine learning
+
+From the user's perspective, `datatype: ml` works just like `datatype:
+text` (which is the default if no `datatype` is indicated), and
+`datatype: mlarea` works just like `datatype: area`.
+
+From the interview author's perspective, however, the variable that is
+set is not a piece of text, but an object representing a
+classification of the user's input, based on a machine learning model
+that is "trained" to classify user input.
+
+{% include demo-side-by-side.html demo="predict-happy-sad" %}
+
+For more information about how to use machine learning variables, see
+the [machine learning section].
 
 ## <a name="min"></a>Input validation
 
@@ -1116,3 +1132,4 @@ why this needs to be done manually as opposed to automatically:
 [`currency()`]: {{ site.baseurl }}/docs/functions.html#currency
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [date functions]: {{ site.baseurl }}/docs/functions.html#date functions
+[machine learning section]: {{ site.baseurl }}/docs/ml.html#howtouse

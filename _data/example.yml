@@ -3797,6 +3797,12 @@
     There is nothing left to classify.
   buttons:
     - Check again: refresh
+"ml-datatype": |-
+  question: |
+    What is your goal?
+  fields:
+    - no label: goal
+      datatype: mlarea
 "ml-export": |-
   initial: True
   code: |
@@ -4408,7 +4414,7 @@
     if not the_task.ready():
       waiting_screen
     ml = SimpleTextMachineLearner('ocr_ai')
-    ml.save_for_classification(phrase)
+    ml.save_for_classification(phrase, info=the_file)
     predictions = ml.predict(phrase)
   ---
   question: |
@@ -6149,6 +6155,73 @@
   fields:
     - First: client.name.first
     - Last: client.name.last
+"predict-activity": |-
+  mandatory: True
+  question: |
+    % if present_activity.prediction == future_activity.prediction:
+    It seems that you are fairly
+    content with your current work.
+    % else:
+    That's interesting.
+    % endif
+  ---
+  question: |
+    What kind of work do you do now?
+  fields:
+    - Work: present_activity
+      datatype: ml
+  ---
+  question: |
+    What kind of work do you see
+    yourself doing in five years?
+  fields:
+    - Work: future_activity
+      datatype: ml
+      using: present_activity
+"predict-activity-activity": |-
+  mandatory: True
+  question: |
+    % if present_activity.prediction == future_activity.prediction:
+    It seems that you are fairly
+    content with your current work.
+    % else:
+    That's interesting.
+    % endif
+  ---
+  question: |
+    What kind of work do you do now?
+  fields:
+    - Work: present_activity
+      datatype: ml
+      using: activity
+  ---
+  question: |
+    What kind of work do you see
+    yourself doing in five years?
+  fields:
+    - Work: future_activity
+      datatype: ml
+      using: activity
+"predict-happy-sad": |-
+  question: |
+    Describe how you feel.
+  fields:
+    - no label: mood
+      datatype: ml
+  ---
+  mandatory: True
+  question: |
+    You sound ${ mood }.
+"predict-happy-sad-area": |-
+  question: |
+    Describe how you feel.
+  fields:
+    - no label: mood
+      datatype: mlarea
+  ---
+  mandatory: True
+  question: |
+    You sound ${ mood }.
 "raw-data-example": "code: |\n  raw_data = objects_from_file(\"raw_data.yml\", recursive=False)\n\
   ---\nmandatory: true\nquestion: |\n  The imported data\nsubquestion: |\n  % for\
   \ item in raw_data:\n  The `inventory` of\n  \"${ item.title }\" is:\n  \n  > `${\

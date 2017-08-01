@@ -16,7 +16,7 @@ back in again, and pick up where they left off.
 
 When a user registers in the **docassemble** system, their default
 "privilege" is that of "user," which has the lowest privileges.  There
-are six privileges defined by default in **docassemble**:
+are seven privileges defined by default in **docassemble**:
 
 * user
 * admin
@@ -24,6 +24,7 @@ are six privileges defined by default in **docassemble**:
 * customer
 * developer
 * advocate
+* trainer
 
 A user who has the "admin" privilege can upgrade the privleges of any
 user by going to the [User List] on the menu.  The user can add

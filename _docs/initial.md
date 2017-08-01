@@ -415,6 +415,76 @@ See [language support] for more information about how to create
 multi-lingual interviews.  See [modifiers] for information about the
 `language` setting of a question.
 
+# <a name="machine learning storage"></a>Machine learning training data
+ 
+If you use [machine learning] in your interviews, then by default,
+**docassemble** will use training data associated with the
+particular interview in the particular [package] in which the
+interview resides.
+
+If you would like your interview to share training data with another
+interview, you can use the `machine learning storage` directive to
+point to the training data of another interview.
+
+For example, suppose you have developed an interview called
+`child_custody.yml` that uses [machine learning], and you have built
+rich training sets for variables within this interview.  Then you
+decide to develop another interview, in the same [package], called
+`child_support.yml`, which uses many of the same variables.  It would
+be a lot of work to maintain two identical training sets in two
+places.
+
+In this scenario, you can add the following block to the
+`child_support.yml` interview:
+
+{% highlight yaml %}
+---
+machine learning storage: ml-child_custody.json
+---
+{% endhighlight %}
+
+`ml-child_custody.json` is the name of a file in the `data/sources`
+directory of the [package].  This file contains the training data for
+the `child-custody.yml` interview.  The naming convention for these
+data files is to start with the name of the interview [YAML] file, add
+`ml-` to the beginning, and replace `.yml` with `.json`.
+
+Now, both the `child-custody.yml` and `child-support.yml` interviews
+will use `ml-child_custody.json` as "storage" area for training data.
+In the [Training] interface, you will find this data set under the
+name `child_custody`.
+
+If you had run the `child-support.yml` interview before adding
+`machine learning storage`, you may still see a data set called
+`child-support` in the [Training] interface.  If you are using the
+[Playground], you may see a file called `ml-child-support.json` in the
+[Sources folder].  To get rid of this, go into the [Playground] and
+delete the `ml-child-support.json` file from the [Sources folder].
+Then go into the [Training] interface and delete any "items" that
+exist within the `child-support` interview.
+
+If you want, you can set `machine learning storage` to a name that
+does not correspond with an actual interview.  For example, you could
+include `machine learning storage: ml-family-law.json` in both the
+`child-custody.yml` and `child-support.yml` interviews.  Even though
+there is no interview called `family-law.yml`, this will still work.
+If you are using the [Playground], a file called `ml-family-law.json`
+will automatically be created in the `Sources folder`.
+
+You can also share "storage" areas across packages.  Suppose you are
+working within a package called `docassemble.missourifamilylaw`, but
+you want to take advantage of training sets in a package called
+`docassemble.generalfamilylaw`.  You can write:
+
+{% highlight yaml %}
+---
+machine learning storage: docassemble.generalfamilylaw:data/sources/ml-family.json
+---
+{% endhighlight %}
+
+For more information about managing training data, see the
+[machine learning] section on [packaging your training sets]
+
 # <a name="features"></a>Optional `features`
 
 The `features` block sets some optional features of the interview.
@@ -555,3 +625,8 @@ features:
 [`script`]: {{ site.baseurl }}/docs/modifiers.html#script
 [`objects_from_file()` function]: {{ site.baseurl}}/docs/functions.html#objects_from_file
 [sources folder]: {{ site.baseurl }}/docs/playground.html#sources
+[machine learning]: {{ site.baseurl }}/docs/ml.html#howtouse
+[Training]: {{ site.baseurl }}/docs/ml.html#train
+[Sources folder]: {{ site.baseurl }}/docs/playground.html#sources
+[Playground]: {{ site.baseurl }}/docs/playground.html
+[packaging your training sets]: {{ site.baseurl }}/docs/ml.html#packaging
