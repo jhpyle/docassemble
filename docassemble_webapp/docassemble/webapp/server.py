@@ -3965,15 +3965,15 @@ def index():
                 exec("import docassemble.base.util", user_dict)
             except Exception as errMess:
                 error_messages.append(("error", "Error: " + str(errMess)))
-            if orig_key in ml_info and 'ml_train' in ml_info[orig_key]:
-                if not ml_info[orig_key]['ml_train']:
+            if orig_key in ml_info and 'train' in ml_info[orig_key]:
+                if not ml_info[orig_key]['train']:
                     use_for_training = 'False'
                 else:
                     use_for_training = 'True'
             else:
                 use_for_training = 'True'
-            if orig_key in ml_info and 'ml_group' in ml_info[orig_key]:
-                data = 'docassemble.base.util.DAModel(' + repr(key) + ', group_id=' + repr(ml_info[orig_key]['ml_group']) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
+            if orig_key in ml_info and 'group_id' in ml_info[orig_key]:
+                data = 'docassemble.base.util.DAModel(' + repr(key) + ', group_id=' + repr(ml_info[orig_key]['group_id']) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
             else:
                 data = 'docassemble.base.util.DAModel(' + repr(key) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
         if set_to_empty:
@@ -11021,8 +11021,8 @@ def train():
                     else:
                         the_saveas = saveas
                     if not re.search(r':', the_saveas):
-                        if saveas not in group_id_list:
-                            group_id_list[saveas] = 0
+                        if the_saveas not in group_id_list:
+                            group_id_list[the_saveas] = 0
         group_id_list = [(x, group_id_list[x]) for x in sorted(group_id_list)]
         extra_js = """\
     <script>

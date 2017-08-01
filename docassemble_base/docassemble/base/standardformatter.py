@@ -676,9 +676,9 @@ def as_html(status, url_for, debug, root, validation_rules):
                 if 'ml_group' in field.extras or 'ml_train' in field.extras:
                     ml_info[field.saveas] = dict()
                     if 'ml_group' in field.extras:
-                        ml_info[field.saveas]['group_id'] = field.extras['ml_group']
+                        ml_info[field.saveas]['group_id'] = status.extras['ml_group'][field.number]
                     if 'ml_train' in field.extras:
-                        ml_info[field.saveas]['train'] = field.extras['ml_train']
+                        ml_info[field.saveas]['train'] = status.extras['ml_train'][field.number]
                 if 'show_if_var' in field.extras and 'show_if_val' in status.extras:
                     if hasattr(field, 'saveas'):
                         fieldlist.append('                <div class="showif" data-saveas="' + escape_id(field.saveas) + '" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(unicode(status.extras['show_if_val'][field.number])) + '>\n')

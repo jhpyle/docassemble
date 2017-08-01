@@ -1,6 +1,11 @@
 # Change Log
 
-## [0.1.27]
+## [0.1.28] - 2017-08-01
+### Fixed
+- DADict object now defines ask_object_type by default
+- Bug with 'using' combined with 'ml'
+
+## [0.1.27] - 2017-07-31
 ### Added
 - ml and mlarea data types and training system
 ### Fixed

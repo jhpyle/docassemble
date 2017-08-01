@@ -663,6 +663,10 @@ class DADict(DAObject):
             del kwargs['complete_attribute']
         if not hasattr(self, 'complete_attribute'):
             self.complete_attribute = None
+        if 'ask_object_type' in kwargs:
+            self.ask_object_type = True
+        if not hasattr(self, 'ask_object_type'):
+            self.ask_object_type = False
         return super(DADict, self).init(*pargs, **kwargs)
     def _trigger_gather(self):
         """Triggers the gathering process."""

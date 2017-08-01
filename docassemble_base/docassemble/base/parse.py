@@ -1362,12 +1362,12 @@ class Question:
                         for key in field:
                             if key == 'default' and 'datatype' in field and field['datatype'] in ['object', 'object_radio', 'object_checkboxes']:
                                 continue
-                            if 'datatype' in field and field['datatype'] in ['ml', 'mlarea'] and key in ['using', 'use for training']:
+                            if 'datatype' in field and field['datatype'] in ['ml', 'mlarea'] and key in ['using', 'keep for training']:
                                 if key == 'using':
                                     if 'extras' not in field_info:
                                         field_info['extras'] = dict()
                                     field_info['extras']['ml_group'] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
-                                if key == 'use for training':
+                                if key == 'keep for training':
                                     if 'extras' not in field_info:
                                         field_info['extras'] = dict()
                                     if type(field[key]) is bool:

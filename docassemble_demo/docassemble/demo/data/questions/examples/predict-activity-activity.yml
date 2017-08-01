@@ -19,7 +19,7 @@ question: |
 fields:
   - Work: present_activity
     datatype: ml
-    using: present_activity
+    using: activity
 ---
 question: |
   What kind of work do you see
@@ -27,4 +27,4 @@ question: |
 fields:
   - Work: future_activity
     datatype: ml
-    using: present_activity
+    using: activity
