@@ -73,6 +73,7 @@ def populate_tables():
     customer_role = get_role(db, 'customer')
     developer_role = get_role(db, 'developer')
     advocate_role = get_role(db, 'advocate')
+    trainer_role = get_role(db, 'trainer')
     admin = get_user(db, admin_role, admin_defaults)
     cron = get_user(db, cron_role, cron_defaults)
     if admin.confirmed_at is None:

@@ -1,0 +1,18 @@
+metadata:
+  title: Machine Learning
+  short title: ML
+  documentation: "https://docassemble.org/docs/ml.html#howtouse"
+  example start: 2
+  example end: 3
+---
+machine learning storage: ml-predict-happy-sad.json
+---
+question: |
+  Describe how you feel.
+fields:
+  - no label: mood
+    datatype: mlarea
+---
+mandatory: True
+question: |
+  You sound ${ mood }.

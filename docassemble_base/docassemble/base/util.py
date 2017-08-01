@@ -156,7 +156,6 @@ def format_time(the_time, format='short'):
 class DateTimeDelta(object):
     def __str__(self):
         return quantity_noun(output.days, word('day'))
-    pass
 
 def current_datetime(timezone=None):
     """Returns the current time as a datetime.datetime object with a timezone.
@@ -1478,3 +1477,49 @@ MachineLearningEntry = DummyObject
 def set_machine_learning_entry(target):
     global MachineLearningEntry
     MachineLearningEntry = target
+
+class DAModel(DAObject):
+    """Applies natural language processing to user input and returns a prediction."""
+    def init(self, *pargs, **kwargs):
+        if 'store' in kwargs:
+            self.store = kwargs['store']
+        else:
+            self.store = '_global'
+        if 'group_id' in kwargs:
+            self.group_id = kwargs['group_id']
+            parts = self.group_id.split(':')
+            if len(parts) == 3 and parts[0].startswith('docassemble.') and re.match(r'data/sources/.*\.json', parts[1]):
+                self.store = parts[0] + ':' + parts[1]
+                self.group_id = parts[2]
+            elif len(parts) == 2 and parts[0] == 'global':
+                self.store = '_global'
+                self.group_id = parts[1]
+            elif len(parts) == 2 and (re.match(r'data/sources/.*\.json', parts[0]) or re.match(r'[^/]+\.json', parts[0])):
+                self.store = re.sub(r':.*', ':data/sources/' + re.sub(r'^data/sources/', '', parts[0]), self.store)
+                self.group_id = parts[1]
+            elif len(parts) != 1:
+                self.store = '_global'
+        else:
+            self.group_id = self.instanceName
+        if self.store != '_global':
+            self.group_id = self.store + ':' + self.group_id
+        self.key = kwargs.get('key', None)
+        self.use_for_training = kwargs.get('use_for_training', True)
+        self.learner = SimpleTextMachineLearner(self.group_id)
+        if 'text' in kwargs:
+            self.text = kwargs['text']
+            self.predict()
+        return super(DAModel, self).init(*pargs, **kwargs)
+    def __str__(self):
+        return str(self.prediction)
+    def predict(self):
+        if self.use_for_training:
+            self.entry_id = self.learner.save_for_classification(self.text, key=self.key)
+        self.predictions = self.learner.predict(self.text, probabilities=True)
+        if len(self.predictions):
+            self.prediction = self.predictions[0][0]
+            self.probability = self.predictions[0][1]
+        else:
+            self.prediction = None
+            self.probability = 1.0
+            

@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from docassemble.base.functions import word
-from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField, FileField
+from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField, FileField, HiddenField, RadioField
 import re
 import sys
 
@@ -110,3 +110,17 @@ class GitHubForm(FlaskForm):
     configure = SubmitField(word('Configure'))
     unconfigure = SubmitField(word('Disable'))
     cancel = SubmitField(word('Cancel'))
+
+class TrainingForm(FlaskForm):
+    the_package = HiddenField()
+    the_file = HiddenField()
+    the_group_id = HiddenField()
+    show_all = HiddenField()
+    submit = SubmitField(word('Save'))
+    cancel = SubmitField(word('Cancel'))
+
+class TrainingUploadForm(FlaskForm):
+    usepackage = RadioField(word('Use Package'))
+    jsonfile = FileField(word('JSON file'))
+    importtype = RadioField(word('Import method'))
+    submit = SubmitField(word('Import'))

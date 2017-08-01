@@ -11,6 +11,10 @@ body.dabody {
     padding: 2px 12px;
 }
 
+textarea.form-control {
+    padding: 6px 12px;
+}
+
 body.dainactive {
     background-color: #f2dede;
 }
@@ -526,6 +530,28 @@ span.daparenthetical {
     margin-right: 3px;
 }
 
+.datrain {
+    color: rgb(217, 7, 53);
+    vertical-align: middle;
+    /* vertical-align: -2px; */
+    cursor: pointer;
+    text-decoration: none !important;
+    line-height: normal;
+    float: right;
+    margin-right: 3px;
+    outline: 0;
+}
+
+.datrain:link,
+.datrain:visited,
+.datrain:active {
+    color: rgb(217, 7, 53);
+}
+
+.datrain:hover {
+    color: rgb(247, 37, 83);
+}
+
 .dashowmethods {
     color: rgb(49, 112, 143);
     vertical-align: middle;
@@ -638,6 +664,11 @@ iframe.observer {
 /* .peer-message > .badge { */
 /*     float: right; */
 /* } */
+
+.delete-observation {
+    float: right;
+    margin: 0;
+}
 
 .topspace {
     margin-top: 10px;
@@ -1072,4 +1103,28 @@ body.adminbody {
 
 svg.mfasvg {
     width: 300px;
+}
+
+blockquote.limheight {
+    max-height: 6em;
+    overflow-y: auto;
+}
+
+.mldownload {
+    float: right;
+    font-size: 13px;
+}
+
+.imagepreview {
+    max-height: 12em;
+    overflow-y: auto;
+}    
+
+.imagepreview img {
+    max-width: 100%;
+}
+
+.onright {
+    float: right;
+    color: black;
 }

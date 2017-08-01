@@ -434,6 +434,7 @@ import babel.dates
 import pytz
 import httplib2
 import zipfile
+import operator
 import traceback
 from Crypto.Hash import MD5
 import mimetypes
@@ -466,7 +467,7 @@ from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
 #from flask_wtf.csrf import generate_csrf
-from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, GitHubForm, PullPlaygroundPackage
+from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm
 from flask_mail import Mail, Message
 import flask_user.signals
 import flask_user.translations
@@ -490,8 +491,8 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
@@ -1462,6 +1463,8 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
                 navbar += custom_menu
             if current_user.has_role('admin', 'developer', 'advocate'):
                 navbar +='<li><a href="' + url_for('monitor') + '">' + word('Monitor') + '</a></li>'
+            if current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
+                navbar +='<li><a href="' + url_for('train') + '">' + word('Train') + '</a></li>'
             if current_user.has_role('admin', 'developer'):
                 navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
                 navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
@@ -1469,7 +1472,6 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
                 navbar +='<li><a href="' + url_for('utilities') + '">' + word('Utilities') + '</a></li>'
                 if current_user.has_role('admin'):
                     navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
-                    #navbar +='<li><a href="' + url_for('privilege_list') + '">' + word('Privileges List') + '</a></li>'
                     navbar +='<li><a href="' + url_for('config_page') + '">' + word('Configuration') + '</a></li>'
             navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li><li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a></li></ul></li>'
     else:
@@ -1797,6 +1799,30 @@ def find_needed_names(interview, needed_names, the_name=None, the_question=None)
                 continue
             find_needed_names(interview, needed_names, the_question=question)
 
+def get_ml_info(varname, default_package, default_file):
+    parts = varname.split(':')
+    if len(parts) == 3 and parts[0].startswith('docassemble.') and re.match(r'data/sources/.*\.json', parts[1]):
+        the_package = parts[0]
+        the_file = parts[1]
+        the_varname = parts[2]
+    elif len(parts) == 2 and parts[0] == 'global':
+        the_package = '_global'
+        the_file = '_global'
+        the_varname = parts[1]
+    elif len(parts) == 2 and (re.match(r'data/sources/.*\.json', parts[0]) or re.match(r'[^/]+\.json', parts[0])):
+        the_package = default_package
+        the_file = re.sub(r'^data/sources/', '', parts[0])
+        the_varname = parts[1]
+    elif len(parts) != 1:
+        the_package = '_global'
+        the_file = '_global'
+        the_varname = varname
+    else:
+        the_package = default_package
+        the_file = default_file
+        the_varname = varname
+    return (the_package, the_file, the_varname)
+        
 def get_vars_in_use(interview, interview_status, debug_mode=False):
     user_dict = fresh_dictionary()
     has_no_endpoint = False
@@ -1898,9 +1924,20 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     names_used = set([i for i in names_used if not extraneous_var.search(i)])
     for var in ['_internal']:
         names_used.discard(var)
+    for var in interview.mlfields:
+        names_used.discard(var + '.text')
+    if len(interview.mlfields):
+        classes.add('DAModel')
+        method_list = [{'insert': '.predict()', 'name': 'predict', 'doc': "Generates a prediction based on the 'text' attribute and sets the attributes 'entry_id,' 'predictions,' 'prediction,' and 'probability.'  Called automatically.", 'tag': '.predict(self)'}]
+        name_info['DAModel'] = {'doc': 'Applies natural language processing to user input and returns a prediction.', 'name': 'DAModel', 'insert': 'DAModel', 'bases': list(), 'methods': method_list}
     view_doc_text = word("View documentation")
     word_documentation = word("Documentation")
     attr_documentation = word("Show attributes")
+    ml_parts = interview.get_ml_store().split(':')
+    if len(ml_parts) == 2:
+        ml_parts[1] = re.sub(r'^data/sources/ml-|\.json$', '', ml_parts[1])
+    else:
+        ml_parts = ['_global', '_global']
     for var in documentation_dict:
         if var not in name_info:
             name_info[var] = dict()
@@ -1975,8 +2012,16 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
                 content += '&nbsp;<a class="dashowattributes" role="button" data-name="' + noquote(var) + '" title="' + attr_documentation + '"><i class="glyphicon glyphicon-option-horizontal"></i></a>'
             if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
                 content +='&nbsp;<span data-ref="' + noquote(name_info[var]['type']) + '" class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
+            elif var in interview.mlfields:
+                content +='&nbsp;<span data-ref="DAModel" class="daparenthetical">(DAModel)</span>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
                 content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+            if var in interview.mlfields:
+                if 'ml_group' in interview.mlfields[var] and not interview.mlfields[var]['ml_group'].uses_mako:
+                    (ml_package, ml_file, ml_group_id) = get_ml_info(interview.mlfields[var]['ml_group'].original_text, ml_parts[0], ml_parts[1])
+                    content += '&nbsp;<a class="datrain" target="_blank" href="' + url_for('train', package=ml_package, file=ml_file, group_id=ml_group_id) + '" title="' + word("Train") + '"><i class="glyphicon glyphicon-apple"></i></a>'
+                else:
+                    content += '&nbsp;<a class="datrain" target="_blank" href="' + url_for('train', package=ml_parts[0], file=ml_parts[1], group_id=var) + '" title="' + word("Train") + '"><i class="glyphicon glyphicon-apple"></i></a>'
             content += '</td></tr>'
         if len(all_sources):
             content += search_key
@@ -3093,7 +3138,7 @@ def checkin():
             if form_parameters is not None:
                 form_parameters = json.loads(form_parameters)
                 for param in form_parameters:
-                    if param['name'] in ['_checkboxes', '_empties', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
+                    if param['name'] in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
                         continue
                     try:
                         parameters[from_safeid(param['name'])] = param['value']
@@ -3618,6 +3663,10 @@ def index():
                 post_data.add(empty_field, 'None')
     else:
         empty_fields = dict()
+    if '_ml_info' in post_data:
+        ml_info = json.loads(myb64unquote(post_data['_ml_info']))
+    else:
+        ml_info = dict()
     something_changed = False
     if '_tracker' in post_data and user_dict['_internal']['tracker'] != int(post_data['_tracker']):
         if user_dict['_internal']['tracker'] > int(post_data['_tracker']):
@@ -3643,6 +3692,8 @@ def index():
         except:
             logmessage("index: bad key was " + str(key))
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    if not interview.from_cache and len(interview.mlfields):
+        ensure_training_loaded(interview)
     debug_mode = DEBUG or yaml_filename.startswith('docassemble.playground')
     # if should_assemble and '_action_context' in post_data:
     #     action = json.loads(myb64unquote(post_data['_action_context']))
@@ -3763,7 +3814,7 @@ def index():
                             error_messages.append(("error", "Error: " + str(errMess)))
     known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ['_checkboxes', '_empties', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
+        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
             continue
         try:
             key = myb64unquote(orig_key)
@@ -3773,7 +3824,7 @@ def index():
             if not (known_varnames[orig_key] in post_data and post_data[known_varnames[orig_key]] != '' and post_data[orig_key] == ''):
                 post_data[known_varnames[orig_key]] = post_data[orig_key]
     for orig_key in post_data:
-        if orig_key in ['_checkboxes', '_empties', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
+        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
             continue
         #logmessage("Got a key: " + key)
         data = post_data[orig_key]
@@ -3846,6 +3897,7 @@ def index():
         #logmessage("Real key is " + real_key + " and key is " + key)
         do_append = False
         do_opposite = False
+        is_ml = False
         if real_key in known_datatypes:
             #logmessage("key " + real_key + "is in datatypes: " + known_datatypes[key])
             if known_datatypes[real_key] in ['boolean', 'checkboxes', 'yesno', 'noyes', 'yesnowide', 'noyeswide']:
@@ -3868,6 +3920,8 @@ def index():
                 if data == '':
                     data = 0
                 data = "int(" + repr(data) + ")"
+            elif known_datatypes[real_key] in ['ml', 'mlarea']:
+                is_ml = True
             elif known_datatypes[real_key] in ['number', 'float', 'currency', 'range']:
                 if data == '':
                     data = 0
@@ -3906,6 +3960,22 @@ def index():
             #else:
                 #continue
                 #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
+        if is_ml:
+            try:
+                exec("import docassemble.base.util", user_dict)
+            except Exception as errMess:
+                error_messages.append(("error", "Error: " + str(errMess)))
+            if orig_key in ml_info and 'ml_train' in ml_info[orig_key]:
+                if not ml_info[orig_key]['ml_train']:
+                    use_for_training = 'False'
+                else:
+                    use_for_training = 'True'
+            else:
+                use_for_training = 'True'
+            if orig_key in ml_info and 'ml_group' in ml_info[orig_key]:
+                data = 'docassemble.base.util.DAModel(' + repr(key) + ', group_id=' + repr(ml_info[orig_key]['ml_group']) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
+            else:
+                data = 'docassemble.base.util.DAModel(' + repr(key) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
         if set_to_empty:
             if set_to_empty == 'checkboxes':
                 try:
@@ -5741,6 +5811,7 @@ def serve_stored_file(uid, number, filename, extension):
         abort(404)
     else:
         response = send_file(file_info['path'], mimetype=file_info['mimetype'])
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
 
 @app.route('/uploadedfile/<number>/<filename>.<extension>', methods=['GET'])
@@ -5762,6 +5833,7 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
             if os.path.isfile(file_info['path'] + '.' + extension):
                 extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
                 response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype)
+                response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
             else:
                 abort(404)
@@ -5785,6 +5857,7 @@ def serve_uploaded_file_with_extension(number, extension):
             if os.path.isfile(file_info['path'] + '.' + extension):
                 extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
                 response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype)
+                response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
             else:
                 abort(404)
@@ -5804,6 +5877,7 @@ def serve_uploaded_file(number):
         #block_size = 4096
         #status = '200 OK'
         response = send_file(file_info['path'], mimetype=file_info['mimetype'])
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
 
 @app.route('/uploadedpage/<number>/<page>', methods=['GET'])
@@ -5823,6 +5897,7 @@ def serve_uploaded_page(number, page):
         filename = file_info['path'] + 'page-' + (formatter % int(page)) + '.png'
         if os.path.isfile(filename):
             response = send_file(filename, mimetype='image/png')
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             return(response)
         else:
             abort(404)
@@ -5845,6 +5920,7 @@ def serve_uploaded_pagescreen(number, page):
         filename = file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
         if os.path.isfile(filename):
             response = send_file(filename, mimetype='image/png')
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             return(response)
         else:
             logmessage('serve_uploaded_pagescreen: path ' + filename + ' is not a file')
@@ -7393,11 +7469,13 @@ def update_package_wait():
             if (data.ok){
               $("#notification").html('""" + word("The package update was successful.  The logs are below.") + """');
               $("#notification").removeClass("alert-info");
+              $("#notification").removeClass("alert-danger");
               $("#notification").addClass("alert-success");
             }
             else{
               $("#notification").html('""" + word("The package update was not fully successful.  The logs are below.") + """');
               $("#notification").removeClass("alert-info");
+              $("#notification").removeClass("alert-success");
               $("#notification").addClass("alert-danger");
             }
             $("#resultsContainer").show();
@@ -7411,6 +7489,7 @@ def update_package_wait():
             resultsAreIn = true;
             $("#notification").html('""" + word("There was an error updating the packages.") + """');
             $("#notification").removeClass("alert-info");
+            $("#notification").removeClass("alert-success");
             $("#notification").addClass("alert-danger");
             $("#resultsContainer").show();
             $("#resultsArea").html(data.error_message);
@@ -7422,6 +7501,7 @@ def update_package_wait():
         else if (!resultsAreIn){
           $("#notification").html('""" + word("There was an error.") + """');
           $("#notification").removeClass("alert-info");
+          $("#notification").removeClass("alert-success");
           $("#notification").addClass("alert-danger");
           if (checkinInterval != null){
             clearInterval(checkinInterval);
@@ -7737,6 +7817,7 @@ def create_playground_package():
                     the_timezone = current_user.timezone
                 else:
                     the_timezone = get_default_timezone()
+                fix_ml_files(author_info['id'])
                 logmessages = docassemble.webapp.files.publish_package(pkgname, info, author_info, the_timezone)
                 flash(logmessages, 'info')
                 time.sleep(3.0)
@@ -7772,6 +7853,7 @@ def create_playground_package():
                     the_timezone = current_user.timezone
                 else:
                     the_timezone = get_default_timezone()
+                fix_ml_files(author_info['id'])
                 docassemble.webapp.files.make_package_dir(pkgname, info, author_info, the_timezone, directory=directory)
                 packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
                 if not os.path.isdir(packagedir):
@@ -7831,6 +7913,7 @@ def create_playground_package():
                 the_timezone = current_user.timezone
             else:
                 the_timezone = get_default_timezone()
+            fix_ml_files(author_info['id'])
             zip_file = docassemble.webapp.files.make_package_zip(pkgname, info, author_info, the_timezone)
             saved_file.copy_from(zip_file.name)
             saved_file.finalize()
@@ -8599,6 +8682,11 @@ def playground_static(userid, filename):
 def playground_sources(userid, filename):
     filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundsources')
+    reslt = write_ml_source(area, userid, filename)
+    if reslt:
+        logmessage("was True")
+    else:
+        logmessage("was False")
     filename = os.path.join(area.directory, filename)
     if os.path.isfile(filename):
         extension, mimetype = get_ext_and_mimetype(filename)
@@ -8782,11 +8870,15 @@ def playground_files():
     files = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
     editable_files = list()
     convertible_files = list()
+    trainable_files = dict()
     mode = "yaml"
     for a_file in files:
         extension, mimetype = get_ext_and_mimetype(a_file)
         if (mimetype and mimetype in ok_mimetypes) or (extension and extension in ok_extensions):
-            editable_files.append(a_file)
+            if section == 'sources' and re.match(r'ml-.*\.json', a_file):
+                trainable_files[a_file] = re.sub(r'^ml-|\.json$', '', a_file)
+            else:
+                editable_files.append(a_file)
     for a_file in files:
         extension, mimetype = get_ext_and_mimetype(a_file)
         b_file = os.path.splitext(a_file)[0] + '.md'
@@ -8969,7 +9061,7 @@ def playground_files():
     else:
         any_files = False
     back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
-    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + ('damarkdown' if mode == 'markdown' else mode) + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file), 200
+    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + ('damarkdown' if mode == 'markdown' else mode) + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
 
 @app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
 @login_required
@@ -9816,11 +9908,31 @@ def playground_variables():
                 content = post_data['playground_content']
             interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
         interview = interview_source.get_interview()
+        ensure_ml_file_exists(interview, active_file)
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
         variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False)
         return jsonify(success=True, variables_html=variables_html, vocab_list=vocab_list)
     return jsonify(success=False, reason=2)
-    
+
+def ensure_ml_file_exists(interview, yaml_file):
+    if len(interview.mlfields):
+        if hasattr(interview, 'ml_store'):
+            parts = interview.ml_store.split(':')
+            if parts[0] != 'docassemble.playground' + str(current_user.id):
+                return
+            source_filename = re.sub(r'.*/', '', parts[1])
+        else:
+            source_filename = 'ml-' + re.sub(r'\.ya?ml$', '', yaml_file) + '.json'
+        #logmessage("Source filename is " + source_filename)
+        source_dir = SavedFile(current_user.id, fix=False, section='playgroundsources')
+        if source_filename not in source_dir.list_of_files():
+            #logmessage("Source filename does not exist yet")
+            source_dir.fix()
+            source_path = os.path.join(source_dir.directory, source_filename)
+            with open(source_path, 'a'):
+                os.utime(source_path, None)
+            source_dir.finalize()
+
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -10000,13 +10112,14 @@ def playground_page():
                 interview_source = docassemble.base.parse.interview_source_from_string(active_interview_string)
                 interview_source.set_testing(True)
                 interview = interview_source.get_interview()
+                ensure_ml_file_exists(interview, active_file)
                 interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
                 variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
                 if form.submit.data:
                     flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.', 'success', is_ajax=is_ajax)
                 else:
                     flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success', is_ajax=is_ajax)
-            except:
+            except DAError as foo:
                 variables_html = None
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error', is_ajax=is_ajax)
             if is_ajax:
@@ -10297,11 +10410,12 @@ def package_page():
 
 @app.errorhandler(Exception)
 def server_error(the_error):
-    errmess = unicode(type(the_error).__name__) + ": " + unicode(the_error)
     if isinstance(the_error, DAError):
+        errmess = unicode(the_error)
         the_trace = None
         logmessage(errmess)
     else:
+        errmess = unicode(type(the_error).__name__) + ": " + unicode(the_error)
         the_trace = traceback.format_exc()
         logmessage(the_trace)
     if isinstance(the_error, DAError):
@@ -10580,6 +10694,453 @@ def needs_to_change_password():
         return True
     #logmessage("needs_to_change_password: ending")
     return False
+
+def fix_group_id(the_package, the_file, the_group_id):
+    if the_package == '_global':
+        group_id_to_use = the_group_id
+    else:
+        group_id_to_use = the_package
+        if re.search(r'^data/', the_file):
+            group_id_to_use += ':' + the_file
+        else:
+            group_id_to_use += ':data/sources/ml-' + the_file + '.json'
+        group_id_to_use += ':' + the_group_id
+    return group_id_to_use
+
+def ensure_training_loaded(interview):
+    # parts = yaml_filename.split(':')
+    # if len(parts) != 2:
+    #     logmessage("ensure_training_loaded: could not read yaml_filename " + str(yaml_filename))
+    #     return
+    # source_filename = parts[0] + ':data/sources/ml-' + re.sub(r'\.ya?ml$', '', re.sub(r'.*/', '', parts[1])) + '.json'
+    #logmessage("Source filename is " + source_filename)
+    source_filename = interview.get_ml_store()
+    parts = source_filename.split(':')
+    if len(parts) == 3 and parts[0].startswith('docassemble.') and re.match(r'data/sources/.*\.json', parts[1]):
+        the_file = docassemble.base.functions.package_data_filename(source_filename)
+        if the_file is not None:
+            record = db.session.query(MachineLearning.group_id).filter(MachineLearning.group_id.like(source_filename + ':%')).first()
+            if record is None:
+                if os.path.isfile(the_file):
+                    with open(the_file, 'rU') as fp:
+                        content = fp.read().decode('utf8')
+                    if len(content):
+                        try:
+                            href = json.loads(content)
+                            if type(href) is dict:
+                                nowtime = datetime.datetime.utcnow()
+                                for group_id, train_list in href.iteritems:
+                                    if type(train_list) is list:
+                                        for entry in train_list:
+                                            if 'independent' in entry:
+                                                new_entry = MachineLearning(group_id=source_filename + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry.get('dependent', None)), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
+                                                db.session.add(new_entry)
+                                db.session.commit()
+                            else:
+                                logmessage("ensure_training_loaded: source filename " + source_filename + " not used because it did not contain a dict")
+                        except:
+                            logmessage("ensure_training_loaded: source filename " + source_filename + " not used because it did not contain valid JSON")
+                    else:
+                        logmessage("ensure_training_loaded: source filename " + source_filename + " not used because its content was empty")
+                else:
+                    logmessage("ensure_training_loaded: source filename " + source_filename + " not used because it did not exist")
+            else:
+                logmessage("ensure_training_loaded: source filename " + source_filename + " not used because training data existed")
+        else:
+            logmessage("ensure_training_loaded: source filename " + source_filename + " did not exist")
+    else:
+        logmessage("ensure_training_loaded: source filename " + source_filename + " was not part of a package")
+        
+def get_corresponding_interview(the_package, the_file):
+    #logmessage("get_corresponding_interview: " + the_package + " " + the_file)
+    interview = None
+    if re.match(r'docassemble.playground[0-9]+', the_package):
+        separator = ':'
+    else:
+        separator = ':data/questions/'
+    for interview_file in [the_package + separator + the_file + '.yml', the_package + separator + the_file + '.yaml', the_package + separator + 'examples/' + the_file + '.yml']:
+        #logmessage("Looking for " + interview_file)
+        try:
+            interview = docassemble.base.interview_cache.get_interview(interview_file)
+            break
+        except Exception as the_err:
+            #logmessage("There was an exception looking for " + interview_file + ": " + str(the_err))
+            continue
+    return interview
+
+def ml_prefix(the_package, the_file):
+    the_prefix = the_package
+    if re.search(r'^data/', the_file):
+        the_prefix += ':' + the_file
+    else:
+        the_prefix += ':data/sources/ml-' + the_file + '.json'
+    return the_prefix
+
+@app.route('/train', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer', 'advocate', 'trainer'])
+def train():
+    the_package = request.args.get('package', None)
+    the_file = request.args.get('file', None)
+    the_group_id = request.args.get('group_id', None)
+    show_all = int(request.args.get('show_all', 0))
+    form = TrainingForm(request.form)
+    uploadform = TrainingUploadForm(request.form)
+    if request.method == 'POST' and the_package is not None and the_file is not None:
+        if the_package == '_global':
+            the_prefix = ''
+        else:
+            the_prefix = ml_prefix(the_package, the_file)
+        json_file = None
+        if the_package != '_global' and uploadform.usepackage.data == 'yes':
+            the_file = docassemble.base.functions.package_data_filename(the_prefix)
+            if the_file is None or not os.path.isfile(the_file):
+                flash(word("Error reading JSON file from package.  File did not exist."), 'error')
+                return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
+            json_file = open(the_file, 'rU')
+        if uploadform.usepackage.data == 'no' and 'jsonfile' in request.files and request.files['jsonfile'].filename:
+            json_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".json")
+            request.files['jsonfile'].save(json_file.name)
+            json_file.seek(0)
+        if json_file is not None:
+            try:
+                href = json.load(json_file)
+            except:
+                flash(word("Error reading JSON file.  Not a valid JSON file."), 'error')
+                return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
+            if type(href) is not dict:
+                flash(word("Error reading JSON file.  The JSON file needs to contain a dictionary at the root level."), 'error')
+                return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
+            nowtime = datetime.datetime.utcnow()
+            for group_id, train_list in href.iteritems():
+                if type(train_list) is not list:
+                    logmessage("Could not import part of JSON file.  Items in dictionary must be lists.")
+                    continue
+                if uploadform.importtype.data == 'replace':
+                    MachineLearning.query.filter_by(group_id=the_prefix + ':' + group_id).delete()
+                    db.session.commit()
+                    for entry in train_list:
+                        if 'independent' in entry:
+                            new_entry = MachineLearning(group_id=the_prefix + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry.get('dependent', None)), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
+                            db.session.add(new_entry)
+                elif uploadform.importtype.data == 'merge':
+                    indep_in_use = set()
+                    for record in MachineLearning.query.filter_by(group_id=the_prefix + ':' + group_id).all():
+                        indep_in_use.add(pickle.loads(codecs.decode(record.independent, 'base64')))
+                    for entry in train_list:
+                        if 'independent' in entry and entry['independent'] not in indep_in_use:
+                            new_entry = MachineLearning(group_id=the_prefix + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry.get('dependent', None)), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
+                            db.session.add(new_entry)
+            db.session.commit()
+            flash(word("Training data were successfully imported."), 'success')
+            return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
+        if form.cancel.data:
+            return redirect(url_for('train', package=the_package, file=the_file, show_all=show_all))
+        if form.submit.data:
+            group_id_to_use = fix_group_id(the_package, the_file, the_group_id)
+            post_data = request.form.copy()
+            deleted = set()
+            for key, val in post_data.iteritems():
+                m = re.match(r'delete([0-9]+)', key)
+                if not m:
+                    continue
+                entry_id = int(m.group(1))
+                model = docassemble.base.util.SimpleTextMachineLearner(group_id_to_use)
+                model.delete_by_id(entry_id)
+                deleted.add('dependent' + m.group(1))
+            for key in deleted:
+                if key in post_data:
+                    del post_data[key]
+            for key, val in post_data.iteritems():
+                m = re.match(r'dependent([0-9]+)', key)
+                if not m:
+                    continue
+                orig_key = 'original' + m.group(1)
+                delete_key = 'delete' + m.group(1)
+                if orig_key in post_data and post_data[orig_key] != val and val != '':
+                    entry_id = int(m.group(1))
+                    model = docassemble.base.util.SimpleTextMachineLearner(group_id_to_use)
+                    model.set_dependent_by_id(entry_id, val)
+            if post_data.get('newdependent', '') != '' and post_data.get('newindependent', '') != '':
+                model = docassemble.base.util.SimpleTextMachineLearner(group_id_to_use)
+                model.add_to_training_set(post_data['newindependent'], post_data['newdependent'])
+            return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
+    if show_all:
+        show_all = 1
+        show_cond = MachineLearning.id != None
+    else:
+        show_all = 0
+        show_cond = MachineLearning.dependent == None
+    package_list = dict()
+    file_list = dict()
+    group_id_list = dict()
+    entry_list = list()
+    if current_user.has_role('admin', 'developer'):
+        playground_package = 'docassemble.playground' + str(current_user.id)
+    else:
+        playground_package = None
+    if the_package is None:
+        for record in db.session.query(MachineLearning.group_id, db.func.count(MachineLearning.id).label('count')).filter(show_cond).group_by(MachineLearning.group_id):
+            group_id = record.group_id
+            parts = group_id.split(':')
+            if is_package_ml(parts):
+                if parts[0] not in package_list:
+                    package_list[parts[0]] = 0
+                package_list[parts[0]] += record.count
+            else:
+                if '_global' not in package_list:
+                    package_list['_global'] = 0
+                package_list['_global'] += record.count
+        if not show_all:
+            for record in db.session.query(MachineLearning.group_id).group_by(MachineLearning.group_id):
+                parts = record.group_id.split(':')
+                if is_package_ml(parts):
+                    if parts[0] not in package_list:
+                        package_list[parts[0]] = 0
+            if '_global' not in package_list:
+                package_list['_global'] = 0
+        if playground_package and playground_package not in package_list:
+            package_list[playground_package] = 0
+        package_list = [(x, package_list[x]) for x in sorted(package_list)]
+        return render_template('pages/train.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_package_list=True, playground_package=playground_package)
+    if playground_package and the_package == playground_package:
+        the_package_display = word("My Playground")
+    else:
+        the_package_display = the_package
+    if the_file is None:
+        file_list = dict()
+        for record in db.session.query(MachineLearning.group_id, db.func.count(MachineLearning.id).label('count')).filter(and_(MachineLearning.group_id.like(the_package + ':%'), show_cond)).group_by(MachineLearning.group_id):
+            parts = record.group_id.split(':')
+            #logmessage("Group id is " + str(parts))
+            if not is_package_ml(parts):
+                continue
+            if re.match(r'data/sources/ml-.*\.json', parts[1]):
+                parts[1] = re.sub(r'^data/sources/ml-|\.json$', '', parts[1])
+            if parts[1] not in file_list:
+                file_list[parts[1]] = 0
+            file_list[parts[1]] += record.count
+        if not show_all:
+            for record in db.session.query(MachineLearning.group_id).filter(MachineLearning.group_id.like(the_package + ':%')).group_by(MachineLearning.group_id):
+                parts = record.group_id.split(':')
+                #logmessage("Other group id is " + str(parts))
+                if not is_package_ml(parts):
+                    continue
+                if re.match(r'data/sources/ml-.*\.json', parts[1]):
+                    parts[1] = re.sub(r'^data/sources/ml-|\.json$', '', parts[1])
+                if parts[1] not in file_list:
+                    file_list[parts[1]] = 0
+        if playground_package:
+            area = SavedFile(current_user.id, fix=False, section='playgroundsources')
+            for filename in area.list_of_files():
+                #logmessage("hey file is " + str(filename))
+                if re.match(r'ml-.*\.json', filename):
+                    short_file_name = re.sub(r'^ml-|\.json$', '', filename)
+                    if short_file_name not in file_list:
+                        file_list[short_file_name] = 0
+        file_list = [(x, file_list[x]) for x in sorted(file_list)]
+        return render_template('pages/train.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_file_list=True)
+    if the_group_id is None:
+        the_prefix = ml_prefix(the_package, the_file)
+        the_package_file = docassemble.base.functions.package_data_filename(the_prefix)
+        if the_package_file is not None and os.path.isfile(the_package_file):
+            package_file_available = True
+        else:
+            package_file_available = False
+        if 'download' in request.args and request.args['download']:
+            output = dict()
+            if the_package == '_global':
+                json_filename = 'ml-global.json'
+                for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key):
+                    if is_package_ml(record.group_id.split(':')):
+                        continue
+                    if record.group_id not in output:
+                        output[record.group_id] = list()
+                    the_entry = dict(independent=pickle.loads(codecs.decode(record.independent, 'base64')), dependent=pickle.loads(codecs.decode(record.dependent, 'base64')))
+                    if record.key is not None:
+                        the_entry['key'] = record.key
+                    output[record.group_id].append(the_entry)
+            else:
+                json_filename = 'ml-' + the_file + '.json'
+                prefix = ml_prefix(the_package, the_file)
+                for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).filter(MachineLearning.group_id.like(prefix + ':%')):
+                    parts = record.group_id.split(':')
+                    if not is_package_ml(parts):
+                        continue
+                    if parts[2] not in output:
+                        output[parts[2]] = list()
+                    the_entry = dict(independent=pickle.loads(codecs.decode(record.independent, 'base64')), dependent=pickle.loads(codecs.decode(record.dependent, 'base64')))
+                    if record.key is not None:
+                        the_entry['key'] = record.key
+                    output[parts[2]].append(the_entry)
+            if len(output):
+                the_json_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".json", delete=False)
+                with open(the_json_file.name, 'w') as fp:
+                    json.dump(output, fp, sort_keys=True, indent=2)
+                response = send_file(the_json_file, mimetype='application/json', as_attachment=True, attachment_filename=json_filename)
+                response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+                return(response)
+            else:
+                flash(word("No data existed in training set.  JSON file not created."), "error")
+                return redirect(url_for('train', package=the_package, file=the_file, show_all=show_all))
+        if the_package == '_global':
+            for record in db.session.query(MachineLearning.group_id, db.func.count(MachineLearning.id).label('count')).filter(show_cond).group_by(MachineLearning.group_id):
+                if is_package_ml(record.group_id.split(':')):
+                    continue
+                if record.group_id not in group_id_list:
+                    group_id_list[record.group_id] = 0
+                group_id_list[record.group_id] += record.count
+            if not show_all:
+                for record in db.session.query(MachineLearning.group_id).group_by(MachineLearning.group_id):
+                    if is_package_ml(record.group_id.split(':')):
+                        continue
+                    if record.group_id not in group_id_list:
+                        group_id_list[record.group_id] = 0
+        else:
+            the_prefix = ml_prefix(the_package, the_file)
+            #logmessage("My prefix is " + the_prefix)
+            for record in db.session.query(MachineLearning.group_id, db.func.count(MachineLearning.id).label('count')).filter(and_(MachineLearning.group_id.like(the_prefix + ':%'), show_cond)).group_by(MachineLearning.group_id):
+                parts = record.group_id.split(':')
+                if not is_package_ml(parts):
+                    continue
+                if parts[2] not in group_id_list:
+                    group_id_list[parts[2]] = 0
+                group_id_list[parts[2]] += record.count
+            if not show_all:
+                for record in db.session.query(MachineLearning.group_id).filter(MachineLearning.group_id.like(the_prefix + ':%')).group_by(MachineLearning.group_id):
+                    parts = record.group_id.split(':')
+                    if not is_package_ml(parts):
+                        continue
+                    if parts[2] not in group_id_list:
+                        group_id_list[parts[2]] = 0
+        if the_package != '_global' and not re.search(r'^data/', the_file):
+            interview = get_corresponding_interview(the_package, the_file)
+            if interview is not None and len(interview.mlfields):
+                for saveas in interview.mlfields:
+                    if 'ml_group' in interview.mlfields[saveas] and not interview.mlfields[saveas]['ml_group'].uses_mako:
+                        the_saveas = interview.mlfields[saveas]['ml_group'].original_text
+                    else:
+                        the_saveas = saveas
+                    if not re.search(r':', the_saveas):
+                        if saveas not in group_id_list:
+                            group_id_list[saveas] = 0
+        group_id_list = [(x, group_id_list[x]) for x in sorted(group_id_list)]
+        extra_js = """\
+    <script>
+      $( document ).ready(function() {
+        $("#showimport").click(function(e){
+          $("#showimport").hide();
+          $("#hideimport").show();
+          $("#importcontrols").show('fast');
+          e.preventDefault();
+          return false;
+        });
+        $("#hideimport").click(function(e){
+          $("#showimport").show();
+          $("#hideimport").hide();
+          $("#importcontrols").hide('fast');
+          e.preventDefault();
+          return false;
+        });
+        $("input[type=radio][name=usepackage]").on('change', function(e) {
+          if ($(this).val() == 'no'){
+            $("#uploadinput").show();
+          }
+          else{
+            $("#uploadinput").hide();
+          }
+          e.preventDefault();
+          return false;
+        });
+      });
+    </script>
+"""        
+        return render_template('pages/train.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_group_id_list=True, package_file_available=package_file_available, the_package_location=the_prefix, uploadform=uploadform)
+    else:
+        group_id_to_use = fix_group_id(the_package, the_file, the_group_id)
+        model = docassemble.base.util.SimpleTextMachineLearner(group_id_to_use)
+        for record in db.session.query(MachineLearning.id, MachineLearning.group_id, MachineLearning.key, MachineLearning.info, MachineLearning.independent, MachineLearning.dependent, MachineLearning.create_time, MachineLearning.modtime, MachineLearning.active).filter(and_(MachineLearning.group_id == group_id_to_use, show_cond)):
+            new_entry = dict(id=record.id, group_id=record.group_id, key=record.key, independent=pickle.loads(codecs.decode(record.independent, 'base64')) if record.independent is not None else None, dependent=pickle.loads(codecs.decode(record.dependent, 'base64')) if record.dependent is not None else None, info=pickle.loads(codecs.decode(record.info, 'base64')) if record.info is not None else None, create_type=record.create_time, modtime=record.modtime, active=MachineLearning.active)
+            if new_entry['dependent'] is None:
+                new_entry['predictions'] = model.predict(new_entry['independent'], probabilities=True)
+                if len(new_entry['predictions']) == 0:
+                    new_entry['predictions'] = None
+                elif len(new_entry['predictions']) > 10:
+                    new_entry['predictions'] = new_entry['predictions'][0:10]
+                if new_entry['predictions'] is not None:
+                    new_entry['predictions'] = [(prediction, '%d%%' % (100.0*probability)) for prediction, probability in new_entry['predictions']]
+            else:
+                new_entry['predictions'] = None
+            if new_entry['info'] is not None:
+                if isinstance(new_entry['info'], DAFile):
+                    image_file_list = [new_entry['info']]
+                elif isinstance(new_entry['info'], DAFileList):
+                    image_file_list = new_entry['info']
+                else:
+                    logmessage("train: info is not a DAFile or DAFileList")
+                    continue
+                new_entry['image_files'] = list()
+                for image_file in image_file_list:
+                    if not isinstance(image_file, DAFile):
+                        logmessage("train: file is not a DAFile")
+                        continue
+                    if not image_file.ok:
+                        logmessage("train: file does not have a number")
+                        continue
+                    if image_file.extension not in ['pdf', 'png', 'jpg', 'jpeg', 'gif']:
+                        logmessage("train: file did not have a recognizable image type")
+                        continue
+                    doc_url = get_url_from_file_reference(image_file)
+                    if image_file.extension == 'pdf':
+                        image_url = get_url_from_file_reference(image_file, size="screen", page=1, ext='pdf')
+                    else:
+                        image_url = doc_url
+                    new_entry['image_files'].append(dict(doc_url=doc_url, image_url=image_url))
+            entry_list.append(new_entry)
+        choices = dict()
+        for record in db.session.query(MachineLearning.dependent, db.func.count(MachineLearning.id).label('count')).filter(and_(MachineLearning.group_id == group_id_to_use)).group_by(MachineLearning.dependent):
+            #logmessage("There is a choice")
+            if record.dependent is None:
+                continue
+            key = pickle.loads(codecs.decode(record.dependent, 'base64'))
+            choices[key] = record.count
+        if len(choices):
+            #logmessage("There are choices")
+            choices = [(x, choices[x]) for x in sorted(choices, key=operator.itemgetter(0), reverse=False)]
+        else:
+            #logmessage("There are no choices")
+            choices = None
+        extra_js = """\
+    <script>
+      $( document ).ready(function() {
+        $("button.prediction").click(function(){
+          if (!($("#dependent" + $(this).data("id-number")).prop('disabled'))){
+            $("#dependent" + $(this).data("id-number")).val($(this).data("prediction"));
+          }
+        });
+        $("select.trainer").change(function(){
+          var the_number = $(this).data("id-number");
+          if (the_number == "newdependent"){
+            $("#newdependent").val($(this).val());
+          }
+          else{
+            $("#dependent" + the_number).val($(this).val());
+          }
+        });
+        $("div.delete-observation input").change(function(){
+          var the_number = $(this).data("id-number");
+          if ($(this).is(':checked')){
+            $("#dependent" + the_number).prop('disabled', true);
+            $("#selector" + the_number).prop('disabled', true);
+          }
+          else{
+            $("#dependent" + the_number).prop('disabled', false);
+            $("#selector" + the_number).prop('disabled', false);
+          }
+        });
+      });
+    </script>
+"""
+        return render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True)
 
 @app.route('/interviews', methods=['GET', 'POST'])
 @login_required

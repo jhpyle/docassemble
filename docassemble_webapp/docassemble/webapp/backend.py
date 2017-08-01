@@ -4,7 +4,7 @@ from docassemble.base.config import daconfig, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.base.logger import logmessage
 from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, ObjectStorage, Shortener 
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, ObjectStorage, Shortener, MachineLearning
 from docassemble.base.generate_key import random_string
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
@@ -29,6 +29,7 @@ import sys
 from flask import session, current_app, has_request_context, url_for
 from flask_mail import Mail, Message
 from flask_wtf.csrf import generate_csrf
+from flask_login import current_user
 import docassemble.webapp.worker
 #sys.stderr.write("I am in backend\n")
 
@@ -86,6 +87,43 @@ def savedfile_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     new_file.save(finalize=True)
     return new_file
 
+def fix_ml_files(playground_number):
+    playground = SavedFile(playground_number, section='playgroundsources', fix=False)
+    changed = False
+    for filename in playground.list_of_files():
+        if re.match(r'^ml-.*\.json', filename):
+            playground.fix()
+            if write_ml_source(playground, playground_number, filename, finalize=False):
+                changed = True
+    if changed:
+        playground.finalize()
+
+def is_package_ml(parts):
+    if len(parts) == 3 and parts[0].startswith('docassemble.') and re.match(r'data/sources/.*\.json', parts[1]):
+        return True
+    return False
+
+def write_ml_source(playground, playground_number, filename, finalize=True):
+    if re.match(r'ml-.*\.json', filename):
+        output = dict()
+        prefix = 'docassemble.playground' + str(playground_number) + ':data/sources/' + str(filename)
+        for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).filter(MachineLearning.group_id.like(prefix + ':%')):
+            parts = record.group_id.split(':')
+            if not is_package_ml(parts):
+                continue
+            if parts[2] not in output:
+                output[parts[2]] = list()
+            the_entry = dict(independent=pickle.loads(codecs.decode(record.independent, 'base64')), dependent=pickle.loads(codecs.decode(record.dependent, 'base64')))
+            if record.key is not None:
+                the_entry['key'] = record.key
+            output[parts[2]].append(the_entry)
+        if len(output):
+            playground.write_as_json(output, filename=filename)
+            if finalize:
+                playground.finalize()
+            return True
+    return False
+
 def absolute_filename(the_file):
     match = re.match(r'^docassemble.playground([0-9]+):(.*)', the_file)
     #logmessage("absolute_filename call: " + the_file)
@@ -108,9 +146,9 @@ def absolute_filename(the_file):
     if match:
         filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
         playground = SavedFile(match.group(1), section='playgroundsources', fix=True, filename=filename)
+        write_ml_source(playground, match.group(1), filename)
         return playground
     return(None)
-
 
 mail = Mail(app)
 
@@ -178,6 +216,8 @@ from docassemble.base.functions import pickleable_objects
 #logmessage("Server started")
 
 def can_access_file_number(file_number, uid=None):
+    if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
+        return True
     if uid is None:
         if has_request_context():
             uid = session.get('uid', None)

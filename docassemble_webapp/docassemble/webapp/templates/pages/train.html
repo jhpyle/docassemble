@@ -1,0 +1,256 @@
+{% extends 'base_templates/page_base_half.html' %}
+
+{% block content %}
+{% from "base_templates/form_macros.html" import render_field, render_file_field_simple, render_submit_field with context %}
+<h2>{{ word('Train machine learning models') }}</h2>
+{%- if show_package_list %}
+<p>
+  {%- if show_all %}
+  <a href="{{ url_for('train', show_all=0) }}">{{ word("Hide entries that are already classified") }}</a>
+  {%- else %}
+  <a href="{{ url_for('train', show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
+  {%- endif %}
+</p>
+<h3>{{ word('Packages') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', show_all=show_all) }}"><i class="glyphicon glyphicon-refresh"></i></a></h3>
+<ul class="list-group">
+  {%- for package, count in package_list %}
+  <li class="list-group-item">
+    <span class="badge">{{ count }}</span>
+    {%- if package == '_global' %}
+    <a href="{{ url_for('train', package='_global', file='_global', show_all=show_all) }}">{{ word('Global') }}</a>
+    {%- elif package == playground_package %}
+    <a href="{{ url_for('train', package=package, show_all=show_all) }}">{{ word("My Playground") }}</a>
+    {%- else %}
+    <a href="{{ url_for('train', package=package, show_all=show_all) }}">{{ package }}</a>
+    {%- endif %}
+  </li>
+  {%- endfor %}
+</ul>
+{%- endif %}
+{%- if show_file_list %}
+<p>
+  {%- if show_all %}
+  <a href="{{ url_for('train', package=the_package, show_all=0) }}">{{ word("Hide entries that are already classified") }}</a>
+  {%- else %}
+  <a href="{{ url_for('train', package=the_package, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
+  {%- endif %}
+</p>
+<h3>{{ word('Interviews') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, show_all=show_all) }}"><i class="glyphicon glyphicon-refresh"></i></a></h3>
+<p>
+  <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; {{ the_package_display }}
+</p>
+<ul class="list-group">
+  {%- for file, count in file_list %}
+  <li class="list-group-item">
+    <span class="badge">{{ count }}</span>
+    <a href="{{ url_for('train', package=the_package, file=file, show_all=show_all) }}">{{ file }}</a>
+  </li>
+{%- endfor %}
+</ul>
+{%- endif %}
+{%- if show_group_id_list %}
+<p>
+  {%- if show_all %}
+  <a href="{{ url_for('train', package=the_package, file=the_file, show_all=0) }}">{{ word("Hide entries that are already classified") }}</a>
+  {%- else %}
+  <a href="{{ url_for('train', package=the_package, file=the_file, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
+  {%- endif %}
+</p>
+<h3>{{ word('Models') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}"><i class="glyphicon glyphicon-refresh"></i></a></h3>
+<p>
+  {%- if the_package == '_global' %}
+  <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; {{ word('Global models') }}
+  {%- else %}
+  <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; <a href="{{ url_for('train', package=the_package, show_all=show_all) }}">{{ the_package_display }}</a> &gt; {{ the_file }}
+  {%- endif %}
+  <a class="label label-default mldownload" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="glyphicon glyphicon-download-alt"></i> {{ word('Download') }}</a>
+</p>
+<p>
+  <a class="label label-success" href="#" id="showimport">Show import controls</a>
+  <a class="label label-danger" href="#" id="hideimport" style="display: none">Hide import controls</a>
+</p>
+<form method="POST" class="form" role="form" enctype="multipart/form-data" id="importcontrols" style="display: none">
+  {{ uploadform.hidden_tag() }}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">{{ word("Import training data from a JSON file") }}</h3>
+    </div>
+    <div class="panel-body">
+      {% if package_file_available %}
+      <h4>{{ word("What file do you want to import?") }}</h4>
+      <div class="radio">
+        <label>
+          <input type="radio" name="usepackage" id="usepackage" value="yes" checked>
+          <span>{{ word("The JSON file in the package") }}: <code>{{ the_package_location }}</code></span>
+        </label>
+      </div>
+      <div class="radio">
+        <label>
+          <input type="radio" name="usepackage" id="usepackage" value="no">
+          <span>{{ word("An uploaded JSON file") }}</span>
+        </label>
+      </div>
+      <div id="uploadinput" style="display: none">
+      {% else %}
+      <input id="the_package" name="usepackage" type="hidden" value="no">
+      <div id="uploadinput">
+      {% endif %}
+        {{ render_file_field_simple(uploadform.jsonfile) }}
+      </div>
+      <h4>{{ word("How would you like the data to be imported?") }}</h4>
+      <div class="radio">
+        <label>
+          <input type="radio" name="importtype" id="importtype" value="merge" checked>
+          <span>{{ word("Merge new data into existing data") }}</span>
+        </label>
+      </div>
+      <div class="radio">
+        <label>
+          <input type="radio" name="importtype" id="importtype" value="replace">
+          <span>{{ word("Erase existing data for each model before importing") }}</span>
+        </label>
+      </div>
+      <div class="form-actions">
+        {{ render_submit_field(uploadform.submit, class="btn btn-primary btn-lg") }}
+      </div>
+    </div>
+  </div>
+</form>
+{%- if group_id_list|length > 0 %}
+<ul class="list-group">
+  {%- for group_id, count in group_id_list %}
+  <li class="list-group-item">
+    <span class="badge">{{ count }}</span>
+    <a href="{{ url_for('train', package=the_package, file=the_file, group_id=group_id, show_all=show_all) }}">{{ group_id }}</a>
+  </li>
+  {%- endfor %}
+</ul>
+{%- else %}
+<p>No models were found.</p>
+{%- endif %}
+{%- endif %}
+{%- if show_entry_list %}
+<p>
+  {%- if show_all %}
+  <a href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=0) }}">{{ word("Hide entries that are already classified") }}</a>
+  {%- else %}
+  <a href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
+  {%- endif %}
+</p>
+<h3>{{ word('Items') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all) }}"><i class="glyphicon glyphicon-refresh"></i></a></h3>
+<p>
+  {%- if the_package == '_global' %}
+  <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; <a href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}">{{ word('Global models') }}</a> &gt; {{ the_group_id }}
+  {%- else %}
+  <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; <a href="{{ url_for('train', package=the_package, show_all=show_all) }}">{{ the_package_display }}</a> &gt; <a href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}">{{ the_file }}</a> &gt; {{ the_group_id }}
+  {%- endif %}
+</p>
+<form action="" method="POST" class="form" role="form">
+  {{ form.hidden_tag() }}
+  <input id="the_package" name="the_package" type="hidden" value="{{ the_package }}">
+  <input id="the_file" name="the_file" type="hidden" value="{{ the_file }}">
+  <input id="the_group_id" name="the_group_id" type="hidden" value="{{ the_group_id }}">
+  <input id="show_all" name="show_all" type="hidden" value="{{ show_all }}">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      {{ word("Manually add a training item") }}
+    </div>
+    <div class="panel-body">
+      <div class="form-group">
+        <label for="newindependent">{{ word("Input") }}</label>
+        <textarea id="newindependent" name="newindependent" class="form-control"></textarea>
+        <label for="newdependent">{{ word("Actual") }}</label>
+        <div class="row">
+          <div class="col-md-8">
+            <input class="form-control actualval" id="newdependent" name="newdependent" type="text" value="">
+          </div>
+          {%- if choices %}
+          <div class="col-md-4">
+            <select data-id-number="newdependent" class="form-control trainer">
+              <option value="" selected>{{ word("Select one") }}</option>
+              {%- for item, count in choices %}
+              <option value="{{ item }}">{{ item }}</option>
+              {%- endfor %}
+            </select>
+          </div>
+          {%- endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="form-actions">
+    {{ render_submit_field(form.submit, tabindex=200, class="btn btn-primary btn-lg") }}
+    {{ render_submit_field(form.cancel, tabindex=210, class="btn btn-default btn-lg") }}
+  </div>
+  {%- if entry_list|length > 0 %}
+  {%- if show_all %}
+  <h4>{{ word('Items in the training set') }}</h4>
+  {%- else %}
+  <h4>{{ word('Unclassified items in the training set') }}</h4>
+  {%- endif %}
+  {%- for entry in entry_list %}
+  <div class="panel panel-default">
+    <div class="panel-body">
+      <div class="form-group">
+        <div class="checkbox delete-observation">
+          <label>
+            <input type="checkbox" name="delete{{ entry.id }}" data-id-number="{{ entry.id }}"> {{ word("Delete") }}
+          </label>
+        </div>
+        <label>{{ word("Input") }}</label>
+        <blockquote class="limheight">{{ entry.independent }}</blockquote>
+        {%- if entry.image_files %}
+        {%- if entry|length == 1 %}
+        <label>{{ word("File") }}</label>
+        {%- else %}
+        <label>{{ word("Files") }}</label>
+        {%- endif %}
+        {%- for linked_file in entry.image_files %}
+        <div class="imagepreview"><a target="_blank" href="{{ linked_file['doc_url'] }}"><img src="{{ linked_file['image_url'] }}"></a></div>
+        {%- endfor %}
+        {%- endif %}
+        {%- if entry.predictions %}
+        <label>{{ word("Prediction") }}</label>
+        <div>
+          {%- for prediction, probability in entry.predictions[0:1] %}
+          <button data-id-number="{{ entry.id }}" data-prediction="{{ prediction }}" class="btn btn-success btn-sm prediction" type="button">
+            {{ prediction }} <span class="badge">{{ probability }}</span>
+          </button>
+          {%- endfor %}
+          {%- for prediction, probability in entry.predictions[1:] %}
+          <button data-id-number="{{ entry.id }}" data-prediction="{{ prediction }}" class="btn btn-primary btn-sm prediction" type="button">
+            {{ prediction }} <span class="badge">{{ probability }}</span>
+          </button>
+          {%- endfor %}
+        </div>
+        {%- endif %}
+        <label for="dependent{{ entry.id }}">{{ word("Actual") }}</label>
+        <div class="row">
+          <div class="col-md-8">
+            <input id="original{{ entry.id }}" name="original{{ entry.id }}" type="hidden" value="{{ '' if entry.dependent is none else entry.dependent }}">
+            <input class="form-control actualval" id="dependent{{ entry.id }}" name="dependent{{ entry.id }}" type="text" value="{{ '' if entry.dependent is none else entry.dependent }}">
+          </div>
+          {%- if choices %}
+          <div class="col-md-4">
+            <select data-id-number="{{ entry.id }}" id="selector{{ entry.id }}" class="form-control trainer">
+              <option value="" selected>{{ word("Select one") }}</option>
+              {%- for item, count in choices %}
+              <option value="{{ item }}">{{ item }}</option>
+              {%- endfor %}
+            </select>
+          </div>
+          {%- endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {%- endfor %}
+  <div class="form-actions">
+    {{ render_submit_field(form.submit, tabindex=200, class="btn btn-primary btn-lg") }}
+    {{ render_submit_field(form.cancel, tabindex=210, class="btn btn-default btn-lg") }}
+  </div>
+  {%- endif %}
+</form>
+{%- endif %}
+
+{% endblock %}

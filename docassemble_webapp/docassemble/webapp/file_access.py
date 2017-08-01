@@ -12,6 +12,7 @@ import docassemble.base.functions
 from docassemble.webapp.core.models import Uploads
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from flask import session, has_request_context
+from flask_login import current_user
 
 def reference_exists(file_reference):
     #logmessage("Got req for " + file_reference)
@@ -132,10 +133,13 @@ def add_info_about_file(filename, result):
     return
 
 def get_info_from_file_number(file_number, privileged=False, filename=None):
-    if has_request_context():
-        uid = session['uid']
+    if current_user and current_user.is_authenticated and current_user.current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
+        privileged = True
     else:
-        uid = docassemble.base.functions.get_uid()
+        if has_request_context():
+            uid = session['uid']
+        else:
+            uid = docassemble.base.functions.get_uid()
     #logmessage("get_info_from_file_number: privileged is " + str(privileged) + " and uid is " + str(uid))
     result = dict()
     if privileged:

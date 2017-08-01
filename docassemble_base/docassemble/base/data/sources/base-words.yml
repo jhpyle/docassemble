@@ -95,6 +95,9 @@
 "Error: menu_items is not a Python list": Null
 "Error: no fields could be found in the file": Null
 "Error": Null
+"Error reading JSON file from package.  File did not exist.": Null
+"Error reading JSON file.  Not a valid JSON file.": Null
+"Error reading JSON file.  The JSON file needs to contain a dictionary at the root level.": Null
 "Every Two Weeks": Null
 "exit": Null
 "Exit": Null
@@ -138,6 +141,8 @@
 "I am sorry.  The code you entered is invalid or expired.  Goodbye.": Null
 "I do not understand what you mean by": Null
 "I don't know": Null
+"Import method": Null
+"Import": Null
 "Input box": Null
 "Install": Null
 "Interview files": Null
@@ -151,6 +156,7 @@
 ", is already in use by someone else": Null
 ", is attached": Null
 "Join": Null
+"JSON file": Null
 "Language": Null
 "Last name is required": Null
 "Last name": Null
@@ -178,6 +184,7 @@
 "Must be a two-letter code": Null
 "Must be a valid e-mail address": Null
 "My Interviews": Null
+"My Playground": Null
 "Name": Null
 "Name of new privilege is required": Null
 "Name of new privilege": Null
@@ -193,6 +200,7 @@
 "n": Null
 "No access code was entered.": Null
 "No administrators could be found.": Null
+"No data existed in training set.  JSON file not created.": Null
 "none": Null
 "no": Null
 "No": Null
@@ -253,7 +261,6 @@
 "Possibly not used": Null
 "Press one of the following buttons:": Null
 "Preview": Null
-"Privileges List": Null
 "Privileges": Null
 "Problem detected.": Null
 "Profile": Null
@@ -369,6 +376,8 @@
 "to proceed.": Null
 "To reach an advocate who can assist you, call": Null
 "To read the question again, type question.": Null
+"Training data were successfully imported.": Null
+"Train": Null
 "Translate": Null
 "Tried to ask mandatory question": Null
 "Tried to ask question": Null
@@ -424,6 +433,7 @@
 "Upload successful": Null
 "URL": Null
 "Used in": Null
+"Use Package": Null
 "User List": Null
 "user": Null
 "User": Null

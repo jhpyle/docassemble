@@ -1,0 +1,10 @@
+mandatory: True
+question: |
+  It seems your goal is
+  ${ goal }.
+---
+question: |
+  What is your goal?
+fields:
+  - no label: goal
+    datatype: mlarea

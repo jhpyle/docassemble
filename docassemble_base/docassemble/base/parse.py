@@ -156,7 +156,7 @@ class InterviewSource(object):
     def get_dialect(self):
         return self.dialect
     def get_package(self):
-        return self.dialect
+        return self.package
     def get_testing(self):
         return self.testing
     def get_interview(self):
@@ -559,6 +559,22 @@ class Question:
         if 'default language' in data:
             should_append = False
             self.from_source.set_language(data['default language'])
+        if 'machine learning storage' in data:
+            should_append = False
+            new_storage = data['machine learning storage']
+            if not new_storage.endswith('.json'):
+                raise DAError("Invalid machine learning storage entry '" + str(data['machine learning storage']) + ".'  A machine learning storage entry must refer to a file ending in .json." + self.idebug(data))
+            parts = new_storage.split(":")
+            if len(parts) == 1:
+                new_storage = re.sub(r'^data/sources/', '', new_storage)
+                the_package = self.from_source.get_package()
+                if the_package is not None:
+                    new_storage = self.from_source.get_package() + ':data/sources/' + new_storage
+                self.interview.set_ml_store(new_storage)
+            elif len(parts) == 2 and parts[0].startswith('docassemble.') and parts[1].startswith('data/sources/'):
+                self.interview.set_ml_store(data['machine learning storage'])
+            else:
+                raise DAError("Invalid machine learning storage entry: " + str(data['machine learning storage']) + self.idebug(data))
         if 'language' in data:
             self.language = data['language']
         else:
@@ -1346,7 +1362,19 @@ class Question:
                         for key in field:
                             if key == 'default' and 'datatype' in field and field['datatype'] in ['object', 'object_radio', 'object_checkboxes']:
                                 continue
-                            if key == 'required':
+                            if 'datatype' in field and field['datatype'] in ['ml', 'mlarea'] and key in ['using', 'use for training']:
+                                if key == 'using':
+                                    if 'extras' not in field_info:
+                                        field_info['extras'] = dict()
+                                    field_info['extras']['ml_group'] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
+                                if key == 'use for training':
+                                    if 'extras' not in field_info:
+                                        field_info['extras'] = dict()
+                                    if type(field[key]) is bool:
+                                        field_info['extras']['ml_train'] = field[key]
+                                    else:
+                                        field_info['extras']['ml_train'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
+                            elif key == 'required':
                                 if type(field[key]) is bool:
                                     field_info['required'] = field[key]
                                 else:
@@ -1454,7 +1482,7 @@ class Question:
                                 field_info['label'] = TextObject(definitions + interpret_label(field[key]), names_used=self.mako_names)
                             else:
                                 if 'label' in field_info:
-                                    raise DAError("Syntax error: field label '" + str(key) + "' overwrites previous label, '" + str(field_info['label']) + "'" + self.idebug(data))
+                                    raise DAError("Syntax error: field label '" + str(key) + "' overwrites previous label, '" + str(field_info['label'].original_text) + "'" + self.idebug(data))
                                 field_info['label'] = TextObject(definitions + interpret_label(key), names_used=self.mako_names)
                                 field_info['saveas'] = field[key]
                         if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ['object', 'object_radio', 'object_checkboxes']:
@@ -1490,8 +1518,21 @@ class Question:
                             field_info['selections'] = {'compute': compile(source_code, '', 'eval'), 'sourcecode': source_code}
                         if 'saveas' in field_info:
                             self.fields.append(Field(field_info))
-                            if 'type' in field_info and field_info['type'] == 'object_checkboxes':
-                                self.fields_used.add(field_info['saveas'] + '.gathered')
+                            if 'type' in field_info:
+                                if field_info['type'] == 'object_checkboxes':
+                                    self.fields_used.add(field_info['saveas'] + '.gathered')
+                                elif field_info['type'] in ['ml', 'mlarea']:
+                                    self.fields_used.add(field_info['saveas'])
+                                    self.interview.mlfields[field_info['saveas']] = dict(saveas=field_info['saveas'])
+                                    if 'extras' in field_info and 'ml_group' in field_info['extras']:
+                                        self.interview.mlfields[field_info['saveas']]['ml_group'] = field_info['extras']['ml_group']
+                                    if re.search(r'\.text$', field_info['saveas']):
+                                        field_info['saveas'] = re.sub(r'\.text$', '', field_info['saveas'])
+                                        self.fields_used.add(field_info['saveas'])
+                                    else:
+                                        self.fields_used.add(field_info['saveas'] + '.text')
+                                else:
+                                    self.fields_used.add(field_info['saveas'])
                             else:
                                 self.fields_used.add(field_info['saveas'])
                         elif 'type' in field_info and field_info['type'] in ['note', 'html']: #, 'script', 'css'
@@ -2035,7 +2076,7 @@ class Question:
                 if hasattr(field, 'label'):
                     labels[field.number] = field.label.text(user_dict)
                 if hasattr(field, 'extras'):
-                    for key in ['note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step']: # , 'textresponse', 'content_type' #'script', 'css', 
+                    for key in ['note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'ml_group']: # , 'textresponse', 'content_type' #'script', 'css', 
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
@@ -2045,6 +2086,14 @@ class Question:
                     #         if key not in extras:
                     #             extras[key] = dict()
                     #         extras[key][field.number] = field.extras[key]
+                    for key in ['ml_train']:
+                        if key in field.extras:
+                            if key not in extras:
+                                extras[key] = dict()
+                            if type(field.extras[key]) is bool:
+                                extras[key][field.number] = field.extras[key]
+                            else:
+                                extras[key][field.number] = eval(field.extras[key]['compute'], user_dict)
                 if hasattr(field, 'saveas'):
                     try:
                         defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
@@ -2450,6 +2499,7 @@ class Interview:
         self.helptext = dict()
         self.defs = dict()
         self.terms = dict()
+        self.mlfields = dict()
         self.autoterms = dict()
         self.includes = set()
         self.reconsider = set()
@@ -2467,6 +2517,27 @@ class Interview:
         self.success = True
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
+    def get_ml_store(self):
+        if hasattr(self, 'ml_store'):
+            return self.ml_store
+        else:
+            return self.standard_ml_store()
+    def set_ml_store(self, ml_store):
+        self.ml_store = ml_store
+    def standard_ml_store(self):
+        if self.source is None:
+            ml_store = None
+        else:
+            ml_store = self.source.get_package()
+        if ml_store is None:
+            ml_store = ''
+        else:
+            ml_store += ':data/sources/'
+        if self.source and self.source.path is not None:
+            ml_store += 'ml-' + re.sub(r'\..*', '', re.sub(r'.*[/:]', '', self.source.path)) + '.json'
+        else:
+            ml_store += 'ml-default.json'
+        return ml_store
     def get_title(self):
         if self.title is not None:
             return self.title

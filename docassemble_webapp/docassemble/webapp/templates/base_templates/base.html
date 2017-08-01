@@ -42,6 +42,9 @@
 		{%- if current_user.has_roles(['admin', 'developer', 'advocate']) %}
 		<li><a href="{{ url_for('monitor') }}">{{ word('Monitor') }}</a></li>
 		{%- endif %}
+		{%- if current_user.has_roles(['admin', 'developer', 'advocate', 'trainer']) %}
+		<li><a href="{{ url_for('train') }}">{{ word('Train') }}</a></li>
+		{%- endif %}
 		{%- if current_user.has_roles(['admin', 'developer']) %}
 		<li><a href="{{ url_for('package_page') }}">{{ word('Package Management') }}</a></li>
 		<li><a href="{{ url_for('logs') }}">{{ word('Logs') }}</a></li>
@@ -49,7 +52,6 @@
 		<li><a href="{{ url_for('utilities') }}">{{ word('Utilities') }}</a></li>
 		  {%- if current_user.has_roles(['admin']) %}
 		<li><a href="{{ url_for('user_list') }}">{{ word('User List') }}</a></li>
-		{# <li><a href="{{ url_for('privilege_list') }}">{{ word('Privileges List') }}</a></li> #}
 		<li><a href="{{ url_for('config_page') }}">{{ word('Configuration') }}</a></li>
 		  {%- endif %}
 		{%- endif %}

@@ -19,7 +19,7 @@ code: |
   if not the_task.ready():
     waiting_screen
   ml = SimpleTextMachineLearner('ocr_ai')
-  ml.save_for_classification(phrase)
+  ml.save_for_classification(phrase, info=the_file)
   predictions = ml.predict(phrase)
 ---
 question: |

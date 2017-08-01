@@ -1,8 +1,12 @@
 # Change Log
 
 ## [0.1.27]
+### Added
+- ml and mlarea data types and training system
 ### Fixed
 - Better error message in Playground when interview has a syntax error
+- Problem with temporary files introduced in 0.1.23 that was causing
+  PDF fill-in to fail
 
 ## [0.1.26] - 2017-07-25
 ### Fixed

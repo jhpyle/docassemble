@@ -646,6 +646,7 @@ def as_html(status, url_for, debug, root, validation_rules):
         checkboxes = list()
         files = list()
         hiddens = dict()
+        ml_info = dict()
         checkbox_validation = False
         if status.subquestionText:
             sub_question_text = markdown_to_html(status.subquestionText, status=status, indent=18, embedder=embed_input)
@@ -672,6 +673,12 @@ def as_html(status, url_for, debug, root, validation_rules):
                 # if 'css' in field.extras and 'css' in status.extras:
                 #     status.extra_css.append(status.extras['css'][field.number])
                 #fieldlist.append("<div>datatype is " + str(field.datatype) + "</div>")
+                if 'ml_group' in field.extras or 'ml_train' in field.extras:
+                    ml_info[field.saveas] = dict()
+                    if 'ml_group' in field.extras:
+                        ml_info[field.saveas]['group_id'] = field.extras['ml_group']
+                    if 'ml_train' in field.extras:
+                        ml_info[field.saveas]['train'] = field.extras['ml_train']
                 if 'show_if_var' in field.extras and 'show_if_val' in status.extras:
                     if hasattr(field, 'saveas'):
                         fieldlist.append('                <div class="showif" data-saveas="' + escape_id(field.saveas) + '" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(unicode(status.extras['show_if_val'][field.number])) + '>\n')
@@ -780,6 +787,8 @@ def as_html(status, url_for, debug, root, validation_rules):
             output += '                <input type="hidden" name="_checkboxes" value=' + myb64doublequote(json.dumps(checkboxes)) + '/>\n'
         if len(hiddens):
             output += '                <input type="hidden" name="_empties" value=' + myb64doublequote(json.dumps(hiddens)) + '/>\n'
+        if len(ml_info):
+            output += '                <input type="hidden" name="_ml_info" value=' + myb64doublequote(json.dumps(ml_info)) + '/>\n'
         if len(files):
             output += '                <input type="hidden" name="_files" value=' + myb64doublequote(json.dumps(files)) + '/>\n'
             init_string = '<script>'
@@ -1510,7 +1519,7 @@ def input_for(status, field, wide=False, embedded=False):
                 else:
                     output += '<input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + '>'
                 status.extra_scripts.append('<script>$("#' + escape_for_jquery(saveas_string) + '").slider({tooltip: "always"});</script>\n')
-        elif field.datatype == 'area':
+        elif field.datatype in ['area', 'mlarea']:
             output += '<textarea alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + title_text + ' rows="4" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + '>'
             if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
                 output += defaultvalue
@@ -1531,6 +1540,8 @@ def input_for(status, field, wide=False, embedded=False):
                 if field.datatype == 'currency':
                     step_string = ' step="0.01"'
                     output += '<div class="input-group"><span class="input-group-addon" id="addon-' + do_escape_id(saveas_string) + '">' + currency_symbol() + '</span>'
+            if field.datatype == 'ml':
+                input_type = 'text'
             output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + title_text + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
             if field.datatype in ('currency', 'file', 'files', 'camera', 'camcorder', 'microphone'):
                 output += ' aria-describedby="addon-' + do_escape_id(saveas_string) + '"/></div><label style="display: none;" for="' + escape_id(saveas_string) + '" class="help-inline" id="' + escape_id(saveas_string) + '-error"></label>'

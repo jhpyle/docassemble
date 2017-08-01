@@ -1,6 +1,7 @@
 import sys
 import os
 import re
+import json
 import pytz
 import shutil
 import urllib
@@ -135,6 +136,16 @@ class SavedFile(object):
             return key.size
         else:
             return os.path.getsize(os.path.join(self.directory, filename))
+    def list_of_files(self):
+        output = list()
+        if cloud is not None and not self.fixed:
+            prefix = str(self.section) + '/' + str(self.file_number) + '/'
+            for key in cloud.list_keys(prefix):
+                output.append(re.sub(r'.*/', '', key.name))
+        else:
+            for filename in os.listdir(self.directory):
+                output.append(filename)
+        return sorted(output)
     def copy_from(self, orig_path, **kwargs):
         filename = kwargs.get('filename', self.filename)
         if not self.fixed:
@@ -158,6 +169,16 @@ class SavedFile(object):
             self.fix()
         with open(os.path.join(self.directory, filename), 'wb') as ifile:
             ifile.write(content)
+        if kwargs.get('save', True):
+            self.save()
+        return
+    def write_as_json(self, obj, **kwargs):
+        filename = kwargs.get('filename', self.filename)
+        if not self.fixed:
+            self.fix()
+        #logmessage("write_as_json: writing to " + os.path.join(self.directory, filename))
+        with open(os.path.join(self.directory, filename), 'wb') as ifile:
+            json.dump(obj, ifile, sort_keys=True, indent=2)
         if kwargs.get('save', True):
             self.save()
         return
@@ -233,7 +254,7 @@ class SavedFile(object):
                     key.set_contents_from_filename(fullpath)
         for filename, key in self.keydict.iteritems():
             if filename not in existing_files:
-                logmessage("Deleting filename " + str(filename) + " from cloud")
+                #logmessage("Deleting filename " + str(filename) + " from cloud")
                 key.delete()
         return
         

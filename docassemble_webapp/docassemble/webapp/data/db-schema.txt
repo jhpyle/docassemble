@@ -37,6 +37,7 @@ machinelearning|create_time|timestamp without time zone||now()
 machinelearning|modtime|timestamp without time zone||now()
 machinelearning|active|boolean||false
 machinelearning|key|text||
+machinelearning|info|text||
 package|id|integer||nextval('package_id_seq'::regclass)
 package|name|character varying|255|
 package|type|text||

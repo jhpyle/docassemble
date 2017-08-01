@@ -52,6 +52,7 @@ class MachineLearning(db.Model):
     key = db.Column(db.Text())
     independent = db.Column(db.Text())
     dependent = db.Column(db.Text())
+    info = db.Column(db.Text())
     create_time = db.Column(db.DateTime())
     modtime = db.Column(db.DateTime())
     active = db.Column(db.Boolean(), nullable=False, server_default='0')

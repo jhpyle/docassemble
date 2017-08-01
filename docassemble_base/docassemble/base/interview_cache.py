@@ -10,6 +10,7 @@ def get_interview(path):
     if cache_valid(path):
         #logmessage("Cache is valid" + "\n")
         the_interview = _interview_cache[path]['interview']
+        the_interview.from_cache = True
     else:
         #logmessage("Not fetching from cache" + "\n")
         interview_source = docassemble.base.parse.interview_source_from_string(path)
@@ -18,6 +19,7 @@ def get_interview(path):
         if interview_source.path in _interview_cache:
             del _interview_cache[interview_source.path]
         the_interview = interview_source.get_interview()
+        the_interview.from_cache = False
         _interview_cache[interview_source.path] = {'modtime': modtime, 'interview': the_interview, 'source': interview_source}
     return(the_interview)
 

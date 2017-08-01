@@ -1,0 +1,29 @@
+metadata:
+  title: Share training sets
+  short title: Share
+  documentation: "https://docassemble.org/docs/ml.html#variable sharing"
+  example start: 1
+  example end: 3
+---
+mandatory: True
+question: |
+  % if present_activity.prediction == future_activity.prediction:
+  It seems that you are fairly
+  content with your current work.
+  % else:
+  That's interesting.
+  % endif
+---
+question: |
+  What kind of work do you do now?
+fields:
+  - Work: present_activity
+    datatype: ml
+---
+question: |
+  What kind of work do you see
+  yourself doing in five years?
+fields:
+  - Work: future_activity
+    datatype: ml
+    using: present_activity
