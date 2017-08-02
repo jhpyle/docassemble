@@ -1,0 +1,18 @@
+modules:
+  docassemble.demo.errors
+---
+mandatory: True
+question: |
+  The answer was ${ the_answer }.
+---
+question: |
+  Answer this.
+fields:
+  - Fruit: favorite_fruit
+  - Seeds: the_answer
+    datatype: integer
+    validate: is_two
+validation code: |
+  if favorite_fruit == 'apple':
+    raise Exception("You are not allowed to like apples.")
+  

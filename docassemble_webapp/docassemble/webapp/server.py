@@ -3698,6 +3698,7 @@ def index():
     # if should_assemble and '_action_context' in post_data:
     #     action = json.loads(myb64unquote(post_data['_action_context']))
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location), tracker=user_dict['_internal']['tracker'])
+    
     if should_assemble or something_changed:
         interview.assemble(user_dict, interview_status)
         if '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
@@ -3740,78 +3741,28 @@ def index():
     known_varnames = dict()
     if '_varnames' in post_data:
         known_varnames = json.loads(myb64unquote(post_data['_varnames']))
-    if '_files' in post_data:
-        file_fields = json.loads(myb64unquote(post_data['_files'])) #post_data['_files'].split(",")
-        has_invalid_fields = False
-        should_assemble_now = False
-        for orig_file_field in file_fields:
-            try:
-                file_field = from_safeid(orig_file_field)
-            except:
-                error_messages.append(("error", "Error: Invalid file_field: " + orig_file_field))
-                break
-            if match_invalid.search(file_field):
-                has_invalid_fields = True
-                error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
-                break
-            if key_requires_preassembly.search(file_field):
-                should_assemble_now = True
-        if not has_invalid_fields:
-            initial_string = 'import docassemble.base.core'
-            try:
-                exec(initial_string, user_dict)
-            except Exception as errMess:
-                error_messages.append(("error", "Error: " + str(errMess)))
-            if something_changed and should_assemble_now and not should_assemble:
+    field_numbers = dict()
+    for kv_key, kv_var in known_varnames.iteritems():
+        try:
+            field_identifier = myb64unquote(kv_key)
+            m = re.search(r'_field_([0-9]+)', field_identifier)
+            if m:
+                field_numbers[kv_var] = int(m.group(1))
+        except:
+            logmessage("index: error where kv_key is " + str(kv_key) + " and kv_var is " + str(kv_var))
+    #logmessage("field_numbers is " + str(field_numbers))
+    if '_question_name' in post_data and post_data['_question_name'] in interview.questions_by_name:
+        the_question = interview.questions_by_name[post_data['_question_name']]
+        if not (should_assemble or something_changed):
+            if the_question.validation_code is not None:
                 interview.assemble(user_dict, interview_status)
-            for orig_file_field_raw in file_fields:
-                orig_file_field = orig_file_field_raw
-                var_to_store = orig_file_field_raw
-                if orig_file_field not in request.files and len(known_varnames):
-                    for key, val in known_varnames.iteritems():
-                        if val == orig_file_field_raw:
-                            orig_file_field = key
-                            var_to_store = val
-                            break
-                if orig_file_field in request.files:
-                    the_files = request.files.getlist(orig_file_field)
-                    if the_files:
-                        files_to_process = list()
-                        for the_file in the_files:
-                            filename = secure_filename(the_file.filename)
-                            file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
-                            extension, mimetype = get_ext_and_mimetype(filename)
-                            saved_file = SavedFile(file_number, extension=extension, fix=True)
-                            temp_file = tempfile.NamedTemporaryFile(suffix='.' + extension)
-                            the_file.save(temp_file.name)
-                            process_file(saved_file, temp_file.name, mimetype, extension)
-                            #sys.stderr.write("Upload was processed\n")
-                            files_to_process.append((filename, file_number, mimetype, extension))
-                        try:
-                            file_field = from_safeid(var_to_store)
-                        except:
-                            error_messages.append(("error", "Error: Invalid file_field: " + var_to_store))
-                            break
-                        if match_invalid.search(file_field):
-                            error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
-                            break
-                        if len(files_to_process) > 0:
-                            elements = list()
-                            indexno = 0
-                            for (filename, file_number, mimetype, extension) in files_to_process:
-                                elements.append("docassemble.base.core.DAFile('" + file_field + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", make_pngs=True, mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
-                                indexno += 1
-                            the_string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
-                        else:
-                            the_string = file_field + " = None"
-                        #logmessage("Doing " + the_string)
-                        try:
-                            exec(the_string, user_dict)
-                            changed = True
-                            steps += 1
-                        except Exception as errMess:
-                            sys.stderr.write("Error: " + str(errMess) + "\n")
-                            error_messages.append(("error", "Error: " + str(errMess)))
+            else:
+                for the_field in the_question.fields:
+                    if hasattr(the_field, 'validate'):
+                        interview.assemble(user_dict, interview_status)
+                        break
+    else:
+        the_question = None
     known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
         if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
@@ -3823,6 +3774,8 @@ def index():
         if key.startswith('_field_') and orig_key in known_varnames:
             if not (known_varnames[orig_key] in post_data and post_data[known_varnames[orig_key]] != '' and post_data[orig_key] == ''):
                 post_data[known_varnames[orig_key]] = post_data[orig_key]
+    field_error = dict()
+    validated = True
     for orig_key in post_data:
         if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
             continue
@@ -3898,33 +3851,42 @@ def index():
         do_append = False
         do_opposite = False
         is_ml = False
+        test_data = data
         if real_key in known_datatypes:
             #logmessage("key " + real_key + "is in datatypes: " + known_datatypes[key])
             if known_datatypes[real_key] in ['boolean', 'checkboxes', 'yesno', 'noyes', 'yesnowide', 'noyeswide']:
                 if data == "True":
                     data = "True"
+                    test_data = True
                 else:
                     data = "False"
+                    test_data = False
             elif known_datatypes[real_key] in ['threestate', 'yesnomaybe', 'noyesmaybe', 'yesnowidemaybe', 'noyeswidemaybe']:
                 if data == "True":
                     data = "True"
+                    test_data = True
                 elif data == "None":
                     data = "None"
+                    test_data = None
                 else:
                     data = "False"
+                    test_data = False
             elif known_datatypes[real_key] == 'date':
                 if type(data) in [str, unicode]:
                     data = data.strip()
+                    test_data = data
                 data = repr(data)
             elif known_datatypes[real_key] == 'integer':
                 if data == '':
                     data = 0
+                test_data = int(data)
                 data = "int(" + repr(data) + ")"
             elif known_datatypes[real_key] in ['ml', 'mlarea']:
                 is_ml = True
             elif known_datatypes[real_key] in ['number', 'float', 'currency', 'range']:
                 if data == '':
                     data = 0
+                test_data = float(data)
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[real_key] in ['object', 'object_radio']:
                 if data == '' or set_to_empty:
@@ -3942,6 +3904,7 @@ def index():
             else:
                 if type(data) in [str, unicode]:
                     data = data.strip()
+                test_data = data
                 data = repr(data)
             if known_datatypes[real_key] in ['object_checkboxes']:
                 do_append = True
@@ -3993,6 +3956,14 @@ def index():
                 the_string = 'if ' + data + ' not in ' + key_to_use + '.elements:\n    ' + key_to_use + '.append(' + data + ')'
         else:
             the_string = key + ' = ' + data
+            if orig_key in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_key] and hasattr(the_question.fields[field_numbers[orig_key]], 'validate'):
+                logmessage("field has validation function")
+                the_func = eval(the_question.fields[field_numbers[orig_key]].validate['compute'], user_dict)
+                the_result = the_func(test_data)
+                if the_result is not True:
+                    field_error[orig_key] = the_result
+                    validated = False
+                    continue
         #logmessage("Doing " + str(the_string))
         try:
             exec(the_string, user_dict)
@@ -4001,34 +3972,105 @@ def index():
         except Exception as errMess:
             error_messages.append(("error", "Error: " + str(errMess)))
             # logmessage("Error: " + str(errMess))
-    for orig_key in empty_fields:
-        key = myb64unquote(orig_key)
-        #logmessage("Doing key " + str(key))
-        if empty_fields[orig_key] == 'object_checkboxes':
-            exec(key + '.clear()' , user_dict)
-            exec(key + '.gathered = True' , user_dict)
-        elif empty_fields[orig_key] in ['object', 'object_radio']:
+    if validated:
+        for orig_key in empty_fields:
+            key = myb64unquote(orig_key)
+            #logmessage("Doing key " + str(key))
+            if empty_fields[orig_key] == 'object_checkboxes':
+                exec(key + '.clear()' , user_dict)
+                exec(key + '.gathered = True' , user_dict)
+            elif empty_fields[orig_key] in ['object', 'object_radio']:
+                try:
+                    eval(key, user_dict)
+                except:
+                    exec(key + ' = None' , user_dict)
+        if the_question is not None and the_question.validation_code:
             try:
-                eval(key, user_dict)
-            except:
-                exec(key + ' = None' , user_dict)
-    if 'informed' in request.form:
-        user_dict['_internal']['informed'][the_user_id] = dict()
-        for key in request.form['informed'].split(','):
-            user_dict['_internal']['informed'][the_user_id][key] = 1
-    # if 'x' in user_dict:
-    #     del user_dict['x']
-    # if 'i' in user_dict:
-    #     del user_dict['i']
-    # if changed and '_question_name' in post_data:
-        # user_dict['_internal']['answered'].add(post_data['_question_name'])
-        # logmessage("From server.py, answered name is " + post_data['_question_name'])
-        # user_dict['role_event_notification_sent'] = False
-    if changed and '_question_name' in post_data and post_data['_question_name'] not in user_dict['_internal']['answers']:
-        user_dict['_internal']['answered'].add(post_data['_question_name'])
-    # if '_multiple_choice' in post_data and '_question_name' in post_data and post_data['_question_name'] in interview.questions_by_name and not interview.questions_by_name[post_data['_question_name']].is_generic:
-    #     interview_status.populate(interview.questions_by_name[post_data['_question_name']].ask(user_dict, 'None', 'None'))
-    # else:
+                exec(the_question.validation_code, user_dict)
+            except Exception as validation_error:
+                error_messages.append(("error", str(validation_error)))
+                validated = False
+    if validated:
+        if '_files' in post_data:
+            file_fields = json.loads(myb64unquote(post_data['_files'])) #post_data['_files'].split(",")
+            has_invalid_fields = False
+            should_assemble_now = False
+            for orig_file_field in file_fields:
+                try:
+                    file_field = from_safeid(orig_file_field)
+                except:
+                    error_messages.append(("error", "Error: Invalid file_field: " + orig_file_field))
+                    break
+                if match_invalid.search(file_field):
+                    has_invalid_fields = True
+                    error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                    break
+                if key_requires_preassembly.search(file_field):
+                    should_assemble_now = True
+            if not has_invalid_fields:
+                initial_string = 'import docassemble.base.core'
+                try:
+                    exec(initial_string, user_dict)
+                except Exception as errMess:
+                    error_messages.append(("error", "Error: " + str(errMess)))
+                if something_changed and should_assemble_now and not should_assemble:
+                    interview.assemble(user_dict, interview_status)
+                for orig_file_field_raw in file_fields:
+                    orig_file_field = orig_file_field_raw
+                    var_to_store = orig_file_field_raw
+                    if orig_file_field not in request.files and len(known_varnames):
+                        for key, val in known_varnames.iteritems():
+                            if val == orig_file_field_raw:
+                                orig_file_field = key
+                                var_to_store = val
+                                break
+                    if orig_file_field in request.files:
+                        the_files = request.files.getlist(orig_file_field)
+                        if the_files:
+                            files_to_process = list()
+                            for the_file in the_files:
+                                filename = secure_filename(the_file.filename)
+                                file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
+                                extension, mimetype = get_ext_and_mimetype(filename)
+                                saved_file = SavedFile(file_number, extension=extension, fix=True)
+                                temp_file = tempfile.NamedTemporaryFile(suffix='.' + extension)
+                                the_file.save(temp_file.name)
+                                process_file(saved_file, temp_file.name, mimetype, extension)
+                                #sys.stderr.write("Upload was processed\n")
+                                files_to_process.append((filename, file_number, mimetype, extension))
+                            try:
+                                file_field = from_safeid(var_to_store)
+                            except:
+                                error_messages.append(("error", "Error: Invalid file_field: " + var_to_store))
+                                break
+                            if match_invalid.search(file_field):
+                                error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                                break
+                            if len(files_to_process) > 0:
+                                elements = list()
+                                indexno = 0
+                                for (filename, file_number, mimetype, extension) in files_to_process:
+                                    elements.append("docassemble.base.core.DAFile('" + file_field + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", make_pngs=True, mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
+                                    indexno += 1
+                                the_string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
+                            else:
+                                the_string = file_field + " = None"
+                            #logmessage("Doing " + the_string)
+                            try:
+                                exec(the_string, user_dict)
+                                changed = True
+                                steps += 1
+                            except Exception as errMess:
+                                sys.stderr.write("Error: " + str(errMess) + "\n")
+                                error_messages.append(("error", "Error: " + str(errMess)))
+        if 'informed' in request.form:
+            user_dict['_internal']['informed'][the_user_id] = dict()
+            for key in request.form['informed'].split(','):
+                user_dict['_internal']['informed'][the_user_id][key] = 1
+        if changed and '_question_name' in post_data and post_data['_question_name'] not in user_dict['_internal']['answers']:
+            user_dict['_internal']['answered'].add(post_data['_question_name'])
+    else:
+        steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     interview.assemble(user_dict, interview_status)
     current_language = docassemble.base.functions.get_language()
     if current_language != DEFAULT_LANGUAGE:
@@ -4167,15 +4209,6 @@ def index():
                 classname = 'danger'
             flash_content += '<div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>'
         flash_content += '</div>'
-#     scripts = """
-#     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-#     <script src="//ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"></script>
-#     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-#     <script src="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/js/jasny-bootstrap.min.js"></script>
-# """
-        # $(function () {
-        #   $('.tabs a:last').tab('show')
-        # })
     if 'reload_after' in interview_status.extras:
         reload_after = 1000 * int(interview_status.extras['reload_after'])
     else:
@@ -5466,7 +5499,7 @@ def index():
         interview_language = DEFAULT_LANGUAGE
     interview_status.extra_scripts = list()
     interview_status.extra_css = list()
-    validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
+    validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error'}
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language
     else:
@@ -5513,13 +5546,14 @@ def index():
         for question_type in ['question', 'help']:
             for audio_format in ['mp3', 'ogg']:
                 interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
-    # else:
-    #     logmessage("speak_text was not here")
-    # if interview_status.question.question_type == "signature":
-    #     content = signature_html(interview_status, debug_mode, url_for('index', i=yaml_filename), validation_rules)
-    # else:
-    content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules)
-    #sms_content = as_sms(interview_status)
+    if (not validated) and the_question.name == interview_status.question.name:
+        for def_key, def_val in post_data.iteritems():
+            if def_key in field_numbers:
+                interview_status.defaults[field_numbers[def_key]] = def_val
+        the_field_errors = field_error
+    else:
+        the_field_errors = None
+    content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules, the_field_errors)
     if debug_mode:
         readability = dict()
         for question_type in ['question', 'help']:

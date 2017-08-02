@@ -468,7 +468,7 @@ def is_empty_mc(status, field):
             return True
     return False
 
-def as_html(status, url_for, debug, root, validation_rules):
+def as_html(status, url_for, debug, root, validation_rules, field_error):
     decorations = list()
     uses_audio_video = False
     audio_text = ''
@@ -721,6 +721,10 @@ def as_html(status, url_for, debug, root, validation_rules):
                     if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                         #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
                         validation_rules['rules'][the_saveas][key] = int(status.extras[key][field.number])
+                        if key == 'minlength':
+                            validation_rules['messages'][the_saveas][key] = word("You must type at least") + " " + str(status.extras[key][field.number]) + " " + word("characters")
+                        elif key == 'maxlength':
+                            validation_rules['messages'][the_saveas][key] = word("You cannot type more than") + " " + str(status.extras[key][field.number]) + " " + word("characters")
             if hasattr(field, 'datatype'):
                 if field.datatype == 'date':
                     validation_rules['rules'][the_saveas]['date'] = True
@@ -739,6 +743,10 @@ def as_html(status, url_for, debug, root, validation_rules):
                         if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                             #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
                             validation_rules['rules'][the_saveas][key] = int(status.extras[key][field.number])
+                            if key == 'min':
+                                validation_rules['messages'][the_saveas][key] = word("You need to enter a number that is at least") + " " + str(status.extras[key][field.number])
+                            elif key == 'max':
+                                validation_rules['messages'][the_saveas][key] = word("You need to enter a number that is at most") + " " + str(status.extras[key][field.number])
                 if (field.datatype in ['files', 'file', 'camera', 'camcorder', 'microphone']):
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(field.saveas)
@@ -774,7 +782,7 @@ def as_html(status, url_for, debug, root, validation_rules):
         if status.subquestionText:
             output += '                <div>\n' + sub_question_text 
             for saveas_string in status.embedded:
-                output += '<label style="display: none;" for="' + escape_id(saveas_string) + '" class="help-inline" id="' + escape_id(saveas_string) + '-error"></label> '
+                output += '<label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label> '
             output += '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
@@ -1113,7 +1121,7 @@ def as_html(status, url_for, debug, root, validation_rules):
             </div>
 """
             status.extra_scripts.append("""<script>
-      $("#emailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + repr(str(word("An e-mail address is required."))) + """, 'email': """ + repr(str(word("You need to enter a complete e-mail address."))) + """}}, 'errorClass': 'help-inline'});
+      $("#emailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + repr(str(word("An e-mail address is required."))) + """, 'email': """ + repr(str(word("You need to enter a complete e-mail address."))) + """}}, 'errorClass': 'da-has-error'});
     </script>""")
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
@@ -1212,7 +1220,7 @@ def as_html(status, url_for, debug, root, validation_rules):
     #     }
     #   });
     # </script>""")
-    add_validation(status.extra_scripts, validation_rules)
+    add_validation(status.extra_scripts, validation_rules, field_error)
     for element_id_unescaped in onchange:
         element_id = re.sub(r'(:|\.|\[|\]|,|=)', r'\\\\\1', element_id_unescaped)
         the_script = """\
@@ -1283,14 +1291,42 @@ def as_html(status, url_for, debug, root, validation_rules):
         status.extra_scripts.append('<script async defer src="https://maps.googleapis.com/maps/api/js?signed_in=true&callback=daInitMap"></script>')
     return master_output
 
-def add_validation(extra_scripts, validation_rules):
+def add_validation(extra_scripts, validation_rules, field_error):
+    if field_error is None:
+        error_show = ''
+    else:
+        error_mess = dict()
+        for key, val in field_error.iteritems():
+            error_mess[key] = val
+        error_show = "\n      validator.showErrors(" + json.dumps(error_mess) + ");"
     extra_scripts.append("""    <script>
+      $.validator.setDefaults({
+        highlight: function(element) {
+            $(element).closest('.form-group').addClass('has-error');
+        },
+        unhighlight: function(element) {
+            $(element).closest('.form-group').removeClass('has-error');
+        },
+        errorElement: 'span',
+        errorClass: 'help-block',
+        errorPlacement: function(error, element) {
+            if (element.hasClass('input-embedded')){
+                error.insertAfter(element.parent());
+            }
+            else if (element.parent('.input-group').length) {
+                error.insertAfter(element.parent());
+            }
+            else {
+                error.insertAfter(element);
+            }
+        }
+      });
       var validation_rules = """ + json.dumps(validation_rules) + """;
       validation_rules.submitHandler = daValidationHandler;
-      $("#daform").validate(validation_rules);
+      var validator = $("#daform").validate(validation_rules);
       $("button").click(function(event){
         whichButton = this;
-      });
+      });""" + error_show + """
       $("#backbutton").submit(function(event){
         $("#backbutton").addClass("dabackiconpressed");
         var informed = '';
@@ -1496,7 +1532,7 @@ def input_for(status, field, wide=False, embedded=False):
             if embedded:
                 output += '<input alt="' + word("You can upload a file here") + '" type="file" class="file file-embedded" name="' + escape_id(saveas_string) + '"' + title_text + ' id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/>'
             else:
-                output += '<input alt="' + word("You can upload a file here") + '" type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/><label style="display: none;" for="' + escape_id(saveas_string) + '" class="help-inline" id="' + escape_id(saveas_string) + '-error"></label>'
+                output += '<input alt="' + word("You can upload a file here") + '" type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
             #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
         elif field.datatype == 'range':
             ok = True
@@ -1544,7 +1580,7 @@ def input_for(status, field, wide=False, embedded=False):
                 input_type = 'text'
             output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + title_text + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
             if field.datatype in ('currency', 'file', 'files', 'camera', 'camcorder', 'microphone'):
-                output += ' aria-describedby="addon-' + do_escape_id(saveas_string) + '"/></div><label style="display: none;" for="' + escape_id(saveas_string) + '" class="help-inline" id="' + escape_id(saveas_string) + '-error"></label>'
+                output += ' aria-describedby="addon-' + do_escape_id(saveas_string) + '"/></div><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
             else:
                 output += '/>'
     return output

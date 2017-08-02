@@ -381,6 +381,8 @@ class Field:
             self.hint = data['hint']
         if 'help' in data:
             self.helptext = data['help']
+        if 'validate' in data:
+            self.validate = data['validate']
         if 'extras' in data:
             self.extras = data['extras']
         if 'selections' in data:
@@ -526,6 +528,7 @@ class Question:
         self.fields_used = set()
         self.names_used = set()
         self.mako_names = set()
+        self.validation_code = None
         num_directives = 0
         for directive in ['yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'fields', 'buttons', 'choices', 'signature', 'review']:
             if directive in data:
@@ -968,6 +971,10 @@ class Question:
                 raise DAError("An if statement must either be text or a list." + self.idebug(data))
         else:
             self.condition = []
+        if 'validation code' in data:
+            if type(data['validation code']) not in [str, unicode]:
+                raise DAError("A validation code statement must be text." + self.idebug(data))
+            self.validation_code = compile(data['validation code'], '', 'exec')
         if 'require' in data:
             if type(data['require']) is list:
                 self.question_type = 'require'
@@ -1374,6 +1381,8 @@ class Question:
                                         field_info['extras']['ml_train'] = field[key]
                                     else:
                                         field_info['extras']['ml_train'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
+                            elif key == 'validate':
+                                field_info['validate'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
                             elif key == 'required':
                                 if type(field[key]) is bool:
                                     field_info['required'] = field[key]
@@ -1999,6 +2008,19 @@ class Question:
                     extras['required'][field.number] = field.required
                 else:
                     extras['required'][field.number] = eval(field.required['compute'], user_dict)
+                if hasattr(field, 'validate'):
+                    the_func = eval(field.validate['compute'], user_dict)
+                    if hasattr(field, 'datatype'):
+                        if field.datatype in ['number', 'integer', 'currency', 'range']:
+                            the_func(0)
+                        elif field.datatype in ['text', 'area', 'password', 'email', 'radio']:
+                            the_func('')
+                        elif field.datatype in ['date']:
+                            the_func('01/01/1970')
+                        elif field.datatype.startswith('yesno') or field.datatype.startswith('noyes'):
+                            the_func(True)
+                    else:
+                        the_func('')
                 if hasattr(field, 'has_code') and field.has_code:
                     selections = list()
                     for choice in field.choices:

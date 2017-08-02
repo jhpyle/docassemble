@@ -1128,3 +1128,7 @@ blockquote.limheight {
     float: right;
     color: black;
 }
+
+.da-has-error {
+    color: #a94442;
+}
