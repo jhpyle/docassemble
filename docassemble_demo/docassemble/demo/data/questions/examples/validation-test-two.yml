@@ -6,7 +6,7 @@ metadata:
   example end: 3
 ---
 modules:
-  docassemble.demo.validationfuncs
+  docassemble.demo.validationfuncstwo
 ---
 mandatory: True
 question: |

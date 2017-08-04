@@ -34,6 +34,7 @@
 "Case No.": Null
 "Changed name of interview": Null
 "Change": Null
+"characters": Null
 "Checkboxes:": Null
 "Choices:": Null
 "Classes": Null
@@ -246,6 +247,7 @@
 "Playground YAML": Null
 "Please choose a different e-mail address.": Null
 "Please enter a valid phone number": Null
+"Please enter a valid value.": Null
 "Please enter the four digit code, followed by the pound sign.": Null
 "Please enter the verification code from the text message we just sent you.": Null
 "Please enter the verification code from your authentication app.": Null
@@ -465,6 +467,7 @@
 "You can also follow this link: ": Null
 "You cannot log in until your e-mail address has been confirmed.": Null
 "You cannot pull from GitHub and PyPI at the same time.  Please fill in one and leave the other blank.": Null
+"You cannot type more than": Null
 "You can press the following button:": Null
 "You can type link1, etc. to visit a link": Null
 "You can type link1 to visit the link": Null
@@ -479,8 +482,11 @@
 "You have signed out successfully.": Null
 "You must attach a file.": Null
 "You must sign your name to continue.": Null
+"You must type at least": Null
 "You need to enter a complete e-mail address.": Null
 "You need to enter a number.": Null
+"You need to enter a number that is at least": Null
+"You need to enter a number that is at most": Null
 "You need to enter a valid date.": Null
 "You need to log in before you can access": Null
 "You need to select one.": Null

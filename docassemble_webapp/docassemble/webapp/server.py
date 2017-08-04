@@ -420,6 +420,8 @@ import urllib2
 import tailer
 import datetime
 from dateutil import tz
+import dateutil
+import dateutil.parser
 import time
 import pip.utils.logging
 import pip
@@ -3874,6 +3876,12 @@ def index():
             elif known_datatypes[real_key] == 'date':
                 if type(data) in [str, unicode]:
                     data = data.strip()
+                    try:
+                        dateutil.parser.parse(data)
+                    except:
+                        validated = False
+                        field_error[orig_key] = word("You need to enter a valid date.")
+                        continue
                     test_data = data
                 data = repr(data)
             elif known_datatypes[real_key] == 'integer':
@@ -3959,9 +3967,14 @@ def index():
             if orig_key in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_key] and hasattr(the_question.fields[field_numbers[orig_key]], 'validate'):
                 logmessage("field has validation function")
                 the_func = eval(the_question.fields[field_numbers[orig_key]].validate['compute'], user_dict)
-                the_result = the_func(test_data)
-                if the_result is not True:
-                    field_error[orig_key] = the_result
+                try:
+                    the_result = the_func(test_data)
+                    if not the_result:
+                        field_error[orig_key] = word("Please enter a valid value.")
+                        validated = False
+                        continue
+                except Exception as errstr:
+                    field_error[orig_key] = str(errstr)
                     validated = False
                     continue
         #logmessage("Doing " + str(the_string))
@@ -3988,7 +4001,10 @@ def index():
             try:
                 exec(the_question.validation_code, user_dict)
             except Exception as validation_error:
-                error_messages.append(("error", str(validation_error)))
+                the_error_message = str(validation_error)
+                if the_error_message == '':
+                    the_error_message = word("Please enter a valid value.")
+                error_messages.append(("error", the_error_message))
                 validated = False
     if validated:
         if '_files' in post_data:

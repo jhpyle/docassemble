@@ -1,0 +1,26 @@
+metadata:
+  title: Input validation
+  short title: Valid
+  documentation: "https://docassemble.org/docs/fields#input validation"
+  example start: 2
+  example end: 2
+---
+mandatory: True
+question: |
+  There were ${ number_of_apples }
+  apples and ${ number_of_oranges }
+  oranges.
+---
+question: |
+  There are 10 fruit in all.
+subquestion: |
+  How many apples and oranges
+  are there?
+fields:
+  - Apples: number_of_apples
+    datatype: integer
+  - Oranges: number_of_oranges
+    datatype: integer
+validation code: |
+  if number_of_oranges + number_of_apples != 10:
+    raise Exception("The number of fruit must add up to 10!")
