@@ -758,12 +758,12 @@ that is "trained" to classify user input.
 For more information about how to use machine learning variables, see
 the [machine learning section].
 
-## <a name="min"></a>Input validation
+## <a name="min"></a><a name="input validation"></a>Input validation
 
-Some datatypes, such as numbers and e-mail addresses, have validation
-features that prevent the user from moving to the next page if the
-input value does not meet the requirements of the data type.  The
-[jQuery Validation Plugin](http://jqueryvalidation.org) is used.
+Some datatypes, such as numbers, dates, and e-mail addresses, have
+validation features that prevent the user from moving to the next page
+if the input value does not meet the requirements of the data type.
+The [jQuery Validation Plugin](http://jqueryvalidation.org) is used.
 
 For some field types, you can require additional input validation by
 adding the following to the definition of a field:
@@ -787,6 +787,69 @@ adding the following to the definition of a field:
   [jQuery Validation Plugin](http://jqueryvalidation.org/maxlength-method).
 
 {% include side-by-side.html demo="minlength" %}
+
+You can also use [Python] code to validate an input field.  To do so,
+add a `validate` directive to the field description that refers to the
+name of a [function] that returns `True` (or something that [Python]
+considers "true") if the value is valid, and `False` (or something
+that [Python] considers "not true") if the value is invalid.
+
+{% include demo-side-by-side.html demo="validation-test" %}
+
+In this example, the function `is_multiple_of_four` is defined as
+follows:
+
+{% highlight python %}
+def is_multiple_of_four(x):
+    return x/4 == int(x/4)
+{% endhighlight %}
+
+This [Python] code is in the [`validationfuncs.py`] file.  The
+`modules` block includes this code.  The function returns `True` if 4
+divides the input value into a whole number
+
+The error message that the user will see is a generic error message,
+"Please enter a valid value."  In most cases you will want to explain
+to the user why the input did not validate.  To provide a more
+descriptive error message, your function can [raise an exception]
+using the error message you would like the user to see.  Both a false
+return value and an exception signal that the input is not valid.
+
+{% include demo-side-by-side.html demo="validation-test-two" %}
+
+In this example, the function `is_multiple_of_four` is defined as
+follows:
+
+{% highlight python %}
+def is_multiple_of_four(x):
+    if x/4 != int(x/4):
+        raise Exception("The number must be a multiple of four")
+    return True
+{% endhighlight %}
+
+This [Python] code is in the [`validationfuncstwo.py`] file.  If 4
+does not divide the input value into a whole number, then an exception
+is raised.  The text passed to `Exception()` will be the text the user
+sees if the value does not validate.  If 4 does divide the input value
+by a whole number, `True` is returned.
+
+One limitation of these validation functions is that they can only
+test for characteristics inherent in the variable being validated;
+they cannot compare the variable to other variables.
+
+You can get around this restriction using the `validation code`
+modifier.
+
+{% include demo-side-by-side.html demo="validation-code" %}
+
+Note that the code under `validation code` is not within a function,
+so it should not try to `return` any values.  If the code runs through
+to the end, this indicates that the input for the question is valid.
+If an exception is raised, the input for the question is invalid.
+
+If the input is invalid, the user will see a message at the top of the
+screen containing the error message passed to the [`Exception`] that
+was raised.
 
 ## A comprehensive example
 
@@ -1100,6 +1163,8 @@ why this needs to be done manually as opposed to automatically:
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`need()`]: {{ site.baseurl }}/docs/functions.html#need
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
+[`validationfuncs.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/validationfuncs.py
+[`validationfuncstwo.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/validationfuncstwo.py
 [`yesno`]: #yesno
 [groups]: {{ site.baseurl }}/docs/groups.html
 [groups section]: {{ site.baseurl }}/docs/groups.html
@@ -1133,3 +1198,5 @@ why this needs to be done manually as opposed to automatically:
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [date functions]: {{ site.baseurl }}/docs/functions.html#date functions
 [machine learning section]: {{ site.baseurl }}/docs/ml.html#howtouse
+[raise an exception]: https://en.wikibooks.org/wiki/Python_Programming/Exceptions
+[`Exception`]: https://docs.python.org/2/library/exceptions.html#exceptions.Exception
