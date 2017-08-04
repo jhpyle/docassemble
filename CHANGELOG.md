@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.1.29] - 2017-08-03
+### Added
+- Input validation with Python code
+- Input validation for dates, in addition to the limited Javascript validation
+
 ## [0.1.28] - 2017-08-01
 ### Fixed
 - DADict object now defines ask_object_type by default
