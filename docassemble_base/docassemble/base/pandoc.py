@@ -9,6 +9,7 @@ import sys
 import re
 from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
+from docassemble.base.pdfa import pdf_to_pdfa
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
@@ -35,7 +36,11 @@ def set_libreoffice_path(path):
 #  - \def\startallcaps#1\end{\uppercase{#1}\end}
 
 class MyPandoc(object):
-    def __init__(self):
+    def __init__(self, **kwargs):
+        if 'pdfa' in kwargs and kwargs['pdfa']:
+            self.pdfa = True
+        else:
+            self.pdfa = False
         self.input_content = None
         self.output_content = None
         self.input_format = 'markdown'
@@ -94,7 +99,10 @@ class MyPandoc(object):
             os.makedirs(latex_conversion_directory)
         if not os.path.isdir(latex_conversion_directory):
             raise Exception("Could not create latex conversion directory")
-        subprocess_arguments = [PANDOC_PATH, '--smart', '-M', 'latextmpdir=' + os.path.join('latex_convert', '')]
+        icc_profile_in_temp = os.path.join(tempfile.gettempdir(), 'sRGB_IEC61966-2-1_black_scaled.icc')
+        if not os.path.isfile(icc_profile_in_temp):
+            shutil.copyfile(docassemble.base.functions.standard_template_filename('sRGB_IEC61966-2-1_black_scaled.icc'), icc_profile_in_temp)
+        subprocess_arguments = [PANDOC_PATH, '--smart', '-M', 'latextmpdir=' + os.path.join('latex_convert', ''), '-M', 'pdfa=' + ('true' if self.pdfa else 'false')]
         if len(yaml_to_use) > 0:
             subprocess_arguments.extend(yaml_to_use)
         if self.template_file is not None:
@@ -105,15 +113,11 @@ class MyPandoc(object):
         subprocess_arguments.extend([temp_file.name])
         subprocess_arguments.extend(self.arguments)
         #logmessage("Arguments are " + str(subprocess_arguments))
+        the_temp_dir = tempfile.gettempdir()
         try:
-            msg = subprocess.check_output(subprocess_arguments, cwd=tempfile.gettempdir(), stderr=subprocess.STDOUT)
+            msg = subprocess.check_output(subprocess_arguments, cwd=the_temp_dir, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as err:
-            raise Exception("Failed to assemble PDF file: " + str(err.output))
-        #cmd = " ".join(subprocess_arguments)
-        #logmessage(cmd)
-        #fin = os.popen(cmd)
-        #msg = fin.read()
-        #fin.close()
+            raise Exception("Failed to assemble file: " + str(err.output))
         if msg:
             self.pandoc_message = msg
         os.remove(temp_file.name)
@@ -155,7 +159,7 @@ class MyPandoc(object):
             self.output_content = p.communicate(self.input_content.encode('utf8'))[0]
         return
 
-def word_to_pdf(in_file, in_format, out_file):
+def word_to_pdf(in_file, in_format, out_file, pdfa=False):
     temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
     tempdir = tempfile.mkdtemp()
     from_file = os.path.join(tempdir, "file." + in_format)
@@ -165,6 +169,8 @@ def word_to_pdf(in_file, in_format, out_file):
     p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
     result = p.wait()
     if result == 0:
+        if pdfa:
+            pdf_to_pdfa(to_file)
         shutil.copyfile(to_file, out_file)
     if tempdir is not None:
         shutil.rmtree(tempdir)

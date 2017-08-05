@@ -9,6 +9,7 @@ import yaml
 import PyPDF2 as pypdf
 from PIL import Image
 from docassemble.base.error import DAError
+from docassemble.base.pdfa import pdf_to_pdfa
 from subprocess import call, check_output
 from docassemble.base.logger import logmessage
 from docassemble.base.functions import word
@@ -73,7 +74,7 @@ def read_fields_pdftk(pdffile):
             fields.append((field['FieldName'], default))
     return fields
     
-def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True):
+def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True, pdfa=False):
     if pdf_url is None:
         pdf_url = ''
     fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
@@ -134,4 +135,6 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
                 with open(new_pdf_file.name, "wb") as outFile:
                     writer.write(outFile)
             shutil.copyfile(new_pdf_file.name, pdf_file.name)
+    if pdfa:
+        pdf_to_pdfa(pdf_file.name)
     return pdf_file.name

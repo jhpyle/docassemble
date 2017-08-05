@@ -1,5 +1,17 @@
+$if(pdfa)$
+\begin{filecontents*}{\jobname.xmpdata}
+\Title{$title-meta$}
+\Author{$author-meta$}
+\Keywords{docassemble}
+\Publisher{docassemble}
+\end{filecontents*}
+$endif$
 \documentclass[$if(fontsize)$$fontsize$$else$12pt$endif$,$if(lang)$$lang$,$endif$$if(papersize)$$papersize$$else$letterpaper$endif$$for(classoption)$,$classoption$$sep$$endfor$]{$if(documentclass)$$documentclass$$else$article$endif$}
+\usepackage{filecontents}
 \usepackage{ifthen}
+$if(pdfa)$
+\usepackage{pdfx}
+$endif$
 \newboolean{usesfirstheader}
 \setboolean{usesfirstheader}{false}
 \newboolean{usesfirstfooter}
@@ -168,17 +180,23 @@ $if(graphics)$
 % using explicit options in \includegraphics[width, height, ...]{}
 %\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
 $endif$
+$if(pdfa)$
+$else$
 \ifxetex
-  \usepackage[setpagesize=false, % page size defined by xetex
-              unicode=false, % unicode breaks when used with xetex
-              xetex]{hyperref}
+  \usepackage[setpagesize=false, unicode=false, xetex]{hyperref}
 \else
   \usepackage[unicode=true]{hyperref}
 \fi
+$endif$
 \hypersetup{breaklinks=true,
             bookmarks=true,
             pdfauthor={$author-meta$},
             pdftitle={$title-meta$},
+            $if(pdfa)$
+            unicode=false,
+            linktoc=none,
+            pdfa,
+            $endif$
             colorlinks=true,
             citecolor=$if(citecolor)$$citecolor$$else$blue$endif$,
             urlcolor=$if(urlcolor)$$urlcolor$$else$blue$endif$,

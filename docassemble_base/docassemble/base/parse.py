@@ -545,6 +545,8 @@ class Question:
                 self.interview.table_width = data['features']['table width']
             if 'progress bar' in data['features'] and data['features']['progress bar']:
                 self.interview.use_progress_bar = True
+            if 'pdf/a' in data['features'] and data['features']['pdf/a']:
+                self.interview.use_pdf_a = True
             for key in ['javascript', 'css']:
                 if key in data['features']:
                     if type(data['features'][key]) is list:
@@ -2248,7 +2250,7 @@ class Question:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
-                        result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True))
+                        result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=self.interview.use_pdf_a)
                     elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
                         #logmessage("field_data is " + str(result['field_data']))
                         docassemble.base.functions.set_context('docx', template=result['template'])
@@ -2260,10 +2262,10 @@ class Question:
                             result['file']['docx'] = docx_file.name
                         if 'pdf' in result['formats_to_use']:
                             pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name)
+                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=self.interview.use_pdf_a)
                             result['file']['pdf'] = pdf_file.name
                 else:
-                    converter = MyPandoc()
+                    converter = MyPandoc(pdfa=self.interview.use_pdf_a)
                     converter.output_format = doc_format
                     converter.input_content = result['markdown'][doc_format]
                     if 'initial_yaml' in attachment['options']:
@@ -2529,6 +2531,7 @@ class Interview:
         self.default_role = None
         self.title = None
         self.use_progress_bar = False
+        self.use_pdf_a = False
         self.names_used = set()
         self.attachment_options = dict()
         self.external_files = dict()

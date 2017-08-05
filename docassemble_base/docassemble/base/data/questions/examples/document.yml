@@ -16,3 +16,6 @@ mandatory: True
 code: |
   client = "Jane Doe"
   benefits = "G-432"
+---
+features:
+  pdf/a: False

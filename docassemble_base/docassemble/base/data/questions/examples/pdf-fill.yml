@@ -69,4 +69,3 @@ attachment:
     Toast Checkbox: |
       ${ likes_toast }
 mandatory: True
-
