@@ -526,7 +526,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
     else:
         decoration_text = ''
     master_output = ""
-    master_output += '          <section id="question" class="tab-pane active col-lg-6 col-md-8 col-sm-10">\n'
+    master_output += '          <section id="question" class="tab-pane active col-lg-6 col-md-7 col-sm-9">\n'
     output = ""
     if status.question.question_type == "signature":
         output += '            <div class="sigpage" id="sigpage">\n              <div class="sigshowsmallblock sigheader" id="sigheader">\n                <div class="siginnerheader">\n                  <a class="btn btn-sm btn-warning signav-left sigclear">' + word('Clear') + '</a>\n                  <a class="btn btn-sm btn-primary signav-right sigsave">' + continue_label + '</a>\n                  <div class="sigtitle">'
@@ -1134,7 +1134,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
         status.screen_reader_text['question'] = unicode(output)
     master_output += output
     master_output += '          </section>\n'
-    master_output += '          <section id="help" class="tab-pane col-lg-6 col-md-8 col-sm-10">\n'
+    master_output += '          <section id="help" class="tab-pane col-lg-6 col-md-7 col-sm-9">\n'
     output = '<div><a id="backToQuestion" data-toggle="tab" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
     output += """
 <div id="daPhoneMessage" class="row invisible">

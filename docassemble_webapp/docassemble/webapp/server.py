@@ -1325,6 +1325,119 @@ def safeid(text):
 def from_safeid(text):
     return(codecs.decode(text, 'base64').decode('utf8'))
 
+def navigation_bar(section, interview, wrapper=True, inner_ul_class=None, show_links=True, hide_inactive_subs=True, li_class=None, a_class=None, show_nesting=True):
+    if inner_ul_class is None:
+        inner_ul_class = 'nav nav-pills nav-stacked danav danavnested'
+    if a_class is None:
+        a_class = 'danavlink'
+    if li_class is None:
+        li_class = ''
+    #logmessage("navigation_bar: starting: " + str(section))
+    the_sections = section.get('sections', list())
+    if len(the_sections) == 0:
+        return('')
+    the_section = section.get('current', None)
+    if the_section is None:
+        if the_sections[0] is dict:
+            the_section = the_sections[0].keys()[0]
+        else:
+            the_section = the_sections[0]
+    if wrapper:
+        output = '<div role="navigation" class="col-sm-3 col-md-3 col-lg-2 hidden-xs danavdiv">' + "\n" + '  <ul class="nav nav-pills nav-stacked danav">' + "\n"
+    else:
+        output = ''
+    section_reached = False
+    indexno = 0
+    for x in the_sections:
+        indexno += 1
+        the_key = None
+        subitems = None
+        currently_active = False
+        if type(x) is dict:
+            if len(x) == 2 and 'subsections' in x:
+                for key, val in x.iteritems():
+                    if key == 'subsections':
+                        subitems = val
+                    else:
+                        the_key = key
+                        the_title = val
+            elif len(x) == 1:
+                the_key = x.keys()[0]
+                value = x[the_key]
+                if type(value) is list:
+                    subitems = value
+                    the_title = the_key
+                else:
+                    the_title = value
+            else:
+                logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                continue
+        else:
+            the_key = None
+            the_title = unicode(x)
+        if (the_key is not None and the_section == the_key) or (the_key is None and the_section == the_title):
+            output += '<li role="presentation" class="' + li_class + ' active">'
+            section_reached = True
+            currently_active = True
+        else:
+            output += '<li class="' + li_class + '" role="presentation">'
+        if show_links and (currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
+            url = docassemble.base.functions.interview_url_action(the_key)
+            output += '<a data-index="' + str(indexno) + '" class="' + a_class + '" href="' + url + '">' + unicode(the_title) + '</a>'
+        else:
+            if section_reached and not currently_active:
+                output += '<a data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
+            else:
+                output += '<a data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
+        suboutput = ''
+        if subitems:
+            current_is_within = False
+            oldindexno = indexno
+            for y in subitems:
+                indexno += 1
+                sub_currently_active = False
+                if type(y) is dict:
+                    if len(y) == 1:
+                        sub_key = y.keys()[0]
+                        sub_title = y[sub_key]
+                    else:
+                        logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                        continue
+                else:
+                    sub_key = None
+                    sub_title = unicode(y)
+                if (sub_key is not None and the_section == sub_key) or (sub_key is None and the_section == sub_title):
+                    suboutput += '<li class="' + li_class + ' active" role="presentation">'
+                    section_reached = True
+                    current_is_within = True
+                    sub_currently_active = True
+                else:
+                    suboutput += '<li class="' + li_class + '" role="presentation">'
+                if show_links and (sub_currently_active or not section_reached) and sub_key is not None and interview is not None and sub_key in interview.questions:
+                    url = docassemble.base.functions.interview_url_action(sub_key)
+                    suboutput += '<a data-index="' + str(indexno) + '" class="' + a_class + '" href="' + url + '">' + unicode(sub_title) + '</a>'
+                else:
+                    if section_reached and not sub_currently_active:
+                        suboutput += '<a data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(sub_title) + '</a>'
+                    else:
+                        suboutput += '<a data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(sub_title) + '</a>'
+                suboutput += "</li>"
+            if currently_active or current_is_within or hide_inactive_subs is False or show_nesting:
+                if currently_active or current_is_within:
+                    suboutput = '<ul class="' + inner_ul_class + '">' + suboutput
+                else:
+                    suboutput = '<ul style="display: none;" class="notshowing ' + inner_ul_class + '">' + suboutput
+                suboutput += "</ul>"
+                output += suboutput
+            else:
+                indexno = oldindexno
+        output += "</li>"
+    if wrapper:
+        output += "\n</ul>\n</div>\n"
+    if not section_reached:
+        raise DAError("Section \"" + str(the_section) + "\" did not exist.")
+    return output        
+
 def progress_bar(progress):
     if progress == 0:
         return('');
@@ -2210,6 +2323,7 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         url_root = 'http://localhost'
         secret = None
         clientip = None
+        method = None
     else:
         url = req.base_url
         url_root = req.url_root
@@ -2217,9 +2331,10 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         for key, value in req.headers.iteritems():
             headers[key] = value
         clientip = req.remote_addr
+        method = req.method
     if secret is not None:
         secret = str(secret)
-    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': session.get('encrypted', True), 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}, 'headers': headers, 'clientip': clientip}
+    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': session.get('encrypted', True), 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}, 'headers': headers, 'clientip': clientip, 'method': method}
     if action is not None:
         return_val.update(action)
         # return_val['orig_action'] = action['action']
@@ -3438,6 +3553,7 @@ def index():
     #logmessage("index: yaml_filename from session/default is " + str(yaml_filename))
     steps = 0
     need_to_reset = False
+    need_to_resave = False
     yaml_parameter = request.args.get('i', None)
     if yaml_filename is None and yaml_parameter is None:
         if len(daconfig['dispatch']):
@@ -3472,6 +3588,8 @@ def index():
                 session_id = session.get('uid', None)
                 if 'key_logged' in session:
                     del session['key_logged']
+                #logmessage("Need to reset because session_parameter is none")
+                need_to_resave = True
                 need_to_reset = True
             else:
                 #logmessage("index: both i and session provided")
@@ -3483,7 +3601,7 @@ def index():
             if show_flash:
                 flash(word(message), 'info')
     elif not is_ajax:
-        #logmessage("index: need_to_reset is True")
+        #logmessage("index: need_to_reset is True because not ajax and yaml_parameter is None")
         need_to_reset = True
     if session_parameter is not None:
         #logmessage("index: session parameter is not None: " + str(session_parameter))
@@ -3494,6 +3612,7 @@ def index():
             session['i'] = yaml_filename
         if 'key_logged' in session:
             del session['key_logged']
+        #logmessage("index: resetting because session_parameter not none")
         need_to_reset = True
     if session_id:
         #logmessage("index: session_id is defined")
@@ -3502,7 +3621,7 @@ def index():
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
         except:
-            #logmessage("index: there was an exception after fetch_user_dict")
+            #logmessage("index: there was an exception after fetch_user_dict and we need to reset")
             #sys.stderr.write(str(the_err) + "\n")
             release_lock(user_code, yaml_filename)
             logmessage("index: dictionary fetch failed, resetting without retain_code")
@@ -3512,6 +3631,7 @@ def index():
             is_encrypted = encrypted
             if 'key_logged' in session:
                 del session['key_logged']
+            need_to_resave = True
             need_to_reset = True
         if encrypted != is_encrypted:
             #logmessage("index: change in encryption; encrypted is " + str(encrypted) + " but is_encrypted is " + str(is_encrypted))
@@ -3576,13 +3696,15 @@ def index():
                 continue
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
-                #logmessage("index: there were args and we need to reset")
+                #logmessage("index: there was an argname " + str(argname) + " and we need to reset")
+            need_to_resave = True
             need_to_reset = True
     if need_to_reset:
         #logmessage("index: needed to reset, so redirecting; encrypted is " + str(encrypted))
         if use_cache == 0:
             docassemble.base.parse.interview_source_from_string(yaml_filename).reset_modtime()
-        save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
+        if need_to_resave:
+            save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
         response = do_redirect(url_for('index', i=yaml_filename), is_ajax)
         if set_cookie:
             response.set_cookie('secret', secret)
@@ -4128,6 +4250,8 @@ def index():
             return do_redirect(exit_page, is_ajax)
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
+    if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
+        user_dict['_internal']['section']['current'] = interview_status.question.section
     if interview_status.question.question_type == "exit":
         manual_checkout()
         user_dict = fresh_dictionary()
@@ -5513,8 +5637,6 @@ def index():
         interview_language = interview_status.question.language
     else:
         interview_language = DEFAULT_LANGUAGE
-    interview_status.extra_scripts = list()
-    interview_status.extra_css = list()
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error'}
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language
@@ -5632,7 +5754,42 @@ def index():
                 start_output += '\n    <link href="' + get_url_from_file_reference(fileref, question=interview_status.question) + '" rel="stylesheet">'
         start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
         start_output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n'
-    output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
+    output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">' + "\n"
+    if interview_status.question.interview.use_navigation:
+        output += navigation_bar(user_dict['_internal']['section'], interview_status.question.interview)
+        nav_js = """
+    <script>
+      $(".danavdiv ul li ul").each(function(){
+        var the_ul = $(this);
+        var the_li = $(this).parent();
+        var the_a = $(the_li).children('a').first();
+        var the_toggle = document.createElement('div');
+        var the_toggle_inner = document.createElement('i');
+        $(the_toggle).addClass('ul-toggle');
+        if ($(the_a).hasClass('notavailableyet')){
+          $(the_toggle).addClass('notavailable');
+        }
+        else{
+          $(the_toggle).addClass('available');
+        }
+        if ($(the_ul).hasClass('notshowing')){
+          $(the_toggle_inner).addClass('glyphicon glyphicon-triangle-right');
+        }
+        else{
+          $(the_toggle_inner).addClass('glyphicon glyphicon-triangle-bottom');
+        }
+        $(the_toggle).append($(the_toggle_inner));
+        $(the_toggle).click(function(){
+          $(the_toggle_inner).toggleClass('glyphicon-triangle-right');
+          $(the_toggle_inner).toggleClass('glyphicon-triangle-bottom');
+          $(the_ul).toggle();
+        });
+        $(the_li).append($(the_toggle));
+      });
+    </script>
+"""
+        interview_status.extra_scripts.append(nav_js)
+    output += '        <div class="tab-content">\n'
     if interview_status.question.interview.use_progress_bar:
         output += progress_bar(user_dict['_internal']['progress'])
     output += content + "        </div>"
@@ -11639,9 +11796,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if sess_info['user_id'] is not None:
             user = load_user(sess_info['user_id'])
         if user is None:
-            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, sms_variable=sms_variable, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
+            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, sms_variable=sms_variable, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
         else:
-            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
+            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
         if action is not None:
             #logmessage("Setting action to " + str(action))
             ci.update(action)
@@ -12329,6 +12486,7 @@ r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
 
 #docassemble.base.util.set_twilio_config(twilio_config)
 docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
+                                         navigation_bar=navigation_bar,
                                          chat_partners_available=chat_partners_available,
                                          sms_body=sms_body,
                                          get_sms_session=get_sms_session,

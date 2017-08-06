@@ -23,7 +23,7 @@ import docassemble.base.pdftk
 import docassemble.base.file_docx
 from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute
 import docassemble.base.functions
-from docassemble.base.functions import pickleable_objects, word, get_language, server, RawValue
+from docassemble.base.functions import pickleable_objects, word, get_language, server, RawValue, get_config
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import MyPandoc, word_to_markdown
 from docassemble.base.mako.template import Template as MakoTemplate
@@ -94,7 +94,7 @@ def textify(data, user_dict):
 #     save_numbered_file = func
 #     return
 
-initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
+initial_dict = dict(_internal=dict(progress=0, section=dict(), tracker=0, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
 
 def set_initial_dict(the_dict):
     global initial_dict
@@ -294,6 +294,8 @@ class InterviewStatus(object):
         self.seeking = list()
         self.tracker = kwargs.get('tracker', -1)
         self.maps = list()
+        self.extra_scripts = list()
+        self.extra_css = list()
         self.using_screen_reader = False
         self.can_go_back = True
         self.attachments = None
@@ -516,6 +518,7 @@ class Question:
         self.undertext = None
         self.continuelabel = None
         self.progress = None
+        self.section = None
         self.script = None
         self.css = None
         self.checkin = None
@@ -545,8 +548,10 @@ class Question:
                 self.interview.table_width = data['features']['table width']
             if 'progress bar' in data['features'] and data['features']['progress bar']:
                 self.interview.use_progress_bar = True
-            if 'pdf/a' in data['features'] and data['features']['pdf/a']:
-                self.interview.use_pdf_a = True
+            if 'navigation' in data['features'] and data['features']['navigation']:
+                self.interview.use_navigation = True
+            if 'pdf/a' in data['features'] and data['features']['pdf/a'] in [True, False]:
+                self.interview.use_pdf_a = data['features']['pdf/a']
             for key in ['javascript', 'css']:
                 if key in data['features']:
                     if type(data['features'][key]) is list:
@@ -564,6 +569,15 @@ class Question:
         if 'default language' in data:
             should_append = False
             self.from_source.set_language(data['default language'])
+        if 'sections' in data:
+            should_append = False
+            if type(data['sections']) is not list:
+                raise DAError("A sections list must be a list." + self.idebug(data))
+            self.interview.sections = data['sections']
+        if 'section' in data:
+            if 'question' not in data:
+                raise DAError("You can only set the section from a question." + self.idebug(data))
+            self.section = data['section']
         if 'machine learning storage' in data:
             should_append = False
             new_storage = data['machine learning storage']
@@ -1858,6 +1872,13 @@ class Question:
                     raise DAError('Unknown data type in attachment valid formats.' + self.idebug(target))
             else:
                 target['valid formats'] = ['*']
+            if 'pdf/a' in target:
+                if type(target['pdf/a']) is bool:
+                    options['pdf_a'] = target['pdf/a']
+                elif type(target['pdf/a']) in [str, unicode]:
+                    options['pdf_a'] = compile(target['pdf/a'], '', 'eval')
+                else:
+                    raise DAError('Unknown data type in attachment pdf/a.' + self.idebug(target))
             if 'content' not in target:
                 raise DAError("No content provided in attachment")
             #logmessage("The content is " + str(target['content']))
@@ -2250,7 +2271,7 @@ class Question:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
-                        result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=self.interview.use_pdf_a)
+                        result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'])
                     elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
                         #logmessage("field_data is " + str(result['field_data']))
                         docassemble.base.functions.set_context('docx', template=result['template'])
@@ -2262,10 +2283,10 @@ class Question:
                             result['file']['docx'] = docx_file.name
                         if 'pdf' in result['formats_to_use']:
                             pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=self.interview.use_pdf_a)
+                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'])
                             result['file']['pdf'] = pdf_file.name
                 else:
-                    converter = MyPandoc(pdfa=self.interview.use_pdf_a)
+                    converter = MyPandoc(pdfa=result['convert_to_pdf_a'])
                     converter.output_format = doc_format
                     converter.input_content = result['markdown'][doc_format]
                     if 'initial_yaml' in attachment['options']:
@@ -2348,6 +2369,13 @@ class Question:
                     result['metadata'][key] = textify(data, user_dict)
                 else:
                     result['metadata'][key] = data.text(user_dict)
+        if 'pdf_a' in attachment['options']:
+            if type(attachment['options']['pdf_a']) is bool:
+                result['convert_to_pdf_a'] = attachment['options']['pdf_a']
+            else:
+                result['convert_to_pdf_a'] = eval(attachment['options']['pdf_a'], user_dict)
+        else:
+            result['convert_to_pdf_a'] = self.interview.use_pdf_a
         for doc_format in result['formats_to_use']:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
@@ -2531,7 +2559,9 @@ class Interview:
         self.default_role = None
         self.title = None
         self.use_progress_bar = False
-        self.use_pdf_a = False
+        self.use_pdf_a = get_config('pdf/a', False)
+        self.use_navigation = False
+        self.sections = None
         self.names_used = set()
         self.attachment_options = dict()
         self.external_files = dict()
@@ -2656,7 +2686,11 @@ class Interview:
         interview_status.current_info.update({'default_role': self.default_role})
         docassemble.base.functions.this_thread.current_package = self.source.package
         docassemble.base.functions.this_thread.current_info = interview_status.current_info
+        docassemble.base.functions.this_thread.interview = self
+        docassemble.base.functions.this_thread.interview_status = interview_status
         docassemble.base.functions.this_thread.internal = user_dict['_internal']
+        if self.use_navigation and self.sections is not None and 'sections' not in user_dict['_internal']['section']:
+            user_dict['_internal']['section']['sections'] = self.sections
         for question in self.questions_list:
             if question.question_type == 'imports':
                 for module_name in question.module_list:

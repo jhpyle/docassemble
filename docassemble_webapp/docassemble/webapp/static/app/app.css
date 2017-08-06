@@ -1132,3 +1132,127 @@ blockquote.limheight {
 .da-has-error {
     color: #a94442;
 }
+
+ul.danavnested {
+    padding-left: 20px;
+}
+
+.danav > li > a.inactive:hover,
+.danav > li > a.inactive:focus {
+    color: #337ab7;
+    text-decoration: inherit;
+    background-color: inherit;
+    outline-offset: inherit;
+}
+
+.danav > li > a.notavailableyet,
+.danav > li > a.notavailableyet {
+    color: #aaa;
+    text-decoration: inherit;
+    background-color: inherit;
+    outline-offset: inherit;
+}
+
+.danav > li > a.notavailableyet:hover,
+.danav > li > a.notavailableyet:focus {
+    color: #aaa;
+    text-decoration: inherit;
+    background-color: inherit;
+    outline-offset: inherit;
+}
+
+.danav > li.active > a.inactive:hover,
+.danav > li.active > a.inactive:focus {
+    color: #fff;
+    background-color: #337ab7;
+}
+
+div.dasections {
+    line-height: 40px;
+}
+
+ul.dainline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: block;
+}
+
+ul.dainline li {
+    padding: 0;
+    margin: 0;
+    display: inline;
+    position: relative;
+    font-weight: bold;
+}
+
+ul.dainline li a {
+    display: inline-block;
+}
+
+ul.dainline a {
+    margin-right: 25px;
+    vertical-align: middle;
+}
+
+ul.dainline a:not(.thelast)::after {
+    content: "\e258";
+    font-size: 20px;
+    position: absolute;
+    font-family: 'Glyphicons Halflings';
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    background-color: transparent;
+    color: #aaa;
+    top: 0px;
+    padding: 5px 5px 5px 7px;
+    margin: 0;
+}
+
+a.danavlidone::after {
+    color: #337ab7 !important;
+}
+
+ul.dainline li ul {
+    display: inline;
+    padding: 0;
+    margin: 0;
+}
+
+ul.dainline > li > ul > li {
+    font-weight: normal;
+}
+
+div.dasections a.label {
+    font-size: 18px;
+    cursor: text;
+    padding: 5px 5px 5px 5px;
+}
+
+div.dasections ul.dainlineinside a.label {
+    font-size: 14px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+div.danavdiv {
+    margin-top: 30px;
+}
+
+.ul-toggle {
+    float: left;
+    position: absolute;
+    left: -20px;
+    top: 11px;
+    color: #777;
+    cursor: pointer;
+}
+
+div.notavailable > i {
+    color: #aaa;
+}
+
+div.available > i {
+    color: #337ab7;
+}

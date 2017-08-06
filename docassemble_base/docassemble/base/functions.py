@@ -33,7 +33,7 @@ from user_agents import parse as ua_parse
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'set_sections', 'get_sections', 'show_sections']
 
 # debug = False
 # default_dialect = 'us'
@@ -447,6 +447,11 @@ def interview_url(**kwargs):
     """Returns a URL that is direct link to the interview and the current
     variable store.  This is used in multi-user interviews to invite
     additional users to participate."""
+    do_local = False
+    if 'local' in kwargs:
+        if kwargs['local']:
+            do_local = True
+        del kwargs['local']
     args = kwargs
     if 'session' not in kwargs:
         args['session'] = this_thread.current_info['session']
@@ -454,17 +459,32 @@ def interview_url(**kwargs):
         args['from_list'] = 1
     else:
         args['i'] = this_thread.current_info['yaml_filename']
-    return str(this_thread.internal['url']) + '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
+    if do_local:
+        url = ''
+    else:
+        url = str(this_thread.internal['url'])
+    url += '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
+    return url
 
 def interview_url_action(action, **kwargs):
     """Like interview_url, except it additionally specifies an action.
     The keyword arguments are arguments to the action."""
+    do_local = False
+    if 'local' in kwargs:
+        if kwargs['local']:
+            do_local = True
+        del kwargs['local']
     args = dict()
     if 'i' not in kwargs:
         args['i'] = this_thread.current_info['yaml_filename']
     args['session'] = this_thread.current_info['session']
     args['action'] = myb64quote(json.dumps({'action': action, 'arguments': kwargs}))
-    return str(this_thread.internal['url']) + '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
+    if do_local:
+        url = ''
+    else:
+        url = str(this_thread.internal['url'])
+    url += '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
+    return url
 
 def interview_url_as_qr(**kwargs):
     """Inserts into the markup a QR code linking to the interview.
@@ -487,6 +507,120 @@ def set_info(**kwargs):
     """Used to set the values of global variables you wish to retrieve through get_info()."""
     for att, value in kwargs.iteritems():
         setattr(this_thread, att, value)
+
+def set_progress(number):
+    """Sets the position of the progress meter."""
+    this_thread.internal['progress'] = number
+
+def get_progress():
+    """Returns the position of the progress meter."""
+    return this_thread.internal['progress']
+
+def set_section(section):
+    """Sets the current section in the navigation."""
+    this_thread.internal['section']['current'] = section
+
+def get_section(display=False):
+    """Returns the current section of the navigation."""
+    current_section = this_thread.internal['section'].get('current', None)
+    if current_section is None or not display:
+        return current_section
+    the_sections = get_sections()
+    current_title = current_section
+    for x in the_sections:
+        subitems = None
+        if type(x) is dict:
+            if len(x) == 2 and 'subsections' in x:
+                for key, val in x.iteritems():
+                    if key == 'subsections':
+                        subitems = val
+                    else:
+                        the_key = key
+                        the_title = val
+            elif len(x) == 1:
+                the_key = x.keys()[0]
+                value = x[the_key]
+                if type(value) is list:
+                    subitems = value
+                    the_title = the_key
+                else:
+                    the_title = value
+            else:
+                logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                continue
+        else:
+            the_key = None
+            the_title = unicode(x)
+        if (the_key is not None and current_section == the_key) or (the_key is None and current_section == the_title):
+            current_title = the_title
+            break
+        if subitems:
+            found_it = False
+            for y in subitems:
+                if type(y) is dict:
+                    if len(y) == 1:
+                        sub_key = y.keys()[0]
+                        sub_title = y[sub_key]
+                    else:
+                        logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                        continue
+                else:
+                    sub_key = None
+                    sub_title = unicode(y)
+                if (sub_key is not None and current_section == sub_key) or (sub_key is None and current_section == sub_title):
+                    current_title = sub_title
+                    found_it = True
+                    break
+            if found_it:
+                break
+    return current_title
+
+def set_sections(sections):
+    """Sets the sections of the navigation to the given list."""
+    this_thread.internal['section']['sections'] = sections
+
+def get_sections():
+    """Returns the sections of the navigation as a list."""
+    return this_thread.internal['section'].get('sections', list())
+
+def show_sections(style=None, show_links=False):
+    """Returns the sections of the navigation as HTML."""
+    if style == "inline":
+        the_class = 'dainline'
+        interior_class = 'dainlineinside'
+        li_class = "danavli"
+        a_class = "danavlink label label-default label-larger"
+        the_js = """
+    <script>
+      $("a.danavlink").last().addClass('thelast');
+      $("a.danavlink").each(function(){
+        if ($(this).hasClass('label') && !$(this).hasClass('notavailableyet')){
+          var the_li = $(this).parent();
+          var the_a = $(this);
+          var the_delay = 1000 + 250 * parseInt($(this).data('index'));
+          setTimeout(function(){
+            $(the_a).addClass('danavlidone');
+            $(the_a).removeClass('label-default');
+            if ($(the_li).hasClass('active')){
+              $(the_a).addClass('label-success');
+            }
+            else{
+              $(the_a).addClass('label-warning');
+            }
+          }, the_delay);
+        }
+      });
+    </script>
+"""
+    else:
+        the_class = ''
+        interior_class = None
+        li_class = None
+        a_class = None
+        the_js = None
+    if this_thread.interview_status is not None and the_js is not None:
+       this_thread.interview_status.extra_scripts.append(the_js) 
+    return '  <div class="dasections"><ul class="' + the_class + '">' + "\n" + server.navigation_bar(this_thread.internal['section'], this_thread.interview, wrapper=False, inner_ul_class=interior_class, li_class=li_class, a_class=a_class, show_links=show_links, show_nesting=False) + '  </ul></div>' + "\n"
 
 word_collection = {
     'es': {
@@ -859,6 +993,8 @@ class ThreadVariables(threading.local):
     redis = None
     uid = None
     current_package = None
+    interview = None
+    interview_status = None
     current_question = None
     evaluation_context = None
     docx_template = None
@@ -1094,9 +1230,13 @@ def update_word_collection(lang, defs):
 #     global daconfig
 #     daconfig = config
 
-def get_config(key):
-    """Returns a value from the docassemble configuration.  If not defined, returns None."""
-    return server.daconfig.get(key, None)
+def get_config(key, none_value=None):
+    """Returns a value from the docassemble configuration.  If not
+    defined, returns None or the value of the optional keyword
+    argument, none_value.
+
+    """
+    return server.daconfig.get(key, none_value)
 
 # def set_default_language(lang):
 #     global default_language

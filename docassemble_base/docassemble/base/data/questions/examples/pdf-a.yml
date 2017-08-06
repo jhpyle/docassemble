@@ -1,0 +1,23 @@
+metadata:
+  title: PDF/A file
+  short title: PDF/A
+  documentation: "https://docassemble.org/docs/documents.html#pdfa"
+  example start: 1
+  example end: 1
+---
+question: Your document is ready.
+subquestion: |
+  If you open the PDF file and look at
+  its properties, you will see that it
+  is a PDF/A file.
+attachment:
+  - name: A hello world document
+    filename: Hello_World_Document
+    valid formats:
+      - pdf
+    description: |
+      A document with a classic message
+    content: |
+      Hello, world!
+    pdf/a: True
+mandatory: True

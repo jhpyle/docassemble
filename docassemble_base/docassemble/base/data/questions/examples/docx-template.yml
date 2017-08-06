@@ -85,3 +85,6 @@ attachment:
   name: Your letter
   filename: letter
   docx template file: letter_template.docx
+---
+features:
+  pdf/a: True
