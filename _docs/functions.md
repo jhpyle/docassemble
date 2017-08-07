@@ -696,6 +696,14 @@ and this interview will be used instead of the current interview.  In
 this case, the URL functions as a referral to a different interview,
 with a fresh variable store.
 
+The keyword argument `local` is also special: set this to `True` if
+you want the URL to be relative (i.e., it will start with `?`).  Note
+that for purposes of the "copy link" feature of web browsers, this
+does not matter; the web browser will provide a full URL even if the
+underlying URL is relative.  However, **docassemble** treats URLs
+differently if they begin with `http:`/`https:` or `?`: links that
+begin with `http` will open in another tab.
+
 ## <a name="interview_url_as_qr"></a>interview_url_as_qr()
 
 Like `interview_url()`, except it inserts into the markup a [QR code]
@@ -1149,6 +1157,70 @@ Note that some countries have no subdivisions at all.  In that case,
 this function will return `None`.
 
 The data come from the [`pycountry` package].
+
+# Navigation and progress bar functions
+
+For more information about the progress bar, see the documentation for
+the [progress bar] initial block and the [`progress`] modifier.
+
+For more information about the navigation bar, see the documentation
+for the [navigation bar] feature. 
+
+## <a name="get_progress"></a>get_progress()
+
+You can retrieve the current numeric value of the progress bar by
+calling `nav.get_progress()`.
+
+## <a name="set_progress"></a>set_progress()
+
+You can set the numeric value of the progress bar by calling, e.g.,
+`nav.set_progress(20)`.  Alternatively, you can use the [`progress`]
+modifier on a [`question`].
+
+## <a name="DANav.get_section"></a>nav.get_section()
+
+The [navigation bar] is controlled by a [special variable] called
+`nav`.  This is a special [Python object] of type [`DANav`].  Access
+to the [navigation bar] is achieved by [methods] that act upon this
+object.
+
+You can retrieve the current section by calling `nav.get_section()`.
+This will return the keyword corresponding to the current section.  
+To get the displayed name of the section, call it using
+`nav.get_section(display=True)`.  When you call it with
+`display=True`, you can also use the optional keyword parameter
+`language` to indicate a language to use, if you want the display name
+for a language other than the current language.
+
+## <a name="DANav.set_section"></a>nav.set_section()
+
+You can change the current section by calling `nav.set_section()` with
+the keyword of the section you want to be the current section.
+
+## <a name="DANav.get_sections"></a>nav.get_sections()
+
+Calling `nav.get_sections()` returns a [Python list] with the sections
+defined using the [`sections`] initial block or the
+[`nav.set_sections()`] method.
+
+## <a name="DANav.set_sections"></a>nav.set_sections()
+
+You can programmatically set the list of sections using
+`nav.set_sections()`.  It takes one argument, the [Python list]
+containing the sections defintion, in the same style as a sections
+definition using the [`sections`] initial block.  This method takes an
+optional keyword argument `language` that you can specify if you want
+to define the section names for a language other than the current language.
+
+## <a name="DANav.show_sections"></a>nav.show_sections()
+
+To display the section list to the user in the body of a question, you
+can include the `nav` variable in a [Mako] template like so: 
+`${ nav }`.  This has the effect of doing 
+`${ nav.show_sections(style='inline') }`.  This method takes the optional
+keyword arguments `style`, the options for which are `None` or
+`'inline'`, and `show_links`, which you can set to `True` if you want
+users to be able to click on section names.
 
 # Functions for managing global variables
 
@@ -3452,13 +3524,28 @@ action (to be read with [`action_argument()`]).
 
 {% include side-by-side.html demo="js_url_action" %}
 
+## <a name="js_url_action_perform"></a>url_action_perform()
+
+The `url_action_perform()` function is like
+[`url_action()`](#js_url_action), except that instead of returning a
+URL that would run the action if accessed, it actually causes the
+user's web browser to run the action.
+
+The [Javascript] function takes two arguments:
+
+1. The [action] to take.  This corresponds with the name of an
+   [`event`] in your interview.
+2. An object containing arguments to pass to the [action].  In your
+   interview, you can use the [`action_argument()`] function to read
+   these values.
+
 ## <a name="js_url_action_call"></a>url_action_call()
 
 The `url_action_call()` function is like
 [`url_action()`](#js_url_action), except it makes an [Ajax] call to
 the URL and runs a callback function when the server responds to the
 request.  In combination with [`json_response()`], this can allow you
-to write [Javascript] code that interacts with the server.
+to write [Javascript] code that interacts with "[API]s" with your interview.
 
 The [Javascript] function takes three arguments:
 
@@ -3786,3 +3873,12 @@ $(document).on('daPageLoad', function(){
 [`objects from file`]: {{ site.baseurl }}/docs/initial.html#objects from file
 [The YAML Format]: http://symfony.com/doc/current/components/yaml/yaml_format.html
 [QR markup documentation]: {{ site.baseurl }}/docs/markup.html#qr
+[progress bar]: {{ site.baseurl }}/docs/initial.html#features
+[`progress`]: {{ site.baseurl}}/docs/modifiers.html#progress
+[navigation bar]: {{ site.baseurl }}/docs/initial.html#navigation bar
+[API]: https://en.wikipedia.org/wiki/Application_programming_interface
+[Python object]: https://docs.python.org/2/tutorial/classes.html
+[methods]: https://docs.python.org/2/tutorial/classes.html
+[`sections`]: {{ site.baseurl }}/docs/initial.html#sections
+[`nav.set_sections()`]: #DANav.set_sections
+[`DANav`]: #DANav.set_sections

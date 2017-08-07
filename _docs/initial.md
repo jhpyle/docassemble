@@ -285,6 +285,73 @@ You can also use `terms` and `auto terms` as [modifiers], in which
 case the terms will apply only to the question, not to the interview
 as a whole.
 
+# <a name="sections"></a>Defining the sections for the navigation bar
+
+You can add use the [`navigation bar`] feature or the
+[`nav.show_sections()`] function to show your users the "sections" of
+the interview and what the current section of the interview is.
+
+Here is a complete example.
+
+{% include side-by-side.html demo="sections" %}
+
+Subsections are supported, but only one level of nesting is allowed.
+
+If your interview uses [multiple languages], you can specify more than
+one `sections` block and modify each one with a `language` modifier:
+
+{% highlight yaml %}
+---
+language: en
+sections:
+  - Introduction
+  - Fruit
+  - Vegetables
+  - Conclusion
+---
+language: es
+sections:
+  - Introducción
+  - Fruta
+  - Vegetales
+  - Conclusión
+---
+{% endhighlight %}
+
+If no language is specified, the fallback language `*` is used.
+
+In the example above, the [`section`] modifier referred to sections
+using the same text that is displayed to the user.  However, in some
+circumstances, you might want to use a shorthand to refer to a
+section, and update the actual section names displayed to the user
+without having to make changes in numerous places in your interview.
+You can do this by using key/value pairs in your `sections` block, and
+using the special key `subsections` to indicate subsections:
+
+{% include side-by-side.html demo="sections-keywords" %}
+
+The keywords for section names need to be valid [Python names].  When
+choosing keywords, make sure not to use the names of variables that
+already exist in your interview.
+
+This is because the keywords can be used to make the left-hand
+navigation bar clickable.  If a keyword for a section is a variable
+that exists in the interview, clicking on the section will cause an
+[action] to be launched that seeks a definition of that variable.
+
+The recommended way to use this feature is to set up [`review`] blocks
+that have [`event`] set to the keyword of each section that you want
+to be clickable.
+
+{% include side-by-side.html demo="sections-keywords-review" %}
+
+Note that if you use [`review`] blocks in an interview with sections,
+every question should have a `section` defined.  Otherwise, when your
+users jump around the interview, their section may not be appropriate
+for the question they are currently answering.  Alternatively, you
+could use [`code` blocks] and the [`nav.set_section()`] function to
+make sure that the section is set appropriately.
+
 # <a name="interview help"></a>Assisting users with `interview help`
 
 {% highlight yaml %}
@@ -492,10 +559,24 @@ The `features` block sets some optional features of the interview.
 ## <a name="progress bar"></a>Progress bar
 
 The `progress bar` feature controls whether a progress bar is shown
-during the interview.  You can use the [progress] modifier to indicate
+during the interview.  You can use the [`progress`] modifier to indicate
 the setting of the progress bar.
 
 {% include side-by-side.html demo="progress-features" %}
+
+## <a name="navigation bar"></a>Navigation bar
+
+The `navigation` feature controls whether a navigation bar is
+shown during the interview.  You can use the [`sections`] initial
+block or the [`nav.set_sections()`] function to define the sections of
+your interview.  The [`section`] modifier or the [`nav.set_section()`]
+function can be used to change the current section.
+
+{% include side-by-side.html demo="sections" %}
+
+Note that the section list is not shown on small devices, such as
+smartphones.  To show a smartphone user a list of sections, you can
+use the [`show_sections()`] function.
 
 ## <a name="javascript"></a><a name="css"></a>Javascript and CSS files
 
@@ -588,6 +669,22 @@ features:
   table width: 75
 {% endhighlight %}
 
+## <a name="pdfa"></a>Producing PDF/A files
+
+If you want the [PDF] files produced by your interview to be in
+[PDF/A] format, you can set this as a default:
+
+{% highlight yaml %}
+features:
+  pdf/a: True
+{% endhighlight %}
+
+The default is determined by the [`pdf/a` configuration directive].
+The setting can also be made on a per-attachment basis by setting the
+[`pdf/a` attachment setting].
+
+[`pdf/a` attachment setting]: {{ site.baseurl }}/docs/document.html#pdfa
+[`pdf/a` configuration directive]: {{ site.baseurl }}/docs/config.html#pdfa
 [`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
 [table]: {{ site.baseurl }}/docs/template.html#table
 [tables]: {{ site.baseurl }}/docs/template.html#table
@@ -599,13 +696,14 @@ features:
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [Mako]: http://www.makotemplates.org/
 [language support]: {{ site.baseurl }}/docs/language.html
+[multiple languages]: {{ site.baseurl }}/docs/language.html
 [modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [markup]: {{ site.baseurl }}/docs/markup.html
 [setting variables]: {{ site.baseurl }}/docs/fields.html
 [objects]: {{ site.baseurl }}/docs/objects.html
 [def]: http://docs.makotemplates.org/en/latest/defs.html
 [roles]: {{ site.baseurl}}/docs/roles.html
-[progress]: {{ site.baseurl}}/docs/modifiers.html#progress
+[`progress`]: {{ site.baseurl}}/docs/modifiers.html#progress
 [`language` modifier]: {{ site.baseurl}}/docs/modifiers.html#language
 [`include`]: {{ site.baseurl}}/docs/initial.html#include
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
@@ -630,3 +728,14 @@ features:
 [Sources folder]: {{ site.baseurl }}/docs/playground.html#sources
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [packaging your training sets]: {{ site.baseurl }}/docs/ml.html#packaging
+[`nav.show_sections()`]: {{ site.baseurl}}/docs/functions.html#DANav.show_sections
+[`section`]: {{ site.baseurl}}/docs/modifiers.html#section
+[`nav.set_section()`]: {{ site.baseurl}}/docs/functions.html#DANav.set_section
+[`sections`]: #sections
+[`navigation`]: #navigation bar
+[Python names]: {{ site.baseurl}}/docs/fields.html#variable names
+[`event`]: {{ site.baseurl}}/docs/fields.html#event
+[`review`]: {{ site.baseurl}}/docs/fields.html#review
+[`navigation bar`]: #navigation bar
+[`nav.set_sections()`]: {{ site.baseurl}}/docs/functions.html#DANav.set_sections
+[action]: {{ site.baseurl}}/docs/functions.html#actions

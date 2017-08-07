@@ -4578,6 +4578,23 @@
 
     Path **${ filename_c }** has
     MIME type **${ mimetype_c }**.
+"pdf-a": |-
+  question: Your document is ready.
+  subquestion: |
+    If you open the PDF file and look at
+    its properties, you will see that it
+    is a PDF/A file.
+  attachment:
+    - name: A hello world document
+      filename: Hello_World_Document
+      valid formats:
+        - pdf
+      description: |
+        A document with a classic message
+      content: |
+        Hello, world!
+      pdf/a: True
+  mandatory: True
 "pdf-fill": |-
   question: |
     Here is your PDF form
@@ -5196,6 +5213,101 @@
         $("#beg").html("Pretty please?");
       }, 1000);
     </script>
+"sections": "sections:\n  - Introduction\n  - About you:\n    - Contact info\n   \
+  \ - Demographics\n  - Preferences\n  - Conclusion\n---\nfeatures:\n  navigation:\
+  \ True\n---\nmodules:\n  docassemble.base.util\n---\nmandatory: True\ncode: |\n\
+  \  menu_items = [ action_menu_item('Roadmap', 'road_map') ]\n---\ninitial: True\n\
+  code: |\n  if returning_user(minutes=0.5):\n    welcome_back\n---\nmandatory: True\n\
+  question: |\n  Welcome to the interview\nsubquestion: |\n  If you are not on a\n\
+  \  smartphone-sized device,\n  you should see a navigation\n  bar to the left.\n\
+  field: sees_nav_bar\n---\nmandatory: True\nquestion: |\n  I am going to ask you\
+  \ some\n  questions about yourself.\nfield: intro_to_about_you\nsection: About you\n\
+  ---\nmandatory: True\nquestion: |\n  What is your name?\nfields:\n  - First Name:\
+  \ first_name\n  - Last Name: last_name\nsection: Contact info\n---\nmandatory: True\n\
+  question: |\n  What is your e-mail address?\nfields:\n  - E-mail: email_address\n\
+  \    datatype: email\n---\nmandatory: True\nquestion: |\n  What is your gender?\n\
+  field: gender\nchoices:\n  - Male\n  - Female\n  - Something else\nsection: Demographics\n\
+  ---\nmandatory: True\nquestion: |\n  What kind of belly button\n  do you have?\n\
+  subquestion: |\n  To see what a user would\n  see after returning to\n  the interview\
+  \ after a period\n  of absence, try waiting\n  thirty seconds, then\n  [click into\
+  \ the\n  interview](${ interview_url(local=True) }).\nfield: belly_button\nchoices:\n\
+  \  - Innie\n  - Outie\n---\nmandatory: True\nquestion: |\n  What is your favorite\
+  \ fruit?\nfields:\n  - Favorite fruit: favorite_fruit\nsection: Preferences\n---\n\
+  mandatory: True\nquestion: |\n  What is your favorite vegetable?\nfields:\n  - Favorite\
+  \ vegetable: favorite_vegetable\n---\nmandatory: True\nquestion: Thank you.\nsubquestion:\
+  \ |\n  ${ first_name },\n\n  Your answers mean a lot to me.\n  \n  I am going to\
+  \ go eat some\n  ${ favorite_vegetable }\n  now.\nsection: Conclusion\n---\nevent:\
+  \ welcome_back\nquestion: |\n  Welcome back!\nsubquestion: |\n  You are currently\
+  \ in the\n  **${ nav.get_section(display=True) }**\n  section.\n\n  ${ nav }\n\n\
+  \  Press \"Continue\" to pick up\n  where you left off.\nbuttons:\n  Continue: continue\n\
+  ---\nevent: road_map\nquestion: |\n  Roadmap\nsubquestion: |\n  You are currently\
+  \ in the\n  **${ nav.get_section(display=True) }**\n  section.\n\n  ${ nav }\n\n\
+  \  Press \"Continue\" to resume the\n  interview.\nbuttons:\n  Continue: continue"
+"sections-keywords": "sections:\n  - intro: Introduction\n  - about: About you\n \
+  \   subsections:\n      - contact: Contact info\n      - demographic: Demographics\n\
+  \  - prefs: Preferences\n  - conclusion: Conclusion\n---\nfeatures:\n  navigation:\
+  \ True\n---\nmandatory: True\nquestion: |\n  Welcome to the interview\nsubquestion:\
+  \ |\n  If you are not on a\n  smartphone-sized device,\n  you should see a navigation\n\
+  \  bar to the left.\nfield: sees_nav_bar\n---\nmandatory: True\nquestion: |\n  I\
+  \ am going to ask you some\n  questions about yourself.\nfield: intro_to_about_you\n\
+  section: about\n---\nmandatory: True\nquestion: |\n  What is your name?\nfields:\n\
+  \  - First Name: first_name\n  - Last Name: last_name\nsection: contact\n---\nmandatory:\
+  \ True\nquestion: |\n  What is your e-mail address?\nfields:\n  - E-mail: email_address\n\
+  \    datatype: email\n---\nmandatory: True\nquestion: |\n  What is your gender?\n\
+  field: gender\nchoices:\n  - Male\n  - Female\n  - Something else\nsection: demographic\n\
+  ---\nmandatory: True\nquestion: |\n  What kind of belly button\n  do you have?\n\
+  field: belly_button\nchoices:\n  - Innie\n  - Outie\n---\nmandatory: True\nquestion:\
+  \ |\n  What is your favorite fruit?\nfields:\n  - Favorite fruit: favorite_fruit\n\
+  section: prefs\n---\nmandatory: True\nquestion: |\n  What is your favorite vegetable?\n\
+  fields:\n  - Favorite vegetable: favorite_vegetable\n---\nmandatory: True\nquestion:\
+  \ Thank you.\nsubquestion: |\n  ${ first_name },\n\n  Your answers mean a lot to\
+  \ me.\n  \n  I am going to go eat some\n  ${ favorite_vegetable }\n  now.\nsection:\
+  \ conclusion"
+"sections-keywords-review": |-
+  sections:
+    - intro: Introduction
+    - about: About you
+      subsections:
+        - contact: Contact info
+        - demographic: Demographics
+    - prefs: Preferences
+    - conclusion: Conclusion
+  ---
+  event: contact
+  section: contact
+  question: |
+    Review contact information
+  review:
+    - Edit name: first_name
+      button: |
+        Name: ${ first_name } ${ last_name }
+    - Edit e-mail: email_address
+      button: |
+        E-mail: ${ email_address }
+  ---
+  event: demographic
+  section: demographic
+  question: |
+    Review demographic information
+  review:
+    - Edit gender: gender
+      button: |
+        Gender: ${ gender }
+    - Edit belly button: belly_button
+      button: |
+        Belly button: ${ belly_button }
+  ---
+  event: prefs
+  section: prefs
+  question: |
+    Preferences
+  review:
+    - Edit fruit: favorite_fruit
+      button: |
+        Favorite fruit: ${ favorite_fruit }
+    - Edit vegetable: favorite_vegetable
+      button: |
+        Favorite vegetable: ${ favorite_vegetable }
 "send-email": |-
   objects:
     - recipient: Individual

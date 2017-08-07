@@ -199,7 +199,7 @@ has global effects (like the example above).  Because of the way
 **docassemble** interviews work, [CSS] applied in one question will
 affect later questions until the screen is reloaded.
 
-# <a name="progress"></a>The `progress` bar
+# <a name="progress"></a>The progress bar
 
 A **docassemble** interview can be configured to show a
 [progress bar].  This will show the user a progress indicator to give
@@ -209,6 +209,35 @@ The progress along the bar at any question needs to be set with the
 `progress` modifier.  For example:
 
 {% include side-by-side.html demo="progress" %}
+
+The value of `progress` needs to be a number between 0 and 100.  If
+the value is zero, the progress bar is hidden.  If the value is
+greater than 100, a full progress bar will be shown.
+
+# <a name="section"></a>The section navigation bar
+
+A **docassemble** interview can be configured to show a left-hand
+[navigation bar] on screens large enough to show one.  The navigation
+bar will contain a list of the sections in the interview, as specified
+in the [`sections`] initial block or using the [`nav.set_sections()`]
+function.  In the navigation bar, the current section will be
+highlighted.
+
+Adding the `section` modifier to a question will update the current
+section when the interview asks the question.  This section will
+continue to be the current section until another question is reached
+that contains a `section` modifier that specifies a different section.
+
+As explained in the documentation for the [`sections`] initial block,
+you have the option of referring to a section by a keyword that is
+different from the name of the section that is displayed to the user.
+If you are using this feature, your `section` modifier needs to refer
+to the keyword, not the displayed name.
+
+{% include side-by-side.html demo="sections" %}
+
+You can also set the current section using the [`nav.set_section()`]
+function.
 
 # <a name="prevent going back"></a>Disable the back button: `prevent going back`
 
@@ -454,6 +483,7 @@ by **docassemble**, so it can contain any valid [YAML].
 [images]: {{ site.baseurl }}/docs/initial.html#images
 [default language]: {{ site.baseurl }}/docs/initial.html#default language
 [progress bar]: {{ site.baseurl }}/docs/initial.html#features
+[navigation bar]: {{ site.baseurl }}/docs/initial.html#navigation bar
 [`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
 [`Person`]: {{ site.baseurl }}/docs/objects.html#Person
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
@@ -469,3 +499,7 @@ by **docassemble**, so it can contain any valid [YAML].
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
 [fallback]: {{ site.baseurl }}/docs/logic.html#fallback
 [`code`]: {{ site.baseurl }}/docs/code.html#code
+[`nav.show_sections()`]: {{ site.baseurl}}/docs/functions.html#DANav.show_sections
+[`nav.set_section()`]: {{ site.baseurl}}/docs/functions.html#DANav.set_section
+[`nav.set_sections()`]: {{ site.baseurl}}/docs/functions.html#DANav.set_sections
+[`sections`]: {{ site.baseurl}}/docs/initial.html#sections

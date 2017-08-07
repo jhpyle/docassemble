@@ -29,6 +29,7 @@ experience errors or unexpected results.
 * <span></span>[`menu_items`]: used to add items to the menu.
 * <span></span>[`multi_user`]: a [special variable] that is used as
   part of the [roles] system.
+* <span></span>[`nav`]: used to keep track of [sections] in the interview.
 * <span></span>[`role`]: used to store the role of the current user for purposes of
   the [roles] system.
 * <span></span>[`role_event`]: a [special variable] that is used as part of the [roles]
@@ -597,3 +598,4 @@ All others are available for you to use and to retrieve with
 [`STOP_RENDERING`]: http://docs.makotemplates.org/en/latest/syntax.html#exiting-early-from-a-template
 [Mako]: http://www.makotemplates.org/
 [background processes]: {{ site.baseurl }}/docs/background.html#background
+[sections]: {{ site.baseurl }}/docs/initial.html#navigation bar

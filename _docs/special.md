@@ -14,6 +14,13 @@ interview's variable store.
 `_internal` is a [Python dictionary] that is used by **docassemble**
 but that is not intended to be used in interviews.
 
+## <a name="nav"></a>nav
+
+`nav` is an object that is used to keep track of sections in your
+interview.  This is relevant if you are using the [navigation bar]
+feature.  For information about how to use it, see the documentation
+for the [`nav` functions].
+
 ## <a name="url_args"></a>url_args
 
 `url_args` is a [Python dictionary] that is used to access parameters
@@ -259,3 +266,5 @@ There are some built-in variable names with special meaning:
 [`cron_weekly`]: {{ site.baseurl }}/docs/background.html#cron_weekly
 [`cron_monthly`]: {{ site.baseurl }}/docs/background.html#cron_monthly
 [e-mail]: {{ site.baseurl }}/docs/background.html#email
+[navigation bar]: {{ site.baseurl }}/docs/initial.html#navigation bar
+[`nav` functions]: {{ site.baseurl }}/docs/functions.html#set_section

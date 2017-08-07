@@ -1231,6 +1231,18 @@ that go by different names:
 libreoffice: soffice
 {% endhighlight %}
 
+## <a name="pdfa"></a>Producing PDF/A files
+
+If you want the [PDF] files produced by interviews on your server to be
+in [PDF/A] format, you can set this as a default:
+
+{% highlight yaml %}
+pdf/a: True
+{% endhighlight %}
+
+The default is `False`.  The setting can also be made on a
+per-interview basis by setting the [`pdf/a` features setting].
+
 ## <a name="timezone"></a>Setting the time zone
 
 Functions like [`as_datetime()`] that deal with dates will use a
@@ -1644,3 +1656,6 @@ and Facebook API keys.
 [Authy]: https://authy.com/
 [privileges]: {{ site.baseurl }}/docs/roles.html
 [bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
+[PDF/A]: https://en.wikipedia.org/wiki/PDF/A
+[PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
+[`pdf/a` features setting]: {{ site.baseurl }}/docs/initial.html#pdfa
