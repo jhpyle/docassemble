@@ -576,7 +576,7 @@ function can be used to change the current section.
 
 Note that the section list is not shown on small devices, such as
 smartphones.  To show a smartphone user a list of sections, you can
-use the [`show_sections()`] function.
+use the [`nav.show_sections()`] function.
 
 ## <a name="javascript"></a><a name="css"></a>Javascript and CSS files
 
