@@ -268,3 +268,6 @@ There are some built-in variable names with special meaning:
 [e-mail]: {{ site.baseurl }}/docs/background.html#email
 [navigation bar]: {{ site.baseurl }}/docs/initial.html#navigation bar
 [`nav` functions]: {{ site.baseurl }}/docs/functions.html#get_section
+[event]: {{ site.baseurl }}/docs/background.html
+[`incoming_email`]: {{ site.baseurl }}/docs/background.html#email
+

@@ -1213,10 +1213,14 @@ defined using the [`sections`] initial block or the
 
 You can programmatically set the list of sections using
 `nav.set_sections()`.  It takes one argument, the [Python list]
-containing the sections defintion, in the same style as a sections
-definition using the [`sections`] initial block.  This method takes an
-optional keyword argument `language` that you can specify if you want
-to define the section names for a language other than the current language.
+containing the sections defintion.  The list should have the same
+structure as a sections definition using the [`sections`] initial
+block (except it should be a [Python] data structure rather than
+[YAML] text).  This method takes an optional keyword argument
+`language` that you can specify if you want to define the section
+names for a language other than the current language.
+
+{% include side-by-side.html demo="sections-keywords-set-sections" %}
 
 ## <a name="DANav.show_sections"></a>nav.show_sections()
 

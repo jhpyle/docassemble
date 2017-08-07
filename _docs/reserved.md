@@ -603,3 +603,4 @@ All others are available for you to use and to retrieve with
 [`incoming_email`]: {{ site.baseurl }}/docs/background.html#email
 [`row_index`]: https://docassemble.org/docs/template.html#table
 [`row_item`]: https://docassemble.org/docs/template.html#table
+[tables]: https://docassemble.org/docs/template.html#table
