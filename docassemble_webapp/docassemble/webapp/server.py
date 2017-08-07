@@ -1206,8 +1206,8 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False):
 
 def process_file(saved_file, orig_file, mimetype, extension, initial=True):
     if extension == "jpg" and daconfig.get('imagemagick', 'convert') is not None:
-        unrotated = tempfile.NamedTemporaryFile(suffix=".jpg")
-        rotated = tempfile.NamedTemporaryFile(suffix=".jpg")
+        unrotated = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".jpg", delete=False)
+        rotated = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".jpg", delete=False)
         shutil.move(orig_file, unrotated.name)
         call_array = [daconfig.get('imagemagick', 'convert'), str(unrotated.name), '-auto-orient', '-density', '300', 'jpeg:' + rotated.name]
         result = call(call_array)
@@ -4206,7 +4206,7 @@ def index():
                                 file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
                                 extension, mimetype = get_ext_and_mimetype(filename)
                                 saved_file = SavedFile(file_number, extension=extension, fix=True)
-                                temp_file = tempfile.NamedTemporaryFile(suffix='.' + extension)
+                                temp_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.' + extension, delete=False)
                                 the_file.save(temp_file.name)
                                 process_file(saved_file, temp_file.name, mimetype, extension)
                                 #sys.stderr.write("Upload was processed\n")

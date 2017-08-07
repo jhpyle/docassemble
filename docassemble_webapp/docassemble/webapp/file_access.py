@@ -133,7 +133,7 @@ def add_info_about_file(filename, result):
     return
 
 def get_info_from_file_number(file_number, privileged=False, filename=None):
-    if current_user and current_user.is_authenticated and current_user.current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
+    if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
         privileged = True
     else:
         if has_request_context():

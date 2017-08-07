@@ -1,9 +1,11 @@
 # Change Log
 
-## [0.1.30]
+## [0.1.30] - 2017-08-07
 ### Added
 - PDF/A support
 - Navigation bar option
+### Fixed
+- Problem with files when user logged in
 
 ## [0.1.29] - 2017-08-03
 ### Added
