@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.31] - 2017-08-07
+### Fixed
+- Problem with PDF/A due to old version of pdfx
+
 ## [0.1.30] - 2017-08-07
 ### Added
 - PDF/A support
