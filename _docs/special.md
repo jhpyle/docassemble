@@ -267,4 +267,4 @@ There are some built-in variable names with special meaning:
 [`cron_monthly`]: {{ site.baseurl }}/docs/background.html#cron_monthly
 [e-mail]: {{ site.baseurl }}/docs/background.html#email
 [navigation bar]: {{ site.baseurl }}/docs/initial.html#navigation bar
-[`nav` functions]: {{ site.baseurl }}/docs/functions.html#set_section
+[`nav` functions]: {{ site.baseurl }}/docs/functions.html#get_section

@@ -183,6 +183,16 @@ unless these libraries are present.
 
 On [Ubuntu], you may need to replace `liblinear1` with `liblinear3`.
 
+**docassemble** depends on a recent version of the [pdfx] package
+for [LaTeX].
+
+{% highlight bash %}
+wget -O /tmp/pdfx.zip http://mirrors.ctan.org/macros/latex/contrib/pdfx.zip
+sudo unzip -o -d /usr/share/texlive/texmf-dist/tex/latex /tmp/pdfx.zip
+sudo texhash
+rm /tmp/pdfx.zip
+{% endhighlight %}
+
 **docassemble** depends on version 5.0.1 or later of the
 [Perl Audio Converter] to convert uploaded sound files into other
 formats.  If your distribution offers an earlier version, you will

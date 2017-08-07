@@ -599,3 +599,7 @@ All others are available for you to use and to retrieve with
 [Mako]: http://www.makotemplates.org/
 [background processes]: {{ site.baseurl }}/docs/background.html#background
 [sections]: {{ site.baseurl }}/docs/initial.html#navigation bar
+[`nav`]: {{ site.baseurl }}/docs/initial.html#navigation bar
+[`incoming_email`]: {{ site.baseurl }}/docs/background.html#email
+[`row_index`]: https://docassemble.org/docs/template.html#table
+[`row_item`]: https://docassemble.org/docs/template.html#table

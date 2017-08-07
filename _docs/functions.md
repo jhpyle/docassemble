@@ -1184,6 +1184,8 @@ The [navigation bar] is controlled by a [special variable] called
 to the [navigation bar] is achieved by [methods] that act upon this
 object.
 
+{% include side-by-side.html demo="sections" %}
+
 You can retrieve the current section by calling `nav.get_section()`.
 This will return the keyword corresponding to the current section.  
 To get the displayed name of the section, call it using
@@ -1197,11 +1199,15 @@ for a language other than the current language.
 You can change the current section by calling `nav.set_section()` with
 the keyword of the section you want to be the current section.
 
+{% include side-by-side.html demo="sections-keywords-code" %}
+
 ## <a name="DANav.get_sections"></a>nav.get_sections()
 
 Calling `nav.get_sections()` returns a [Python list] with the sections
 defined using the [`sections`] initial block or the
 [`nav.set_sections()`] method.
+
+{% include side-by-side.html demo="sections-keywords-get-sections" %}
 
 ## <a name="DANav.set_sections"></a>nav.set_sections()
 
