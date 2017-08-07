@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.1.30]
+### Added
+- PDF/A support
+- Navigation bar option
+
 ## [0.1.29] - 2017-08-03
 ### Added
 - Input validation with Python code

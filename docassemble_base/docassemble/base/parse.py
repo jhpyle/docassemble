@@ -94,7 +94,7 @@ def textify(data, user_dict):
 #     save_numbered_file = func
 #     return
 
-initial_dict = dict(_internal=dict(progress=0, section=dict(), tracker=0, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict(), nav=docassemble.base.functions.DANav())
 
 def set_initial_dict(the_dict):
     global initial_dict
@@ -566,6 +566,8 @@ class Question:
                         self.interview.external_files[key].append(the_file)
         if 'question' in data and 'code' in data:
             raise DAError("A block can be a question block or a code block but cannot be both at the same time." + self.idebug(data))
+        if 'event' in data and ('field' in data or 'fields' in data or 'yesno' in data or 'noyes' in data):
+            raise DAError("An 'event' block is for special screens that do not gather information and can only be used with 'buttons' or with no other controls." + self.idebug(data))
         if 'default language' in data:
             should_append = False
             self.from_source.set_language(data['default language'])
@@ -573,7 +575,11 @@ class Question:
             should_append = False
             if type(data['sections']) is not list:
                 raise DAError("A sections list must be a list." + self.idebug(data))
-            self.interview.sections = data['sections']
+            if 'language' in data:
+                the_language = data['language']
+            else:
+                the_language = '*'
+            self.interview.sections[the_language] = data['sections']
         if 'section' in data:
             if 'question' not in data:
                 raise DAError("You can only set the section from a question." + self.idebug(data))
@@ -2561,7 +2567,7 @@ class Interview:
         self.use_progress_bar = False
         self.use_pdf_a = get_config('pdf/a', False)
         self.use_navigation = False
-        self.sections = None
+        self.sections = dict()
         self.names_used = set()
         self.attachment_options = dict()
         self.external_files = dict()
@@ -2689,8 +2695,8 @@ class Interview:
         docassemble.base.functions.this_thread.interview = self
         docassemble.base.functions.this_thread.interview_status = interview_status
         docassemble.base.functions.this_thread.internal = user_dict['_internal']
-        if self.use_navigation and self.sections is not None and 'sections' not in user_dict['_internal']['section']:
-            user_dict['_internal']['section']['sections'] = self.sections
+        if user_dict['nav'].sections is None:
+            user_dict['nav'].sections = self.sections
         for question in self.questions_list:
             if question.question_type == 'imports':
                 for module_name in question.module_list:

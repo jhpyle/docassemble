@@ -1240,6 +1240,10 @@ div.danavdiv {
     margin-top: 30px;
 }
 
+div.danavdiv a.clickable {
+    cursor: pointer;
+}
+
 .ul-toggle {
     float: left;
     position: absolute;

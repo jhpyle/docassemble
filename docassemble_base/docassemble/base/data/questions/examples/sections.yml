@@ -1,5 +1,9 @@
 metadata:
-  title: Navigation
+  title: Navigation bar
+  short title: Navigation
+  documentation: "https://docassemble.org/docs/initial.html#navigation bar"
+  example start: 1
+  example end: 16
 ---
 sections:
   - Introduction
@@ -14,6 +18,10 @@ features:
 ---
 modules:
   docassemble.base.util
+---
+mandatory: True
+code: |
+  menu_items = [ action_menu_item('Roadmap', 'road_map') ]
 ---
 initial: True
 code: |
@@ -90,7 +98,7 @@ mandatory: True
 question: |
   What is your favorite vegetable?
 fields:
-  - Favorite fruit: favorite_vegetable
+  - Favorite vegetable: favorite_vegetable
 ---
 mandatory: True
 question: Thank you.
@@ -109,12 +117,27 @@ question: |
   Welcome back!
 subquestion: |
   You are currently in the
-  **${ get_section(display=True) }**
+  **${ nav.get_section(display=True) }**
   section.
 
-  ${ show_sections(style='inline') }
+  ${ nav }
 
   Press "Continue" to pick up
   where you left off.
+buttons:
+  Continue: continue
+---
+event: road_map
+question: |
+  Roadmap
+subquestion: |
+  You are currently in the
+  **${ nav.get_section(display=True) }**
+  section.
+
+  ${ nav }
+
+  Press "Continue" to resume the
+  interview.
 buttons:
   Continue: continue

@@ -33,7 +33,7 @@ from user_agents import parse as ua_parse
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'set_sections', 'get_sections', 'show_sections']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress']
 
 # debug = False
 # default_dialect = 'us'
@@ -516,81 +516,104 @@ def get_progress():
     """Returns the position of the progress meter."""
     return this_thread.internal['progress']
 
-def set_section(section):
-    """Sets the current section in the navigation."""
-    this_thread.internal['section']['current'] = section
+class DANav(object):
+    def __init__(self):
+        self.past = set()
+        self.sections = None
+        self.current = None
 
-def get_section(display=False):
-    """Returns the current section of the navigation."""
-    current_section = this_thread.internal['section'].get('current', None)
-    if current_section is None or not display:
-        return current_section
-    the_sections = get_sections()
-    current_title = current_section
-    for x in the_sections:
-        subitems = None
-        if type(x) is dict:
-            if len(x) == 2 and 'subsections' in x:
-                for key, val in x.iteritems():
-                    if key == 'subsections':
-                        subitems = val
+    def __str__(self):
+        return self.show_sections(style='inline')
+    
+    def __unicode__(self):
+        return unicode(self.__str__())
+
+    def set_section(self, section):
+        """Sets the current section in the navigation."""
+        if section == self.current:
+            return False
+        self.current = section
+        self.past.add(section)
+        return True
+
+    def get_section(self, display=False, language=None):
+        """Returns the current section of the navigation."""
+        current_section = self.current
+        if current_section is None or not display:
+            return current_section
+        the_sections = self.get_sections(language=language)
+        current_title = current_section
+        for x in the_sections:
+            subitems = None
+            if type(x) is dict:
+                if len(x) == 2 and 'subsections' in x:
+                    for key, val in x.iteritems():
+                        if key == 'subsections':
+                            subitems = val
+                        else:
+                            the_key = key
+                            the_title = val
+                elif len(x) == 1:
+                    the_key = x.keys()[0]
+                    value = x[the_key]
+                    if type(value) is list:
+                        subitems = value
+                        the_title = the_key
                     else:
-                        the_key = key
-                        the_title = val
-            elif len(x) == 1:
-                the_key = x.keys()[0]
-                value = x[the_key]
-                if type(value) is list:
-                    subitems = value
-                    the_title = the_key
+                        the_title = value
                 else:
-                    the_title = value
+                    logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                    continue
             else:
-                logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
-                continue
-        else:
-            the_key = None
-            the_title = unicode(x)
-        if (the_key is not None and current_section == the_key) or (the_key is None and current_section == the_title):
-            current_title = the_title
-            break
-        if subitems:
-            found_it = False
-            for y in subitems:
-                if type(y) is dict:
-                    if len(y) == 1:
-                        sub_key = y.keys()[0]
-                        sub_title = y[sub_key]
-                    else:
-                        logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
-                        continue
-                else:
-                    sub_key = None
-                    sub_title = unicode(y)
-                if (sub_key is not None and current_section == sub_key) or (sub_key is None and current_section == sub_title):
-                    current_title = sub_title
-                    found_it = True
-                    break
-            if found_it:
+                the_key = None
+                the_title = unicode(x)
+            if (the_key is not None and current_section == the_key) or (the_key is None and current_section == the_title):
+                current_title = the_title
                 break
-    return current_title
+            if subitems:
+                found_it = False
+                for y in subitems:
+                    if type(y) is dict:
+                        if len(y) == 1:
+                            sub_key = y.keys()[0]
+                            sub_title = y[sub_key]
+                        else:
+                            logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                            continue
+                    else:
+                        sub_key = None
+                        sub_title = unicode(y)
+                    if (sub_key is not None and current_section == sub_key) or (sub_key is None and current_section == sub_title):
+                        current_title = sub_title
+                        found_it = True
+                        break
+                if found_it:
+                    break
+        return current_title
 
-def set_sections(sections):
-    """Sets the sections of the navigation to the given list."""
-    this_thread.internal['section']['sections'] = sections
+    def set_sections(self, sections, language=None):
+        """Sets the sections of the navigation to the given list."""
+        if language is None:
+            language = this_thread.language
+        self.sections[language] = sections
+        self.past = set()
 
-def get_sections():
-    """Returns the sections of the navigation as a list."""
-    return this_thread.internal['section'].get('sections', list())
+    def get_sections(self, language=None):
+        """Returns the sections of the navigation as a list."""
+        if language is None:
+            language = this_thread.language
+        if language not in self.sections:
+            language = '*'
+        return self.sections.get(language, list())
 
-def show_sections(style=None, show_links=False):
-    """Returns the sections of the navigation as HTML."""
-    if style == "inline":
-        the_class = 'dainline'
-        interior_class = 'dainlineinside'
-        li_class = "danavli"
-        a_class = "danavlink label label-default label-larger"
-        the_js = """
+    def show_sections(self, style=None, show_links=False):
+        """Returns the sections of the navigation as HTML."""
+        if style == "inline":
+            the_class = 'dainline'
+            interior_class = 'dainlineinside'
+            li_class = "danavli"
+            a_class = "danavlink label label-default label-larger"
+            the_js = """
     <script>
       $("a.danavlink").last().addClass('thelast');
       $("a.danavlink").each(function(){
@@ -612,15 +635,15 @@ def show_sections(style=None, show_links=False):
       });
     </script>
 """
-    else:
-        the_class = ''
-        interior_class = None
-        li_class = None
-        a_class = None
-        the_js = None
-    if this_thread.interview_status is not None and the_js is not None:
-       this_thread.interview_status.extra_scripts.append(the_js) 
-    return '  <div class="dasections"><ul class="' + the_class + '">' + "\n" + server.navigation_bar(this_thread.internal['section'], this_thread.interview, wrapper=False, inner_ul_class=interior_class, li_class=li_class, a_class=a_class, show_links=show_links, show_nesting=False) + '  </ul></div>' + "\n"
+        else:
+            the_class = ''
+            interior_class = None
+            li_class = None
+            a_class = None
+            the_js = None
+        if this_thread.interview_status is not None and the_js is not None:
+           this_thread.interview_status.extra_scripts.append(the_js) 
+        return '  <div class="dasections"><ul class="' + the_class + '">' + "\n" + server.navigation_bar(self, this_thread.interview, wrapper=False, inner_ul_class=interior_class, li_class=li_class, a_class=a_class, show_links=show_links, show_nesting=False) + '  </ul></div>' + "\n"
 
 word_collection = {
     'es': {

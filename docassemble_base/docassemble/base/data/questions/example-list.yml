@@ -22,6 +22,7 @@
     - document-docx
     - allow-emailing-false
     - document-language
+    - pdf-a
 - "PDF & DOCX templates":
     - pdf-fill
     - pdf-fill-signature
@@ -252,6 +253,10 @@
 - Storage:
     - redis
     - database_storage
+- Sections:
+    - sections
+    - sections-keywords
+    - sections-keywords-review
 - API responses: 
     - response
     - response-json

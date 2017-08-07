@@ -1,0 +1,133 @@
+metadata:
+  title: Navigation with review pages
+  short title: Navigation
+  documentation: "https://docassemble.org/docs/initial.html#sections"
+  example start: 1
+  example end: 4
+---
+sections:
+  - intro: Introduction
+  - about: About you
+    subsections:
+      - contact: Contact info
+      - demographic: Demographics
+  - prefs: Preferences
+  - conclusion: Conclusion
+---
+event: contact
+section: contact
+question: |
+  Review contact information
+review:
+  - Edit name: first_name
+    button: |
+      Name: ${ first_name } ${ last_name }
+  - Edit e-mail: email_address
+    button: |
+      E-mail: ${ email_address }
+---
+event: demographic
+section: demographic
+question: |
+  Review demographic information
+review:
+  - Edit gender: gender
+    button: |
+      Gender: ${ gender }
+  - Edit belly button: belly_button
+    button: |
+      Belly button: ${ belly_button }
+---
+event: prefs
+section: prefs
+question: |
+  Preferences
+review:
+  - Edit fruit: favorite_fruit
+    button: |
+      Favorite fruit: ${ favorite_fruit }
+  - Edit vegetable: favorite_vegetable
+    button: |
+      Favorite vegetable: ${ favorite_vegetable }
+---
+features:
+  navigation: True
+---
+mandatory: True
+question: |
+  Welcome to the interview
+subquestion: |
+  If you are not on a
+  smartphone-sized device,
+  you should see a navigation
+  bar to the left.
+field: sees_nav_bar
+---
+mandatory: True
+question: |
+  I am going to ask you some
+  questions about yourself.
+field: intro_to_about_you
+section: about
+---
+mandatory: True
+question: |
+  What is your name?
+fields:
+  - First Name: first_name
+  - Last Name: last_name
+section: contact
+---
+mandatory: True
+question: |
+  What is your e-mail address?
+fields:
+  - E-mail: email_address
+    datatype: email
+section: contact
+---
+mandatory: True
+question: |
+  What is your gender?
+field: gender
+choices:
+  - Male
+  - Female
+  - Something else
+section: demographic
+---
+mandatory: True
+question: |
+  What kind of belly button
+  do you have?
+field: belly_button
+choices:
+  - Innie
+  - Outie
+section: demographic
+---
+mandatory: True
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+section: prefs
+---
+mandatory: True
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite vegetable: favorite_vegetable
+section: prefs
+---
+mandatory: True
+question: Thank you.
+subquestion: |
+  ${ first_name },
+
+  Your answers mean a lot to me.
+  
+  I am going to go eat some
+  ${ favorite_vegetable }
+  now.
+section: conclusion

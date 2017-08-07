@@ -98,6 +98,7 @@ match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
 match_brackets = re.compile('\[\'.*\'\]$')
 match_inside_and_outside_brackets = re.compile('(.*)(\[\'[^\]]+\'\])$')
 match_inside_brackets = re.compile('\[\'([^\]]+)\'\]')
+valid_python_var = re.compile(r'[A-Za-z][A-Za-z0-9\_]+')
 
 if 'mail' not in daconfig:
     daconfig['mail'] = dict()
@@ -1325,7 +1326,11 @@ def safeid(text):
 def from_safeid(text):
     return(codecs.decode(text, 'base64').decode('utf8'))
 
-def navigation_bar(section, interview, wrapper=True, inner_ul_class=None, show_links=True, hide_inactive_subs=True, li_class=None, a_class=None, show_nesting=True):
+def test_for_valid_var(varname):
+    if not valid_python_var.match(varname):
+        raise DAError(varname + " is not a valid name.  A valid name consists only of letters, numbers, and underscores, and begins with a letter.")
+
+def navigation_bar(nav, interview, wrapper=True, inner_ul_class=None, show_links=True, hide_inactive_subs=True, li_class=None, a_class=None, show_nesting=True):
     if inner_ul_class is None:
         inner_ul_class = 'nav nav-pills nav-stacked danav danavnested'
     if a_class is None:
@@ -1333,21 +1338,31 @@ def navigation_bar(section, interview, wrapper=True, inner_ul_class=None, show_l
     if li_class is None:
         li_class = ''
     #logmessage("navigation_bar: starting: " + str(section))
-    the_sections = section.get('sections', list())
+    the_language = docassemble.base.functions.get_language()
+    if the_language not in nav.sections:
+        the_language = DEFAULT_LANGUAGE
+    if the_language not in nav.sections:
+        the_language = '*'
+    if the_language not in nav.sections:
+        raise DAError("Could not find a navigation bar to display.  " + str(nav.sections))
+    the_sections = nav.sections[the_language]
     if len(the_sections) == 0:
         return('')
-    the_section = section.get('current', None)
+    the_section = nav.current
+    #logmessage("Past sections are: " + str(nav.past))
     if the_section is None:
-        if the_sections[0] is dict:
+        if type(the_sections[0]) is dict:
             the_section = the_sections[0].keys()[0]
         else:
             the_section = the_sections[0]
+    max_section = the_section
     if wrapper:
         output = '<div role="navigation" class="col-sm-3 col-md-3 col-lg-2 hidden-xs danavdiv">' + "\n" + '  <ul class="nav nav-pills nav-stacked danav">' + "\n"
     else:
         output = ''
     section_reached = False
     indexno = 0
+    seen = set()
     for x in the_sections:
         indexno += 1
         the_key = None
@@ -1360,9 +1375,11 @@ def navigation_bar(section, interview, wrapper=True, inner_ul_class=None, show_l
                         subitems = val
                     else:
                         the_key = key
+                        test_for_valid_var(the_key)
                         the_title = val
             elif len(x) == 1:
                 the_key = x.keys()[0]
+                test_for_valid_var(the_key)
                 value = x[the_key]
                 if type(value) is list:
                     subitems = value
@@ -1370,8 +1387,7 @@ def navigation_bar(section, interview, wrapper=True, inner_ul_class=None, show_l
                 else:
                     the_title = value
             else:
-                logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
-                continue
+                raise DAError("navigation_bar: too many keys in dict.  " + str(the_sections))
         else:
             the_key = None
             the_title = unicode(x)
@@ -1381,11 +1397,18 @@ def navigation_bar(section, interview, wrapper=True, inner_ul_class=None, show_l
             currently_active = True
         else:
             output += '<li class="' + li_class + '" role="presentation">'
-        if show_links and (currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
-            url = docassemble.base.functions.interview_url_action(the_key)
-            output += '<a data-index="' + str(indexno) + '" class="' + a_class + '" href="' + url + '">' + unicode(the_title) + '</a>'
+        new_key = the_title if the_key is None else the_key
+        seen.add(new_key)
+        #logmessage("seen sections are: " + str(seen))
+        if len(nav.past.difference(seen)) or new_key in nav.past:
+            seen_more = True
         else:
-            if section_reached and not currently_active:
+            seen_more = False
+        if show_links and (seen_more or currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
+            #url = docassemble.base.functions.interview_url_action(the_key)
+            output += '<a data-key="' + the_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + '">' + unicode(the_title) + '</a>'
+        else:
+            if section_reached and not currently_active and not seen_more:
                 output += '<a data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
             else:
                 output += '<a data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
@@ -1399,9 +1422,10 @@ def navigation_bar(section, interview, wrapper=True, inner_ul_class=None, show_l
                 if type(y) is dict:
                     if len(y) == 1:
                         sub_key = y.keys()[0]
+                        test_for_valid_var(sub_key)
                         sub_title = y[sub_key]
                     else:
-                        logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                        raise DAError("navigation_bar: too many keys in dict.  " + str(the_sections))
                         continue
                 else:
                     sub_key = None
@@ -1413,11 +1437,18 @@ def navigation_bar(section, interview, wrapper=True, inner_ul_class=None, show_l
                     sub_currently_active = True
                 else:
                     suboutput += '<li class="' + li_class + '" role="presentation">'
-                if show_links and (sub_currently_active or not section_reached) and sub_key is not None and interview is not None and sub_key in interview.questions:
-                    url = docassemble.base.functions.interview_url_action(sub_key)
-                    suboutput += '<a data-index="' + str(indexno) + '" class="' + a_class + '" href="' + url + '">' + unicode(sub_title) + '</a>'
+                new_sub_key = sub_title if sub_key is None else sub_key
+                seen.add(new_sub_key)
+                #logmessage("sub: seen sections are: " + str(seen))
+                if len(nav.past.difference(seen)) or new_sub_key in nav.past:
+                    seen_more = True
                 else:
-                    if section_reached and not sub_currently_active:
+                    seen_more = False
+                if show_links and (seen_more or sub_currently_active or not section_reached) and sub_key is not None and interview is not None and sub_key in interview.questions:
+                    #url = docassemble.base.functions.interview_url_action(sub_key)
+                    suboutput += '<a data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + '">' + unicode(sub_title) + '</a>'
+                else:
+                    if section_reached and not sub_currently_active and not seen_more:
                         suboutput += '<a data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(sub_title) + '</a>'
                     else:
                         suboutput += '<a data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(sub_title) + '</a>'
@@ -1439,8 +1470,11 @@ def navigation_bar(section, interview, wrapper=True, inner_ul_class=None, show_l
     return output        
 
 def progress_bar(progress):
-    if progress == 0:
+    progress = float(progress)
+    if progress <= 0:
         return('');
+    if progress > 100:
+        progress = 100
     return('<div class="row"><div class="col-lg-6 col-md-8 col-sm-10"><div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div></div></div>\n')
 
 def get_unique_name(filename, secret):
@@ -3255,7 +3289,7 @@ def checkin():
             if form_parameters is not None:
                 form_parameters = json.loads(form_parameters)
                 for param in form_parameters:
-                    if param['name'] in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
+                    if param['name'] in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token', '_action']:
                         continue
                     try:
                         parameters[from_safeid(param['name'])] = param['value']
@@ -3679,6 +3713,8 @@ def index():
         #logmessage("index: action in session")
         action = json.loads(myb64unquote(session['action']))
         del session['action']
+    if '_action' in request.form:
+        action = json.loads(myb64unquote(request.form['_action']))
     if len(request.args):
         #logmessage("index: there were args")
         if 'action' in request.args:
@@ -3822,7 +3858,6 @@ def index():
     # if should_assemble and '_action_context' in post_data:
     #     action = json.loads(myb64unquote(post_data['_action_context']))
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location), tracker=user_dict['_internal']['tracker'])
-    
     if should_assemble or something_changed:
         interview.assemble(user_dict, interview_status)
         if '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
@@ -3889,7 +3924,7 @@ def index():
         the_question = None
     known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
+        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token', '_action']:
             continue
         try:
             key = myb64unquote(orig_key)
@@ -3901,7 +3936,7 @@ def index():
     field_error = dict()
     validated = True
     for orig_key in post_data:
-        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
+        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token', '_action']:
             continue
         #logmessage("Got a key: " + key)
         data = post_data[orig_key]
@@ -4087,7 +4122,7 @@ def index():
         else:
             the_string = key + ' = ' + data
             if orig_key in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_key] and hasattr(the_question.fields[field_numbers[orig_key]], 'validate'):
-                logmessage("field has validation function")
+                #logmessage("field has validation function")
                 the_func = eval(the_question.fields[field_numbers[orig_key]].validate['compute'], user_dict)
                 try:
                     the_result = the_func(test_data)
@@ -4251,7 +4286,11 @@ def index():
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
-        user_dict['_internal']['section']['current'] = interview_status.question.section
+        if user_dict['nav'].set_section(interview_status.question.section):
+            pass
+            #logmessage("Section changed")
+            #changed = True
+            #steps += 1
     if interview_status.question.question_type == "exit":
         manual_checkout()
         user_dict = fresh_dictionary()
@@ -4484,6 +4523,28 @@ def index():
                 daProcessAjaxError(xhr, status, error);
               }, 0);
             }
+          });
+      }
+      function url_action_perform(action, args){
+          if (args == null){
+              args = {};
+          }
+          var data = {action: action, arguments: args};
+          $.ajax({
+            type: "POST",
+            url: """ + '"' + url_for('index') + '"' + """,
+            data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
+            success: function(data){
+              setTimeout(function(){
+                daProcessAjax(data, $("#daform"));
+              }, 0);
+            },
+            error: function(xhr, status, error){
+              setTimeout(function(){
+                daProcessAjaxError(xhr, status, error);
+              }, 0);
+            },
+            dataType: 'json'
           });
       }
       function get_interview_variables(callback){
@@ -5387,35 +5448,35 @@ def index():
           return true;
         });
         $("body").focus();
-        $("#daform input, #daform textarea, #daform select").first().each(function(){
-          $(this).focus();
-          var inputType = $(this).attr('type');
-          if ($(this).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file" && inputType != "range" && inputType != "number" && inputType != "date"){
-            var strLength = $(this).val().length * 2;
-            $(this)[0].setSelectionRange(strLength, strLength);
+        var firstInput = $("#daform input, #daform textarea, #daform select").first();
+        if (firstInput.length > 0){
+          $(firstInput).focus();
+          var inputType = $(firstInput).attr('type');
+          if ($(firstInput).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file" && inputType != "range" && inputType != "number" && inputType != "date"){
+            var strLength = $(firstInput).val().length * 2;
+            if (strLength > 0){
+              $(firstInput)[0].setSelectionRange(strLength, strLength);
+            }
           }
-        });
+        }
         $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
         $(".to-labelauty-icon").labelauty({ label: false });
-        $(function(){ 
-          var navMain = $("#navbar-collapse");
-          navMain.on("click", "a", null, function () {
-            if (!($(this).hasClass("dropdown-toggle"))){
-              navMain.collapse('hide');
-            }
-          });
-          $("#helptoggle").on("click", function(){
-            //console.log("Got to helptoggle");
-            window.scrollTo(0, 1);
-            $(this).removeClass('daactivetext')
-          });
-          $("#sourcetoggle").on("click", function(){
-            $(this).toggleClass("sourceactive");
-          });
-          $('#backToQuestion').click(function(event){
-            event.preventDefault();
-            $('#questionlabel').trigger('click');
-          });
+        var navMain = $("#navbar-collapse");
+        navMain.on("click", "a", null, function () {
+          if (!($(this).hasClass("dropdown-toggle"))){
+            navMain.collapse('hide');
+          }
+        });
+        $("#helptoggle").on("click", function(){
+          window.scrollTo(0, 1);
+          $(this).removeClass('daactivetext')
+        });
+        $("#sourcetoggle").on("click", function(){
+          $(this).toggleClass("sourceactive");
+        });
+        $('#backToQuestion').click(function(event){
+          event.preventDefault();
+          $('#questionlabel').trigger('click');
         });
         $(".showif").each(function(){
           var showIfSign = $(this).data('showif-sign');
@@ -5551,7 +5612,7 @@ def index():
         // setTimeout(daCheckin, 100);
         // checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
         window.onpopstate = function(event) {
-          if (event.state.steps < daSteps && daAllowGoingBack){
+          if (event.state != null && event.state.steps < daSteps && daAllowGoingBack){
             $("#backbutton").submit();
           }
         };
@@ -5756,9 +5817,15 @@ def index():
         start_output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n'
     output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">' + "\n"
     if interview_status.question.interview.use_navigation:
-        output += navigation_bar(user_dict['_internal']['section'], interview_status.question.interview)
+        output += navigation_bar(user_dict['nav'], interview_status.question.interview)
         nav_js = """
     <script>
+      $(".danavdiv a.clickable").click(function(e){
+        var the_key = $(this).data('key');
+        url_action_perform(the_key, {});
+        e.preventDefault();
+        return false;
+      });
       $(".danavdiv ul li ul").each(function(){
         var the_ul = $(this);
         var the_li = $(this).parent();
