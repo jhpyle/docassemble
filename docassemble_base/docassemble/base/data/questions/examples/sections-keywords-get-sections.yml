@@ -1,0 +1,94 @@
+metadata:
+  title: Sections as list
+  short title: Navigation
+  documentation: "https://docassemble.org/docs/functions.html#DANav.get_sections"
+  example start: 1
+  example end: 12
+---
+sections:
+  - intro: Introduction
+  - about: About you
+    subsections:
+      - contact: Contact info
+      - demographic: Demographics
+  - prefs: Preferences
+  - conclusion: Conclusion
+---
+features:
+  navigation: True
+---
+mandatory: True
+question: |
+  Welcome to the interview
+subquestion: |
+  The sections of this interview,
+  as a Python list, are:
+
+  `${ nav.get_sections() }`
+field: sees_nav_bar
+---
+mandatory: True
+question: |
+  I am going to ask you some
+  questions about yourself.
+field: intro_to_about_you
+section: about
+---
+mandatory: True
+question: |
+  What is your name?
+fields:
+  - First Name: first_name
+  - Last Name: last_name
+section: contact
+---
+mandatory: True
+question: |
+  What is your e-mail address?
+fields:
+  - E-mail: email_address
+    datatype: email
+---
+mandatory: True
+question: |
+  What is your gender?
+field: gender
+choices:
+  - Male
+  - Female
+  - Something else
+section: demographic
+---
+mandatory: True
+question: |
+  What kind of belly button
+  do you have?
+field: belly_button
+choices:
+  - Innie
+  - Outie
+---
+mandatory: True
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+section: prefs
+---
+mandatory: True
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite vegetable: favorite_vegetable
+---
+mandatory: True
+question: Thank you.
+subquestion: |
+  ${ first_name },
+
+  Your answers mean a lot to me.
+  
+  I am going to go eat some
+  ${ favorite_vegetable }
+  now.
+section: conclusion

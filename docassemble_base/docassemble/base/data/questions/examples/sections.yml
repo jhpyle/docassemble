@@ -82,6 +82,10 @@ subquestion: |
   thirty seconds, then
   [click into the
   interview](${ interview_url(local=True) }).
+
+  In addition, there is a similar
+  screen available on the Menu in the
+  upper-right, under "Roadmap."
 field: belly_button
 choices:
   - Innie

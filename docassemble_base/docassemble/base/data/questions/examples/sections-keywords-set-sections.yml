@@ -1,0 +1,116 @@
+metadata:
+  title: Redefine sections
+  short title: Navigation
+  documentation: "https://docassemble.org/docs/functions.html#DANav.set_section"
+  example start: 1
+  example end: 5
+---
+sections:
+  - intro: Introduction
+  - about: About you
+    subsections:
+      - contact: Contact info
+      - demographic: Demographics
+  - prefs: Preferences
+---
+features:
+  navigation: True
+---
+question: |
+  What additional section
+  would you like to add to
+  this interview?
+fields:
+  - Name: new_name
+  - Keyword: new_keyword
+    help: |
+      Use only letters and
+      underscores.
+---
+mandatory: True
+code: |
+  new_section = dict()
+  new_section[new_keyword] = new_name
+  the_sections = nav.get_sections()
+  the_sections.append(new_section)
+  nav.set_sections(the_sections)
+---
+mandatory: True
+code: |
+  sees_nav_bar
+  nav.set_section('about')
+  intro_to_about_you
+  nav.set_section('contact')
+  first_name
+  email_address
+  nav.set_section('demographic')
+  gender
+  belly_button
+  nav.set_section('prefs')
+  favorite_fruit
+  favorite_vegetable
+  nav.set_section(new_keyword)
+  final_screen
+---
+question: |
+  Welcome to the interview
+subquestion: |
+  If you are not on a
+  smartphone-sized device,
+  you should see a navigation
+  bar to the left.
+field: sees_nav_bar
+---
+question: |
+  I am going to ask you some
+  questions about yourself.
+field: intro_to_about_you
+---
+question: |
+  What is your name?
+fields:
+  - First Name: first_name
+  - Last Name: last_name
+---
+question: |
+  What is your e-mail address?
+fields:
+  - E-mail: email_address
+    datatype: email
+---
+question: |
+  What is your gender?
+field: gender
+choices:
+  - Male
+  - Female
+  - Something else
+---
+question: |
+  What kind of belly button
+  do you have?
+field: belly_button
+choices:
+  - Innie
+  - Outie
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite vegetable: favorite_vegetable
+---
+event: final_screen
+question: Thank you.
+subquestion: |
+  ${ first_name },
+
+  Your answers mean a lot to me.
+  
+  I am going to go eat some
+  ${ favorite_vegetable }
+  now.

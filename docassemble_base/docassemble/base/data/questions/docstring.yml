@@ -18,6 +18,13 @@ url_args:
     parameters passed to the interview through the URL.
   type: dict
   show: True
+nav:
+  doc: |
+    This is a special variable used by docassemble to store 
+    information about the sections of the interview, if the
+    interview makes use of the navigation bar feature.
+  type: DANav
+  show: True
 role:
   doc: |
     This is a special variable used in multi-user interviews to indicate

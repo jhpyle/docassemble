@@ -257,6 +257,9 @@
     - sections
     - sections-keywords
     - sections-keywords-review
+    - sections-keywords-code
+    - sections-keywords-get-sections
+    - sections-keywords-set-sections
 - API responses: 
     - response
     - response-json
