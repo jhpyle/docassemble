@@ -8072,7 +8072,7 @@ def create_playground_package():
             for field in ['dependencies', 'dependency_links', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
                 if field not in info:
                     info[field] = list()
-            for package in ['docassemble', 'docassemble.base']:
+            for package in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
                 if package not in info['dependencies']:
                     info['dependencies'].append(package)
             for package in info['dependencies']:
