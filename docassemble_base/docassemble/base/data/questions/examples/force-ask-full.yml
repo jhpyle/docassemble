@@ -1,0 +1,33 @@
+metadata:
+  title: Force asking a question
+  example start: 1
+  example end: 5
+  documentation: "https://docassemble.org/docs/functions.html#force_ask"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Are you a communist?
+yesno: user_is_communist
+---
+mandatory: True
+code: |
+  if user_is_communist and user_reconsidering_communism:
+    user_reconsidering_communism = False
+    force_ask('user_is_communist')
+---
+question: |
+  I suggest you reconsider your
+  answer.
+field: user_reconsidering_communism
+---
+question: |
+  % if user_is_communist:
+  I am referring your case to
+  Mr. McCarthy.
+  % else:
+  I am glad you are a true
+  American.
+  % endif
+mandatory: True

@@ -14,7 +14,7 @@ import codecs
 def tracker_tag(status):
     output = ''
     output += '                <input type="hidden" name="csrf_token" value="' + server.generate_csrf() + '"/>\n'
-    if status.next_action:
+    if len(status.next_action):
         output += '                <input type="hidden" name="_next_action" value=' + myb64doublequote(json.dumps(status.next_action)) + '/>\n'
     if status.question.name:
         output += '                <input type="hidden" name="_question_name" value="' + status.question.name + '"/>\n'

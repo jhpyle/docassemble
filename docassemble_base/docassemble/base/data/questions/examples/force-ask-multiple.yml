@@ -1,0 +1,56 @@
+metadata:
+  title: Force asking several questions
+  short title: Force
+  example start: 1
+  example end: 8
+  documentation: "https://docassemble.org/docs/functions.html#force_ask"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  favorite_fruit
+  favorite_vegetable
+  favorite_fungus
+  told_to_review
+  if not all_reviewed:
+    all_reviewed = True
+    force_ask('favorite_fruit', 'favorite_vegetable', 'favorite_fungus')
+  final_screen
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite vegetable: favorite_vegetable
+---
+question: |
+  What is your favorite fungus?
+fields:
+  - Favorite: favorite_fungus
+---
+question: |
+  Please verify your answers.
+subquestion: |
+  I will ask each question again.
+  Make any changes that you think
+  are necessary.
+field: told_to_review
+---
+event: final_screen
+question: |
+  Thank you.
+subquestion: |
+  You like
+  ${ favorite_fruit },
+  ${ favorite_vegetable },
+  and
+  ${ favorite_fungus }.
+---
+code: |
+  all_reviewed = False

@@ -11,7 +11,22 @@ class CodeExecute(Exception):
         self.question = question
     
 class ForcedNameError(NameError):
-    pass
+    def __init__(self, *pargs):
+        the_args = [x for x in pargs]
+        self.name = str(the_args.pop(0))
+        if len(the_args):
+            self.next_action = list()
+            while len(the_args):
+                arg = the_args.pop(0)
+                if type(arg) is dict:
+                    if (len(arg.keys()) == 2 and 'action' in arg and 'arguments' in arg) or (len(arg.keys()) == 1 and 'action' in arg):
+                        self.next_action.append(arg)
+                    else:
+                        raise DAError("Dictionaries passed to force_ask must have keys of 'action' and 'argument' only.")
+                else:
+                    self.next_action.append(dict(action=arg, arguments=dict()))
+        else:
+            self.next_action = None
 
 class DAErrorNoEndpoint(DAError):
     pass

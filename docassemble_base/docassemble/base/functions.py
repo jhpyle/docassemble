@@ -1858,22 +1858,19 @@ def command(*pargs, **kwargs):
     """Executes a command, such as exit, restart, or leave."""
     raise CommandError(*pargs, **kwargs)
 
-def force_ask(variable_name):
-    """Given a variable, instructs docassemble to ask a question that would
-    define the variable, even if the variable has already been defined.
-    This does not change the interview logic, but merely diverts from the 
-    interview logic, temporarily, in order to attempt to ask a question."""
-    raise ForcedNameError("name '" + str(variable_name) + "' is not defined")
+def force_ask(*pargs):
+    """Given a variable name, instructs docassemble to ask a question that
+    would define the variable, even if the variable has already been
+    defined.  This does not change the interview logic, but merely
+    diverts from the interview logic, temporarily, in order to attempt
+    to ask a question.  If more than one variable name is provided,
+    questions will be asked serially.
+
+    """
+    raise ForcedNameError(*pargs)
 
 def force_ask_nameerror(variable_name):
     raise NameError("name '" + str(variable_name) + "' is not defined")
-
-def force_ask(variable_name):
-    """Given a variable, instructs docassemble to ask a question that would
-    define the variable, even if the variable has already been defined.
-    This does not change the interview logic, but merely diverts from the 
-    interview logic, temporarily, in order to attempt to ask a question."""
-    raise ForcedNameError("name '" + str(variable_name) + "' is not defined")
 
 def force_gather(*pargs):
     """Like force_ask(), except more insistent.  In addition to making a 
@@ -1884,7 +1881,7 @@ def force_gather(*pargs):
     for variable_name in pargs:
         if variable_name not in this_thread.internal['gather']:
             this_thread.internal['gather'].append(variable_name)
-    raise ForcedNameError("name '" + str(variable_name) + "' is not defined")
+    raise ForcedNameError(variable_name)
 
 def static_filename_path(filereference):
     result = package_data_filename(static_filename(filereference))

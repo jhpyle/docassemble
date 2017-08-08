@@ -299,7 +299,7 @@ class InterviewStatus(object):
         self.using_screen_reader = False
         self.can_go_back = True
         self.attachments = None
-        self.next_action = None
+        self.next_action = list()
         self.embedded = set()
         self.extras = dict()
     def initialize_screen_reader(self):
@@ -2732,7 +2732,7 @@ class Interview:
             docassemble.base.functions.reset_gathering_mode()
             try:
                 if 'sms_variable' in interview_status.current_info and interview_status.current_info['sms_variable'] is not None:
-                    raise ForcedNameError("name '" + str(interview_status.current_info['sms_variable']) + "' is not defined")
+                    raise ForcedNameError(interview_status.current_info['sms_variable'])
                 if (self.uses_action or 'action' in interview_status.current_info) and not self.calls_process_action:
                     if self.imports_util:
                         #logmessage("util was imported")
@@ -2810,14 +2810,17 @@ class Interview:
                                 user_dict['_internal']['answered'].add(question.name)
                             else:
                                 raise MandatoryQuestion()
-            except NameError as errMess:
-                #logmessage("Error in NameError is " + str(errMess))
+            except NameError as the_exception:
+                #logmessage("Error in NameError is " + str(the_exception))
                 docassemble.base.functions.reset_context()
-                if isinstance(errMess, ForcedNameError):
+                if isinstance(the_exception, ForcedNameError):
                     follow_mc = False
+                    if the_exception.next_action is not None:
+                        interview_status.next_action.extend(the_exception.next_action)
+                    missingVariable = the_exception.name
                 else:
                     follow_mc = True
-                missingVariable = extract_missing_name(errMess)
+                    missingVariable = extract_missing_name(the_exception)
                 question_result = self.askfor(missingVariable, user_dict, seeking=interview_status.seeking, follow_mc=follow_mc)
                 if question_result['type'] == 'continue':
                     continue
@@ -2826,9 +2829,9 @@ class Interview:
                 else:
                     interview_status.populate(question_result)
                     break
-            except UndefinedError as errMess:
+            except UndefinedError as the_exception:
                 docassemble.base.functions.reset_context()
-                missingVariable = extract_missing_name(errMess)
+                missingVariable = extract_missing_name(the_exception)
                 question_result = self.askfor(missingVariable, user_dict, seeking=interview_status.seeking, follow_mc=True)
                 if question_result['type'] == 'continue':
                     continue
@@ -3198,27 +3201,29 @@ class Interview:
                             continue
                         return question.ask(user_dict, the_x, iterators)
                 raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
-            except NameError as errMess:
+            except NameError as the_exception:
                 docassemble.base.functions.reset_context()
-                if isinstance(errMess, ForcedNameError):
+                if isinstance(the_exception, ForcedNameError):
                     #logmessage("forced nameerror")
                     follow_mc = False
+                    if the_exception.next_action is not None:
+                        interview_status.next_action.extend(the_exception.next_action)
                 else:
                     #logmessage("regular nameerror")
                     follow_mc = True
-                #logmessage("got this error: " + str(errMess))
-                newMissingVariable = extract_missing_name(errMess)
-                #newMissingVariable = str(errMess).split("'")[1]
+                #logmessage("got this error: " + str(the_exception))
+                newMissingVariable = extract_missing_name(the_exception)
+                #newMissingVariable = str(the_exception).split("'")[1]
                 question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=follow_mc)
                 if question_result['type'] == 'continue':
                     #logmessage("Continuing after asking for newMissingVariable " + str(newMissingVariable))
                     continue
                 docassemble.base.functions.pop_current_variable()
                 return(question_result)
-            except UndefinedError as errMess:
-                #logmessage("UndefinedError: " + str(errMess))
+            except UndefinedError as the_exception:
+                #logmessage("UndefinedError: " + str(the_exception))
                 docassemble.base.functions.reset_context()
-                newMissingVariable = extract_missing_name(errMess)
+                newMissingVariable = extract_missing_name(the_exception)
                 question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=True)
                 if question_result['type'] == 'continue':
                     continue

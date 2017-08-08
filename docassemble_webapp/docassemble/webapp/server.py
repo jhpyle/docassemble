@@ -4256,7 +4256,9 @@ def index():
     else:
         steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     if next_action:
-        interview_status.current_info.update(next_action)
+        the_next_action = next_action.pop(0)
+        interview_status.next_action = next_action
+        interview_status.current_info.update(the_next_action)
     interview.assemble(user_dict, interview_status)
     current_language = docassemble.base.functions.get_language()
     if current_language != DEFAULT_LANGUAGE:
@@ -5806,7 +5808,7 @@ def index():
     else:
         the_field_errors = None
     if next_action_to_set:
-        interview_status.next_action = next_action_to_set
+        interview_status.next_action.append(next_action_to_set)
     content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules, the_field_errors)
     if debug_mode:
         readability = dict()
