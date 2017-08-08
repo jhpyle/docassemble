@@ -3289,7 +3289,7 @@ def checkin():
             if form_parameters is not None:
                 form_parameters = json.loads(form_parameters)
                 for param in form_parameters:
-                    if param['name'] in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token', '_action']:
+                    if param['name'] in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action']:
                         continue
                     try:
                         parameters[from_safeid(param['name'])] = param['value']
@@ -3715,6 +3715,7 @@ def index():
         del session['action']
     if '_action' in request.form:
         action = json.loads(myb64unquote(request.form['_action']))
+        #logmessage("Action is " + str(action))
     if len(request.args):
         #logmessage("index: there were args")
         if 'action' in request.args:
@@ -3895,6 +3896,16 @@ def index():
             except Exception as errMess:
                 error_messages.append(("error", "Error: " + str(errMess)))
     known_datatypes = dict()
+    if '_next_action_to_set' in post_data:
+        next_action_to_set = json.loads(myb64unquote(post_data['_next_action_to_set']))
+        #logmessage("next_action_to_set is " + str(next_action_to_set))
+    else:
+        next_action_to_set = None
+    if '_next_action' in post_data:
+        next_action = json.loads(myb64unquote(post_data['_next_action']))
+        #logmessage("next_action is " + str(next_action))
+    else:
+        next_action = None
     if '_datatypes' in post_data:
         known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
     known_varnames = dict()
@@ -3924,7 +3935,7 @@ def index():
         the_question = None
     known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token', '_action']:
+        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action']:
             continue
         try:
             key = myb64unquote(orig_key)
@@ -3936,7 +3947,7 @@ def index():
     field_error = dict()
     validated = True
     for orig_key in post_data:
-        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token', '_action']:
+        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action']:
             continue
         #logmessage("Got a key: " + key)
         data = post_data[orig_key]
@@ -4244,6 +4255,8 @@ def index():
             user_dict['_internal']['answered'].add(post_data['_question_name'])
     else:
         steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
+    if next_action:
+        interview_status.current_info.update(next_action)
     interview.assemble(user_dict, interview_status)
     current_language = docassemble.base.functions.get_language()
     if current_language != DEFAULT_LANGUAGE:
@@ -4253,6 +4266,10 @@ def index():
     if len(interview_status.attachments) > 0:
         #logmessage("Updating attachment info")
         update_attachment_info(user_code, user_dict, interview_status, secret)
+    if interview_status.question.question_type == "review":
+        next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
+    else:
+        next_action_review = None
     if interview_status.question.question_type == "restart":
         manual_checkout()
         url_args = user_dict['url_args']
@@ -4356,7 +4373,7 @@ def index():
         del user_dict['_internal']['answers'][interview_status.question.name]
     if action and not changed:
         changed = True
-        logmessage("Incrementing steps because action")
+        #logmessage("Incrementing steps because action")
         steps += 1
     if changed and interview_status.question.interview.use_progress_bar:
         advance_progress(user_dict)
@@ -4481,6 +4498,7 @@ def index():
       var daSpinnerTimeout = null;
       var daSubmitter = null;
       var daDoAction = """ + do_action + """;
+      var daNextAction = """ + json.dumps(next_action_review) + """;
       var daCsrf = """ + repr(str(generate_csrf())) + """;
       function preloadImage(url){
         var img = new Image();
@@ -4534,6 +4552,29 @@ def index():
             type: "POST",
             url: """ + '"' + url_for('index') + '"' + """,
             data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
+            success: function(data){
+              setTimeout(function(){
+                daProcessAjax(data, $("#daform"));
+              }, 0);
+            },
+            error: function(xhr, status, error){
+              setTimeout(function(){
+                daProcessAjaxError(xhr, status, error);
+              }, 0);
+            },
+            dataType: 'json'
+          });
+      }
+      function url_action_perform_with_next(action, args, next_data){
+          //console.log("url_action_perform_with_next: " + action + " | " + next_data)
+          if (args == null){
+              args = {};
+          }
+          var data = {action: action, arguments: args};
+          $.ajax({
+            type: "POST",
+            url: """ + '"' + url_for('index') + '"' + """,
+            data: $.param({_action: btoa(JSON.stringify(data)), _next_action_to_set: btoa(JSON.stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
             success: function(data){
               setTimeout(function(){
                 daProcessAjax(data, $("#daform"));
@@ -5000,6 +5041,7 @@ def index():
           $("body").addClass(data.bodyclass);
           $("meta[name=viewport]").attr('content', "width=device-width, initial-scale=1");
           daDoAction = data.do_action;
+          daNextAction = data.next_action;
           daChatAvailable = data.livehelp.availability;
           daChatMode = data.livehelp.mode;
           daChatRoles = data.livehelp.roles;
@@ -5052,6 +5094,11 @@ def index():
           }
           form.submit();
         }
+      }
+      function daReviewAction(e){
+        url_action_perform_with_next($(e.target).data('action'), null, daNextAction);
+        e.preventDefault();
+        return false;
       }
       function daRingChat(){
         daChatStatus = 'ringing';
@@ -5422,6 +5469,7 @@ def index():
             daShowingHelp = 0;""" + debug_readability_question + """
           }
         });
+        $("a.review-action").click(daReviewAction);
         $("input.input-embedded").on('keyup', adjustInputWidth);
         $("input.input-embedded").each(adjustInputWidth);
         $(function () {
@@ -5455,7 +5503,12 @@ def index():
           if ($(firstInput).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file" && inputType != "range" && inputType != "number" && inputType != "date"){
             var strLength = $(firstInput).val().length * 2;
             if (strLength > 0){
-              $(firstInput)[0].setSelectionRange(strLength, strLength);
+              try {
+                $(firstInput)[0].setSelectionRange(strLength, strLength);
+              }
+              catch(err) {
+                console.log(err.message);
+              }
             }
           }
         }
@@ -5752,6 +5805,8 @@ def index():
         the_field_errors = field_error
     else:
         the_field_errors = None
+    if next_action_to_set:
+        interview_status.next_action = next_action_to_set
     content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules, the_field_errors)
     if debug_mode:
         readability = dict()
@@ -5818,43 +5873,6 @@ def index():
     output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">' + "\n"
     if interview_status.question.interview.use_navigation:
         output += navigation_bar(user_dict['nav'], interview_status.question.interview)
-        nav_js = """
-    <script>
-      $(".danavdiv a.clickable").click(function(e){
-        var the_key = $(this).data('key');
-        url_action_perform(the_key, {});
-        e.preventDefault();
-        return false;
-      });
-      $(".danavdiv ul li ul").each(function(){
-        var the_ul = $(this);
-        var the_li = $(this).parent();
-        var the_a = $(the_li).children('a').first();
-        var the_toggle = document.createElement('div');
-        var the_toggle_inner = document.createElement('i');
-        $(the_toggle).addClass('ul-toggle');
-        if ($(the_a).hasClass('notavailableyet')){
-          $(the_toggle).addClass('notavailable');
-        }
-        else{
-          $(the_toggle).addClass('available');
-        }
-        if ($(the_ul).hasClass('notshowing')){
-          $(the_toggle_inner).addClass('glyphicon glyphicon-triangle-right');
-        }
-        else{
-          $(the_toggle_inner).addClass('glyphicon glyphicon-triangle-bottom');
-        }
-        $(the_toggle).append($(the_toggle_inner));
-        $(the_toggle).click(function(){
-          $(the_toggle_inner).toggleClass('glyphicon-triangle-right');
-          $(the_toggle_inner).toggleClass('glyphicon-triangle-bottom');
-          $(the_ul).toggle();
-        });
-        $(the_li).append($(the_toggle));
-      });
-    </script>
-"""
         interview_status.extra_scripts.append(nav_js)
     output += '        <div class="tab-content">\n'
     if interview_status.question.interview.use_progress_bar:
@@ -5942,7 +5960,7 @@ def index():
             do_action = interview_status.question.checkin
         else:
             do_action = None
-        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back)
+        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back)
     else:
         output = start_output + output + end_output
         response = make_response(output.encode('utf8'), '200 OK')
@@ -10156,6 +10174,44 @@ function activatePopovers(){
   });
 }
 
+"""
+
+nav_js = """
+    <script>
+      $(".danavdiv a.clickable").click(function(e){
+        var the_key = $(this).data('key');
+        url_action_perform(the_key, {});
+        e.preventDefault();
+        return false;
+      });
+      $(".danavdiv ul li ul").each(function(){
+        var the_ul = $(this);
+        var the_li = $(this).parent();
+        var the_a = $(the_li).children('a').first();
+        var the_toggle = document.createElement('div');
+        var the_toggle_inner = document.createElement('i');
+        $(the_toggle).addClass('ul-toggle');
+        if ($(the_a).hasClass('notavailableyet')){
+          $(the_toggle).addClass('notavailable');
+        }
+        else{
+          $(the_toggle).addClass('available');
+        }
+        if ($(the_ul).hasClass('notshowing')){
+          $(the_toggle_inner).addClass('glyphicon glyphicon-triangle-right');
+        }
+        else{
+          $(the_toggle_inner).addClass('glyphicon glyphicon-triangle-bottom');
+        }
+        $(the_toggle).append($(the_toggle_inner));
+        $(the_toggle).click(function(){
+          $(the_toggle_inner).toggleClass('glyphicon-triangle-right');
+          $(the_toggle_inner).toggleClass('glyphicon-triangle-bottom');
+          $(the_ul).toggle();
+        });
+        $(the_li).append($(the_toggle));
+      });
+    </script>
 """
 
 @app.route('/playgroundvariables', methods=['POST'])

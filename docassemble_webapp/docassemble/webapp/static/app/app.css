@@ -431,6 +431,10 @@ table.daplaygroundtable td table td {
 }
 
 a.review-action {
+    cursor: pointer;
+}
+
+a.review-action-button {
     font-size: 14px;
     float: right;
 }

@@ -299,6 +299,7 @@ class InterviewStatus(object):
         self.using_screen_reader = False
         self.can_go_back = True
         self.attachments = None
+        self.next_action = None
         self.embedded = set()
         self.extras = dict()
     def initialize_screen_reader(self):

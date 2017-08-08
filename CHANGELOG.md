@@ -1,6 +1,9 @@
 # Change Log
 
 ## [0.1.31] - 2017-08-07
+### Changed
+- Review page buttons now Ajax
+- Screen reverts to review page after field edit
 ### Fixed
 - Problem with PDF/A due to old version of pdfx
 
