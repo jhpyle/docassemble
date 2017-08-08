@@ -1058,6 +1058,13 @@ Here is an example of a `review` block that is launched from the menu:
 
 {% include side-by-side.html demo="review-1" image="review-block.png" %}
 
+If you click "Favorite fruit," you are taken to a [`question`] where
+you can edit the value of `fruit`.  This has the same effect as
+calling [`force_ask()`] on `'fruit'` or running an [action] on
+`'fruit'`; whatever block in your interview offers to define `fruit`
+will be used.  After the user edits the value of the variable, the
+user will return to the `review` screen again.
+
 Note that the `review` block does not show a link for "Favorite
 fungus" because the variable `fungi` has not been defined yet.
 However, once `fungi` is defined, the `review` block would show it.
@@ -1200,3 +1207,5 @@ why this needs to be done manually as opposed to automatically:
 [machine learning section]: {{ site.baseurl }}/docs/ml.html#howtouse
 [raise an exception]: https://en.wikibooks.org/wiki/Python_Programming/Exceptions
 [`Exception`]: https://docs.python.org/2/library/exceptions.html#exceptions.Exception
+[`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
+[action]: {{ site.baseurl }}/docs/functions.html#actions

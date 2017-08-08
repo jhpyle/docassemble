@@ -128,38 +128,18 @@ variable is already defined.
 In this example, we use `force_ask` to cause **docassemble** to ask a
 question that has already been asked.
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
-question: |
-  Are you a communist?
-yesno: user_is_communist
----
-mandatory: True
-code: |
-  if user_is_communist and user_reconsidering_communism:
-    user_reconsidering_communism = False
-    force_ask('user_is_communist')
----
-question: |
-  I suggest you reconsider your answer.
-field: user_reconsidering_communism
----
-mandatory: True
-question: |
-  % if user_is_communist:
-  I am referring your case to Mr. McCarthy.
-  % else:
-  I am glad you are a true American.
-  % endif
-{% endhighlight %}
+{% include side-by-side.html demo="force-ask-full" %}
 
-This may be useful in particular circumstances.  Note, however, that
-the effect of `force_ask()` is temporary.  If the user refreshes the
-screen while looking at the `user_is_communist` question a second
-time, it will be as though `force_ask` never happened.
+This may be useful in particular circumstances.  However, the effect
+of `force_ask()` is temporary.  If the user refreshes the screen while
+looking at the `user_is_communist` question a second time, it will be
+as though `force_ask` never happened.
+
+Note that variable names given to force_ask must be in quotes.  If
+your variable is `favorite_fruit`, you need to write
+`force_ask('favorite_fruit')`.  If you write
+`force_ask(favorite_fruit)`, **docassemble** will assume that, for
+example, `apples` is a variable in your interview.
 
 Note also that no code that comes after `force_ask()` will ever be
 executed.  Once the `force_ask()` function is called, the code stops
@@ -188,6 +168,18 @@ cannot get past the question simply by refeshing the screen.
 The `force_ask()` function can also be given the names of variables
 that refer to [`event`] blocks.  The screen will be shown, but no
 variable will be defined.
+
+You can use `force_ask()` to ask a series of questions.  Just list
+each variable one after another.
+
+{% include side-by-side.html demo="force-ask-multiple" %}
+
+The second and subsequent arguments to `force_ask()` can specify
+[actions] with arguments.  If an argument to `force_ask()` is a
+[Python dictionary] with keys `action` and `arguments`, the specified
+action will be run.  (Internally, **docassemble** is using the
+[actions] mechanism to cause the interview to ask these subsequent
+questions.)
 
 ## <a name="force_gather"></a>force_gather()
 
@@ -3637,6 +3629,7 @@ $(document).on('daPageLoad', function(){
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [Markdown]: https://daringfireball.net/projects/markdown/
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[Python dictionaries]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [Python function]: https://docs.python.org/2/tutorial/controlflow.html#defining-functions
 [Python functions]: https://docs.python.org/2/tutorial/controlflow.html#defining-functions
 [Python interpreter]: https://docs.python.org/2/tutorial/interpreter.html

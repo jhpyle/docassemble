@@ -2102,6 +2102,84 @@
     if user_is_communist and user_reconsidering_communism:
       user_reconsidering_communism = False
       force_ask('user_is_communist')
+"force-ask-full": |-
+  modules:
+    - docassemble.base.util
+  ---
+  question: |
+    Are you a communist?
+  yesno: user_is_communist
+  ---
+  mandatory: True
+  code: |
+    if user_is_communist and user_reconsidering_communism:
+      user_reconsidering_communism = False
+      force_ask('user_is_communist')
+  ---
+  question: |
+    I suggest you reconsider your
+    answer.
+  field: user_reconsidering_communism
+  ---
+  question: |
+    % if user_is_communist:
+    I am referring your case to
+    Mr. McCarthy.
+    % else:
+    I am glad you are a true
+    American.
+    % endif
+  mandatory: True
+"force-ask-multiple": |-
+  modules:
+    - docassemble.base.util
+  ---
+  mandatory: True
+  code: |
+    favorite_fruit
+    favorite_vegetable
+    favorite_fungus
+    told_to_review
+    if not all_reviewed:
+      all_reviewed = True
+      force_ask('favorite_fruit', 'favorite_vegetable', 'favorite_fungus')
+    final_screen
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Favorite fruit: favorite_fruit
+  ---
+  question: |
+    What is your favorite vegetable?
+  fields:
+    - Favorite vegetable: favorite_vegetable
+  ---
+  question: |
+    What is your favorite fungus?
+  fields:
+    - Favorite: favorite_fungus
+  ---
+  question: |
+    Please verify your answers.
+  subquestion: |
+    I will ask each question again.
+    Make any changes that you think
+    are necessary.
+  field: told_to_review
+  ---
+  event: final_screen
+  question: |
+    Thank you.
+  subquestion: |
+    You like
+    ${ favorite_fruit },
+    ${ favorite_vegetable },
+    and
+    ${ favorite_fungus }.
+  ---
+  code: |
+    all_reviewed = False
 "force-gather": |-
   initial: True
   code: |
