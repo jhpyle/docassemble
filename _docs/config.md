@@ -141,7 +141,7 @@ outside the context of an HTTP request.  For example, if you have a
 a media attachment, the URL for the media attachment will be unknown
 unless it is set in the configuration.
 
-## <a name="dispatch"></a><a name="start page title"></a>Interview shortcuts
+## <a name="dispatch"></a>Interview shortcuts
 
 The `dispatch` directive allows users to start interviews with
 user-friendly URLs like `https://example.com/start/legal`.
@@ -155,12 +155,127 @@ dispatch:
 If you define the [`dispatch`] directive, your users can see a list of
 available interviews by going to the URL `/list` on the site.
 
-The title of this page is configurable with the `start page title`
-directive.
+If you would like to embed the list of interviews into another web
+site, you can send a [GET request] to `/list?embedded=1` and
+obtain a snippet of [HTML].  For example, you might get [HTML] that
+looks like this:
+
+{% highlight html %}
+<ul class="dastart">
+  <li><a href="/?i=docassemble.demo%3Adata%2Fquestions%2Fquestions.yml">Demonstration interview</a></li>
+  <li><a href="/?i=docassemble.base%3Adata%2Fquestions%2Fexamples%2Fmadlibs.yml">Mad libs</a></li>
+</ul>
+{% endhighlight %}
+
+On your web site, you can use the `dastart` [CSS] style to apply styles to this list.
+
+## <a name="start page template"></a><a name="interview page template"></a><a name="start page title"></a><a name="interview page title"></a><a name="start page heading"></a><a name="interview page heading"></a>Customization of pages
+
+There are two pages that you can customize:
+
+* The [start page] that shows a list of available interviews.
+* The list of saved interviews.
+
+You can customize the titles.  There are two types of titles:
+
+* A "page title" that appears in the browser tab and in the top
+navigation bar; and
+* A "heading" that appears in the body of the page.
+
+You can customize these titles with the following directives:
 
 {% highlight yaml %}
-start page title: Run an interview
+start page title: Missouri interviews
+start page heading: Interviews available to Missouri residents
+interview page title: Your interviews
+interview page heading: Interviews you have started
 {% endhighlight %}
+
+If you want to customize more than the titles, you can specify an
+[HTML] template to use.  Use the `start page template` and `interview
+page template` directives to point to files in the "templates"
+directory of a package.
+
+{% highlight yaml %}
+start page template: docassemble.missouri:data/templates/my_start_page.html
+interview page template: docassemble.missouri:data/templates/my_interview_page.html
+{% endhighlight %}
+
+To see what the standard templates look like, see:
+
+* [`start.html`]
+* [`interviews.html`]
+
+You might want to use these as a starting point.  Note that
+**docassemble** uses [Flask], which uses [Jinja2] HTML templates.
+
+These templates use [Jinja2] to load a standard [HTML] framework.  If
+you want, you can replace the entire body of the page using these
+templates.  However, if you do so, you may wish to include 
+`{% raw %}{{ extra_css }}{% endraw %}` in the `<head>` and 
+`{% raw %}{{ extra_js }}{% endraw %}` at the end of the `<body>`.
+On the interviews page, there is a bit of [Javascript] that 
+asks the user "are you sure?" before deleting all of the interview.
+The start page does not use [Javascript].
+
+You can also customize the appearance of these pages using [CSS].  The
+[HTML] elements in the standard template use some classes do nothing;
+they are just placeholders for customization.  For example, to
+customize [`start.html`] and [`interviews.html`], you could include
+the following in a [CSS] file that you include with [`global css`]
+(which is discussed in the next section):
+
+{% highlight css %}
+h1.dastartpage {
+  font-size: 15px;
+}
+ul.dastartpage {
+  background-color: red;
+}
+ul.dastartpage li {
+  font-weight: bold;
+}
+h3.dainterviewpage {
+  font-decoration: underline;
+}
+p.dainterviewpage {
+  color: #aaaaaa;
+}
+table.dainterviewpage td {
+  border-style: solid;
+  border-width: 1px;
+}
+{% endhighlight %}
+
+## <a name="global css"></a><a name="global javascript"></a>CSS and Javascript customization
+
+You can use the [`javascript` features setting] and the
+[`css` features setting] to modify the [Javascript] and [CSS] for a
+particular interview.
+
+By using `global javascript` and `global css`, you can apply
+[Javascript] and [CSS] on a more global level.  These directives allow
+you to include [Javascript] and [CSS] files in every interview and
+also in the [start page] and the page showing the list of interviews.
+The directive should refer to files located in the "static" directory
+of a package:
+
+{% highlight yaml %}
+global css: docassemble.missouri:data/static/missouri.css
+global javascript: docassemble.missouri:data/static/missouri.js
+{% endhighlight %}
+
+If you have more than one [CSS] file or more than one [Javascript]
+file, you can use these directives to refer to a list of files:
+
+{% highlight yaml %}
+global css: 
+  - docassemble.missouri:data/static/missouri.css
+  - docassemble.midwest:data/static/look_and_feel.css
+{% endhighlight %}
+
+These [Javascript] and [CSS] files are loaded after the other
+[Javascript] and [CSS] files on the page.
 
 ## <a name="favicon"></a>Custom favicon in browser tab
 
@@ -1659,3 +1774,16 @@ and Facebook API keys.
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
 [`pdf/a` features setting]: {{ site.baseurl }}/docs/initial.html#pdfa
+[Jinja2]: http://jinja.pocoo.org/docs/2.9/
+[Flask]: http://flask.pocoo.org/
+[`interviews.html`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/templates/pages/interviews.html
+[`start.html`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/templates/pages/start.html
+[HTML]: https://en.wikipedia.org/wiki/HTML
+[Javascript]: https://en.wikipedia.org/wiki/JavaScript
+[CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
+[`javascript` features setting]: {{ site.baseurl }}/docs/initial.html#javascript
+[`css` features setting]: {{ site.baseurl }}/docs/initial.html#javascript
+[start page]: #dispatch
+[GET request]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Request_methods
+[`global css`]: #global css
+[`global javascript`]: #global javascript

@@ -478,7 +478,7 @@ useful for providing guidance to the user on how to enter information.
 ### <a name="html"></a>`html`
 
 The `html` directive is like [`note`](#note), except the format is
-expected to be raw HTML.  It can be used in combination with the
+expected to be raw [HTML].  It can be used in combination with the
 [`css`] and [`script`] modifiers.
 
 {% include side-by-side.html demo="html" %}
@@ -1209,3 +1209,4 @@ why this needs to be done manually as opposed to automatically:
 [`Exception`]: https://docs.python.org/2/library/exceptions.html#exceptions.Exception
 [`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
 [action]: {{ site.baseurl }}/docs/functions.html#actions
+[HTML]: https://en.wikipedia.org/wiki/HTML
