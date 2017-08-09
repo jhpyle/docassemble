@@ -1300,59 +1300,59 @@ def add_validation(extra_scripts, validation_rules, field_error):
         error_mess = dict()
         for key, val in field_error.iteritems():
             error_mess[key] = val
-        error_show = "\n      validator.showErrors(" + json.dumps(error_mess) + ");"
-    extra_scripts.append("""    <script>
-      $.validator.setDefaults({
-        highlight: function(element) {
-            $(element).closest('.form-group').addClass('has-error');
-        },
-        unhighlight: function(element) {
-            $(element).closest('.form-group').removeClass('has-error');
-        },
-        errorElement: 'span',
-        errorClass: 'help-block',
-        errorPlacement: function(error, element) {
-            if (element.hasClass('input-embedded')){
-                error.insertAfter(element.parent());
-            }
-            else if (element.parent('.input-group').length) {
-                error.insertAfter(element.parent());
-            }
-            else {
-                error.insertAfter(element);
-            }
+        error_show = "\n  validator.showErrors(" + json.dumps(error_mess) + ");"
+    extra_scripts.append("""<script>
+  $.validator.setDefaults({
+    highlight: function(element) {
+        $(element).closest('.form-group').addClass('has-error');
+    },
+    unhighlight: function(element) {
+        $(element).closest('.form-group').removeClass('has-error');
+    },
+    errorElement: 'span',
+    errorClass: 'help-block',
+    errorPlacement: function(error, element) {
+        if (element.hasClass('input-embedded')){
+            error.insertAfter(element.parent());
         }
-      });
-      var validation_rules = """ + json.dumps(validation_rules) + """;
-      validation_rules.submitHandler = daValidationHandler;
-      var validator = $("#daform").validate(validation_rules);
-      $("button").click(function(event){
-        whichButton = this;
-      });""" + error_show + """
-      $("#backbutton").submit(function(event){
-        $("#backbutton").addClass("dabackiconpressed");
-        var informed = '';
-        if (daInformedChanged){
-          informed = '&informed=' + Object.keys(daInformed).join(',');
+        else if (element.parent('.input-group').length) {
+            error.insertAfter(element.parent());
         }
-        $.ajax({
-          type: "POST",
-          url: $("#backbutton").attr('action'),
-          data: $("#backbutton").serialize() + '&ajax=1' + informed, 
-          success: function(data){
-            setTimeout(function(){
-              daProcessAjax(data, document.getElementById('backbutton'));
-            }, 0);
-          },
-          error: function(xhr, status, error){
-            setTimeout(function(){
-              daProcessAjaxError(xhr, status, error);
-            }, 0);
-          }
-        });
-        event.preventDefault();
-      });
-    </script>""")
+        else {
+            error.insertAfter(element);
+        }
+    }
+  });
+  var validation_rules = """ + json.dumps(validation_rules) + """;
+  validation_rules.submitHandler = daValidationHandler;
+  var validator = $("#daform").validate(validation_rules);
+  $("button").click(function(event){
+    whichButton = this;
+  });""" + error_show + """
+  $("#backbutton").submit(function(event){
+    $("#backbutton").addClass("dabackiconpressed");
+    var informed = '';
+    if (daInformedChanged){
+      informed = '&informed=' + Object.keys(daInformed).join(',');
+    }
+    $.ajax({
+      type: "POST",
+      url: $("#backbutton").attr('action'),
+      data: $("#backbutton").serialize() + '&ajax=1' + informed, 
+      success: function(data){
+        setTimeout(function(){
+          daProcessAjax(data, document.getElementById('backbutton'));
+        }, 0);
+      },
+      error: function(xhr, status, error){
+        setTimeout(function(){
+          daProcessAjaxError(xhr, status, error);
+        }, 0);
+      }
+    });
+    event.preventDefault();
+  });
+</script>""")
 
 def input_for(status, field, wide=False, embedded=False):
     output = ""

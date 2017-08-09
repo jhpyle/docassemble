@@ -464,7 +464,7 @@ import subprocess
 from pygments import highlight
 from pygments.lexers import YamlLexer
 from pygments.formatters import HtmlFormatter
-from flask import make_response, abort, render_template, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
+from flask import make_response, abort, render_template, render_template_string, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
 from flask import url_for
 from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
@@ -1196,7 +1196,7 @@ def do_refresh(is_ajax, yaml_filename):
         return redirect(url_for('index', i=yaml_filename))
 
 def standard_scripts():
-    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js') + '"></script>\n'
+    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js') + '"></script>'
     
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False):
     output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/interview.css') + '" rel="stylesheet">'
@@ -4417,13 +4417,13 @@ def index():
         allow_going_back = False
     if not is_ajax:
         scripts = standard_scripts()
+        if 'javascript' in interview_status.question.interview.external_files:
+            for fileref in interview_status.question.interview.external_files['javascript']:
+                scripts += "\n" + '    <script src="' + get_url_from_file_reference(fileref, question=interview_status.question) + '"></script>'
         if interview_status.question.checkin is not None:
             do_action = repr(str(interview_status.question.checkin))
         else:
             do_action = 'null'
-        if 'javascript' in interview_status.question.interview.external_files:
-            for fileref in interview_status.question.interview.external_files['javascript']:
-                scripts += '    <script src="' + get_url_from_file_reference(fileref, question=interview_status.question) + '"></script>\n';
         chat_available = user_dict['_internal']['livehelp']['availability']
         chat_mode = user_dict['_internal']['livehelp']['mode']
         #logmessage("index: chat_available is " + str(chat_available))
@@ -4473,7 +4473,8 @@ def index():
         else:
             debug_readability_help = ''
             debug_readability_question = ''
-        scripts += """    <script type="text/javascript" charset="utf-8">
+        scripts += """
+    <script type="text/javascript" charset="utf-8">
       var map_info = null;
       var whichButton = null;
       var socket = null;
@@ -5497,6 +5498,39 @@ def index():
           daSubmitter = this;
           return true;
         });
+        $(".danavdiv a.clickable").click(function(e){
+          var the_key = $(this).data('key');
+          url_action_perform(the_key, {});
+          e.preventDefault();
+          return false;
+        });
+        $(".danavdiv ul li ul").each(function(){
+          var the_ul = $(this);
+          var the_li = $(this).parent();
+          var the_a = $(the_li).children('a').first();
+          var the_toggle = document.createElement('div');
+          var the_toggle_inner = document.createElement('i');
+          $(the_toggle).addClass('ul-toggle');
+          if ($(the_a).hasClass('notavailableyet')){
+            $(the_toggle).addClass('notavailable');
+          }
+          else{
+            $(the_toggle).addClass('available');
+          }
+          if ($(the_ul).hasClass('notshowing')){
+            $(the_toggle_inner).addClass('glyphicon glyphicon-triangle-right');
+          }
+          else{
+            $(the_toggle_inner).addClass('glyphicon glyphicon-triangle-bottom');
+          }
+          $(the_toggle).append($(the_toggle_inner));
+          $(the_toggle).click(function(){
+            $(the_toggle_inner).toggleClass('glyphicon-triangle-right');
+            $(the_toggle_inner).toggleClass('glyphicon-triangle-bottom');
+            $(the_ul).toggle();
+          });
+          $(the_li).append($(the_toggle));
+        });
         $("body").focus();
         var firstInput = $("#daform input, #daform textarea, #daform select").first();
         if (firstInput.length > 0){
@@ -5869,13 +5903,14 @@ def index():
         start_output = standard_header_start
         if 'css' in interview_status.question.interview.external_files:
             for fileref in interview_status.question.interview.external_files['css']:
-                start_output += '\n    <link href="' + get_url_from_file_reference(fileref, question=interview_status.question) + '" rel="stylesheet">'
-        start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
+                start_output += "\n" + '    <link href="' + get_url_from_file_reference(fileref, question=interview_status.question) + '" rel="stylesheet">'
+        start_output += global_css
+        if len(interview_status.extra_css):
+            start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
         start_output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n'
     output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">' + "\n"
     if interview_status.question.interview.use_navigation:
         output += navigation_bar(user_dict['nav'], interview_status.question.interview)
-        interview_status.extra_scripts.append(nav_js)
     output += '        <div class="tab-content">\n'
     if interview_status.question.interview.use_progress_bar:
         output += progress_bar(user_dict['_internal']['progress'])
@@ -5941,7 +5976,7 @@ def index():
         output += '      </div>' + "\n"
     output += '    </div>'
     if not is_ajax:
-        end_output = scripts + "\n" + "".join(interview_status.extra_scripts) + """\n  </body>\n</html>"""
+        end_output = scripts + "\n" + indent_by("".join(interview_status.extra_scripts).strip(), 4).rstrip() + global_js + "\n  </body>\n</html>"
     #logmessage(output.encode('utf8'))
     #logmessage("Request time interim: " + str(g.request_time()))
     if 'uid' in session and 'i' in session:
@@ -6081,7 +6116,20 @@ def interview_start():
             logmessage("interview_dispatch: unable to load interview file " + yaml_filename)
             continue
         interview_info.append(dict(link=url_for('index', i=yaml_filename), display=interview_title))
-    return render_template('pages/start.html', version_warning=None, interview_info=interview_info, title=daconfig.get('start page title', word('Available interviews')))
+    argu = dict(extra_css=Markup(global_css), extra_js=Markup(global_js), version_warning=None, interview_info=interview_info, tab_title=daconfig.get('start page title', word('Interviews')), title=daconfig.get('start page heading', word('Available interviews')))
+    if 'embedded' in request.args and int(request.args['embedded']):
+        the_page = 'pages/start-embedded.html'
+    else:
+        if 'start page template' in daconfig and daconfig['start page template']:
+            the_page = docassemble.base.functions.package_template_filename(daconfig['start page template'])
+            if the_page is None:
+                raise DAError("Could not find start page template " + daconfig['start page template'])
+            with open(the_page, 'rU') as fp:
+                template_string = fp.read().decode('utf8')
+                return render_template_string(template_string, **argu)
+        else:
+            the_page = 'pages/start.html'
+    return render_template(the_page, **argu)
 
 @app.route('/start/<dispatch>', methods=['GET'])
 def redirect_to_interview(dispatch):
@@ -6645,1093 +6693,1093 @@ def monitor():
         forwarding_phone_number = twilio_config['name']['default'].get('number', None)
         if forwarding_phone_number is not None:
             call_forwarding_on = 'true'
-    script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n' + """<script type="text/javascript" charset="utf-8">
-    var daAudioContext = null;
-    var socket;
-    var soundBuffer = Object();
-    var daShowingNotif = false;
-    var daUpdatedSessions = Object();
-    var daUserid = """ + str(current_user.id) + """;
-    var daPhoneOnMessage = """ + repr(str("The user can call you.  Click to cancel.")) + """;
-    var daPhoneOffMessage = """ + repr(str("Click if you want the user to be able to call you.")) + """;
-    var daSessions = Object();
-    var daAvailRoles = Object();
-    var daChatPartners = Object();
-    var daPhonePartners = Object();
-    var daNewPhonePartners = Object();
-    var daTermPhonePartners = Object();
-    var daUsePhone = """ + call_forwarding_on + """;
-    var daSubscribedRoles = """ + json.dumps(subscribed_roles) + """;
-    var daAvailableForChat = """ + daAvailableForChat + """;
-    var daPhoneNumber = """ + repr(str(default_phone_number)) + """;
-    var daFirstTime = 1;
-    var updateMonitorInterval = null;
-    var daNotificationsEnabled = false;
-    var daControlling = Object();
-    var daBrowserTitle = """ + repr(str(word('Monitor'))) + """;
-    window.gotConfirmation = function(key){
-        //console.log("Got confirmation in parent for key " + key);
-        // daControlling[key] = 2;
-        // var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-        // $("#listelement" + skey).find("a").each(function(){
-        //     if ($(this).data('name') == "stopControlling"){
-        //         $(this).removeClass('invisible');
-        //         console.log("Found it");
-        //     }
-        // });
-    }
-    function faviconRegular(){
-      var link = document.querySelector("link[rel*='shortcut icon'") || document.createElement('link');
-      link.type = 'image/x-icon';
-      link.rel = 'shortcut icon';
-      link.href = '""" + url_for('favicon', nocache="1") + """';
-      document.getElementsByTagName('head')[0].appendChild(link);
-    }
-    function faviconAlert(){
-      var link = document.querySelector("link[rel*='shortcut icon'") || document.createElement('link');
-      link.type = 'image/x-icon';
-      link.rel = 'shortcut icon';
-      link.href = '""" + url_for('static', filename='app/chat.ico') + """?nocache=1';
-      document.getElementsByTagName('head')[0].appendChild(link);
-    }
-    function topMessage(message){
-        var newDiv = document.createElement('div');
-        $(newDiv).addClass("top-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 col-centered");
-        $(newDiv).html(message)
-        $(newDiv).css("display", "none");
-        $(newDiv).appendTo($("body"));
-        $(newDiv).slideDown();
-        setTimeout(function(){
-          $(newDiv).slideUp(300, function(){
-            $(newDiv).remove();
+    script = "\n" + '    <script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + "\n" + """    <script type="text/javascript" charset="utf-8">
+      var daAudioContext = null;
+      var socket;
+      var soundBuffer = Object();
+      var daShowingNotif = false;
+      var daUpdatedSessions = Object();
+      var daUserid = """ + str(current_user.id) + """;
+      var daPhoneOnMessage = """ + repr(str("The user can call you.  Click to cancel.")) + """;
+      var daPhoneOffMessage = """ + repr(str("Click if you want the user to be able to call you.")) + """;
+      var daSessions = Object();
+      var daAvailRoles = Object();
+      var daChatPartners = Object();
+      var daPhonePartners = Object();
+      var daNewPhonePartners = Object();
+      var daTermPhonePartners = Object();
+      var daUsePhone = """ + call_forwarding_on + """;
+      var daSubscribedRoles = """ + json.dumps(subscribed_roles) + """;
+      var daAvailableForChat = """ + daAvailableForChat + """;
+      var daPhoneNumber = """ + repr(str(default_phone_number)) + """;
+      var daFirstTime = 1;
+      var updateMonitorInterval = null;
+      var daNotificationsEnabled = false;
+      var daControlling = Object();
+      var daBrowserTitle = """ + repr(str(word('Monitor'))) + """;
+      window.gotConfirmation = function(key){
+          //console.log("Got confirmation in parent for key " + key);
+          // daControlling[key] = 2;
+          // var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+          // $("#listelement" + skey).find("a").each(function(){
+          //     if ($(this).data('name') == "stopControlling"){
+          //         $(this).removeClass('invisible');
+          //         console.log("Found it");
+          //     }
+          // });
+      }
+      function faviconRegular(){
+        var link = document.querySelector("link[rel*='shortcut icon'") || document.createElement('link');
+        link.type = 'image/x-icon';
+        link.rel = 'shortcut icon';
+        link.href = '""" + url_for('favicon', nocache="1") + """';
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+      function faviconAlert(){
+        var link = document.querySelector("link[rel*='shortcut icon'") || document.createElement('link');
+        link.type = 'image/x-icon';
+        link.rel = 'shortcut icon';
+        link.href = '""" + url_for('static', filename='app/chat.ico') + """?nocache=1';
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+      function topMessage(message){
+          var newDiv = document.createElement('div');
+          $(newDiv).addClass("top-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 col-centered");
+          $(newDiv).html(message)
+          $(newDiv).css("display", "none");
+          $(newDiv).appendTo($("body"));
+          $(newDiv).slideDown();
+          setTimeout(function(){
+            $(newDiv).slideUp(300, function(){
+              $(newDiv).remove();
+            });
+          }, 2000);
+      }
+      window.abortControlling = function(key){
+          topMessage(""" + repr(str(word("That screen is already being controlled by another operator"))) + """);
+          stopControlling(key);
+      }
+      window.stopControlling = function(key){
+          //console.log("Got stopControlling in parent for key " + key);
+          // if (daControlling.hasOwnProperty(key)){
+          //   delete daControlling[key];
+          // }
+          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+          $("#listelement" + skey).find("a").each(function(){
+              if ($(this).data('name') == "stopControlling"){
+                  $(this).click();
+                  //console.log("Found it");
+              }
           });
-        }, 2000);
-    }
-    window.abortControlling = function(key){
-        topMessage(""" + repr(str(word("That screen is already being controlled by another operator"))) + """);
-        stopControlling(key);
-    }
-    window.stopControlling = function(key){
-        //console.log("Got stopControlling in parent for key " + key);
-        // if (daControlling.hasOwnProperty(key)){
-        //   delete daControlling[key];
-        // }
-        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-        $("#listelement" + skey).find("a").each(function(){
-            if ($(this).data('name') == "stopControlling"){
-                $(this).click();
-                //console.log("Found it");
+      }
+      function daOnError(){
+          console.log('daOnError');
+      }
+      function loadSoundBuffer(key, url_a, url_b){
+          //console.log("loadSoundBuffer");
+          var pos = 0;
+          if (daAudioContext == null){
+              return;
+          }
+          var request = new XMLHttpRequest();
+          request.open('GET', url_a, true);
+          request.responseType = 'arraybuffer';
+          request.onload = function(){
+              daAudioContext.decodeAudioData(request.response, function(buffer){
+                  if (!buffer){
+                      if (pos == 1){
+                          console.error('loadSoundBuffer: error decoding file data');
+                          return;
+                      }
+                      else {
+                          pos = 1;
+                          console.info('loadSoundBuffer: error decoding file data, trying next source');
+                          request.open("GET", url_b, true);
+                          return request.send();
+                      }
+                  }
+                  soundBuffer[key] = buffer;
+              },
+              function(error){
+                  if (pos == 1){
+                      console.error('loadSoundBuffer: decodeAudioData error');
+                      return;
+                  }
+                  else{
+                      pos = 1;
+                      console.info('loadSoundBuffer: decodeAudioData error, trying next source');
+                      request.open("GET", url_b, true);
+                      return request.send();
+                  }
+              });
+          }
+          request.send();
+      }
+      function playSound(key) {
+          //console.log("playSound");
+          var buffer = soundBuffer[key];
+          if (!daAudioContext || !buffer){
+              return;
+          }
+          var source = daAudioContext.createBufferSource();
+          source.buffer = buffer;
+          source.connect(daAudioContext.destination);
+          source.start(0);
+      }
+      function checkNotifications(){
+          //console.log("checkNotifications");
+          if (daNotificationsEnabled){
+              return;
+          }
+          if (!("Notification" in window)) {
+              daNotificationsEnabled = false;
+              return;
+          }
+          if (Notification.permission === "granted") {
+              daNotificationsEnabled = true;
+              return;
+          }
+          if (Notification.permission !== 'denied') {
+              Notification.requestPermission(function (permission) {
+                  if (permission === "granted") {
+                      daNotificationsEnabled = true;
+                  }
+              });
+          }
+      }
+      function notifyOperator(key, mode, message) {
+          //console.log("notifyOperator: " + key + " " + mode + " " + message);
+          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+          if (mode == "chat"){
+            playSound('newmessage');
+          }
+          else{
+            playSound('newconversation');
+          }
+          if ($("#listelement" + skey).offset().top > $(window).scrollTop() + $(window).height()){
+            if (mode == "chat"){
+              $("#chat-message-below").html(""" + repr(str(word("New message below"))) + """);
             }
-        });
-    }
-    function daOnError(){
-        console.log('daOnError');
-    }
-    function loadSoundBuffer(key, url_a, url_b){
-        //console.log("loadSoundBuffer");
-        var pos = 0;
-        if (daAudioContext == null){
-            return;
-        }
-        var request = new XMLHttpRequest();
-        request.open('GET', url_a, true);
-        request.responseType = 'arraybuffer';
-        request.onload = function(){
-            daAudioContext.decodeAudioData(request.response, function(buffer){
-                if (!buffer){
-                    if (pos == 1){
-                        console.error('loadSoundBuffer: error decoding file data');
-                        return;
-                    }
-                    else {
-                        pos = 1;
-                        console.info('loadSoundBuffer: error decoding file data, trying next source');
-                        request.open("GET", url_b, true);
-                        return request.send();
-                    }
-                }
-                soundBuffer[key] = buffer;
-            },
-            function(error){
-                if (pos == 1){
-                    console.error('loadSoundBuffer: decodeAudioData error');
-                    return;
-                }
-                else{
-                    pos = 1;
-                    console.info('loadSoundBuffer: decodeAudioData error, trying next source');
-                    request.open("GET", url_b, true);
-                    return request.send();
-                }
-            });
-        }
-        request.send();
-    }
-    function playSound(key) {
-        //console.log("playSound");
-        var buffer = soundBuffer[key];
-        if (!daAudioContext || !buffer){
-            return;
-        }
-        var source = daAudioContext.createBufferSource();
-        source.buffer = buffer;
-        source.connect(daAudioContext.destination);
-        source.start(0);
-    }
-    function checkNotifications(){
-        //console.log("checkNotifications");
-        if (daNotificationsEnabled){
-            return;
-        }
-        if (!("Notification" in window)) {
-            daNotificationsEnabled = false;
-            return;
-        }
-        if (Notification.permission === "granted") {
-            daNotificationsEnabled = true;
-            return;
-        }
-        if (Notification.permission !== 'denied') {
-            Notification.requestPermission(function (permission) {
-                if (permission === "granted") {
-                    daNotificationsEnabled = true;
-                }
-            });
-        }
-    }
-    function notifyOperator(key, mode, message) {
-        //console.log("notifyOperator: " + key + " " + mode + " " + message);
-        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-        if (mode == "chat"){
-          playSound('newmessage');
-        }
-        else{
-          playSound('newconversation');
-        }
-        if ($("#listelement" + skey).offset().top > $(window).scrollTop() + $(window).height()){
-          if (mode == "chat"){
-            $("#chat-message-below").html(""" + repr(str(word("New message below"))) + """);
+            else{
+              $("#chat-message-below").html(""" + repr(str(word("New conversation below"))) + """);
+            }
+            //$("#chat-message-below").data('key', key);
+            $("#chat-message-below").slideDown();
+            daShowingNotif = true;
+            markAsUpdated(key);
+          }
+          else if ($("#listelement" + skey).offset().top + $("#listelement" + skey).height() < $(window).scrollTop() + 32){
+            if (mode == "chat"){
+              $("#chat-message-above").html(""" + repr(str(word("New message above"))) + """);
+            }
+            else{
+              $("#chat-message-above").html(""" + repr(str(word("New conversation above"))) + """);
+            }
+            //$("#chat-message-above").data('key', key);
+            $("#chat-message-above").slideDown();
+            daShowingNotif = true;
+            markAsUpdated(key);
           }
           else{
-            $("#chat-message-below").html(""" + repr(str(word("New conversation below"))) + """);
+            //console.log("It is visible");
           }
-          //$("#chat-message-below").data('key', key);
-          $("#chat-message-below").slideDown();
-          daShowingNotif = true;
-          markAsUpdated(key);
-        }
-        else if ($("#listelement" + skey).offset().top + $("#listelement" + skey).height() < $(window).scrollTop() + 32){
-          if (mode == "chat"){
-            $("#chat-message-above").html(""" + repr(str(word("New message above"))) + """);
+          if (!daNotificationsEnabled){
+              //console.log("Browser will not enable notifications")
+              return;
+          }
+          if (!("Notification" in window)) {
+              return;
+          }
+          if (Notification.permission === "granted") {
+              var notification = new Notification(message);
+          }
+          else if (Notification.permission !== 'denied') {
+              Notification.requestPermission(function (permission) {
+                  if (permission === "granted") {
+                      var notification = new Notification(message);
+                      daNotificationsEnabled = true;
+                  }
+              });
+          }
+      }
+      function phoneNumberOk(){
+          //console.log("phoneNumberOk");
+          var phoneNumber = $("#daPhoneNumber").val();
+          if (phoneNumber == '' || phoneNumber.match(/^\+?[1-9]\d{1,14}$/)){
+              return true;
           }
           else{
-            $("#chat-message-above").html(""" + repr(str(word("New conversation above"))) + """);
+              return false;
           }
-          //$("#chat-message-above").data('key', key);
-          $("#chat-message-above").slideDown();
-          daShowingNotif = true;
-          markAsUpdated(key);
-        }
-        else{
-          //console.log("It is visible");
-        }
-        if (!daNotificationsEnabled){
-            //console.log("Browser will not enable notifications")
-            return;
-        }
-        if (!("Notification" in window)) {
-            return;
-        }
-        if (Notification.permission === "granted") {
-            var notification = new Notification(message);
-        }
-        else if (Notification.permission !== 'denied') {
-            Notification.requestPermission(function (permission) {
-                if (permission === "granted") {
-                    var notification = new Notification(message);
-                    daNotificationsEnabled = true;
-                }
-            });
-        }
-    }
-    function phoneNumberOk(){
-        //console.log("phoneNumberOk");
-        var phoneNumber = $("#daPhoneNumber").val();
-        if (phoneNumber == '' || phoneNumber.match(/^\+?[1-9]\d{1,14}$/)){
-            return true;
-        }
-        else{
-            return false;
-        }
-    }
-    function checkPhone(){
-        //console.log("checkPhone");
-        $("#daPhoneNumber").val($("#daPhoneNumber").val().replace(/[^0-9\+]/g, ''));
-        var the_number = $("#daPhoneNumber").val();
-        if (the_number[0] != '+'){
-            $("#daPhoneNumber").val('+' + the_number);
-        }
-        if (phoneNumberOk()){
-            $("#daPhoneNumber").parent().removeClass("has-error");
-            $("#daPhoneError").addClass("invisible");
+      }
+      function checkPhone(){
+          //console.log("checkPhone");
+          $("#daPhoneNumber").val($("#daPhoneNumber").val().replace(/[^0-9\+]/g, ''));
+          var the_number = $("#daPhoneNumber").val();
+          if (the_number[0] != '+'){
+              $("#daPhoneNumber").val('+' + the_number);
+          }
+          if (phoneNumberOk()){
+              $("#daPhoneNumber").parent().removeClass("has-error");
+              $("#daPhoneError").addClass("invisible");
+              daPhoneNumber = $("#daPhoneNumber").val();
+              if (daPhoneNumber == ''){
+                  daPhoneNumber = null;
+              }
+              else{
+                  $(".phone").removeClass("invisible");
+              }
+          }
+          else{
+              $("#daPhoneNumber").parent().addClass("has-error");
+              $("#daPhoneError").removeClass("invisible");
+              daPhoneNumber = null;
+              $(".phone").addClass("invisible");
+          }
+          $("#daPhoneSaved").removeClass("invisible");
+          setTimeout(function(){
+              $("#daPhoneSaved").addClass("invisible");
+          }, 2000);
+      }
+      function allSessions(uid, yaml_filename){
+          //console.log("allSessions");
+          var prefix = 'da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:';
+          var output = Array();
+          for (var key in daSessions){
+              if (daSessions.hasOwnProperty(key) && key.indexOf(prefix) == 0){
+                  output.push(key);
+              }
+          }
+          return(output);
+      }
+      function scrollChat(key){
+          var chatScroller = $(key).find('ul').first();
+          if (chatScroller.length){
+              var height = chatScroller[0].scrollHeight;
+              chatScroller.animate({scrollTop: height}, 800);
+          }
+          else{
+              console.log("scrollChat: error")
+          }
+      }
+      function scrollChatFast(key){
+          var chatScroller = $(key).find('ul').first();
+          if (chatScroller.length){
+            var height = chatScroller[0].scrollHeight;
+              //console.log("Scrolling to " + height + " where there are " + chatScroller[0].childElementCount + " children");
+              chatScroller.scrollTop(height);
+            }
+          else{
+              console.log("scrollChatFast: error")
+          }
+      }
+      function do_update_monitor(){
+          //console.log("do_update_monitor with " + daAvailableForChat);
+          if (phoneNumberOk()){
             daPhoneNumber = $("#daPhoneNumber").val();
             if (daPhoneNumber == ''){
-                daPhoneNumber = null;
+              daPhoneNumber = null;
             }
-            else{
-                $(".phone").removeClass("invisible");
-            }
-        }
-        else{
-            $("#daPhoneNumber").parent().addClass("has-error");
-            $("#daPhoneError").removeClass("invisible");
-            daPhoneNumber = null;
-            $(".phone").addClass("invisible");
-        }
-        $("#daPhoneSaved").removeClass("invisible");
-        setTimeout(function(){
-            $("#daPhoneSaved").addClass("invisible");
-        }, 2000);
-    }
-    function allSessions(uid, yaml_filename){
-        //console.log("allSessions");
-        var prefix = 'da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:';
-        var output = Array();
-        for (var key in daSessions){
-            if (daSessions.hasOwnProperty(key) && key.indexOf(prefix) == 0){
-                output.push(key);
-            }
-        }
-        return(output);
-    }
-    function scrollChat(key){
-        var chatScroller = $(key).find('ul').first();
-        if (chatScroller.length){
-            var height = chatScroller[0].scrollHeight;
-            chatScroller.animate({scrollTop: height}, 800);
-        }
-        else{
-            console.log("scrollChat: error")
-        }
-    }
-    function scrollChatFast(key){
-        var chatScroller = $(key).find('ul').first();
-        if (chatScroller.length){
-          var height = chatScroller[0].scrollHeight;
-            //console.log("Scrolling to " + height + " where there are " + chatScroller[0].childElementCount + " children");
-            chatScroller.scrollTop(height);
-          }
-        else{
-            console.log("scrollChatFast: error")
-        }
-    }
-    function do_update_monitor(){
-        //console.log("do_update_monitor with " + daAvailableForChat);
-        if (phoneNumberOk()){
-          daPhoneNumber = $("#daPhoneNumber").val();
-          if (daPhoneNumber == ''){
-            daPhoneNumber = null;
-          }
-        }
-        else{
-          daPhoneNumber = null;
-        }
-        socket.emit('updatemonitor', {available_for_chat: daAvailableForChat, phone_number: daPhoneNumber, subscribed_roles: daSubscribedRoles, phone_partners_to_add: daNewPhonePartners, phone_partners_to_terminate: daTermPhonePartners});
-    }
-    function update_monitor(){
-        //console.log("update_monitor with " + daAvailableForChat);
-        if (updateMonitorInterval != null){
-            clearInterval(updateMonitorInterval);
-        }
-        do_update_monitor();
-        updateMonitorInterval = setInterval(do_update_monitor, """ + str(CHECKIN_INTERVAL) + """);
-        //console.log("update_monitor");
-    }
-    function isHidden(ref){
-        if ($(ref).length){
-            if (($(ref).offset().top + $(ref).height() < $(window).scrollTop() + 32)){
-                return -1;
-            }
-            else if ($(ref).offset().top > $(window).scrollTop() + $(window).height()){
-                return 1;
-            }
-            else{
-                return 0;
-            }
-        }
-        else{
-            return 0;
-        }
-    }
-    function markAsUpdated(key){
-        //console.log("markAsUpdated with " + key);
-        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-        if (isHidden("#listelement" + skey)){
-            daUpdatedSessions["#listelement" + skey] = 1;
-        }
-    }
-    function activateChatArea(key){
-        //console.log("activateChatArea with " + key);
-        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-        if (!$("#chatarea" + skey).find('input').first().is(':focus')){
-          $("#listelement" + skey).addClass("new-message");
-          if (daBrowserTitle == document.title){
-            document.title = '* ' + daBrowserTitle;
-            faviconAlert();
-          }
-        }
-        markAsUpdated(key);
-        $("#chatarea" + skey).removeClass('invisible');
-        $("#chatarea" + skey).find('input, button').prop("disabled", false);
-        $("#chatarea" + skey).find('ul').html('');
-        socket.emit('chat_log', {key: key});
-    }
-    function deActivateChatArea(key){
-        //console.log("daActivateChatArea with " + key);
-        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-        $("#chatarea" + skey).find('input, button').prop("disabled", true);
-        $("#listelement" + skey).removeClass("new-message");
-        if (document.title != daBrowserTitle){
-            document.title = daBrowserTitle;
-            faviconRegular();
-        }
-    }
-    function undraw_session(key){
-        //console.log("Undrawing...");
-        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-        var xButton = document.createElement('a');
-        var xButtonIcon = document.createElement('i');
-        $(xButton).addClass("corner-remove");
-        $(xButtonIcon).addClass("glyphicon glyphicon-remove-circle");
-        $(xButtonIcon).appendTo($(xButton));
-        $("#listelement" + skey).addClass("list-group-item-danger");
-        $("#session" + skey).find("a").remove();
-        $("#session" + skey).find("span").first().html('""" + word("offline") + """');
-        $("#session" + skey).find("span").first().removeClass('label-info');
-        $("#session" + skey).find("span").first().addClass('label-danger');
-        $(xButton).click(function(){
-            $("#listelement" + skey).slideUp(300, function(){
-                $("#listelement" + skey).remove();
-                check_if_empty();
-            });
-        });
-        $(xButton).appendTo($("#session" + skey));
-        $("#chatarea" + skey).find('input, button').prop("disabled", true);
-        var theIframe = $("#iframe" + skey).find('iframe')[0];
-        if (theIframe){
-            $(theIframe).contents().find('body').addClass("dainactive");
-            if (theIframe.contentWindow && theIframe.contentWindow.turnOffControl){
-                theIframe.contentWindow.turnOffControl();
-            }
-        }
-        if (daControlling.hasOwnProperty(key)){
-            delete daControlling[key];
-        }
-        delete daSessions[key];
-    }
-    function publish_chat_log(uid, yaml_filename, userid, mode, messages){
-        //console.log("publish_chat_log with " + uid + " " + yaml_filename + " " + userid + " " + mode + " " + messages);
-        var keys; 
-        //if (mode == 'peer' || mode == 'peerhelp'){
-        //    keys = allSessions(uid, yaml_filename);
-        //}
-        //else{
-            keys = ['da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:' + userid];
-        //}
-        for (var i = 0; i < keys.length; ++i){
-            key = keys[i];
-            var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-            var chatArea = $("#chatarea" + skey).find('ul').first();
-            for (var i = 0; i < messages.length; ++i){
-                var message = messages[i];
-                var newLi = document.createElement('li');
-                $(newLi).addClass("list-group-item");
-                if (message.is_self){
-                    $(newLi).addClass("list-group-item-warning dalistright");
-                }
-                else{
-                    $(newLi).addClass("list-group-item-info");
-                }
-                $(newLi).html(message.message);
-                $(newLi).appendTo(chatArea);
-            }
-            scrollChatFast("#chatarea" + skey);
-        }
-    }
-    function check_if_empty(){
-        if ($("#monitorsessions").find("li").length > 0){
-            $("#emptylist").addClass("invisible");
-        }
-        else{
-            $("#emptylist").removeClass("invisible");
-        }
-    }
-    function draw_session(key, obj){
-        //console.log("draw_session with " + key);
-        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-        var the_html;
-        var wants_to_chat;
-        if (obj.chatstatus != 'off'){ //obj.chatstatus == 'waiting' || obj.chatstatus == 'standby' || obj.chatstatus == 'ringing' || obj.chatstatus == 'ready' || obj.chatstatus == 'on' || obj.chatstatus == 'observeonly'
-            wants_to_chat = true;
-        }
-        if (wants_to_chat){
-            the_html = obj.browser_title + ' &mdash; '
-            if (obj.hasOwnProperty('first_name')){
-              the_html += obj.first_name + ' ' + obj.last_name;
-            }
-            else{
-              the_html += '""" + word("anonymous visitor") + """ ' + obj.temp_user_id;
-            }
-        }
-        var theListElement;
-        var sessionDiv;
-        var theIframeContainer;
-        var theChatArea;
-        if ($("#session" + skey).length && !(key in daSessions)){
-            $("#listelement" + skey).removeClass("list-group-item-danger");
-            $("#iframe" + skey).find('iframe').first().contents().find('body').removeClass("dainactive");
-        }
-        daSessions[key] = 1;
-        if ($("#session" + skey).length){
-            theListElement = $("#listelement" + skey).first();
-            sessionDiv = $("#session" + skey).first();
-            //controlDiv = $("#control" + skey).first();
-            theIframeContainer = $("#iframe" + skey).first();
-            theChatArea = $("#chatarea" + skey).first();
-            $(sessionDiv).empty();
-            if (obj.chatstatus == 'on' && key in daChatPartners && $("#chatarea" + skey).find('button').first().prop("disabled") == true){
-                activateChatArea(key);
-            }
-        }
-        else{
-            var theListElement = document.createElement('li');
-            $(theListElement).addClass('list-group-item');
-            $(theListElement).attr('id', "listelement" + key);
-            var sessionDiv = document.createElement('div');
-            $(sessionDiv).attr('id', "session" + key);
-            $(sessionDiv).addClass('chat-session');
-            $(sessionDiv).appendTo($(theListElement));
-            $(theListElement).appendTo("#monitorsessions");
-            // controlDiv = document.createElement('div');
-            // $(controlDiv).attr('id', "control" + key);
-            // $(controlDiv).addClass("chatcontrol invisible chat-session");
-            // $(controlDiv).appendTo($(theListElement));
-            theIframeContainer = document.createElement('div');
-            $(theIframeContainer).addClass("observer-container invisible");
-            $(theIframeContainer).attr('id', 'iframe' + key);
-            var theIframe = document.createElement('iframe');
-            $(theIframe).addClass("observer");
-            $(theIframe).attr('name', 'iframe' + key);
-            $(theIframe).appendTo($(theIframeContainer));
-            $(theIframeContainer).appendTo($(theListElement));
-            var theChatArea = document.createElement('div');
-            $(theChatArea).addClass('monitor-chat-area invisible');
-            $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"></ul></div></div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control" disabled><span class="input-group-btn"><button class="btn btn-default" type="button" disabled>""" + word("Send") + """</button></span></div></div></div></form>');
-            $(theChatArea).attr('id', 'chatarea' + key);
-            var submitter = function(){
-                //console.log("I am the submitter and I am submitting " + key);
-                var input = $(theChatArea).find("input").first();
-                var message = input.val().trim();
-                if (message == null || message == ""){
-                    //console.log("Message was blank");
-                    return false;
-                }
-                socket.emit('chatmessage', {key: key, data: input.val()});
-                input.val('');
-                return false;
-            };
-            $(theChatArea).find("button").click(submitter);
-            $(theChatArea).find("input").bind('keypress keydown keyup', function(e){
-                if(e.keyCode == 13) { submitter(); e.preventDefault(); }
-            });
-            $(theChatArea).find("input").focus(function(){
-                $(theListElement).removeClass("new-message");
-                if (document.title != daBrowserTitle){
-                    document.title = daBrowserTitle;
-                    faviconRegular();
-                }
-            });
-            $(theChatArea).appendTo($(theListElement));
-            if (obj.chatstatus == 'on' && key in daChatPartners){
-                activateChatArea(key);
-            }
-        }
-        var theText = document.createElement('span');
-        $(theText).addClass('chat-title-label');
-        theText.innerHTML = the_html;
-        var statusLabel = document.createElement('span');
-        $(statusLabel).addClass("label label-info chat-status-label");
-        $(statusLabel).html(obj.chatstatus == 'observeonly' ? 'off' : obj.chatstatus);
-        $(statusLabel).appendTo($(sessionDiv));
-        if (daUsePhone){
-          var phoneButton = document.createElement('a');
-          var phoneIcon = document.createElement('i');
-          $(phoneIcon).addClass("glyphicon glyphicon-earphone");
-          $(phoneIcon).appendTo($(phoneButton));
-          $(phoneButton).addClass("label phone");
-          $(phoneButton).data('name', 'phone');
-          if (key in daPhonePartners){
-            $(phoneButton).addClass("phone-on label-success");
-            $(phoneButton).attr('title', daPhoneOnMessage);
           }
           else{
-            $(phoneButton).addClass("phone-off label-default");
-            $(phoneButton).attr('title', daPhoneOffMessage);
+            daPhoneNumber = null;
           }
-          $(phoneButton).addClass('observebutton')
-          $(phoneButton).appendTo($(sessionDiv));
-          $(phoneButton).attr('href', '#');
-          if (daPhoneNumber == null){
-            $(phoneButton).addClass("invisible");
+          socket.emit('updatemonitor', {available_for_chat: daAvailableForChat, phone_number: daPhoneNumber, subscribed_roles: daSubscribedRoles, phone_partners_to_add: daNewPhonePartners, phone_partners_to_terminate: daTermPhonePartners});
+      }
+      function update_monitor(){
+          //console.log("update_monitor with " + daAvailableForChat);
+          if (updateMonitorInterval != null){
+              clearInterval(updateMonitorInterval);
           }
-          $(phoneButton).click(function(e){
-            if ($(this).hasClass("phone-off") && daPhoneNumber != null){
-              $(this).removeClass("phone-off");
-              $(this).removeClass("label-default");
-              $(this).addClass("phone-on");
-              $(this).addClass("label-success");
-              $(this).attr('title', daPhoneOnMessage);
-              daPhonePartners[key] = 1;
-              daNewPhonePartners[key] = 1;
-              if (key in daTermPhonePartners){
-                delete daTermPhonePartners[key];
+          do_update_monitor();
+          updateMonitorInterval = setInterval(do_update_monitor, """ + str(CHECKIN_INTERVAL) + """);
+          //console.log("update_monitor");
+      }
+      function isHidden(ref){
+          if ($(ref).length){
+              if (($(ref).offset().top + $(ref).height() < $(window).scrollTop() + 32)){
+                  return -1;
               }
-              update_monitor();
+              else if ($(ref).offset().top > $(window).scrollTop() + $(window).height()){
+                  return 1;
+              }
+              else{
+                  return 0;
+              }
+          }
+          else{
+              return 0;
+          }
+      }
+      function markAsUpdated(key){
+          //console.log("markAsUpdated with " + key);
+          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+          if (isHidden("#listelement" + skey)){
+              daUpdatedSessions["#listelement" + skey] = 1;
+          }
+      }
+      function activateChatArea(key){
+          //console.log("activateChatArea with " + key);
+          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+          if (!$("#chatarea" + skey).find('input').first().is(':focus')){
+            $("#listelement" + skey).addClass("new-message");
+            if (daBrowserTitle == document.title){
+              document.title = '* ' + daBrowserTitle;
+              faviconAlert();
             }
-            else{
-              $(this).removeClass("phone-on");
-              $(this).removeClass("label-success");
-              $(this).addClass("phone-off");
-              $(this).addClass("label-default");
-              $(this).attr('title', daPhoneOffMessage);
-              if (key in daPhonePartners){
-                delete daPhonePartners[key];
-              }
-              if (key in daNewPhonePartners){
-                delete daNewPhonePartners[key];
-              }
-              daTermPhonePartners[key] = 1;
-              update_monitor();
-            }
-            e.preventDefault();
-            return false;
+          }
+          markAsUpdated(key);
+          $("#chatarea" + skey).removeClass('invisible');
+          $("#chatarea" + skey).find('input, button').prop("disabled", false);
+          $("#chatarea" + skey).find('ul').html('');
+          socket.emit('chat_log', {key: key});
+      }
+      function deActivateChatArea(key){
+          //console.log("daActivateChatArea with " + key);
+          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+          $("#chatarea" + skey).find('input, button').prop("disabled", true);
+          $("#listelement" + skey).removeClass("new-message");
+          if (document.title != daBrowserTitle){
+              document.title = daBrowserTitle;
+              faviconRegular();
+          }
+      }
+      function undraw_session(key){
+          //console.log("Undrawing...");
+          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+          var xButton = document.createElement('a');
+          var xButtonIcon = document.createElement('i');
+          $(xButton).addClass("corner-remove");
+          $(xButtonIcon).addClass("glyphicon glyphicon-remove-circle");
+          $(xButtonIcon).appendTo($(xButton));
+          $("#listelement" + skey).addClass("list-group-item-danger");
+          $("#session" + skey).find("a").remove();
+          $("#session" + skey).find("span").first().html('""" + word("offline") + """');
+          $("#session" + skey).find("span").first().removeClass('label-info');
+          $("#session" + skey).find("span").first().addClass('label-danger');
+          $(xButton).click(function(){
+              $("#listelement" + skey).slideUp(300, function(){
+                  $("#listelement" + skey).remove();
+                  check_if_empty();
+              });
           });
-        }
-        var unblockButton = document.createElement('a');
-        $(unblockButton).addClass("label label-info observebutton");
-        $(unblockButton).data('name', 'unblock');
-        if (!obj.blocked){
-            $(unblockButton).addClass("invisible");
-        }
-        $(unblockButton).html('""" + word("Unblock") + """');
-        $(unblockButton).attr('href', '#');
-        $(unblockButton).appendTo($(sessionDiv));
-        var blockButton = document.createElement('a');
-        $(blockButton).addClass("label label-danger observebutton");
-        if (obj.blocked){
-            $(blockButton).addClass("invisible");
-        }
-        $(blockButton).html('""" + word("Block") + """');
-        $(blockButton).attr('href', '#');
-        $(blockButton).data('name', 'block');
-        $(blockButton).appendTo($(sessionDiv));
-        $(blockButton).click(function(e){
-            $(unblockButton).removeClass("invisible");
-            $(this).addClass("invisible");
-            deActivateChatArea(key);
-            socket.emit('block', {key: key});
-            e.preventDefault();
-            return false;
-        });
-        $(unblockButton).click(function(e){
-            $(blockButton).removeClass("invisible");
-            $(this).addClass("invisible");
-            socket.emit('unblock', {key: key});
-            e.preventDefault();
-            return false;
-        });
-        var joinButton = document.createElement('a');
-        $(joinButton).addClass("label label-warning observebutton");
-        $(joinButton).html('""" + word("Join") + """');
-        $(joinButton).attr('href', '""" + url_for('visit_interview') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
-        $(joinButton).data('name', 'join');
-        $(joinButton).attr('target', '_blank');
-        $(joinButton).appendTo($(sessionDiv));
-        if (wants_to_chat){
-            var openButton = document.createElement('a');
-            $(openButton).addClass("label label-primary observebutton");
-            $(openButton).attr('href', '""" + url_for('observer') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
-            //$(openButton).attr('href', 'about:blank');
-            $(openButton).attr('id', 'observe' + key);
-            $(openButton).attr('target', 'iframe' + key);
-            $(openButton).html('""" + word("Observe") + """');
-            $(openButton).data('name', 'open');
-            $(openButton).appendTo($(sessionDiv));
-            var stopObservingButton = document.createElement('a');
-            $(stopObservingButton).addClass("label label-default observebutton invisible");
-            $(stopObservingButton).html('""" + word("Stop Observing") + """');
-            $(stopObservingButton).attr('href', '#');
-            $(stopObservingButton).data('name', 'stopObserving');
-            $(stopObservingButton).appendTo($(sessionDiv));
-            var controlButton = document.createElement('a');
-            $(controlButton).addClass("label label-info observebutton");
-            $(controlButton).html('""" + word("Control") + """');
-            $(controlButton).attr('href', '#');
-            $(controlButton).data('name', 'control');
-            $(controlButton).appendTo($(sessionDiv));
-            var stopControllingButton = document.createElement('a');
-            $(stopControllingButton).addClass("label label-default observebutton invisible");
-            $(stopControllingButton).html('""" + word("Stop Controlling") + """');
-            $(stopControllingButton).attr('href', '#');
-            $(stopControllingButton).data('name', 'stopControlling');
-            $(stopControllingButton).appendTo($(sessionDiv));
-            $(controlButton).click(function(event){
-                event.preventDefault();
-                //console.log("Controlling...");
-                $(this).addClass("invisible");
-                $(stopControllingButton).removeClass("invisible");
-                $(stopObservingButton).addClass("invisible");
-                var theIframe = $("#iframe" + skey).find('iframe')[0];
-                if (theIframe != null && theIframe.contentWindow){
-                    theIframe.contentWindow.turnOnControl();
-                }
-                else{
-                    console.log("Cannot turn on control");
-                }
-                daControlling[key] = 1;
-                return false;
-            });
-            $(stopControllingButton).click(function(event){
-                //console.log("Got click on stopControllingButton");
-                event.preventDefault();
-                var theIframe = $("#iframe" + skey).find('iframe')[0];
-                if (theIframe != null && theIframe.contentWindow && theIframe.contentWindow.turnOffControl){
-                    theIframe.contentWindow.turnOffControl();
-                }
-                else{
-                    console.log("Cannot turn off control");
-                    return false;
-                }
-                //console.log("Stop controlling...");
-                $(this).addClass("invisible");
-                $(controlButton).removeClass("invisible");
-                $(stopObservingButton).removeClass("invisible");
-                if (daControlling.hasOwnProperty(key)){
-                    delete daControlling[key];
-                }
-                return false;
-            });
-            $(openButton).click(function(){
-                //console.log("Observing..");
-                $(this).addClass("invisible");
-                $(stopObservingButton).removeClass("invisible");
-                $("#iframe" + skey).removeClass("invisible");
-                $(controlButton).removeClass("invisible");
-                return true;
-            });
-            $(stopObservingButton).click(function(e){
-                //console.log("Unobserving...");
-                $(this).addClass("invisible");
-                $(openButton).removeClass("invisible");
-                $(controlButton).addClass("invisible");
-                $(stopObservingButton).addClass("invisible");
-                $(stopControllingButton).addClass("invisible");
-                var theIframe = $("#iframe" + skey).find('iframe')[0];
-                if (daControlling.hasOwnProperty(key)){
-                    delete daControlling[key];
-                    if (theIframe != null && theIframe.contentWindow && theIframe.contentWindow.turnOffControl){
-                        //console.log("Calling turnOffControl in iframe");
-                        theIframe.contentWindow.turnOffControl();
-                    }
-                }
-                if (theIframe != null && theIframe.contentWindow){
-                    //console.log("Deleting the iframe");
-                    theIframe.contentWindow.document.open();
-                    theIframe.contentWindow.document.write("");
-                    theIframe.contentWindow.document.close();
-                }
-                $("#iframe" + skey).slideUp(400, function(){
-                    $(this).css("display", "").addClass("invisible");
-                });
-                e.preventDefault();
-                return false;
-            });
-            if ($(theIframeContainer).hasClass("invisible")){
-                $(openButton).removeClass("invisible");
-                $(stopObservingButton).addClass("invisible");
-                $(controlButton).addClass("invisible");
-                $(stopControllingButton).addClass("invisible");
-                if (daControlling.hasOwnProperty(key)){
-                    delete daControlling[key];
-                }
-            }
-            else{
-                $(openButton).addClass("invisible");
-                if (daControlling.hasOwnProperty(key)){
-                    $(stopObservingButton).addClass("invisible");
-                    $(controlButton).addClass("invisible");
-                    $(stopControllingButton).removeClass("invisible");
-                }
-                else{
-                    $(stopObservingButton).removeClass("invisible");
-                    $(controlButton).removeClass("invisible");
-                    $(stopControllingButton).addClass("invisible");
-                }
-            }
-        }
-        $(theText).appendTo($(sessionDiv));
-        if (obj.chatstatus == 'on' && key in daChatPartners && $("#chatarea" + skey).hasClass('invisible')){
-            activateChatArea(key);
-        }
-        if ((obj.chatstatus != 'on' || !(key in daChatPartners)) && $("#chatarea" + skey).find('button').first().prop("disabled") == false){
-            deActivateChatArea(key);
-        }
-        else if (obj.blocked){
-            deActivateChatArea(key);
-        }
-    }
-    function onScrollResize(){
-        if (document.title != daBrowserTitle){
-            document.title = daBrowserTitle;
-            faviconRegular();
-        }
-        if (!daShowingNotif){
-            return true;
-        }
-        var obj = Array();
-        for (var key in daUpdatedSessions){
-            if (daUpdatedSessions.hasOwnProperty(key)){
-                obj.push(key);
-            }
-        }
-        var somethingAbove = false;
-        var somethingBelow = false;
-        var firstElement = -1;
-        var lastElement = -1;
-        for (var i = 0; i < obj.length; ++i){
-            var result = isHidden(obj[i]);
-            if (result == 0){
-                delete daUpdatedSessions[obj[i]];
-            }
-            else if (result < 0){
-                var top = $(obj[i]).offset().top;
-                somethingAbove = true;
-                if (firstElement == -1 || top < firstElement){
-                    firstElement = top;
-                }
-            }
-            else if (result > 0){
-                var top = $(obj[i]).offset().top;
-                somethingBelow = true;
-                if (lastElement == -1 || top > lastElement){
-                    lastElement = top;
-                }
-            }
-        }
-        if (($("#chat-message-above").is(":visible")) && !somethingAbove){
-            $("#chat-message-above").hide();
-        }
-        if (($("#chat-message-below").is(":visible")) && !somethingBelow){
-            $("#chat-message-below").hide();
-        }
-        if (!(somethingAbove || somethingBelow)){
-            daShowingNotif = false;
-        }
-        return true;
-    }
-    $(document).ready(function(){
-        //console.log("document ready");
-        try {
-            window.AudioContext = window.AudioContext || window.webkitAudioContext;
-            daAudioContext = new AudioContext();
-        }
-        catch(e) {
-            console.log('Web Audio API is not supported in this browser');
-        }
-        loadSoundBuffer('newmessage', '""" + url_for('static', filename='sounds/notification-click-on.mp3') + """', '""" + url_for('static', filename='sounds/notification-click-on.ogg') + """');
-        loadSoundBuffer('newconversation', '""" + url_for('static', filename='sounds/notification-stapler.mp3') + """', '""" + url_for('static', filename='sounds/notification-stapler.ogg') + """');
-        loadSoundBuffer('signinout', '""" + url_for('static', filename='sounds/notification-snap.mp3') + """', '""" + url_for('static', filename='sounds/notification-snap.ogg') + """');
-        if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-            socket = io.connect("http://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
-        }
-        if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            socket = io.connect("https://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
-        }
-        //console.log("socket is " + socket)
-        if (typeof socket !== 'undefined') {
-            socket.on('connect', function() {
-                //console.log("Connected!");
-                update_monitor();
-            });
-            socket.on('terminate', function() {
-                //console.log("monitor: terminating socket");
-                socket.disconnect();
-            });
-            socket.on('disconnect', function() {
-                //console.log("monitor: disconnected socket");
-                //socket = null;
-            });
-            socket.on('refreshsessions', function(data) {
-                update_monitor();
-            });
-            // socket.on('abortcontroller', function(data) {
-            //     console.log("Got abortcontroller message for " + data.key);
-            // });
-            socket.on('chatready', function(data) {
-                var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
-                //console.log('chatready: ' + key);
-                activateChatArea(key);
-                notifyOperator(key, "chatready", """ + repr(str(word("New chat connection from"))) + """ + ' ' + data.name)
-            });
-            socket.on('chatstop', function(data) {
-                var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
-                //console.log('chatstop: ' + key);
-                if (key in daChatPartners){
-                    delete daChatPartners[key];
-                }
-                deActivateChatArea(key);
-            });
-            socket.on('chat_log', function(arg) {
-                //console.log('chat_log: ' + arg.userid);
-                publish_chat_log(arg.uid, arg.i, arg.userid, arg.mode, arg.data);
-            });            
-            socket.on('block', function(arg) {
-                //console.log("back from blocking " + arg.key);
-                update_monitor();
-            });            
-            socket.on('unblock', function(arg) {
-                //console.log("back from unblocking " + arg.key);
-                update_monitor();
-            });            
-            socket.on('chatmessage', function(data) {
-                //console.log("chatmessage");
-                var keys; 
-                if (data.data.mode == 'peer' || data.data.mode == 'peerhelp'){
-                  keys = allSessions(data.uid, data.i);
-                }
-                else{
-                  keys = ['da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid];
-                }
-                for (var i = 0; i < keys.length; ++i){
-                  key = keys[i];
-                  var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-                  //console.log("Received chat message for #chatarea" + skey);
-                  var chatArea = $("#chatarea" + skey).find('ul').first();
+          $(xButton).appendTo($("#session" + skey));
+          $("#chatarea" + skey).find('input, button').prop("disabled", true);
+          var theIframe = $("#iframe" + skey).find('iframe')[0];
+          if (theIframe){
+              $(theIframe).contents().find('body').addClass("dainactive");
+              if (theIframe.contentWindow && theIframe.contentWindow.turnOffControl){
+                  theIframe.contentWindow.turnOffControl();
+              }
+          }
+          if (daControlling.hasOwnProperty(key)){
+              delete daControlling[key];
+          }
+          delete daSessions[key];
+      }
+      function publish_chat_log(uid, yaml_filename, userid, mode, messages){
+          //console.log("publish_chat_log with " + uid + " " + yaml_filename + " " + userid + " " + mode + " " + messages);
+          var keys; 
+          //if (mode == 'peer' || mode == 'peerhelp'){
+          //    keys = allSessions(uid, yaml_filename);
+          //}
+          //else{
+              keys = ['da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:' + userid];
+          //}
+          for (var i = 0; i < keys.length; ++i){
+              key = keys[i];
+              var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+              var chatArea = $("#chatarea" + skey).find('ul').first();
+              for (var i = 0; i < messages.length; ++i){
+                  var message = messages[i];
                   var newLi = document.createElement('li');
                   $(newLi).addClass("list-group-item");
-                  if (data.data.is_self){
-                    $(newLi).addClass("list-group-item-warning dalistright");
+                  if (message.is_self){
+                      $(newLi).addClass("list-group-item-warning dalistright");
                   }
                   else{
-                    $(newLi).addClass("list-group-item-info");
+                      $(newLi).addClass("list-group-item-info");
                   }
-                  $(newLi).html(data.data.message);
+                  $(newLi).html(message.message);
                   $(newLi).appendTo(chatArea);
-                  scrollChat("#chatarea" + skey);
-                  if (data.data.is_self){
-                    $("#listelement" + skey).removeClass("new-message");
-                    if (document.title != daBrowserTitle){
+              }
+              scrollChatFast("#chatarea" + skey);
+          }
+      }
+      function check_if_empty(){
+          if ($("#monitorsessions").find("li").length > 0){
+              $("#emptylist").addClass("invisible");
+          }
+          else{
+              $("#emptylist").removeClass("invisible");
+          }
+      }
+      function draw_session(key, obj){
+          //console.log("draw_session with " + key);
+          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+          var the_html;
+          var wants_to_chat;
+          if (obj.chatstatus != 'off'){ //obj.chatstatus == 'waiting' || obj.chatstatus == 'standby' || obj.chatstatus == 'ringing' || obj.chatstatus == 'ready' || obj.chatstatus == 'on' || obj.chatstatus == 'observeonly'
+              wants_to_chat = true;
+          }
+          if (wants_to_chat){
+              the_html = obj.browser_title + ' &mdash; '
+              if (obj.hasOwnProperty('first_name')){
+                the_html += obj.first_name + ' ' + obj.last_name;
+              }
+              else{
+                the_html += '""" + word("anonymous visitor") + """ ' + obj.temp_user_id;
+              }
+          }
+          var theListElement;
+          var sessionDiv;
+          var theIframeContainer;
+          var theChatArea;
+          if ($("#session" + skey).length && !(key in daSessions)){
+              $("#listelement" + skey).removeClass("list-group-item-danger");
+              $("#iframe" + skey).find('iframe').first().contents().find('body').removeClass("dainactive");
+          }
+          daSessions[key] = 1;
+          if ($("#session" + skey).length){
+              theListElement = $("#listelement" + skey).first();
+              sessionDiv = $("#session" + skey).first();
+              //controlDiv = $("#control" + skey).first();
+              theIframeContainer = $("#iframe" + skey).first();
+              theChatArea = $("#chatarea" + skey).first();
+              $(sessionDiv).empty();
+              if (obj.chatstatus == 'on' && key in daChatPartners && $("#chatarea" + skey).find('button').first().prop("disabled") == true){
+                  activateChatArea(key);
+              }
+          }
+          else{
+              var theListElement = document.createElement('li');
+              $(theListElement).addClass('list-group-item');
+              $(theListElement).attr('id', "listelement" + key);
+              var sessionDiv = document.createElement('div');
+              $(sessionDiv).attr('id', "session" + key);
+              $(sessionDiv).addClass('chat-session');
+              $(sessionDiv).appendTo($(theListElement));
+              $(theListElement).appendTo("#monitorsessions");
+              // controlDiv = document.createElement('div');
+              // $(controlDiv).attr('id', "control" + key);
+              // $(controlDiv).addClass("chatcontrol invisible chat-session");
+              // $(controlDiv).appendTo($(theListElement));
+              theIframeContainer = document.createElement('div');
+              $(theIframeContainer).addClass("observer-container invisible");
+              $(theIframeContainer).attr('id', 'iframe' + key);
+              var theIframe = document.createElement('iframe');
+              $(theIframe).addClass("observer");
+              $(theIframe).attr('name', 'iframe' + key);
+              $(theIframe).appendTo($(theIframeContainer));
+              $(theIframeContainer).appendTo($(theListElement));
+              var theChatArea = document.createElement('div');
+              $(theChatArea).addClass('monitor-chat-area invisible');
+              $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"></ul></div></div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control" disabled><span class="input-group-btn"><button class="btn btn-default" type="button" disabled>""" + word("Send") + """</button></span></div></div></div></form>');
+              $(theChatArea).attr('id', 'chatarea' + key);
+              var submitter = function(){
+                  //console.log("I am the submitter and I am submitting " + key);
+                  var input = $(theChatArea).find("input").first();
+                  var message = input.val().trim();
+                  if (message == null || message == ""){
+                      //console.log("Message was blank");
+                      return false;
+                  }
+                  socket.emit('chatmessage', {key: key, data: input.val()});
+                  input.val('');
+                  return false;
+              };
+              $(theChatArea).find("button").click(submitter);
+              $(theChatArea).find("input").bind('keypress keydown keyup', function(e){
+                  if(e.keyCode == 13) { submitter(); e.preventDefault(); }
+              });
+              $(theChatArea).find("input").focus(function(){
+                  $(theListElement).removeClass("new-message");
+                  if (document.title != daBrowserTitle){
                       document.title = daBrowserTitle;
                       faviconRegular();
-                    }
                   }
-                  else{
-                    if (!$("#chatarea" + skey).find('input').first().is(':focus')){
-                      $("#listelement" + skey).addClass("new-message");
-                      if (daBrowserTitle == document.title){
-                        document.title = '* ' + daBrowserTitle;
-                        faviconAlert();
-                      }
-                    }
-                    if (data.data.hasOwnProperty('temp_user_id')){
-                      notifyOperator(key, "chat", """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.data.temp_user_id + ': ' + data.data.message);
-                    }
-                    else{
-                      if (data.data.first_name && data.data.first_name != ''){
-                        notifyOperator(key, "chat", data.data.first_name + ' ' + data.data.last_name + ': ' + data.data.message);
-                      }
-                      else{
-                        notifyOperator(key, "chat", data.data.email + ': ' + data.data.message);
-                      }
-                    }
-                  }
-                }
-            });
-            socket.on('sessionupdate', function(data) {
-                //console.log("Got session update: " + data.session.chatstatus);
-                draw_session(data.key, data.session);
-                check_if_empty();
-            });
-            socket.on('updatemonitor', function(data) {
-                //console.log("Got update monitor response");
-                //console.log("updatemonitor: chat partners are: " + data.chatPartners);
-                daChatPartners = data.chatPartners;
-                daNewPhonePartners = Object();
-                daTermPhonePartners = Object();
-                daPhonePartners = data.phonePartners;
-                var newSubscribedRoles = Object();
-                for (var key in data.subscribedRoles){
-                    if (data.subscribedRoles.hasOwnProperty(key)){
-                        newSubscribedRoles[key] = 1;
-                    }
-                }
-                for (var i = 0; i < data.availRoles.length; ++i){
-                    var key = data.availRoles[i];
-                    var skey = key.replace(/(:|\.|\[|\]|,|=|\/| )/g, '\\\\$1');
-                    if ($("#role" + skey).length == 0){
-                        var label = document.createElement('label');
-                        $(label).addClass('checkbox-inline');
-                        var input = document.createElement('input');
-                        var text = document.createTextNode(key);
-                        $(input).attr('type', 'checkbox');
-                        $(input).attr('id', "role" + key);
-                        if (key in newSubscribedRoles){
-                            $(input).prop('checked', true);
-                        }
-                        else{
-                            $(input).prop('checked', false);
-                        }
-                        $(input).val(key);
-                        $(input).appendTo($(label));
-                        $(text).appendTo($(label));
-                        $(label).appendTo($("#monitorroles"));
-                        $(input).change(function(){
-                            var key = $(this).val();
-                            //console.log("change to " + key);
-                            if ($(this).is(":checked")) {
-                                //console.log("it is checked");
-                                daSubscribedRoles[key] = 1;
-                            }
-                            else{
-                                //console.log("it is not checked");
-                                if (key in daSubscribedRoles){
-                                    delete daSubscribedRoles[key];
-                                }
-                            }
-                            update_monitor();
-                        });
-                    }
-                    else{
-                        var input = $("#role" + skey).first();
-                        if (key in newSubscribedRoles){
-                            $(input).prop('checked', true);
-                        }
-                        else{
-                            $(input).prop('checked', false);
-                        }
-                    }
-                }
-                daSubscribedRoles = newSubscribedRoles;
-                newDaSessions = Object();
-                for (var key in data.sessions){
-                    if (data.sessions.hasOwnProperty(key)){
-                        var user_id = key.replace(/^.*:userid:/, '');
-                        if (true || user_id != daUserid){
-                            var obj = data.sessions[key];
-                            newDaSessions[key] = obj;
-                            draw_session(key, obj);
-                        }
-                    }
-                }
-                var toDelete = Array();
-                var numSessions = 0;
-                for (var key in daSessions){
-                    if (daSessions.hasOwnProperty(key)){
-                        numSessions++;
-                        if (!(key in newDaSessions)){
-                            toDelete.push(key);
-                        }
-                    }
-                }
-                for (var i = 0; i < toDelete.length; ++i){
-                    var key = toDelete[i];
-                    undraw_session(key);
-                }
-                if ($("#monitorsessions").find("li").length > 0){
-                    $("#emptylist").addClass("invisible");
-                }
-                else{
-                    $("#emptylist").removeClass("invisible");
-                }
-            });
-        }
-        if (daAvailableForChat){
-            $("#daNotAvailable").addClass("invisible");
-            checkNotifications();
-        }
-        else{
-            $("#daAvailable").addClass("invisible");
-        }
-        $("#daAvailable").click(function(){
-            $("#daAvailable").addClass("invisible");
-            $("#daNotAvailable").removeClass("invisible");
-            daAvailableForChat = false;
-            //console.log("daAvailableForChat: " + daAvailableForChat);
-            update_monitor();
-            playSound('signinout');
-        });
-        $("#daNotAvailable").click(function(){
-            checkNotifications();
-            $("#daNotAvailable").addClass("invisible");
-            $("#daAvailable").removeClass("invisible");
-            daAvailableForChat = true;
-            //console.log("daAvailableForChat: " + daAvailableForChat);
-            update_monitor();
-            playSound('signinout');
-        });
-        $( window ).bind('unload', function() {
-          if (typeof socket !== 'undefined'){
-            socket.emit('terminate');
+              });
+              $(theChatArea).appendTo($(theListElement));
+              if (obj.chatstatus == 'on' && key in daChatPartners){
+                  activateChatArea(key);
+              }
           }
-        });
-        if (daUsePhone){
-          $("#daPhoneInfo").removeClass("invisible");
-          $("#daPhoneNumber").val(daPhoneNumber);
-          $("#daPhoneNumber").change(checkPhone);
-          $("#daPhoneNumber").bind('keypress keydown keyup', function(e){
-            if(e.keyCode == 13) { $(this).blur(); e.preventDefault(); }
-          });
-        }
-        $(window).on('scroll', onScrollResize);
-        $(window).on('resize', onScrollResize);
-        $(".chat-notifier").click(function(e){
-            //var key = $(this).data('key');
-            var direction = 0;
-            if ($(this).attr('id') == "chat-message-above"){
-                direction = -1;
+          var theText = document.createElement('span');
+          $(theText).addClass('chat-title-label');
+          theText.innerHTML = the_html;
+          var statusLabel = document.createElement('span');
+          $(statusLabel).addClass("label label-info chat-status-label");
+          $(statusLabel).html(obj.chatstatus == 'observeonly' ? 'off' : obj.chatstatus);
+          $(statusLabel).appendTo($(sessionDiv));
+          if (daUsePhone){
+            var phoneButton = document.createElement('a');
+            var phoneIcon = document.createElement('i');
+            $(phoneIcon).addClass("glyphicon glyphicon-earphone");
+            $(phoneIcon).appendTo($(phoneButton));
+            $(phoneButton).addClass("label phone");
+            $(phoneButton).data('name', 'phone');
+            if (key in daPhonePartners){
+              $(phoneButton).addClass("phone-on label-success");
+              $(phoneButton).attr('title', daPhoneOnMessage);
             }
             else{
-                direction = 1;
+              $(phoneButton).addClass("phone-off label-default");
+              $(phoneButton).attr('title', daPhoneOffMessage);
             }
-            var target = -1;
-            var targetElement = null;
-            for (var key in daUpdatedSessions){
-                if (daUpdatedSessions.hasOwnProperty(key)){
-                    var top = $(key).offset().top;
-                    if (direction == -1){
-                        if (target == -1 || top < target){
-                            target = top;
-                            targetElement = key;
-                        }
+            $(phoneButton).addClass('observebutton')
+            $(phoneButton).appendTo($(sessionDiv));
+            $(phoneButton).attr('href', '#');
+            if (daPhoneNumber == null){
+              $(phoneButton).addClass("invisible");
+            }
+            $(phoneButton).click(function(e){
+              if ($(this).hasClass("phone-off") && daPhoneNumber != null){
+                $(this).removeClass("phone-off");
+                $(this).removeClass("label-default");
+                $(this).addClass("phone-on");
+                $(this).addClass("label-success");
+                $(this).attr('title', daPhoneOnMessage);
+                daPhonePartners[key] = 1;
+                daNewPhonePartners[key] = 1;
+                if (key in daTermPhonePartners){
+                  delete daTermPhonePartners[key];
+                }
+                update_monitor();
+              }
+              else{
+                $(this).removeClass("phone-on");
+                $(this).removeClass("label-success");
+                $(this).addClass("phone-off");
+                $(this).addClass("label-default");
+                $(this).attr('title', daPhoneOffMessage);
+                if (key in daPhonePartners){
+                  delete daPhonePartners[key];
+                }
+                if (key in daNewPhonePartners){
+                  delete daNewPhonePartners[key];
+                }
+                daTermPhonePartners[key] = 1;
+                update_monitor();
+              }
+              e.preventDefault();
+              return false;
+            });
+          }
+          var unblockButton = document.createElement('a');
+          $(unblockButton).addClass("label label-info observebutton");
+          $(unblockButton).data('name', 'unblock');
+          if (!obj.blocked){
+              $(unblockButton).addClass("invisible");
+          }
+          $(unblockButton).html('""" + word("Unblock") + """');
+          $(unblockButton).attr('href', '#');
+          $(unblockButton).appendTo($(sessionDiv));
+          var blockButton = document.createElement('a');
+          $(blockButton).addClass("label label-danger observebutton");
+          if (obj.blocked){
+              $(blockButton).addClass("invisible");
+          }
+          $(blockButton).html('""" + word("Block") + """');
+          $(blockButton).attr('href', '#');
+          $(blockButton).data('name', 'block');
+          $(blockButton).appendTo($(sessionDiv));
+          $(blockButton).click(function(e){
+              $(unblockButton).removeClass("invisible");
+              $(this).addClass("invisible");
+              deActivateChatArea(key);
+              socket.emit('block', {key: key});
+              e.preventDefault();
+              return false;
+          });
+          $(unblockButton).click(function(e){
+              $(blockButton).removeClass("invisible");
+              $(this).addClass("invisible");
+              socket.emit('unblock', {key: key});
+              e.preventDefault();
+              return false;
+          });
+          var joinButton = document.createElement('a');
+          $(joinButton).addClass("label label-warning observebutton");
+          $(joinButton).html('""" + word("Join") + """');
+          $(joinButton).attr('href', '""" + url_for('visit_interview') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
+          $(joinButton).data('name', 'join');
+          $(joinButton).attr('target', '_blank');
+          $(joinButton).appendTo($(sessionDiv));
+          if (wants_to_chat){
+              var openButton = document.createElement('a');
+              $(openButton).addClass("label label-primary observebutton");
+              $(openButton).attr('href', '""" + url_for('observer') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
+              //$(openButton).attr('href', 'about:blank');
+              $(openButton).attr('id', 'observe' + key);
+              $(openButton).attr('target', 'iframe' + key);
+              $(openButton).html('""" + word("Observe") + """');
+              $(openButton).data('name', 'open');
+              $(openButton).appendTo($(sessionDiv));
+              var stopObservingButton = document.createElement('a');
+              $(stopObservingButton).addClass("label label-default observebutton invisible");
+              $(stopObservingButton).html('""" + word("Stop Observing") + """');
+              $(stopObservingButton).attr('href', '#');
+              $(stopObservingButton).data('name', 'stopObserving');
+              $(stopObservingButton).appendTo($(sessionDiv));
+              var controlButton = document.createElement('a');
+              $(controlButton).addClass("label label-info observebutton");
+              $(controlButton).html('""" + word("Control") + """');
+              $(controlButton).attr('href', '#');
+              $(controlButton).data('name', 'control');
+              $(controlButton).appendTo($(sessionDiv));
+              var stopControllingButton = document.createElement('a');
+              $(stopControllingButton).addClass("label label-default observebutton invisible");
+              $(stopControllingButton).html('""" + word("Stop Controlling") + """');
+              $(stopControllingButton).attr('href', '#');
+              $(stopControllingButton).data('name', 'stopControlling');
+              $(stopControllingButton).appendTo($(sessionDiv));
+              $(controlButton).click(function(event){
+                  event.preventDefault();
+                  //console.log("Controlling...");
+                  $(this).addClass("invisible");
+                  $(stopControllingButton).removeClass("invisible");
+                  $(stopObservingButton).addClass("invisible");
+                  var theIframe = $("#iframe" + skey).find('iframe')[0];
+                  if (theIframe != null && theIframe.contentWindow){
+                      theIframe.contentWindow.turnOnControl();
+                  }
+                  else{
+                      console.log("Cannot turn on control");
+                  }
+                  daControlling[key] = 1;
+                  return false;
+              });
+              $(stopControllingButton).click(function(event){
+                  //console.log("Got click on stopControllingButton");
+                  event.preventDefault();
+                  var theIframe = $("#iframe" + skey).find('iframe')[0];
+                  if (theIframe != null && theIframe.contentWindow && theIframe.contentWindow.turnOffControl){
+                      theIframe.contentWindow.turnOffControl();
+                  }
+                  else{
+                      console.log("Cannot turn off control");
+                      return false;
+                  }
+                  //console.log("Stop controlling...");
+                  $(this).addClass("invisible");
+                  $(controlButton).removeClass("invisible");
+                  $(stopObservingButton).removeClass("invisible");
+                  if (daControlling.hasOwnProperty(key)){
+                      delete daControlling[key];
+                  }
+                  return false;
+              });
+              $(openButton).click(function(){
+                  //console.log("Observing..");
+                  $(this).addClass("invisible");
+                  $(stopObservingButton).removeClass("invisible");
+                  $("#iframe" + skey).removeClass("invisible");
+                  $(controlButton).removeClass("invisible");
+                  return true;
+              });
+              $(stopObservingButton).click(function(e){
+                  //console.log("Unobserving...");
+                  $(this).addClass("invisible");
+                  $(openButton).removeClass("invisible");
+                  $(controlButton).addClass("invisible");
+                  $(stopObservingButton).addClass("invisible");
+                  $(stopControllingButton).addClass("invisible");
+                  var theIframe = $("#iframe" + skey).find('iframe')[0];
+                  if (daControlling.hasOwnProperty(key)){
+                      delete daControlling[key];
+                      if (theIframe != null && theIframe.contentWindow && theIframe.contentWindow.turnOffControl){
+                          //console.log("Calling turnOffControl in iframe");
+                          theIframe.contentWindow.turnOffControl();
+                      }
+                  }
+                  if (theIframe != null && theIframe.contentWindow){
+                      //console.log("Deleting the iframe");
+                      theIframe.contentWindow.document.open();
+                      theIframe.contentWindow.document.write("");
+                      theIframe.contentWindow.document.close();
+                  }
+                  $("#iframe" + skey).slideUp(400, function(){
+                      $(this).css("display", "").addClass("invisible");
+                  });
+                  e.preventDefault();
+                  return false;
+              });
+              if ($(theIframeContainer).hasClass("invisible")){
+                  $(openButton).removeClass("invisible");
+                  $(stopObservingButton).addClass("invisible");
+                  $(controlButton).addClass("invisible");
+                  $(stopControllingButton).addClass("invisible");
+                  if (daControlling.hasOwnProperty(key)){
+                      delete daControlling[key];
+                  }
+              }
+              else{
+                  $(openButton).addClass("invisible");
+                  if (daControlling.hasOwnProperty(key)){
+                      $(stopObservingButton).addClass("invisible");
+                      $(controlButton).addClass("invisible");
+                      $(stopControllingButton).removeClass("invisible");
+                  }
+                  else{
+                      $(stopObservingButton).removeClass("invisible");
+                      $(controlButton).removeClass("invisible");
+                      $(stopControllingButton).addClass("invisible");
+                  }
+              }
+          }
+          $(theText).appendTo($(sessionDiv));
+          if (obj.chatstatus == 'on' && key in daChatPartners && $("#chatarea" + skey).hasClass('invisible')){
+              activateChatArea(key);
+          }
+          if ((obj.chatstatus != 'on' || !(key in daChatPartners)) && $("#chatarea" + skey).find('button').first().prop("disabled") == false){
+              deActivateChatArea(key);
+          }
+          else if (obj.blocked){
+              deActivateChatArea(key);
+          }
+      }
+      function onScrollResize(){
+          if (document.title != daBrowserTitle){
+              document.title = daBrowserTitle;
+              faviconRegular();
+          }
+          if (!daShowingNotif){
+              return true;
+          }
+          var obj = Array();
+          for (var key in daUpdatedSessions){
+              if (daUpdatedSessions.hasOwnProperty(key)){
+                  obj.push(key);
+              }
+          }
+          var somethingAbove = false;
+          var somethingBelow = false;
+          var firstElement = -1;
+          var lastElement = -1;
+          for (var i = 0; i < obj.length; ++i){
+              var result = isHidden(obj[i]);
+              if (result == 0){
+                  delete daUpdatedSessions[obj[i]];
+              }
+              else if (result < 0){
+                  var top = $(obj[i]).offset().top;
+                  somethingAbove = true;
+                  if (firstElement == -1 || top < firstElement){
+                      firstElement = top;
+                  }
+              }
+              else if (result > 0){
+                  var top = $(obj[i]).offset().top;
+                  somethingBelow = true;
+                  if (lastElement == -1 || top > lastElement){
+                      lastElement = top;
+                  }
+              }
+          }
+          if (($("#chat-message-above").is(":visible")) && !somethingAbove){
+              $("#chat-message-above").hide();
+          }
+          if (($("#chat-message-below").is(":visible")) && !somethingBelow){
+              $("#chat-message-below").hide();
+          }
+          if (!(somethingAbove || somethingBelow)){
+              daShowingNotif = false;
+          }
+          return true;
+      }
+      $(document).ready(function(){
+          //console.log("document ready");
+          try {
+              window.AudioContext = window.AudioContext || window.webkitAudioContext;
+              daAudioContext = new AudioContext();
+          }
+          catch(e) {
+              console.log('Web Audio API is not supported in this browser');
+          }
+          loadSoundBuffer('newmessage', '""" + url_for('static', filename='sounds/notification-click-on.mp3') + """', '""" + url_for('static', filename='sounds/notification-click-on.ogg') + """');
+          loadSoundBuffer('newconversation', '""" + url_for('static', filename='sounds/notification-stapler.mp3') + """', '""" + url_for('static', filename='sounds/notification-stapler.ogg') + """');
+          loadSoundBuffer('signinout', '""" + url_for('static', filename='sounds/notification-snap.mp3') + """', '""" + url_for('static', filename='sounds/notification-snap.ogg') + """');
+          if (location.protocol === 'http:' || document.location.protocol === 'http:'){
+              socket = io.connect("http://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
+          }
+          if (location.protocol === 'https:' || document.location.protocol === 'https:'){
+              socket = io.connect("https://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
+          }
+          //console.log("socket is " + socket)
+          if (typeof socket !== 'undefined') {
+              socket.on('connect', function() {
+                  //console.log("Connected!");
+                  update_monitor();
+              });
+              socket.on('terminate', function() {
+                  //console.log("monitor: terminating socket");
+                  socket.disconnect();
+              });
+              socket.on('disconnect', function() {
+                  //console.log("monitor: disconnected socket");
+                  //socket = null;
+              });
+              socket.on('refreshsessions', function(data) {
+                  update_monitor();
+              });
+              // socket.on('abortcontroller', function(data) {
+              //     console.log("Got abortcontroller message for " + data.key);
+              // });
+              socket.on('chatready', function(data) {
+                  var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
+                  //console.log('chatready: ' + key);
+                  activateChatArea(key);
+                  notifyOperator(key, "chatready", """ + repr(str(word("New chat connection from"))) + """ + ' ' + data.name)
+              });
+              socket.on('chatstop', function(data) {
+                  var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
+                  //console.log('chatstop: ' + key);
+                  if (key in daChatPartners){
+                      delete daChatPartners[key];
+                  }
+                  deActivateChatArea(key);
+              });
+              socket.on('chat_log', function(arg) {
+                  //console.log('chat_log: ' + arg.userid);
+                  publish_chat_log(arg.uid, arg.i, arg.userid, arg.mode, arg.data);
+              });            
+              socket.on('block', function(arg) {
+                  //console.log("back from blocking " + arg.key);
+                  update_monitor();
+              });            
+              socket.on('unblock', function(arg) {
+                  //console.log("back from unblocking " + arg.key);
+                  update_monitor();
+              });            
+              socket.on('chatmessage', function(data) {
+                  //console.log("chatmessage");
+                  var keys; 
+                  if (data.data.mode == 'peer' || data.data.mode == 'peerhelp'){
+                    keys = allSessions(data.uid, data.i);
+                  }
+                  else{
+                    keys = ['da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid];
+                  }
+                  for (var i = 0; i < keys.length; ++i){
+                    key = keys[i];
+                    var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+                    //console.log("Received chat message for #chatarea" + skey);
+                    var chatArea = $("#chatarea" + skey).find('ul').first();
+                    var newLi = document.createElement('li');
+                    $(newLi).addClass("list-group-item");
+                    if (data.data.is_self){
+                      $(newLi).addClass("list-group-item-warning dalistright");
                     }
                     else{
-                        if (target == -1 || top > target){
-                            target = top;
-                            targetElement = key;
-                        }
+                      $(newLi).addClass("list-group-item-info");
                     }
-                }
+                    $(newLi).html(data.data.message);
+                    $(newLi).appendTo(chatArea);
+                    scrollChat("#chatarea" + skey);
+                    if (data.data.is_self){
+                      $("#listelement" + skey).removeClass("new-message");
+                      if (document.title != daBrowserTitle){
+                        document.title = daBrowserTitle;
+                        faviconRegular();
+                      }
+                    }
+                    else{
+                      if (!$("#chatarea" + skey).find('input').first().is(':focus')){
+                        $("#listelement" + skey).addClass("new-message");
+                        if (daBrowserTitle == document.title){
+                          document.title = '* ' + daBrowserTitle;
+                          faviconAlert();
+                        }
+                      }
+                      if (data.data.hasOwnProperty('temp_user_id')){
+                        notifyOperator(key, "chat", """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.data.temp_user_id + ': ' + data.data.message);
+                      }
+                      else{
+                        if (data.data.first_name && data.data.first_name != ''){
+                          notifyOperator(key, "chat", data.data.first_name + ' ' + data.data.last_name + ': ' + data.data.message);
+                        }
+                        else{
+                          notifyOperator(key, "chat", data.data.email + ': ' + data.data.message);
+                        }
+                      }
+                    }
+                  }
+              });
+              socket.on('sessionupdate', function(data) {
+                  //console.log("Got session update: " + data.session.chatstatus);
+                  draw_session(data.key, data.session);
+                  check_if_empty();
+              });
+              socket.on('updatemonitor', function(data) {
+                  //console.log("Got update monitor response");
+                  //console.log("updatemonitor: chat partners are: " + data.chatPartners);
+                  daChatPartners = data.chatPartners;
+                  daNewPhonePartners = Object();
+                  daTermPhonePartners = Object();
+                  daPhonePartners = data.phonePartners;
+                  var newSubscribedRoles = Object();
+                  for (var key in data.subscribedRoles){
+                      if (data.subscribedRoles.hasOwnProperty(key)){
+                          newSubscribedRoles[key] = 1;
+                      }
+                  }
+                  for (var i = 0; i < data.availRoles.length; ++i){
+                      var key = data.availRoles[i];
+                      var skey = key.replace(/(:|\.|\[|\]|,|=|\/| )/g, '\\\\$1');
+                      if ($("#role" + skey).length == 0){
+                          var label = document.createElement('label');
+                          $(label).addClass('checkbox-inline');
+                          var input = document.createElement('input');
+                          var text = document.createTextNode(key);
+                          $(input).attr('type', 'checkbox');
+                          $(input).attr('id', "role" + key);
+                          if (key in newSubscribedRoles){
+                              $(input).prop('checked', true);
+                          }
+                          else{
+                              $(input).prop('checked', false);
+                          }
+                          $(input).val(key);
+                          $(input).appendTo($(label));
+                          $(text).appendTo($(label));
+                          $(label).appendTo($("#monitorroles"));
+                          $(input).change(function(){
+                              var key = $(this).val();
+                              //console.log("change to " + key);
+                              if ($(this).is(":checked")) {
+                                  //console.log("it is checked");
+                                  daSubscribedRoles[key] = 1;
+                              }
+                              else{
+                                  //console.log("it is not checked");
+                                  if (key in daSubscribedRoles){
+                                      delete daSubscribedRoles[key];
+                                  }
+                              }
+                              update_monitor();
+                          });
+                      }
+                      else{
+                          var input = $("#role" + skey).first();
+                          if (key in newSubscribedRoles){
+                              $(input).prop('checked', true);
+                          }
+                          else{
+                              $(input).prop('checked', false);
+                          }
+                      }
+                  }
+                  daSubscribedRoles = newSubscribedRoles;
+                  newDaSessions = Object();
+                  for (var key in data.sessions){
+                      if (data.sessions.hasOwnProperty(key)){
+                          var user_id = key.replace(/^.*:userid:/, '');
+                          if (true || user_id != daUserid){
+                              var obj = data.sessions[key];
+                              newDaSessions[key] = obj;
+                              draw_session(key, obj);
+                          }
+                      }
+                  }
+                  var toDelete = Array();
+                  var numSessions = 0;
+                  for (var key in daSessions){
+                      if (daSessions.hasOwnProperty(key)){
+                          numSessions++;
+                          if (!(key in newDaSessions)){
+                              toDelete.push(key);
+                          }
+                      }
+                  }
+                  for (var i = 0; i < toDelete.length; ++i){
+                      var key = toDelete[i];
+                      undraw_session(key);
+                  }
+                  if ($("#monitorsessions").find("li").length > 0){
+                      $("#emptylist").addClass("invisible");
+                  }
+                  else{
+                      $("#emptylist").removeClass("invisible");
+                  }
+              });
+          }
+          if (daAvailableForChat){
+              $("#daNotAvailable").addClass("invisible");
+              checkNotifications();
+          }
+          else{
+              $("#daAvailable").addClass("invisible");
+          }
+          $("#daAvailable").click(function(){
+              $("#daAvailable").addClass("invisible");
+              $("#daNotAvailable").removeClass("invisible");
+              daAvailableForChat = false;
+              //console.log("daAvailableForChat: " + daAvailableForChat);
+              update_monitor();
+              playSound('signinout');
+          });
+          $("#daNotAvailable").click(function(){
+              checkNotifications();
+              $("#daNotAvailable").addClass("invisible");
+              $("#daAvailable").removeClass("invisible");
+              daAvailableForChat = true;
+              //console.log("daAvailableForChat: " + daAvailableForChat);
+              update_monitor();
+              playSound('signinout');
+          });
+          $( window ).bind('unload', function() {
+            if (typeof socket !== 'undefined'){
+              socket.emit('terminate');
             }
-            if (target >= 0){
-                $("html, body").animate({scrollTop: target - 60}, 500, function(){
-                    $(targetElement).find("input").first().focus();
-                });
-            }
-            e.preventDefault();
-            return false;
-        })
-    });
-</script>"""
+          });
+          if (daUsePhone){
+            $("#daPhoneInfo").removeClass("invisible");
+            $("#daPhoneNumber").val(daPhoneNumber);
+            $("#daPhoneNumber").change(checkPhone);
+            $("#daPhoneNumber").bind('keypress keydown keyup', function(e){
+              if(e.keyCode == 13) { $(this).blur(); e.preventDefault(); }
+            });
+          }
+          $(window).on('scroll', onScrollResize);
+          $(window).on('resize', onScrollResize);
+          $(".chat-notifier").click(function(e){
+              //var key = $(this).data('key');
+              var direction = 0;
+              if ($(this).attr('id') == "chat-message-above"){
+                  direction = -1;
+              }
+              else{
+                  direction = 1;
+              }
+              var target = -1;
+              var targetElement = null;
+              for (var key in daUpdatedSessions){
+                  if (daUpdatedSessions.hasOwnProperty(key)){
+                      var top = $(key).offset().top;
+                      if (direction == -1){
+                          if (target == -1 || top < target){
+                              target = top;
+                              targetElement = key;
+                          }
+                      }
+                      else{
+                          if (target == -1 || top > target){
+                              target = top;
+                              targetElement = key;
+                          }
+                      }
+                  }
+              }
+              if (target >= 0){
+                  $("html, body").animate({scrollTop: target - 60}, 500, function(){
+                      $(targetElement).find("input").first().focus();
+                  });
+              }
+              e.preventDefault();
+              return false;
+          })
+      });
+    </script>"""
     return render_template('pages/monitor.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Monitor'), page_title=word('Monitor')), 200
 
 @app.route('/updatingpackages', methods=['GET', 'POST'])
@@ -7740,7 +7788,8 @@ def monitor():
 def update_package_wait():
     next_url = request.args.get('next', url_for('update_package'))
     my_csrf = generate_csrf()
-    script = """<script>
+    script = """
+    <script>
       var checkinInterval = null;
       var resultsAreIn = false;
       function daRestartCallback(data){
@@ -7819,8 +7868,7 @@ def update_package_wait():
         //console.log("page loaded");
         checkinInterval = setInterval(daUpdate, 2000);
       });
-    </script>
-"""
+    </script>"""
     return render_template('pages/update_package_wait.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=next_url)
 
 @app.route('/update_package_ajax', methods=['GET', 'POST'])
@@ -8511,7 +8559,8 @@ class Fruit(DAObject):
 @login_required
 @roles_required(['admin', 'developer'])
 def restart_page():
-    script = """<script>
+    script = """
+    <script>
       function daRestartCallback(data){
         //console.log("Restart result: " + data.success);
       }
@@ -8529,8 +8578,7 @@ def restart_page():
         //console.log("restarting");
         setTimeout(daRestart, 500);
       });
-    </script>
-"""
+    </script>"""
     next_url = request.args.get('next', url_for('interview_list'))
     extra_meta = """\n    <meta http-equiv="refresh" content="5;URL='""" + next_url + """'">"""
     return render_template('pages/restart.html', version_warning=None, bodyclass='adminbody', extra_meta=Markup(extra_meta), extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting'))
@@ -10178,44 +10226,6 @@ function activatePopovers(){
 
 """
 
-nav_js = """
-    <script>
-      $(".danavdiv a.clickable").click(function(e){
-        var the_key = $(this).data('key');
-        url_action_perform(the_key, {});
-        e.preventDefault();
-        return false;
-      });
-      $(".danavdiv ul li ul").each(function(){
-        var the_ul = $(this);
-        var the_li = $(this).parent();
-        var the_a = $(the_li).children('a').first();
-        var the_toggle = document.createElement('div');
-        var the_toggle_inner = document.createElement('i');
-        $(the_toggle).addClass('ul-toggle');
-        if ($(the_a).hasClass('notavailableyet')){
-          $(the_toggle).addClass('notavailable');
-        }
-        else{
-          $(the_toggle).addClass('available');
-        }
-        if ($(the_ul).hasClass('notshowing')){
-          $(the_toggle_inner).addClass('glyphicon glyphicon-triangle-right');
-        }
-        else{
-          $(the_toggle_inner).addClass('glyphicon glyphicon-triangle-bottom');
-        }
-        $(the_toggle).append($(the_toggle_inner));
-        $(the_toggle).click(function(){
-          $(the_toggle_inner).toggleClass('glyphicon-triangle-right');
-          $(the_toggle_inner).toggleClass('glyphicon-triangle-bottom');
-          $(the_ul).toggle();
-        });
-        $(the_li).append($(the_toggle));
-      });
-    </script>
-"""
-
 @app.route('/playgroundvariables', methods=['POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -11356,7 +11366,7 @@ def train():
                         if the_saveas not in group_id_list:
                             group_id_list[the_saveas] = 0
         group_id_list = [(x, group_id_list[x]) for x in sorted(group_id_list)]
-        extra_js = """\
+        extra_js = """
     <script>
       $( document ).ready(function() {
         $("#showimport").click(function(e){
@@ -11384,8 +11394,7 @@ def train():
           return false;
         });
       });
-    </script>
-"""        
+    </script>"""        
         return render_template('pages/train.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_group_id_list=True, package_file_available=package_file_available, the_package_location=the_prefix, uploadform=uploadform)
     else:
         group_id_to_use = fix_group_id(the_package, the_file, the_group_id)
@@ -11441,7 +11450,7 @@ def train():
         else:
             #logmessage("There are no choices")
             choices = None
-        extra_js = """\
+        extra_js = """
     <script>
       $( document ).ready(function() {
         $("button.prediction").click(function(){
@@ -11470,8 +11479,7 @@ def train():
           }
         });
       });
-    </script>
-"""
+    </script>"""
         return render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True)
 
 @app.route('/interviews', methods=['GET', 'POST'])
@@ -11552,7 +11560,8 @@ def interview_list():
         starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
         modtime = nice_date_from_utc(dictionary['_internal']['modtime'], timezone=the_timezone)
         interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title, 'valid': is_valid})
-    script = """<script>
+    script = """
+    <script>
       $("#deleteall").on('click', function(event){
         if (confirm('""" + word("Are you sure you want to delete all saved interviews?") + """')){
           return true;
@@ -11560,9 +11569,20 @@ def interview_list():
         event.preventDefault();
         return false;
       });
-    </script>
-"""
-    return render_template('pages/interviews.html', version_warning=version_warning, extra_js=Markup(script), tab_title=word("Interviews"), page_title=word("Interviews"), numinterviews=len(interviews), interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
+    </script>"""
+    script += global_js
+    interview_page_title = word(daconfig.get('interview page title', 'Interviews'))
+    title = word(daconfig.get('interview page heading', 'Resume an interview'))
+    argu = dict(version_warning=version_warning, extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title, numinterviews=len(interviews), interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
+    if 'interview page template' in daconfig and daconfig['interview page template']:
+        the_page = docassemble.base.functions.package_template_filename(daconfig['interview page template'])
+        if the_page is None:
+            raise DAError("Could not find start page template " + daconfig['start page template'])
+        with open(the_page, 'rU') as fp:
+            template_string = fp.read().decode('utf8')
+            return render_template_string(template_string, **argu)
+    else:
+        return render_template('pages/interviews.html', **argu)
 
 def fix_secret():
     password = request.form.get('password', request.form.get('new_password', None))
@@ -12683,6 +12703,16 @@ else:
                                              worker_convert=docassemble.webapp.worker.convert)
 
 pg_ex = dict()
+
+global_css = ''
+if 'global css' in daconfig:
+    for fileref in daconfig['global css']:
+        global_css += "\n" + '    <link href="' + get_url_from_file_reference(fileref) + '" rel="stylesheet">'
+        
+global_js = ''
+if 'global javascript' in daconfig:
+    for fileref in daconfig['global javascript']:
+        global_js += "\n" + '    <script src="' + get_url_from_file_reference(fileref) + '"></script>';
 
 def define_examples():
     if 'encoded_example_html' in pg_ex:

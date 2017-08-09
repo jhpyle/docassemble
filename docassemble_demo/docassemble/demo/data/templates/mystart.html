@@ -1,8 +1,9 @@
 {% extends 'base_templates/flask_wide_base.html' %}
 
 {% block content %}
-<h1 class="dastartpage">{{ title }}</h1>
-<ul class="dastartpage">
+<h1>{{ title }}</h1>
+<p>Hello there!</p>
+<ul class="dastart">
   {% for interview in interview_info %}
   <li><a href="{{ interview['link'] }}">{{ interview['display'] }}</a></li>
   {% endfor %}

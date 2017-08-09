@@ -215,6 +215,12 @@ def load(**kwargs):
     else:
         daconfig['email confirmation privileges'] = []
     loaded = True
+    for key in ['global javascript', 'global css']:
+        if key in daconfig:
+            if daconfig[key] is None:
+                del daconfig[key]
+            elif type(daconfig[key]) is not list:
+                daconfig[key] = [daconfig[key]]
     return
 
 def default_config():
