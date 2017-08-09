@@ -412,6 +412,8 @@ lm.login_view = 'custom_login'
 #from twilio.rest import Capability as TwilioCapability
 from twilio.rest import Client as TwilioRestClient
 import twilio.twiml
+import twilio.twiml.messaging_response
+import twilio.twiml.voice_response
 from PIL import Image
 import socket
 import copy
@@ -11699,7 +11701,7 @@ def on_register_hook(sender, user, **extra):
 @app.route("/voice", methods=['POST', 'GET'])
 @csrf.exempt
 def voice():
-    resp = twilio.twiml.Response()
+    resp = twilio.twiml.voice_response.VoiceResponse()
     if twilio_config is None:
         logmessage("voice: ignoring call to voice because Twilio not enabled")
         return Response(str(resp), mimetype='text/xml')
@@ -11733,7 +11735,7 @@ def voice():
 @app.route("/digits", methods=['POST', 'GET'])
 @csrf.exempt
 def digits():
-    resp = twilio.twiml.Response()
+    resp = twilio.twiml.messaging_response.MessagingResponse()
     if twilio_config is None:
         logmessage("digits: ignoring call to digits because Twilio not enabled")
         return Response(str(resp), mimetype='text/xml')
@@ -11846,7 +11848,7 @@ def sms():
     return Response(str(resp), mimetype='text/xml')
 
 def do_sms(form, base_url, url_root, config='default', save=True):
-    resp = twilio.twiml.Response()
+    resp = twilio.twiml.messaging_response.MessagingResponse()
     special_messages = list()
     if twilio_config is None:
         logmessage("do_sms: ignoring message to sms because Twilio not enabled")
@@ -11868,17 +11870,17 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         logmessage("do_sms: request to sms ignored because message had no content")
         return resp
     inp = form['Body'].strip()
-    #logmessage("Received >" + inp + "<")
+    logmessage("do_sms: received >" + inp + "<")
     key = 'da:sms:client:' + form["From"] + ':server:' + tconfig['number']
     #logmessage("Searching for " + key)
     sess_contents = r.get(key)
     if sess_contents is None:
-        logmessage("Nothing found")
+        logmessage("do_sms: received input '" + str(inp) + "' from new user")
         yaml_filename = tconfig.get('default interview', default_yaml_filename)
         if 'dispatch' in tconfig and type(tconfig['dispatch']) is dict:
             if inp.lower() in tconfig['dispatch']:
                 yaml_filename = tconfig['dispatch'][inp.lower()]
-                #logmessage("do_sms: using interview from dispatch: " + str(yaml_filename))
+                logmessage("do_sms: using interview from dispatch: " + str(yaml_filename))
         if yaml_filename is None:
             logmessage("do_sms: request to sms ignored because no interview could be determined")
             return resp
@@ -11893,9 +11895,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
     else:
         try:        
             sess_info = pickle.loads(sess_contents)
-            #logmessage("Unpickled contents: " + str(sess_info))
         except:
-            #logmessage("do_sms: unable to decode session information")
+            logmessage("do_sms: unable to decode session information")
             return resp
         accepting_input = True
     if inp.lower() in [word('exit'), word('quit')]:
@@ -11929,7 +11930,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if 'skip' not in user_dict['_internal']:
             user_dict['_internal']['skip'] = dict()
         if 'smsgather' in user_dict['_internal']:
-            #logmessage("do_sms: need to gather " + user_dict['_internal']['smsgather'])
+            logmessage("do_sms: need to gather " + user_dict['_internal']['smsgather'])
             sms_variable = user_dict['_internal']['smsgather']
         else:
             sms_variable = None
@@ -11941,11 +11942,11 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if sess_info['user_id'] is not None:
             user = load_user(sess_info['user_id'])
         if user is None:
-            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, sms_variable=sms_variable, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
+            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + str(sess_info['tempuser']), roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, sms_variable=sms_variable, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
         else:
             ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
         if action is not None:
-            #logmessage("Setting action to " + str(action))
+            logmessage("do_sms: setting action to " + str(action))
             ci.update(action)
         interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
         interview.assemble(user_dict, interview_status)
@@ -11953,7 +11954,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             sess_info['question'] = interview_status.question.name
             r.set(key, pickle.dumps(sess_info))
         elif 'question' in sess_info and sess_info['question'] != interview_status.question.name:
-            logmessage("do_sms: blanking the input because question changed")
+            logmessage("do_sms: blanking the input because question changed from " + str(sess_info['question']) + " to " + str(interview_status.question.name)) 
             if inp not in [word('?'), word('back'), word('question'), word('exit')]:
                 inp = 'question'
 
