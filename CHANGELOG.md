@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.1.32] - 2017-08-08
+### Changed
+- force_ask() can ask a series of questions
+### Added
+- Configuration directives for customization of global Javascript and
+  CSS
+- Configuration directives for customization of start page and
+  interview list
+
 ## [0.1.31] - 2017-08-07
 ### Changed
 - Review page buttons now Ajax
