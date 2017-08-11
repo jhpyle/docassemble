@@ -323,6 +323,7 @@ class InterviewStatus(object):
         self.helptexts = question_result['helptexts']
         self.extras = question_result['extras']
         self.labels = question_result['labels']
+        self.sought = question_result['sought']
     def set_tracker(self, tracker):
         self.tracker = tracker
 
@@ -1895,7 +1896,7 @@ class Question:
         else:
             raise DAError("Unknown data type in attachment")
 
-    def ask(self, user_dict, the_x, iterators):
+    def ask(self, user_dict, the_x, iterators, sought):
         docassemble.base.functions.this_thread.current_question = self
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
@@ -2179,7 +2180,7 @@ class Question:
                 # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
-        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels}) #'defined': defined, 
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought}) #'defined': defined, 
     def processed_attachments(self, user_dict, **kwargs):
         result_list = list()
         items = list()
@@ -2734,6 +2735,7 @@ class Interview:
             docassemble.base.functions.reset_gathering_mode()
             try:
                 if 'sms_variable' in interview_status.current_info and interview_status.current_info['sms_variable'] is not None:
+                    logmessage("Raising ForcedNameError on " + str(interview_status.current_info['sms_variable']))
                     raise ForcedNameError(interview_status.current_info['sms_variable'])
                 if (self.uses_action or 'action' in interview_status.current_info) and not self.calls_process_action:
                     if self.imports_util:
@@ -2805,9 +2807,9 @@ class Interview:
                             if question.name and question.name in user_dict['_internal']['answers']:
                                 #logmessage("in answers")
                                 #question.mark_as_answered(user_dict)
-                                interview_status.populate(question.follow_multiple_choice(user_dict).ask(user_dict, 'None', []))
+                                interview_status.populate(question.follow_multiple_choice(user_dict).ask(user_dict, 'None', [], None))
                             else:
-                                interview_status.populate(question.ask(user_dict, 'None', []))
+                                interview_status.populate(question.ask(user_dict, 'None', [], None))
                             if interview_status.question.question_type == 'continue':
                                 user_dict['_internal']['answered'].add(question.name)
                             else:
@@ -2816,6 +2818,7 @@ class Interview:
                 #logmessage("Error in NameError is " + str(the_exception))
                 docassemble.base.functions.reset_context()
                 if isinstance(the_exception, ForcedNameError):
+                    logmessage("assemble: got a ForcedNameError for " + the_exception.name)
                     follow_mc = False
                     if the_exception.next_action is not None:
                         interview_status.next_action.extend(the_exception.next_action)
@@ -2850,7 +2853,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                interview_status.populate(new_question.ask(user_dict, 'None', []))
+                interview_status.populate(new_question.ask(user_dict, 'None', [], None))
                 break
             except ResponseError as qError:
                 docassemble.base.functions.reset_context()
@@ -2880,7 +2883,7 @@ class Interview:
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 #the_question = new_question.follow_multiple_choice(user_dict)
-                interview_status.populate(new_question.ask(user_dict, 'None', []))
+                interview_status.populate(new_question.ask(user_dict, 'None', [], None))
                 break
             except BackgroundResponseError as qError:
                 docassemble.base.functions.reset_context()
@@ -2893,7 +2896,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                interview_status.populate(new_question.ask(user_dict, 'None', []))
+                interview_status.populate(new_question.ask(user_dict, 'None', [], None))
                 break
             except BackgroundResponseActionError as qError:
                 docassemble.base.functions.reset_context()
@@ -2906,7 +2909,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                interview_status.populate(new_question.ask(user_dict, 'None', []))
+                interview_status.populate(new_question.ask(user_dict, 'None', [], None))
                 break
             # except SendFileError as qError:
             #     #logmessage("Trapped SendFileError")
@@ -2919,7 +2922,7 @@ class Interview:
             #     new_interview = new_interview_source.get_interview()
             #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
             #     new_question.name = "Question_Temp"
-            #     interview_status.populate(new_question.ask(user_dict, 'None', []))
+            #     interview_status.populate(new_question.ask(user_dict, 'None', [], None))
             #     break
             except QuestionError as qError:
                 docassemble.base.functions.reset_context()
@@ -2955,7 +2958,7 @@ class Interview:
                 new_question.name = "Question_Temp"
                 # will this be a problem?
                 the_question = new_question.follow_multiple_choice(user_dict)
-                interview_status.populate(the_question.ask(user_dict, 'None', []))
+                interview_status.populate(the_question.ask(user_dict, 'None', [], None))
                 break
             except AttributeError as the_error:
                 docassemble.base.functions.reset_context()
@@ -3070,10 +3073,10 @@ class Interview:
                                     exec(command, user_dict)
                         question.mark_as_answered(user_dict)
                         docassemble.base.functions.pop_current_variable()
-                        return({'type': 'continue'})
+                        return({'type': 'continue', 'var': missing_var})
                     if question.question_type == "template":
                         if question.target is not None:
-                            return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'under_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict()})
+                            return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'under_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict(), 'var': missing_var})
                         string = "import docassemble.base.core"
                         exec(string, user_dict)
                         if question.decorations is None:
@@ -3085,7 +3088,7 @@ class Interview:
                         exec(string, user_dict)
                         #question.mark_as_answered(user_dict)
                         docassemble.base.functions.pop_current_variable()
-                        return({'type': 'continue'})
+                        return({'type': 'continue', 'var': missing_var})
                     if question.question_type == "table":
                         string = "import docassemble.base.core"
                         exec(string, user_dict)
@@ -3151,7 +3154,7 @@ class Interview:
                         string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + repr(from_safeid(question.fields[0].saveas)) + ", content=" + repr(table_content) + ")"
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
-                        return({'type': 'continue'})
+                        return({'type': 'continue', 'var': missing_var})
                     if question.question_type == 'attachments':
                         attachment_text = question.processed_attachments(user_dict)
                         if missing_var in variable_stack:
@@ -3160,7 +3163,7 @@ class Interview:
                             eval(missing_var, user_dict)
                             question.mark_as_answered(user_dict)
                             docassemble.base.functions.pop_current_variable()
-                            return({'type': 'continue'})
+                            return({'type': 'continue', 'var': missing_var})
                         except:
                             continue
                     if question.question_type in ["code", "event_code"]:
@@ -3183,12 +3186,12 @@ class Interview:
                             variable_stack.remove(missing_var)
                         if question.question_type == 'event_code':
                             docassemble.base.functions.pop_current_variable()
-                            return({'type': 'continue'})
+                            return({'type': 'continue', 'var': missing_var})
                         try:
                             eval(missing_var, user_dict)
                             question.mark_as_answered(user_dict)
                             docassemble.base.functions.pop_current_variable()
-                            return({'type': 'continue'})
+                            return({'type': 'continue', 'var': missing_var})
                         except:
                             if was_defined:
                                 try:
@@ -3201,20 +3204,21 @@ class Interview:
                     else:
                         if question.question_type == 'continue':
                             continue
-                        return question.ask(user_dict, the_x, iterators)
+                        return question.ask(user_dict, the_x, iterators, missing_var)
                 raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
             except NameError as the_exception:
                 docassemble.base.functions.reset_context()
+                #logmessage("got this error: " + str(the_exception))
                 if isinstance(the_exception, ForcedNameError):
-                    #logmessage("forced nameerror")
+                    logmessage("askfor: got a ForcedNameError for " + the_exception.name)
                     follow_mc = False
+                    newMissingVariable = the_exception.name
                     if the_exception.next_action is not None:
                         interview_status.next_action.extend(the_exception.next_action)
                 else:
                     #logmessage("regular nameerror")
                     follow_mc = True
-                #logmessage("got this error: " + str(the_exception))
-                newMissingVariable = extract_missing_name(the_exception)
+                    newMissingVariable = extract_missing_name(the_exception)
                 #newMissingVariable = str(the_exception).split("'")[1]
                 question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=follow_mc)
                 if question_result['type'] == 'continue':
@@ -3239,7 +3243,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                return(new_question.ask(user_dict, 'None', []))
+                return(new_question.ask(user_dict, 'None', [], missing_var))
             except ResponseError as qError:
                 docassemble.base.functions.reset_context()
                 #logmessage("Trapped ResponseError2")
@@ -3263,7 +3267,7 @@ class Interview:
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 #the_question = new_question.follow_multiple_choice(user_dict)
-                return(new_question.ask(user_dict, 'None', []))
+                return(new_question.ask(user_dict, 'None', [], missing_var))
             except BackgroundResponseError as qError:
                 docassemble.base.functions.reset_context()
                 #logmessage("Trapped BackgroundResponseError2")
@@ -3275,7 +3279,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                return(new_question.ask(user_dict, 'None', []))
+                return(new_question.ask(user_dict, 'None', [], missing_var))
             except BackgroundResponseActionError as qError:
                 docassemble.base.functions.reset_context()
                 #logmessage("Trapped BackgroundResponseActionError2")
@@ -3287,7 +3291,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                return(new_question.ask(user_dict, 'None', []))
+                return(new_question.ask(user_dict, 'None', [], missing_var))
             except QuestionError as qError:
                 docassemble.base.functions.reset_context()
                 #logmessage("Trapped QuestionError")
@@ -3323,7 +3327,7 @@ class Interview:
                 new_question.name = "Question_Temp"
                 # will this be a problem?
                 the_question = new_question.follow_multiple_choice(user_dict)
-                return(the_question.ask(user_dict, 'None', []))
+                return(the_question.ask(user_dict, 'None', [], missing_var))
             except CodeExecute as code_error:
                 docassemble.base.functions.reset_context()
                 #if debug:
@@ -3338,7 +3342,7 @@ class Interview:
                     #logmessage("returning from running code")
                     docassemble.base.functions.pop_current_variable()
                     #logmessage("Got here 2")
-                    return({'type': 'continue'})
+                    return({'type': 'continue', 'var': missing_var})
                 except:
                     #raise DAError("Problem setting that variable")
                     continue
@@ -3363,7 +3367,7 @@ class Interview:
             #     new_interview = new_interview_source.get_interview()
             #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
             #     new_question.name = "Question_Temp"
-            #     return(new_question.ask(user_dict, 'None', []))
+            #     return(new_question.ask(user_dict, 'None', [], None))
         raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.")
 
 def reproduce_basics(interview, new_interview):

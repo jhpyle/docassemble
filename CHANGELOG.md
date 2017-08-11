@@ -1,5 +1,18 @@
 # Change Log
 
+## [0.1.34] - 2017-08-10
+### Fixed
+- Checkboxes are now DADicts but the auto-gathering system on them was
+  not turned off.
+
+## [0.1.33] - 2017-08-09
+### Fixed
+- Backwards compatibility for interviews started before 'nav' added as
+  a variable in the user dictionary.
+- Extension packages now depend on docassemble.webapp so that when a
+  package is updated, all of docassemble is updated, not just
+  docassemble.base.
+
 ## [0.1.32] - 2017-08-08
 ### Changed
 - force_ask() can ask a series of questions

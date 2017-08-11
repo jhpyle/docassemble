@@ -536,7 +536,7 @@ if 'twilio' in daconfig:
             if 'name' in tconfig:
                 twilio_config['name'][tconfig['name']] = tconfig
         else:
-            logmessage("do_sms: improper setup in twilio configuration")    
+            logmessage("improper setup in twilio configuration")    
     if 'default' not in twilio_config['name']:
         twilio_config = None
 else:
@@ -4005,9 +4005,10 @@ def index():
                         except:
                             pass
                     if use_initialize:
-                        the_string = core_key_name + ".initializeAttributecore\n" + key + ' = docassemble.base.core.DADict(' + repr(key) +')'
+                        the_string = core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", DADict)\n" + key + ' = docassemble.base.core.DADict(' + repr(key) +')'
                     else:
                         the_string = "import docassemble.base.core\n" + key + ' = docassemble.base.core.DADict(' + repr(key) +')'
+                    the_string += "\n" + key + ".auto_gather = False\n" + key + ".gathered = True"
                     try:
                         exec(the_string, user_dict)
                         known_variables[key] = True
@@ -11930,7 +11931,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if 'skip' not in user_dict['_internal']:
             user_dict['_internal']['skip'] = dict()
         if 'smsgather' in user_dict['_internal']:
-            logmessage("do_sms: need to gather " + user_dict['_internal']['smsgather'])
+            logmessage("do_sms: need to gather smsgather " + user_dict['_internal']['smsgather'])
             sms_variable = user_dict['_internal']['smsgather']
         else:
             sms_variable = None
@@ -11950,13 +11951,18 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             ci.update(action)
         interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
         interview.assemble(user_dict, interview_status)
+        logmessage("do_sms: back from assemble 1; had been seeking variable " + str(interview_status.sought))
+        logmessage("do_sms: question is " + interview_status.question.name)
         if action is not None:
+            logmessage('do_sms: question is now ' + interview_status.question.name + ' because action')
             sess_info['question'] = interview_status.question.name
             r.set(key, pickle.dumps(sess_info))
         elif 'question' in sess_info and sess_info['question'] != interview_status.question.name:
-            logmessage("do_sms: blanking the input because question changed from " + str(sess_info['question']) + " to " + str(interview_status.question.name)) 
             if inp not in [word('?'), word('back'), word('question'), word('exit')]:
+                logmessage("do_sms: blanking the input because question changed from " + str(sess_info['question']) + " to " + str(interview_status.question.name))
+                sess_info['question'] = interview_status.question.name
                 inp = 'question'
+                r.set(key, pickle.dumps(sess_info))
 
         #logmessage("do_sms: inp is " + inp.lower() + " and steps is " + str(steps) + " and can go back is " + str(interview_status.can_go_back))
         m = re.search(r'^(' + word('menu') + '|' + word('link') + ')([0-9]+)', inp.lower())
@@ -12046,7 +12052,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             else:
                 if hasattr(interview_status.question.fields[0], 'saveas'):
                     saveas = myb64unquote(interview_status.question.fields[0].saveas)
-                    #logmessage("do_sms: variable to set is " + str(saveas))
+                    logmessage("do_sms: variable to set is " + str(saveas))
                 else:
                     saveas = None
                 field = interview_status.question.fields[0]
@@ -12066,7 +12072,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 saved_file = savedfile_numbered_file(filename, temp_image_file.name, yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
                 if inp_lower in [word('x')]:
                     the_string = saveas + " = docassemble.base.core.DAFile('" + saveas + "', filename='" + str(filename) + "', number=" + str(saved_file.file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
-                    #logmessage("do_sms: doing " + the_string)
+                    logmessage("do_sms: doing import docassemble.base.core")
+                    logmessage("do_sms: doing signature: " + the_string)
                     try:
                         exec('import docassemble.base.core', user_dict)
                         exec(the_string, user_dict)
@@ -12113,7 +12120,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                             elements.append("docassemble.base.core.DAFile('" + saveas + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
                             indexno += 1
                         the_string = saveas + " = docassemble.base.core.DAFileList('" + saveas + "', elements=[" + ", ".join(elements) + "])"
-                        logmessage("do_sms: doing " + the_string)
+                        logmessage("do_sms: doing import docassemble.base.core")
+                        logmessage("do_sms: doing file: " + the_string)
                         try:
                             exec('import docassemble.base.core', user_dict)
                             exec(the_string, user_dict)
@@ -12163,8 +12171,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     try:
                         eval(saveas, user_dict)
                     except:
-                        the_string = "import docassemble.base.core\n" + saveas + ' = docassemble.base.core.DADict(' + repr(saveas) + ')'
-                        #logmessage("do_sms: doing " + the_string)
+                        the_string = "import docassemble.base.core\n" + saveas + ' = docassemble.base.core.DADict(' + repr(saveas) + ')' + "\n" + saveas + '.auto_gather = False' + "\n" + saveas + '.gathered = True'
+                        logmessage("do_sms: doing mc: " + the_string)
                         try:
                             exec(the_string, user_dict)
                             changed = True
@@ -12180,7 +12188,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                             data = repr('')
                             for choice in choice_list:
                                 the_string = choice[1] + ' = False'
-                                #logmessage("do_sms: doing " + str(the_string) + " for skipping checkboxes")
+                                logmessage("do_sms: doing checkboxes" + str(the_string) + " for skipping checkboxes")
                                 try:
                                     exec(the_string, user_dict)
                                     changed = True
@@ -12210,7 +12218,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                 the_string = 'if ' + choice[2] + ' not in ' + saveas + ':\n    ' + saveas + '.append(' + choice[2] + ')'
                             else:
                                 the_string = 'if ' + choice[2] + ' in ' + saveas + ':\n    ' + saveas + '.remove(' + choice[2] + ')'
-                            #logmessage("do_sms: doing " + str(the_string) + " for object_checkboxes")
+                            logmessage("do_sms: doing object checkboxes: " + str(the_string))
                             try:
                                 exec(the_string, user_dict)
                                 changed = True
@@ -12231,7 +12239,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                 the_string = choice[1] + ' = True'
                             else:
                                 the_string = choice[1] + ' = False'
-                            #logmessage("do_sms: doing " + str(the_string) + " for checkboxes")
+                            logmessage("do_sms: doing for checkboxes: " + str(the_string))
                             try:
                                 exec(the_string, user_dict)
                                 changed = True
@@ -12307,39 +12315,58 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             special_messages.append(word("I do not understand what you mean by") + ' "' + inp + '"')
         else:
             the_string = saveas + ' = ' + data
-            #logmessage("do_sms: doing " + str(the_string))
             #release_lock(sess_info['uid'], sess_info['yaml_filename'])
             #return resp
             try:
                 if not skip_it:
-                    exec(the_string, user_dict)
-                    changed = True
-                    if hasattr(field, 'disableothers') and field.disableothers and hasattr(field, 'saveas'):
-                        #logmessage("do_sms: disabling others")
-                        if 'sms_variable' in interview_status.current_info:
-                            del interview_status.current_info['sms_variable']
-                        if 'smsgather' in user_dict['_internal'] and user_dict['_internal']['smsgather'] == saveas:
-                            #logmessage("do_sms: deleting " + user_dict['_internal']['smsgather'] + "because disable others")
-                            del user_dict['_internal']['smsgather']
+                    if next_field is not None:
+                        if 'command_cache' not in user_dict['_internal']:
+                            user_dict['_internal']['command_cache'] = list()
+                        user_dict['_internal']['command_cache'].append(the_string)
+                        logmessage("do_sms: storing in command cache: " + str(the_string))
+                    else:
+                        if 'command_cache' in user_dict['_internal']:
+                            for pre_string in user_dict['_internal']['command_cache']:
+                                logmessage("do_sms: doing command cache: " + pre_string)
+                                exec(pre_string, user_dict)
+                        logmessage("do_sms: doing regular: " + the_string)
+                        exec(the_string, user_dict)
+                        changed = True
+                        if hasattr(field, 'disableothers') and field.disableothers and hasattr(field, 'saveas'):
+                            #logmessage("do_sms: disabling others")
+                            if 'sms_variable' in interview_status.current_info:
+                                del interview_status.current_info['sms_variable']
+                            if 'smsgather' in user_dict['_internal'] and user_dict['_internal']['smsgather'] == saveas:
+                                #logmessage("do_sms: deleting " + user_dict['_internal']['smsgather'] + "because disable others")
+                                del user_dict['_internal']['smsgather']
                 if next_field is None:
+                    logmessage("do_sms: next_field is None")
                     if 'skip' in user_dict['_internal']:
-                        del user_dict['_internal']['skip']
+                        user_dict['_internal']['skip'].clear()
+                    if 'command_cache' in user_dict['_internal']:
+                        del user_dict['_internal']['command_cache'][:]
                     if 'sms_variable' in interview_status.current_info:
                         del interview_status.current_info['sms_variable']
                 else:
+                    logmessage("do_sms: next_field is not None")
                     user_dict['_internal']['skip'][field.number] = True
-                if 'smsgather' in user_dict['_internal'] and user_dict['_internal']['smsgather'] == saveas:
-                    #logmessage("do_sms: deleting " + user_dict['_internal']['smsgather'])
-                    del user_dict['_internal']['smsgather']
-            except:
+                    #user_dict['_internal']['smsgather'] = interview_status.sought
+                # if 'smsgather' in user_dict['_internal'] and user_dict['_internal']['smsgather'] == saveas:
+                #     #logmessage("do_sms: deleting " + user_dict['_internal']['smsgather'])
+                #     del user_dict['_internal']['smsgather']
+            except Exception as the_err:
                 logmessage("do_sms: failure to set variable with " + the_string)
+                logmessage("do_sms: error was " + str(the_err))
                 release_lock(sess_info['uid'], sess_info['yaml_filename'])
                 if 'uid' in session:
                     del session['uid']
                 return resp
         if changed and next_field is None and question.name not in user_dict['_internal']['answers']:
+            logmessage("do_sms: setting internal answers for " + str(question.name))
             user_dict['_internal']['answered'].add(question.name)
         interview.assemble(user_dict, interview_status)
+        logmessage("do_sms: back from assemble 2; had been seeking variable " + str(interview_status.sought))
+        logmessage("do_sms: question is now " + interview_status.question.name)
         sess_info['question'] = interview_status.question.name
         r.set(key, pickle.dumps(sess_info))
     if interview_status.question.question_type in ["restart", "exit"]:
@@ -12360,8 +12387,10 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         sms_info = as_sms(interview_status)
         qoutput = sms_info['question']
         if sms_info['next'] is not None:
-            #logmessage("do_sms: next variable is " + sms_info['next'])
-            user_dict['_internal']['smsgather'] = sms_info['next']
+            logmessage("do_sms: next variable is " + sms_info['next'])
+            if interview_status.sought is None:
+                logmessage("do_sms: sought variable is None")
+            #user_dict['_internal']['smsgather'] = interview_status.sought
         if (accepting_input or changed or action_performed or sms_info['next'] is not None) and save:
             save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted, changed=changed)
         for special_message in special_messages:

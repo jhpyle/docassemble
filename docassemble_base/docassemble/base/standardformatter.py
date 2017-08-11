@@ -224,19 +224,21 @@ def as_sms(status, links=None, menu_items=None):
                     qoutput += "\n" + to_text(markdown_to_html(status.extras['note'][the_field.number], status=status), terms, links, status)
                     continue
                 if the_field.datatype in ['html']:
-                    qoutput += "\n" + to_text(status.extras['html'][the_field.number].rstrip())
+                    qoutput += "\n" + to_text(status.extras['html'][the_field.number].rstrip(), terms, links, status)
                     continue
             #logmessage("field number is " + str(the_field.number))
             if not hasattr(the_field, 'saveas'):
                 logmessage("as_sms: field has no saveas")
                 continue
             if the_field.number not in status.current_info['skip']:
-                #logmessage("field is not defined yet")
+                #logmessage("as_sms: field is not defined yet")
                 if field is None:
                     field = the_field
                 elif next_field is None:
                     next_field = the_field
                 continue
+            else:
+                logmessage("as_sms: field " + str(the_field.number) + " skipped")
         if field is None:
             logmessage("as_sms: field seemed to be defined already?")
             field = status.question.fields[0]
