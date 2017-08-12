@@ -223,7 +223,7 @@ class InterviewSourceFile(InterviewSource):
             with open(self.filepath, 'a'):
                 os.utime(self.filepath, None)
         except:
-            logmessage("Could not reset modification time on interview")
+            logmessage("InterviewSourceFile: could not reset modification time on interview")
     def update(self):
         #logmessage("Update: " + str(self.filepath))
         try:
@@ -1271,7 +1271,7 @@ class Question:
             try:
                 self.need = list(map((lambda x: compile(x, '', 'exec')), need_list))
             except:
-                logmessage("Compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]))
+                logmessage("Question: compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]))
                 raise
         if 'target' in data:
             self.interview.uses_action = True
@@ -1368,7 +1368,7 @@ class Question:
                     self.compute = compile(data['code'], '', 'exec')
                     self.sourcecode = data['code']
                 except:
-                    logmessage("Compile error in code:\n" + unicode(data['code']) + "\n" + str(sys.exc_info()[0]))
+                    logmessage("Question: compile error in code:\n" + unicode(data['code']) + "\n" + str(sys.exc_info()[0]))
                     raise
                 if self.question_type == 'code':
                     find_fields_in(data['code'], self.fields_used, self.names_used)
@@ -1690,7 +1690,7 @@ class Question:
             self.compute_attachment = compile(sourcecode, '', 'eval')
             self.sourcecode = sourcecode
         except:
-            logmessage("Compile error in code:\n" + unicode(sourcecode) + "\n" + str(sys.exc_info()[0]))
+            logmessage("Question: compile error in code:\n" + unicode(sourcecode) + "\n" + str(sys.exc_info()[0]))
             raise
     def process_attachment_list(self, target):
         if type(target) is list:
@@ -2244,7 +2244,7 @@ class Question:
         return(has_code, result_list)
     def mark_as_answered(self, user_dict):
         user_dict['_internal']['answered'].add(self.name)
-        # logmessage("Question " + str(self.name) + " marked as answered")
+        # logmessage("mark_as_answered: question " + str(self.name) + " marked as answered")
         return
     def follow_multiple_choice(self, user_dict):
         # logmessage("follow_multiple_choice")
@@ -2633,7 +2633,7 @@ class Interview:
             source_package = None
         if hasattr(source, 'path'):
             if source.path in self.includes:
-                logmessage("Source " + str(source.path) + " has already been included.  Skipping.")
+                logmessage("Interview: source " + str(source.path) + " has already been included.  Skipping.")
                 return
             self.includes.add(source.path)
         #for document in ruamel.yaml.safe_load_all(source.content):
@@ -2648,7 +2648,7 @@ class Interview:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code)
                         self.names_used.update(question.fields_used)
                 except Exception as errMess:
-                    logmessage('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
+                    logmessage('Interview: error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
                     self.success = False
                     pass
             else:
@@ -2734,9 +2734,9 @@ class Interview:
         while True:
             docassemble.base.functions.reset_gathering_mode()
             try:
-                if 'sms_variable' in interview_status.current_info and interview_status.current_info['sms_variable'] is not None:
-                    logmessage("Raising ForcedNameError on " + str(interview_status.current_info['sms_variable']))
-                    raise ForcedNameError(interview_status.current_info['sms_variable'])
+                # if 'sms_variable' in interview_status.current_info and interview_status.current_info['sms_variable'] is not None:
+                #     #logmessage("assemble: raising ForcedNameError on " + str(interview_status.current_info['sms_variable']))
+                #     raise ForcedNameError(interview_status.current_info['sms_variable'])
                 if (self.uses_action or 'action' in interview_status.current_info) and not self.calls_process_action:
                     if self.imports_util:
                         #logmessage("util was imported")
@@ -2818,7 +2818,7 @@ class Interview:
                 #logmessage("Error in NameError is " + str(the_exception))
                 docassemble.base.functions.reset_context()
                 if isinstance(the_exception, ForcedNameError):
-                    logmessage("assemble: got a ForcedNameError for " + the_exception.name)
+                    #logmessage("assemble: got a ForcedNameError for " + the_exception.name)
                     follow_mc = False
                     if the_exception.next_action is not None:
                         interview_status.next_action.extend(the_exception.next_action)
@@ -3018,7 +3018,7 @@ class Interview:
         for variant in variants:
             totry.append({'real': missingVariable, 'vari': variant, 'iterators': level_dict[variant], 'generic': generic_dict[variant], 'is_generic': 0 if generic_dict[variant] == '' else 1, 'num_dots': variant.count('.'), 'num_iterators': variant.count('[')})
         totry = sorted(sorted(sorted(sorted(totry, key=lambda x: len(x['iterators'])), key=lambda x: x['num_iterators'], reverse=True), key=lambda x: x['num_dots'], reverse=True), key=lambda x: x['is_generic'])
-        #logmessage("totry is " + "\n".join([x['vari'] for x in totry]))
+        #logmessage("ask_for: totry is " + "\n".join([x['vari'] for x in totry]))
         questions_to_try = list()
         for mv in totry:
             realMissingVariable = mv['real']
@@ -3047,7 +3047,7 @@ class Interview:
                     if lang in self.questions[missingVariable]:
                         for the_question in reversed(self.questions[missingVariable][lang]):
                             questions_to_try.append((the_question, False, 'None', mv['iterators'], missingVariable, None))
-        #logmessage("questions to try is " + str(questions_to_try))
+        #logmessage("askfor: questions to try is " + str(questions_to_try))
         while True:
             docassemble.base.functions.reset_gathering_mode(origMissingVariable)
             try:
@@ -3210,7 +3210,7 @@ class Interview:
                 docassemble.base.functions.reset_context()
                 #logmessage("got this error: " + str(the_exception))
                 if isinstance(the_exception, ForcedNameError):
-                    logmessage("askfor: got a ForcedNameError for " + the_exception.name)
+                    #logmessage("askfor: got a ForcedNameError for " + the_exception.name)
                     follow_mc = False
                     newMissingVariable = the_exception.name
                     if the_exception.next_action is not None:
@@ -3466,11 +3466,17 @@ def process_selections(data, manual=False, exclude=None):
         for entry in data:
             if type(entry) is dict:
                 for key in entry:
-                    if key == 'default' and len(entry) > 1:
+                    if key in ['default', 'help'] and len(entry) > 1:
                         continue
                     if 'default' in entry and len(entry) > 1:
                         if key not in to_exclude:
-                            result.append([key, entry[key], entry['default']])
+                            if 'help' in entry:
+                                result.append([key, entry[key], entry['default'], entry['help']])
+                            else:
+                                result.append([key, entry[key], entry['default']])
+                    elif 'help' in entry and len(entry) > 1:
+                        if key not in to_exclude:
+                            result.append([key, entry[key], None, entry['help']])
                     else:
                         is_not_boolean = False
                         for val in entry.values():
@@ -3480,7 +3486,9 @@ def process_selections(data, manual=False, exclude=None):
                             result.append([key, entry[key]])
             if type(entry) is list and len(entry) > 0:
                 if entry[0] not in to_exclude:
-                    if len(entry) == 3:
+                    if len(entry) == 4:
+                        result.append([entry[0], entry[1], entry[2], entry[3]])
+                    elif len(entry) == 3:
                         result.append([entry[0], entry[1], entry[2]])
                     elif len(entry) == 1:
                         result.append([entry[0], entry[0]])

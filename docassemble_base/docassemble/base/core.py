@@ -712,14 +712,14 @@ class DADict(DAObject):
             else:
                 the_list.append(parg)
         if len(the_list) == 0:
-            for value in self.elements.values():
+            for key, value in sorted(self.elements.iteritems()):
                 if value is not False:
                     return False
             return True
         for key in the_list:
             if key not in self.elements:
                 return False
-        for key, value in self.elements.iteritems():
+        for key, value in sorted(self.elements.iteritems()):
             if key in the_list:
                 if value is not False:
                     return False
@@ -743,14 +743,14 @@ class DADict(DAObject):
             else:
                 the_list.append(parg)
         if len(the_list) == 0:
-            for value in self.elements.values():
+            for key, value in sorted(self.elements.iteritems()):
                 if value is not True:
                     return False
             return True
         for key in the_list:
             if key not in self.elements:
                 return False
-        for key, value in self.elements.iteritems():
+        for key, value in sorted(self.elements.iteritems()):
             if key in the_list:
                 if value is not True:
                     return False
@@ -894,7 +894,7 @@ class DADict(DAObject):
         return nice_number(self.number())
     def _validate(self, item_object_type, complete_attribute):
         if self.ask_object_type:
-            for key, elem in self.elements:
+            for key, elem in sorted(self.elements.iteritems()):
                 if elem is None:
                     if type(self.new_object_type) is type:
                         object_type_to_use = self.new_object_type
@@ -991,7 +991,7 @@ class DADict(DAObject):
     def keys(self):
         """Returns the keys of the dictionary as a Python list."""
         self._trigger_gather()
-        return self.elements.keys()
+        return sorted(self.elements.keys())
     def values(self):
         """Returns the values of the dictionary as a Python list."""
         self._trigger_gather()
@@ -1288,7 +1288,7 @@ class DASet(DAObject):
         if hasattr(self, 'gathered') and self.gathered:
             return True
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
-        for elem in self.elements:
+        for elem in sorted(self.elements):
             str(elem)
         if number is None and self.ask_number:
             number = self.target_number
@@ -1305,7 +1305,7 @@ class DASet(DAObject):
         while (number is not None and len(self.elements) < int(number)) or (minimum is not None and len(self.elements) < int(minimum)) or (self.ask_number is False and minimum != 0 and self.there_is_another):
             self.add(self.new_item)
             del self.new_item
-            for elem in self.elements:
+            for elem in sorted(self.elements):
                 str(elem)
             if hasattr(self, 'there_is_another'):
                 del self.there_is_another
@@ -1638,7 +1638,7 @@ class DAFileList(DAList):
 
         """
         output = ''
-        for element in self.elements:
+        for element in sorted(self.elements):
             if element.ok:
                 output += element.show(width=width)
         return output

@@ -1,0 +1,40 @@
+metadata:
+  title: Multiple choice with code and default
+  short title: MC
+  example start: 4
+  example end: 4
+  documentation: "https://docassemble.org/docs/fields.html#code"
+---
+mandatory: True
+question: |
+  Your favorite fruit is the
+  ${ favorite_fruit }, which is
+  the king of all fruits.
+subquestion: |
+  Your brother, who is not so wise,
+  is partial to the
+  ${ favorite_fruit_of_brother }.
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+    datatype: radio
+    code: |
+      myoptions
+---
+question: |
+  What is your brother's favorite
+  fruit?
+fields:
+  - Fruit: favorite_fruit_of_brother
+    datatype: radio
+    code: |
+      myoptions
+---
+code: |
+  myoptions = [
+                ['apple', 'Apples'],
+                ['orange', 'Oranges', True],
+                ['pear', 'Pears']
+              ]

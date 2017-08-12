@@ -1,0 +1,45 @@
+metadata:
+  title: Multiple choice with default and help
+  short title: MC
+  example start: 4
+  example end: 4
+  documentation: "https://docassemble.org/docs/fields.html#code"
+---
+mandatory: True
+question: |
+  Your favorite fruit is the
+  ${ favorite_fruit }, which is
+  the king of all fruits.
+subquestion: |
+  Your brother, who is not so wise,
+  is partial to the
+  ${ favorite_fruit_of_brother }.
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+    datatype: radio
+    code: |
+      myoptions
+---
+question: |
+  What is your brother's favorite
+  fruit?
+fields:
+  - Fruit: favorite_fruit_of_brother
+    datatype: radio
+    code: |
+      myoptions
+---
+code: |
+  myoptions = [
+                {'apple': "Apples",
+                 'default': True,
+                 'help': "Apples are good in pies."},
+                {'orange': "Oranges",
+                 'help': "Oranges are a type of citrus fruit."},
+                {'pear': "Pears",
+                 'help': "Pears are an acquired taste."}
+              ]
+  

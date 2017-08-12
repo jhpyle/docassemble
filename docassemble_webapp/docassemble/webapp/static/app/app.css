@@ -1264,3 +1264,33 @@ div.notavailable > i {
 div.available > i {
     color: #337ab7;
 }
+
+div.choicewithhelp {
+    display: table;
+    width: 100%;
+}
+
+div.choicewithhelp > div {
+    display: table-row;
+}
+
+div.choicewithhelp > div > div {
+    display: table-cell;
+}
+
+div.choicehelp {
+    text-align: right;
+    width: 32px;
+    vertical-align: middle;
+}
+
+div.choicehelp a {
+    text-decoration: none;
+    color: #3498db;
+    cursor: pointer;
+    font-size: 25px;
+}
+
+div.choicehelp a:hover {
+    color: #72c5fd;
+}

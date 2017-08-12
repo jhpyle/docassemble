@@ -472,6 +472,12 @@ def is_empty_mc(status, field):
             return True
     return False
 
+def help_wrap(content, helptext):
+    if helptext is None:
+        return content
+    else:
+        return '<div class="choicewithhelp"><div><div>' + content + '</div><div class="choicehelp"><a data-container="body" data-toggle="popover" data-placement="left" data-content=' + noquote(helptext) + '><i class="glyphicon glyphicon-question-sign"></i></a></div></div></div>'
+
 def as_html(status, url_for, debug, root, validation_rules, field_error):
     decorations = list()
     uses_audio_video = False
@@ -864,15 +870,23 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                     if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
                         random.shuffle(pairlist)
                     for pair in pairlist:
+                        if len(pair) > 3:
+                            helptext = pair[3]
+                        else:
+                            helptext = None
+                        if len(pair) > 2 and pair[2] and defaultvalue is None:
+                            ischecked = ' checked="checked"'
+                        else:
+                            ischecked = ''
                         formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
                         if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
                         if pair[0] is not None:
-                            output += '                <div class="row"><div class="col-md-12"><input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/></div></div>\n'
+                            output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext) + '</div></div>\n'
                         else:
-                            output += '                <div class="form-group"><div class="col-md-12">' + markdown_to_html(pair[1], status=status) + '</div></div>\n'
+                            output += '                <div class="form-group"><div class="col-md-12">' + help_wrap(markdown_to_html(pair[1], status=status), helptext) + '</div></div>\n'
                         id_index += 1
                 else:
                     id_index = 0
@@ -1401,6 +1415,10 @@ def input_for(status, field, wide=False, embedded=False):
             id_index = 0
             output += '<p class="sr-only">' + word('Checkboxes:') + '</p>'
             for pair in pairlist:
+                if len(pair) > 3:
+                    helptext = pair[3]
+                else:
+                    helptext = None
                 if pair[0] is not None:
                     inner_field = safeid(from_safeid(saveas_string) + "[" + myb64quote(pair[0]) + "]")
                     #sys.stderr.write("I've got a " + repr(pair[1]) + "\n")
@@ -1419,9 +1437,9 @@ def input_for(status, field, wide=False, embedded=False):
                         ischecked = ' checked'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>')
+                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>', helptext))
                 else:
-                    inner_fieldlist.append('<div>' + markdown_to_html(pair[1], status=status) + '</div>')
+                    inner_fieldlist.append(help_wrap('<div>' + markdown_to_html(pair[1], status=status) + '</div>', helptext))
                 id_index += 1
             output += u''.join(inner_fieldlist)
             if field.datatype in ['object_checkboxes']:
@@ -1432,6 +1450,10 @@ def input_for(status, field, wide=False, embedded=False):
             id_index = 0
             output += '<p class="sr-only">' + word('Choices:') + '</p>'
             for pair in pairlist:
+                if len(pair) > 3:
+                    helptext = pair[3]
+                else:
+                    helptext = None
                 if pair[0] is not None:
                     #sys.stderr.write(str(saveas_string) + "\n")
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
@@ -1439,9 +1461,9 @@ def input_for(status, field, wide=False, embedded=False):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext))
                 else:
-                    inner_fieldlist.append('<div>' + markdown_to_html(unicode(pair[1]), status=status) + '</div>')
+                    inner_fieldlist.append(help_wrap('<div>' + markdown_to_html(unicode(pair[1]), status=status) + '</div>', helptext))
                 id_index += 1
             output += "".join(inner_fieldlist)
         else:
@@ -1473,20 +1495,28 @@ def input_for(status, field, wide=False, embedded=False):
                 if field.sign > 0:
                     for pair in [['True', status.question.yes()], ['False', status.question.no()]]:
                         formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
+                        if len(pair) > 3:
+                            helptext = pair[3]
+                        else:
+                            helptext = None
                         if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
-                        inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext))
                         id_index += 1
                 else:
                     for pair in [['False', status.question.yes()], ['True', status.question.no()]]:
                         formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
+                        if len(pair) > 3:
+                            helptext = pair[3]
+                        else:
+                            helptext = None
                         if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
-                        inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext))
                         id_index += 1
                 output += "".join(inner_fieldlist)
             else:
@@ -1504,20 +1534,28 @@ def input_for(status, field, wide=False, embedded=False):
             if field.sign > 0:
                 for pair in [['True', status.question.yes()], ['False', status.question.no()], ['None', status.question.maybe()]]:
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
+                    if len(pair) > 3:
+                        helptext = pair[3]
+                    else:
+                        helptext = None
                     if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext))
                     id_index += 1
             else:
                 for pair in [['False', status.question.yes()], ['True', status.question.no()], ['None', status.question.maybe()]]:
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
+                    if len(pair) > 3:
+                        helptext = pair[3]
+                    else:
+                        helptext = None
                     if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext))
                     id_index += 1
             output += "".join(inner_fieldlist)
         elif field.datatype in ['file', 'files', 'camera', 'camcorder', 'microphone']:

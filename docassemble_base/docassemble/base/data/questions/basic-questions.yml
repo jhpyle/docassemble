@@ -479,7 +479,8 @@ yesno: x.is_plaintiff
 ---
 generic object: Individual
 question: |
-  Where ${ x.do_question('live') } in ${ case.state }?
+  Where ${ x.do_question('live') } in 
+  ${ state_name(case.state) }?
 fields:
   - Address: x.address.address
   - Unit: x.address.unit

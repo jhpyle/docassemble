@@ -8630,7 +8630,7 @@ class RedisCredStorage(oauth2client.client.Storage):
             try:
                 creds = oauth2client.client.Credentials.new_from_json(json_creds)
             except:
-                logmessage("Could not read credentials from " + str(json_creds))
+                logmessage("RedisCredStorage: could not read credentials from " + str(json_creds))
         return creds
     def locked_put(self, credentials):
         r.set(self.key, credentials.to_json())
@@ -8642,7 +8642,7 @@ class RedisCredStorage(oauth2client.client.Storage):
 @roles_required(['admin', 'developer'])
 def google_drive_callback():
     for key in request.args:
-        logmessage("Argument " + str(key) + ": " + str(request.args[key]))
+        logmessage("google_drive_callback: argument " + str(key) + ": " + str(request.args[key]))
     if 'code' in request.args:
         flow = get_gd_flow()
         credentials = flow.step2_exchange(request.args['code'])
@@ -8853,7 +8853,7 @@ def google_drive_page():
     if not credentials or credentials.invalid:
         flow = get_gd_flow()
         uri = flow.step1_get_authorize_url()
-        logmessage("uri is " + str(uri))
+        # logmessage("google_drive_page: uri is " + str(uri))
         return redirect(uri)
     http = credentials.authorize(httplib2.Http())
     service = apiclient.discovery.build('drive', 'v3', http=http)
@@ -8994,7 +8994,7 @@ def config_page():
 def view_source():
     source_path = request.args.get('i', None)
     if source_path is None:
-        logmessage("No source path")
+        logmessage("view_source: no source path")
         abort(404)
     try:
         if re.search(r':', source_path):
@@ -9005,7 +9005,7 @@ def view_source():
             except:
                 source = docassemble.base.parse.interview_source_from_string(source_path)
     except Exception as errmess:
-        logmessage("No source: " + str(errmess))
+        logmessage("view_source: no source: " + str(errmess))
         abort(404)
     header = source_path
     return render_template('pages/view_source.html', version_warning=None, bodyclass='adminbody', tab_title="Source", page_title="Source", extra_css=Markup('\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), header=header, contents=Markup(highlight(source.content, YamlLexer(), HtmlFormatter(cssclass="highlight fullheight")))), 200
@@ -9028,10 +9028,10 @@ def playground_sources(userid, filename):
     filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundsources')
     reslt = write_ml_source(area, userid, filename)
-    if reslt:
-        logmessage("was True")
-    else:
-        logmessage("was False")
+    # if reslt:
+    #     logmessage("playground_sources: was True")
+    # else:
+    #     logmessage("playground_sources: was False")
     filename = os.path.join(area.directory, filename)
     if os.path.isfile(filename):
         extension, mimetype = get_ext_and_mimetype(filename)
@@ -10937,7 +10937,7 @@ def utilities():
                                     developerKey=daconfig['google']['api key'])
                     use_google_translate = True
                 except:
-                    logmessage("Attempt to call Google Translate failed")
+                    logmessage("utilities: attempt to call Google Translate failed")
                     use_google_translate = False
             else:
                 use_google_translate = False
@@ -10953,7 +10953,7 @@ def utilities():
                             q=[the_word]
                         ).execute()
                     except Exception as errstr:
-                        logmessage("Translation failed: " + str(errstr))
+                        logmessage("utilities: translation failed: " + str(errstr))
                         resp = None
                     if type(resp) is dict and u'translations' in resp and type(resp[u'translations']) is list and len(resp[u'translations']) and type(resp[u'translations'][0]) is dict and 'translatedText' in resp[u'translations'][0]:
                         result[language][the_word] = re.sub(r'&#39;', r"'", resp['translations'][0]['translatedText'])
@@ -11159,7 +11159,7 @@ def train():
             nowtime = datetime.datetime.utcnow()
             for group_id, train_list in href.iteritems():
                 if type(train_list) is not list:
-                    logmessage("Could not import part of JSON file.  Items in dictionary must be lists.")
+                    logmessage("train: could not import part of JSON file.  Items in dictionary must be lists.")
                     continue
                 if uploadform.importtype.data == 'replace':
                     MachineLearning.query.filter_by(group_id=the_prefix + ':' + group_id).delete()
@@ -11790,7 +11790,7 @@ def sms_body(phone_number, body='question', config='default'):
 def favicon_file(filename):
     the_dir = docassemble.base.functions.package_data_filename(daconfig.get('favicon', 'docassemble.webapp:data/static/favicon'))
     if the_dir is None or not os.path.isdir(the_dir):
-        logmessage("Could not find favicon directory")
+        logmessage("favicon_file: could not find favicon directory")
         abort(404)
     the_file = os.path.join(the_dir, filename)
     if not os.path.isfile(the_file):
@@ -11871,19 +11871,19 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         logmessage("do_sms: request to sms ignored because message had no content")
         return resp
     inp = form['Body'].strip()
-    logmessage("do_sms: received >" + inp + "<")
+    #logmessage("do_sms: received >" + inp + "<")
     key = 'da:sms:client:' + form["From"] + ':server:' + tconfig['number']
     #logmessage("Searching for " + key)
     sess_contents = r.get(key)
     if sess_contents is None:
-        logmessage("do_sms: received input '" + str(inp) + "' from new user")
+        #logmessage("do_sms: received input '" + str(inp) + "' from new user")
         yaml_filename = tconfig.get('default interview', default_yaml_filename)
         if 'dispatch' in tconfig and type(tconfig['dispatch']) is dict:
             if inp.lower() in tconfig['dispatch']:
                 yaml_filename = tconfig['dispatch'][inp.lower()]
-                logmessage("do_sms: using interview from dispatch: " + str(yaml_filename))
+                #logmessage("do_sms: using interview from dispatch: " + str(yaml_filename))
         if yaml_filename is None:
-            logmessage("do_sms: request to sms ignored because no interview could be determined")
+            #logmessage("do_sms: request to sms ignored because no interview could be determined")
             return resp
         secret = random_string(16)
         uid = get_unique_name(yaml_filename, secret)
@@ -11930,11 +11930,11 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         interview = docassemble.base.interview_cache.get_interview(sess_info['yaml_filename'])
         if 'skip' not in user_dict['_internal']:
             user_dict['_internal']['skip'] = dict()
-        if 'smsgather' in user_dict['_internal']:
-            logmessage("do_sms: need to gather smsgather " + user_dict['_internal']['smsgather'])
-            sms_variable = user_dict['_internal']['smsgather']
-        else:
-            sms_variable = None
+        # if 'smsgather' in user_dict['_internal']:
+        #     #logmessage("do_sms: need to gather smsgather " + user_dict['_internal']['smsgather'])
+        #     sms_variable = user_dict['_internal']['smsgather']
+        # else:
+        #     sms_variable = None
         # if action is not None:
         #     action_manual = True
         # else:
@@ -11943,9 +11943,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if sess_info['user_id'] is not None:
             user = load_user(sess_info['user_id'])
         if user is None:
-            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + str(sess_info['tempuser']), roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, sms_variable=sms_variable, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
+            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + str(sess_info['tempuser']), roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
         else:
-            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
+            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, skip=user_dict['_internal']['skip'])
         if action is not None:
             logmessage("do_sms: setting action to " + str(action))
             ci.update(action)
@@ -12044,8 +12044,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         break
                 if field is None:
                     logmessage("do_sms: unclear what field is necessary!")
-                    if 'smsgather' in user_dict['_internal']:
-                        del user_dict['_internal']['smsgather']
+                    # if 'smsgather' in user_dict['_internal']:
+                    #     del user_dict['_internal']['smsgather']
                     field = interview_status.question.fields[0]
                     next_field = None
                 saveas = myb64unquote(field.saveas)
@@ -12274,6 +12274,35 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         data = "int(" + repr(data) + ")"
                     except:
                         data = None
+            elif hasattr(field, 'datatype') and field.datatype in ['date']:
+                if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
+                    data = repr('')
+                    skip_it = True
+                else:
+                    try:
+                        dateutil.parser.parse(data)
+                    except:
+                        data = None                    
+            elif hasattr(field, 'datatype') and field.datatype in ['ml', 'mlarea']:
+                if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
+                    data = repr('')
+                    skip_it = True
+                else: #PPP
+                    try:
+                        exec("import docassemble.base.util", user_dict)
+                    except Exception as errMess:
+                        error_messages.append(("error", "Error: " + str(errMess)))
+                    if orig_key in ml_info and 'train' in ml_info[orig_key]:
+                        if not ml_info[orig_key]['train']:
+                            use_for_training = 'False'
+                        else:
+                            use_for_training = 'True'
+                    else:
+                        use_for_training = 'True'
+                    if orig_key in ml_info and 'group_id' in ml_info[orig_key]:
+                        data = 'docassemble.base.util.DAModel(' + repr(key) + ', group_id=' + repr(ml_info[orig_key]['group_id']) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
+                    else:
+                        data = 'docassemble.base.util.DAModel(' + repr(key) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
             elif hasattr(field, 'datatype') and field.datatype in ['range']:
                 if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
                     data = repr('')
@@ -12332,21 +12361,22 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         logmessage("do_sms: doing regular: " + the_string)
                         exec(the_string, user_dict)
                         changed = True
-                        if hasattr(field, 'disableothers') and field.disableothers and hasattr(field, 'saveas'):
+                        # TODO: restore this functionality
+                        # if hasattr(field, 'disableothers') and field.disableothers and hasattr(field, 'saveas'):
                             #logmessage("do_sms: disabling others")
-                            if 'sms_variable' in interview_status.current_info:
-                                del interview_status.current_info['sms_variable']
-                            if 'smsgather' in user_dict['_internal'] and user_dict['_internal']['smsgather'] == saveas:
-                                #logmessage("do_sms: deleting " + user_dict['_internal']['smsgather'] + "because disable others")
-                                del user_dict['_internal']['smsgather']
+                            # if 'sms_variable' in interview_status.current_info:
+                            #     del interview_status.current_info['sms_variable']
+                            # if 'smsgather' in user_dict['_internal'] and user_dict['_internal']['smsgather'] == saveas:
+                            #     #logmessage("do_sms: deleting " + user_dict['_internal']['smsgather'] + "because disable others")
+                            #     del user_dict['_internal']['smsgather']
                 if next_field is None:
                     logmessage("do_sms: next_field is None")
                     if 'skip' in user_dict['_internal']:
                         user_dict['_internal']['skip'].clear()
                     if 'command_cache' in user_dict['_internal']:
                         del user_dict['_internal']['command_cache'][:]
-                    if 'sms_variable' in interview_status.current_info:
-                        del interview_status.current_info['sms_variable']
+                    # if 'sms_variable' in interview_status.current_info:
+                    #     del interview_status.current_info['sms_variable']
                 else:
                     logmessage("do_sms: next_field is not None")
                     user_dict['_internal']['skip'][field.number] = True
@@ -12369,6 +12399,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         logmessage("do_sms: question is now " + interview_status.question.name)
         sess_info['question'] = interview_status.question.name
         r.set(key, pickle.dumps(sess_info))
+    else:
+        logmessage("do_sms: not accepting input.")    
     if interview_status.question.question_type in ["restart", "exit"]:
         logmessage("do_sms: exiting because of restart or exit")
         if save:
@@ -12383,7 +12415,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         #logmessage("do_sms: " + as_sms(interview_status))
         #twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
         #message = twilio_client.messages.create(to=form["From"], from_=form["To"], body=as_sms(interview_status))
-        #logmessage("calling as_sms")
+        logmessage("calling as_sms")
         sms_info = as_sms(interview_status)
         qoutput = sms_info['question']
         if sms_info['next'] is not None:

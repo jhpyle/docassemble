@@ -922,14 +922,14 @@ class FinancialList(DADict):
         """Returns the total value in the list, gathering the list items if necessary."""
         self._trigger_gather()
         result = 0
-        for item in self.elements:
+        for item in sorted(self.elements.keys()):
             if self[item].exists:
                 result += Decimal(self[item].value)
         return(result)
     def existing_items(self):
         """Returns a list of types of amounts that exist within the financial list."""
         self._trigger_gather()
-        return [key for key in self.elements if self[key].exists]
+        return [key for key in sorted(self.elements.keys()) if self[key].exists]
     def _new_item_init_callback(self):
         self.elements[self.new_item_name].exists = True
         if hasattr(self, 'new_item_value'):
@@ -950,7 +950,7 @@ class PeriodicFinancialList(FinancialList):
         result = 0
         if period_to_use == 0:
             return(result)
-        for item in self.elements:
+        for item in sorted(self.elements.keys()):
             if self.elements[item].exists:
                 result += Decimal(self.elements[item].value) * Decimal(self.elements[item].period)
         return(result/Decimal(period_to_use))
