@@ -386,6 +386,30 @@ It can be a [list] of two-element [list]s:
 
 {% include side-by-side.html demo="fields-mc-4" %}
 
+You can specify a default by including a three-element list where the
+third element is `True` if the choice should be selected by default.
+
+{% include side-by-side.html demo="fields-mc-5" %}
+
+You can include "help text" for a choice by including a fourth element
+in one of the lists, where the element contains the help text you want
+to be available.  The user can see the help text by touching the
+question mark button.
+
+{% include side-by-side.html demo="fields-mc-6" %}
+
+If your code is a [list] of dictionaries, you can include a
+`'default'` key in the dictionary indicating a true or false value
+that represents whether the choice should be selected by default.
+
+{% include side-by-side.html demo="fields-mc-7" %}
+
+Similarly, you can include help text in a [list] of dictionaries by
+including a `'help'` key in the dictionary indicating the help text
+that should be available to the user.
+
+{% include side-by-side.html demo="fields-mc-8" %}
+
 ### When code returns an empty list
 
 If your code returns an empty list, **docassemble** will try to deal

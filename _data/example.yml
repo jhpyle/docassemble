@@ -1927,6 +1927,39 @@
                   ['orange', 'Oranges'],
                   ['pear', 'Pears']
                 ]
+"fields-mc-5": |-
+  code: |
+    myoptions = [
+                  ['apple', 'Apples'],
+                  ['orange', 'Oranges', True],
+                  ['pear', 'Pears']
+                ]
+"fields-mc-6": |-
+  code: |
+    myoptions = [
+                  ['apple', 'Apples', None, 'Apples are good in pies.'],
+                  ['orange', 'Oranges', None, 'Oranges are a type of citrus fruit.'],
+                  ['pear', 'Pears', None, 'Pears are an acquired taste.']
+                ]
+"fields-mc-7": |-
+  code: |
+    myoptions = [
+                  {'apple': "Apples",
+                   'default': True},
+                  {'orange': "Oranges"},
+                  {'pear': "Pears"}
+                ]
+"fields-mc-8": |-
+  code: |
+    myoptions = [
+                  {'apple': "Apples",
+                   'default': True,
+                   'help': "Apples are good in pies."},
+                  {'orange': "Oranges",
+                   'help': "Oranges are a type of citrus fruit."},
+                  {'pear': "Pears",
+                   'help': "Pears are an acquired taste."}
+                ]
 "fields-mc-exclude": |-
   question: |
     What is your favorite fruit?
