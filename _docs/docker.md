@@ -1359,6 +1359,7 @@ containers depend on the images.
 [`docassemble/Docker/rabbitmq.config`]: {{ site.github.repository_url }}/blob/master/Docker/rabbitmq.config
 [`docassemble/Docker/docassemble.logrotate`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.logrotate
 [`docassemble/Docker/apache.logrotate`]: {{ site.github.repository_url }}/blob/master/Docker/apache.logrotate
+[`docassemble/Docker/process-email.sh`]: {{ site.github.repository_url }}/blob/master/Docker/process-email.sh
 [`docassemble/Docker/run-postgresql.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-postgresql.sh
 [`docassemble/Docker/run-apache.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-apache.sh
 [`docassemble/Docker/run-celery.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-celery.sh
@@ -1369,6 +1370,7 @@ containers depend on the images.
 [`docassemble/Docker/run-websockets.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-websockets.sh
 [`docassemble/Docker/reset.sh`]: {{ site.github.repository_url }}/blob/master/Docker/reset.sh
 [`docassemble/Docker/sync.sh`]: {{ site.github.repository_url }}/blob/master/Docker/sync.sh
+[`docassemble/Docker/update.sh`]: {{ site.github.repository_url }}/blob/master/Docker/update.sh
 [template for the `env.list` file]: {{ site.github.repository_url }}/blob/master/Docker/env.list
 [ECS]: https://aws.amazon.com/ecs/
 [JSON]: https://en.wikipedia.org/wiki/JSON

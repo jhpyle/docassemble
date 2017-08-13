@@ -5690,6 +5690,14 @@
     % else:
     Sorry to hear that!
     % endif
+"someone-already-mentioned": |-
+  import:
+    - .change_suffix
+"someone-already-mentioned2": |-
+  objects:
+    successor_agent: Individual
+    conservator: Individual
+    guardian: Individual
 "space-underscore": |-
   question: |
     Removing spaces
@@ -6539,6 +6547,39 @@
   ---\nmandatory: true\nquestion: |\n  The imported data\nsubquestion: |\n  % for\
   \ item in raw_data:\n  The `inventory` of\n  \"${ item.title }\" is:\n  \n  > `${\
   \ item.inventory }`\n  \n  % endfor"
+"someone-already-mentioned": |-
+  objects:
+    cook: Individual
+    gardener: Individual
+    maid: Individual
+  ---
+  question: |
+    Who is the cook?
+  fields:
+    - Somebody already mentioned: cook
+      datatype: object
+      disable others: True
+      choices: |
+        [person for person in [cook, gardener, maid] if person.name.defined()]
+    - First Name: cook.name.first
+    - Last Name: cook.name.last
+    - Suffix: cook.name.suffix
+      required: False
+      code: name_suffix()
+  ---
+  question: |
+    Who is the gardener?
+  fields:
+    - Somebody already mentioned: gardener
+      datatype: object
+      disable others: True
+      choices: |
+        [person for person in [cook, gardener, maid] if person.name.defined()]
+    - First Name: gardener.name.first
+    - Last Name: gardener.name.last
+    - Suffix: gardener.name.suffix
+      required: False
+      code: name_suffix()
 "validation-code": |-
   question: |
     There are 10 fruit in all.

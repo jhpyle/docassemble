@@ -747,6 +747,23 @@ select.  [Python] code can be used here.
 
 {% include side-by-side.html demo="object-selections" %}
 
+By using `datatype: object` in combination with [`disable others`],
+you can create questions that either set the attributes of an object
+or set the object equal to another object.
+
+{% include demo-side-by-side.html demo="someone-already-mentioned" %}
+
+In this example, if the gardener and the cook are the same person, the
+interview effectively does the following in [Python]:
+
+{% highlight python %}
+gardener = cook
+{% endhighlight %}
+
+Please note that `datatype: object` cannot be used with
+[the `generic object` modifier](#generic) if the variable being set is
+`x`.
+
 <a name="object_radio"></a>`datatype: object_radio` is like `datatype:
 object`, except the user interface uses radio buttons rather than a
 pull-down list.
@@ -1234,3 +1251,4 @@ why this needs to be done manually as opposed to automatically:
 [`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
 [action]: {{ site.baseurl }}/docs/functions.html#actions
 [HTML]: https://en.wikipedia.org/wiki/HTML
+[`disable others`]: #disable others

@@ -743,6 +743,15 @@ defined here, that script sets up a single account in the
 After [`create_tables`] runs for the first time, you can delete the
 `default admin account` information from the configuration file.
 
+## <a name="use alembic"></a>Database table upgrades
+
+By default, **docassemble** uses [alembic] to upgrade the SQL database
+from one version to another.  To turn this off, you can add:
+
+{% highlight yaml %}
+use alembic: False
+{% endhighlight %}
+
 ## <a name="secretkey"></a>Secret key for Flask
 
 The [Flask] web framework needs a secret key in order to manage
