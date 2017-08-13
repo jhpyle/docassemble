@@ -2,7 +2,7 @@ import sys
 import pip
 import re
 import datetime
-import subprocess
+#import subprocess
 import docassemble.base.config
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
@@ -107,19 +107,21 @@ def main():
             packagedir = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), 'docassemble/webapp')
             if not os.path.isdir(packagedir):
                 sys.exit("path for running alembic could not be found")
+            from alembic.config import Config
+            from alembic import command
+            alembic_cfg = Config(os.path.join(packagedir, 'alembic.ini'))
+            alembic_cfg.set_main_option("sqlalchemy.url", alchemy_connection_string())
+            alembic_cfg.set_main_option("script_location", os.path.join(packagedir, 'alembic'))
             if db.engine.has_table('user'):
-                commands = ['alembic', 'upgrade', 'head']
-                try:
-                    subprocess.call(commands, cwd=packagedir)
-                    returnval = 0
-                except subprocess.CalledProcessError as err:
-                    returnval = err.returncode
-                    sys.exit("alembic returned " + str(returnval))
+                command.upgrade(alembic_cfg, "head")
+                # commands = ['alembic', 'upgrade', 'head']
+                # try:
+                #     subprocess.call(commands, cwd=packagedir)
+                #     returnval = 0
+                # except subprocess.CalledProcessError as err:
+                #     returnval = err.returncode
+                #     sys.exit("alembic returned " + str(returnval))
             else:
-                from alembic.config import Config
-                from alembic import command
-                alembic_cfg = Config(os.path.join(packagedir, 'alembic.ini'))
-                alembic_cfg.set_main_option("sqlalchemy.url", alchemy_connection_string())
                 command.stamp(alembic_cfg, "head")
         #db.drop_all()
         db.create_all()

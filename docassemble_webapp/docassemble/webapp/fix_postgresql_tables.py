@@ -10,9 +10,6 @@ if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig
 
-#import tempfile
-#from subprocess import Popen, PIPE
-
 def read_in(line, target):
     col = line.split('|')
     if col[0] not in target:
@@ -21,8 +18,6 @@ def read_in(line, target):
 
 def main():
     dbconfig = daconfig.get('db', dict())
-    if dbconfig.get('use alembic', True):
-        return
     db_prefix = dbconfig.get('prefix', 'postgresql+psycopg2://')
     if db_prefix != 'postgresql+psycopg2://':
         sys.stderr.write("fix_postgresql_tables: skipping because configured database is not PostgreSQL.\n")
@@ -57,7 +52,6 @@ def main():
     if db_table_prefix is None:
         db_table_prefix = os.getenv('DBTABLEPREFIX', '')
     if schema_file is None:
-        #schema_file = os.getenv('DBSCHEMAFILE', '/usr/share/docassemble/config/db-schema.txt')
         schema_file = os.getenv('DBSCHEMAFILE', None)
         if not (schema_file and os.path.isfile(schema_file)):
             schema_file = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), "docassemble/webapp/data/db-schema.txt")
@@ -69,14 +63,6 @@ def main():
         cur.execute("select table_name, column_name, data_type, character_maximum_length, column_default from information_schema.columns where table_schema='public'")
     except:
         sys.exit("failed to read existing columns from database")
-        
-    #pgpass = tempfile.NamedTemporaryFile()
-    #with open(pgpass.name, 'a') as the_file:
-    #    the_file.write(':'.join([db_host, db_port, db_name, db_user, db_password]))
-    #os.chmod(pgpass.name, stat.S_IRUSR | stat.S_IWUSR)
-    #output, err = Popen(['psql', '-h', db_host, '-p', db_port, '-d', db_name, '-U', db_user, '-Atc', "select table_name, column_name, data_type, character_maximum_length, column_default from information_schema.columns where table_schema='public'"], stdout=PIPE, stderr=PIPE, env={'PGPASSFILE': pgpass.name}).communicate()
-    #for line in output.splitlines():
-    #    read_in(line, existing_columns)
     
     existing_columns = dict()
     rows = cur.fetchall()
@@ -85,6 +71,9 @@ def main():
             existing_columns[col[0]] = dict()
         existing_columns[col[0]][col[1]] = {'type': col[2], 'size': col[3], 'default': col[4]}
 
+    if 'alembic_version' in existing_columns and daconfig.get('use alembic', True):
+        sys.stderr.write("fix_postgresql_tables: skipping because alembic is in use.\n")
+        return
     desired_columns = dict()
     with open(schema_file, 'rU') as f:
         for line in f:
@@ -106,7 +95,6 @@ def main():
                     commands.append(output)
 
     if len(commands):
-        #output, err = Popen(['psql', '-h', db_host, '-p', db_port, '-U', db_user, '-d', db_name], stdin=PIPE, env={'PGPASSFILE': pgpass.name}).communicate(input=''.join([command + "\n" for command in commands]))
         for command in commands:
             try:
                 cur.execute(command)
