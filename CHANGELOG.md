@@ -1,9 +1,26 @@
 # Change Log
 
+## [0.1.35] - 2017-08-13
+### Added
+- Support for help text next to choices in a multiple choice list.
+### Changed
+- Database upgrades now handled by alembic by default.  See the 'use
+  alembic' configuration directive.
+- Extension packages no longer depend on the docassemble.webapp,
+  docassemble.base, or docassemble packages.  As a result,
+  installation of an extension package will no longer trigger a total
+  software update.  If you want to upgrade docassemble, upgrade
+  docassemble.webapp.  Note that packages created in earlier versions
+  will still have these dependencies until they are regenerated in the
+  Playground.  You can always edit 'install_requires' in the setup.py
+  file.
+### Fixed
+- Bug fixes to SMS interface.
+
 ## [0.1.34] - 2017-08-10
 ### Fixed
-- Checkboxes are now DADicts but the auto-gathering system on them was
-  not turned off.
+- Checkboxes became DADicts a few weeks ago but the auto-gathering
+  system on them was not turned off; it is turned off now.
 
 ## [0.1.33] - 2017-08-09
 ### Fixed

@@ -1,4 +1,4 @@
-min_system_version = '0.1.22'
+in_system_version = '0.1.22'
 import re
 re._MAXCACHE = 10000
 import os
@@ -8129,9 +8129,9 @@ def create_playground_package():
             for field in ['dependencies', 'dependency_links', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
                 if field not in info:
                     info[field] = list()
-            for package in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
-                if package not in info['dependencies']:
-                    info['dependencies'].append(package)
+            # for package in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
+            #     if package not in info['dependencies']:
+            #         info['dependencies'].append(package)
             for package in info['dependencies']:
                 logmessage("Considering " + str(package))
                 existing_package = Package.query.filter_by(name=package, active=True).first()
