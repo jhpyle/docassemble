@@ -47,6 +47,18 @@ else:
   user.is_eligible = False
 {% endhighlight %}
 
+## Support is available
+
+Although **docassemble** has extensive [documentation], you may have
+questions about how to use it.  To get help from the community of
+developers and other users, you can submit questions to the
+[docassemble mailing list].  If you find a bug, you can
+[submit an issue on GitHub].
+
+[documentation]: {{ site.baseurl }}/docs.html
+[submit an issue on GitHub]: https://github.com/jhpyle/docassemble/issues
+[docassemble mailing list]: https://mail.python.org/mm3/mailman3/lists/docassemble.python.org/
+[e-mail the developer]: mailto:jhpyle@gmail.com
 [Markdown]: https://daringfireball.net/projects/markdown/syntax
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [YAML]: https://en.wikipedia.org/wiki/YAML
