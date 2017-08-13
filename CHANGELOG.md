@@ -1,19 +1,22 @@
 # Change Log
 
+## [0.1.36] - 2017-08-13
+### Fixed
+- Small typo that made 0.1.35 unusable
+
 ## [0.1.35] - 2017-08-13
 ### Added
 - Support for help text next to choices in a multiple choice list.
 ### Changed
 - Database upgrades now handled by alembic by default.  See the 'use
   alembic' configuration directive.
-- Extension packages no longer depend on the docassemble.webapp,
-  docassemble.base, or docassemble packages.  As a result,
-  installation of an extension package will no longer trigger a total
-  software update.  If you want to upgrade docassemble, upgrade
-  docassemble.webapp.  Note that packages created in earlier versions
-  will still have these dependencies until they are regenerated in the
-  Playground.  You can always edit 'install_requires' in the setup.py
-  file.
+- Extension packages no longer depend on the docassemble.base or
+  docassemble.webapp packages.  As a result, installation of an
+  extension package will no longer trigger a total software update.
+  If you want to upgrade docassemble, upgrade docassemble.webapp.
+  Note that packages created in earlier versions will still have these
+  dependencies until they are regenerated in the Playground.  You can
+  always edit 'install_requires' in the setup.py file.
 ### Fixed
 - Bug fixes to SMS interface.
 
