@@ -1,0 +1,60 @@
+---
+include:
+  - basic-questions.yml
+---
+objects:
+  successor_agent: Individual
+  conservator: Individual
+  guardian: Individual
+---
+question: |
+  Who is the successor agent?
+fields:
+  - First Name: successor_agent.name.first
+  - Middle Name: successor_agent.name.middle
+    required: False
+  - Last Name: successor_agent.name.last
+  - Suffix: successor_agent.name.suffix
+    required: False
+    code: name_suffix()
+---
+question: |
+  Who is the conservator?
+fields:
+  - Somebody already mentioned: conservator
+    datatype: object
+    disable others: True
+    choices:
+      - successor_agent
+  - First Name: conservator.name.first
+  - Middle Name: conservator.name.middle
+    required: False
+  - Last Name: conservator.name.last
+  - Suffix: conservator.name.suffix
+    required: False
+    code: name_suffix()
+---
+question: |
+  Who is the guardian?
+fields:
+  - Somebody already mentioned: guardian
+    datatype: object
+    disable others: True
+    choices:
+      - successor_agent
+      - conservator
+  - First Name: guardian.name.first
+  - Middle Name: guardian.name.middle
+    required: False
+  - Last Name: guardian.name.last
+  - Suffix: guardian.name.suffix
+    required: False
+    code: name_suffix()
+---
+mandatory: True
+question: |
+  The successor agent is ${ successor_agent }.
+
+  The conservator is ${ conservator }.
+
+  The guardian is ${ guardian }.

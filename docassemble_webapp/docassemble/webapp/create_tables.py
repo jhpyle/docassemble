@@ -2,10 +2,11 @@ import sys
 import pip
 import re
 import datetime
+import subprocess
 import docassemble.base.config
-from docassemble.base.config import daconfig
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
+from docassemble.base.config import daconfig
 from docassemble.base.functions import word
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
@@ -18,6 +19,9 @@ from sqlalchemy import create_engine, MetaData
 #import string
 from docassemble.base.generate_key import random_alphanumeric
 from flask_user import UserManager, SQLAlchemyAdapter
+import pkg_resources
+import os
+from docassemble.webapp.database import alchemy_connection_string
 
 def get_role(db, name):
     the_role = Role.query.filter_by(name=name).first()
@@ -99,6 +103,24 @@ def populate_tables():
 
 def main():
     with app.app_context():
+        if daconfig.get('use alembic', True):
+            packagedir = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), 'docassemble/webapp')
+            if not os.path.isdir(packagedir):
+                sys.exit("path for running alembic could not be found")
+            if db.engine.has_table('user'):
+                commands = ['alembic', 'upgrade', 'head']
+                try:
+                    subprocess.call(commands, cwd=packagedir)
+                    returnval = 0
+                except subprocess.CalledProcessError as err:
+                    returnval = err.returncode
+                    sys.exit("alembic returned " + str(returnval))
+            else:
+                from alembic.config import Config
+                from alembic import command
+                alembic_cfg = Config(os.path.join(packagedir, 'alembic.ini'))
+                alembic_cfg.set_main_option("sqlalchemy.url", alchemy_connection_string())
+                command.stamp(alembic_cfg, "head")
         #db.drop_all()
         db.create_all()
         populate_tables()

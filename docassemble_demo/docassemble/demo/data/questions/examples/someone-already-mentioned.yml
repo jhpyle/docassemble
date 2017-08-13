@@ -1,0 +1,64 @@
+metadata:
+  title: Object with disable others
+  short title: Object
+  documentation: "https://docassemble.org/docs/fields#object"
+  example start: 2
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  cook: Individual
+  gardener: Individual
+  maid: Individual
+---
+question: |
+  Who is the cook?
+fields:
+  - Somebody already mentioned: cook
+    datatype: object
+    disable others: True
+    choices: |
+      [person for person in [cook, gardener, maid] if person.name.defined()]
+  - First Name: cook.name.first
+  - Last Name: cook.name.last
+  - Suffix: cook.name.suffix
+    required: False
+    code: name_suffix()
+---
+question: |
+  Who is the gardener?
+fields:
+  - Somebody already mentioned: gardener
+    datatype: object
+    disable others: True
+    choices: |
+      [person for person in [cook, gardener, maid] if person.name.defined()]
+  - First Name: gardener.name.first
+  - Last Name: gardener.name.last
+  - Suffix: gardener.name.suffix
+    required: False
+    code: name_suffix()
+---
+question: |
+  Who is the maid?
+fields:
+  - Somebody already mentioned: maid
+    datatype: object
+    disable others: True
+    choices: |
+      [person for person in [cook, gardener, maid] if person.name.defined()]
+  - First Name: maid.name.first
+  - Last Name: maid.name.last
+  - Suffix: maid.name.suffix
+    required: False
+    code: name_suffix()
+---
+mandatory: True
+question: |
+  The cook is ${ cook }.
+
+  The gardener is ${ gardener }.
+
+  The maid is ${ maid }.

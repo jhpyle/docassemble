@@ -21,9 +21,11 @@ def read_in(line, target):
 
 def main():
     dbconfig = daconfig.get('db', dict())
+    if dbconfig.get('use alembic', True):
+        return
     db_prefix = dbconfig.get('prefix', 'postgresql+psycopg2://')
     if db_prefix != 'postgresql+psycopg2://':
-        sys.stderr.write("fix_postgresql_tables: skipping because configured database is not PostgreSQL.  You may need to adjust table columns manually.\n")
+        sys.stderr.write("fix_postgresql_tables: skipping because configured database is not PostgreSQL.\n")
         return
     db_name = dbconfig.get('name', None)
     db_host = dbconfig.get('host', None)

@@ -15,4 +15,4 @@ question: |
   % else:
   What a _lousy_ favorite number.
   % endif
-mandatory: true
+mandatory: True

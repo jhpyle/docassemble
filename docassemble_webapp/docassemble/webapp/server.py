@@ -4068,6 +4068,10 @@ def index():
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[real_key] in ['object', 'object_radio']:
+                logmessage("We have an object type and objselections is " + str(user_dict['_internal']['objselections']))
+                logmessage("We have an object type and key is " + str(key))
+                logmessage("We have an object type and data is " + str(data))
+                logmessage("We have an object type and set_to_empty is " + str(set_to_empty))
                 if data == '' or set_to_empty:
                     continue
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
@@ -4148,14 +4152,14 @@ def index():
                     field_error[orig_key] = str(errstr)
                     validated = False
                     continue
-        #logmessage("Doing " + str(the_string))
+        logmessage("Doing " + str(the_string))
         try:
             exec(the_string, user_dict)
             changed = True
             steps += 1
         except Exception as errMess:
             error_messages.append(("error", "Error: " + str(errMess)))
-            # logmessage("Error: " + str(errMess))
+            logmessage("Error: " + str(errMess))
     if validated:
         for orig_key in empty_fields:
             key = myb64unquote(orig_key)

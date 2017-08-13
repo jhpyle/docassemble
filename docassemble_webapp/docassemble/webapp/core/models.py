@@ -92,3 +92,7 @@ class EmailAttachment(db.Model):
     extension = db.Column(db.Text())
     upload = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'))
     
+# class DbInfo(db.Model):
+#     __tablename__ = dbtableprefix + "dbinfo"
+#     key = db.Column(db.Text(), primary_key=True)
+#     value = db.Column(db.Text())

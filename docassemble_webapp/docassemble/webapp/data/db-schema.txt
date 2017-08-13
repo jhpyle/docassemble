@@ -111,6 +111,7 @@ userdictkeys|user_id|integer||
 userdictlock|filename|text||
 userdictlock|key|character varying|250|
 userdictlock|indexno|integer||nextval('userdictlock_indexno_seq'::regclass)
+alembic_version|version_num|character varying|32|
 chatlog|id|integer||nextval('chatlog_id_seq'::regclass)
 chatlog|filename|text||
 chatlog|key|character varying|250|
@@ -122,18 +123,6 @@ chatlog|temp_owner_id|integer||
 chatlog|open_to_peer|boolean||false
 chatlog|encrypted|boolean||true
 chatlog|modtime|timestamp without time zone||
-emailattachment|id|integer||nextval('emailattachment_id_seq'::regclass)
-emailattachment|email_id|integer||
-emailattachment|index|integer||
-emailattachment|content_type|text||
-emailattachment|extension|text||
-emailattachment|upload|integer||
-install|id|integer||nextval('install_id_seq'::regclass)
-install|hostname|text||
-install|version|integer||
-install|packageversion|text||
-install|package_id|integer||
-tempuser|id|integer||nextval('tempuser_id_seq'::regclass)
 user|id|integer||nextval('user_id_seq'::regclass)
 user|social_id|character varying|255|
 user|nickname|character varying|255|
@@ -153,3 +142,16 @@ user|language|character varying|64|
 user|otp_secret|character varying|255|
 user|pypi_username|character varying|255|
 user|pypi_password|character varying|255|
+user|modified_at|timestamp without time zone||
+emailattachment|id|integer||nextval('emailattachment_id_seq'::regclass)
+emailattachment|email_id|integer||
+emailattachment|index|integer||
+emailattachment|content_type|text||
+emailattachment|extension|text||
+emailattachment|upload|integer||
+install|id|integer||nextval('install_id_seq'::regclass)
+install|hostname|text||
+install|version|integer||
+install|packageversion|text||
+install|package_id|integer||
+tempuser|id|integer||nextval('tempuser_id_seq'::regclass)

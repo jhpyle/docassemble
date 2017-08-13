@@ -63,7 +63,7 @@ def load(**kwargs):
         with open(filename, 'rU') as fp:
             sys.stderr.write(fp.read().decode('utf8') + "\n")
         sys.exit(1)
-    daconfig = dict()
+    daconfig.clear()
     for key, val in raw_daconfig.iteritems():
         if re.search(r'_', key):
             sys.stderr.write("WARNING!  Configuration keys should not contain underscores.  Your configuration key " + str(key) + " has been converted.\n")
