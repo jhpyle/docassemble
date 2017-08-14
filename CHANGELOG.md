@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.1.37] - 2017-08-14
+### Added
+- "None of the above" choice in checkboxes.
+### Fixed
+- Automatic login after registration.
+- Improved CSS for when name of interview on mobile is too long to fit
+  in navigation bar.
+- Non-ASCII characters in PDF fields when scanning through utilities.
+
 ## [0.1.36] - 2017-08-13
 ### Fixed
 - Small typo that made 0.1.35 unusable

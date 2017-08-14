@@ -139,6 +139,12 @@ def get_choices(interview_status, field):
             else:
                 for pair in pairlist:
                     choice_list.append([pair[1], saveas, pair[0]])
+            if hasattr(field, 'nota') and interview_status.extras['nota'][field.number] is not False:
+                if interview_status.extras['nota'][field.number] is True:
+                    formatted_item = word("None of the above")
+                else:
+                    formatted_item = interview_status.extras['nota'][field.number]
+                choice_list.append([formatted_item, None, None])
     else:
         indexno = 0
         for choice in field.choices:
@@ -1373,11 +1379,13 @@ def add_validation(extra_scripts, validation_rules, field_error):
 def input_for(status, field, wide=False, embedded=False):
     output = ""
     if field.number in status.defaults:
+        defaultvalue_set = True
         if type(status.defaults[field.number]) in [str, unicode, int, float]:
             defaultvalue = unicode(status.defaults[field.number])
         else:
             defaultvalue = status.defaults[field.number]
     else:
+        defaultvalue_set = False
         defaultvalue = None
     if field.number in status.hints:
         placeholdertext = ' placeholder=' + json.dumps(unicode(status.hints[field.number].replace('\n', ' ')))
@@ -1437,10 +1445,20 @@ def input_for(status, field, wide=False, embedded=False):
                         ischecked = ' checked'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>', helptext))
+                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="non-nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>', helptext))
                 else:
                     inner_fieldlist.append(help_wrap('<div>' + markdown_to_html(pair[1], status=status) + '</div>', helptext))
                 id_index += 1
+            if hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
+                if defaultvalue_set and defaultvalue is None:
+                    ischecked = ' checked'
+                else:
+                    ischecked = ''
+                if status.extras['nota'][field.number] is True:
+                    formatted_item = word("None of the above")
+                else:
+                    formatted_item = markdown_to_html(unicode(status.extras['nota'][field.number]), status=status, trim=True, escape=True, do_terms=False)
+                inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + '" name="' + inner_field + '" type="checkbox" ' + ischecked + '/>')
             output += u''.join(inner_fieldlist)
             if field.datatype in ['object_checkboxes']:
                 

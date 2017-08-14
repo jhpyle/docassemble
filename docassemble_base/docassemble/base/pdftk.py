@@ -25,6 +25,8 @@ def set_pdftk_path(path):
     PDFTK_PATH = path
 
 def read_fields(pdffile):
+    import string
+    printable = set(string.printable)
     outfields = list()
     fp = open(pdffile, 'rb')
     id_to_page = dict()
@@ -39,8 +41,8 @@ def read_fields(pdffile):
     fields = resolve1(doc.catalog['AcroForm'])['Fields']
     for i in fields:
         field = resolve1(i)
-        name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')
-        #logmessage("name is " + str(name) + " and FT is |" + str(field_type) + "|")
+        name, value, rect, page, field_type = str(field.get('T')).decode('latin1').encode('utf-8'), str(field.get('V')).decode('latin1').encode('utf-8'), field.get('Rect'), field.get('P'), field.get('FT')
+        #logmessage("name is " + str(name) + " and FT is |" + str(field_type) + "| and value is " + str(value))
         if page is not None:
             pageno = id_to_page[page.objid]
         else:
@@ -54,14 +56,16 @@ def read_fields(pdffile):
             default = '${ user.signature }'
         else:
             if value is not None:
-                default = value
+                default = filter(lambda x: x in printable, value)
+                if not default:
+                    default = word("something")
             else:
                 default = word("something")
         outfields.append((name, default, pageno, rect, field_type))
     return outfields
 
 def read_fields_pdftk(pdffile):
-    output = check_output([PDFTK_PATH, pdffile, 'dump_data_fields'])
+    output = unicode(check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode('utf8'))
     fields = list()
     if not len(output) > 0:
         return None

@@ -412,6 +412,8 @@ class Field:
         #     self.css = data['css']
         if 'shuffle' in data:
             self.shuffle = data['shuffle']
+        if 'nota' in data:
+            self.nota = data['nota']
         if 'required' in data:
             self.required = data['required']
         else:
@@ -1505,6 +1507,11 @@ class Question:
                             #     field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
                             elif key == 'shuffle':
                                 field_info['shuffle'] = field[key]
+                            elif key == 'none of the above' and 'datatype' in field and field['datatype'] == 'checkboxes':
+                                if type(field[key]) is bool:
+                                    field_info['nota'] = field[key]
+                                else:
+                                    field_info['nota'] = TextObject(definitions + interpret_label(field[key]), names_used=self.mako_names)
                             elif key == 'field':
                                 if 'label' not in field:
                                     raise DAError("If you use 'field' to indicate a variable in a 'fields' section, you must also include a 'label.'" + self.idebug(data))
@@ -1518,6 +1525,8 @@ class Question:
                                     raise DAError("Syntax error: field label '" + str(key) + "' overwrites previous label, '" + str(field_info['label'].original_text) + "'" + self.idebug(data))
                                 field_info['label'] = TextObject(definitions + interpret_label(key), names_used=self.mako_names)
                                 field_info['saveas'] = field[key]
+                        if 'type' in field_info and field_info['type'] == 'checkboxes' and 'nota' not in field_info:
+                            field_info['nota'] = True
                         if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ['object', 'object_radio', 'object_checkboxes']:
                             if 'choices' not in field:
                                 raise DAError("You need to have a choices element if you want to set a variable to an object." + self.idebug(data))
@@ -2035,6 +2044,13 @@ class Question:
                             extras['ok'][field.number] = False
                             continue
                 extras['ok'][field.number] = True
+                if hasattr(field, 'nota'):
+                    if 'nota' not in extras:
+                        extras['nota'] = dict()
+                    if type(field.nota) is bool:
+                        extras['nota'][field.number] = field.nota
+                    else:
+                        extras['nota'][field.number] = field.nota.text(user_dict)
                 if type(field.required) is bool:
                     extras['required'][field.number] = field.required
                 else:
@@ -2064,19 +2080,13 @@ class Question:
                     if len(selections) == 0:
                         if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']:
                             if len(self.fields) == 1:
-                                # logmessage("1")
-                                raise CodeExecute(from_safeid(field.saveas) + ' = dict()', self)
-                            # logmessage("2")
+                                raise CodeExecute("import docassemble.base.core\n" + from_safeid(field.saveas) + ' = docassemble.base.core.DADict(' + repr(from_safeid(field.saveas)) + ', auto_gather=False, gathered=True)', self)
                         else:
                             if len(self.fields) == 1:
-                                # logmessage("3")
                                 raise CodeExecute(from_safeid(field.saveas) + ' = None', self)
-                            # else:
-                            #     logmessage("4")
-                    #logmessage("5")
                     selectcompute[field.number] = selections
                 if hasattr(field, 'choicetype') and field.choicetype == 'compute':
-                    if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'object_checkboxes']:
+                    if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'object_checkboxes', 'checkboxes']:
                         string = "import docassemble.base.core"
                         #logmessage("Doing " + string)
                         exec(string, user_dict)                        
@@ -2091,10 +2101,10 @@ class Question:
                             # logmessage("7")
                             if len(self.fields) == 1:
                                 # logmessage("8")
-                                if field.datatype == 'object_checkboxes':
-                                    raise CodeExecute(from_safeid(field.saveas) + '.gathered = True', self)
-                                else:
-                                    raise CodeExecute(from_safeid(field.saveas) + ' = dict()', self)
+                                #if field.datatype == 'object_checkboxes':
+                                raise CodeExecute(from_safeid(field.saveas) + '.gathered = True', self)
+                                #else:
+                                #    raise CodeExecute(from_safeid(field.saveas) + ' = dict()', self)
                         else:
                             # logmessage("9")
                             if len(self.fields) == 1:
@@ -2134,11 +2144,6 @@ class Question:
                             if key not in extras:
                                 extras[key] = dict()
                             extras[key][field.number] = field.extras[key].text(user_dict)
-                    # for key in ['binaryresponse', 'response_filename']:
-                    #     if key in field.extras:
-                    #         if key not in extras:
-                    #             extras[key] = dict()
-                    #         extras[key][field.number] = field.extras[key]
                     for key in ['ml_train']:
                         if key in field.extras:
                             if key not in extras:

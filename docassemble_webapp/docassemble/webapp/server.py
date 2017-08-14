@@ -5480,6 +5480,16 @@ def index():
             daShowingHelp = 0;""" + debug_readability_question + """
           }
         });
+        $("input.nota-checkbox").click(function(){
+          $(this).parent().find('input.non-nota-checkbox').each(function(){
+            $(this).prop('checked', false);
+          });
+        });
+        $("input.non-nota-checkbox").click(function(){
+          $(this).parent().find('input.nota-checkbox').each(function(){
+            $(this).prop('checked', false);
+          });
+        });
         $("a.review-action").click(daReviewAction);
         $("input.input-embedded").on('keyup', adjustInputWidth);
         $("input.input-embedded").each(adjustInputWidth);
@@ -12194,8 +12204,10 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                             skip_it = True
                             data = repr('')
                             for choice in choice_list:
+                                if choice[1] is None:
+                                    continue
                                 the_string = choice[1] + ' = False'
-                                logmessage("do_sms: doing checkboxes" + str(the_string) + " for skipping checkboxes")
+                                logmessage("do_sms: doing checkboxes " + str(the_string) + " for skipping checkboxes")
                                 try:
                                     exec(the_string, user_dict)
                                     changed = True
@@ -12242,6 +12254,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                         if value == choice[0]:
                                             true_values.add(choice[1])
                         for choice in choice_list:
+                            if choice[1] is None:
+                                continue
                             if choice[1] in true_values:
                                 the_string = choice[1] + ' = True'
                             else:
