@@ -183,7 +183,13 @@ a.sourceactive {
     margin: 0;
     padding: 0;
     color: #539ac7;
-    margin-left: -10px;
+    margin-left: -5px;
+}
+
+@media (max-width: 768px) {
+    .dabackicon {
+	margin-left: -10px;
+    }
 }
 
 .dabackicon:hover {
@@ -1293,4 +1299,20 @@ div.choicehelp a {
 
 div.choicehelp a:hover {
     color: #72c5fd;
+}
+
+div.danavbar {
+    max-height: 51px;
+    overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    div.danavbar {
+	margin-left: -15px !important;
+	padding-left: 15px;
+    }
+}
+.dabrand:focus,
+.dabrand:hover {
+    color: #9d9d9d !important;
 }

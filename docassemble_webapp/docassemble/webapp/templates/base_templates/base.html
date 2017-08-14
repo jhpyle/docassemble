@@ -22,7 +22,7 @@
     <meta name="theme-color" content="{{ config['FAVICON_THEME_COLOR'] }}">
   </head>
   <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %}">
-    <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar navbar-inverse navbar-fixed-top danavbar">
       <div class="container-fluid">
         <div class="navbar-header">
           {%- if not (current_user.is_anonymous and request.path == "/user/sign-in") %}

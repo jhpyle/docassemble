@@ -1541,7 +1541,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     navbar = """\
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
-        <div class="navbar-header">
+        <div class="navbar-header danavbar">
 """
     navbar += """\
           <button id="mobile-toggler" type="button" class="navbar-toggle collapsed mynavbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
@@ -1556,7 +1556,6 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
           <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon" type="submit" title=""" + '"' + word("Go back to the previous question") + '"' + """><i class="glyphicon glyphicon-chevron-left dalarge"></i>""" + word('Back') + """</button></form></span>
 """
     navbar += """\
-          <a href="#question" data-toggle="tab" class="navbar-brand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
           <a class="invisible" id="questionlabel" href="#question" data-toggle="tab">""" + word('Question') + """</a>
 """
     help_message = word("Help is available")
@@ -1572,6 +1571,8 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     elif chat_info['availability'] == 'available':
         navbar += '          <a title="' + phone_message + '" id="daPhoneAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
     navbar += """
+          <a href="#question" data-toggle="tab" class="navbar-brand dabrand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
+      
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
           <ul class="nav navbar-nav navbar-left hidden-xs">
@@ -11578,6 +11579,8 @@ def interview_list():
       });
     </script>"""
     script += global_js
+    if re.search(r'user/sign-in|user/register', str(request.referrer)) and len(interviews) == 1:
+        return redirect(url_for('index', i=interviews[0]['interview_info'].filename, session=interviews[0]['interview_info'].key, from_list=1))
     interview_page_title = word(daconfig.get('interview page title', 'Interviews'))
     title = word(daconfig.get('interview page heading', 'Resume an interview'))
     argu = dict(version_warning=version_warning, extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title, numinterviews=len(interviews), interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
