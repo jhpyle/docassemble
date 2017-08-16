@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.38] - 2017-08-16
+### Fixed
+- Bug in Alembic upgrade process
+
 ## [0.1.37] - 2017-08-16
 ### Changed
 - Fields with `datatype: checkboxes` now have a "None of the above"
