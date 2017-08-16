@@ -1,16 +1,20 @@
 # Change Log
 
-## [0.1.37] - 2017-08-15
+## [0.1.37] - 2017-08-16
 ### Changed
-- Checkboxes now have a "None of the above" option by default, and
-  input validation ensures that something is checked.
+- Fields with `datatype: checkboxes` now have a "None of the above"
+  option by default, and input validation ensures that something is
+  checked.  The `none of the above` field modifer configures it.
+- After registration, users will bypass the "Interviews" screen and
+  go right back to their interview, if they have started an interview.
 ### Added
-- Option in `fields` called `uncheck others` when `datatype` is `yesno`, `noyes`,
-  `yesnowide`, or `noyeswide`.  Enables a field to act as a "None of
-  the above" option.
+- Option in `fields` called `uncheck others` when `datatype` is
+  `yesno`, `noyes`, `yesnowide`, or `noyeswide`.  Enables a yes/no
+  field to act as a "None of the above" option.
 - "Upgrade docassemble" button on the "Update a package" page.
 ### Fixed
-- Automatic login after registration.
+- Automatic login after registration was not working, so users had to
+  enter username and password information twice.
 - Improved CSS for when name of interview on mobile is too long to fit
   in navigation bar.
 - Non-ASCII characters in PDF fields when scanning through utilities
