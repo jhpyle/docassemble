@@ -1877,6 +1877,29 @@
     In Python, `likes_fruit` is
     `${ variable_as_code }`.
   mandatory: True
+"fields-checkboxes-nota": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: checkboxes
+      choices:
+        - Apples
+        - Peaches
+        - Pears
+    - "What is your favorite fruit overall?": favorite_fruit
+"fields-checkboxes-nota-false": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: checkboxes
+      choices:
+        - Apples
+        - Peaches
+        - Pears
+      none of the above: False
+    - "What is your favorite fruit overall?": favorite_fruit
 "fields-choices": |-
   question: |
     What is your favorite fruit?
@@ -1987,6 +2010,44 @@
                   {'orange': "Oranges"},
                   {'pear': "Pears"}
                 ]
+"fields-mc-nota": |-
+  question: |
+    Please fill in the following information.
+  fields:
+    - Requested options: car_options
+      datatype: checkboxes
+      choices:
+        - Sunroof
+        - Automatic transmission
+        - Heated seats
+      show if: likes_fruit
+      none of the above: |
+        Nothing ${ "at all" }
+"fields-mc-with-showif": |-
+  question: |
+    Please fill in the following information.
+  fields:
+    - "Do you like fruit?": likes_fruit
+      datatype: yesnoradio
+    - "What's your favorite fruit?": favorite_fruit
+      show if: likes_fruit
+    - "Favorite apple": favorite_apple
+      datatype: radio
+      shuffle: True
+      choices:
+        - Granny Smith
+        - Empire
+        - Fuji
+        - Red Delicious
+    - Options: car_options
+      datatype: checkboxes
+      choices:
+        - Sunroof
+        - Automatic transmission
+        - Heated seats
+      show if: likes_fruit
+      none of the above: |
+        Nothing ${ "at all" }
 "fields-noyesmaybe": |-
   question: |
     Please answer the following question.
@@ -2003,6 +2064,44 @@
       datatype: yesno
     - Turnips: dislikes_turnips
       datatype: noyes
+"fields-yesno-uncheck-others": |-
+  question: |
+    Please provide the following information.
+  fields:
+    - "What is your favorite food?": favorite_food
+    - note: Check which foods you like.
+    - Apples: likes_apples
+      datatype: yesnowide
+    - Turnips: likes_turnips
+      datatype: yesnowide
+    - Neither: dislikes_both_foods
+      datatype: yesnowide
+      uncheck others: True
+"fields-yesno-uncheck-others-list": |-
+  question: |
+    Please provide the following information.
+  fields:
+    - "What is your favorite food?": favorite_food
+    - note: Check which foods you like.
+    - Apples: likes_apples
+      datatype: yesno
+    - Turnips: likes_turnips
+      datatype: yesno
+    - Neither: dislikes_both_foods
+      datatype: yesno
+      uncheck others:
+        - likes_turnips
+        - likes_apples
+    - note: Check which rocks you like.
+    - Granite: likes_granite
+      datatype: yesno
+    - Obsidian: likes_obsidian
+      datatype: yesno
+    - I do not like these rocks: dislikes_both_rocks
+      datatype: yesno
+      uncheck others:
+        - likes_granite
+        - likes_obsidian
 "fields-yesnomaybe": |-
   question: |
     Please answer the following question.
@@ -5109,6 +5208,9 @@
     ${ noun_plural('time', counter) }.
   field: acknowledged
 "required-code": |-
+  question: Do you like soda?
+  yesno: user_likes_soda
+  ---
   question: |
     What are your favorite
     things to drink?
@@ -6395,7 +6497,7 @@
     % else:
     What a _lousy_ favorite number.
     % endif
-  mandatory: true
+  mandatory: True
 "yesno": |-
   question: |
     Are you at least 18 years of age?

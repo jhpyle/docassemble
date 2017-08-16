@@ -430,6 +430,24 @@ from the list using `exclude`, where the value of `exclude` is
 In this example, the value of `exclude` is a single variable.  If
 given a list of things, it will exclude any items that are in the list.
 
+### <a name="none of the above"></a>`none of the above`
+
+If you use [`datatype: checkboxes`](#fields checkboxes), then by
+default a "None of the above" choice is added.
+
+{% include side-by-side.html demo="fields-checkboxes-nota" %}
+
+You can turn off the "None of the above" choice by setting the 
+`none of the above` option to `False`.
+
+{% include side-by-side.html demo="fields-checkboxes-nota-false" %}
+
+You can also change the phrase from "None of the above" to something
+else, even a [Mako] expression.  Just set `none of the above` to the
+text you want to be displayed.
+
+{% include side-by-side.html demo="fields-mc-nota" %}
+
 ### <a name="shuffle"></a>`shuffle`
 
 `shuffle` can be used on multiple-choice fields (defined with
@@ -528,11 +546,14 @@ and the variable name using the `field` key.
 
 {% include side-by-side.html demo="label" %}
 
-## <a name="datatype"></a>Plain text
+## <a name="datatype"></a>Data types
 
-There are many possible `datatype` values, which affect what the user
-sees and how the input is stored in a variable.  This section and the
-following sections describe the available `datatype`s.
+Within a [`fields`] question, there are many possible `datatype`
+values, which affect what the user sees and how the input is stored in
+a variable.  The following sections describe the available
+`datatype`s.
+
+## Plain text
 
 <a name="text"></a>A `datatype: text` provides a single-line text
 input box.  This is the default, so you never need to specify it
@@ -646,6 +667,21 @@ that fills the full width of area.  `datatype: noyeswide` is like
 `datatype: yesnowide`, except with True and False inverted.
 
 {% include side-by-side.html demo="fields-yesnowide" %}
+
+<a name="uncheck others"></a>Sometimes, when you are using a series of
+these checkboxes, you might want to have a "none of the above"
+selection.  To do this, add a field for the selection, and associate
+it with a variable.  (Your interview does not need to use the
+variable.)  Then modify the field with `uncheck others: True`.
+
+{% include side-by-side.html demo="fields-yesno-uncheck-others" %}
+
+This will cause the field to act as a "none of the above" field for
+all the other yes/no checkbox fields on the page.  If you want the
+field to only relate to specific other fields, use a list of the
+variable names of those fields instead of `True`.
+
+{% include side-by-side.html demo="fields-yesno-uncheck-others-list" %}
 
 <a name="fields yesnoradio"></a>`datatype: yesnoradio` will show radio
 buttons offering choices "Yes" and "No."
