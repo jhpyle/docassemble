@@ -112,17 +112,10 @@ def main():
             alembic_cfg = Config(os.path.join(packagedir, 'alembic.ini'))
             alembic_cfg.set_main_option("sqlalchemy.url", alchemy_connection_string())
             alembic_cfg.set_main_option("script_location", os.path.join(packagedir, 'alembic'))
+            if not db.engine.has_table('alembic_version'):
+                command.stamp(alembic_cfg, "head")
             if db.engine.has_table('user'):
                 command.upgrade(alembic_cfg, "head")
-                # commands = ['alembic', 'upgrade', 'head']
-                # try:
-                #     subprocess.call(commands, cwd=packagedir)
-                #     returnval = 0
-                # except subprocess.CalledProcessError as err:
-                #     returnval = err.returncode
-                #     sys.exit("alembic returned " + str(returnval))
-            else:
-                command.stamp(alembic_cfg, "head")
         #db.drop_all()
         db.create_all()
         populate_tables()
