@@ -1,17 +1,26 @@
 # Change Log
 
-## [0.1.37] - 2017-08-14
+## [0.1.37] - 2017-08-15
+### Changed
+- Checkboxes now have a "None of the above" option by default, and
+  input validation ensures that something is checked.
 ### Added
-- "None of the above" choice in checkboxes.
+- Option in `fields` called `uncheck others` when `datatype` is `yesno`, `noyes`,
+  `yesnowide`, or `noyeswide`.  Enables a field to act as a "None of
+  the above" option.
+- "Upgrade docassemble" button on the "Update a package" page.
 ### Fixed
 - Automatic login after registration.
 - Improved CSS for when name of interview on mobile is too long to fit
   in navigation bar.
-- Non-ASCII characters in PDF fields when scanning through utilities.
+- Non-ASCII characters in PDF fields when scanning through utilities
+  no longer cause an error.
+- Fixed problem introduced in 0.1.22 where interview data would be
+  destroyed when switching back to an interview during the same session.
 
 ## [0.1.36] - 2017-08-13
 ### Fixed
-- Small typo that made 0.1.35 unusable
+- Small typo that made 0.1.35 unusable.
 
 ## [0.1.35] - 2017-08-13
 ### Added

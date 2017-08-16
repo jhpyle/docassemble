@@ -496,7 +496,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -1198,7 +1198,8 @@ def do_refresh(is_ajax, yaml_filename):
         return redirect(url_for('index', i=yaml_filename))
 
 def standard_scripts():
-    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js') + '"></script>'
+    #
+    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js') + '"></script>'
     
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False):
     output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/interview.css') + '" rel="stylesheet">'
@@ -1788,7 +1789,7 @@ def install_pip_package(packagename, limitation):
         db.session.commit()
     return
 
-def get_package_info():
+def get_package_info(exclude_core=False):
     if current_user.has_role('admin'):
         is_admin = True
     else:
@@ -1801,6 +1802,8 @@ def get_package_info():
             package_auth[auth.package_id] = dict()
         package_auth[auth.package_id][auth.user_id] = auth.authtype
     for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
+        if exclude_core and package.name in ['docassemble.base', 'docassemble.webapp']:
+            continue
         if package.name in seen:
             continue
         seen[package.name] = 1
@@ -3292,7 +3295,7 @@ def checkin():
             if form_parameters is not None:
                 form_parameters = json.loads(form_parameters)
                 for param in form_parameters:
-                    if param['name'] in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action']:
+                    if param['name'] in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action'] or param['name'].startswith('_ignore'):
                         continue
                     try:
                         parameters[from_safeid(param['name'])] = param['value']
@@ -3618,8 +3621,13 @@ def index():
                     else:
                         message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
                 #logmessage("index: calling reset_session with retain_code")
-                user_code, user_dict = reset_session(yaml_filename, secret, retain_code=True)
-                reset_user_dict(user_code, yaml_filename)
+                if 'uid' in session and user_dict_exists(session['uid'], yaml_filename):
+                    retain_code = False
+                else:
+                    retain_code = True
+                user_code, user_dict = reset_session(yaml_filename, secret, retain_code=retain_code)
+                if reset_interview:
+                    reset_user_dict(user_code, yaml_filename)
                 save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
                 release_lock(user_code, yaml_filename)
                 session_id = session.get('uid', None)
@@ -3938,7 +3946,7 @@ def index():
         the_question = None
     known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action']:
+        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action'] or orig_key.startswith('_ignore'):
             continue
         try:
             key = myb64unquote(orig_key)
@@ -3950,7 +3958,7 @@ def index():
     field_error = dict()
     validated = True
     for orig_key in post_data:
-        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action']:
+        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action'] or orig_key.startswith('_ignore'):
             continue
         #logmessage("Got a key: " + key)
         data = post_data[orig_key]
@@ -4153,7 +4161,7 @@ def index():
                     field_error[orig_key] = str(errstr)
                     validated = False
                     continue
-        logmessage("Doing " + str(the_string))
+        #logmessage("Doing " + str(the_string))
         try:
             exec(the_string, user_dict)
             changed = True
@@ -5568,6 +5576,16 @@ def index():
         }
         $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
         $(".to-labelauty-icon").labelauty({ label: false });
+        $(".uncheckothers").on('change', function(){
+          if ($(this).is(":checked")){
+            $(".uncheckable").prop("checked", false);
+          }
+        });
+        $(".uncheckable").on('change', function(){
+          if ($(this).is(":checked")){
+            $(".uncheckothers").prop("checked", false);
+          }
+        });
         var navMain = $("#navbar-collapse");
         navMain.on("click", "a", null, function () {
           if (!($(this).hasClass("dropdown-toggle"))){
@@ -5805,7 +5823,7 @@ def index():
         interview_language = interview_status.question.language
     else:
         interview_language = DEFAULT_LANGUAGE
-    validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error'}
+    validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error', 'debug': True}
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language
     else:
@@ -7927,6 +7945,7 @@ def update_package():
     form = UpdatePackageForm(request.form)
     action = request.args.get('action', None)
     target = request.args.get('package', None)
+    is_base_upgrade = request.args.get('package', False)
     if action is not None and target is not None:
         package_list, package_auth = get_package_info()
         the_package = None
@@ -8005,7 +8024,7 @@ def update_package():
                     flash(word("You do not have permission to install this package."), 'error')
             else:
                 flash(word('You need to supply a Git URL, upload a file, or supply the name of a package on PyPI.'), 'error')
-    package_list, package_auth = get_package_info()
+    package_list, package_auth = get_package_info(exclude_core=True)
     form.pippackage.data = None
     form.giturl.data = None
     return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, package_list=package_list, tab_title=word('Update Package'), page_title=word('Update Package')), 200
@@ -11589,7 +11608,7 @@ def interview_list():
       });
     </script>"""
     script += global_js
-    if re.search(r'user/sign-in|user/register', str(request.referrer)) and len(interviews) == 1:
+    if re.search(r'user/register', str(request.referrer)) and len(interviews) == 1:
         return redirect(url_for('index', i=interviews[0]['interview_info'].filename, session=interviews[0]['interview_info'].key, from_list=1))
     interview_page_title = word(daconfig.get('interview page title', 'Interviews'))
     title = word(daconfig.get('interview page heading', 'Resume an interview'))

@@ -3,7 +3,7 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_file_field_simple, render_submit_field with context %}
 
-<h1>{{ word('Install or update a package') }}</h1>
+<h2>{{ word('Install or update a package') }}</h2>
 
 <form action="{{ url_for('update_package') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
@@ -20,7 +20,7 @@
   </div>
 </form>
 
-<h1>{{ word('Update or uninstall an existing package') }}</h1>
+<h2>{{ word('Update or uninstall an existing package') }}</h2>
 
 <table class="table table-striped">
   <thead>
@@ -38,5 +38,11 @@
 {% endfor %}
   </tbody>
 </table>
+
+<h2>{{ word('Upgrade docassemble') }}</h2>
+
+<div class="form-actions">
+  <a class="btn btn-primary btn-lg" href="{{ url_for('update_package', package='docassemble.webapp', action='update', base='1') }}">{{ word('Upgrade') }}</a>
+</div>
 
 {% endblock %}

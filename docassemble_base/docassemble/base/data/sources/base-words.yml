@@ -35,6 +35,7 @@
 "Changed name of interview": Null
 "Change": Null
 "characters": Null
+"Check at least one option, or check": Null
 "Checkboxes:": Null
 "Choices:": Null
 "Classes": Null
@@ -246,6 +247,7 @@
 "Playground": Null
 "Playground Packages": Null
 "Playground YAML": Null
+"Please check at least one.": Null
 "Please choose a different e-mail address.": Null
 "Please enter a valid phone number": Null
 "Please enter a valid value.": Null
@@ -253,6 +255,7 @@
 "Please enter the verification code from the text message we just sent you.": Null
 "Please enter the verification code from your authentication app.": Null
 "Please log in.": Null
+"Please select one.": Null
 "Please send an audio clip.": Null
 "Please send an audio clip, or type skip.": Null
 "Please send an image or file.": Null

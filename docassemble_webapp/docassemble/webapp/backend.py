@@ -373,6 +373,12 @@ def fetch_user_dict(user_code, filename, secret=None):
         break
     return steps, user_dict, encrypted
 
+def user_dict_exists(user_code, filename):
+    result = UserDict.query.filter(and_(UserDict.key == user_code, UserDict.filename == filename)).first()
+    if result:
+        return True
+    return False
+
 def fetch_previous_user_dict(user_code, filename, secret):
     user_dict = None
     max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).scalar()

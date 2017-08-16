@@ -1047,13 +1047,16 @@ question: |
 decoration: bills
 fields:
   - Employment: x.income['employment'].exists
-    datatype: yesnowide
+    datatype: yesno
   - Self-employment: x.income['self employment'].exists
-    datatype: yesnowide
+    datatype: yesno
   - SSI: x.income['SSI'].exists
-    datatype: yesnowide
+    datatype: yesno
   - Cash assistance: x.income['TANF'].exists
-    datatype: yesnowide
+    datatype: yesno
+  - None of the above: x.no_income_exists
+    datatype: yesno
+    uncheck others: True
 comment: |
   The datatype "yesnowide" is just like the data type "yesno" except
   that it fills the width of the form rather than aligning with other

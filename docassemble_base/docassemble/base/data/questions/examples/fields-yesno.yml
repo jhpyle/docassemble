@@ -1,6 +1,6 @@
 metadata:
   title: Yes/no checkboxes
-  short title: Yes/no checkboxes
+  short title: Yes/no
   documentation: "https://docassemble.org/docs/fields.html#fields yesno"
 ---
 question: |

@@ -1,6 +1,11 @@
 metadata:
   title: Optional field with code
   documentation: "https://docassemble.org/docs/fields.html#required"
+  example start: 1
+  example end: 2
+---
+question: Do you like soda?
+yesno: user_likes_soda
 ---
 question: |
   What are your favorite
@@ -9,9 +14,6 @@ fields:
   - Favorite Beverage Overall: favorite_beverage
   - Favorite Soda: favorite_soda
     required: user_likes_soda
----
-question: Do you like soda?
-yesno: user_likes_soda
 ---
 question: Result of question
 subquestion: |

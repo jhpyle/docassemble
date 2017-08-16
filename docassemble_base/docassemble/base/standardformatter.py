@@ -726,13 +726,49 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                 if (hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras) or (hasattr(field, 'disableothers') and field.disableothers):
                     the_saveas = safeid('_field_' + str(field.number))
                 else:
-                    the_saveas = field.saveas
-                validation_rules['messages'][the_saveas] = {'required': word("This field is required.")}
-                if status.extras['required'][field.number]:
-                    #sys.stderr.write(field.datatype + "\n")
-                    validation_rules['rules'][the_saveas] = {'required': True}
-                else:
-                    validation_rules['rules'][the_saveas] = {'required': False}
+                    the_saveas = field.saveas                        
+                if not (hasattr(field, 'datatype') and field.datatype == 'checkboxes'):
+                #     validation_rules['messages'][the_saveas] = dict()
+                #     validation_rules['rules'][the_saveas] = dict()
+                # else:
+                    validation_rules['messages'][the_saveas] = {'required': word("This field is required.")}
+                    if status.extras['required'][field.number]:
+                        #sys.stderr.write(field.datatype + "\n")
+                        validation_rules['rules'][the_saveas] = {'required': True}
+                    else:
+                        validation_rules['rules'][the_saveas] = {'required': False}
+                if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide'] and hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
+                    if field.uncheckothers is True:
+                        the_query = '.uncheckable:checked, .uncheckothers:checked'
+                        uncheck_list = [y.saveas for y in status.question.fields if y is not field and hasattr(y, 'saveas') and hasattr(y, 'inputtype') and y.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide']]
+                    else:
+                        uncheck_list = [safeid(y) for y in field.uncheckothers]
+                        the_query = ', '.join(['#' + do_escape_id(x) + ':checked' for x in uncheck_list + [field.saveas]])
+                        the_js = """\
+<script>
+  $( document ).ready(function() {
+    $(""" + '"' + ', '.join(['#' + escape_for_jquery(x) for x in uncheck_list]) + '"' + """).on("change", function(){
+      if ($(this).is(":checked")){
+        $('#""" + escape_for_jquery(field.saveas) + """').prop("checked", false);
+      }
+    });
+    $('#""" + escape_for_jquery(field.saveas) + """').on("change", function(){
+      if ($(this).is(":checked")){
+        $(""" + '"' + ', '.join(['#' + escape_for_jquery(x) for x in uncheck_list]) + '"' + """).prop("checked", false);
+      }
+    });
+  });
+</script>
+"""
+                        status.extra_scripts.append(the_js)
+                    for y in uncheck_list + [the_saveas]:
+                        validation_rules['rules'][y]['checkone'] = [1, the_query]
+                        validation_rules['messages'][y]['checkone'] = word("Check at least one option, or check") + " " + '"' + status.labels[field.number] + '"'
+                    if 'groups' not in validation_rules:
+                        validation_rules['groups'] = dict()
+                    validation_rules['groups'][the_saveas + '_group'] = ' '.join(uncheck_list + [field.saveas])
+                    validation_rules['ignore'] = None
+                    
                 for key in ['minlength', 'maxlength']:
                     if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                         #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
@@ -742,6 +778,27 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                         elif key == 'maxlength':
                             validation_rules['messages'][the_saveas][key] = word("You cannot type more than") + " " + str(status.extras[key][field.number]) + " " + word("characters")
             if hasattr(field, 'datatype'):
+                if field.datatype == 'checkboxes' and hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
+                    #validation_rules['rules'][the_saveas]['checkboxgroup'] = dict(name=the_saveas, foobar=2)
+                    #validation_rules['messages'][the_saveas]['checkboxgroup'] = word("You need to select one.")
+                    if 'groups' not in validation_rules:
+                        validation_rules['groups'] = dict()
+                    if field.choicetype == 'compute':
+                        pairlist = list(status.selectcompute[field.number])
+                    else:
+                        pairlist = list(field.selections)
+                    name_list = [safeid(from_safeid(the_saveas) + "[" + myb64quote(pairlist[indexno][0]) + "]") for indexno in range(len(pairlist))]
+                    for the_name in name_list:
+                        validation_rules['rules'][the_name] = dict(require_from_group=[1, '.dafield' + str(field.number)])
+                        validation_rules['messages'][the_name] = dict(require_from_group=word("Please select one."))
+                    validation_rules['rules']['_ignore' + str(field.number)] = dict(require_from_group=[1, '.dafield' + str(field.number)])
+                    validation_rules['messages']['_ignore' + str(field.number)] = dict(require_from_group=word("Please select one."))
+                    validation_rules['groups'][the_saveas] = " ".join(name_list)
+                    validation_rules['ignore'] = None
+                if hasattr(field, 'inputtype') and field.inputtype in ['yesnoradio', 'noyesradio']:
+                    validation_rules['ignore'] = None
+                if field.datatype in ['radio', 'object_radio']:
+                    validation_rules['ignore'] = None
                 if field.datatype == 'date':
                     validation_rules['rules'][the_saveas]['date'] = True
                     validation_rules['messages'][the_saveas]['date'] = word("You need to enter a valid date.")
@@ -784,11 +841,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                 continue
             if hasattr(field, 'label'):
                 if status.labels[field.number] == 'no label':
-                    fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group' + req_tag + '"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
                     fieldlist.append('                <div class="row"><div class="col-md-12">' + input_for(status, field) + '</div></div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
-                    fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group yesnospacing' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
                 else:
                     fieldlist.append('                <div class="form-group' + req_tag + '"><label for="' + escape_id(the_saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
             if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras:
@@ -864,7 +921,6 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
-        output += '                <div id="errorcontainer" class="alert alert-danger" role="alert" style="display:none"></div>\n'
         output += '                <p class="sr-only">' + word('Your choices are:') + '</p>\n'
         validation_rules['errorElement'] = "span"
         validation_rules['errorLabelContainer'] = "#errorcontainer"
@@ -917,6 +973,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                 validation_rules['ignore'] = None
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
                 validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
+                output += '                <div id="errorcontainer" style="display:none"></div>\n'
             else:
                 indexno = 0
                 for choice in status.question.fields[0].choices:
@@ -934,6 +991,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                     indexno += 1
                     validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': True}
                     validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
+                    output += '                <div id="errorcontainer" style="display:none"></div>\n'
             output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
             output += '                <button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button>\n'
         else:
@@ -1324,6 +1382,7 @@ def add_validation(extra_scripts, validation_rules, field_error):
             error_mess[key] = val
         error_show = "\n  validator.showErrors(" + json.dumps(error_mess) + ");"
     extra_scripts.append("""<script>
+  var validation_rules = """ + json.dumps(validation_rules) + """;
   $.validator.setDefaults({
     highlight: function(element) {
         $(element).closest('.form-group').addClass('has-error');
@@ -1334,18 +1393,53 @@ def add_validation(extra_scripts, validation_rules, field_error):
     errorElement: 'span',
     errorClass: 'help-block',
     errorPlacement: function(error, element) {
-        if (element.hasClass('input-embedded')){
-            error.insertAfter(element.parent());
+        var elementName = $(element).attr("name");
+        var lastInGroup = $.map(validation_rules['groups'], function(thefields, thename){
+          var fieldsArr;
+          if (thefields.indexOf(elementName) >= 0) {
+            fieldsArr = thefields.split(" ");
+            return fieldsArr[fieldsArr.length - 1];
+          }
+          else {
+            return null;
+          }
+        })[0];
+        if (element.hasClass('uncheckable') && lastInGroup){
+          $("input[name='" + lastInGroup + "']").parent().append(error);
+        }
+        else if (element.hasClass('input-embedded')){
+          error.insertAfter(element.parent());
         }
         else if (element.parent('.input-group').length) {
-            error.insertAfter(element.parent());
+          error.insertAfter(element.parent());
+        }
+        else if (element.hasClass('labelauty')){
+          var choice_with_help = $(element).parents(".choicewithhelp").first();
+          if (choice_with_help.length > 0){
+            $(choice_with_help).parent().append(error);
+          }
+          else{
+            element.parent().append(error);
+          }
+        }
+        else if (element.hasClass('non-nota-checkbox')){
+          element.parent().append(error);
         }
         else {
-            error.insertAfter(element);
+          error.insertAfter(element);
         }
     }
   });
-  var validation_rules = """ + json.dumps(validation_rules) + """;
+  $.validator.addMethod('checkone', function(value, element, params){
+    var number_needed = params[0];
+    var css_query = params[1];
+    if ($(css_query).length >= number_needed){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }, """ + json.dumps(word("Please check at least one.")) + """);
   validation_rules.submitHandler = daValidationHandler;
   var validator = $("#daform").validate(validation_rules);
   $("button").click(function(event){
@@ -1445,7 +1539,7 @@ def input_for(status, field, wide=False, embedded=False):
                         ischecked = ' checked'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="non-nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>', helptext))
+                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="' + 'dafield' + str(field.number) + ' non-nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>', helptext))
                 else:
                     inner_fieldlist.append(help_wrap('<div>' + markdown_to_html(pair[1], status=status) + '</div>', helptext))
                 id_index += 1
@@ -1458,10 +1552,9 @@ def input_for(status, field, wide=False, embedded=False):
                     formatted_item = word("None of the above")
                 else:
                     formatted_item = markdown_to_html(unicode(status.extras['nota'][field.number]), status=status, trim=True, escape=True, do_terms=False)
-                inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + '" name="' + inner_field + '" type="checkbox" ' + ischecked + '/>')
+                inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="' + 'dafield' + str(field.number) + ' nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' type="checkbox" name="_ignore' + str(field.number) + '" ' + ischecked + '/>')
             output += u''.join(inner_fieldlist)
-            if field.datatype in ['object_checkboxes']:
-                
+            if field.datatype in ['object_checkboxes']:                
                 output += '<input type="hidden" name="' + safeid(from_safeid(saveas_string) + ".gathered")+ '" value="True"/>'
         elif field.datatype in ['radio', 'object_radio']:
             inner_fieldlist = list()
@@ -1538,10 +1631,17 @@ def input_for(status, field, wide=False, embedded=False):
                         id_index += 1
                 output += "".join(inner_fieldlist)
             else:
-                if field.sign > 0:
-                    output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+                if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
+                    if type(field.uncheckothers) is list:
+                        uncheck = ''
+                    else:
+                        uncheck = ' uncheckothers'
                 else:
-                    output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+                    uncheck = ' uncheckable'
+                if field.sign > 0:
+                    output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + ' type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+                else:
+                    output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + ' type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
                 if defaultvalue:
                     output += ' checked'
                 output += '/> '

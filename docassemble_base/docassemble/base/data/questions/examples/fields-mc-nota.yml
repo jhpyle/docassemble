@@ -1,0 +1,27 @@
+metadata:
+  title: None of the above customized
+  short title: None
+  documentation: "https://docassemble.org/docs/fields.html#none of the above"
+---
+question: |
+  Please fill in the following information.
+fields:
+  - Requested options: car_options
+    datatype: checkboxes
+    choices:
+      - Sunroof
+      - Automatic transmission
+      - Heated seats
+    show if: likes_fruit
+    none of the above: |
+      Nothing ${ "at all" }
+---
+question: |
+  Your car options
+subquestion: |
+  % for option in car_options:
+  % if car_options[option]:
+  You want ${ option }.
+  % endif
+  % endfor
+mandatory: True

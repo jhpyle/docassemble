@@ -1,0 +1,37 @@
+metadata:
+  title: Conditionally show
+  short title: Conditionally show 
+  documentation: "https://docassemble.org/docs/fields.html#show if"
+---
+question: |
+  Please fill in the following information.
+fields:
+  - "Do you like fruit?": likes_fruit
+    datatype: yesnoradio
+  - "What's your favorite fruit?": favorite_fruit
+    show if: likes_fruit
+  - "Favorite apple": favorite_apple
+    datatype: radio
+    shuffle: True
+    choices:
+      - Granny Smith
+      - Empire
+      - Fuji
+      - Red Delicious
+  - Options: car_options
+    datatype: checkboxes
+    choices:
+      - Sunroof
+      - Automatic transmission
+      - Heated seats
+    show if: likes_fruit
+    none of the above: |
+      Nothing ${ "at all" }
+---
+question: |
+  % if likes_fruit is True:
+  You like ${ favorite_fruit }.
+  % else:
+  You do not like fruit.
+  % endif
+mandatory: True

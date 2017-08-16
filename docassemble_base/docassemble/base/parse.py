@@ -379,6 +379,8 @@ class Field:
             self.choicetype = data['choicetype']
         if 'disable others' in data:
             self.disableothers = data['disable others']
+        if 'uncheck others' in data:
+            self.uncheckothers = data['uncheck others']
         if 'default' in data:
             self.default = data['default']
         if 'hint' in data:
@@ -1450,10 +1452,14 @@ class Question:
                             elif key == 'disable others':
                                 field_info['disable others'] = True
                                 field_info['required'] = False
+                            elif key == 'uncheck others' and 'datatype' in field and field['datatype'] in ['yesno', 'yesnowide', 'noyes', 'noyeswide']:
+                                if type(field[key]) not in [list, bool]:
+                                    raise DAError("An 'uncheck others' directive must be True, False, or a list of variable names." + self.idebug(data))
+                                field_info['uncheck others'] = field[key]
                             elif key == 'datatype':
                                 field_info['type'] = field[key]
-                                #if field[key] in ['yesno', 'yesnowide', 'noyes', 'noyeswide'] and 'required' not in field_info:
-                                #    field_info['required'] = False
+                                if field[key] in ['yesno', 'yesnowide', 'noyes', 'noyeswide'] and 'required' not in field_info:
+                                    field_info['required'] = False
                                 if field[key] in ['range'] and 'required' not in field_info:
                                     field_info['required'] = False
                                 if field[key] in ['range'] and not ('min' in field and 'max' in field):

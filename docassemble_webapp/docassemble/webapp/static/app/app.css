@@ -1316,3 +1316,8 @@ div.danavbar {
 .dabrand:hover {
     color: #9d9d9d !important;
 }
+
+.yesnospacing + .yesnospacing {
+    margin-top: -15px;
+}
+	       
