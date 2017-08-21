@@ -350,7 +350,7 @@ attachment:
   valid formats:
     - pdf
   content: |
-    Hello, world!
+    Hello, ${ url_args.get('name', 'you') }!
 ---
 mandatory: True
 code: |
