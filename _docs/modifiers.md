@@ -341,10 +341,10 @@ allows authors to express questions in general terms.
 The above example will cause **docassemble** to ask "Does Sally Smith
 like cats?" if the interview logic calls for `neighbor.likes_cats` and
 `neighbor` is an object of type [`Individual`] whose name has been set
-to "Sally Smith."  Or, it will ask "Does William Jones like cats?" if
-the interview logic calls for `teacher.likes_cats`, and `teacher` is
-an object of type [`Individual`] whose name has been set to "William
-Jones."
+to "Sally Smith."  The same question will also ask "Does William Jones
+like cats?" if the interview logic calls for `teacher.likes_cats`, and
+`teacher` is an object of type [`Individual`] whose name has been set
+to "William Jones."
 
 <a name="x"></a>`x` is a special variable that should only be used in
 `generic object` questions.  The above question definition tells
@@ -398,8 +398,14 @@ attribute is still not defined, and it will "fall back" to the
 [`question`] that asks the user to manually enter the EIN.
 
 As explained in the [fallback] section of the documentation, the order
-of these two blocks matters; the [`code`] block will be tried first
-only if it appears later in the [YAML] file.
+in which these two blocks appear in the [YAML] file matters; the
+[`code`] block will be tried first only if it appears later in the
+[YAML] file than the [`question`] block.
+
+A similar feature to `generic object` and its special variable `x` is
+the special [index variable `i`].  For more information about this
+feature, see the [index variable documentation] and the documentation
+in the [groups section].
 
 # <a name="role"></a>The `role` of the question
 
@@ -503,3 +509,6 @@ by **docassemble**, so it can contain any valid [YAML].
 [`nav.set_section()`]: {{ site.baseurl}}/docs/functions.html#DANav.set_section
 [`nav.set_sections()`]: {{ site.baseurl}}/docs/functions.html#DANav.set_sections
 [`sections`]: {{ site.baseurl}}/docs/initial.html#sections
+[index variable `i`]: {{ site.baseurl }}/docs/fields.html#index variables
+[groups section]: {{ site.baseurl }}/docs/groups.html
+[index variable documentation]: {{ site.baseurl }}/docs/fields.html#index variables

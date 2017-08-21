@@ -95,6 +95,12 @@ Privileges" on the [User List] page.  From here, administrators can
 add new privilege types, or delete privilege types that were already
 created.
 
+## <a name="add">Add User</a>
+
+Administrators can add users by clicking "Add a user" on the
+[User List] page.  The user's first name, last name, e-mail, password,
+and user role(s) must be set.
+
 ## <a name="invite">Invite User</a>
 
 Administrators can invite people to register by clicking "Invite a
