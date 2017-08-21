@@ -6,6 +6,7 @@ import tempfile
 import shutil
 import fdfgen
 import yaml
+import re
 import PyPDF2 as pypdf
 from PIL import Image
 from docassemble.base.error import DAError
@@ -41,7 +42,11 @@ def read_fields(pdffile):
     fields = resolve1(doc.catalog['AcroForm'])['Fields']
     for i in fields:
         field = resolve1(i)
-        name, value, rect, page, field_type = str(field.get('T')).decode('latin1').encode('utf-8'), str(field.get('V')).decode('latin1').encode('utf-8'), field.get('Rect'), field.get('P'), field.get('FT')
+        name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')
+        if name is not None:
+            name = unicode(name)
+        if value is not None:
+            value = str(value).decode('latin1').encode('utf-8')
         #logmessage("name is " + str(name) + " and FT is |" + str(field_type) + "| and value is " + str(value))
         if page is not None:
             pageno = id_to_page[page.objid]
@@ -56,7 +61,10 @@ def read_fields(pdffile):
             default = '${ user.signature }'
         else:
             if value is not None:
-                default = filter(lambda x: x in printable, value)
+                # for val in value:
+                #     logmessage("Got a " + str(ord(val)))
+                # logmessage(repr(value))
+                default = re.sub(r'^\xc3\xbe\xc3\xbf', '', value).decode('utf8')
                 if not default:
                     default = word("something")
             else:

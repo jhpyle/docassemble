@@ -1,5 +1,5 @@
 <ul class="dastart">
   {% for interview in interview_info %}
-  <li><a href="{{ interview['link'] }}">{{ interview['display'] }}</a></li>
+  <li><a href="{{ interview['link'] }}"{% if interview['status_class'] %} class="{{ interview['status_class'] }}"{% endif %}>{{ interview['display'] }}</a></li>
   {% endfor %}
 </ul>

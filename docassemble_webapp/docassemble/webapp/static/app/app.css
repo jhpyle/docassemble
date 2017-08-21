@@ -1320,4 +1320,12 @@ div.danavbar {
 .yesnospacing + .yesnospacing {
     margin-top: -15px;
 }
-	       
+
+.dainterviewhaserror {
+    color: #a94442;
+}
+
+.dainterviewhaserror:hover,
+.dainterviewhaserror:focus {
+    color: #843534;
+}

@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.1.39] - 2017-08-20
+### Added
+- Page where administrator can add users manually without going
+  through invitation process.
+### Fixed
+- Non-ASCII characters in PDF field defaults no longer stripped out
+  when scanning through utilities.
+
 ## [0.1.38] - 2017-08-16
 ### Fixed
 - Bug in Alembic upgrade process

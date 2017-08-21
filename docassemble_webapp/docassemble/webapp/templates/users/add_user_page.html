@@ -1,0 +1,27 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+{% from "base_templates/form_macros.html" import render_field, render_submit_field, render_multiselect_field %}
+
+<h1>{{ word('Add User') }}</h1>
+
+<form action="" method="POST" role="form" class="form">
+    {{ form.hidden_tag() }}
+    
+    {{ render_field(form.first_name, tabindex=100) }}
+
+    {{ render_field(form.last_name, tabindex=110) }}
+
+    {{ render_field(form.email, tabindex=120) }}
+
+    {{ render_field(form.password, tabindex=130) }}
+
+    {{ render_multiselect_field(form.role_id, tabindex=140) }}
+
+    <br>
+    <div class="form-actions">
+      {{ render_submit_field(form.submit, tabindex=150) }}
+    </div>
+</form>
+
+{% endblock %}

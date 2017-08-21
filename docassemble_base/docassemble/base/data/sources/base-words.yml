@@ -21,6 +21,7 @@
 "Are you sure you want to delete all saved interviews?": Null
 "attachment_message_plural": Null
 "attachment_message_singular": Null
+"A user with that e-mail has already registered": Null
 "Authentication failed.": Null
 "Authentication": Null
 "Available interviews": Null
@@ -234,6 +235,7 @@
 "Package on PyPI": Null
 "Packages": Null
 "pages": Null
+"Password": Null
 "PDF/DOCX File": Null
 "pdf_message": Null
 "Per Month": Null
@@ -351,6 +353,7 @@
 "The configuration file was saved.": Null
 "The information was saved.": Null
 "The mapping was reset because the folder does not appear to exist anymore.": Null
+"The new user has been created": Null
 "The operator is no longer controlling your screen.": Null
 "The package information was saved.": Null
 "The package update was not fully successful.  The logs are below.": Null

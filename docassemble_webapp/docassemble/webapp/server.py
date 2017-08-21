@@ -6148,10 +6148,12 @@ def interview_start():
                 interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
             else:
                 interview_title = word('Untitled')
+            status_class = None
         except:
+            interview_title = yaml_filename
+            status_class = 'dainterviewhaserror'
             logmessage("interview_dispatch: unable to load interview file " + yaml_filename)
-            continue
-        interview_info.append(dict(link=url_for('index', i=yaml_filename), display=interview_title))
+        interview_info.append(dict(link=url_for('index', i=yaml_filename), display=interview_title, status_class=status_class))
     argu = dict(extra_css=Markup(global_css), extra_js=Markup(global_js), version_warning=None, interview_info=interview_info, tab_title=daconfig.get('start page title', word('Interviews')), title=daconfig.get('start page heading', word('Available interviews')))
     if 'embedded' in request.args and int(request.args['embedded']):
         the_page = 'pages/start-embedded.html'

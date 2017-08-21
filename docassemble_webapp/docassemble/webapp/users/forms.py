@@ -1,6 +1,6 @@
 import sys
 import re
-from flask_user.forms import RegisterForm, LoginForm
+from flask_user.forms import RegisterForm, LoginForm, password_validator
 from flask_wtf import FlaskForm
 from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, PasswordField, validators
 from wtforms.validators import DataRequired, Email, Optional
@@ -95,6 +95,18 @@ class MyInviteForm(FlaskForm):
     next = HiddenField()
     submit = SubmitField(word('Invite'))
 
+class UserAddForm(FlaskForm):
+    email = StringField(word('E-mail'), validators=[
+        validators.Required(word('E-mail is required')),
+        validators.Email(word('Invalid E-mail'))])
+    first_name = StringField(word('First name'), validators=[
+        DataRequired(word('First name is required'))])
+    last_name = StringField(word('Last name'), validators=[
+        DataRequired(word('Last name is required'))])
+    role_id = SelectMultipleField(word('Privileges'), coerce=int)
+    password = StringField(word('Password'), widget=PasswordInput(hide_value=False), validators=[password_validator])
+    submit = SubmitField(word('Add'))
+    
 class PhoneLoginForm(FlaskForm):
     phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255)])
     #next = HiddenField()

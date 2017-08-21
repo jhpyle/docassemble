@@ -3,16 +3,19 @@ from docassemble.webapp.db_object import db
 from flask import redirect, render_template, render_template_string, request, flash, current_app
 from flask import url_for as url_for
 from flask_user import current_user, login_required, roles_required, emails
-from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm
+from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm, UserAddForm
 from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
 from docassemble.base.functions import word, debug_status, get_default_timezone
 from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
+from docassemble.base.generate_key import random_alphanumeric
 from sqlalchemy import or_, and_
 
 import random
 import string
 import pytz
+import datetime
+import re
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 
@@ -212,7 +215,7 @@ def invite():
 
         user, user_email = user_manager.find_user_by_email(email)
         if user:
-            flash("A user with that email has already registered", "error")
+            flash(word("A user with that e-mail has already registered"), "error")
             return redirect(url_for('invite'))
         else:
             user_invite = MyUserInvitation(email=email, role_id=the_role_id, invited_by_user_id=current_user.id)
@@ -238,3 +241,43 @@ def invite():
         return redirect(next)
 
     return render_template('flask_user/invite.html', version_warning=None, bodyclass='adminbody', form=invite_form)
+
+@app.route('/user/add', methods=['GET', 'POST'])
+@login_required
+@roles_required('admin')
+def user_add():
+    user_role = Role.query.filter_by(name='user').first()
+    add_form = UserAddForm(request.form, role_id=[str(user_role.id)])
+    add_form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
+    add_form.role_id.default = user_role.id
+    if str(add_form.role_id.data) == 'None':
+        add_form.role_id.data = user_role.id
+    if request.method == 'POST' and add_form.validate():
+        user, user_email = app.user_manager.find_user_by_email(add_form.email.data)
+        if user:
+            flash(word("A user with that e-mail has already registered"), "error")
+            return redirect(url_for('user_add'))
+        user_auth = UserAuthModel(password=app.user_manager.hash_password(add_form.password.data))
+        the_user = UserModel(
+            active=True,
+            nickname=re.sub(r'@.*', '', add_form.email.data),
+            social_id='local$' + random_alphanumeric(32),
+            email=add_form.email.data,
+            user_auth=user_auth,
+            first_name = add_form.first_name.data,
+            last_name = add_form.last_name.data,
+            confirmed_at = datetime.datetime.now()
+        )
+        num_roles = 0
+        for role in Role.query.order_by('id'):
+            if role.id in add_form.role_id.data:
+                the_user.roles.append(role)
+                num_roles +=1
+        if num_roles == 0:
+            the_user.roles.append(user_role)
+        db.session.add(user_auth)
+        db.session.add(the_user)
+        db.session.commit()
+        flash(word("The new user has been created"), "error")
+        return redirect(url_for('user_list'))
+    return render_template('users/add_user_page.html', version_warning=None, bodyclass='adminbody', form=add_form)
