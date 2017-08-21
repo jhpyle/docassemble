@@ -58,7 +58,7 @@ Users who log in with an e-mail address and password have the
 additional option of using [two-factor authentication].
 
 If you do not want your users to be able to log in, you can hide the
-Login button by setting the [`show_login`] setting in the
+Login button by setting the [`show login`] setting in the
 [configuration].
 
 When a user is logged in, the user's information is made available to
@@ -106,7 +106,7 @@ and user role(s) must be set.
 Administrators can invite people to register by clicking "Invite a
 user" on the [User List] page.  **docassemble** will send an e-mail
 with a link that the person can click on to register.  If
-[`allow_registration`] is set to `False`, this is the only way that
+[`allow registration`] is set to `False`, this is the only way that
 users can register on the site.
 
 The administrator can select the role that the user will be assigned
@@ -292,3 +292,6 @@ immediately.  (The [`process_action()`] function will run after
 [`phone login`]: {{ site.baseurl }}/docs/config.html#phone login
 [`twilio`]: {{ site.baseurl }}/docs/config.html#twilio
 [two-factor authentication]: {{ site.baseurl }}/docs/config.html#mfa
+[`show login`]: {{ site.baseurl }}/docs/config.html#show login
+[`imports`]: {{ site.baseurl }}/docs/initial.html#imports
+[`modules`]: {{ site.baseurl }}/docs/initial.html#modules
