@@ -739,3 +739,5 @@ The setting can also be made on a per-attachment basis by setting the
 [`navigation bar`]: #navigation bar
 [`nav.set_sections()`]: {{ site.baseurl}}/docs/functions.html#DANav.set_sections
 [action]: {{ site.baseurl}}/docs/functions.html#actions
+[PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
+[PDF/A]: https://en.wikipedia.org/wiki/PDF/A

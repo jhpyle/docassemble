@@ -466,3 +466,4 @@ interview where two users each sign a document:
 [`user_privileges()`]: {{ site.baseurl }}/docs/functions.html#user_privileges
 [`user_has_privilege()`]: {{ site.baseurl }}/docs/functions.html#user_has_privilege
 [function]: {{ site.baseurl }}/docs/functions.html
+[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py

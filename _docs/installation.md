@@ -1447,3 +1447,5 @@ All of these system administration headaches can be avoided by
 [reverse DNS]: https://en.wikipedia.org/wiki/Reverse_DNS_lookup
 [submit a support request]: http://docs.aws.amazon.com/ses/latest/DeveloperGuide/request-production-access.html
 [`appname`]: {{ site.baseurl }}/docs/config.html#appname
+[pdfx]: https://www.ctan.org/pkg/pdfx?lang=en
+[LaTeX]: https://en.wikipedia.org/wiki/LaTeX

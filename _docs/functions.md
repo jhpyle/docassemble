@@ -3885,3 +3885,4 @@ $(document).on('daPageLoad', function(){
 [`sections`]: {{ site.baseurl }}/docs/initial.html#sections
 [`nav.set_sections()`]: #DANav.set_sections
 [`DANav`]: #DANav.set_sections
+[table]: {{ site.baseurl }}/docs/template.html#table

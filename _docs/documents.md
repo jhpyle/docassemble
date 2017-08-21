@@ -1108,3 +1108,5 @@ Including `allow emailing: False` will disable this:
 [dictionary]: {{ site.baseurl }}/docs/groups.html#gather dictionary
 [auto-format]: https://support.office.com/en-us/article/Change-curly-quotes-to-straight-quotes-and-vice-versa-017963a0-bc5f-486b-9c9d-0ec511a8fb8f
 [`pdf/a` features setting]: {{ site.baseurl }}/docs/initial.html#pdfa
+[PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
+[PDF/A]: https://en.wikipedia.org/wiki/PDF/A

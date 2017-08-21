@@ -295,3 +295,4 @@ immediately.  (The [`process_action()`] function will run after
 [`show login`]: {{ site.baseurl }}/docs/config.html#show login
 [`imports`]: {{ site.baseurl }}/docs/initial.html#imports
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
+[action]: {{ site.baseurl }}/docs/functions.html#actions

@@ -374,3 +374,4 @@ information about this feature, see the section on
 [`<%def>`]: http://docs.makotemplates.org/en/latest/defs.html#using-defs
 [`def` initial block]: {{ site.baseurl }}/docs/initial.html#def
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
+[signature field]: {{ site.baseurl }}/docs/fields.html#signature
