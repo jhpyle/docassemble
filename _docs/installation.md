@@ -1292,16 +1292,19 @@ pip uninstall docassemble.webapp
 
 Sometimes, new versions of docassemble require additional database
 tables or additional columns in tables.  The
-[`docassemble.webapp.fix_postgresql_tables`] module adds new columns
-to existing database tables, while the
-[`docassemble.webapp.create_tables`] module creates new tables.
+[`docassemble.webapp.create_tables`] module uses [alembic] to make any
+necessary modifications to the tables.
 
-The latter works on non-[PostgreSQL] databases, but the former does
-not.  If you are running a non-[PostgreSQL] database, and you get an
-error about a missing column, see the [schema] for information about
-what database columns need to exist.
+{% highlight bash %}
+sudo -H -u www-data bash -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables"
+{% endhighlight %}
 
-You can reset your database by running the following commands as root:
+If you get an error in your logs about a missing column and running
+[`docassemble.webapp.create_tables`] does not fix the problem, see the
+database [schema] for information about what database columns need to
+exist in the database.
+
+You can delete and recreate your database by running the following commands as root:
 
 {% highlight bash %}
 echo "drop database docassemble; create database docassemble owner docassemble;" | sudo -u postgres psql

@@ -390,7 +390,6 @@ db:
   host: localhost
   port: 5432
   table prefix: Null
-  schema file: /usr/share/docassemble/config/db-schema.txt
 {% endhighlight %}
 
 The `prefix` is a [SQLAlchemy] prefix.  If you use a database other
@@ -401,11 +400,6 @@ at the hostname `host` on the port `port`, and will authenticate with
 the `user` and `password`.  It will connect to the database called
 `name`.  If you want separate **docassemble** systems to share the
 same database, you can set a `table prefix`.
-
-<a name="db schema file"></a>The `schema file` directive helps
-**docassemble** create missing columns during the startup process.  It
-is used by the [`docassemble.webapp.fix_postgresql_tables`] module
-during [Docker] startup and during [installation] and [upgrades].
 
 ## <a name="appname"></a><a name="brandname"></a>Branding
 

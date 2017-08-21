@@ -9,41 +9,15 @@ The [`db`] directive in the [configuration] tells **docassemble**
 where to find this SQL database.
 
 The necessary data tables are created with the
-[`docassemble.webapp.create_tables`] module:
+[`docassemble.webapp.create_tables`] module.  If new versions of
+**docassemble** add new tables or modify the columns of existing
+tables, the [`docassemble.webapp.create_tables`] module uses [alembic]
+to make these changes to the database.
 
-{% highlight bash %}
-python -m docassemble.webapp.create_tables
-{% endhighlight %}
-
-Thus, if new versions of **docassemble** add new database tables, this
-module will create the tables.  But if new versions of **docassemble**
-add columns to existing tables, the
-[`docassemble.webapp.create_tables`] module (which is based on
-[SQLAlchemy]) will not be able to add those additional columns.
-
-If you are using [PostgreSQL] as your backend database, the
-[`docassemble.webapp.fix_postgresql_tables`] module will add these
-missing columns:
-
-{% highlight bash %}
-python -m docassemble.webapp.fix_postgresql_tables
-{% endhighlight %}
-
-This module depends on a file called [`db-schema.txt`], which is
-stored in `/usr/share/docassemble/config/`.  This file will exist if
-you are using [Docker] or if you followed the [installation]
-instructions and copied necessary files into this folder.  (The
-location of this file is configurable with the [`schema file`]
-directive under [`db`] in the [configuration].)
-
-If you are running **docassemble** with [Docker], these two database
-update modules will execute automatically during the container
-startup, and you shouldn't have to worry about upgrading your database
-tables.
-
-If you are using a SQL database other than [PostgreSQL], however, you
-might need to make manual changes to existing database tables after a
-**docassemble** upgrade.
+The [`docassemble.webapp.create_tables`] module runs automatically
+within the [Docker] container whenever the container [starts up] or
+when the server [restarts] (e.g., when a package is installed or
+upgraded).
 
 The following table lists all of the tables and columns that
 **docassemble** uses.  (This is output from [PostgreSQL], but the same
@@ -51,6 +25,9 @@ concepts exist in most SQL database systems.)
 
 {% include db-schema.html %}
 
+[starts up]: {{ site.github.repository_url }}/blob/master/Docker/initialize.sh
+[restarts]: {{ site.github.repository_url }}/blob/master/Docker/reset.sh
+[alembic]: http://alembic.zzzcomputing.com/en/latest/
 [PostgreSQL]: https://www.postgresql.org/
 [SQLAlchemy]: http://www.sqlalchemy.org/
 [Docker]: {{ site.baseurl }}/docs/docker.html
