@@ -41,7 +41,7 @@ use the HTTP and HTTPS ports if it has exclusive use of them.)
 # Supported platforms
 
 The installation instructions in this section assume you are
-installing **docassemble** into a 64 bit [Debian]/[Ubuntu] environment
+installing **docassemble** into a 64 bit [Debian stretch] environment
 (not using [Docker]).
 
 However, **docassemble** has been developed to be
@@ -145,7 +145,7 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl \
   libaudio-scan-perl libaudio-flac-header-perl \
   libparallel-forkmanager-perl libav-tools autoconf automake \
-  libjpeg-dev zlib1g-dev libpq-dev logrotate tmpreaper cron pdftk \
+  libjpeg-dev zlib1g-dev libpq-dev logrotate cron pdftk \
   fail2ban libxml2 libxslt1.1 libxml2-dev libxslt1-dev \
   libcurl4-openssl-dev libssl-dev redis-server rabbitmq-server \
   libreoffice libtool libtool-bin pacpl syslog-ng rsync s3cmd \
@@ -172,16 +172,14 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   tesseract-ocr-srp tesseract-ocr-swa tesseract-ocr-swe \
   tesseract-ocr-tam tesseract-ocr-tel tesseract-ocr-tgl \
   tesseract-ocr-tha tesseract-ocr-tur tesseract-ocr-ukr \
-  tesseract-ocr-vie build-essential nodejs npm exim4-daemon-heavy \
-  libsvm3 libsvm-dev liblinear1 liblinear-dev libzbar-dev \
+  tesseract-ocr-vie build-essential nodejs exim4-daemon-heavy \
+  libsvm3 libsvm-dev liblinear3 liblinear-dev libzbar-dev \
   cm-super libgs-dev ghostscript texlive-extra-utils
 {% endhighlight %}
 
 The libraries `libcurl4-openssl-dev` and `libssl-dev` are particularly
 important; **docassemble**'s [Python] dependencies will not install
 unless these libraries are present.
-
-On [Ubuntu], you may need to replace `liblinear1` with `liblinear3`.
 
 **docassemble** depends on a recent version of the [pdfx] package
 for [LaTeX].
@@ -194,9 +192,11 @@ rm /tmp/pdfx.zip
 {% endhighlight %}
 
 **docassemble** depends on version 5.0.1 or later of the
-[Perl Audio Converter] to convert uploaded sound files into other
-formats.  If your distribution offers an earlier version, you will
-need to install [pacpl] it from the source:
+[Perl Audio Converter] and on version 1.17 or later of [Pandoc].  If
+your Linux distribution only provides earlier versions, you should
+install from the source.
+
+The latest version of the [Perl Audio Converter] can be installed by doing:
 
 {% highlight bash %}
 sudo apt-get -q -y remove pacpl
@@ -208,13 +208,7 @@ sudo make install
 cd ..
 {% endhighlight %}
 
-(Note that these instructions call for the standard [pacpl] to be
-installed and then uninstalled; this is a quick way of ensuring that
-[pacpl]'s dependencies exist on the system.)
-
-**docassemble** also depends on [Pandoc] version 1.17 or later.  If
-your Linux distribution provides an earlier version, you can install
-from the source:
+The latest version of [Pandoc] can be installed by doing:
 
 {% highlight bash %}
 wget https://github.com/jgm/pandoc/releases/download/1.19.2.1/pandoc-1.19.2.1-1-amd64.deb
@@ -233,9 +227,17 @@ To enable the use of [Azure blob storage] as a means of
 [data storage], you will need to run the following:
 
 {% highlight bash %}
-sudo update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
+sudo update-alternatives --install /usr/bin/node node /usr/bin/nodejs
+10
+wget -qO- https://deb.nodesource.com/setup_6.x | sudo bash -
+sudo apt-get -y install nodejs
 sudo npm install -g azure-storage-cmd
 {% endhighlight %}
+
+([npm] is absent from [Debian stretch] due to security issues, so it
+needs to be installed from another source.  If [npm] is available on
+your Linux distribution, it is probably sufficient just to run `npm
+install -g azure-storage-cmd`.)
 
 **docassemble** uses locale settings to format numbers, get currency
 symbols, and other things.  Do `echo $LANG` to see what locale you are
@@ -1206,6 +1208,18 @@ source /usr/share/docassemble/local/bin/activate
 If you encounter any errors, please register an "issue" on the
 **docassemble** [issues page]({{ site.github.repository_url }}/issues).
 
+# Known issues
+
+As of August 2017, harmless errors have been issuing when a script exits:
+
+{% highlight text %}
+Exception TypeError: "'NoneType' object is not callable" in <function remove at 0x7fd44df87410> ignored
+Exception TypeError: "'NoneType' object is not callable" in <function remove at 0x7fd44df87410> ignored
+{% endhighlight %}
+
+This error message is caused by the `weakref` [Python] package.  It
+appears to be harmless and may be fixed soon.
+
 # Using different web servers and/or SQL database backends
 
 **docassemble** needs a web server and a SQL server, but it is not
@@ -1452,3 +1466,5 @@ All of these system administration headaches can be avoided by
 [`appname`]: {{ site.baseurl }}/docs/config.html#appname
 [pdfx]: https://www.ctan.org/pkg/pdfx?lang=en
 [LaTeX]: https://en.wikipedia.org/wiki/LaTeX
+[Debian stretch]: https://wiki.debian.org/DebianStretch
+[npm]: https://www.npmjs.com

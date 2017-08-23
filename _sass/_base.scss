@@ -519,3 +519,33 @@ div.col-md-5 > figure > pre {
 .dasearchform {
     max-width: 100%;
 }
+
+.daexample .dafull {
+    display: none;
+}
+
+.daexample:hover .dafull {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    background-color: #ddd;
+    display: inline-block;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.daexample .dafull:hover {
+    background-color: #ccc;
+}
+
+.daexample .dafull a {
+    padding: 2px 10px 0px 10px;
+    text-decoration: none;
+    color: #777;
+    display: block;
+}
+
+.daexample .dafull a:focus,
+.daexample .dafull a:hover {
+    color: #555;
+}

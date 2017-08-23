@@ -6056,6 +6056,12 @@
     ${ disclaimer }
 
     To get started, press **Continue**.
+"template-code": "question: |\n  Please upload the template file.\nsubquestion: |\n\
+  \  For best results, download\n  [this file] and then upload\n  it here.\n\n  [this\
+  \ file]: ${ url_of('letter_template.docx') }\nfields:\n  - File: the_template_file\n\
+  \    datatype: file\n---\nmandatory: True\nquestion: |\n  Here is your document.\n\
+  attachment:\n  - name: Your letter\n    filename: letter\n    docx template file:\
+  \ \n      code: |\n        the_template_file"
 "template-file": |-
   template: disclaimer
   content file: disclaimer.md

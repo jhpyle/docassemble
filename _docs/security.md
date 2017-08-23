@@ -57,11 +57,6 @@ accounts on production servers, and that you only install
 
 # Issues to look out for
 
-The standard [Docker] deployment of **docassemble** uses [tmpreaper]
-to clean out temporary files.  There have been warnings about security
-issues related to [tmpreaper], which are discussed in
-/usr/share/doc/tmpreaper/README.security.gz in the Debian package.
-
 **docassemble** makes extensive use of [eval] and [exec], including to
 process information supplied by the user.  There are protections in
 place to prevent code injection, but more work could be done to harden
@@ -80,10 +75,21 @@ information that is stored on the server.  As a result, an intruder
 with access to the server could reverse-engineer the encrpytion key
 for an interview belonging to a user who logs in with Google or Facebook.
 
+On [Docker], **docassemble** installs [npm] from a [different source]
+because [npm] is missing from [Debian stretch] due to unresolved
+security issues in a Javascript library.  The installation of [npm]
+may have security implications.  However, the only Javascript-based
+application that **docassemble** uses is [`azure-storage-cmd`], and
+this is only used when [Azure blob storage] is enabled.
+
+[Azure blob storage]: {{ site.baseurl }}/docs/docker.html#persistent azure
+[`azure-storage-cmd`]: https://www.npmjs.com/package/azure-storage-cmd
+[different source]: http://linuxbsdos.com/2017/06/26/how-to-install-node-js-lts-on-debian-9-stretch/
+[Debian stretch]: https://wiki.debian.org/DebianStretch
+[npm]: https://www.npmjs.com
 [login/password system]: {{ site.baseurl }}/docs/users.html
 [fail2ban]: https://en.wikipedia.org/wiki/Fail2ban
 [Docker]: {{ site.baseurl }}/docs/docker.html
-[tmpreaper]: https://packages.debian.org/sid/admin/tmpreaper
 [eval]: https://docs.python.org/2/library/functions.html#eval
 [exec]: https://docs.python.org/2/reference/simple_stmts.html#exec
 [Amazon S3]: https://aws.amazon.com/s3/
