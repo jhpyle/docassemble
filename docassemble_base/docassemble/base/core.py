@@ -1714,6 +1714,9 @@ class DATemplate(DAObject):
             for decoration in kwargs['decorations']:
                 if decoration and decoration != '':
                     self.decorations.append(decoration)
+    def show(self, **kwargs):
+        """Displays the contents of the template."""
+        return unicode(self.__str__())
     def __str__(self):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             return docassemble.base.filter.docx_template_filter(self.content)
