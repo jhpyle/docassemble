@@ -2423,7 +2423,7 @@ class Question:
         for doc_format in result['formats_to_use']:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
-                    if doc_format == 'docx':
+                    if doc_format == 'docx' or ('docx' not in result['formats_to_use'] and doc_format == 'pdf'):
                         result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'].path(user_dict=user_dict))
                         if type(attachment['options']['fields']) in [str, unicode]:
                             result['field_data'] = user_dict

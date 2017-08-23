@@ -1,6 +1,11 @@
 # Change Log
 
-## [0.1.40] - 2017-08-22
+## [0.1.41] - 2017-08-23
+### Added
+- Configuration directive `require referer` that allows users who use
+  referer blockers to use **docassemble**.
+
+## [0.1.40] - 2017-08-23
 ### Changed
 - Upgraded from Debian jessie to Debian stretch
 ### Added
