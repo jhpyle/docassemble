@@ -1047,15 +1047,15 @@ question: |
 decoration: bills
 fields:
   - Employment: x.income['employment'].exists
-    datatype: yesno
+    datatype: yesnowide
   - Self-employment: x.income['self employment'].exists
-    datatype: yesno
+    datatype: yesnowide
   - SSI: x.income['SSI'].exists
-    datatype: yesno
+    datatype: yesnowide
   - Cash assistance: x.income['TANF'].exists
-    datatype: yesno
+    datatype: yesnowide
   - None of the above: x.no_income_exists
-    datatype: yesno
+    datatype: yesnowide
     uncheck others: True
 comment: |
   The datatype "yesnowide" is just like the data type "yesno" except

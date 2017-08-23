@@ -278,6 +278,6 @@ def user_add():
         db.session.add(user_auth)
         db.session.add(the_user)
         db.session.commit()
-        flash(word("The new user has been created"), "error")
+        flash(word("The new user has been created"), "success")
         return redirect(url_for('user_list'))
     return render_template('users/add_user_page.html', version_warning=None, bodyclass='adminbody', form=add_form)
