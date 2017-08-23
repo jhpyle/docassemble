@@ -1715,6 +1715,8 @@ class DATemplate(DAObject):
                 if decoration and decoration != '':
                     self.decorations.append(decoration)
     def __str__(self):
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+            return docassemble.base.filter.docx_template_filter(self.content)
         return(self.content)
     def __unicode__(self):
         return unicode(self.__str__())

@@ -71,8 +71,11 @@ signature: user.signature
 under: |
   ${ user.name }
 ---
-code: |
-  phone_number = "202-555-1234"
+template: phone_number
+content: |
+  \_\_\_Blah\_\_\_
+#code: |
+#  phone_number = "202-555-1234"
 ---
 mandatory: true
 code: |
