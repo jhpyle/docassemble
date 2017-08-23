@@ -1,6 +1,8 @@
 # Change Log
 
 ## [0.1.40] - 2017-08-22
+### Changed
+- Upgraded from Debian jessie to Debian stretch
 ### Added
 - Ability to specify filenames in `attachment` blocks using `code`.
 ### Fixed
