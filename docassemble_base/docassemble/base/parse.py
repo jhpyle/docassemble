@@ -2317,7 +2317,7 @@ class Question:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
                         result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'])
                     elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
-                        #logmessage("field_data is " + str(result['field_data']))
+                        logmessage("field_data is " + str(result['field_data']))
                         docassemble.base.functions.set_context('docx', template=result['template'])
                         result['template'].render(result['field_data'], jinja_env=Environment(undefined=StrictUndefined))
                         docassemble.base.functions.reset_context()

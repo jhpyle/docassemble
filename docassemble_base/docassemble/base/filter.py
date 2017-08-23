@@ -408,7 +408,7 @@ def docx_template_filter(text):
     text = re.sub(r'\[ENDASH\]', '--', text)
     text = re.sub(r'\[EMDASH\]', '---', text)
     text = re.sub(r'\[HYPHEN\]', '-', text)
-    text = re.sub(r'\\_', '_', text)
+    text = re.sub(r'\\', '', text)
     text = re.sub(r'\[CHECKBOX\]', '____', text)
     text = re.sub(r'\[BLANK\]', r'__________________', text)
     text = re.sub(r'\[BLANKFILL\]', r'__________________', text)
