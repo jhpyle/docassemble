@@ -1923,7 +1923,7 @@ def qr_code(string, **kwargs):
     the string you want to encode, you can just use the "[QR ...]" markup.  
     This function is useful when you want to assemble the string programmatically.
     Takes an optional keyword argument "width"
-    (e.g., qr_code('http://google.com', width='2in'))."""
+    (e.g., qr_code('https://google.com', width='2in'))."""
     width = kwargs.get('width', None)
     if width is None:
         return('[QR ' + string + ']')

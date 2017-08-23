@@ -2,8 +2,6 @@ from __future__ import with_statement
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
-import docassemble.base.config
-docassemble.base.config.load()
 from docassemble.webapp.database import alchemy_connection_string
 
 # this is the Alembic Config object, which provides

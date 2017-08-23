@@ -1208,7 +1208,19 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False):
     return output
 
 def process_file(saved_file, orig_file, mimetype, extension, initial=True):
-    if extension == "jpg" and daconfig.get('imagemagick', 'convert') is not None:
+    if extension == "gif" and daconfig.get('imagemagick', 'convert') is not None:
+        unconverted = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".gif", delete=False)
+        converted = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False)
+        shutil.move(orig_file, unconverted.name)
+        call_array = [daconfig.get('imagemagick', 'convert'), str(unconverted.name), 'png:' + converted.name]
+        result = call(call_array)
+        if result == 0:
+            saved_file.copy_from(converted.name, filename=re.sub(r'\.[^\.]+$', '', saved_file.filename) + '.png')
+        else:
+            logmessage("process_file: error converting from gif to png")
+        shutil.move(unconverted.name, saved_file.path)
+        saved_file.save()
+    elif extension == "jpg" and daconfig.get('imagemagick', 'convert') is not None:
         unrotated = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".jpg", delete=False)
         rotated = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".jpg", delete=False)
         shutil.move(orig_file, unrotated.name)
@@ -11012,7 +11024,7 @@ def utilities():
                 if fields is None:
                     fields_output = word("Error: no fields could be found in the file")
                 else:
-                    fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + the_file.filename + "\n    fields:\n"
+                    fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', the_file.filename) + "\n    fields:\n"
                     for field, default, pageno, rect, field_type in fields:
                         fields_output += '      "' + field + '": ' + default + "\n"
                     fields_output += "---"
@@ -12124,6 +12136,22 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     data = repr('')
                 else:
                     data = None
+            elif hasattr(field, 'datatype') and field.datatype in ["ml", "mlarea"]:
+                try:
+                    exec("import docassemble.base.util", user_dict)
+                except Exception as errMess:
+                    special_messages.append("Error: " + str(errMess))
+                if 'ml_train' in interview_status.extras and field.number in interview_status.extras['ml_train']:
+                    if not interview_status.extras['ml_train'][field.number]:
+                        use_for_training = 'False'
+                    else:
+                        use_for_training = 'True'
+                else:
+                    use_for_training = 'True'
+                if 'ml_group' in interview_status.extras and field.number in interview_status.extras['ml_group']:
+                    data = 'docassemble.base.util.DAModel(' + repr(saveas) + ', group_id=' + repr(interview_status.extras['ml_group'][field.number]) + ', text=' + repr(inp) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
+                else:
+                    data = 'docassemble.base.util.DAModel(' + repr(saveas) + ', text=' + repr(inp) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
             elif hasattr(field, 'datatype') and field.datatype in ["file", "files", "camera", "camcorder", "microphone"]:
                 if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
                     skip_it = True
@@ -12325,26 +12353,6 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         dateutil.parser.parse(data)
                     except:
                         data = None                    
-            elif hasattr(field, 'datatype') and field.datatype in ['ml', 'mlarea']:
-                if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
-                    data = repr('')
-                    skip_it = True
-                else: #PPP
-                    try:
-                        exec("import docassemble.base.util", user_dict)
-                    except Exception as errMess:
-                        error_messages.append(("error", "Error: " + str(errMess)))
-                    if orig_key in ml_info and 'train' in ml_info[orig_key]:
-                        if not ml_info[orig_key]['train']:
-                            use_for_training = 'False'
-                        else:
-                            use_for_training = 'True'
-                    else:
-                        use_for_training = 'True'
-                    if orig_key in ml_info and 'group_id' in ml_info[orig_key]:
-                        data = 'docassemble.base.util.DAModel(' + repr(key) + ', group_id=' + repr(ml_info[orig_key]['group_id']) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
-                    else:
-                        data = 'docassemble.base.util.DAModel(' + repr(key) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
             elif hasattr(field, 'datatype') and field.datatype in ['range']:
                 if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
                     data = repr('')
@@ -12606,14 +12614,14 @@ def get_email_obj(email, short_record, user):
         process_file(saved_file_att, saved_file_att.path, attachment_record.content_type, attachment_record.extension, initial=False)
         if upload.filename == 'headers.json':
             #sys.stderr.write("Processing headers\n")
-            email_obj.initializeAttribute('headers', DAFile, mimetype=attachment_record.content_type, extension=attachment_record.extension, number=attachment_record.upload)
+            email_obj.initializeAttribute('headers', DAFile, mimetype=mimetype, extension=extension, number=attachment_record.upload)
         elif upload.filename == 'attachment.txt' and attachment_record.index < 3:
             #sys.stderr.write("Processing body text\n")
-            email_obj.initializeAttribute('body_text', DAFile, mimetype=attachment_record.content_type, extension=attachment_record.extension, number=attachment_record.upload)
+            email_obj.initializeAttribute('body_text', DAFile, mimetype=mimetype, extension=extension, number=attachment_record.upload)
         elif upload.filename == 'attachment.html' and attachment_record.index < 3:
-            email_obj.initializeAttribute('body_html', DAFile, mimetype=attachment_record.content_type, extension=attachment_record.extension, number=attachment_record.upload)
+            email_obj.initializeAttribute('body_html', DAFile, mimetype=mimetype, extension=extension, number=attachment_record.upload)
         else:
-            email_obj.attachment.appendObject(DAFile, mimetype=attachment_record.content_type, extension=attachment_record.extension, number=attachment_record.upload)
+            email_obj.attachment.appendObject(DAFile, mimetype=mimetype, extension=extension, number=attachment_record.upload)
     if not hasattr(email_obj, 'headers'):
         email_obj.headers = None
     if not hasattr(email_obj, 'body_text'):

@@ -1,0 +1,80 @@
+metadata:
+  title: Computed template filename
+  short title: Computed
+  example start: 3
+  example end: 4
+  documentation: "https://docassemble.org/docs/documents.html#template file code"
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  user: Individual
+  adverse_party: Individual
+---
+question: |
+  Please upload the template file.
+subquestion: |
+  For best results, download
+  [this file] and then upload
+  it here.
+
+  [this file]: ${ url_of('letter_template.docx') }
+fields:
+  - File: the_template_file
+    datatype: file
+---
+mandatory: True
+question: |
+  Here is your document.
+attachment:
+  - name: Your letter
+    filename: letter
+    docx template file: 
+      code: |
+        the_template_file
+---
+question: |
+  What is your name?
+fields:
+  - First Name: user.name.first
+  - Last Name: user.name.last
+---
+question: |
+  What is the adverse party's name?
+fields:
+  - First Name: adverse_party.name.first
+  - Last Name: adverse_party.name.last
+---
+question: |
+  What is the address of ${ adverse_party }?
+fields:
+  - Address: adverse_party.address.address
+  - Unit: adverse_party.address.unit
+    required: False
+  - City: adverse_party.address.city
+  - State: adverse_party.address.state
+    code: |
+      states_list()
+  - Zip: adverse_party.address.zip
+    required: False
+---
+question: |
+  What the subject of your complaint?
+field: subject_matter
+choices:
+  - world peace
+  - overpriced coffee
+  - so many channels, nothing on
+  - youth unemployment
+---
+question: |
+  Please sign your name below.
+subquestion: |
+  Your signature will be added to the letter.
+signature: user.signature
+under: |
+  ${ user.name }
+---
+code: |
+  phone_number = "202-555-1234"

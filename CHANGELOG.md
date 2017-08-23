@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.1.40] - 2017-08-22
+### Added
+- Ability to specify filenames in `attachment` blocks using `code`.
+### Fixed
+- Error when GIFs inserted into RTF file.
+
 ## [0.1.39] - 2017-08-20
 ### Added
 - Page where administrator can add users manually without going

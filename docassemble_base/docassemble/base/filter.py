@@ -701,7 +701,7 @@ def image_as_rtf(match, question=None):
     if width == 'full':
         width_supplied = False
     file_reference = match.group(1)
-    file_info = server.file_finder(file_reference, convert={'svg': 'png'}, question=question)
+    file_info = server.file_finder(file_reference, convert={'svg': 'png', 'gif': 'png'}, question=question)
     if 'path' not in file_info:
         return ''
     #logmessage('image_as_rtf: path is ' + file_info['path'])

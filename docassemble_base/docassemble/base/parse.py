@@ -10,6 +10,7 @@ import ruamel.yaml
 import os
 import os.path
 import sys
+import urllib
 import httplib2
 import datetime
 import operator
@@ -470,14 +471,38 @@ def docx_variable_fix(variable):
 
 class FileInPackage:
     def __init__(self, fileref, area, package):
-        if area == 'template':
+        if area == 'template' and type(fileref) is not dict:
             docassemble.base.functions.package_template_filename(fileref, package=package)
         self.fileref = fileref
+        if type(self.fileref) is dict:
+            self.is_code = True
+            if 'code' not in self.fileref:
+                raise DAError("A docx or pdf template file expressed in the form of a dictionary must have 'code' as the key" + str(self.fileref))
+            self.code = compile(self.fileref['code'], '', 'eval')
+        else:
+            self.is_code = False
         self.area = area
         self.package = package
-    def path(self):
+    def path(self, user_dict=dict()):
         if self.area == 'template':
-            return docassemble.base.functions.package_template_filename(self.fileref, package=self.package)
+            if self.is_code:
+                the_file_ref = eval(self.code, user_dict)
+                if str(type(the_file_ref)) == "<class 'docassemble.base.core.DAFile'>":
+                    the_file_ref = the_file_ref.path()
+                elif str(type(the_file_ref)) == "<class 'docassemble.base.core.DAFileList'>" and len(the_file_ref.elements) > 0:
+                    the_file_ref = the_file_ref.elements[0].path()
+                elif re.search(r'^https?://', str(the_file_ref)):
+                    temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
+                    try:
+                        urllib.urlretrieve(str(the_file_ref), temp_template_file.name)
+                    except Exception as err:
+                        raise DAError("FileInPackage: error downloading " + str(the_file_ref) + ": " + str(err))
+                    the_file_ref = temp_template_file.name
+                if not str(the_file_ref).startswith('/'):
+                    the_file_ref = docassemble.base.functions.package_template_filename(str(the_file_ref), package=self.package)
+                return the_file_ref
+            else:
+                return docassemble.base.functions.package_template_filename(self.fileref, package=self.package)
 
 class FileOnServer:
     def __init__(self, fileref, question):
@@ -1838,15 +1863,15 @@ class Question:
                             raise DAError('Unknown data type in attachment valid formats.' + self.idebug(target))
                     else:
                         target['valid formats'] = ['docx', 'pdf']
-                if type(target[template_type + ' template file']) is not str:
-                    raise DAError(template_type + ' template file supplied to attachment must be a string' + self.idebug(target))
+                if type(target[template_type + ' template file']) not in [str, unicode, dict]:
+                    raise DAError(template_type + ' template file supplied to attachment must be a string or a dict' + self.idebug(target))
                 if field_mode == 'auto':
                     options['fields'] = 'auto'
                 elif type(target['fields']) is not dict:
                     raise DAError('fields supplied to attachment must be a dictionary' + self.idebug(target))
                 target['content'] = ''
                 options[template_type + '_template_file'] = FileInPackage(target[template_type + ' template file'], 'template', package=self.package)
-                if template_type == 'docx':
+                if template_type == 'docx' and type(target[template_type + ' template file']) in [str, unicode]:
                     docx_template = docassemble.base.file_docx.DocxTemplate(options['docx_template_file'].path())
                     the_env = Environment()
                     the_xml = docx_template.get_xml()
@@ -2290,7 +2315,7 @@ class Question:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
-                        result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'])
+                        result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'])
                     elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
                         #logmessage("field_data is " + str(result['field_data']))
                         docassemble.base.functions.set_context('docx', template=result['template'])
@@ -2309,28 +2334,28 @@ class Question:
                     converter.output_format = doc_format
                     converter.input_content = result['markdown'][doc_format]
                     if 'initial_yaml' in attachment['options']:
-                        converter.initial_yaml = [x.path() for x in attachment['options']['initial_yaml']]
+                        converter.initial_yaml = [x.path(user_dict=user_dict) for x in attachment['options']['initial_yaml']]
                     elif 'initial_yaml' in self.interview.attachment_options:
-                        converter.initial_yaml = [x.path() for x in self.interview.attachment_options['initial_yaml']]
+                        converter.initial_yaml = [x.path(user_dict=user_dict) for x in self.interview.attachment_options['initial_yaml']]
                     if 'additional_yaml' in attachment['options']:
-                        converter.additional_yaml = [x.path() for x in attachment['options']['additional_yaml']]
+                        converter.additional_yaml = [x.path(user_dict=user_dict) for x in attachment['options']['additional_yaml']]
                     elif 'additional_yaml' in self.interview.attachment_options:
-                        converter.additional_yaml = [x.path() for x in self.interview.attachment_options['additional_yaml']]
+                        converter.additional_yaml = [x.path(user_dict=user_dict) for x in self.interview.attachment_options['additional_yaml']]
                     if doc_format == 'rtf':
                         if 'rtf_template_file' in attachment['options']:
-                            converter.template_file = attachment['options']['rtf_template_file'].path()
+                            converter.template_file = attachment['options']['rtf_template_file'].path(user_dict=user_dict)
                         elif 'rtf_template_file' in self.interview.attachment_options:
-                            converter.template_file = self.interview.attachment_options['rtf_template_file'].path()
+                            converter.template_file = self.interview.attachment_options['rtf_template_file'].path(user_dict=user_dict)
                     elif doc_format == 'docx':
                         if 'docx_reference_file' in attachment['options']:
-                            converter.reference_file = attachment['options']['docx_reference_file'].path()
+                            converter.reference_file = attachment['options']['docx_reference_file'].path(user_dict=user_dict)
                         elif 'docx_reference_file' in self.interview.attachment_options:
-                            converter.reference_file = self.interview.attachment_options['docx_reference_file'].path()
+                            converter.reference_file = self.interview.attachment_options['docx_reference_file'].path(user_dict=user_dict)
                     else:
                         if 'template_file' in attachment['options']:
-                            converter.template_file = attachment['options']['template_file'].path()
+                            converter.template_file = attachment['options']['template_file'].path(user_dict=user_dict)
                         elif 'template_file' in self.interview.attachment_options:
-                            converter.template_file = self.interview.attachment_options['template_file'].path()
+                            converter.template_file = self.interview.attachment_options['template_file'].path(user_dict=user_dict)
                     converter.metadata = result['metadata']
                     converter.convert(self)
                     result['file'][doc_format] = converter.output_filename
@@ -2399,7 +2424,7 @@ class Question:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
                     if doc_format == 'docx':
-                        result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'].path())
+                        result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'].path(user_dict=user_dict))
                         if type(attachment['options']['fields']) in [str, unicode]:
                             result['field_data'] = user_dict
                         else:

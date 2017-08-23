@@ -1,4 +1,7 @@
 from docassemble.base.error import DAError
+import docassemble.base.config
+if not docassemble.base.config.loaded:
+    docassemble.base.config.load()
 from docassemble.base.config import daconfig
 
 if 'db' not in daconfig:

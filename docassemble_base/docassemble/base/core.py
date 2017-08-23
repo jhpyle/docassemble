@@ -1621,7 +1621,6 @@ class DAFileCollection(DAObject):
     """
     def init(self, *pargs, **kwargs):
         self.info = dict()
-    pass
 
 class DAFileList(DAList):
     """Used internally by docassemble to refer to a list of files, such as

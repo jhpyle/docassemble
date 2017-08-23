@@ -12,7 +12,7 @@ attachment:
   valid formats:
     - pdf
   content: |
-    Hello, ${ url_args.get('name', 'you')}!
+    Hello, ${ url_args.get('name', 'you') }!
 ---
 mandatory: True
 code: |

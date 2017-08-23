@@ -21,7 +21,7 @@ from docassemble.base.generate_key import random_alphanumeric
 from flask_user import UserManager, SQLAlchemyAdapter
 import pkg_resources
 import os
-from docassemble.webapp.database import alchemy_connection_string
+from docassemble.webapp.database import alchemy_connection_string, dbtableprefix
 
 def get_role(db, name):
     the_role = Role.query.filter_by(name=name).first()
@@ -112,9 +112,9 @@ def main():
             alembic_cfg = Config(os.path.join(packagedir, 'alembic.ini'))
             alembic_cfg.set_main_option("sqlalchemy.url", alchemy_connection_string())
             alembic_cfg.set_main_option("script_location", os.path.join(packagedir, 'alembic'))
-            if not db.engine.has_table('alembic_version'):
+            if not db.engine.has_table(dbtableprefix + 'alembic_version'):
                 command.stamp(alembic_cfg, "head")
-            if db.engine.has_table('user'):
+            if db.engine.has_table(dbtableprefix + 'user'):
                 command.upgrade(alembic_cfg, "head")
         #db.drop_all()
         db.create_all()

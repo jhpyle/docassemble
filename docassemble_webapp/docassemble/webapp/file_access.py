@@ -36,7 +36,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
         if 'fullpath' not in result:
             result['fullpath'] = None
         has_info = True
-    elif re.search(r'^https*://', str(file_reference)):
+    elif re.search(r'^https?://', str(file_reference)):
         #logmessage(str(file_reference) + " is a URL")
         possible_filename = re.sub(r'.*/', '', file_reference)
         if possible_filename == '':
