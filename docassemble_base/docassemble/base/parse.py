@@ -300,6 +300,7 @@ class InterviewStatus(object):
         self.using_screen_reader = False
         self.can_go_back = True
         self.attachments = None
+        self.linkcounter = 0
         self.next_action = list()
         self.embedded = set()
         self.extras = dict()

@@ -7,10 +7,14 @@ metadata:
 modules:
   - docassemble.base.util
 ---
+interview help: |
+  This is the interview help.
+---
 mandatory: True
 code: |
   multi_user = True
   set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])
+  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
 ---
 mandatory: True
 question: |
@@ -32,7 +36,35 @@ fields:
 ---
 mandatory: True
 question: |
+  Here is a testing page.
+subquestion: |
+  Your lucky number is ${ lucky_number }.
+  [Increase](${ url_action('set_number_event', increment=1) })
+  [Decrease](${ url_action('set_number_event', increment=-1) })
+
+  You can also [get help].
+
+  [get help]: ${ url_of('help') }
+field: penultimate
+---
+mandatory: True
+question: |
   All done
 subquestion: |
   Thank you for telling me that information.
-  
+---
+code: |
+  lucky_number = 2
+---
+event: set_number_event
+code: |
+  lucky_number += action_argument('increment')
+---
+event: review_answers
+question: |
+  Review your answers
+review:
+  - Revisit: some_field
+    button: |
+      You said that some field was
+      ${ some_field }.

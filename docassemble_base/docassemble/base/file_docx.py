@@ -6,7 +6,7 @@ import docassemble.base.filter
 from types import NoneType
 
 def image_for_docx(number, question, tpl, width=None):
-    file_info = server.file_finder(number, convert={'svg': 'png'}, question=question)
+    file_info = server.file_finder(number, convert={'svg': 'png'}, question=question, privileged=True)
     if 'fullpath' not in file_info:
         return '[FILE NOT FOUND]'
     if width is not None:
@@ -44,13 +44,13 @@ def transform_for_docx(text, question, tpl, width=None):
             the_width = Mm(amount)
         else:
             the_width = Pt(amount)
-        file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
+        file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question, privileged=True)
         if 'fullpath' not in file_info:
             return '[FILE NOT FOUND]'
         return InlineImage(tpl, file_info['fullpath'], the_width)
     m = re.search(r'\[FILE ([^,\]]+)\]', text)
     if m:
-        file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
+        file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question, privileged=True)
         if 'fullpath' not in file_info:
             return '[FILE NOT FOUND]'
         return InlineImage(tpl, file_info['fullpath'], Inches(2))

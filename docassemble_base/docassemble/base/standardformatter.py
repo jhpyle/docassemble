@@ -898,7 +898,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
         if video_text:
             output += indent_by(video_text, 12)
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '                <div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True"> ' + continue_label + '</button></div>\n'
+        output += '                <div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True">' + continue_label + '</button></div>\n'
         #output += question_name_tag(status.question)
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
@@ -1005,7 +1005,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if pair[0] is not None:
-                            output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(pair[0]) + '"> ' + markdown_to_html(pair[1], status=status, trim=True, do_terms=False) + '</button>\n'
+                            output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(pair[0]) + '">' + markdown_to_html(pair[1], status=status, trim=True, do_terms=False) + '</button>\n'
                         else:
                             output += markdown_to_html(pair[1], status=status)
                 else:
@@ -1021,7 +1021,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(choice[key]) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button>\n'
+                            output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(choice[key]) + '">' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button>\n'
             else:
                 indexno = 0
                 for choice in status.question.fields[0].choices:

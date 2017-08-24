@@ -674,9 +674,13 @@ def remove_question_package(args):
         del args['_package']
     
 def get_url_from_file_reference(file_reference, **kwargs):
+    if 'privileged' in kwargs:
+        privileged = kwargs['privileged']
+    else:
+        privileged = False
     if isinstance(file_reference, DAFile) and hasattr(file_reference, 'number'):
         file_number = file_reference.number
-        if can_access_file_number(file_number):
+        if privileged or can_access_file_number(file_number):
             url_properties = dict()
             if hasattr(file_reference, 'filename'):
                 url_properties['filename'] = file_reference.filename
@@ -4931,11 +4935,13 @@ def index():
                     });
                 });
                 if (data.clicked){
-                    //console.log("Need to click " + data.clicked);
+                    console.log("Need to click " + data.clicked);
                     $(data.clicked).prop("disabled", false);
                     $(data.clicked).addClass("click-selected");
                     setTimeout(function(){
+                      console.log("Clicking it now");
                       $(data.clicked).click();
+                      console.log("Clicked it.");
                     }, 200);
                 }
             });
@@ -5109,6 +5115,11 @@ def index():
           }
           form.submit();
         }
+      }
+      function daEmbeddedAction(e){
+        console.log("Intercepted " + $(e.target).data('embaction'));
+        e.preventDefault();
+        return false;
       }
       function daReviewAction(e){
         url_action_perform_with_next($(e.target).data('action'), null, daNextAction);
@@ -5497,6 +5508,7 @@ def index():
             $(this).prop('checked', false);
           });
         });
+        $("a[data-embaction]").click(daEmbeddedAction);
         $("a.review-action").click(daReviewAction);
         $("input.input-embedded").on('keyup', adjustInputWidth);
         $("input.input-embedded").each(adjustInputWidth);
@@ -6442,11 +6454,15 @@ def observer():
         if ($(this).hasClass('review-action')){
           theAction = $(this).data('action');
         }
+        var linkNum = $(this).data('linknum');
         var theId = $(this).attr('id');
         var theName = $(this).attr('name');
         var theValue = $(this).val();
         var skey;
-        if (theAction){
+        if (linkNum){
+          skey = 'a[data-linknum="' + linkNum + '"]';
+        }
+        else if (theAction){
           skey = 'a[data-action="' + theAction.replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1') + '"]';
         }
         else if (theId){
@@ -6572,6 +6588,7 @@ def observer():
         $('button[type="submit"]').click(daSubmitter);
         $('input[type="submit"]').click(daSubmitter);
         $("a.review-action").click(daSubmitter);
+        $("a[data-linknum]").click(daSubmitter);
         $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
         $(".to-labelauty-icon").labelauty({ label: false });
         var navMain = $("#navbar-collapse");
