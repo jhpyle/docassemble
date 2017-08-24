@@ -10,6 +10,9 @@
 - Error when `valid types` was set to `pdf` when `docx template file`
   was in use.
 - Typo in HTML of monitor page.
+- Auto-updating of version numbers in package listing.
+- Updating of package table so that core packages are retrieved from
+  pip, not GitHub.
 
 ## [0.1.40] - 2017-08-23
 ### Changed

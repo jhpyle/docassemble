@@ -3865,7 +3865,7 @@ def index():
         the_location = None
     should_assemble = False
     for key in post_data:
-        if key.startswith('_') or key in ['csrf_token', 'ajax']:
+        if key.startswith('_') or key in ['csrf_token', 'ajax', 'informed']:
             continue
         try:
             if key_requires_preassembly.search(from_safeid(key)):
