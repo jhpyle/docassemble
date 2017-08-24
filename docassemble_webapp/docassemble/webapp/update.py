@@ -198,7 +198,7 @@ def add_dependencies(user_id):
     #sys.stderr.write('add_dependencies: user_id is ' + str(user_id) + "\n")
     sys.stderr.write("add_dependencies: starting\n")
     from docassemble.base.config import hostname, daconfig
-    docassemble_git_url = daconfig.get('docassemble git url', 'https://github.com/jhpyle/docassemble')
+    #docassemble_git_url = daconfig.get('docassemble git url', 'https://github.com/jhpyle/docassemble')
     package_by_name = dict()
     for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
         if package.name in package_by_name:
@@ -355,7 +355,7 @@ def get_pip_info(package_name):
         if len(a) == 2:
             #sys.stderr.write("Found " + a[0] + " which was " + a[1] + "\n")
             results[a[0]] = a[1]
-    for key in ['Name', 'Home-page']:
+    for key in ['Name', 'Home-page', 'Version']:
         if key not in results:
             results[key] = None
     return results
@@ -364,9 +364,11 @@ if __name__ == "__main__":
     #import docassemble.webapp.database
     with app.app_context():
         #app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
+        update_versions()
         any_package = Package.query.filter_by(active=True).first()
         if any_package is None:
             add_dependencies(1)
+            update_versions()
         check_for_updates(doing_startup=True)
         remove_inactive_hosts()
         from docassemble.base.config import daconfig
