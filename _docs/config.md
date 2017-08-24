@@ -769,6 +769,21 @@ interview answers for users who log in using
 Facebook, Google or Azure will not be able to resume stored
 interviews.
 
+## <a name="require referer"></a>Allowing referer blocking
+
+By default, when HTTPS is used, **docassemble** uses a form of
+[CSRF protection] that checks whether the [referer header] matches the
+host.  For privacy reasons, some users set their browsers to disable
+the sending of the referer header.  If the [referer header] is
+missing, the [CSRF protection] mechanism will generate an error.  To
+bypass this security feature, set:
+
+{% highlight yaml %}
+require referer: False
+{% endhighlight %}
+
+The default setting is `True`.
+
 ## <a name="png resolution"></a><a name="png screen resolution"></a>Image conversion resolution
 
 When users supply PDF files and **docassemble** includes those files
@@ -1791,3 +1806,5 @@ and Facebook API keys.
 [`global css`]: #global css
 [`global javascript`]: #global javascript
 [alembic]: http://alembic.zzzcomputing.com/en/latest/
+[CSRF protection]: http://flask-wtf.readthedocs.io/en/stable/csrf.html
+[referer header]: https://en.wikipedia.org/wiki/HTTP_referer

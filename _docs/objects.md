@@ -1228,8 +1228,18 @@ Objects of this type have two attributes:
 
 When **docassemble** defines a [template], it assembles any [Mako] in
 the `content` and option `subject` sets defines these attributes as
-the resulting text.  Note that the text may have [Markdown]<span></span> [markup]
-in it.
+the resulting text.  Note that the text may have
+[Markdown]<span></span> [markup] in it.
+
+<a name="DATemplate.show"></a>If a template is a variable
+`disclaimer`, the content can be inserted by writing 
+`${ disclaimer }`, `${ disclaimer.content }`, or 
+`${ disclaimer.show() }`.  The latter method facilitates the use of
+[`DATemplate`]s and [`DAFile`]s interchangably. 
+
+For more information about using [`DATemplate`]s, see the
+documentation for [templates].  Also, see the documentation for
+[`send_email()`] and [`send_sms()`].
 
 # <a name="person classes"></a>Classes for information about people and things
 
@@ -2423,6 +2433,7 @@ and not an instance of the `Attorney` class.
 [special variable]: {{ site.baseurl }}/docs/special.html
 [str function]: https://docs.python.org/2/library/functions.html#str
 [template]: {{ site.baseurl }}/docs/template.html
+[templates]: {{ site.baseurl }}/docs/template.html
 [thread-safe]: https://en.wikipedia.org/wiki/Thread_safety
 [threading module]: https://docs.python.org/2/library/threading.html
 [user login system]: {{ site.baseurl }}/docs/users.html

@@ -1107,6 +1107,9 @@ fields:
     datatype: yesnowide
   - Cash assistance: x.income['TANF'].exists
     datatype: yesnowide
+  - None of the above: x.no_income_exists
+    datatype: yesnowide
+    uncheck others: True
 comment: |
   The datatype "yesnowide" is just like the data type "yesno" except
   that it fills the width of the form rather than aligning with other
@@ -1139,6 +1142,7 @@ defined in the `basic-questions.yml` file.  Here is an annotated
 guide to this file.
 
 {% highlight yaml %}
+---
 ---
 metadata:
   description: |
@@ -1377,7 +1381,7 @@ subquestion: |
 ---
 generic object: Individual
 question: |
-  Please sign your name below.
+  Sign your name
 signature: x.signature
 need:
   - x.name.first
@@ -1620,7 +1624,8 @@ yesno: x.is_plaintiff
 ---
 generic object: Individual
 question: |
-  Where ${ x.do_question('live') } in ${ case.state }?
+  Where ${ x.do_question('live') } in 
+  ${ state_name(case.state) }?
 fields:
   - Address: x.address.address
   - Unit: x.address.unit

@@ -49,7 +49,8 @@ You can refer to the two parts of the template by writing, e.g.,
 `disclaimer.subject` and `disclaimer.content`.
 
 Note that writing `${ disclaimer }` has the same effect as writing `${
-disclaimer.content }`.
+disclaimer.content }`.  You can also write `${ disclaimer.show() }`
+(for interchangability with images).
 
 Templates are also useful for defining the content of e-mails.  See
 [`send_email()`] for more information on using templates with e-mails.
