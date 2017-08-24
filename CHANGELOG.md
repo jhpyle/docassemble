@@ -4,6 +4,12 @@
 ### Added
 - Configuration directive `require referer` that allows users who use
   referer blockers to use **docassemble**.
+- `.show()` method for `DATemplate` objects, for interchangability
+  with images in `DAFile` objects.
+### Fixed
+- Error when `valid types` was set to `pdf` when `docx template file`
+  was in use.
+- Typo in HTML of monitor page.
 
 ## [0.1.40] - 2017-08-23
 ### Changed

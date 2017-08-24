@@ -1198,7 +1198,6 @@ def do_refresh(is_ajax, yaml_filename):
         return redirect(url_for('index', i=yaml_filename))
 
 def standard_scripts():
-    #
     return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js') + '"></script>'
     
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False):
@@ -4545,15 +4544,15 @@ def index():
       preloadImage('""" + str(url_for('static', filename='labelauty/source/images/radio-checked.png')) + """');
       preloadImage('""" + str(url_for('static', filename='bootstrap-fileinput/img/loading-sm.gif')) + """');
       preloadImage('""" + str(url_for('static', filename='bootstrap-fileinput/img/loading.gif')) + """');
+      function show_help_tab(){
+          $('#helptoggle').trigger('click');
+      }
       function url_action(action, args){
           if (args == null){
               args = {};
           }
           data = {action: action, arguments: args};
           return '?action=' + encodeURIComponent(btoa(JSON.stringify(data)));
-      }
-      function show_help_tab(){
-          $('#helptoggle').trigger('click');
       }
       function url_action_call(action, args, callback){
           if (args == null){
@@ -4620,32 +4619,19 @@ def index():
           });
       }
       function get_interview_variables(callback){
-          if (callback == null){
-              callback = function(){};
+        if (callback == null){
+          callback = function(){};
+        }
+        $.ajax({
+          type: "GET",
+          url: """ + '"' + url_for('get_variables') + '"' + """,
+          success: callback,
+          error: function(xhr, status, error){
+            setTimeout(function(){
+              daProcessAjaxError(xhr, status, error);
+            }, 0);
           }
-          $.ajax({
-            type: "GET",
-            url: """ + '"' + url_for('get_variables') + '"' + """,
-            success: callback,
-            error: function(xhr, status, error){
-              setTimeout(function(){
-                daProcessAjaxError(xhr, status, error);
-              }, 0);
-            }
-          });
-      }
-      function userNameString(data){
-          if (data.hasOwnProperty('temp_user_id')){
-              return """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.temp_user_id;
-          }
-          else{
-              if (data.first_name != '' && data.first_name != ''){
-                  return data.first_name + ' ' + data.last_name;
-              }
-              else{
-                  return data.email;
-              }
-          }
+        });
       }
       function inform_about(subject){
         if (subject in daInformed || (subject != 'chatmessage' && !daIsUser)){
@@ -5046,8 +5032,6 @@ def index():
         checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
       }
       function daProcessAjaxError(xhr, status, error){
-        //console.log("Got error: " + error);
-        //console.log("Status was: " + status);
         $("body").html(xhr.responseText);
       }
       function addScriptToHead(src){
@@ -5058,7 +5042,6 @@ def index():
         script.async = true;
         script.defer = true;
         head.appendChild(script);
-        //console.log("All done");
       }
       function daProcessAjax(data, form){
         daInformedChanged = false;
@@ -5079,6 +5062,7 @@ def index():
           daChatPartnerRoles = data.livehelp.partner_roles;
           daSteps = data.steps;
           daAllowGoingBack = data.allow_going_back;
+          //console.log("daProcessAjax: pushing " + daSteps);
           history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, "#page" + daSteps);
           daInitialize();
           var tempDiv = document.createElement('div');
@@ -5474,6 +5458,9 @@ def index():
           hideSpinner();
         }
         notYetScrolled = true;
+        $("button").on('click', function(){
+          whichButton = this;
+        });
         $('#source').on('hide.bs.collapse', function (e) {
           $("#readability").slideUp();
         });
@@ -5519,6 +5506,30 @@ def index():
         if (daPhoneAvailable){
           $("#daPhoneAvailable").removeClass("invisible");
         }
+        $("#backbutton").on('submit', function(event){
+          $("#backbutton").addClass("dabackiconpressed");
+          var informed = '';
+          if (daInformedChanged){
+            informed = '&informed=' + Object.keys(daInformed).join(',');
+          }
+          $.ajax({
+            type: "POST",
+            url: $("#backbutton").attr('action'),
+            data: $("#backbutton").serialize() + '&ajax=1' + informed, 
+            success: function(data){
+              setTimeout(function(){
+                daProcessAjax(data, document.getElementById('backbutton'));
+              }, 0);
+            },
+            error: function(xhr, status, error){
+              setTimeout(function(){
+                daProcessAjaxError(xhr, status, error);
+              }, 0);
+            }
+          });
+          daSpinnerTimeout = setTimeout(showSpinner, 1000);
+          event.preventDefault();
+        });
         $("#daChatOnButton").click(daRingChat);
         $("#daChatOffButton").click(daCloseChat);
         $('#daMessage').bind('keypress keydown keyup', function(e){
@@ -5624,7 +5635,6 @@ def index():
           var isSame = (saveAs == showIfVar);
           var showIfDiv = this;
           var showHideDiv = function(){
-            //console.log("showHideDiv1")
             if($(this).parents(".showif").length !== 0){
               return;
             }
@@ -5741,6 +5751,7 @@ def index():
       }
       $(document).ready(function(){
         daInitialize();
+        //console.log("ready: replaceState " + daSteps);
         history.replaceState({steps: daSteps}, "", "#page" + daSteps);
         var daReloadAfter = """ + str(int(reload_after)) + """;
         if (daReloadAfter > 0){
@@ -6354,6 +6365,7 @@ def observer():
     userid = request.args.get('userid', None)
     observation_script = """
     <script>
+      var whichButton = null;
       var daSendChanges = false;
       var daNoConnectionCount = 0;
       var daConnected = false;
@@ -6383,6 +6395,10 @@ def observer():
         socket.emit('observerStopControl', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """});
         return;
       }
+      function daValidationHandler(form){
+        console.log("observer: daValidationHandler");
+        return(false);
+      }
       function stopPushChanges(){
         if (observerChangesInterval != null){
           clearInterval(observerChangesInterval);
@@ -6393,59 +6409,6 @@ def observer():
           clearInterval(observerChangesInterval);
         }
         observerChangesInterval = setInterval(pushChanges, """ + str(CHECKIN_INTERVAL) + """);
-      }
-      function daValidationHandler(form){
-        //form.submit();
-        dadisable = setTimeout(function(){
-          $(form).find('input[type="submit"]').prop("disabled", true);
-          $(form).find('button[type="submit"]').prop("disabled", true);
-        }, 1);
-        if ($('input[name="_files"]').length){
-          $("#uploadiframe").remove();
-          var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
-          $("body").append(iframe);
-          $(form).attr("target", "uploadiframe");
-          $('<input>').attr({
-              type: 'hidden',
-              name: 'ajax',
-              value: '1'
-          }).appendTo($(form));
-          iframe.bind('load', function(){
-            setTimeout(function(){
-              daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form);
-            }, 0);
-          });
-          form.submit();
-        }
-        else{
-          if (daSubmitter != null){
-            var input = $("<input>")
-              .attr("type", "hidden")
-              .attr("name", daSubmitter.name).val(daSubmitter.value);
-            $(form).append($(input));
-          }
-          var informed = '';
-          if (daInformedChanged){
-            informed = '&informed=' + Object.keys(daInformed).join(',');
-          }
-          $.ajax({
-            type: "POST",
-            url: $(form).attr('action'),
-            data: $(form).serialize() + '&ajax=1' + informed, 
-            success: function(data){
-              setTimeout(function(){
-                daProcessAjax(data, form);
-              }, 0);
-            },
-            error: function(xhr, status, error){
-              setTimeout(function(){
-                daProcessAjaxError(xhr, status, error);
-              }, 0);
-            }
-          });
-        }
-        daSpinnerTimeout = setTimeout(showSpinner, 1000);
-        return(false);
       }
       function pushChanges(){
         //console.log("Pushing changes");
@@ -6461,16 +6424,32 @@ def observer():
       function daProcessAjaxError(xhr, status, error){
         $("body").html(xhr.responseText);
       }
+      function addScriptToHead(src){
+        var head = document.getElementsByTagName("head")[0];
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = src;
+        script.async = true;
+        script.defer = true;
+        head.appendChild(script);
+      }
       function daSubmitter(event){
         event.preventDefault();
         if (!daSendChanges || !daConnected){
           return false;
         }
+        var theAction = null;
+        if ($(this).hasClass('review-action')){
+          theAction = $(this).data('action');
+        }
         var theId = $(this).attr('id');
         var theName = $(this).attr('name');
         var theValue = $(this).val();
         var skey;
-        if (theId){
+        if (theAction){
+          skey = 'a[data-action="' + theAction.replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1') + '"]';
+        }
+        else if (theId){
           skey = '#' + theId.replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1');
         }
         else if (theName){
@@ -6489,13 +6468,111 @@ def observer():
         socket.emit('observerChanges', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """, clicked: skey, parameters: JSON.stringify($("#daform").serializeArray())});
         return false;
       }
-      function daInitialize(){
-        $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
+      function adjustInputWidth(e){
+        var contents = $(this).val();
+        contents = contents.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/ /g, '&nbsp;');
+        $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('body');
+        $(this).width($('#dawidth').width() + 16);
+        $('#dawidth').remove();
+      }
+      function show_help_tab(){
+          $('#helptoggle').trigger('click');
+      }
+      function url_action(action, args){
+          //redo
+          if (args == null){
+              args = {};
+          }
+          data = {action: action, arguments: args};
+          return '?action=' + encodeURIComponent(btoa(JSON.stringify(data)));
+      }
+      function url_action_call(action, args, callback){
+          //redo
+          if (args == null){
+              args = {};
+          }
+          if (callback == null){
+              callback = function(){};
+          }
+          var data = {action: action, arguments: args};
+          $.ajax({
+            type: "GET",
+            url: "?action=" + encodeURIComponent(btoa(JSON.stringify(data))),
+            success: callback,
+            error: function(xhr, status, error){
+              setTimeout(function(){
+                daProcessAjaxError(xhr, status, error);
+              }, 0);
+            }
+          });
+      }
+      function url_action_perform(action, args){
+          //redo
+          if (args == null){
+              args = {};
+          }
+          var data = {action: action, arguments: args};
+          $.ajax({
+            type: "POST",
+            url: """ + '"' + url_for('index') + '"' + """,
+            data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
+            success: function(data){
+              setTimeout(function(){
+                daProcessAjax(data, $("#daform"));
+              }, 0);
+            },
+            error: function(xhr, status, error){
+              setTimeout(function(){
+                daProcessAjaxError(xhr, status, error);
+              }, 0);
+            },
+            dataType: 'json'
+          });
+      }
+      function url_action_perform_with_next(action, args, next_data){
+          //redo
+          //console.log("url_action_perform_with_next: " + action + " | " + next_data)
+          if (args == null){
+              args = {};
+          }
+          var data = {action: action, arguments: args};
+          $.ajax({
+            type: "POST",
+            url: """ + '"' + url_for('index') + '"' + """,
+            data: $.param({_action: btoa(JSON.stringify(data)), _next_action_to_set: btoa(JSON.stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
+            success: function(data){
+              setTimeout(function(){
+                daProcessAjax(data, $("#daform"));
+              }, 0);
+            },
+            error: function(xhr, status, error){
+              setTimeout(function(){
+                daProcessAjaxError(xhr, status, error);
+              }, 0);
+            },
+            dataType: 'json'
+          });
+      }
+      function get_interview_variables(callback){
+        if (callback == null){
+          callback = function(){};
+        }
+        $.ajax({
+          type: "GET",
+          url: """ + '"' + url_for('get_variables') + '"' + """,
+          success: callback,
+          error: function(xhr, status, error){
+            setTimeout(function(){
+              daProcessAjaxError(xhr, status, error);
+            }, 0);
+          }
         });
+      }
+      function daInitialize(){
         $('button[type="submit"]').click(daSubmitter);
         $('input[type="submit"]').click(daSubmitter);
-        $(".to-labelauty").labelauty({ width: "100%" });
+        $("a.review-action").click(daSubmitter);
+        $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
         $(".to-labelauty-icon").labelauty({ label: false });
         var navMain = $("#navbar-collapse");
         navMain.on("click", "a", null, function () {
@@ -6503,11 +6580,24 @@ def observer():
             navMain.collapse('hide');
           }
         });
+        $(function () {
+          $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
+        });
+        $("input.nota-checkbox").click(function(){
+          $(this).parent().find('input.non-nota-checkbox').each(function(){
+            $(this).prop('checked', false);
+          });
+        });
+        $("input.non-nota-checkbox").click(function(){
+          $(this).parent().find('input.nota-checkbox').each(function(){
+            $(this).prop('checked', false);
+          });
+        });
+        $("input.input-embedded").on('keyup', adjustInputWidth);
+        $("input.input-embedded").each(adjustInputWidth);
         $("#helptoggle").on("click", function(){
-          //console.log("Got to helptoggle");
-          window.scrollTo(0, 0);
+          window.scrollTo(0, 1);
           $(this).removeClass('daactivetext')
-          return true;
         });
         $("#sourcetoggle").on("click", function(){
           $(this).toggleClass("sourceactive");
@@ -6525,7 +6615,6 @@ def observer():
           var isSame = (saveAs == showIfVar);
           var showIfDiv = this;
           var showHideDiv = function(){
-            //console.log("showHideDiv1")
             if($(this).parents(".showif").length !== 0){
               return;
             }
@@ -6576,6 +6665,12 @@ def observer():
         });
         daInitialized = true;
         daShowingHelp = 0;
+        setTimeout(function(){
+          $("#flash .alert-success").hide(300, function(){
+            $(self).remove();
+          });
+        }, 3000);
+        $(document).trigger('daPageLoad');
       }
       $( document ).ready(function(){
         daInitialize();
@@ -6637,7 +6732,13 @@ def observer():
                 tempDiv.innerHTML = data.extra_scripts;
                 var scripts = tempDiv.getElementsByTagName('script');
                 for (var i = 0; i < scripts.length; i++){
-                  eval(scripts[i].innerHTML);
+                  if (scripts[i].src != ""){
+                    //console.log("Added script to head");
+                    addScriptToHead(scripts[i].src);
+                  }
+                  else{
+                    eval(scripts[i].innerHTML);
+                  }
                 }
                 for (var i = 0; i < data.extra_css.length; i++){
                   $("head").append(data.extra_css[i]);

@@ -86,6 +86,13 @@ def populate_tables():
         cron.confirmed_at = datetime.datetime.now()
     db.session.commit()
     add_dependencies(admin.id)
+    git_packages = Package.query.filter_by(type='git')
+    for package in git_packages:
+        if package.name in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
+            package.giturl = None
+            package.gitsubdir = None
+            package.type = 'pip'
+            db.session.commit()
     # docassemble_git_url = daconfig.get('docassemble git url', 'https://github.com/jhpyle/docassemble')
     # installed_packages = get_installed_distributions()
     # existing_packages = [package.name for package in Package.query.all()]

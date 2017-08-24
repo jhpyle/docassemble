@@ -1441,33 +1441,9 @@ def add_validation(extra_scripts, validation_rules, field_error):
     }
   }, """ + json.dumps(word("Please check at least one.")) + """);
   validation_rules.submitHandler = daValidationHandler;
-  var validator = $("#daform").validate(validation_rules);
-  $("button").click(function(event){
-    whichButton = this;
-  });""" + error_show + """
-  $("#backbutton").submit(function(event){
-    $("#backbutton").addClass("dabackiconpressed");
-    var informed = '';
-    if (daInformedChanged){
-      informed = '&informed=' + Object.keys(daInformed).join(',');
-    }
-    $.ajax({
-      type: "POST",
-      url: $("#backbutton").attr('action'),
-      data: $("#backbutton").serialize() + '&ajax=1' + informed, 
-      success: function(data){
-        setTimeout(function(){
-          daProcessAjax(data, document.getElementById('backbutton'));
-        }, 0);
-      },
-      error: function(xhr, status, error){
-        setTimeout(function(){
-          daProcessAjaxError(xhr, status, error);
-        }, 0);
-      }
-    });
-    event.preventDefault();
-  });
+  if ($("#daform").length > 0){
+    var validator = $("#daform").validate(validation_rules);""" + error_show + """
+  }
 </script>""")
 
 def input_for(status, field, wide=False, embedded=False):
