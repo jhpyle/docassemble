@@ -1499,6 +1499,8 @@ class DAFile(DAObject):
             self.file_info = server.file_number_finder(self.number, filename=self.filename)
         else:
             self.file_info = server.file_number_finder(self.number)
+        self.persistent = self.file_info['persistent']
+        self.private = self.file_info['private']
     def slurp(self):
         """Returns the contents of the file."""
         self.retrieve()
@@ -1613,6 +1615,10 @@ class DAFile(DAObject):
         return server.url_finder(self)
     def set_attributes(self, **kwargs):
         """Sets attributes of the file stored on the server.  Takes optional keyword arguments private and persistent, which must be boolean values."""
+        if 'private' in kwargs and kwargs['private'] in [True, False]:
+            self.private = kwargs['private']
+        if 'persistent' in kwargs and kwargs['persistent'] in [True, False]:
+            self.persistent = kwargs['persistent']
         return server.file_set_attributes(self.number, **kwargs)
 
 class DAFileCollection(DAObject):
@@ -1644,6 +1650,16 @@ class DAFileList(DAList):
             if element.ok:
                 output += element.show(width=width)
         return output
+    def url_for(self):
+        """Returns a URL to the first file in the list."""
+        if len(self.elements) == 0:
+            return None
+        return self.elements[0].url_for()
+    def set_attributes(self, **kwargs):
+        """Sets attributes of the file(s) stored on the server.  Takes optional keyword arguments private and persistent, which must be boolean values."""
+        for element in sorted(self.elements):
+            if element.ok:
+                element.set_attributes(**kwargs)
 
 class DAEmailRecipientList(DAList):
     def init(self, *pargs, **kwargs):

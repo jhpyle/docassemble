@@ -1,5 +1,18 @@
 # Change Log
 
+## [0.1.42] - 2017-08-24
+### Added
+- set_attributes() method for `DAFile` and `DAFileList` in order to
+  allow uploaded files to be used across interview sessions and not be
+  deleted when the session in which the file was uploaded is deleted.
+- url_for() method for `DAFileList`.
+### Changed
+- Hyperlinks to actions (e.g., created through `url_action()` or
+`action_menu_item()`) are now carried out through Ajax.
+### Fixed
+- Compatibility of UI elements with 'control' live help feature.
+- Extraneous "Menu" entry in mobile menu when custom menu used.
+
 ## [0.1.41] - 2017-08-23
 ### Added
 - Configuration directive `require referer` that allows users who use

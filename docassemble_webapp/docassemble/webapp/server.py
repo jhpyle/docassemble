@@ -1610,7 +1610,11 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
                 if not (type(menu_item) is dict and 'url' in menu_item and 'label' in menu_item):
                     custom_menu += '<li>' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
                 else:
-                    custom_menu += '<li><a href="' + menu_item['url'] + '">' + menu_item['label'] + '</a></li>'
+                    match_action = re.search(r'^\?action=([^\&]+)', menu_item['url'])
+                    if match_action:
+                        custom_menu += '<li><a data-embaction="' + match_action.group(1) + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a></li>'
+                    else:
+                        custom_menu += '<li><a href="' + menu_item['url'] + '">' + menu_item['label'] + '</a></li>'
         else:
             custom_menu = False
     else:
@@ -1622,7 +1626,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     if show_login:
         if current_user.is_anonymous:
             if custom_menu:
-                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login') + '">' + sign_in_text + '</a></li></ul></li>' + "\n"
+                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login') + '">' + sign_in_text + '</a></li></ul></li>' + "\n"
             else:
                 navbar += '            <li><a href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>' + "\n"
         else:
@@ -1644,7 +1648,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
             navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li><li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a></li></ul></li>'
     else:
         if custom_menu:
-            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li></ul></li>' + "\n"
+            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li></ul></li>' + "\n"
         else:
             navbar += '            <li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li>'
     navbar += """\
@@ -4944,13 +4948,13 @@ def index():
                     });
                 });
                 if (data.clicked){
-                    console.log("Need to click " + data.clicked);
+                    //console.log("Need to click " + data.clicked);
                     $(data.clicked).prop("disabled", false);
                     $(data.clicked).addClass("click-selected");
                     setTimeout(function(){
-                      console.log("Clicking it now");
+                      //console.log("Clicking it now");
                       $(data.clicked).click();
-                      console.log("Clicked it.");
+                      //console.log("Clicked it.");
                     }, 200);
                 }
             });
@@ -5126,7 +5130,23 @@ def index():
         }
       }
       function daEmbeddedAction(e){
-        console.log("Intercepted " + $(e.target).data('embaction'));
+        var data = decodeURIComponent($(e.target).data('embaction'));
+        $.ajax({
+          type: "POST",
+          url: """ + '"' + url_for('index') + '"' + """,
+          data: $.param({_action: data, csrf_token: daCsrf, ajax: 1}),
+          success: function(data){
+            setTimeout(function(){
+              daProcessAjax(data, $("#daform"));
+            }, 0);
+          },
+          error: function(xhr, status, error){
+            setTimeout(function(){
+              daProcessAjaxError(xhr, status, error);
+            }, 0);
+          },
+          dataType: 'json'
+        });
         e.preventDefault();
         return false;
       }
@@ -6463,6 +6483,7 @@ def observer():
         if ($(this).hasClass('review-action')){
           theAction = $(this).data('action');
         }
+        var embeddedAction = $(this).data('embaction');
         var linkNum = $(this).data('linknum');
         var theId = $(this).attr('id');
         var theName = $(this).attr('name');
@@ -6470,6 +6491,9 @@ def observer():
         var skey;
         if (linkNum){
           skey = 'a[data-linknum="' + linkNum + '"]';
+        }
+        else if (embeddedAction){
+          skey = 'a[data-embaction="' + embeddedAction.replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1') + '"]';
         }
         else if (theAction){
           skey = 'a[data-action="' + theAction.replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1') + '"]';
@@ -6598,6 +6622,7 @@ def observer():
         $('input[type="submit"]').click(daSubmitter);
         $("a.review-action").click(daSubmitter);
         $("a[data-linknum]").click(daSubmitter);
+        $("a[data-embaction]").click(daSubmitter);
         $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
         $(".to-labelauty-icon").labelauty({ label: false });
         var navMain = $("#navbar-collapse");
