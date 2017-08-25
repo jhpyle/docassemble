@@ -1611,6 +1611,9 @@ class DAFile(DAObject):
     def url_for(self):
         """Returns a URL to the file."""
         return server.url_finder(self)
+    def set_attributes(self, **kwargs):
+        """Sets attributes of the file stored on the server.  Takes optional keyword arguments private and persistent, which must be boolean values."""
+        return server.file_set_attributes(self.number, **kwargs)
 
 class DAFileCollection(DAObject):
     """Used internally by docassemble to refer to a collection of DAFile

@@ -225,7 +225,7 @@ def can_access_file_number(file_number, uid=None):
             uid = docassemble.base.functions.get_uid()
     if uid is None:
         raise Exception("can_access_file_number: uid not defined")
-    upload = Uploads.query.filter_by(indexno=file_number, key=uid).first()
+    upload = Uploads.query.filter(and_(Uploads.indexno == file_number, or_(Uploads.key == uid, Uploads.private == False))).first()
     if upload:
         return True
     return False
@@ -392,15 +392,15 @@ def advance_progress(user_dict):
     return
 
 def reset_user_dict(user_code, filename):
-    #logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename))
+    logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename))
     UserDict.query.filter_by(key=user_code, filename=filename).delete()
     db.session.commit()
     UserDictKeys.query.filter_by(key=user_code, filename=filename).delete()
     db.session.commit()
-    for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename).all():
+    for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).all():
         old_file = SavedFile(upload.indexno)
         old_file.delete()
-    Uploads.query.filter_by(key=user_code, yamlfile=filename).delete()
+    Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).delete()
     db.session.commit()
     Attachments.query.filter_by(key=user_code, filename=filename).delete()
     db.session.commit()
@@ -410,6 +410,7 @@ def reset_user_dict(user_code, filename):
     db.session.commit()
     Shortener.query.filter_by(uid=user_code, filename=filename).delete()
     db.session.commit()
+    logmessage("reset_user_dict: done")
     return
 
 def get_person(user_id, cache):
@@ -511,3 +512,17 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
             else:
                 messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
     return messages
+
+def file_set_attributes(file_number, **kwargs):
+    upload = Uploads.query.filter_by(indexno=file_number).first()
+    if upload is None:
+        raise Exception("file_set_attributes: file number " + str(file_number) + " not found.")
+    changed = False
+    if 'private' in kwargs and kwargs['private'] in [True, False] and upload.private != kwargs['private']:
+        upload.private = kwargs['private']
+        changed = True
+    if 'persistent' in kwargs and kwargs['persistent'] in [True, False] and upload.persistent != kwargs['persistent']:
+        upload.persistent = kwargs['persistent']
+        changed = True
+    if changed:
+        db.session.commit()

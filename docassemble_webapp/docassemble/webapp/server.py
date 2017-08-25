@@ -496,7 +496,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -1654,6 +1654,12 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     </div>
 """
     return(navbar)
+
+def delete_session_for_interview():
+    for key in ['i', 'uid', 'key_logged', 'action', 'encrypted', 'chatstatus', 'observer', 'monitor', 'doing_sms']:
+        if key in session:
+            del session[key]
+    return
 
 def delete_session():
     for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next']:
@@ -4343,12 +4349,15 @@ def index():
             #steps += 1
     if interview_status.question.question_type == "exit":
         manual_checkout()
-        user_dict = fresh_dictionary()
+        # user_dict = fresh_dictionary()
+        # logmessage("Calling reset_user_dict on " + user_code + " and " + yaml_filename)
         reset_user_dict(user_code, yaml_filename)
-        save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
-        if current_user.is_authenticated and 'visitor_secret' not in request.cookies:
-            save_user_dict_key(user_code, yaml_filename)
-            session['key_logged'] = True
+        delete_session_for_interview()
+        # why did I think it would be good to put a blank dict in its place?
+        # save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
+        # if current_user.is_authenticated and 'visitor_secret' not in request.cookies:
+        #     save_user_dict_key(user_code, yaml_filename)
+        #     session['key_logged'] = True
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
             return do_redirect(interview_status.questionText, is_ajax)
@@ -12873,7 +12882,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          retrieve_emails=retrieve_emails,
                                          get_short_code=get_short_code,
                                          make_png_for_pdf=make_png_for_pdf,
-                                         wait_for_task=wait_for_task)
+                                         wait_for_task=wait_for_task,
+                                         file_set_attributes=file_set_attributes)
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
 #docassemble.base.parse.set_url_finder(get_url_from_file_reference)

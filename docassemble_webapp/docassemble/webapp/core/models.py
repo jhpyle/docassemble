@@ -8,7 +8,7 @@ class Attachments(db.Model):
     dictionary = db.Column(db.Text())
     question = db.Column(db.Integer())
     filename = db.Column(db.Text())
-    encrypted = db.Column(db.Boolean(), nullable=False, server_default='1')
+    encrypted = db.Column(db.Boolean(), nullable=False, server_default=db.true())
 
 class Uploads(db.Model):
     __tablename__ = dbtableprefix + "uploads"
@@ -16,6 +16,8 @@ class Uploads(db.Model):
     key = db.Column(db.String(250))
     filename = db.Column(db.Text())
     yamlfile = db.Column(db.Text())
+    private = db.Column(db.Boolean(), nullable=False, server_default=db.true())
+    persistent = db.Column(db.Boolean(), nullable=False, server_default=db.false())
 
 class ObjectStorage(db.Model):
     __tablename__ = dbtableprefix + "objectstorage"
@@ -34,7 +36,7 @@ class SpeakList(db.Model):
     language = db.Column(db.String(10))
     dialect = db.Column(db.String(10))
     upload = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'))
-    encrypted = db.Column(db.Boolean(), nullable=False, server_default='1')
+    encrypted = db.Column(db.Boolean(), nullable=False, server_default=db.true())
     digest = db.Column(db.Text())
 
 class Supervisors(db.Model):
@@ -55,7 +57,7 @@ class MachineLearning(db.Model):
     info = db.Column(db.Text())
     create_time = db.Column(db.DateTime())
     modtime = db.Column(db.DateTime())
-    active = db.Column(db.Boolean(), nullable=False, server_default='0')
+    active = db.Column(db.Boolean(), nullable=False, server_default=db.false())
 
 class Shortener(db.Model):
     __tablename__ = dbtableprefix + "shortener"

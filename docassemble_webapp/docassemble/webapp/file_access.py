@@ -149,7 +149,7 @@ def get_info_from_file_number(file_number, privileged=False, filename=None):
     if privileged:
         upload = Uploads.query.filter_by(indexno=file_number).first()
     else:
-        upload = Uploads.query.filter_by(indexno=file_number, key=uid).first()
+        upload = Uploads.query.filter(and_(Uploads.indexno == file_number, or_(Uploads.key == uid, Uploads.private == False))).first()
     if upload:
         if filename is None:
             result['filename'] = upload.filename
@@ -159,6 +159,8 @@ def get_info_from_file_number(file_number, privileged=False, filename=None):
         result['savedfile'] = SavedFile(file_number, extension=result['extension'], fix=True)
         result['path'] = result['savedfile'].path
         result['fullpath'] = result['path'] + '.' + result['extension']
+        result['private'] = upload.private
+        result['persistent'] = upload.persistent
         #logmessage("fullpath is " + str(result['fullpath']))
     if 'path' not in result:
         logmessage("get_info_from_file_number: path is not in result for " + str(file_number))

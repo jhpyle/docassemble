@@ -86,6 +86,8 @@ uploads|indexno|integer||nextval('uploads_indexno_seq'::regclass)
 uploads|key|character varying|250|
 uploads|filename|text||
 uploads|yamlfile|text||
+uploads|private|boolean||true
+uploads|persistent|boolean||false
 user_auth|id|integer||nextval('user_auth_id_seq'::regclass)
 user_auth|user_id|integer||
 user_auth|password|character varying|255|''::character varying
