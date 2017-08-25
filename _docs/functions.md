@@ -556,10 +556,11 @@ question.  Typically the URL will be part of a [Markdown] link inside
 of a [question], or in a `note` within a set of [fields].
 
 The [`process_action()`] function triggers the processing of the
-action.  It is typically called behind-the-scenes, but you can call it
-explicitly if you want to control exactly when (and if) it is called.
-For more information about calling [`process_action()`] explicitly,
-see the section on the [interaction of user roles and actions].
+action.  It is typically called for you, behind-the-scenes, but you
+can call it explicitly if you want to control exactly when (and if) it
+is called.  For more information about calling [`process_action()`]
+explicitly, see the section on the
+[interaction of user roles and actions].
 
 Here is an example:
 

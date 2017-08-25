@@ -1013,7 +1013,7 @@ argument, `width`, which can be set to, e.g., `'1in'`, `'44mm'`, or
 markup.
 
 In the context of a [Mako] template, writing `${ myfile }` is
-equivalent to writing `${ myfile. show() }` (where `myfile` is a
+equivalent to writing `${ myfile.show() }` (where `myfile` is a
 `DAFile` object).
 
 <a name="DAFile.path"></a>The `.path()` method returns a complete file
@@ -1034,6 +1034,44 @@ or [Azure blob storage], documents are stored in the cloud, and the
 server accesses them by copying them from the cloud to the server and
 then copying them back to the cloud.  If the file does not exist yet,
 calling `.retrieve()` will generate an error.
+
+<a name="DAFile.set_attributes"></a>The `.set_attributes()` command
+allows you to set two characteristics of the uploaded document:
+
+* `private`: the default value of this attribute is `True`, which
+  means that other interviews and other interview sessions cannot
+  access the contents of the file, even if they know the `.number` or
+  have the `DAFile` object itself.  You will need to set the `private`
+  attribute to `False` if you want other sessions to be able to access
+  the file.  For example, you might store a [`DAFile`] object in
+  [storage] and retrieve it within other interviews at a later time.
+  The contents of the file will not be accessible unless you set
+  `private` to `False`.
+* `persistent`: the default value of this attribute is `False`, which
+  means that the file will be deleted when the interview session is
+  deleted.  Interview sessions are deleted when the user presses an
+  [exit button] or an [exit command] is run.  Interview sessions are
+  also deleted when the session has been [inactive for a period].  You
+  can prevent the deletion of the files by setting the `persistent`
+  attribute to `True`.
+  
+You can set these attributes with code like this:
+
+{% highlight yaml %}
+question: |
+  Sign your name
+signature: user_signature
+---
+mandatory: True
+code: |
+  user_signature.set_attributes(persistent=True)
+{% endhighlight %}
+
+To see the values of the attributes for a variable like
+`user_signature`, refer to `user_signature.private` and
+`user_signature.persistent`, which are set by
+[`.retrieve()`](#DAFile.retrieve).  Setting these attributes directly
+has no effect; you need to use [`.set_attributes()`] to set them.
 
 <a name="DAFile.slurp"></a>The `.slurp()` method reads the contents of
 the file and returns them as a value.
@@ -1122,16 +1160,43 @@ the filename (before an extension is added), and a description.  The
 A `DAFileList` is a [`DAList`], the items of which are expected to be
 [`DAFile`] objects.
 
-When a question has a field with a `datatype` for a file upload (see
-[fields]), the variable will be defined as a `DAFileList` object
-containing the file or files uploaded.
+When a question has a field with a `datatype` for a file upload
+([`datatype: file`] and [`datatype: files`]), the variable will be
+defined as a `DAFileList` object containing the file or files
+uploaded.  These variables can be used in much the same way that
+[`DAFile`] variables can be used.
 
-<a name="DAFileList.show"></a>It has one method, `.show()`, which
-inserts markup that displays each file as an image.  This method takes
-an optional keyword argument, `width`.
+<a name="DAFileList.show"></a>The `.show()` method inserts markup that
+displays each file as an image.  This method takes an optional keyword
+argument, `width`.
 
 When included in a [Mako] template, a `DAFileList` object will effectively
 call `show()` on itself.
+
+<a name="DAFileList.url_for"></a>The `.url_for()` method returns a URL
+at which the first file in the list can be accessed.  This is useful
+when working with `DAFileList` objects returned from
+[`datatype: file`], when you know that the list will only have one
+element in it.
+
+<a name="DAFileList.set_attributes"></a>The `.set_attributes()` method
+calls [`.set_attributes()`] on each of the [`DAFile`]s in the list,
+applying the same attributes to each file.  For an explanation of how
+this method works, see [its documentation](#DAFile.set_attributes).
+
+You would call the method like this:
+
+{% highlight yaml %}
+question: |
+  Upload a file
+fields:
+  - File: the_upload
+    datatype: file
+---
+mandatory: True
+code: |
+  the_upload.set_attributes(private=False)
+{% endhighlight %}
 
 ## <a name="DAEmail"></a>DAEmail
 
@@ -2469,3 +2534,10 @@ and not an instance of the `Attorney` class.
 [inserting images]: {{ site.baseurl }}/docs/markup.html#inserting images
 [data storage]: {{ site.baseurl }}/docs/docker.html#data storage
 [checkbox groups]: {{ site.baseurl }}/docs/fields.html#fields checkboxes
+[storage]: {{ site.baseurl }}/docs/functions.html#storage
+[exit button]: {{ site.baseurl }}/docs/questions.html#special buttons
+[exit command]: {{ site.baseurl }}/docs/functions.html#command
+[inactive for a period]: {{ site.baseurl }}/docs/config.html#interview delete days
+[`.set_attributes()`]: #DAFile.set_attributes
+[`datatype: file`]: {{ site.baseurl }}/docs/fields.html#file
+[`datatype: files`]: {{ site.baseurl }}/docs/fields.html#files
