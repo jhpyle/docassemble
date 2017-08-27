@@ -201,7 +201,8 @@ def _endpoint_url(endpoint):
 
 def _get_safe_next_param(param_name, default_endpoint):
     if param_name in request.args:
-        safe_next = current_app.user_manager.make_safe_url_function(unquote(request.args[param_name]))
+        #safe_next = current_app.user_manager.make_safe_url_function(unquote(request.args[param_name]))
+        safe_next = unquote(request.args[param_name])
     else:
         safe_next = _endpoint_url(default_endpoint)
     return safe_next
@@ -277,7 +278,8 @@ def custom_login():
             user, user_email = user_manager.find_user_by_email(login_form.email.data)
 
         if user:
-            safe_next = user_manager.make_safe_url_function(login_form.next.data)
+            #safe_next = user_manager.make_safe_url_function(login_form.next.data)
+            safe_next = login_form.next.data
             if daconfig.get('two factor authentication', False) is True and user.otp_secret is not None:
                 session['validated_user'] = user.id
                 if user.otp_secret.startswith(':phone:'):
@@ -403,7 +405,7 @@ from flask_user import UserManager, SQLAlchemyAdapter
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 from docassemble.webapp.users.views import user_profile_page
 user_manager = UserManager()
-user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, make_safe_url_function=make_safe_url, login_view_function=custom_login, resend_confirm_email_view_function=custom_resend_confirm_email, resend_confirm_email_form=MyResendConfirmEmailForm)
+user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, login_view_function=custom_login, resend_confirm_email_view_function=custom_resend_confirm_email, resend_confirm_email_form=MyResendConfirmEmailForm)
 from flask_login import LoginManager
 lm = LoginManager()
 lm.init_app(app)
@@ -2983,7 +2985,8 @@ def mfa_login():
                 return redirect(url_for('user.login'))
             elif failed_attempts is not None:
                 r.delete(fail_key)
-        safe_next = user_manager.make_safe_url_function(form.next.data)
+        #safe_next = user_manager.make_safe_url_function(form.next.data)
+        save_next = form.next.data
         return flask_user.views._do_login_user(user, safe_next, False)
     description = word("This account uses two-factor authentication.")
     if user.otp_secret.startswith(':phone:'):
