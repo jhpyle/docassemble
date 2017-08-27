@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.1.43]
+### Fixed
+- Extraneous call to checkin for chat log.
+- Clicking elements in control mode in live chat
+- Problems with db table prefixes
+
 ## [0.1.42] - 2017-08-24
 ### Added
 - set_attributes() method for `DAFile` and `DAFileList` in order to

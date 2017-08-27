@@ -392,7 +392,7 @@ def advance_progress(user_dict):
     return
 
 def reset_user_dict(user_code, filename):
-    logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename))
+    #logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename))
     UserDict.query.filter_by(key=user_code, filename=filename).delete()
     db.session.commit()
     UserDictKeys.query.filter_by(key=user_code, filename=filename).delete()
@@ -410,7 +410,7 @@ def reset_user_dict(user_code, filename):
     db.session.commit()
     Shortener.query.filter_by(uid=user_code, filename=filename).delete()
     db.session.commit()
-    logmessage("reset_user_dict: done")
+    #logmessage("reset_user_dict: done")
     return
 
 def get_person(user_id, cache):

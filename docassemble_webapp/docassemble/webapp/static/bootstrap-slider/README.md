@@ -198,7 +198,7 @@ Options can be passed either as a data (data-slider-foo) attribute, or as part o
 | scale | string | 'linear' | Set to 'logarithmic' to use a logarithmic scale. |
 | focus | bool | false | Focus the appropriate slider handle after a value change. |
 | labelledby | string,array | null | ARIA labels for the slider handle's, Use array for multiple values in a range slider. |
-| rangeHighlights | array | [] | Defines a range array that you want to highlight, for example: [{'start':val1, 'end': val2}]. |
+| rangeHighlights | array | [] | Defines a range array that you want to highlight, for example: [{'start':val1, 'end': val2, 'class': 'optionalAdditionalClassName'}]. |
 
 Functions
 =========
@@ -258,7 +258,7 @@ The following is a list of the commonly-used command line tasks:
 * `grunt prod`: Alias for `grunt production`
 * `grunt build`: Transpiles JavaScript source via Babel and compiles LESS source to CSS to `temp` directory.
 * `grunt lint`: Runs JSLint on the JavaScript source code files, SASS-Lint on the SASS source code files, and LESSLint on the LESS source code files.
-* `grunt test`: Runs unit tests contained in `/test` directory via Jasmine.
+* `grunt test`: Runs unit tests contained in `/test` directory via Jasmine 2.x.x
 
 
 Version Bumping and Publishing (Maintainers Only)
@@ -294,6 +294,7 @@ Other Platforms & Libraries
 - [NuGet](https://www.nuget.org/packages/bootstrap-slider/) ([@ChrisMissal](https://github.com/ChrisMissal))
 - [MeteorJS](https://github.com/kidovate/meteor-bootstrap-slider)
 - [Maven](http://mvnrepository.com/artifact/org.webjars.bower/seiyria-bootstrap-slider)
+- [Vue.js](https://github.com/pimlie/vue-bootstrap-slider) ([@pimlie](https://github.com/pimlie))
 
 Maintainers
 ============

@@ -856,6 +856,7 @@ def stop_control(message):
         pipe.execute()
         sid = rr.get('da:interviewsession:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid']))
         if sid is not None:
+            sys.stderr.write("Calling controllerexit 1");
             rr.publish(sid, json.dumps(dict(messagetype='controllerexit', sid=request.sid)))
     else:
         pipe.execute()
@@ -876,7 +877,7 @@ def observer_changes(message):
         else:
             socketio.emit('noconnection', {'key': key}, namespace='/observer', room=request.sid)
     else:
-        sys.stderr.write('observerChanges: sid exists\n')
+        sys.stderr.write('observerChanges: sid exists at ' + time.strftime("%Y-%m-%d %H:%M:%S") + '\n')
         rr.publish(sid, json.dumps(dict(messagetype='controllerchanges', sid=request.sid, clicked=message.get('clicked', None), parameters=message['parameters'])))
         # sid=request.sid, yaml_filename=str(message['i']), uid=str(message['uid']), user_id=str(message['userid'])
         self_key = 'da:control:sid:' + str(request.sid)
@@ -901,6 +902,7 @@ def on_observer_disconnect():
         other_sid = None
     rr.delete(self_key)
     if other_sid is not None:
+        sys.stderr.write("Calling controllerexit 2");
         rr.publish(other_sid, json.dumps(dict(messagetype='controllerexit', sid=request.sid)))
     rr.publish(request.sid, json.dumps(dict(message='KILL', sid=request.sid)))
     

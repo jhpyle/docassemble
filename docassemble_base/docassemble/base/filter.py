@@ -1035,10 +1035,15 @@ def link_rewriter(m, status):
         action_data = 'data-embaction="' + action_search.group(1) + '" '
     else:
         action_data = ''
+    js_search = re.search(r'^javascript:(.*)', m.group(1))
+    if js_search:
+        js_data = 'data-js="' + js_search.group(1) + '" '
+    else:
+        js_data = ''
     if status is None:
-        return '<a ' + action_data + target + 'href="' + m.group(1) + '"'
+        return '<a ' + action_data + target + js_data + 'href="' + m.group(1) + '"'
     status.linkcounter += 1
-    return '<a data-linknum="' + str(status.linkcounter) + '" ' + action_data + target + 'href="' + m.group(1) + '"'
+    return '<a data-linknum="' + str(status.linkcounter) + '" ' + action_data + target + js_data + 'href="' + m.group(1) + '"'
 
 def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None, divclass=None, embedder=None):
     a = unicode(a)

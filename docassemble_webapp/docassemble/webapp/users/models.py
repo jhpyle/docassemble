@@ -19,7 +19,7 @@ class UserModel(db.Model, UserMixin):
     timezone = db.Column(db.String(64))
     language = db.Column(db.String(64))
     user_auth = db.relationship('UserAuthModel', uselist=False, primaryjoin="UserAuthModel.user_id==UserModel.id")
-    roles = db.relationship('Role', secondary='user_roles', backref=db.backref('user', lazy='dynamic'))
+    roles = db.relationship('Role', secondary=dbtableprefix + 'user_roles', backref=db.backref(dbtableprefix + 'user', lazy='dynamic'))
     password = db.Column(db.String(255), nullable=False, server_default='') # work around a bug
     otp_secret = db.Column(db.String(255), nullable=True)
     pypi_username = db.Column(db.String(255), nullable=True)
@@ -96,6 +96,6 @@ class MyUserInvitation(db.Model):
     email = db.Column(db.String(255), nullable=False)
     role_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'role.id', ondelete='CASCADE'))
     # save the user of the invitee
-    invited_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    invited_by_user_id = db.Column(db.Integer, db.ForeignKey(dbtableprefix + 'user.id'))
     # token used for registration page to identify user registering
     token = db.Column(db.String(100), nullable=False, server_default='')

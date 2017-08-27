@@ -1587,7 +1587,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     elif chat_info['availability'] == 'available':
         navbar += '          <a title="' + phone_message + '" id="daPhoneAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
     navbar += """
-          <a href="#question" data-toggle="tab" class="navbar-brand dabrand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
+          <a id="pagetitle" href="#question" data-toggle="tab" class="navbar-brand dabrand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
       
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
@@ -4858,6 +4858,7 @@ def index():
             });
             socket.on('controllerexit', function(){
               daBeingControlled = false;
+              //console.log("Hiding control 2");
               hide_control();
               if (daChatStatus != 'on'){
                 if (socket != null && socket.connected){
@@ -4951,6 +4952,11 @@ def index():
                     //console.log("Need to click " + data.clicked);
                     $(data.clicked).prop("disabled", false);
                     $(data.clicked).addClass("click-selected");
+                    if ($(data.clicked).prop("tagName") == 'A' && typeof $(data.clicked).attr('href') != 'undefined' && ($(data.clicked).attr('href').startsWith('javascript') || $(data.clicked).attr('href').startsWith('#'))){
+                      setTimeout(function(){
+                        $(data.clicked).removeClass("click-selected");
+                      }, 2200);
+                    }
                     setTimeout(function(){
                       //console.log("Clicking it now");
                       $(data.clicked).click();
@@ -4966,6 +4972,7 @@ def index():
       var daChatRoles = """ + json.dumps(user_dict['_internal']['livehelp']['roles']) + """;
       var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['livehelp']['partner_roles']) + """;
       function daValidationHandler(form){
+        //PPP
         //form.submit();
         $("#daform").each(function(){
           $(this).find(':input').off('change', pushChanges);
@@ -5129,6 +5136,13 @@ def index():
           form.submit();
         }
       }
+      function daEmbeddedJs(e){
+        //console.log("using embedded js");
+        var data = decodeURIComponent($(e.target).data('js'));
+        eval(data);
+        e.preventDefault();
+        return false;
+      }
       function daEmbeddedAction(e){
         var data = decodeURIComponent($(e.target).data('embaction'));
         $.ajax({
@@ -5285,7 +5299,7 @@ def index():
         daCheckingIn = 0;
         //console.log("daCheckinCallback: success is " + data.success);
         if (data.checkin_code != daCheckinCode){
-          //console.log("Ignoring checkincallback because code is wrong");
+          console.log("Ignoring checkincallback because code is wrong");
           return;
         }
         if (data.success){
@@ -5322,6 +5336,7 @@ def index():
                   var assignment = assignments[i];
                   $('#datarget' + assignment.target.replace(/[^A-Za-z0-9\_]/g)).html(assignment.content);
                 }
+                //console.log("Triggering daCheckIn");
                 $(document).trigger('daCheckIn', [command.action, command.value]);
               }
             }
@@ -5390,6 +5405,7 @@ def index():
           if (daBeingControlled){
             if (!data.observerControl){
               daBeingControlled = false;
+              //console.log("Hiding control 1");
               hide_control();
               if (daChatStatus != 'on'){
                 if (socket != null && socket.connected){
@@ -5538,6 +5554,7 @@ def index():
           });
         });
         $("a[data-embaction]").click(daEmbeddedAction);
+        $("a[data-js]").click(daEmbeddedJs);
         $("a.review-action").click(daReviewAction);
         $("input.input-embedded").on('keyup', adjustInputWidth);
         $("input.input-embedded").each(adjustInputWidth);
@@ -5734,7 +5751,7 @@ def index():
         if (daChatStatus == 'ready' || daBeingControlled){
           daInitializeSocket();
         }
-        if (true || daInitialized == false){
+        if (daInitialized == false){ // why was this set to always retrieve the chat log?
           setTimeout(function(){
             //console.log("daInitialize call to chat_log in checkin");
             $.ajax({
@@ -6437,7 +6454,7 @@ def observer():
         return;
       }
       function daValidationHandler(form){
-        console.log("observer: daValidationHandler");
+        //console.log("observer: daValidationHandler");
         return(false);
       }
       function stopPushChanges(){
@@ -6475,17 +6492,21 @@ def observer():
         head.appendChild(script);
       }
       function daSubmitter(event){
-        event.preventDefault();
         if (!daSendChanges || !daConnected){
+          event.preventDefault();
           return false;
         }
         var theAction = null;
         if ($(this).hasClass('review-action')){
           theAction = $(this).data('action');
         }
+        var embeddedJs = $(this).data('js');
         var embeddedAction = $(this).data('embaction');
         var linkNum = $(this).data('linknum');
         var theId = $(this).attr('id');
+        if (theId == 'pagetitle'){
+          theId = 'questionlabel';
+        }
         var theName = $(this).attr('name');
         var theValue = $(this).val();
         var skey;
@@ -6511,11 +6532,18 @@ def observer():
           skey = '#' + $(this).parents("form").attr('id') + ' ' + $(this).prop('tagName').toLowerCase() + '[type="submit"]';
         }
         //console.log("Need to click on " + skey);
-        if (observerChangesInterval != null){
+        if (observerChangesInterval != null && embeddedJs == null && theId != "backToQuestion" && theId != "helptoggle" && theId != "questionlabel"){
           clearInterval(observerChangesInterval);
         }
         socket.emit('observerChanges', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """, clicked: skey, parameters: JSON.stringify($("#daform").serializeArray())});
-        return false;
+        if (embeddedJs != null){
+          //console.log("Running the embedded js");
+          eval(decodeURIComponent(embeddedJs));
+        }
+        if (theId != "backToQuestion" && theId != "helptoggle" && theId != "questionlabel"){
+          event.preventDefault();
+          return false;
+        }
       }
       function adjustInputWidth(e){
         var contents = $(this).val();
@@ -6528,6 +6556,7 @@ def observer():
           $('#helptoggle').trigger('click');
       }
       function url_action(action, args){
+          //console.log("Got to a url_action");
           //redo
           if (args == null){
               args = {};
@@ -6621,6 +6650,10 @@ def observer():
         $('button[type="submit"]').click(daSubmitter);
         $('input[type="submit"]').click(daSubmitter);
         $("a.review-action").click(daSubmitter);
+        $("#backToQuestion").click(daSubmitter);
+        $("#questionlabel").click(daSubmitter);
+        $("#pagetitle").click(daSubmitter);
+        $("#helptoggle").click(daSubmitter);
         $("a[data-linknum]").click(daSubmitter);
         $("a[data-embaction]").click(daSubmitter);
         $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });

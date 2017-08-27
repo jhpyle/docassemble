@@ -36,6 +36,13 @@ body.dacontrolled > .navbar-inverse {
     margin-top: 15px;
 }
 
+.slider .tooltip-inner {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 .alert {
     max-height: 150px;
     overflow-y: auto;
