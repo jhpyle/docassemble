@@ -1,10 +1,13 @@
 # Change Log
 
-## [0.1.43]
+## [0.1.43] - 2017-08-27
 ### Fixed
 - Extraneous call to checkin for chat log.
 - Clicking elements in control mode in live chat
 - Problems with db table prefixes
+- Adjusted to changes in flask-user
+- Downgraded to Debian jessie because there was a problem with corrupt
+  HTTP responses.
 
 ## [0.1.42] - 2017-08-24
 ### Added
