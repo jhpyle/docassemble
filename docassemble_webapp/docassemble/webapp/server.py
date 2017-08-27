@@ -6650,15 +6650,7 @@ def observer():
         });
       }
       function daInitialize(){
-        $('button[type="submit"]').click(daSubmitter);
-        $('input[type="submit"]').click(daSubmitter);
-        $("a.review-action").click(daSubmitter);
-        $("#backToQuestion").click(daSubmitter);
-        $("#questionlabel").click(daSubmitter);
-        $("#pagetitle").click(daSubmitter);
-        $("#helptoggle").click(daSubmitter);
-        $("a[data-linknum]").click(daSubmitter);
-        $("a[data-embaction]").click(daSubmitter);
+        $('button[type="submit"], input[type="submit"], a.review-action, #backToQuestion, #questionlabel, #pagetitle, #helptoggle, a[data-linknum], a[data-embaction]').click(daSubmitter);
         $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
         $(".to-labelauty-icon").labelauty({ label: false });
         var navMain = $("#navbar-collapse");
@@ -11691,7 +11683,7 @@ def train():
             choices = None
         extra_js = """
     <script>
-      $( document ).ready(function() {
+      $( document ).ready(function(){
         $("button.prediction").click(function(){
           if (!($("#dependent" + $(this).data("id-number")).prop('disabled'))){
             $("#dependent" + $(this).data("id-number")).val($(this).data("prediction"));
@@ -11974,7 +11966,7 @@ def voice():
 @app.route("/digits", methods=['POST', 'GET'])
 @csrf.exempt
 def digits():
-    resp = twilio.twiml.messaging_response.MessagingResponse()
+    resp = twilio.twiml.voice_response.VoiceResponse()
     if twilio_config is None:
         logmessage("digits: ignoring call to digits because Twilio not enabled")
         return Response(str(resp), mimetype='text/xml')
