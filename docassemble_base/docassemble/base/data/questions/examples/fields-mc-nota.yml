@@ -12,7 +12,6 @@ fields:
       - Sunroof
       - Automatic transmission
       - Heated seats
-    show if: likes_fruit
     none of the above: |
       Nothing ${ "at all" }
 ---
@@ -24,4 +23,7 @@ subquestion: |
   You want ${ option }.
   % endif
   % endfor
+
+  car_options is
+  `${ car_options.elements }`
 mandatory: True

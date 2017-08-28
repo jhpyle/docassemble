@@ -1539,7 +1539,7 @@ class Question:
                             #     field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
                             elif key == 'shuffle':
                                 field_info['shuffle'] = field[key]
-                            elif key == 'none of the above' and 'datatype' in field and field['datatype'] == 'checkboxes':
+                            elif key == 'none of the above' and 'datatype' in field and field['datatype'] in ['checkboxes', 'object_checkboxes']:
                                 if type(field[key]) is bool:
                                     field_info['nota'] = field[key]
                                 else:
@@ -1557,7 +1557,7 @@ class Question:
                                     raise DAError("Syntax error: field label '" + str(key) + "' overwrites previous label, '" + str(field_info['label'].original_text) + "'" + self.idebug(data))
                                 field_info['label'] = TextObject(definitions + interpret_label(key), names_used=self.mako_names)
                                 field_info['saveas'] = field[key]
-                        if 'type' in field_info and field_info['type'] == 'checkboxes' and 'nota' not in field_info:
+                        if 'type' in field_info and field_info['type'] in ['checkboxes', 'object_checkboxes'] and 'nota' not in field_info:
                             field_info['nota'] = True
                         if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ['object', 'object_radio', 'object_checkboxes']:
                             if 'choices' not in field:
@@ -1585,7 +1585,7 @@ class Question:
                             else:
                                 default_list = list()
                             if field_info['type'] == 'object_checkboxes':
-                                default_list.append(field_info['saveas'])
+                                default_list.append('_DAOBJECTDEFAULTDA')
                             if len(default_list):
                                 select_list.append('default=[' + ", ".join(default_list) + ']')
                             source_code = "docassemble.base.core.selections(" + ", ".join(select_list) + ")"
@@ -1593,7 +1593,8 @@ class Question:
                         if 'saveas' in field_info:
                             self.fields.append(Field(field_info))
                             if 'type' in field_info:
-                                if field_info['type'] == 'object_checkboxes':
+                                if field_info['type'] in ['checkboxes', 'object_checkboxes']:
+                                    self.fields_used.add(field_info['saveas'])
                                     self.fields_used.add(field_info['saveas'] + '.gathered')
                                 elif field_info['type'] in ['ml', 'mlarea']:
                                     self.fields_used.add(field_info['saveas'])
@@ -2109,62 +2110,63 @@ class Question:
                                 selections.extend(process_selections(eval(value, user_dict)))
                             else:
                                 selections.append([value, key])
-                    if len(selections) == 0:
+                    if len(selections) == 0 and len(self.fields) == 1:
                         if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']:
-                            if len(self.fields) == 1:
-                                raise CodeExecute("import docassemble.base.core\n" + from_safeid(field.saveas) + ' = docassemble.base.core.DADict(' + repr(from_safeid(field.saveas)) + ', auto_gather=False, gathered=True)', self)
+                            ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict)
+                            raise CodeExecute(from_safeid(field.saveas) + ".gathered = True", self)
                         else:
-                            if len(self.fields) == 1:
-                                raise CodeExecute(from_safeid(field.saveas) + ' = None', self)
+                            raise CodeExecute(from_safeid(field.saveas) + ' = None', self)
                     selectcompute[field.number] = selections
                 if hasattr(field, 'choicetype') and field.choicetype == 'compute':
                     if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'object_checkboxes', 'checkboxes']:
                         string = "import docassemble.base.core"
-                        #logmessage("Doing " + string)
-                        exec(string, user_dict)                        
-                    #logmessage("Doing " + field.selections['sourcecode'])
+                        # logmessage("Doing " + string)
+                        exec(string, user_dict)
+                    to_compute = field.selections['compute']
+                    if field.datatype == 'object_checkboxes':
+                        default_exists = False
+                        try:
+                            eval(from_safeid(field.saveas), user_dict)
+                            default_to_use = from_safeid(field.saveas)
+                        except:
+                            default_to_use = 'None'
+                        exec('_DAOBJECTDEFAULTDA = ' + default_to_use, user_dict)
                     if 'exclude' in field.selections:
-                        selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict), exclude=eval(field.selections['exclude'], user_dict))
+                        selectcompute[field.number] = process_selections(eval(to_compute, user_dict), exclude=eval(field.selections['exclude'], user_dict))
                     else:
-                        selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict))
+                        #logmessage("Doing " + field.selections.get('sourcecode', "No source code"))
+                        selectcompute[field.number] = process_selections(eval(to_compute, user_dict))
+                    if field.datatype == 'object_checkboxes':
+                        if '_DAOBJECTDEFAULTDA' in user_dict:
+                            del user_dict['_DAOBJECTDEFAULTDA']
                     if len(selectcompute[field.number]) == 0:
-                        # logmessage("6")
-                        if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']:
-                            # logmessage("7")
-                            if len(self.fields) == 1:
-                                # logmessage("8")
-                                #if field.datatype == 'object_checkboxes':
+                        if len(self.fields) == 1:
+                            if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']:
+                                ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict)
                                 raise CodeExecute(from_safeid(field.saveas) + '.gathered = True', self)
-                                #else:
-                                #    raise CodeExecute(from_safeid(field.saveas) + ' = dict()', self)
-                        else:
-                            # logmessage("9")
-                            if len(self.fields) == 1:
-                                # logmessage("10")
+                            else:
                                 raise CodeExecute(from_safeid(field.saveas) + ' = None', self)
-                            # else:
-                            #     logmessage("11")
-                    # logmessage("12")
                 if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'object_checkboxes']:
                     if field.number not in selectcompute:
                         raise DAError("datatype was set to object but no code or selections was provided")
-                    string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "] = dict()"
-                    # logmessage("Doing " + string)
                     if len(self.fields) == 1 and len(selectcompute[field.number]) == 0:
                         if field.datatype == 'object_checkboxes':
+                            ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict)
                             # logmessage("object checkboxes setting gathered to true")
                             raise CodeExecute(from_safeid(field.saveas) + '.gathered = True', self)
                         else:
                             # logmessage("object selection setting object to None")
                             raise CodeExecute(from_safeid(field.saveas) + ' = None', self)
+                    string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "] = dict()"
+                    # logmessage("Doing " + string)
                     try:
                         exec(string, user_dict)
                         for selection in selectcompute[field.number]:
                             key = selection[0]
-                            # logmessage("key is " + str(key))
+                            #logmessage("key is " + str(key))
                             real_key = codecs.decode(key, 'base64').decode('utf8')
                             string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "][" + repr(key) + "] = " + real_key
-                            # logmessage("Doing " + string)
+                            #logmessage("Doing " + string)
                             exec(string, user_dict)
                     except:
                         raise DAError("Failure while processing field with datatype of object")
@@ -3640,3 +3642,38 @@ def recurse_indices(expression_array, variable_list, pre_part, final_list, var_s
     recurse_indices(copy.copy(expression_array), variable_list, copy.copy(pre_part), final_list, var_subs_dict, var_subs, generic_dict, copy.copy(generic))
     if len(var_subs) == 0 and len(generic) == 0:
         recurse_indices(copy.copy(expression_array), variable_list, ['x'], final_list, var_subs_dict, var_subs, generic_dict, copy.copy(pre_part))
+
+def ensure_object_exists(saveas, datatype, user_dict):
+    #logmessage("ensure object exists")
+    already_there = False
+    try:
+        eval(saveas, user_dict)
+        already_there = True
+    except:
+        pass
+    if already_there:
+        #logmessage("ensure object exists: already there")
+        return
+    use_initialize = False
+    if re.search(r'\.', saveas):
+        core_key_name = re.sub(r'\..*', '', saveas)
+        attribute_name = re.sub(r'\..*', '', saveas)
+        try:
+            core_key = eval(core_key, user_dict)
+            if hasattr(core_key, 'instanceName'):
+                use_initialize = True
+        except:
+            pass
+    exec("import docassemble.base.core", user_dict)
+    if use_initialize:
+        if datatype == 'checkboxes':
+            exec(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DADict, auto_gather=False)", user_dict)
+        elif datatype == 'object_checkboxes':
+            exec(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DAList, auto_gather=False)", user_dict)
+    else:
+        if datatype == 'checkboxes':
+            exec(saveas + ' = docassemble.base.core.DADict(' + repr(saveas) + ', auto_gather=False)', user_dict)
+        elif datatype == 'object_checkboxes':
+            exec(saveas + ' = docassemble.base.core.DAList(' + repr(saveas) + ', auto_gather=False)', user_dict)
+
+    

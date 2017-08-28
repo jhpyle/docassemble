@@ -158,6 +158,10 @@
 "Invite": Null
 ", is already in use by someone else": Null
 ", is attached": Null
+"is not a valid date.": Null
+"is not a valid number.": Null
+"is not a whole number.": Null
+"is not within the range.": Null
 "Join": Null
 "JSON file": Null
 "Language": Null

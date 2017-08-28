@@ -1,10 +1,13 @@
 # Change Log
 
 ## [0.1.44]
+### Changed
+- Datatype object_checkboxes will now create the variable if it does not
+  exist.
 ### Fixed
-- Bug in control mode that submitted clicks twice in some
-  circumstances.
-- Bug in voice call forwarding.
+- Control mode submitting clicks twice in some circumstances.
+- Voice call forwarding.
+- Checkbox validation error message.
 
 ## [0.1.43] - 2017-08-27
 ### Fixed

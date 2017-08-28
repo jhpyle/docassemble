@@ -3983,6 +3983,17 @@ def index():
         if key.startswith('_field_') and orig_key in known_varnames:
             if not (known_varnames[orig_key] in post_data and post_data[known_varnames[orig_key]] != '' and post_data[orig_key] == ''):
                 post_data[known_varnames[orig_key]] = post_data[orig_key]
+        if key.endswith('.gathered'):
+            objname = re.sub(r'\.gathered$', '', key)
+            try:
+                eval(objname, user_dict)
+            except:
+                safe_objname = safeid(objname)
+                if safe_objname in known_datatypes:
+                    if known_datatypes[safe_objname] == 'object_checkboxes':
+                        docassemble.base.parse.ensure_object_exists(objname, 'object_checkboxes', user_dict)
+                    elif known_datatypes[safe_objname] == 'checkboxes':
+                        docassemble.base.parse.ensure_object_exists(objname, 'checkboxes', user_dict)
     field_error = dict()
     validated = True
     for orig_key in post_data:
@@ -3993,7 +4004,7 @@ def index():
         try:
             key = myb64unquote(orig_key)
         except:
-            raise DAError("invalid name " + str(orig_key))
+            raise DAError("index: invalid name " + str(orig_key))
         if key.startswith('_field_'):
             continue
         bracket_expression = None
@@ -4009,7 +4020,7 @@ def index():
             try:
                 key = match.group(1)
             except:
-                raise DAError("invalid name " + str(match.group(1)))
+                raise DAError("index: invalid bracket name " + str(match.group(1)))
             real_key = safeid(key)
             if match_invalid.search(key):
                 error_messages.append(("error", "Error: Invalid character in key: " + key))
@@ -4029,8 +4040,8 @@ def index():
                     eval(key, user_dict)
                 except:
                     #logmessage("setting key " + str(key) + " to empty dict")
+                    #m = re.search(r'(.*)\.([^.]+)', key)
                     use_initialize = False
-                    m = re.search(r'(.*)\.([^.]+)', key)
                     if re.search(r'\.', key):
                         core_key_name = re.sub(r'\..*', '', key)
                         attribute_name = re.sub(r'\..*', '', key)
@@ -4041,11 +4052,15 @@ def index():
                                 use_initialize = True
                         except:
                             pass
+                    objtype = 'DADict'
+                    if orig_key in known_datatypes:
+                        #logmessage("key " + key + " is a " + known_datatypes[orig_key])
+                        if known_datatypes[orig_key] == 'object_checkboxes':
+                            objtype = 'DAList'
                     if use_initialize:
-                        the_string = core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", DADict)\n" + key + ' = docassemble.base.core.DADict(' + repr(key) +')'
+                        the_string = "import docassemble.base.core\n" + core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base." + objtype + ", auto_gather=False, gathered=True)"
                     else:
-                        the_string = "import docassemble.base.core\n" + key + ' = docassemble.base.core.DADict(' + repr(key) +')'
-                    the_string += "\n" + key + ".auto_gather = False\n" + key + ".gathered = True"
+                        the_string = "import docassemble.base.core\n" + key + ' = docassemble.base.core.' + objtype + '(' + repr(key) + ', auto_gather=False, gathered=True)'
                     try:
                         exec(the_string, user_dict)
                         known_variables[key] = True
@@ -4105,10 +4120,10 @@ def index():
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[real_key] in ['object', 'object_radio']:
-                logmessage("We have an object type and objselections is " + str(user_dict['_internal']['objselections']))
-                logmessage("We have an object type and key is " + str(key))
-                logmessage("We have an object type and data is " + str(data))
-                logmessage("We have an object type and set_to_empty is " + str(set_to_empty))
+                #logmessage("We have an object type and objselections is " + str(user_dict['_internal']['objselections']))
+                #logmessage("We have an object type and key is " + str(key))
+                #logmessage("We have an object type and data is " + str(data))
+                #logmessage("We have an object type and set_to_empty is " + str(set_to_empty))
                 if data == '' or set_to_empty:
                     continue
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
@@ -6255,7 +6270,7 @@ def interview_start():
 
 @app.route('/start/<dispatch>', methods=['GET'])
 def redirect_to_interview(dispatch):
-    logmessage("The dispatch is " + str(dispatch))
+    logmessage("redirect_to_interview: the dispatch is " + str(dispatch))
     yaml_filename = daconfig['dispatch'].get(dispatch, None)
     if yaml_filename is None:
         abort(404)
@@ -8357,12 +8372,12 @@ def create_playground_package():
                 if package not in info['dependencies']:
                     info['dependencies'].append(package)
             for package in info['dependencies']:
-                logmessage("Considering " + str(package))
+                logmessage("create_playground_package: considering " + str(package))
                 existing_package = Package.query.filter_by(name=package, active=True).first()
                 if existing_package is not None:
-                    logmessage("Package " + str(package) + " exists")
+                    logmessage("create_playground_package: package " + str(package) + " exists")
                     if existing_package.giturl is None or existing_package.giturl == 'https://github.com/jhpyle/docassemble':
-                        logmessage("Package " + str(package) + " exists but I will skip it; name is " + str(existing_package.name) + " and giturl is " + str(existing_package.giturl))
+                        logmessage("create_playground_package: package " + str(package) + " exists but I will skip it; name is " + str(existing_package.name) + " and giturl is " + str(existing_package.giturl))
                         continue
                     # https://github.com/jhpyle/docassemble-helloworld
                     # git+https://github.com/fact-project/smart_fact_crawler.git@master#egg=smart_fact_crawler-0
@@ -8373,7 +8388,7 @@ def create_playground_package():
                     if new_url not in info['dependency_links']:
                         info['dependency_links'].append(str(new_url))
                 else:
-                    logmessage("Package " + str(package) + " does not exist")
+                    logmessage("create_playground_package: package " + str(package) + " does not exist")
             info['modtime'] = os.path.getmtime(filename)
             author_info = dict()
             author_info['author name and email'] = name_of_user(current_user, include_email=True)
@@ -12223,14 +12238,30 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 inp = ''
                 continue
             break
-        if inp.lower() in [word('back')] and steps > 1 and interview_status.can_go_back:
-            steps, user_dict, is_encrypted = fetch_previous_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
-            if 'question' in sess_info:
-                del sess_info['question']
-                r.set(key, pickle.dumps(sess_info))
-            accepting_input = False
-            inp = ''
-            continue
+        if inp.lower() in [word('back')]:
+            if 'skip' in user_dict['_internal'] and len(user_dict['_internal']['skip']):
+                max_entry = -1
+                for the_entry in user_dict['_internal']['skip'].keys():
+                    if the_entry > max_entry:
+                        max_entry = the_entry
+                if max_entry in user_dict['_internal']['skip']:
+                    del user_dict['_internal']['skip'][max_entry]
+                if 'command_cache' in user_dict['_internal'] and max_entry in user_dict['_internal']['command_cache']:
+                    del user_dict['_internal']['command_cache'][max_entry]
+                save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted, changed=False)
+                accepting_input = False
+                inp = ''
+                continue
+            elif steps > 1 and interview_status.can_go_back:
+                steps, user_dict, is_encrypted = fetch_previous_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
+                if 'question' in sess_info:
+                    del sess_info['question']
+                    r.set(key, pickle.dumps(sess_info))
+                accepting_input = False
+                inp = ''
+                continue
+            else:
+                break
         else:
             break
     false_list = [word('no'), word('n'), word('false'), word('f')]
@@ -12238,6 +12269,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
     inp_lower = inp.lower()
     skip_it = False
     changed = False
+    nothing_more = False
     if accepting_input:
         if inp_lower in [word('?')]:
             sms_info = as_sms(interview_status)
@@ -12414,34 +12446,54 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 cdata, choice_list = get_choices_with_abb(interview_status, field)
                 data = None
                 if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes'] and saveas is not None:
+                    if 'command_cache' not in user_dict['_internal']:
+                        user_dict['_internal']['command_cache'] = dict()
+                    if field.number not in user_dict['_internal']['command_cache']:
+                        user_dict['_internal']['command_cache'][field.number] = list()
+                    already_there = False
                     try:
                         eval(saveas, user_dict)
+                        already_there = True
                     except:
-                        the_string = "import docassemble.base.core\n" + saveas + ' = docassemble.base.core.DADict(' + repr(saveas) + ')' + "\n" + saveas + '.auto_gather = False' + "\n" + saveas + '.gathered = True'
-                        logmessage("do_sms: doing mc: " + the_string)
-                        try:
-                            exec(the_string, user_dict)
-                            changed = True
-                        except:
-                            logmessage("do_sms: failed to create checkbox dict")
+                        pass
+                    if not already_there:
+                        use_initialize = False
+                        if re.search(r'\.', saveas):
+                            core_key_name = re.sub(r'\..*', '', saveas)
+                            attribute_name = re.sub(r'\..*', '', saveas)
+                            try:
+                                core_key = eval(core_key, user_dict)
+                                if isinstance(core_key, DAObject):
+                                    use_initialize = True
+                            except:
+                                pass
+                        if use_initialize:
+                            if field.datatype == 'checkboxes':
+                                user_dict['_internal']['command_cache'][field.number].append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", DADict)")
+                            elif field.datatype == 'object_checkboxes':
+                                user_dict['_internal']['command_cache'][field.number].append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", DAList)")
+                        else:
+                            user_dict['_internal']['command_cache'][field.number].append("import docassemble.base.core")
+                            if field.datatype == 'checkboxes':
+                                user_dict['_internal']['command_cache'][field.number].append(saveas + ' = docassemble.base.core.DADict(' + repr(saveas) +')')
+                            elif field.datatype == 'object_checkboxes':
+                                user_dict['_internal']['command_cache'][field.number].append(saveas + ' = docassemble.base.core.DAList(' + repr(saveas) +')')
+                    user_dict['_internal']['command_cache'][field.number].append(saveas + '.auto_gather = False')
+                    data = 'True'
+                    saveas = saveas + '.gathered'
                 if (inp_lower == word('skip') or (inp_lower == word('none') and hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes'])) and ((hasattr(field, 'disableothers') and field.disableothers) or (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']) or not (interview_status.extras['required'][field.number] or (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')))):
+                    # user typed 'skip,' or, where checkboxes, 'none.'  Also:
+                    # field is skippable, either because it has disableothers, or it is a checkbox field, or
+                    # it is not required.  Multiple choice fields with saveas are considered required.
                     if hasattr(field, 'datatype'):
                         if field.datatype in ['object', 'object_radio']:
                             skip_it = True
                             data = repr('')
                         if field.datatype in ['checkboxes', 'object_checkboxes']:
-                            skip_it = True
-                            data = repr('')
                             for choice in choice_list:
                                 if choice[1] is None:
                                     continue
-                                the_string = choice[1] + ' = False'
-                                logmessage("do_sms: doing checkboxes " + str(the_string) + " for skipping checkboxes")
-                                try:
-                                    exec(the_string, user_dict)
-                                    changed = True
-                                except:
-                                    logmessage("do_sms: failure to set checkbox with " + the_string)
+                                user_dict['_internal']['command_cache'][field.number].append(choice[1] + ' = False')
                         elif field.datatype in ['integer']:
                             data = '0'
                         elif field.datatype in ['number', 'float', 'currency', 'range']:
@@ -12451,9 +12503,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     else:
                         data = repr('')
                 else:
+                    # There is a real value here
                     if hasattr(field, 'datatype') and field.datatype in ['object_checkboxes']:
-                        skip_it = True
-                        data = repr('')
                         true_values = set()
                         for selection in re.split(r' *[,;] *', inp_lower):
                             for potential_abb, value in cdata['abblower'].iteritems():
@@ -12466,15 +12517,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                 the_string = 'if ' + choice[2] + ' not in ' + saveas + ':\n    ' + saveas + '.append(' + choice[2] + ')'
                             else:
                                 the_string = 'if ' + choice[2] + ' in ' + saveas + ':\n    ' + saveas + '.remove(' + choice[2] + ')'
-                            logmessage("do_sms: doing object checkboxes: " + str(the_string))
-                            try:
-                                exec(the_string, user_dict)
-                                changed = True
-                            except:
-                                logmessage("do_sms: failure to set checkbox with " + the_string)
+                            user_dict['_internal']['command_cache'][field.number].append(the_string)
                     elif hasattr(field, 'datatype') and field.datatype in ['checkboxes']:
-                        skip_it = True
-                        data = repr('')
                         true_values = set()
                         for selection in re.split(r' *[,;] *', inp_lower):
                             for potential_abb, value in cdata['abblower'].iteritems():
@@ -12489,13 +12533,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                 the_string = choice[1] + ' = True'
                             else:
                                 the_string = choice[1] + ' = False'
-                            logmessage("do_sms: doing for checkboxes: " + str(the_string))
-                            try:
-                                exec(the_string, user_dict)
-                                changed = True
-                            except:
-                                logmessage("do_sms: failure to set checkbox with " + the_string)
+                            user_dict['_internal']['command_cache'][field.number].append(the_string)
                     else:
+                        #regular multiple choice
                         #logmessage("do_sms: user selected " + inp_lower + " and data is " + str(cdata))
                         for potential_abb, value in cdata['abblower'].iteritems():
                             if inp_lower.startswith(potential_abb):
@@ -12523,6 +12563,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         the_value = eval("int(" + repr(data) + ")")
                         data = "int(" + repr(data) + ")"
                     except:
+                        special_messages.append('"' + inp + '" ' + word("is not a whole number."))
                         data = None
             elif hasattr(field, 'datatype') and field.datatype in ['date']:
                 if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
@@ -12530,8 +12571,11 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     skip_it = True
                 else:
                     try:
-                        dateutil.parser.parse(data)
-                    except:
+                        dateutil.parser.parse(inp)
+                        data = repr(inp)
+                    except Exception as the_err:
+                        logmessage("do_sms: date validation error was " + str(the_err))
+                        special_messages.append('"' + inp + '" ' + word("is not a valid date."))
                         data = None                    
             elif hasattr(field, 'datatype') and field.datatype in ['range']:
                 if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
@@ -12542,6 +12586,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     try:
                         the_value = eval("float(" + repr(data) + ")", user_dict)
                         if the_value > int(interview_status.extras['max'][field.number]) or the_value < int(interview_status.extras['min'][field.number]):
+                            special_messages.append('"' + inp + '" ' + word("is not within the range."))
                             data = None
                     except:
                         data = None
@@ -12557,6 +12602,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         the_value = eval("float(" + repr(data) + ")", user_dict)
                         data = "float(" + repr(str(data)) + ")"
                     except:
+                        special_messages.append('"' + inp + '" ' + word("is not a valid number."))
                         data = None
             else:
                 if inp_lower == word('skip'):
@@ -12571,40 +12617,36 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             data = None
         if data is None:
             logmessage("do_sms: could not process input: " + inp)
-            special_messages.append(word("I do not understand what you mean by") + ' "' + inp + '"')
+            special_messages.append(word("I do not understand what you mean by") + ' "' + inp + '."')
         else:
             the_string = saveas + ' = ' + data
-            #release_lock(sess_info['uid'], sess_info['yaml_filename'])
-            #return resp
             try:
                 if not skip_it:
+                    if hasattr(field, 'disableothers') and field.disableothers and hasattr(field, 'saveas'):
+                        logmessage("do_sms: disabling others")
+                        next_field = None
                     if next_field is not None:
                         if 'command_cache' not in user_dict['_internal']:
-                            user_dict['_internal']['command_cache'] = list()
-                        user_dict['_internal']['command_cache'].append(the_string)
+                            user_dict['_internal']['command_cache'] = dict()
+                        if field.number not in user_dict['_internal']['command_cache']:
+                            user_dict['_internal']['command_cache'][field.number] = list()
+                        user_dict['_internal']['command_cache'][field.number].append(the_string)
                         logmessage("do_sms: storing in command cache: " + str(the_string))
                     else:
                         if 'command_cache' in user_dict['_internal']:
-                            for pre_string in user_dict['_internal']['command_cache']:
-                                logmessage("do_sms: doing command cache: " + pre_string)
-                                exec(pre_string, user_dict)
+                            for field_num in sorted(user_dict['_internal']['command_cache'].keys()):
+                                for pre_string in user_dict['_internal']['command_cache'][field_num]:
+                                    logmessage("do_sms: doing command cache: " + pre_string)
+                                    exec(pre_string, user_dict)
                         logmessage("do_sms: doing regular: " + the_string)
                         exec(the_string, user_dict)
                         changed = True
-                        # TODO: restore this functionality
-                        # if hasattr(field, 'disableothers') and field.disableothers and hasattr(field, 'saveas'):
-                            #logmessage("do_sms: disabling others")
-                            # if 'sms_variable' in interview_status.current_info:
-                            #     del interview_status.current_info['sms_variable']
-                            # if 'smsgather' in user_dict['_internal'] and user_dict['_internal']['smsgather'] == saveas:
-                            #     #logmessage("do_sms: deleting " + user_dict['_internal']['smsgather'] + "because disable others")
-                            #     del user_dict['_internal']['smsgather']
                 if next_field is None:
                     logmessage("do_sms: next_field is None")
                     if 'skip' in user_dict['_internal']:
                         user_dict['_internal']['skip'].clear()
                     if 'command_cache' in user_dict['_internal']:
-                        del user_dict['_internal']['command_cache'][:]
+                        user_dict['_internal']['command_cache'].clear()
                     # if 'sms_variable' in interview_status.current_info:
                     #     del interview_status.current_info['sms_variable']
                 else:

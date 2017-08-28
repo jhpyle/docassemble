@@ -1760,6 +1760,7 @@ def selections(*pargs, **kwargs):
     defaults = set()
     if 'default' in kwargs:
         setify(kwargs['default'], defaults)
+        defaults.discard(None)
     output = list()
     seen = set()
     for arg in pargs:

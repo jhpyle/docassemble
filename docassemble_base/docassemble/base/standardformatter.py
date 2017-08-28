@@ -727,7 +727,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                     the_saveas = safeid('_field_' + str(field.number))
                 else:
                     the_saveas = field.saveas                        
-                if not (hasattr(field, 'datatype') and field.datatype == 'checkboxes'):
+                if not (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']):
                 #     validation_rules['messages'][the_saveas] = dict()
                 #     validation_rules['rules'][the_saveas] = dict()
                 # else:
@@ -778,7 +778,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                         elif key == 'maxlength':
                             validation_rules['messages'][the_saveas][key] = word("You cannot type more than") + " " + str(status.extras[key][field.number]) + " " + word("characters")
             if hasattr(field, 'datatype'):
-                if field.datatype == 'checkboxes' and hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
+                if field.datatype in ['checkboxes', 'object_checkboxes'] and hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
                     #validation_rules['rules'][the_saveas]['checkboxgroup'] = dict(name=the_saveas, foobar=2)
                     #validation_rules['messages'][the_saveas]['checkboxgroup'] = word("You need to select one.")
                     if 'groups' not in validation_rules:
@@ -793,7 +793,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                         validation_rules['messages'][the_name] = dict(require_from_group=word("Please select one."))
                     validation_rules['rules']['_ignore' + str(field.number)] = dict(require_from_group=[1, '.dafield' + str(field.number)])
                     validation_rules['messages']['_ignore' + str(field.number)] = dict(require_from_group=word("Please select one."))
-                    validation_rules['groups'][the_saveas] = " ".join(name_list)
+                    validation_rules['groups'][the_saveas] = " ".join(name_list + ['_ignore' + str(field.number)])
                     validation_rules['ignore'] = None
                 if hasattr(field, 'inputtype') and field.inputtype in ['yesnoradio', 'noyesradio']:
                     validation_rules['ignore'] = None
