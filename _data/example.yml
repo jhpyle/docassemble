@@ -522,10 +522,8 @@
     not your favorite color of eggs.
   sets: all_done
 "chat": |-
-  mandatory: True
-  code: |
-    multi_user = True
-    set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])
+  interview help: |
+    This is the interview help.
 "chat-example-1": |-
   mandatory: True
   code: |
@@ -1258,6 +1256,8 @@
     name: Your letter
     filename: letter
     docx template file: letter_template.docx
+    valid formats:
+      - pdf
 "docx-template-auto": ""
 "docx-template-code": |-
   mandatory: True
@@ -1481,7 +1481,7 @@
   ---
   code: |
     import random
-    if random.random() < 0.5:
+    if random.random() < -0.5:
       the_choices = []
     else:
       the_choices = [protagonist, antagonist]
@@ -1499,7 +1499,6 @@
     - no label: villain
       datatype: object_checkboxes
       choices: the_choices
-  #  - Favorite food: favorite_food
   ---
   mandatory: True
   question: |
@@ -2020,7 +2019,6 @@
         - Sunroof
         - Automatic transmission
         - Heated seats
-      show if: likes_fruit
       none of the above: |
         Nothing ${ "at all" }
 "fields-mc-with-showif": |-
@@ -4301,6 +4299,47 @@
     antagonist.name.first = "Tom"
     antagonist.name.last = "Riddle"
     villain.auto_gather = False
+  ---
+  question: Who are the villains, if any?
+  fields:
+    no label: villain
+    datatype: object_checkboxes
+    choices:
+      - protagonist
+      - antagonist
+"object-checkboxes-dalist": |-
+  objects:
+    protagonist: Individual
+    antagonist: Individual
+  ---
+  mandatory: True
+  code: |
+    protagonist.name.first = "Harry"
+    protagonist.name.last = "Potter"
+    antagonist.name.first = "Tom"
+    antagonist.name.last = "Riddle"
+  ---
+  question: Who are the villains, if any?
+  fields:
+    no label: villain
+    datatype: object_checkboxes
+    choices:
+      - protagonist
+      - antagonist
+"object-checkboxes-default": |-
+  objects:
+    protagonist: Individual
+    antagonist: Individual
+    villain: PartyList
+  ---
+  mandatory: True
+  code: |
+    protagonist.name.first = "Harry"
+    protagonist.name.last = "Potter"
+    antagonist.name.first = "Tom"
+    antagonist.name.last = "Riddle"
+    villain.auto_gather = False
+    villain.append(antagonist)
   ---
   question: Who are the villains, if any?
   fields:

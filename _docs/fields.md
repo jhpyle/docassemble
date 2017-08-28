@@ -817,7 +817,24 @@ presented to the user as checkboxes.  The `.gathered` attribute of the
 variable will be set to `True` after the elements are set.  See
 [groups] for more information.
 
-{% include side-by-side.html demo="object-checkboxes" %}
+{% include side-by-side.html demo="object-checkboxes-dalist" %}
+
+You can also use `datatype: object_checkboxes` on variables that
+already exist in your interview.  You would need to do this if you
+wanted the variable to be a subtype of [`DAList`].  If you use a
+variable name that already exists, note that the `question` will only
+be used when the `.gathered` attribute is needed.  To avoid questions
+asking for `.there_are_any` and `.there_is_another`, set
+`.auto_gather` to `False`.  For example:
+
+{% include side-by-side.html demo="object-checkboxes-dalist" %}
+
+Another advantage of using an already-existing variable is that the
+choices in the question will default to the current elements in the
+list.  In this example, we use the [`.append()`] method to initialize
+the list of villains.
+
+{% include side-by-side.html demo="object-checkboxes-default" %}
 
 ## <a name="ml"></a>Machine learning
 
@@ -1288,3 +1305,4 @@ why this needs to be done manually as opposed to automatically:
 [action]: {{ site.baseurl }}/docs/functions.html#actions
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [`disable others`]: #disable others
+[`.append()`]: {{ site.baseurl }}/docs/objects.html#DAList.append
