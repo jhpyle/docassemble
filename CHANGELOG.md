@@ -1,15 +1,16 @@
 # Change Log
 
-## [0.1.44]
+## [0.1.44] - 2017-08-30
 ### Changed
-- Datatype object_checkboxes will now create the variable if it does not
+- Datatype `object_checkboxes` will now create the variable if it does not
   exist.
 ### Fixed
 - Control mode submitting clicks twice in some circumstances.
 - Voice call forwarding.
 - Duplicate checkbox validation error message.
-- send_email() did not e-mail docx files when given
+- `send_email()` did not e-mail .docx files when given
   DAFileCollection objects.
+- Inconsistency in handling of nested questions.
 
 ## [0.1.43] - 2017-08-27
 ### Fixed
