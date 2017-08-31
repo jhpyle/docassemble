@@ -9,6 +9,7 @@
         XSendFile on
         XSendFilePath /usr
         XSendFilePath /tmp
+	KeepAliveTimeout 10
         RewriteEngine On
         RewriteCond %{REQUEST_URI}      ^{{POSTURLROOT}}ws/socket.io         [NC]
         RewriteCond %{QUERY_STRING}     transport=websocket     [NC]

@@ -420,6 +420,7 @@
 "Type your message here.": Null
 "Type your selection.": Null
 "Type your selection, or type skip to move on without selecting.": Null
+"Type your selection(s), separated by commas.": Null
 "Type your selection(s), separated by commas, or type none.": Null
 "Unable to determine if the package is published on GitHub.": Null
 "Unable to determine if the package is published on PyPI.": Null

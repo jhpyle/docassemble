@@ -218,7 +218,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
         except Exception as e:
             sys.stderr.write("Error in assembly: " + str(e))
         if not hasattr(interview_status, 'question'):
-            #sys.stderr.write("background_action: status was question\n")
+            #sys.stderr.write("background_action: status had no question\n")
             return(worker_controller.functions.ReturnValue(extra=extra))
         if interview_status.question.question_type in ["restart", "exit"]:
             #sys.stderr.write("background_action: status was restart or exit\n")
@@ -259,5 +259,8 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 elif interview_status.question.question_type == "backgroundresponse":
                     return worker_controller.functions.ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
             return worker_controller.functions.ReturnValue(value=new_action, extra=extra)
-        sys.stderr.write("background_action: return at end\n")
+        if hasattr(interview_status, 'questionText') and interview_status.questionText:
+            sys.stderr.write("background_action: the end result of the background action was the asking of this question: " + repr(interview_status.questionText) + "\n")
+            sys.stderr.write("background_action: perhaps your interview did not ask all of the questions needed for the background action to do its work.  Or perhaps your background action did its job, but you did not end it with a call to background_response().")
+        sys.stderr.write("background_action: finished\n")
         return(worker_controller.functions.ReturnValue(extra=extra))

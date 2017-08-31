@@ -16,6 +16,7 @@
         XSendFile on
         XSendFilePath /usr
         XSendFilePath /tmp
+	KeepAliveTimeout 10
         WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
         WSGIScriptAlias {{WSGIROOT}} /usr/share/docassemble/webapp/docassemble.wsgi
         <Directory /usr/share/docassemble/webapp>

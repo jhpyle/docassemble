@@ -7,7 +7,9 @@
 ### Fixed
 - Control mode submitting clicks twice in some circumstances.
 - Voice call forwarding.
-- Checkbox validation error message.
+- Duplicate checkbox validation error message.
+- send_email() did not e-mail docx files when given
+  DAFileCollection objects.
 
 ## [0.1.43] - 2017-08-27
 ### Fixed

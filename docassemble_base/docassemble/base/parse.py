@@ -304,6 +304,7 @@ class InterviewStatus(object):
         self.next_action = list()
         self.embedded = set()
         self.extras = dict()
+        self.followed_mc = False
     def initialize_screen_reader(self):
         self.using_screen_reader = True
         self.screen_reader_text = dict()
@@ -2285,7 +2286,7 @@ class Question:
         user_dict['_internal']['answered'].add(self.name)
         # logmessage("mark_as_answered: question " + str(self.name) + " marked as answered")
         return
-    def follow_multiple_choice(self, user_dict):
+    def follow_multiple_choice(self, user_dict, interview_status):
         # logmessage("follow_multiple_choice")
         # if self.name:
         #     logmessage("question is " + self.name)
@@ -2293,6 +2294,7 @@ class Question:
         #     logmessage("question has no name")
         # logmessage("question type is " + str(self.question_type))
         if self.name and self.name in user_dict['_internal']['answers']:
+            interview_status.followed_mc = True
             self.mark_as_answered(user_dict)
             # logmessage("question in answers")
             # user_dict['_internal']['answered'].add(self.name)
@@ -2311,7 +2313,7 @@ class Question:
                 elif isinstance(target, Question):
                     # logmessage("Reassigning question")
                     # self.mark_as_answered(user_dict)
-                    return(target.follow_multiple_choice(user_dict))
+                    return(target.follow_multiple_choice(user_dict, interview_status))
         return(self)
     def finalize_attachment(self, attachment, result, user_dict):
         for doc_format in result['formats_to_use']:
@@ -2846,7 +2848,7 @@ class Interview:
                             if question.name and question.name in user_dict['_internal']['answers']:
                                 #logmessage("in answers")
                                 #question.mark_as_answered(user_dict)
-                                interview_status.populate(question.follow_multiple_choice(user_dict).ask(user_dict, 'None', [], None))
+                                interview_status.populate(question.follow_multiple_choice(user_dict, interview_status).ask(user_dict, 'None', [], None))
                             else:
                                 interview_status.populate(question.ask(user_dict, 'None', [], None))
                             if interview_status.question.question_type == 'continue':
@@ -2865,7 +2867,7 @@ class Interview:
                 else:
                     follow_mc = True
                     missingVariable = extract_missing_name(the_exception)
-                question_result = self.askfor(missingVariable, user_dict, seeking=interview_status.seeking, follow_mc=follow_mc)
+                question_result = self.askfor(missingVariable, user_dict, interview_status, seeking=interview_status.seeking, follow_mc=follow_mc)
                 if question_result['type'] == 'continue':
                     continue
                 elif question_result['type'] == 'refresh':
@@ -2876,7 +2878,7 @@ class Interview:
             except UndefinedError as the_exception:
                 docassemble.base.functions.reset_context()
                 missingVariable = extract_missing_name(the_exception)
-                question_result = self.askfor(missingVariable, user_dict, seeking=interview_status.seeking, follow_mc=True)
+                question_result = self.askfor(missingVariable, user_dict, interview_status, seeking=interview_status.seeking, follow_mc=True)
                 if question_result['type'] == 'continue':
                     continue
                 elif question_result['type'] == 'refresh':
@@ -2995,9 +2997,9 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                # will this be a problem?
-                the_question = new_question.follow_multiple_choice(user_dict)
-                interview_status.populate(the_question.ask(user_dict, 'None', [], None))
+                # will this be a problem?  Maybe, since the question name can vary by thread.
+                #the_question = new_question.follow_multiple_choice(user_dict)
+                interview_status.populate(new_question.ask(user_dict, 'None', [], None))
                 break
             except AttributeError as the_error:
                 docassemble.base.functions.reset_context()
@@ -3031,7 +3033,7 @@ class Interview:
             interview_status.can_go_back = False
         docassemble.base.functions.close_files()
         return(pickleable_objects(user_dict))
-    def askfor(self, missingVariable, user_dict, **kwargs):
+    def askfor(self, missingVariable, user_dict, interview_status, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())
         language = get_language()
         follow_mc = kwargs.get('follow_mc', True)
@@ -3092,7 +3094,7 @@ class Interview:
             try:
                 for the_question, is_generic, the_x, iterators, missing_var, generic_object in questions_to_try:
                     if follow_mc:
-                        question = the_question.follow_multiple_choice(user_dict)
+                        question = the_question.follow_multiple_choice(user_dict, interview_status)
                     else:
                         question = the_question
                     if debug:
@@ -3259,7 +3261,7 @@ class Interview:
                     follow_mc = True
                     newMissingVariable = extract_missing_name(the_exception)
                 #newMissingVariable = str(the_exception).split("'")[1]
-                question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=follow_mc)
+                question_result = self.askfor(newMissingVariable, user_dict, interview_status, variable_stack=variable_stack, seeking=seeking, follow_mc=follow_mc)
                 if question_result['type'] == 'continue':
                     #logmessage("Continuing after asking for newMissingVariable " + str(newMissingVariable))
                     continue
@@ -3269,7 +3271,7 @@ class Interview:
                 #logmessage("UndefinedError: " + str(the_exception))
                 docassemble.base.functions.reset_context()
                 newMissingVariable = extract_missing_name(the_exception)
-                question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=True)
+                question_result = self.askfor(newMissingVariable, user_dict, interview_status, variable_stack=variable_stack, seeking=seeking, follow_mc=True)
                 if question_result['type'] == 'continue':
                     continue
                 docassemble.base.functions.pop_current_variable()
@@ -3364,9 +3366,9 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                # will this be a problem?
-                the_question = new_question.follow_multiple_choice(user_dict)
-                return(the_question.ask(user_dict, 'None', [], missing_var))
+                # will this be a problem? yup
+                # the_question = new_question.follow_multiple_choice(user_dict)
+                return(new_question.ask(user_dict, 'None', [], missing_var))
             except CodeExecute as code_error:
                 docassemble.base.functions.reset_context()
                 #if debug:
@@ -3656,8 +3658,8 @@ def ensure_object_exists(saveas, datatype, user_dict):
         return
     use_initialize = False
     if re.search(r'\.', saveas):
-        core_key_name = re.sub(r'\..*', '', saveas)
-        attribute_name = re.sub(r'\..*', '', saveas)
+        core_key_name = re.sub(r'^(.*)\..*', r'\1', saveas)
+        attribute_name = re.sub(r'.*\.', '', saveas)
         try:
             core_key = eval(core_key, user_dict)
             if hasattr(core_key, 'instanceName'):

@@ -4043,8 +4043,8 @@ def index():
                     #m = re.search(r'(.*)\.([^.]+)', key)
                     use_initialize = False
                     if re.search(r'\.', key):
-                        core_key_name = re.sub(r'\..*', '', key)
-                        attribute_name = re.sub(r'\..*', '', key)
+                        core_key_name = re.sub(r'^(.*)\..*', r'\1', key)
+                        attribute_name = re.sub(r'.*\.', '', key)
                         #logmessage("Core key is " + str(core_key_name))
                         try:
                             core_key = eval(core_key, user_dict)
@@ -4432,9 +4432,13 @@ def index():
     else:
         response_to_send = None
     # Why do this?  To prevent loops of redirects?
-    user_dict['_internal']['answers'] = dict()
-    if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
-        del user_dict['_internal']['answers'][interview_status.question.name]
+    # Commenting this line out is necessary for force-gather.yml to work.
+    # user_dict['_internal']['answers'] = dict()
+    if (not interview_status.followed_mc) and len(user_dict['_internal']['answers']):
+        user_dict['_internal']['answers'].clear()
+    # Not sure we need this anymore
+    # if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
+    #     del user_dict['_internal']['answers'][interview_status.question.name]
     if action and not changed:
         changed = True
         #logmessage("Incrementing steps because action")
@@ -12459,8 +12463,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     if not already_there:
                         use_initialize = False
                         if re.search(r'\.', saveas):
-                            core_key_name = re.sub(r'\..*', '', saveas)
-                            attribute_name = re.sub(r'\..*', '', saveas)
+                            core_key_name = re.sub(r'^(.*)\..*', r'\1', saveas)
+                            attribute_name = re.sub(r'.*\.', '', saveas)
                             try:
                                 core_key = eval(core_key, user_dict)
                                 if isinstance(core_key, DAObject):
@@ -12668,7 +12672,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             user_dict['_internal']['answered'].add(question.name)
         interview.assemble(user_dict, interview_status)
         logmessage("do_sms: back from assemble 2; had been seeking variable " + str(interview_status.sought))
-        logmessage("do_sms: question is now " + interview_status.question.name)
+        logmessage("do_sms: question is now " + str(interview_status.question.name))
         sess_info['question'] = interview_status.question.name
         r.set(key, pickle.dumps(sess_info))
     else:
@@ -12678,12 +12682,20 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if save:
             reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
         r.delete(key)
+        if interview_status.question.question_type == 'restart':
+            sess_info = dict(yaml_filename=sess_info['yaml_filename'], uid=sess_info['uid'], secret=sess_info['secret'], number=form["From"], encrypted=True, tempuser=sess_info['tempuser'], user_id=None)
+            r.set(key, pickle.dumps(sess_info))
+            form['Body'] = word('question')
+            return do_sms(form, base_url, url_root, config=config, save=True)
     else:
         if not interview_status.can_go_back:
             user_dict['_internal']['steps_offset'] = steps
+        #I had commented this out in do_sms(), but not in index()
         #user_dict['_internal']['answers'] = dict()
-        if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
-            del user_dict['_internal']['answers'][interview_status.question.name]
+        if (not interview_status.followed_mc) and len(user_dict['_internal']['answers']):
+            user_dict['_internal']['answers'].clear()
+        # if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
+        #     del user_dict['_internal']['answers'][interview_status.question.name]
         #logmessage("do_sms: " + as_sms(interview_status))
         #twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
         #message = twilio_client.messages.create(to=form["From"], from_=form["To"], body=as_sms(interview_status))

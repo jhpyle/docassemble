@@ -1126,6 +1126,8 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
         if type(attachment) is DAFileCollection:
             subattachment = getattr(attachment, 'pdf', None)
             if subattachment is None:
+                subattachment = getattr(attachment, 'docx', None)
+            if subattachment is None:
                 subattachment = getattr(attachment, 'rtf', None)
             if subattachment is None:
                 subattachment = getattr(attachment, 'tex', None)
@@ -1196,6 +1198,8 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
         attachment_list = list()
         if type(attachment) is DAFileCollection:
             subattachment = getattr(attachment, 'pdf', None)
+            if subattachment is None:
+                subattachment = getattr(attachment, 'docx', None)
             if subattachment is None:
                 subattachment = getattr(attachment, 'rtf', None)
             if subattachment is None:

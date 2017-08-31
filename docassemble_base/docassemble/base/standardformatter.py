@@ -100,7 +100,7 @@ def get_choices_with_abb(status, field, terms=None, links=None):
             if not success:
                 break
         if success:
-            break        
+            break
     return data, choice_list
     
 def get_choices(interview_status, field):
@@ -282,7 +282,10 @@ def as_sms(status, links=None, menu_items=None):
             for the_label in data['label']:
                 qoutput += "\n" + the_label
             if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']:
-                qoutput += "\n" + word("Type your selection(s), separated by commas, or type none.")
+                if hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
+                    qoutput += "\n" + word("Type your selection(s), separated by commas.")
+                else:
+                    qoutput += "\n" + word("Type your selection(s), separated by commas, or type none.")
             else:
                 if status.extras['required'][field.number]:
                     if len(choice_list) == 1:
