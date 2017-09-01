@@ -25,8 +25,8 @@ user-created packages.
 
 # Anatomy of a docassemble package
 
-Here is the file structure of a **docassemble** package called
-`docassemble.baseball`.
+Here is the file structure of a (fictional) **docassemble** package
+called `docassemble.baseball`.
 
 {% highlight text %}
 docassemble-baseball
@@ -211,7 +211,8 @@ One way to install [Python] packages on a server is through [GitHub].
 1. Find the [GitHub] URL of the package you want to install.  This is
 in the location bar when you are looking at a [GitHub] repository.
 For example, the [GitHub] URL of the `docassemble-baseball`
-package may be `https://github.com/jhpyle/docassemble-baseball`.
+package may be `https://github.com/jhpyle/docassemble-baseball`.  (No
+such package actually exists.)
 2. In the **docassemble** web app, go to Package Management.
 3. Click "Update a package."
 4. Enter `https://github.com/jhpyle/docassemble-baseball`
@@ -243,7 +244,8 @@ central repository for [Python] software.  Anyone can register on
 [PyPI] and upload software to it.  For example, if you want to install
 the `docassemble-baseball` package:
 
-1. Make sure the `docassemble-baseball` package exists on [PyPI].
+1. Make sure the `docassemble-baseball` package exists on [PyPI]
+   (note: it doesn't; it is just a fictional package).
 2. In the **docassemble** web app, go to Package Management.
 3. Click "Update a package."
 4. Type `docassemble.baseball` into the "Package on PyPI"

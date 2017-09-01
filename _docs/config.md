@@ -1158,6 +1158,20 @@ work, you can change the URL that **docassemble** uses by setting the
 ec2 ip url: http://169.254.169.254/latest/meta-data/local-ipv4
 {% endhighlight %}
 
+## <a name="password login"></a>Password login
+
+If `password login` is set to `False`, then users will not see an
+option for entering their username and password on the login screen;
+they will only see buttons for other login methods that you have
+enabled.  The default value is `True`.
+
+Since there is a possibility that your other login methods will fail,
+there is a "back door" that bypasses this setting, so that you as the
+administrator can still log in using a username and password.  Instead
+of going to `/user/sign-in` in the web browser, go to
+`/user/sign-in?admin=1`.  The username and password fields will be
+shown, regardless of the `password login` setting.
+
 ## <a name="phone login"></a>Phone number login
 
 If `phone login` is set to `True`, then **docassemble** will allow

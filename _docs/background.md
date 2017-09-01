@@ -202,24 +202,37 @@ addition, background tasks are different from [scheduled tasks] in
 that you can run background tasks regardless of whether [`multi_user`]
 is set to `True` or `False`.
 
-There is one important factor about [actions] invoked through
-`background_action()`, which is that any changes made to variables by
-a background action will not be remembered after the action finishes.
-In order to communicate back to the interview, you need to use
-[`background_response()`] or [`background_response_action()`]
-(discussed below).
+There is two important things to understand about [actions] invoked
+through `background_action()`:
 
-This limitation exists because background actions are intended to run
-at the same time the user is answering questions in the interview.  If
-the background process starts at 3:05 p.m. and finishes at 3:10 p.m.,
-but the user answers five questions between 3:05 p.m. and 3:10 p.m.,
-the user's changes would be overwritten if the background process
-saved its changes at 3:10 p.m.
+#. Background actions are not capable of asking the user any
+   questions.  Before calling [`background_action()`], you need to
+   make sure that all of the variables the [action] needs to gather
+   from the user by asking [`question`]s have been defined.
+#. Any changes made to variables by a background action will not be
+   remembered after the action finishes.  In order to communicate back
+   to the interview, you need to use [`background_response()`] or
+   [`background_response_action()`] (discussed below).
+
+Your background action is prevented from saving changes to the
+variables because background actions are intended to run at the same
+time the user is answering questions in the interview.  If the
+background process starts at 3:05 p.m. and finishes at 3:10 p.m., but
+the user answers five questions between 3:05 p.m. and 3:10 p.m., the
+user's changes would be overwritten if the background process saved
+its changes at 3:10 p.m.
 
 The [`background_response()`] function is the simplest way to return a
 value to the interview, but you may want to use
 [`background_response_action()`] if you want to make permanent changes
 to the interview variables based on the code that is run in the background.
+
+Also, even if you are not interested in obtaining any results from the
+background action, and are only interested in the action's side
+effects, it is a good practice to end the [action] with a call to
+`background_response()` (with no arguments).  If you follow this
+practice, you will have an easier time debugging problems with your
+background actions.
 
 ## <a name="background_response"></a>background_response()
 
@@ -852,8 +865,6 @@ code: |
   the_status = action_argument('result')
   response()
 {% endhighlight %}
-
-
 
 # <a name="email"></a>E-mailing the interview
 
