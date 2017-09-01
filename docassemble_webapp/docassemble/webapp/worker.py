@@ -260,7 +260,8 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     return worker_controller.functions.ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
             return worker_controller.functions.ReturnValue(value=new_action, extra=extra)
         if hasattr(interview_status, 'questionText') and interview_status.questionText:
-            sys.stderr.write("background_action: the end result of the background action was the asking of this question: " + repr(interview_status.questionText) + "\n")
-            sys.stderr.write("background_action: perhaps your interview did not ask all of the questions needed for the background action to do its work.  Or perhaps your background action did its job, but you did not end it with a call to background_response().")
+            sys.stderr.write("background_action: The end result of the background action was the asking of this question: " + repr(str(interview_status.questionText).strip()) + "\n")
+            sys.stderr.write("background_action: Perhaps your interview did not ask all of the questions needed for the background action to do its work.")
+            sys.stderr.write("background_action: Or perhaps your background action did its job, but you did not end it with a call to background_response().")
         sys.stderr.write("background_action: finished\n")
         return(worker_controller.functions.ReturnValue(extra=extra))

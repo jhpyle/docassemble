@@ -9,7 +9,7 @@
   {{ form.hidden_tag() }}
   <div class="form-group">
     <h4>{{ word('You can provide a:') }}</h4>
-    {{ render_field(form.giturl, tabindex=70, placeholder='https://github.com/yourname/docassemble-yourpackage') }}
+    {{ render_field(form.giturl, tabindex=70, placeholder='https://github.com/username/packagename') }}
     <h4>{{ word('Or you can upload a:') }}</h4>
     {{ render_file_field_simple(form.zipfile, tabindex=80) }}
     <h4>{{ word('Or you can specify a:') }}</h4>

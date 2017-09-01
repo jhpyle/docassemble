@@ -552,6 +552,10 @@ app.config['USE_AZURE_LOGIN'] = False
 app.config['USE_GOOGLE_DRIVE'] = False
 app.config['USE_PHONE_LOGIN'] = False
 app.config['USE_GITHUB'] = False
+if daconfig.get('password login', True) is False:
+    app.config['USE_PASSWORD_LOGIN'] = False
+else:
+    app.config['USE_PASSWORD_LOGIN'] = True
 if twilio_config is not None and daconfig.get('phone login', False) is True:
     app.config['USE_PHONE_LOGIN'] = True
 if 'oauth' in daconfig:
@@ -1829,7 +1833,7 @@ def get_package_info(exclude_core=False):
             package_auth[auth.package_id] = dict()
         package_auth[auth.package_id][auth.user_id] = auth.authtype
     for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
-        if exclude_core and package.name in ['docassemble.base', 'docassemble.webapp']:
+        if exclude_core and package.name in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
             continue
         if package.name in seen:
             continue
@@ -8084,7 +8088,12 @@ def update_package_wait():
             $("#notification").removeClass("alert-success");
             $("#notification").addClass("alert-danger");
             $("#resultsContainer").show();
-            $("#resultsArea").html(data.error_message);
+            if (data.error_message){
+              $("#resultsArea").html(data.error_message);
+            }
+            else if (data.summary){
+              $("#resultsArea").html(data.summary);
+            }
             if (checkinInterval != null){
               clearInterval(checkinInterval);
             }
@@ -8138,6 +8147,8 @@ def update_package_ajax():
             elif hasattr(the_result, 'error_message'):
                 logmessage("update_package_ajax: failed return value is " + str(the_result.error_message))
                 return jsonify(success=True, status='failed', error_message=str(the_result.error_message))
+            elif hasattr(the_result, 'results') and hasattr(the_result, 'logmessages'):
+                return jsonify(success=True, status='failed', summary=summarize_results(the_result.results, the_result.logmessages))
             else:
                 return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(the_result)))
         else:
@@ -11792,7 +11803,7 @@ def interview_list():
             logmessage("interview_list: unable to load interview file " + interview_info.filename)
             metadata = dict()
             metadata['title'] = word('Error: interview not found')
-            interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
+            interview_title = metadata['title']
             is_valid = False
         #logmessage("Found old interview with title " + interview_title)
         if interview_info.encrypted:
@@ -11802,13 +11813,24 @@ def interview_list():
                 logmessage("interview_list: unable to decrypt dictionary with secret " + str(secret))
                 dictionary = fresh_dictionary()
                 metadata = dict()
-                metadata['title'] = word('Error: interview cannot be decrypted')
-                interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
+                if is_valid:
+                    metadata['title'] = word('Error: interview answers cannot be decrypted')
+                else:
+                    metadata['title'] = word('Error: interview not found and answers could not be decrypted')
+                dictionary['_internal']['starttime'] = None
+                dictionary['_internal']['modtime'] = None
+                interview_title = metadata.get('title', word('Error: interview answers cannot be decrypted')).rstrip()
                 is_valid = False
         else:
             dictionary = unpack_dictionary(interview_info.dictionary)
-        starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
-        modtime = nice_date_from_utc(dictionary['_internal']['modtime'], timezone=the_timezone)
+        if dictionary['_internal']['starttime']:
+            starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
+        else:
+            starttime = ''
+        if dictionary['_internal']['modtime']:
+            modtime = nice_date_from_utc(dictionary['_internal']['modtime'], timezone=the_timezone)
+        else:
+            modtime = ''
         interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title, 'valid': is_valid})
     script = """
     <script>
@@ -12683,9 +12705,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
         r.delete(key)
         if interview_status.question.question_type == 'restart':
-            sess_info = dict(yaml_filename=sess_info['yaml_filename'], uid=sess_info['uid'], secret=sess_info['secret'], number=form["From"], encrypted=True, tempuser=sess_info['tempuser'], user_id=None)
+            sess_info = dict(yaml_filename=sess_info['yaml_filename'], uid=get_unique_name(yaml_filename, secret), secret=sess_info['secret'], number=form["From"], encrypted=True, tempuser=sess_info['tempuser'], user_id=None)
             r.set(key, pickle.dumps(sess_info))
-            form['Body'] = word('question')
+            form = dict(To=form['To'], From=form['From'], AccountSid=form['AccountSid'], Body=word('question'))
             return do_sms(form, base_url, url_root, config=config, save=True)
     else:
         if not interview_status.can_go_back:

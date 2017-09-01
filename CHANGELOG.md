@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.1.45] - 2017-08-31
+
+### Added
+- Configuration directive `password login`, which will hide the
+  username and password fields on the login screen.
+### Fixed
+- Better error messages when packages fail to install.
+- Better error messages in `worker.log` when background processes
+  do not complete.
+
 ## [0.1.44] - 2017-08-30
 ### Changed
 - Datatype `object_checkboxes` will now create the variable if it does not

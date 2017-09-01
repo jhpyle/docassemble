@@ -92,7 +92,8 @@
 "Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.": Null
 "Enter code": Null
 "Error accessing Google Drive": Null
-"Error: interview cannot be decrypted": Null
+"Error: interview answers cannot be decrypted": Null
+"Error: interview not found and answers could not be decrypted": Null
 "Error: interview not found": Null
 "Error: menu item is not a Python dict with keys of url and label": Null
 "Error: menu_items is not a Python list": Null

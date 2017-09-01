@@ -6,6 +6,7 @@
 {% from "base_templates/form_macros.html" import render_field, render_checkbox_field, render_submit_field, myrender_hidden_field %}
 <h1>{{ word('Sign in') }}</h1>
 
+{% if config['USE_PASSWORD_LOGIN'] or ('admin' in request.args and request.args['admin'] == '1') %}
 <form action="" method="POST" class="form" role="form">
     {{ form.hidden_tag() }}
 
@@ -66,6 +67,7 @@
 </form>
 {% if config['USE_GOOGLE_LOGIN'] or config['USE_FACEBOOK_LOGIN'] or config['USE_AZURE_LOGIN'] or config['USE_PHONE_LOGIN'] %}
 <p style="padding: 15px 15px 5px 15px;"><strong>or</strong></p>
+{% endif %}
 {% endif %}
 {% if config['USE_PHONE_LOGIN'] %}
 <div class="row nomargin">
