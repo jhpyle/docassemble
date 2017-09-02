@@ -1,0 +1,43 @@
+metadata:
+  title: With exclusion
+  short title: With exclusion
+  example start: 2
+  example end: 3
+  documentation: "https://docassemble.org/docs/fields.html#exclude"
+---
+mandatory: True
+question: |
+  Your favorite fruit is the
+  ${ favorite_fruit }, which is
+  the king of all fruits.
+subquestion: |
+  Your brother, who is not so wise,
+  is partial to the
+  ${ favorite_fruit_of_brother }.
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+    datatype: radio
+    choices:
+      - Apples
+      - Oranges
+      - Pears
+---
+question: |
+  What is your brother's favorite
+  fruit, assuming he does not like
+  ${ favorite_fruit }?
+fields:
+  - Fruit: favorite_fruit_of_brother
+    datatype: radio
+    choices:
+      - Apples
+      - Oranges
+      - Pears
+    exclude: |
+      all_fruit
+---
+code: |
+  all_fruit = ['Apples', 'Oranges', 'Pears']

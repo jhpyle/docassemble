@@ -27,10 +27,8 @@ code: |
   antagonist.name.last = "Riddle"
   villain.auto_gather = False
 ---
-question: |
-  Please answer this.
+question: Who are the villains, if any?
 fields:
-  - Favorite fruit: favorite_fruit
   - no label: villain
     datatype: object_checkboxes
     choices: the_choices
@@ -46,10 +44,8 @@ question: |
   % endif
   % if len(the_choices) == 0:
   In fact, no villains ever existed.
+
   % endif
-subquestion: |
-  Your favorite fruit is
-  ${ favorite_fruit }.
 buttons:
   - Restart: restart
 ---

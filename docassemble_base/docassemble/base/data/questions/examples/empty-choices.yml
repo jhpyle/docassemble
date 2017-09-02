@@ -6,14 +6,13 @@ metadata:
   documentation: "https://docassemble.org/docs/fields.html#field with buttons"
 ---
 code: |
-  import random
-  if random.random() < 0.5:
+  if choices_should_be_empty:
     the_choices = []
   else:
     the_choices = ["Door Number 1", "Door Number 2"]
 ---
 question: |
-  Which door do you choose?
+  What do you choose?
 field: door
 choices:
   - code: the_choices
@@ -25,6 +24,12 @@ question: |
   % else:
   You chose ${ door }.
   % endif
+subquestion: |
+  `door` is `${ door }`.
 buttons:
   - Restart: restart
-  
+---
+question: |
+  Should the list of choices for the
+  multiple choice question be empty?
+yesno: choices_should_be_empty

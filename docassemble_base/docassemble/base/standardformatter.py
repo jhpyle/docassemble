@@ -120,13 +120,10 @@ def get_choices(interview_status, field):
                             continue
                         choice_list.append([key, saveas, choice[key]])
         elif hasattr(field, 'choicetype'):
-            if field.choicetype == 'compute':
+            if field.choicetype in ['compute', 'manual']:
                 pairlist = list(interview_status.selectcompute[field.number])
-            elif field.datatype in ['checkboxes', 'object_checkboxes'] and field.choicetype != 'manual':
+            elif field.datatype in ['checkboxes', 'object_checkboxes']:
                 pairlist = list()
-            else:
-                pairlist = list(field.selections)
-            #if field.datatype in ['object', 'radio', 'object_radio', 'checkboxes', 'object_checkboxes']:
             if field.datatype in ['object_checkboxes']:
                 for pair in pairlist:
                     choice_list.append([pair[1], saveas, from_safeid(pair[0])])
@@ -221,9 +218,12 @@ def as_sms(status, links=None, menu_items=None):
         field = None
         next_field = None
         for the_field in status.question.fields:
+            if is_empty_mc(status, the_field):
+                logmessage("as_sms: skipping field because choice list is empty.")
+                continue
             if hasattr(the_field, 'datatype'):
-                # if the_field.datatype in ['script', 'css']:
-                #     continue
+                if the_field.datatype in ['script', 'css']: # why did I ever comment this out?
+                    continue
                 if the_field.datatype in ['html', 'note'] and field is not None:
                     continue
                 if the_field.datatype in ['note']:
@@ -467,15 +467,15 @@ def embed_input(status, variable):
 
 def is_empty_mc(status, field):
     if hasattr(field, 'choicetype'):
-        if field.choicetype == 'compute':
+        if field.choicetype in ['compute', 'manual']:
             if field.number not in status.selectcompute:
                 #logmessage("selectcompute had nothing for field " + str(field.number))
                 return False
             #logmessage("Using selectcompute")
             pairlist = list(status.selectcompute[field.number])
         else:
-            #logmessage("Using field selections")
-            pairlist = list(field.selections)
+            logmessage("is_empty_mc: unknown choicetype " + str(field.choicetype))
+            return False
         #logmessage("Pairlist was " + str(pairlist))
         if len(pairlist) == 0:
             return True
@@ -786,10 +786,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                     #validation_rules['messages'][the_saveas]['checkboxgroup'] = word("You need to select one.")
                     if 'groups' not in validation_rules:
                         validation_rules['groups'] = dict()
-                    if field.choicetype == 'compute':
+                    if field.choicetype in ['compute', 'manual']:
                         pairlist = list(status.selectcompute[field.number])
                     else:
-                        pairlist = list(field.selections)
+                        raise Exception("Unknown choicetype " + field.choicetype)
                     name_list = [safeid(from_safeid(the_saveas) + "[" + myb64quote(pairlist[indexno][0]) + "]") for indexno in range(len(pairlist))]
                     for the_name in name_list:
                         validation_rules['rules'][the_name] = dict(require_from_group=[1, '.dafield' + str(field.number)])
@@ -829,10 +829,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                 if field.datatype in ['boolean', 'threestate']:
                     checkboxes.append(field.saveas)
                 elif field.datatype in ['checkboxes', 'object_checkboxes']:
-                    if field.choicetype == 'compute':
+                    if field.choicetype in ['compute', 'manual']:
                         pairlist = list(status.selectcompute[field.number])
-                    elif field.choicetype == 'manual':
-                        pairlist = list(field.selections)
                     else:
                         pairlist = list()
                     if hasattr(field, 'shuffle') and field.shuffle:
@@ -1483,10 +1481,10 @@ def input_for(status, field, wide=False, embedded=False):
         extra_radio = ''
         title_text = ''
     if hasattr(field, 'choicetype'):
-        if field.choicetype == 'compute':
+        if field.choicetype in ['compute', 'manual']:
             pairlist = list(status.selectcompute[field.number])
         else:
-            pairlist = list(field.selections)
+            raise Exception("Unknown choicetype " + field.choicetype)
         if hasattr(field, 'shuffle') and field.shuffle:
             random.shuffle(pairlist)
         if field.datatype in ['checkboxes', 'object_checkboxes']:

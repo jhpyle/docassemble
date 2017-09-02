@@ -1,7 +1,14 @@
 # Change Log
 
-## [0.1.45] - 2017-08-31
+## [0.1.46] - 2017-09-02
+### Added
+- Methods `.true_values()` and `.false_values()` for `DADict`.
+### Fixed
+- Multiple choice questions where list of selections is empty.
+- SMS interface for multiple choice questions where list of 
+  selections is empty.
 
+## [0.1.45] - 2017-08-31
 ### Added
 - Configuration directive `password login`, which will hide the
   username and password fields on the login screen.

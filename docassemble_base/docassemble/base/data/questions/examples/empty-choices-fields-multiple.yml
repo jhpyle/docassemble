@@ -7,17 +7,21 @@ metadata:
 ---
 code: |
   if choices_should_be_empty:
-    the_choices = []
+    the_doors = []
+    the_buckets = []
   else:
-    the_choices = ["Door Number 1", "Door Number 2"]
+    the_doors = ["Door Number 1", "Door Number 2"]
+    the_buckets = ["Green Bucket", "Red Bucket"]
 ---
 question: |
   What do you choose?
 fields:
-  - Fruit: favorite_fruit
   - no label: door
     datatype: radio
-    code: the_choices
+    code: the_doors
+  - no label: bucket
+    datatype: radio
+    code: the_buckets
 ---
 mandatory: true
 question: |
@@ -25,12 +29,12 @@ question: |
   There were no choices available.
   % else:
   You chose ${ door }.
+  You chose ${ bucket }.
   % endif
 subquestion: |
-  Your favorite fruit is
-  ${ favorite_fruit }.
-
   `door` is `${ door }`.
+
+  `bucket` is `${ bucket }`.
 buttons:
   - Restart: restart
 ---

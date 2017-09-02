@@ -758,6 +758,12 @@ class DADict(DAObject):
                 if exclusive and value is True:
                     return False
         return True
+    def true_values(self):
+        """Returns the keys for which the corresponding value is True."""
+        return DAList(elements=[key for key, value in sorted(self.iteritems()) if value is True])
+    def false_values(self):
+        """Returns the keys for which the corresponding value is False."""
+        return DAList(elements=[key for key, value in sorted(self.iteritems()) if value is False])
     def initializeObject(self, *pargs, **kwargs):
         """Creates a new object and creates an entry in the dictionary for it.
         The first argument is the name of the dictionary key to set.

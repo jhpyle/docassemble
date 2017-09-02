@@ -492,7 +492,7 @@ import docassemble.base.parse
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
 import docassemble.webapp.update
-from docassemble.base.standardformatter import as_html, as_sms, get_choices, get_choices_with_abb
+from docassemble.base.standardformatter import as_html, as_sms, get_choices, get_choices_with_abb, is_empty_mc
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
@@ -4184,7 +4184,7 @@ def index():
                     exec("import docassemble.base.core", user_dict)
                 except Exception as errMess:
                     error_messages.append(("error", "Error: " + str(errMess)))
-                data = 'docassemble.base.core.DADict(' + repr(key) + ')'
+                data = 'docassemble.base.core.DADict(' + repr(key) + ', auto_gather=False, gathered=True)'
             else:
                 data = 'None'
         if do_append and not set_to_empty:
@@ -4221,6 +4221,7 @@ def index():
             key = myb64unquote(orig_key)
             #logmessage("Doing key " + str(key))
             if empty_fields[orig_key] == 'object_checkboxes':
+                docassemble.base.parse.ensure_object_exists(key, 'object_checkboxes', user_dict)
                 exec(key + '.clear()' , user_dict)
                 exec(key + '.gathered = True' , user_dict)
             elif empty_fields[orig_key] in ['object', 'object_radio']:
@@ -12312,6 +12313,10 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             return resp
         if inp_lower in [word('question')]:
             accepting_input = False
+    if inp_lower in [word('skip')]:
+        user_entered_skip = True
+    else:
+        user_entered_skip = False
     if accepting_input:
         saveas = None
         if len(interview_status.question.fields):
@@ -12321,6 +12326,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 next_field = None
                 for the_field in interview_status.question.fields:
                     if hasattr(the_field, 'datatype') and the_field.datatype in ['html', 'note', 'script', 'css']:
+                        continue
+                    if is_empty_mc(interview_status, the_field):
                         continue
                     if the_field.number in user_dict['_internal']['skip']:
                         continue
@@ -12391,7 +12398,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 else:
                     data = 'docassemble.base.util.DAModel(' + repr(saveas) + ', text=' + repr(inp) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
             elif hasattr(field, 'datatype') and field.datatype in ["file", "files", "camera", "camcorder", "microphone"]:
-                if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
+                if user_entered_skip and not interview_status.extras['required'][field.number]:
                     skip_it = True
                     data = repr('')
                 else:
@@ -12476,38 +12483,11 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         user_dict['_internal']['command_cache'] = dict()
                     if field.number not in user_dict['_internal']['command_cache']:
                         user_dict['_internal']['command_cache'][field.number] = list()
-                    already_there = False
-                    try:
-                        eval(saveas, user_dict)
-                        already_there = True
-                    except:
-                        pass
-                    if not already_there:
-                        use_initialize = False
-                        if re.search(r'\.', saveas):
-                            core_key_name = re.sub(r'^(.*)\..*', r'\1', saveas)
-                            attribute_name = re.sub(r'.*\.', '', saveas)
-                            try:
-                                core_key = eval(core_key, user_dict)
-                                if isinstance(core_key, DAObject):
-                                    use_initialize = True
-                            except:
-                                pass
-                        if use_initialize:
-                            if field.datatype == 'checkboxes':
-                                user_dict['_internal']['command_cache'][field.number].append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", DADict)")
-                            elif field.datatype == 'object_checkboxes':
-                                user_dict['_internal']['command_cache'][field.number].append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", DAList)")
-                        else:
-                            user_dict['_internal']['command_cache'][field.number].append("import docassemble.base.core")
-                            if field.datatype == 'checkboxes':
-                                user_dict['_internal']['command_cache'][field.number].append(saveas + ' = docassemble.base.core.DADict(' + repr(saveas) +')')
-                            elif field.datatype == 'object_checkboxes':
-                                user_dict['_internal']['command_cache'][field.number].append(saveas + ' = docassemble.base.core.DAList(' + repr(saveas) +')')
-                    user_dict['_internal']['command_cache'][field.number].append(saveas + '.auto_gather = False')
-                    data = 'True'
+                    docassemble.base.parse.ensure_object_exists(saveas, field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][field.number])
                     saveas = saveas + '.gathered'
-                if (inp_lower == word('skip') or (inp_lower == word('none') and hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes'])) and ((hasattr(field, 'disableothers') and field.disableothers) or (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']) or not (interview_status.extras['required'][field.number] or (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')))):
+                    data = 'True'
+                if (user_entered_skip or (inp_lower == word('none') and hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes'])) and ((hasattr(field, 'disableothers') and field.disableothers) or (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']) or not (interview_status.extras['required'][field.number] or (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')))):
+                    logmessage("do_sms: skip accepted")
                     # user typed 'skip,' or, where checkboxes, 'none.'  Also:
                     # field is skippable, either because it has disableothers, or it is a checkbox field, or
                     # it is not required.  Multiple choice fields with saveas are considered required.
@@ -12520,6 +12500,10 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                 if choice[1] is None:
                                     continue
                                 user_dict['_internal']['command_cache'][field.number].append(choice[1] + ' = False')
+                        elif (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')) or hasattr(field, 'choicetype'):
+                            logmessage("do_sms: setting skip_it to True")
+                            skip_it = True
+                            data = repr('')
                         elif field.datatype in ['integer']:
                             data = '0'
                         elif field.datatype in ['number', 'float', 'currency', 'range']:
@@ -12537,12 +12521,17 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                 if selection and selection.startswith(potential_abb):
                                     for choice in choice_list:
                                         if value == choice[0]:
-                                            true_values.add(choice[1])
+                                            true_values.add(choice[2])
+                        the_saveas = myb64unquote(field.saveas)
+                        logmessage("do_sms: the_saveas is " + repr(the_saveas))
                         for choice in choice_list:
-                            if choice[1] in true_values:
-                                the_string = 'if ' + choice[2] + ' not in ' + saveas + ':\n    ' + saveas + '.append(' + choice[2] + ')'
+                            if choice[2] is None:
+                                continue
+                            if choice[2] in true_values:
+                                logmessage("do_sms: " + choice[2] + " is in true_values")
+                                the_string = 'if ' + choice[2] + ' not in ' + the_saveas + '.elements:\n    ' + the_saveas + '.append(' + choice[2] + ')'
                             else:
-                                the_string = 'if ' + choice[2] + ' in ' + saveas + ':\n    ' + saveas + '.remove(' + choice[2] + ')'
+                                the_string = 'if ' + choice[2] + ' in ' + the_saveas + '.elements:\n    ' + the_saveas + '.remove(' + choice[2] + ')'
                             user_dict['_internal']['command_cache'][field.number].append(the_string)
                     elif hasattr(field, 'datatype') and field.datatype in ['checkboxes']:
                         true_values = set()
@@ -12578,7 +12567,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                         break
                                 break
             elif hasattr(field, 'datatype') and field.datatype in ['integer']:
-                if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
+                if user_entered_skip and not interview_status.extras['required'][field.number]:
                     data = repr('')
                     skip_it = True
                 else:
@@ -12592,7 +12581,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         special_messages.append('"' + inp + '" ' + word("is not a whole number."))
                         data = None
             elif hasattr(field, 'datatype') and field.datatype in ['date']:
-                if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
+                if user_entered_skip and not interview_status.extras['required'][field.number]:
                     data = repr('')
                     skip_it = True
                 else:
@@ -12604,7 +12593,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         special_messages.append('"' + inp + '" ' + word("is not a valid date."))
                         data = None                    
             elif hasattr(field, 'datatype') and field.datatype in ['range']:
-                if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
+                if user_entered_skip and not interview_status.extras['required'][field.number]:
                     data = repr('')
                     skip_it = True
                 else:
@@ -12617,7 +12606,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     except:
                         data = None
             elif hasattr(field, 'datatype') and field.datatype in ['number', 'float', 'currency']:
-                if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
+                if user_entered_skip and not interview_status.extras['required'][field.number]:
                     data = repr('')
                     skip_it = True
                 else:
@@ -12631,7 +12620,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         special_messages.append('"' + inp + '" ' + word("is not a valid number."))
                         data = None
             else:
-                if inp_lower == word('skip'):
+                if user_entered_skip:
                     if interview_status.extras['required'][field.number]:
                         data = repr(inp)
                     else:
@@ -12659,6 +12648,31 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         user_dict['_internal']['command_cache'][field.number].append(the_string)
                         logmessage("do_sms: storing in command cache: " + str(the_string))
                     else:
+                        for the_field in interview_status.question.fields:
+                            if is_empty_mc(interview_status, the_field):
+                                logmessage("do_sms: a field is empty")
+                                the_saveas = myb64unquote(the_field.saveas)
+                                if 'command_cache' not in user_dict['_internal']:
+                                    user_dict['_internal']['command_cache'] = dict()
+                                if the_field.number not in user_dict['_internal']['command_cache']:
+                                    user_dict['_internal']['command_cache'][the_field.number] = list()
+                                if hasattr(the_field, 'datatype'):
+                                    if the_field.datatype == 'object_checkboxes':
+                                        docassemble.base.parse.ensure_object_exists(the_saveas, 'object_checkboxes', user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
+                                        user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.clear()')
+                                        user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.gathered = True')
+                                    elif the_field.datatype in ['object', 'object_radio']:
+                                        try:
+                                            eval(the_saveas, user_dict)
+                                        except:
+                                            user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + ' = None')
+                                    elif the_field.datatype == 'checkboxes':
+                                        docassemble.base.parse.ensure_object_exists(the_saveas, 'checkboxes', user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
+                                        user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.gathered = True')
+                                    else:
+                                        user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + ' = None')
+                                else:
+                                    user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + ' = None')
                         if 'command_cache' in user_dict['_internal']:
                             for field_num in sorted(user_dict['_internal']['command_cache'].keys()):
                                 for pre_string in user_dict['_internal']['command_cache'][field_num]:
@@ -12668,6 +12682,14 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         exec(the_string, user_dict)
                         changed = True
                 if next_field is None:
+                    if skip_it:
+                        # Run the commands that we have been storing up
+                        if 'command_cache' in user_dict['_internal']:
+                            for field_num in sorted(user_dict['_internal']['command_cache'].keys()):
+                                for pre_string in user_dict['_internal']['command_cache'][field_num]:
+                                    logmessage("do_sms: doing command cache: " + pre_string)
+                                    exec(pre_string, user_dict)
+                            changed = True
                     logmessage("do_sms: next_field is None")
                     if 'skip' in user_dict['_internal']:
                         user_dict['_internal']['skip'].clear()
@@ -12705,7 +12727,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
         r.delete(key)
         if interview_status.question.question_type == 'restart':
-            sess_info = dict(yaml_filename=sess_info['yaml_filename'], uid=get_unique_name(yaml_filename, secret), secret=sess_info['secret'], number=form["From"], encrypted=True, tempuser=sess_info['tempuser'], user_id=None)
+            sess_info = dict(yaml_filename=sess_info['yaml_filename'], uid=get_unique_name(sess_info['yaml_filename'], sess_info['secret']), secret=sess_info['secret'], number=form["From"], encrypted=True, tempuser=sess_info['tempuser'], user_id=None)
             r.set(key, pickle.dumps(sess_info))
             form = dict(To=form['To'], From=form['From'], AccountSid=form['AccountSid'], Body=word('question'))
             return do_sms(form, base_url, url_root, config=config, save=True)
@@ -12721,7 +12743,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         #logmessage("do_sms: " + as_sms(interview_status))
         #twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
         #message = twilio_client.messages.create(to=form["From"], from_=form["To"], body=as_sms(interview_status))
-        logmessage("calling as_sms")
+        logmessage("do_sms: calling as_sms")
         sms_info = as_sms(interview_status)
         qoutput = sms_info['question']
         if sms_info['next'] is not None:

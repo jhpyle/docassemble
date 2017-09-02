@@ -14,7 +14,6 @@ code: |
 question: |
   What do you choose?
 fields:
-  - Favorite fruit: favorite_fruit
   - no label: doors
     datatype: checkboxes
     code: the_choices
@@ -33,9 +32,6 @@ question: |
   % endif
 subquestion: |
   `doors` is `${ doors.elements }`.
-  
-  Your favorite fruit is
-  ${ favorite_fruit }.
 buttons:
   - Restart: restart
 ---

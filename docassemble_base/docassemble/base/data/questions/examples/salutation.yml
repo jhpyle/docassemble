@@ -12,7 +12,8 @@ objects:
 ---
 template: letter_to_client
 content: |
-  Dear ${ client.salutation() }
+  Dear
+  ${ client.salutation() }
   ${ client.name.last }:
 
   I hope this letter finds you well.

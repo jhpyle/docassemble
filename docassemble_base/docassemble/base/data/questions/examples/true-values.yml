@@ -1,0 +1,23 @@
+metadata:
+  title: Checkbox method
+  documentation: "https://docassemble.org/docs/objects.html#true_values"
+  example start: 1
+  example end: 2
+---
+question: |
+  Please tell me what you think.
+fields:
+  - "Select the fruits you like": likes_fruit
+    datatype: checkboxes
+    choices:
+      - Apples
+      - Peaches
+      - Pears
+      - Plums
+---
+mandatory: True
+question: |
+  Summary of your answer
+subquestion: |
+  You like
+  ${ likes_fruit.true_values() }.
