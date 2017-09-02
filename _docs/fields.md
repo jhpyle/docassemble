@@ -410,15 +410,6 @@ that should be available to the user.
 
 {% include side-by-side.html demo="fields-mc-8" %}
 
-### When code returns an empty list
-
-If your code returns an empty list, **docassemble** will try to deal
-with the situation gracefully.  If there is only a single field listed
-under `fields`, then the variable that will be set by the user's
-selection will be set to `None`, and the question will be skipped.  If
-the `datatype` is `checkboxes`, the variable will be set to an empty
-[`DADict`] (a type of [dictionary] specific to **docassemble**).
-
 ### <a name="exclude"></a>`exclude`
 
 If you build the list of choices with `code`, you can exclude items
@@ -447,6 +438,21 @@ else, even a [Mako] expression.  Just set `none of the above` to the
 text you want to be displayed.
 
 {% include side-by-side.html demo="fields-mc-nota" %}
+
+### When the list of choices is empty
+
+If the list of choices for a multiple choice question is empty,
+**docassemble** will try to deal with the situation gracefully.  If
+there is only a single field listed under `fields`, or the question is
+a [standalone multiple choice question](#field with buttons), then the
+variable that will be set by the user's selection will be set to
+`None`, and the question (or the field, if there are other fields
+listed under `fields`) will be skipped.
+
+If the `datatype` is `checkboxes`, the variable will be set to an
+empty [`DADict`] (a type of [dictionary] specific to **docassemble**).
+If the `datatype` is `object_checkboxes`, the variable will be set to
+an empty [`DAList`] (a type of [list] specific to **docassemble**).
 
 ### <a name="shuffle"></a>`shuffle`
 

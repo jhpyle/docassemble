@@ -1400,14 +1400,13 @@
     - "Other": other
 "empty-choices": |-
   code: |
-    import random
-    if random.random() < 0.5:
+    if choices_should_be_empty:
       the_choices = []
     else:
       the_choices = ["Door Number 1", "Door Number 2"]
   ---
   question: |
-    Which door do you choose?
+    What do you choose?
   field: door
   choices:
     - code: the_choices
@@ -1419,20 +1418,29 @@
     % else:
     You chose ${ door }.
     % endif
+  subquestion: |
+    `door` is `${ door }`.
   buttons:
     - Restart: restart
-"empty-choices-checkboxes": |-
+"empty-choices-checkboxes": "code: |\n  if choices_should_be_empty:\n    the_choices\
+  \ = []\n  else:\n    the_choices = [\"Door Number 1\", \"Door Number 2\"]\n---\n\
+  question: |\n  What do you choose?\nfields:\n  - Favorite fruit: favorite_fruit\n\
+  \  - no label: doors\n    datatype: checkboxes\n    code: the_choices\n---\nmandatory:\
+  \ true\nquestion: |\n  % if len(doors):\n  % for door in [x for x in doors if doors[x]]:\n\
+  \  You chose ${ door }.\n  % endfor\n  % if doors.all_false():\n  You chose no doors.\n\
+  \  % endif\n  % else:\n  No doors could be chosen.\n  % endif\nsubquestion: |\n\
+  \  `doors` is `${ doors.elements }`.\n  \n  Your favorite fruit is\n  ${ favorite_fruit\
+  \ }.\nbuttons:\n  - Restart: restart"
+"empty-choices-checkboxes-solo": |-
   code: |
-    import random
-    if random.random() < 0.5:
+    if choices_should_be_empty:
       the_choices = []
     else:
       the_choices = ["Door Number 1", "Door Number 2"]
   ---
   question: |
-    Which doors do you choose?
+    What do you choose?
   fields:
-    - Favorite fruit: favorite_fruit
     - no label: doors
       datatype: checkboxes
       code: the_choices
@@ -1443,21 +1451,25 @@
     % for door in [x for x in doors if doors[x]]:
     You chose ${ door }.
     % endfor
+    % if doors.all_false():
+    You chose no doors.
+    % endif
     % else:
     No doors could be chosen.
     % endif
+  subquestion: |
+    `doors` is `${ doors.elements }`.
   buttons:
     - Restart: restart
 "empty-choices-fields": |-
   code: |
-    import random
-    if random.random() < 0.5:
+    if choices_should_be_empty:
       the_choices = []
     else:
       the_choices = ["Door Number 1", "Door Number 2"]
   ---
   question: |
-    Which door do you choose?
+    What do you choose?
   fields:
     - Fruit: favorite_fruit
     - no label: door
@@ -1471,6 +1483,69 @@
     % else:
     You chose ${ door }.
     % endif
+  subquestion: |
+    Your favorite fruit is
+    ${ favorite_fruit }.
+
+    `door` is `${ door }`.
+  buttons:
+    - Restart: restart
+"empty-choices-fields-multiple": |-
+  code: |
+    if choices_should_be_empty:
+      the_doors = []
+      the_buckets = []
+    else:
+      the_doors = ["Door Number 1", "Door Number 2"]
+      the_buckets = ["Green Bucket", "Red Bucket"]
+  ---
+  question: |
+    What do you choose?
+  fields:
+    - no label: door
+      datatype: radio
+      code: the_doors
+    - no label: bucket
+      datatype: radio
+      code: the_buckets
+  ---
+  mandatory: true
+  question: |
+    % if door is None:
+    There were no choices available.
+    % else:
+    You chose ${ door }.
+    You chose ${ bucket }.
+    % endif
+  subquestion: |
+    `door` is `${ door }`.
+
+    `bucket` is `${ bucket }`.
+  buttons:
+    - Restart: restart
+"empty-choices-fields-solo": |-
+  code: |
+    if choices_should_be_empty:
+      the_choices = []
+    else:
+      the_choices = ["Door Number 1", "Door Number 2"]
+  ---
+  question: |
+    What do you choose?
+  fields:
+    - no label: door
+      datatype: radio
+      code: the_choices
+  ---
+  mandatory: true
+  question: |
+    % if door is None:
+    There were no choices available.
+    % else:
+    You chose ${ door }.
+    % endif
+  subquestion: |
+    `door` is `${ door }`.
   buttons:
     - Restart: restart
 "empty-choices-object-checkboxes": |-
@@ -1480,8 +1555,7 @@
     villain: PartyList
   ---
   code: |
-    import random
-    if random.random() < -0.5:
+    if choices_should_be_empty:
       the_choices = []
     else:
       the_choices = [protagonist, antagonist]
@@ -1493,6 +1567,133 @@
     antagonist.name.first = "Tom"
     antagonist.name.last = "Riddle"
     villain.auto_gather = False
+  ---
+  question: |
+    Please answer this.
+  fields:
+    - Favorite fruit: favorite_fruit
+    - no label: villain
+      datatype: object_checkboxes
+      choices: the_choices
+  ---
+  mandatory: True
+  question: |
+    % if villain.number() == 0:
+    There are no villains here.
+    % else:
+    The ${ villain.as_noun() }
+    ${ villain.does_verb("include") }
+    ${ villain }.
+    % endif
+    % if len(the_choices) == 0:
+    In fact, no villains ever existed.
+    % endif
+  subquestion: |
+    Your favorite fruit is
+    ${ favorite_fruit }.
+  buttons:
+    - Restart: restart
+"empty-choices-object-checkboxes-create": |-
+  objects:
+    protagonist: Individual
+    antagonist: Individual
+  ---
+  code: |
+    if choices_should_be_empty:
+      the_choices = []
+    else:
+      the_choices = [protagonist, antagonist]
+  ---
+  mandatory: True
+  code: |
+    protagonist.name.first = "Harry"
+    protagonist.name.last = "Potter"
+    antagonist.name.first = "Tom"
+    antagonist.name.last = "Riddle"
+  ---
+  question: |
+    Please answer this.
+  fields:
+    - Favorite fruit: favorite_fruit
+    - no label: villain
+      datatype: object_checkboxes
+      choices: the_choices
+  ---
+  mandatory: True
+  question: |
+    % if villain.number() == 0:
+    There are no villains here.
+    % else:
+    The ${ villain.as_noun() }
+    ${ villain.does_verb("include") }
+    ${ villain }.
+    % endif
+    % if len(the_choices) == 0:
+    In fact, no villains ever existed.
+    % endif
+  subquestion: |
+    Your favorite fruit is
+    ${ favorite_fruit }.
+  buttons:
+    - Restart: restart
+"empty-choices-object-checkboxes-solo": |-
+  objects:
+    protagonist: Individual
+    antagonist: Individual
+    villain: PartyList
+  ---
+  code: |
+    if choices_should_be_empty:
+      the_choices = []
+    else:
+      the_choices = [protagonist, antagonist]
+  ---
+  mandatory: True
+  code: |
+    protagonist.name.first = "Harry"
+    protagonist.name.last = "Potter"
+    antagonist.name.first = "Tom"
+    antagonist.name.last = "Riddle"
+    villain.auto_gather = False
+  ---
+  question: Who are the villains, if any?
+  fields:
+    - no label: villain
+      datatype: object_checkboxes
+      choices: the_choices
+  ---
+  mandatory: True
+  question: |
+    % if villain.number() == 0:
+    There are no villains here.
+    % else:
+    The ${ villain.as_noun() }
+    ${ villain.does_verb("include") }
+    ${ villain }.
+    % endif
+    % if len(the_choices) == 0:
+    In fact, no villains ever existed.
+
+    % endif
+  buttons:
+    - Restart: restart
+"empty-choices-object-checkboxes-solo-create": |-
+  objects:
+    protagonist: Individual
+    antagonist: Individual
+  ---
+  code: |
+    if choices_should_be_empty:
+      the_choices = []
+    else:
+      the_choices = [protagonist, antagonist]
+  ---
+  mandatory: True
+  code: |
+    protagonist.name.first = "Harry"
+    protagonist.name.last = "Potter"
+    antagonist.name.first = "Tom"
+    antagonist.name.last = "Riddle"
   ---
   question: Who are the villains, if any?
   fields:
@@ -1680,6 +1881,24 @@
   event: good_news
   question: |
     That is splendid news!
+"false-values": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: checkboxes
+      choices:
+        - Apples
+        - Peaches
+        - Pears
+        - Plums
+  ---
+  mandatory: True
+  question: |
+    Summary of your answer
+  subquestion: |
+    You do not like
+    ${ likes_fruit.false_values() }.
 "field-note": |-
   question: |
     Tell me more about you.
@@ -2009,6 +2228,30 @@
                   {'orange': "Oranges"},
                   {'pear': "Pears"}
                 ]
+"fields-mc-exclude-manual": |-
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+      datatype: radio
+      choices:
+        - Apples
+        - Oranges
+        - Pears
+  ---
+  question: |
+    What is your brother's favorite
+    fruit, assuming he does not like
+    ${ favorite_fruit }?
+  fields:
+    - Fruit: favorite_fruit_of_brother
+      datatype: radio
+      choices:
+        - Apples
+        - Oranges
+        - Pears
+      exclude: |
+        all_fruit
 "fields-mc-nota": |-
   question: |
     Please fill in the following information.
@@ -5403,7 +5646,8 @@
 "salutation": |-
   template: letter_to_client
   content: |
-    Dear ${ client.salutation() }
+    Dear
+    ${ client.salutation() }
     ${ client.name.last }:
 
     I hope this letter finds you well.
@@ -6275,6 +6519,24 @@
   question: |
     Today's date is ${ today() }.
   mandatory: True
+"true-values": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: checkboxes
+      choices:
+        - Apples
+        - Peaches
+        - Pears
+        - Plums
+  ---
+  mandatory: True
+  question: |
+    Summary of your answer
+  subquestion: |
+    You like
+    ${ likes_fruit.true_values() }.
 "twocol": |-
   modules:
     - docassemble.base.util
