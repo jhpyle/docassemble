@@ -581,6 +581,8 @@ class Question:
                 self.interview.table_width = data['features']['table width']
             if 'progress bar' in data['features'] and data['features']['progress bar']:
                 self.interview.use_progress_bar = True
+            if 'go full screen' in data['features'] and data['features']['go full screen']:
+                self.interview.force_fullscreen = True
             if 'navigation' in data['features'] and data['features']['navigation']:
                 self.interview.use_navigation = True
             if 'pdf/a' in data['features'] and data['features']['pdf/a'] in [True, False]:
@@ -2642,6 +2644,7 @@ class Interview:
         self.default_role = None
         self.title = None
         self.use_progress_bar = False
+        self.force_fullscreen = False
         self.use_pdf_a = get_config('pdf/a', False)
         self.use_navigation = False
         self.sections = dict()

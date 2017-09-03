@@ -4549,12 +4549,16 @@ def index():
         else:
             debug_readability_help = ''
             debug_readability_question = ''
-        forceFullScreen = """
+        #PPP
+        if interview_status.question.interview.force_fullscreen:
+            forceFullScreen = """
           if (data.steps > 1 && window != top) {
             top.location.href = location.href;
             return;
           }
 """
+        else:
+            forceFullScreen = ''
         scripts += """
     <script type="text/javascript" charset="utf-8">
       var map_info = null;
