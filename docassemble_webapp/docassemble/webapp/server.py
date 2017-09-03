@@ -6288,7 +6288,7 @@ def interview_start():
                 return render_template_string(template_string, **argu)
         else:
             the_page = 'pages/start.html'
-    resp = render_template(the_page, **argu)
+    resp = make_response(render_template(the_page, **argu))
     if embed:
         resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
