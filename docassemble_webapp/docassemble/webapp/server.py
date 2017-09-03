@@ -6259,6 +6259,11 @@ def interview_start():
     interview_info = list()
     if len(daconfig['dispatch']) == 0:
         return redirect(url_for('index', reset=1, i=final_default_yaml_filename))
+    if 'embedded' in request.args and int(request.args['embedded']):
+        the_page = 'pages/start-embedded.html'
+        embed = True
+    else:
+        embed = False
     for key, yaml_filename in sorted(daconfig['dispatch'].iteritems()):
         try:
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
@@ -6274,13 +6279,15 @@ def interview_start():
             interview_title = yaml_filename
             status_class = 'dainterviewhaserror'
             logmessage("interview_dispatch: unable to load interview file " + yaml_filename)
-        interview_info.append(dict(link=url_for('index', i=yaml_filename), display=interview_title, status_class=status_class))
+        if embed:
+            url = url_for('index', i=yaml_filename, _external=True)
+        else:
+            url = url_for('index', i=yaml_filename)
+        interview_info.append(dict(link=url, display=interview_title, status_class=status_class))
     argu = dict(extra_css=Markup(global_css), extra_js=Markup(global_js), version_warning=None, interview_info=interview_info, tab_title=daconfig.get('start page title', word('Interviews')), title=daconfig.get('start page heading', word('Available interviews')))
-    if 'embedded' in request.args and int(request.args['embedded']):
+    if embed:
         the_page = 'pages/start-embedded.html'
-        embed = True
     else:
-        embed = False
         if 'start page template' in daconfig and daconfig['start page template']:
             the_page = docassemble.base.functions.package_template_filename(daconfig['start page template'])
             if the_page is None:
