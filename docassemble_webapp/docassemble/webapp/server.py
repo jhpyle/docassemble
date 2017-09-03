@@ -4549,6 +4549,12 @@ def index():
         else:
             debug_readability_help = ''
             debug_readability_question = ''
+        forceFullScreen = """
+          if (data.steps > 1 && window != top) {
+            top.location.href = location.href;
+            return;
+          }
+"""
         scripts += """
     <script type="text/javascript" charset="utf-8">
       var map_info = null;
@@ -5107,7 +5113,7 @@ def index():
           clearTimeout(dadisable);
         }
         daCsrf = data.csrf_token;
-        if (data.action == 'body'){
+        if (data.action == 'body'){""" + forceFullScreen + """
           $("body").html(data.body);
           $("body").removeClass();
           $("body").addClass(data.bodyclass);
