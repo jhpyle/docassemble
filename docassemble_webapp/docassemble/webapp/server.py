@@ -3660,6 +3660,7 @@ def index():
                 user_code, user_dict = reset_session(yaml_filename, secret, retain_code=retain_code)
                 if reset_interview:
                     reset_user_dict(user_code, yaml_filename)
+                add_referer(user_dict)
                 save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
                 release_lock(user_code, yaml_filename)
                 session_id = session.get('uid', None)
@@ -3703,6 +3704,7 @@ def index():
             release_lock(user_code, yaml_filename)
             logmessage("index: dictionary fetch failed, resetting without retain_code")
             user_code, user_dict = reset_session(yaml_filename, secret)
+            add_referer(user_dict)
             encrypted = False
             session['encrypted'] = encrypted
             is_encrypted = encrypted
@@ -3728,6 +3730,7 @@ def index():
     except:
         #logmessage("index: 02 Calling without retain_code")
         user_code, user_dict = reset_session(yaml_filename, secret)
+        add_referer(user_dict)
         encrypted = False
         session['encrypted'] = encrypted
         if 'key_logged' in session:
@@ -4339,8 +4342,10 @@ def index():
     if interview_status.question.question_type == "restart":
         manual_checkout()
         url_args = user_dict['url_args']
+        referer = user_dict['_internal'].get('referer', None)
         user_dict = fresh_dictionary()
         user_dict['url_args'] = url_args
+        user_dict['_internal']['referer'] = referer
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
         reset_user_dict(user_code, yaml_filename)
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
@@ -6155,6 +6160,12 @@ def index():
     #sys.stderr.write("11\n")
     return response
 
+def add_referer(user_dict):
+    if request.referrer:
+        user_dict['_internal']['referer'] = request.referrer
+    else:
+        user_dict['_internal']['referer'] = None
+
 @app.template_filter('word')
 def word_filter(text):
     return docassemble.base.functions.word(unicode(text))
@@ -6265,7 +6276,9 @@ def interview_start():
     argu = dict(extra_css=Markup(global_css), extra_js=Markup(global_js), version_warning=None, interview_info=interview_info, tab_title=daconfig.get('start page title', word('Interviews')), title=daconfig.get('start page heading', word('Available interviews')))
     if 'embedded' in request.args and int(request.args['embedded']):
         the_page = 'pages/start-embedded.html'
+        embed = True
     else:
+        embed = False
         if 'start page template' in daconfig and daconfig['start page template']:
             the_page = docassemble.base.functions.package_template_filename(daconfig['start page template'])
             if the_page is None:
@@ -6275,7 +6288,10 @@ def interview_start():
                 return render_template_string(template_string, **argu)
         else:
             the_page = 'pages/start.html'
-    return render_template(the_page, **argu)
+    resp = render_template(the_page, **argu)
+    if embed:
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
 @app.route('/start/<dispatch>', methods=['GET'])
 def redirect_to_interview(dispatch):

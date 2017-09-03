@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.47]
+### Added
+- Function `referring_url()` for accessing the original "referer" URL.
+
 ## [0.1.46] - 2017-09-02
 ### Added
 - Methods `.true_values()` and `.false_values()` for `DADict`.

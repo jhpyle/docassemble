@@ -1,0 +1,25 @@
+metadata:
+  title: Exit to referring URL
+  short title: Referring URL
+  documentation: "https://docassemble.org/docs/functions.html#referring_url"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  We are on a quest.
+subquestion: |
+  This quest is exciting!
+field: continue_with_quest
+---
+question: |
+  We have finished our quest.
+buttons:
+  - Return: exit
+    url: |
+      ${ referring_url() }
+need:
+  - continue_with_quest
+mandatory: True
