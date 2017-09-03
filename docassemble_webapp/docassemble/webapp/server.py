@@ -6264,6 +6264,8 @@ def interview_start():
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             if len(interview.metadata):
                 metadata = interview.metadata[0]
+                if 'unlisted' in metadata and metadata['unlisted'] is True:
+                    continue
                 interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
             else:
                 interview_title = word('Untitled')
