@@ -26,9 +26,15 @@ A `metadata` block contains information about the [YAML] file, such as
 the name of the author.  It must be a [YAML] dictionary, but each the
 dictionary items can contain any arbitrary [YAML] structure.
 
-If a "title" is defined, it will be displayed in the navigation bar in
-the web app.  If a "short title" is provided, it will be displayed
-in place of the "title" when the size of the screen is small.
+If a `title` is defined, it will be displayed in the navigation bar in
+the web app.  If a `short title` is provided, it will be displayed
+in place of the `title` when the size of the screen is small.
+
+If you set `unlisted: True` for an interview that has an entry in the
+[`dispatch`] list in your [configuration], the interview will be
+exempted from display in the interview list available at `/list`.  For
+more information about this, see the documentation for the
+[`dispatch`] configuration directive.
 
 # <a name="objects"></a>Creating `objects`
 
@@ -741,3 +747,5 @@ The setting can also be made on a per-attachment basis by setting the
 [action]: {{ site.baseurl}}/docs/functions.html#actions
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
+[`dispatch`]: {{ site.baseurl}}/docs/config.html#dispatch
+[configuration]: {{ site.baseurl}}/docs/config.html

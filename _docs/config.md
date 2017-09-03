@@ -152,13 +152,23 @@ dispatch:
   madlibs: docassemble.base:data/questions/examples/madlibs.yml
 {% endhighlight %}
 
-If you define the [`dispatch`] directive, your users can see a list of
-available interviews by going to the URL `/list` on the site.
+In this example, the URL shortcuts `/start/legal` and `/start/madlibs`
+are enabled.
+
+In addition, when you define the [`dispatch`] directive, your users
+can see a list of available interviews by going to the URL `/list` on
+the site.  They will see a page like this:
+
+![Interview list]({{ site.baseurl }}/img/interviewlist.png){: .maybe-full-width }
+
+If you want to take advantage of the `/start/` shortcuts but you do
+not want the interview listed in the interview list, set `unlisted:
+True` in the [`metadata`] of the interview.
 
 If you would like to embed the list of interviews into another web
-site, you can send a [GET request] to `/list?embedded=1` and
-obtain a snippet of [HTML].  For example, you might get [HTML] that
-looks like this:
+site, you can send a [GET request] to `/list?embedded=1` to obtain a
+snippet of [HTML].  For example, the [HTML] snippet might look like
+this:
 
 {% highlight html %}
 <ul class="dastart">
@@ -167,7 +177,77 @@ looks like this:
 </ul>
 {% endhighlight %}
 
-On your web site, you can use the `dastart` [CSS] style to apply styles to this list.
+On your web site, you can embed this into the body of a page.  You can
+use the `dastart` [CSS] class to apply styles to this list.
+
+Here is an example of a complete page of [HTML] that demonstrates how
+you can embed the result of `/list?embedded=1` into a page:
+
+{% highlight html %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Page of a web site</title>
+    <style>
+      ul.dastart {
+        list-style-type: circle;
+      }
+      ul.dastart li {
+        font-size: 12px;
+      }
+      ul.dastart a {
+        text-decoration: none;
+      }
+      ul.dastart a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hello, world!</h1>
+    
+    <p>I thought you might be interested in some interviews.</p>
+    
+    <div id="interviews"></div>
+    
+    <p>Goodbye.</p>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript">
+      $.get("https://demo.docassemble.org/list?embedded=1", function(data){
+        $("#interviews").html(data);
+      }).fail(function(){
+        $("#interviews").html('<span style="color: red">Error: unable to get list of interviews.</span>');
+      });
+    </script>
+  </body>
+</html>
+{% endhighlight %}
+
+You can [try this out here]({{ site.baseurl }}/static/test-embed.html){:target="_blank"}.
+
+On your web site, you may need to edit files in different places in
+order to control the various parts of the [HTML] response.  Some things
+to note about this example:
+
+* The place where you want the interview list to appear is designated
+  by `<div id="interviews"></div>`.
+* The part between `<style>` and `</style>` is optional and simply
+  demonstrates how the list of interviews can be styled.  The [CSS]
+  commands could also be put in a separate [CSS] file.
+* The part that retrieves the interview list is the [Javascript] call
+  to [`$.get()`], which is between `<script type="text/javascript">` and
+  `</script>`.  The part that plugs the [HTML] into the screen is the
+  call to [`.html()`].
+* [jQuery] needs to be loaded before the call to `$.get()`.  [jQuery]
+  is very common on web sites, so it may already be loaded on your
+  site.
+* The [Javascript] code is wrapped in a call to
+  [`$( document ).ready`].  This may not be necessary on your site,
+  but it can help avoid the potential problem where call to
+  [`.html()`] takes place before the `<div id="interviews"></div>`
+  [HTML] even exists on the screen.
 
 ## <a name="start page template"></a><a name="interview page template"></a><a name="start page title"></a><a name="interview page title"></a><a name="start page heading"></a><a name="interview page heading"></a>Customization of pages
 
@@ -1822,3 +1902,7 @@ and Facebook API keys.
 [alembic]: http://alembic.zzzcomputing.com/en/latest/
 [CSRF protection]: http://flask-wtf.readthedocs.io/en/stable/csrf.html
 [referer header]: https://en.wikipedia.org/wiki/HTTP_referer
+[jQuery]: https://jquery.com/
+[`$( document ).ready`]: https://api.jquery.com/ready/
+[`$.get()`]: https://api.jquery.com/jquery.get/
+[`.html()`]: https://api.jquery.com/html/

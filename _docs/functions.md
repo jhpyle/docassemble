@@ -2294,6 +2294,43 @@ whether the server has particular features enabled.  The keys are:
 * `azure` - whether [Azure blob storage] is enabled.  See the [`azure`]
   configuration.
 
+## <a name="referring_url"></a>referring_url()
+
+Returns the URL that the user was visiting when the user clicked on a
+link to go to the interview.
+
+Under some circumstances, this URL cannot be obtained.  For example,
+if the user started the interview by typing a URL directly into the
+location bar of the browser, or if the user has a browser setting that
+blocks the [referer header], then the URL will not be available.
+
+If the URL cannot be obtained, then the URL indicated by the optional
+keyword parameter `default` will be returned.  If no `default` URL is
+provided, or `default` is `None`, then the value of the configuration
+directive [`exitpage`] will be used.
+
+This function is useful when you want to bring the user back to where
+they started at the end of the interview.
+
+{% include side-by-side.html demo="exit-url-referer" %}
+
+If you just want to find out the referring URL, make sure to set the
+`default` parameter to something you can test.  For example, the
+following blocks will set the variable `how_user_heard_of_us` either
+by obtaining the referring URL or, if the URL is not available, by
+asking the user "How did you hear about us?"
+
+{% highlight yaml %}
+question: |
+  How did you hear about us?
+fields:
+  no label: how_user_heard_of_us
+---
+code: |
+  if referring_url(default=False) is not False:
+    how_user_heard_of_us = referring_url()
+{% endhighlight %}
+
 ## <a name="static_image"></a>static_image()
 
 {% include side-by-side.html demo="static_image" %}
@@ -3887,3 +3924,5 @@ $(document).on('daPageLoad', function(){
 [`nav.set_sections()`]: #DANav.set_sections
 [`DANav`]: #DANav.set_sections
 [table]: {{ site.baseurl }}/docs/template.html#table
+[referer header]: https://en.wikipedia.org/wiki/HTTP_referer
+[`exitpage`]: {{ site.baseurl }}/docs/config.html#exitpage

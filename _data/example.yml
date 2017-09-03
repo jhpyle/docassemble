@@ -1821,6 +1821,22 @@
     - Learn More: exit
       url: https://en.wikipedia.org/wiki/Amphiprioninae
   mandatory: True
+"exit-url-referer": |-
+  question: |
+    We are on a quest.
+  subquestion: |
+    This quest is exciting!
+  field: continue_with_quest
+  ---
+  question: |
+    We have finished our quest.
+  buttons:
+    - Return: exit
+      url: |
+        ${ referring_url() }
+  need:
+    - continue_with_quest
+  mandatory: True
 "external_files": |-
   features:
     javascript: my-functions.js

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Page of a web site</title>
+    <style>
+      ul.dastart {
+        list-style-type: circle;
+      }
+      ul.dastart li {
+        font-size: 12px;
+      }
+      ul.dastart a {
+        text-decoration: none;
+      }
+      ul.dastart a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hello, world!</h1>
+    
+    <p>I thought you might be interested in some interviews.</p>
+    
+    <div id="interviews"></div>
+    
+    <p>Goodbye.</p>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript">
+      $( document ).ready(function(){
+        $.get("https://demo.docassemble.org/list?embedded=1", function(data){
+          $("#interviews").html(data);
+        }).fail(function(){
+          $("#interviews").html('<span style="color: red">Error: unable to get list of interviews.</span>');
+        });
+      });
+    </script>
+  </body>
+</html>

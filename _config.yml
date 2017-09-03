@@ -13,8 +13,7 @@ collections:
   docs:
     output: true
 defaults:
-  -
-    scope:
+  - scope:
       path: "docs"
       type: docs
     values:

@@ -132,17 +132,11 @@ special features, for example by adding help text or icons.
 
 # How you run a **docassemble** interview
 
-You start the interview by going to its URL.  In the case of the
-interview linked from the [demonstration page], you can get to the
-interview by doing:
+Users start an interview by going to its URL, which is the URL of your
+server with the `i` parameter set to the name of the interview.
 
-[{{ site.demourl }}]({{ site.demourl }}){:target="_blank"}
-
-This URL is simple-looking because it uses the default interview file
-that was set in the [configuration].
-
-If you want to link to an interview file by its specific filename,
-just set an `i` parameter in the URL:
+For example, the [demo interview], which is hosted on the server
+`demo.docassemble.org`, can be accessed with this URL.
 
 [{{ site.demourl }}?i=docassemble.demo:data/questions/questions.yml]({{ site.demourl }}?i=docassemble.demo:data/questions/questions.yml){:target="_blank"}
 
@@ -152,14 +146,34 @@ Here, the interview file name is
 and then within that package, look for the file `questions.yml`
 located in the subdirectory `data/questions`.
 
-To make your own Python package, you download a ZIP file from your
-**docassemble** server, unpack it on your computer, and you will find
-the `data/questions` subdirectory inside.  You can create your own
-[YAML] files within that subdirectory.  When you re-ZIP everything and
-upload it to your **docassemble** server, you can run the interview by
-typing in a URL like:
+You can make your own packages in the [Playground] and then install
+them on the same server or a different server.  If the name of your
+server is `interview.example.come`, the name of your package is
+`docassemble.mypackage`, and the name of your interview file is
+`myinterview.yml`, your users can access the interview at:
 
-> http://example.com/interview?i=docassemble.mypackage:data/questions/myinterview.yml
+> https://interview.example.com/?i=docassemble.mypackage:data/questions/myinterview.yml
+
+There is also a special page of the site, located at `/list`, which
+displays a [list of interviews] available on your server.
+
+> https://interview.example.com/list
+
+You can configure this list using the [`dispatch`] configuration
+directive.  The list of interviews can also be [embedded] into a page
+of another web site.
+
+The [`dispatch`] configuration directive also allows your users to
+access specific interviews at human-readable URLs like:
+
+> https://interview.example.com/start/eviction
+> https://interview.example.com/start/namechange
+
+If you want the simplest possible URL for an interview, you can set
+the [`default interview`] configuration directive, and then the
+interview will be accessible at:
+
+> https://interview.example.com
 
 # How answers are stored
 
@@ -414,7 +428,7 @@ For more information about [YAML], see the [YAML specification].
 [demonstration page]: {{ site.baseurl }}/demo.html
 [tutorial]: {{ site.baseurl }}/docs/helloworld.html
 [configuration]: {{ site.baseurl }}/docs/config.html
-[installation]: {{ site.baseurl }}/docs/config.html
+[installation]: {{ site.baseurl }}/docs/installation.html
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [Python]: https://www.python.org/
 [Initial Blocks]: {{ site.baseurl }}/docs/initial.html
@@ -439,3 +453,8 @@ For more information about [YAML], see the [YAML specification].
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [Special Variables]: {{ site.baseurl }}/docs/special.html
+[`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
+[`default interview`]: {{ site.baseurl }}/docs/config.html#default interview
+[embedded]: {{ site.baseurl }}/docs/config.html#dispatch
+[list of interviews]: {{ site.baseurl }}/docs/config.html#dispatch
+[demo interview]: {{ site.baseurl }}/demo.html
