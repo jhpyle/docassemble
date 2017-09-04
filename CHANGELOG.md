@@ -3,6 +3,10 @@
 ## [0.1.47]
 ### Added
 - Function `referring_url()` for accessing the original "referer" URL.
+- Support in Docker for MySQL connections
+### Fixed
+- Error accessing machine learning training area
+- Undefined mimetype error with e-mail receiving feature
 
 ## [0.1.46] - 2017-09-02
 ### Added

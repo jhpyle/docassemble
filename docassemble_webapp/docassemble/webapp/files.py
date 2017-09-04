@@ -143,8 +143,9 @@ class SavedFile(object):
             for key in cloud.list_keys(prefix):
                 output.append(re.sub(r'.*/', '', key.name))
         else:
-            for filename in os.listdir(self.directory):
-                output.append(filename)
+            if os.path.isdir(self.directory):
+                for filename in os.listdir(self.directory):
+                    output.append(filename)
         return sorted(output)
     def copy_from(self, orig_path, **kwargs):
         filename = kwargs.get('filename', self.filename)

@@ -12925,6 +12925,7 @@ def get_email_obj(email, short_record, user):
         #sys.stderr.write("Filename is " + upload.filename + "\n")
         saved_file_att = SavedFile(attachment_record.upload, extension=attachment_record.extension, fix=True)
         process_file(saved_file_att, saved_file_att.path, attachment_record.content_type, attachment_record.extension, initial=False)
+        extension, mimetype = get_ext_and_mimetype(upload.filename)
         if upload.filename == 'headers.json':
             #sys.stderr.write("Processing headers\n")
             email_obj.initializeAttribute('headers', DAFile, mimetype=mimetype, extension=extension, number=attachment_record.upload)

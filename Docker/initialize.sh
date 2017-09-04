@@ -459,7 +459,7 @@ fi
 
 # echo "29"
 
-if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
+if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DBTYPE" == "postgresql" ]; then
     supervisorctl --serverurl http://localhost:9001 start postgres || exit 1
     sleep 4
     su -c "while ! pg_isready -q; do sleep 1; done" postgres

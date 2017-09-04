@@ -1,5 +1,6 @@
 from docassemble.webapp.db_object import db
 from docassemble.base.config import daconfig, dbtableprefix
+from sqlalchemy import true, false
 
 class Attachments(db.Model):
     __tablename__ = dbtableprefix + "attachments"
@@ -8,7 +9,7 @@ class Attachments(db.Model):
     dictionary = db.Column(db.Text())
     question = db.Column(db.Integer())
     filename = db.Column(db.Text())
-    encrypted = db.Column(db.Boolean(), nullable=False, server_default=db.true())
+    encrypted = db.Column(db.Boolean(), nullable=False, server_default=true())
 
 class Uploads(db.Model):
     __tablename__ = dbtableprefix + "uploads"
@@ -16,8 +17,8 @@ class Uploads(db.Model):
     key = db.Column(db.String(250))
     filename = db.Column(db.Text())
     yamlfile = db.Column(db.Text())
-    private = db.Column(db.Boolean(), nullable=False, server_default=db.true())
-    persistent = db.Column(db.Boolean(), nullable=False, server_default=db.false())
+    private = db.Column(db.Boolean(), nullable=False, server_default=true())
+    persistent = db.Column(db.Boolean(), nullable=False, server_default=false())
 
 class ObjectStorage(db.Model):
     __tablename__ = dbtableprefix + "objectstorage"
@@ -36,7 +37,7 @@ class SpeakList(db.Model):
     language = db.Column(db.String(10))
     dialect = db.Column(db.String(10))
     upload = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'))
-    encrypted = db.Column(db.Boolean(), nullable=False, server_default=db.true())
+    encrypted = db.Column(db.Boolean(), nullable=False, server_default=true())
     digest = db.Column(db.Text())
 
 class Supervisors(db.Model):
@@ -57,7 +58,7 @@ class MachineLearning(db.Model):
     info = db.Column(db.Text())
     create_time = db.Column(db.DateTime())
     modtime = db.Column(db.DateTime())
-    active = db.Column(db.Boolean(), nullable=False, server_default=db.false())
+    active = db.Column(db.Boolean(), nullable=False, server_default=false())
 
 class Shortener(db.Model):
     __tablename__ = dbtableprefix + "shortener"

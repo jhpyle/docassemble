@@ -33,17 +33,18 @@ def get_cron_user():
     sys.exit("Cron user not found")
 
 def clear_old_interviews():
+    sys.stderr.write("clear_old_interviews: starting\n")
     interview_delete_days = docassemble.base.config.daconfig.get('interview delete days', 90)
     if interview_delete_days == 0:
         return
     stale = list()
     nowtime = datetime.datetime.utcnow()
-    #sys.stderr.write("days is " + str(interview_delete_days) + "\n")
+    sys.stderr.write("clear_old_interviews: days is " + str(interview_delete_days) + "\n")
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).subquery()
     results = db.session.query(UserDict.dictionary, UserDict.key, UserDict.user_id, UserDict.filename, UserDict.modtime, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno).order_by(UserDict.indexno)
     for record in results:
         delta = nowtime - record.modtime
-        #sys.stderr.write("delta days is " + str(delta.days) + "\n")
+        sys.stderr.write("clear_old_interviews: delta days is " + str(delta.days) + "\n")
         if delta.days > interview_delete_days:
             stale.append(dict(key=record.key, filename=record.filename))
     for item in stale:
