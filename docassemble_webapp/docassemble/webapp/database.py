@@ -43,10 +43,11 @@ if dbhost is not None:
         alchemy_connect_string += ':' + dbport
 else:
     alchemy_connect_string += '@'
-if dbname is not None:
-    alchemy_connect_string += "/" + dbname
-else:
-    raise DAError("No database name provided")
+if not dbprefix.startswith('oracle'):
+    if dbname is not None:
+        alchemy_connect_string += "/" + dbname
+    else:
+        raise DAError("No database name provided")
 
 def connection_string():
     return connect_string

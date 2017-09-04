@@ -32,7 +32,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web|celery|log|cron):.* ]]; then
     rsync -au /usr/share/docassemble/log $BACKUPDIR/
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
+if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     PGBACKUPDIR=`mktemp -d`
     chown postgres.postgres "$PGBACKUPDIR"
     su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash

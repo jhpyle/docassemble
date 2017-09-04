@@ -45,6 +45,12 @@ if __name__ == "__main__":
                 indexno += 1
     if 'db' in daconfig:
         if 'prefix' in daconfig['db'] and daconfig['db']['prefix'] is not None:
+            if daconfig['db']['prefix'].startswith('postgresql'):
+                print('export DBTYPE="postgresql"')
+            elif daconfig['db']['prefix'].startswith('mysql'):
+                print('export DBTYPE="mysql"')
+            else:
+                print('export DBTYPE="other"')
             print('export DBPREFIX="' + str(daconfig['db']['prefix']) + '"')
         if 'name' in daconfig['db'] and daconfig['db']['name'] is not None:
             print('export DBNAME="' + str(daconfig['db']['name']) + '"')

@@ -1,9 +1,9 @@
 metadata:
-  title: Exit to referring URL
-  short title: Referring URL
-  documentation: "https://docassemble.org/docs/functions.html#referring_url"
+  title: Going full screen
+  short title: Fullscreen
+  documentation: "https://docassemble.org/docs/initial.html#go full screen"
   example start: 2
-  example end: 3
+  example end: 5
 ---
 modules:
   - docassemble.base.util

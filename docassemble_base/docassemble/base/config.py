@@ -180,6 +180,8 @@ def load(**kwargs):
             if key.exists():
                 the_host = key.get_contents_as_string()
                 daconfig['rabbitmq'] = 'pyamqp://guest@' + str(the_host) + '//'
+    if daconfig['db'].get('prefix', None) is None or daconfig['db'].get('prefix', '') == '':
+        daconfig['db']['prefix'] = 'postgresql+psycopg2://'
     if daconfig['db'].get('host', None) is None or daconfig['db'].get('host', '') == '':
         daconfig['db']['host'] = 'localhost'
     if daconfig['db'].get('name', None) is None or daconfig['db'].get('name', '') == '':
@@ -189,7 +191,12 @@ def load(**kwargs):
     if daconfig['db'].get('password', None) is None or daconfig['db'].get('password', '') == '':
         daconfig['db']['password'] = 'abc123'
     if daconfig['db'].get('port', None) is None or daconfig['db'].get('port', '') == '':
-        daconfig['db']['port'] = '5432'
+        if daconfig['db']['prefix'].startswith('postgresql'):
+            daconfig['db']['port'] = '5432'
+        elif daconfig['db']['prefix'].startswith('mysql'):
+            daconfig['db']['port'] = '3306'
+        elif daconfig['db']['prefix'].startswith('oracle'):
+            daconfig['db']['port'] = '1521'
     if 'ocr languages' not in daconfig or type(daconfig['ocr languages']) is not dict:
         daconfig['ocr languages'] = dict()
     if 'zh' not in daconfig['ocr languages']:
