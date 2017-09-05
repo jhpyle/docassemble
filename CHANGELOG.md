@@ -1,12 +1,14 @@
 # Change Log
 
-## [0.1.47]
+## [0.1.47] - 2017-09-04
 ### Added
 - Function `referring_url()` for accessing the original "referer" URL.
-- Support in Docker for MySQL connections
+- Feature `go full screen` for breaking out of iframes.
+- Support in Docker for MySQL connections.
 ### Fixed
-- Error accessing machine learning training area
-- Undefined mimetype error with e-mail receiving feature
+- Error accessing machine learning training area.
+- Undefined mimetype error with e-mail receiving feature.
+- "Next will be" message in SMS interface skipped `note` and `html`.
 
 ## [0.1.46] - 2017-09-02
 ### Added

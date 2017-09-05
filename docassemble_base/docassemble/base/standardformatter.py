@@ -217,6 +217,7 @@ def as_sms(status, links=None, menu_items=None):
     if len(status.question.fields):
         field = None
         next_field = None
+        info_message = None
         for the_field in status.question.fields:
             if is_empty_mc(status, the_field):
                 logmessage("as_sms: skipping field because choice list is empty.")
@@ -227,10 +228,10 @@ def as_sms(status, links=None, menu_items=None):
                 if the_field.datatype in ['html', 'note'] and field is not None:
                     continue
                 if the_field.datatype in ['note']:
-                    qoutput += "\n" + to_text(markdown_to_html(status.extras['note'][the_field.number], status=status), terms, links, status)
+                    info_message = to_text(markdown_to_html(status.extras['note'][the_field.number], status=status), terms, links, status)
                     continue
                 if the_field.datatype in ['html']:
-                    qoutput += "\n" + to_text(status.extras['html'][the_field.number].rstrip(), terms, links, status)
+                    info_message = to_text(status.extras['html'][the_field.number].rstrip(), terms, links, status)
                     continue
             #logmessage("field number is " + str(the_field.number))
             if not hasattr(the_field, 'saveas'):
@@ -245,16 +246,37 @@ def as_sms(status, links=None, menu_items=None):
                 continue
             else:
                 logmessage("as_sms: field " + str(the_field.number) + " skipped")
+        if info_message is not None:
+            qoutput += "\n" + info_message
+        immediate_next_field = None
         if field is None:
             logmessage("as_sms: field seemed to be defined already?")
             field = status.question.fields[0]
             #return dict(question=qoutput, help=None, next=next_variable)
+        else:
+            reached_field = False
+            for the_field in status.question.fields:
+                if the_field is field:
+                    reached_field = True
+                    continue
+                if reached_field is False:
+                    continue
+                if the_field.datatype in ['script', 'css']:
+                    continue
+                immediate_next_field = the_field
+                break
         label = None
         next_label = ''
         if next_field is not None:
             next_variable = myb64unquote(next_field.saveas)
-            if hasattr(next_field, 'label') and status.labels[next_field.number] not in ["no label", ""]:
-                next_label = ' (' + word("Next will be") + ' ' + to_text(markdown_to_html(status.labels[next_field.number], trim=False, status=status, strip_newlines=True), terms, links, status) + ')'
+            if immediate_next_field is not None:
+                if hasattr(immediate_next_field, 'label') and status.labels[immediate_next_field.number] not in ["no label", ""]:
+                    next_label = ' (' + word("Next will be") + ' ' + to_text(markdown_to_html(status.labels[immediate_next_field.number], trim=False, status=status, strip_newlines=True), terms, links, status) + ')'
+                elif hasattr(immediate_next_field, 'datatype'):
+                    if immediate_next_field.datatype in ['note']:
+                        next_label = ' (' + word("Next will be") + ' ' + to_text(markdown_to_html(status.extras['note'][immediate_next_field.number], trim=False, status=status, strip_newlines=True), terms, links, status) + ')'
+                    elif immediate_next_field.datatype in ['html']:
+                        next_label = ' (' + word("Next will be") + ' ' + to_text(status.extras['html'][immediate_next_field.number].rstrip(), terms, links, status) + ')'
         if hasattr(field, 'label') and status.labels[field.number] != "no label":
             label = to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), terms, links, status)
         question = status.question
