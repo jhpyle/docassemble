@@ -166,7 +166,7 @@ of another web site.
 The [`dispatch`] configuration directive also allows your users to
 access specific interviews at human-readable URLs like:
 
-> https://interview.example.com/start/eviction
+> https://interview.example.com/start/eviction<br>
 > https://interview.example.com/start/namechange
 
 If you want the simplest possible URL for an interview, you can set
@@ -174,6 +174,28 @@ the [`default interview`] configuration directive, and then the
 interview will be accessible at:
 
 > https://interview.example.com
+
+You can embed an interview into a web page by inserting an [iframe]
+into the [HTML] of the page.
+
+{% highlight html %}
+<iframe style="width: 500px; height: 700px;" src="https://demo.docassemble.org/?i=docassemble.demo:data/questions/questions.yml&reset=1"></iframe>
+{% endhighlight %}
+
+You should adjust the width and height of the [iframe] based on what
+makes sense for the web page.  **docassemble** can handle a variety of
+sizes, but make sure you test the user experience both on desktop
+and on mobile.  Since embedded interviews are often less than ideal for
+mobile users, you can use the [`go full screen`] feature to cause the
+interview to "go full screen" on the user's device once the user
+starts interacting with it.
+
+If you add `&reset=1` to the end of an interview URL, this means that
+whenever the link is clicked (or the [iframe] is drawn), the interview
+will start at the beginning.  If `&reset=1` is omitted from the URL,
+then if the user clicks on the link after having already visited the
+same interview during the same browser session, then the user will be
+taken back to the "current" screen of the interview.
 
 # How answers are stored
 
@@ -458,3 +480,6 @@ For more information about [YAML], see the [YAML specification].
 [embedded]: {{ site.baseurl }}/docs/config.html#dispatch
 [list of interviews]: {{ site.baseurl }}/docs/config.html#dispatch
 [demo interview]: {{ site.baseurl }}/demo.html
+[iframe]: https://www.w3schools.com/TAgs/tag_iframe.asp
+[HTML]: https://en.wikipedia.org/wiki/HTML
+[`go full screen`]: {{ site.baseurl }}/docs/initial.html#go full screen

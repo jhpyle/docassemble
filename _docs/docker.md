@@ -338,7 +338,9 @@ in `env.list`.
 * <a name="DBPREFIX"></a>`DBPREFIX`: This sets the prefix for the
   database specifier.  The default is `postgresql+psycopg2://`.
 * <a name="DBPORT"></a>`DBPORT`: This sets the port that
-  **docassemble** will use to access the SQL server.
+  **docassemble** will use to access the SQL server.  If you are using
+  the default port for your database backend, you do not need to set
+  this.
 * <a name="DBTABLEPREFIX"></a>`DBTABLEPREFIX`: This allows multiple
   separate **docassemble** implementations to share the same SQL
   database.  The value is a prefix to be added to each table in the
@@ -776,7 +778,12 @@ jhpyle/docassemble
 Note that [Docker] will fail if any of these ports is already in use.
 For example, many Linux distributions run a mail tranport agent on
 port 25 by default; you will have to stop that service in order to
-start [Docker] with `-p 25:25`.
+start [Docker] with `-p 25:25`.  For example, on [Amazon Linux] you
+may need to run:
+
+{% highlight bash %}
+sudo /etc/init.d/sendmail stop
+{% endhighlight %}
 
 ## <a name="file sharing"></a>File sharing
 

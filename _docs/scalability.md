@@ -253,10 +253,10 @@ Then go to the "Auto Scaling Groups" section of the [EC2 Console] and
 create a new [Auto Scaling Group] called `docassembleAsg`.  Connect it
 with `docassembleLc`, the [Launch Configuration] you just created.
 Use a fixed number of instances without scaling policies that respond
-to [CloudWatch] alarms.  Set the number of instances to 3.  Once the
-[Auto Scaling Group] is saved, [AWS] should start running three [EC2]
-instances.  Since you chose an [ECS]-optimized AMI, the instances
-should automatically register with your [ECS] cluster.
+to [CloudWatch] alarms.  Set the desired number of instances to 3.
+Once the [Auto Scaling Group] is saved, [AWS] should start running
+three [EC2] instances.  Since you chose an [ECS]-optimized AMI, the
+instances should automatically register with your [ECS] cluster.
 
 The next step is to create an [Application Load Balancer].  The load
 balancer will accept HTTPS requests from the outside world and forward
@@ -360,12 +360,13 @@ few manual changes to it.
 
 In the "Load Balancers" section, select the `docassembleLb` load
 balancer, and open the "Listeners" tab.  Click "Edit" next to the HTTP
-listener.  Set the "Default target group" to "http-redirect."
+listener.  Set the "Default target group" to "http-redirect," if it is
+not selected already.
 
 Once those changes are saved, edit the "rules" for the HTTPS listener.
 
 There will be one default rule set up, and it will incorrectly say
-that requests should be routed to the `http-redir` target group.  This
+that requests should be routed to the `http-redirect` target group.  This
 is the proper setting for HTTP (port 80), but not for HTTPS (port
 443), so you need to change it.  Click the button to edit rules, and
 edit the default rule.  Change it so that it forwards to the `web`
@@ -578,16 +579,53 @@ includes the "IAM Role" of `docassembleInstanceRole`; the virtual
 machines themselves are authorized to access the [S3] bucket.
 
 Just one more thing needs to be done to make the **docassemble**
-server fully functional: you need to associate the `websocket` "Target
-Group" with the same [EC2] instances that are associated with the
-`web` "Target Group."  (Unfortunately, this is not something that the
-[ECS] system can do automatically yet.)  To fix this, go to the
-[EC2 Console], go to the "Target Groups" section, select the
-`web` Target Group, go to the "Targets" tab, and note the Instance IDs
-of the "Registered Instances."  Now de-select `web`, select
-`websocket`, and click the "Edit" button within the "Targets" tab.  On
-the "Register and deregister instances" page that appears, select the
-instances you just noted and click the "Add to registered" button.
+server fully functional: you need to associate the `websocket` and
+`http-redirect` "Target Groups" with the same [EC2] instances that are
+associated with the `web` "Target Group."  (Unfortunately, this is not
+something that the [ECS] system can do automatically yet.)  To fix
+this, go to the [EC2 Console], go to the "Target Groups" section,
+select the `web` Target Group, go to the "Targets" tab, and note the
+Instance IDs of the "Registered Instances."  Now de-select `web`,
+select `websocket`, and click the "Edit" button within the "Targets"
+tab.  On the "Register and deregister instances" page that appears,
+select the instances you just noted and click the "Add to registered"
+button.  Then do the same with `http-redirect`.
+
+### Shutting down
+
+To shut down a multi-server **docassemble** configuration:
+
+#. Go to the [ECS Console].  Go into the `default` cluster, and update
+   the "app" [ECS] service.  Set "Number of tasks" to zero.  This will
+   gracefully stop the [Docker] containers that serve in the role of
+   application servers.
+#. Wait until the tasks have stopped.
+#. Update the "backend" [ECS] service.  Set "Number of tasks" to zero.
+   This will stop the [Docker] container that provides centralized
+   services.
+#. Wait until the task has stopped.
+#. The **docassemble** application is now fully shut down.  However,
+   you are still spending money because there are [EC2] instances
+   running.  To shut down these instances, go to the [EC2 Console] and
+   edit the [Auto Scaling Group] you created (`docassembleAsg`).  Set
+   the desired number of instances to 0.  This will cause the three
+   instances you created to shut down.
+#. Now you are no longer paying money to keep instances running, but
+   you are still paying to keep the load balancer alive (approximately
+   $5 per month).  To avoid this cost, go to the "Load Balancers"
+   section of the [EC2 Console] and delete the `docassembleLb` load
+   balancer.
+#. If you do not care about retaining the database or configuration of
+   the **docassemble** application you just shut down, go to the
+   [S3 Console] and delete the bucket you created.  Note that the cost
+   of maintaining data in [S3] is minimal.  The data that
+   **docassemble** stores in [S3] will only be significant if you have
+   a lot of uploaded files or a lot of static files in your [Playground].
+
+When you have shut these things down, many [AWS] resources that you
+created will still exist, but you do not need to delete them to avoid
+incurring costs.  A "target group," for example, is just a
+configuration.
 
 ### Controlling AWS from the command line
 
@@ -1097,3 +1135,4 @@ number of PostgreSQL connections will be 12.
 [SendGrid]: https://sendgrid.com/
 [DKIM]: https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail
 [reverse DNS]: https://en.wikipedia.org/wiki/Reverse_DNS_lookup
+[Playground]: {{ site.baseurl }}/docs/playground.html

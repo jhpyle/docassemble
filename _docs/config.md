@@ -473,7 +473,7 @@ db:
 {% endhighlight %}
 
 The `prefix` is a [SQLAlchemy] prefix.  If you use a database other
-than [PostgreSQL], change this.
+than [PostgreSQL], change this.  For [MySQL], use `mysql://`
 
 <a name="db host"></a>**docassemble** will connect to the SQL database
 at the hostname `host` on the port `port`, and will authenticate with

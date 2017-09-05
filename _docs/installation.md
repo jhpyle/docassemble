@@ -174,7 +174,8 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   tesseract-ocr-tha tesseract-ocr-tur tesseract-ocr-ukr \
   tesseract-ocr-vie build-essential nodejs exim4-daemon-heavy \
   libsvm3 libsvm-dev liblinear3 liblinear-dev libzbar-dev \
-  cm-super libgs-dev ghostscript texlive-extra-utils
+  cm-super libgs-dev ghostscript texlive-extra-utils \
+  libmysqlclient-dev
 {% endhighlight %}
 
 The libraries `libcurl4-openssl-dev` and `libssl-dev` are particularly
@@ -640,7 +641,9 @@ Configuring the e-mail receiving feature also involves:
   that e-mails sent to addresses ending with `@help.example.com` will
   be directed to the **docassemble** server.
 * Setting the [`incoming mail domain`] directive in the
-  [configuration] to this domain (`help.example.com`).
+  [configuration] to this domain (`help.example.com`).  (But you
+  can skip this step if the domain is the same as the
+  [`external hostname`].)
 * Editing the firewall rules protecting the **docassemble** server so
   that incoming port 25 ([SMTP]) is open.
 * Ensuring that no other application on the server is using port 25.

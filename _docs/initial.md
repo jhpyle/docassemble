@@ -689,6 +689,29 @@ The default is determined by the [`pdf/a` configuration directive].
 The setting can also be made on a per-attachment basis by setting the
 [`pdf/a` attachment setting].
 
+## <a name="go full screen"></a>Going full screen when interview is embedded
+
+It is possible to embed a **docassemble** interviews in a web page
+using an [iframe].  However, the user experience on mobile is degraded
+when an interview is embedded.
+
+If you want the interview to switch to "full screen" after the user
+moves to the next screen in the embedded interview, you can set the
+following in your interview:
+
+{% highlight yaml %}
+features:
+  go full screen: True
+{% endhighlight %}
+
+[Here is a page where you can test this]({{ site.baseurl }}/static/test-iframe.html){:target="_blank"}.
+
+To send the user back to the original page at the end of the
+interview, you can use an [exit button] with a `url` set to the result
+of the [`referring_url()`] function.
+
+[`referring_url()`]: {{ site.baseurl }}/docs/functions.html#referring_url
+[iframe]: https://www.w3schools.com/TAgs/tag_iframe.asp
 [`pdf/a` attachment setting]: {{ site.baseurl }}/docs/document.html#pdfa
 [`pdf/a` configuration directive]: {{ site.baseurl }}/docs/config.html#pdfa
 [`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
