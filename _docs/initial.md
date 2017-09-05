@@ -710,6 +710,7 @@ To send the user back to the original page at the end of the
 interview, you can use an [exit button] with a `url` set to the result
 of the [`referring_url()`] function.
 
+[exit button]: {{ site.baseurl }}/docs/questions.html#special buttons
 [`referring_url()`]: {{ site.baseurl }}/docs/functions.html#referring_url
 [iframe]: https://www.w3schools.com/TAgs/tag_iframe.asp
 [`pdf/a` attachment setting]: {{ site.baseurl }}/docs/document.html#pdfa
