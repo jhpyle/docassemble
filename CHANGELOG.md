@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.1.48]
+### Added
+- Option for `go full screen` that limits behavior to mobile only.
+### Fixed
+- Spinner did not appear on signature pages.
+
 ## [0.1.47] - 2017-09-04
 ### Added
 - Function `referring_url()` for accessing the original "referer" URL.

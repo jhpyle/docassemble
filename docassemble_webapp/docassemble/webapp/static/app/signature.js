@@ -84,6 +84,7 @@ function resizeCanvas(){
 function saveCanvas(){
   var dataURL = document.getElementById("sigcanvas").toDataURL();
   //console.log(dataURL)
+  daSpinnerTimeout = setTimeout(showSpinner, 1000);
   da_post({'_success': 1, '_the_image': dataURL});
 }
 

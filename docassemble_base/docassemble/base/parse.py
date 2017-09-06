@@ -582,7 +582,7 @@ class Question:
             if 'progress bar' in data['features'] and data['features']['progress bar']:
                 self.interview.use_progress_bar = True
             if 'go full screen' in data['features'] and data['features']['go full screen']:
-                self.interview.force_fullscreen = True
+                self.interview.force_fullscreen = data['features']['go full screen']
             if 'navigation' in data['features'] and data['features']['navigation']:
                 self.interview.use_navigation = True
             if 'pdf/a' in data['features'] and data['features']['pdf/a'] in [True, False]:

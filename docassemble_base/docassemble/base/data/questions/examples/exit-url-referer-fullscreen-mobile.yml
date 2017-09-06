@@ -3,17 +3,40 @@ metadata:
   short title: Fullscreen
   documentation: "https://docassemble.org/docs/initial.html#go full screen"
   example start: 2
-  example end: 5
+  example end: 8
 ---
 modules:
   - docassemble.base.util
 ---
 features:
-  go full screen: True
+  go full screen: mobile
+---
+code: |
+  if device().is_mobile or device().is_tablet:
+    on_mobile = True
+  else:
+    on_mobile = False
+---
+mandatory: True
+code: |
+  excitement_level
+  quest_almost_over
+  if on_mobile:
+    final_screen_mobile
+  else:
+    final_screen_desktop
 ---
 question: |
   Let's go on a quest!
 subquestion: |
+  % if on_mobile:
+  I see you are using a mobile
+  device.
+  % else:
+  I see that you are not using
+  a mobile device.
+  % endif
+  
   How exciting would you
   like your quest to be?
 field: excitement_level
@@ -27,13 +50,14 @@ question: |
   quest.
 field: quest_almost_over
 ---
+event: final_screen_mobile
 question: |
   We have finished the quest.
 buttons:
   - Return: exit
     url: |
       ${ referring_url() }
-need:
-  - excitement_level
-  - quest_almost_over
-mandatory: True
+---
+event: final_screen_desktop
+question: |
+  We have finished the quest.

@@ -506,6 +506,7 @@ from docassemble.base.generate_key import random_string, random_lower_string, ra
 import docassemble.webapp.backend
 import docassemble.base.util
 from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile, DAObject
+from user_agents import parse as ua_parse
 
 mimetypes.add_type('application/x-yaml', '.yml')
 mimetypes.add_type('application/x-yaml', '.yaml')
@@ -4550,7 +4551,7 @@ def index():
             debug_readability_help = ''
             debug_readability_question = ''
         #PPP
-        if interview_status.question.interview.force_fullscreen:
+        if interview_status.question.interview.force_fullscreen is True or (re.search(r'mobile', str(interview_status.question.interview.force_fullscreen).lower()) and is_mobile_or_tablet()):
             forceFullScreen = """
           if (data.steps > 1 && window != top) {
             top.location.href = location.href;
@@ -6169,6 +6170,14 @@ def index():
     #logmessage("Request time final: " + str(g.request_time()))
     #sys.stderr.write("11\n")
     return response
+
+def is_mobile_or_tablet():
+    ua_string = request.headers.get('User-Agent', None)
+    if ua_string is not None:
+        response = ua_parse(ua_string)
+        if response.is_mobile or response.is_tablet:
+            return True
+    return False
 
 def add_referer(user_dict):
     if request.referrer:
