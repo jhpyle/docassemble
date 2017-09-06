@@ -618,14 +618,17 @@ To shut down a multi-server **docassemble** configuration:
 #. If you do not care about retaining the database or configuration of
    the **docassemble** application you just shut down, go to the
    [S3 Console] and delete the bucket you created.  Note that the cost
-   of maintaining data in [S3] is minimal.  The data that
-   **docassemble** stores in [S3] will only be significant if you have
-   a lot of uploaded files or a lot of static files in your [Playground].
+   of maintaining data in [S3] is minimal as long as the volume of
+   data is low.  The data that **docassemble** stores in [S3] will
+   only be significant if you have a lot of uploaded files or a lot of
+   static files in your [Playground].
 
-When you have shut these things down, many [AWS] resources that you
-created will still exist, but you do not need to delete them to avoid
-incurring costs.  A "target group," for example, is just a
-configuration.
+After you have shut down these resources, many other [AWS] resources
+that you created will still exist, but you do not need to delete them
+to avoid incurring costs.  "Target groups" and "Launch
+Configurations," for example, are just configuration data; [AWS] does
+not need to reserve computing power or IP addresses to maintain them
+in your account.
 
 ### Controlling AWS from the command line
 

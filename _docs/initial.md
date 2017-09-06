@@ -696,20 +696,29 @@ using an [iframe].  However, the user experience on mobile is degraded
 when an interview is embedded.
 
 If you want the interview to switch to "full screen" after the user
-moves to the next screen in the embedded interview, you can set the
-following in your interview:
+moves to the next screen in the embedded interview, you can set 
+`go full screen` to `True`.
 
-{% highlight yaml %}
-features:
-  go full screen: True
-{% endhighlight %}
+{% include side-by-side.html demo="exit-url-referer-fullscreen" path="/static/test-iframe.html" %}
 
-[Here is a page where you can test this]({{ site.baseurl }}/static/test-iframe.html){:target="_blank"}.
+For more information about implementing an embedded interview like
+this, see the [HTML source of the web page in this example]({{ site.github.repository_url }}/blob/gh-pages/static/test-iframe.html)
 
 To send the user back to the original page at the end of the
 interview, you can use an [exit button] with a `url` set to the result
 of the [`referring_url()`] function.
 
+If you only want the interview to go full screen if the user is using
+a mobile device, set `go full screen` to `mobile`.
+
+If desktop users will not go full screen, you might want to use the
+[`device()`] function to make sure they see a special [ending screen]
+that offers no exit buttons.
+
+{% include side-by-side.html demo="exit-url-referer-fullscreen-mobile" path="/static/test-iframe-mobile.html" %}
+
+[ending screen]: {{ site.baseurl }}/docs/questions.html#ending screens
+[`device()`]: {{ site.baseurl }}/docs/functions.html#device
 [exit button]: {{ site.baseurl }}/docs/questions.html#special buttons
 [`referring_url()`]: {{ site.baseurl }}/docs/functions.html#referring_url
 [iframe]: https://www.w3schools.com/TAgs/tag_iframe.asp

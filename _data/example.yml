@@ -1853,7 +1853,8 @@
     - Soporific
   ---
   question: |
-    We are nearing the end of the quest.
+    We are nearing the end of the
+    quest.
   field: quest_almost_over
   ---
   question: |
@@ -1866,6 +1867,18 @@
     - excitement_level
     - quest_almost_over
   mandatory: True
+"exit-url-referer-fullscreen-mobile": "features:\n  go full screen: mobile\n---\n\
+  code: |\n  if device().is_mobile or device().is_tablet:\n    on_mobile = True\n\
+  \  else:\n    on_mobile = False\n---\nmandatory: True\ncode: |\n  excitement_level\n\
+  \  quest_almost_over\n  if on_mobile:\n    final_screen_mobile\n  else:\n    final_screen_desktop\n\
+  ---\nquestion: |\n  Let's go on a quest!\nsubquestion: |\n  % if on_mobile:\n  I\
+  \ see you are using a mobile\n  device.\n  % else:\n  I see that you are not using\n\
+  \  a mobile device.\n  % endif\n  \n  How exciting would you\n  like your quest\
+  \ to be?\nfield: excitement_level\nchoices:\n  - Thrilling\n  - Interesting\n  -\
+  \ Soporific\n---\nquestion: |\n  We are nearing the end of the\n  quest.\nfield:\
+  \ quest_almost_over\n---\nevent: final_screen_mobile\nquestion: |\n  We have finished\
+  \ the quest.\nbuttons:\n  - Return: exit\n    url: |\n      ${ referring_url() }\n\
+  ---\nevent: final_screen_desktop\nquestion: |\n  We have finished the quest."
 "external_files": |-
   features:
     javascript: my-functions.js
