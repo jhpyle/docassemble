@@ -2377,6 +2377,7 @@ class Question:
                         docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                         result['template'].save(docx_file.name)
                         del result['template']
+                        del result['field_data']
                         if 'docx' in result['formats_to_use']:
                             result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)
                         if 'pdf' in result['formats_to_use']:
