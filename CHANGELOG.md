@@ -3,9 +3,12 @@
 ## [0.1.48] - 2017-09-06
 ### Added
 - Option for `go full screen` that limits behavior to mobile only.
-- Caching of assembled documents.
+- Caching of assembled documents.  Clicking on assembled documents
+  will now open them in a new browser tab rather than offering them
+  as attachment downloads.
 ### Changed
-- In Google Drive synchronization, .tmp and .gdoc files are ignored.
+- In Google Drive synchronization, .tmp and .gdoc files are now 
+  ignored.
 ### Fixed
 - Spinner did not appear on signature pages.
 - Date validation forcing input even when date not required.

@@ -9093,7 +9093,9 @@ def sync_with_google_drive():
             if page_token is None:
                 break
         for f in gd_files[section]:
+            #logmessage("Considering " + f + " on GD")
             if f not in local_files[section] or gd_modtimes[section][f] - local_modtimes[section][f] > 3:
+                #logmessage("Considering " + f + " to copy to local")
                 sections_modified.add(section)
                 commentary += "Copied " + f + " from Google Drive.  "
                 the_path = os.path.join(area.directory, f)
@@ -9106,10 +9108,14 @@ def sync_with_google_drive():
                         #logmessage("Download %d%%." % int(status.progress() * 100))
                 os.utime(the_path, (gd_modtimes[section][f], gd_modtimes[section][f]))
         for f in local_files[section]:
+            #logmessage("Considering " + f + ", which is a local file")
             if f not in gd_deleted[section]:
+                #logmessage("Considering " + f + " is not in Google Drive deleted")
                 if f not in gd_files[section]:
+                    #logmessage("Considering " + f + " is not in Google Drive")
                     the_path = os.path.join(area.directory, f)
                     if os.path.getsize(the_path) == 0:
+                        logmessage("Found zero byte file: " + the_path)
                         continue
                     commentary += "Copied " + f + " to Google Drive.  "
                     extension, mimetype = get_ext_and_mimetype(the_path)
@@ -9121,8 +9127,12 @@ def sync_with_google_drive():
                                                           fields='id').execute()
                     new_id = the_new_file.get('id')
                 elif local_modtimes[section][f] - gd_modtimes[section][f] > 3:
-                    commentary += "Updated " + f + " on Google Drive.  "
+                    #logmessage("Considering " + f + " is in Google Drive but local is more recent")
                     the_path = os.path.join(area.directory, f)
+                    if os.path.getsize(the_path) == 0:
+                        logmessage("Found zero byte file during update: " + the_path)
+                        continue
+                    commentary += "Updated " + f + " on Google Drive.  "
                     extension, mimetype = get_ext_and_mimetype(the_path)
                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
                     file_metadata = { 'modifiedTime': the_modtime }
@@ -9131,8 +9141,11 @@ def sync_with_google_drive():
                                            body=file_metadata,
                                            media_body=media).execute()
         for f in gd_deleted[section]:
+            #logmessage("Considering " + f + " is deleted on Google Drive")
             if f in local_files[section]:
+                #logmessage("Considering " + f + " is deleted on Google Drive but exists locally")
                 if local_modtimes[section][f] - gd_modtimes[section][f] > 3:
+                    #logmessage("Considering " + f + " is deleted on Google Drive but exists locally and needs to be undeleted on GD")
                     commentary += "Undeleted and updated " + f + " on Google Drive.  "
                     the_path = os.path.join(area.directory, f)
                     extension, mimetype = get_ext_and_mimetype(the_path)
@@ -9143,6 +9156,7 @@ def sync_with_google_drive():
                                            body=file_metadata,
                                            media_body=media).execute()
                 else:
+                    #logmessage("Considering " + f + " is deleted on Google Drive but exists locally and needs to deleted locally")
                     sections_modified.add(section)
                     commentary += "Deleted " + f + " from Playground.  "
                     the_path = os.path.join(area.directory, f)
@@ -9151,6 +9165,7 @@ def sync_with_google_drive():
         area.finalize()
     if commentary != '':
         flash(commentary, 'success')
+        logmessage(commentary)
     next = request.args.get('next', url_for('playground_page'))
     if 'modules' in sections_modified:
         return redirect(url_for('restart_page', next=next))
@@ -11906,7 +11921,7 @@ def interview_list():
         return redirect(url_for('index', i=interviews[0]['interview_info'].filename, session=interviews[0]['interview_info'].key, from_list=1))
     interview_page_title = word(daconfig.get('interview page title', 'Interviews'))
     title = word(daconfig.get('interview page heading', 'Resume an interview'))
-    argu = dict(version_warning=version_warning, extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title, numinterviews=len(interviews), interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
+    argu = dict(version_warning=version_warning, extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title, numinterviews=len(interviews), interviews=sorted(interviews, key=valid_date_key))
     if 'interview page template' in daconfig and daconfig['interview page template']:
         the_page = docassemble.base.functions.package_template_filename(daconfig['interview page template'])
         if the_page is None:
@@ -11917,6 +11932,11 @@ def interview_list():
     else:
         return render_template('pages/interviews.html', **argu)
 
+def valid_date_key(x):
+    if x['dict']['_internal']['starttime'] is None:
+        return datetime.datetime.now()
+    return x['dict']['_internal']['starttime']
+    
 def fix_secret():
     password = request.form.get('password', request.form.get('new_password', None))
     if password is not None:

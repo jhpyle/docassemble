@@ -2259,7 +2259,7 @@ class Question:
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought}) #'defined': defined, 
     def processed_attachments(self, user_dict, **kwargs):
         steps = user_dict['_internal'].get('steps', -1)
-        logmessage("processed_attachments: steps is " + str(steps))
+        # logmessage("processed_attachments: steps is " + str(steps))
         if 'doc_cache' not in user_dict['_internal']:
             user_dict['_internal']['doc_cache'] = dict()
         if hasattr(self, 'name') and self.name in user_dict['_internal']['doc_cache'] and steps in user_dict['_internal']['doc_cache'][self.name]:
