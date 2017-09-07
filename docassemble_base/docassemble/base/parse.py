@@ -95,7 +95,7 @@ def textify(data, user_dict):
 #     save_numbered_file = func
 #     return
 
-initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict(), nav=docassemble.base.functions.DANav())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict(), nav=docassemble.base.functions.DANav())
 
 def set_initial_dict(the_dict):
     global initial_dict
@@ -2258,6 +2258,13 @@ class Question:
                 raise NameError("name 'role_event' is not defined")
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought}) #'defined': defined, 
     def processed_attachments(self, user_dict, **kwargs):
+        steps = user_dict['_internal'].get('steps', -1)
+        logmessage("processed_attachments: steps is " + str(steps))
+        if 'doc_cache' not in user_dict['_internal']:
+            user_dict['_internal']['doc_cache'] = dict()
+        if hasattr(self, 'name') and self.name in user_dict['_internal']['doc_cache'] and steps in user_dict['_internal']['doc_cache'][self.name]:
+            #logmessage("processed_attachments: result was in document cache")
+            return user_dict['_internal']['doc_cache'][self.name][steps]
         result_list = list()
         items = list()
         for x in self.attachments:
@@ -2271,6 +2278,10 @@ class Question:
                         items.append([attachment, self.prepare_attachment(attachment, user_dict, **kwargs)])
         for item in items:
             result_list.append(self.finalize_attachment(item[0], item[1], user_dict))
+        if hasattr(self, 'name'):
+            if self.name not in user_dict['_internal']['doc_cache']:
+                user_dict['_internal']['doc_cache'][self.name] = dict()
+            user_dict['_internal']['doc_cache'][self.name][steps] = result_list
         return result_list
         #return(list(map((lambda x: self.make_attachment(x, user_dict, **kwargs)), self.attachments)))
     def parse_fields(self, the_list, register_target, uses_field):
@@ -2356,7 +2367,8 @@ class Question:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
-                        result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'])
+                        the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'])
+                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + doc_format, the_pdf_file, yaml_file_name=self.interview.source.path)
                     elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
                         #logmessage("field_data is " + str(result['field_data']))
                         docassemble.base.functions.set_context('docx', template=result['template'])
@@ -2365,11 +2377,11 @@ class Question:
                         docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                         result['template'].save(docx_file.name)
                         if 'docx' in result['formats_to_use']:
-                            result['file']['docx'] = docx_file.name
+                            result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)
                         if 'pdf' in result['formats_to_use']:
                             pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
                             docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'])
-                            result['file']['pdf'] = pdf_file.name
+                            result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
                 else:
                     converter = MyPandoc(pdfa=result['convert_to_pdf_a'])
                     converter.output_format = doc_format
@@ -2399,7 +2411,7 @@ class Question:
                             converter.template_file = self.interview.attachment_options['template_file'].path(user_dict=user_dict)
                     converter.metadata = result['metadata']
                     converter.convert(self)
-                    result['file'][doc_format] = converter.output_filename
+                    result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + doc_format, converter.output_filename, yaml_file_name=self.interview.source.path)
                     result['content'][doc_format] = result['markdown'][doc_format]
             elif doc_format in ['html']:
                 result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
@@ -2418,11 +2430,11 @@ class Question:
             del user_dict['_attachment_info']
             for doc_format in result['file']:
                 variable_string = attachment['variable_name'] + '.' + doc_format
-                filename = result['filename'] + '.' + doc_format
-                file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
-                if file_number is None:
+                # filename = result['filename'] + '.' + doc_format
+                # file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
+                if result['file'][doc_format] is None:
                     raise Exception("Could not save numbered file")
-                string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(filename)) + ", number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+                string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + '.' + doc_format) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "')"
                 #logmessage("Executing " + string + "\n")
                 exec(string, user_dict)
         return(result)
@@ -2439,6 +2451,8 @@ class Question:
         result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
         result['markdown'] = dict();
         result['content'] = dict();
+        result['extension'] = dict();
+        result['mimetype'] = dict();
         result['file'] = dict();
         if '*' in attachment['valid_formats']:
             result['formats_to_use'] = ['html', 'rtf', 'pdf', 'tex']

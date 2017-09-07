@@ -1293,9 +1293,11 @@ def save_user_dict_key(user_code, filename, priors=False):
         db.session.commit()
     return
 
-def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None):
+def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None, steps=None):
     #logmessage("save_user_dict: called with encrypt " + str(encrypt))
     nowtime = datetime.datetime.utcnow()
+    if steps is not None:
+        user_dict['_internal']['steps'] = steps
     user_dict['_internal']['modtime'] = nowtime
     if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
         if manual_user_id is not None:
@@ -3344,7 +3346,7 @@ def checkin():
                 commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response), extra='backgroundresponse'))
             elif interview_status.question.question_type == "template" and interview_status.question.target is not None:
                 commands.append(dict(action=do_action, value=dict(target=interview_status.question.target, content=docassemble.base.util.markdown_to_html(interview_status.questionText, trim=True)), extra='backgroundresponse'))
-            save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted)
+            save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
         peer_ok = False
         help_ok = False
         num_peers = 0
@@ -3624,7 +3626,7 @@ def index():
         set_cookie = False
     yaml_filename = session.get('i', default_yaml_filename)
     #logmessage("index: yaml_filename from session/default is " + str(yaml_filename))
-    steps = 0
+    steps = 1
     need_to_reset = False
     need_to_resave = False
     yaml_parameter = request.args.get('i', None)
@@ -3736,7 +3738,7 @@ def index():
         session['encrypted'] = encrypted
         if 'key_logged' in session:
             del session['key_logged']
-        steps = 0
+        steps = 1
     action = None
     if user_dict.get('multi_user', False) is True and encrypted is True:
         #logmessage("index: encryption mismatch, should be False")
@@ -3845,7 +3847,7 @@ def index():
             interview.assemble(the_user_dict, interview_status)
             if len(interview_status.attachments) > 0:
                 the_attachment = interview_status.attachments[int(request.args.get('index'))]
-                the_filename = the_attachment['file'][request.args.get('format')]
+                the_file_number = the_attachment['file'][request.args.get('format')]
                 the_format = request.args.get('format')
                 if the_format == "pdf":
                     mime_type = 'application/pdf'
@@ -3938,8 +3940,10 @@ def index():
             #logmessage("Doing " + the_string)
             try:
                 exec(the_string, user_dict)
-                changed = True
-                steps += 1
+                if not changed:
+                    steps += 1
+                    user_dict['_internal']['steps'] = steps
+                    changed = True
             except Exception as errMess:
                 error_messages.append(("error", "Error: " + str(errMess)))
     known_datatypes = dict()
@@ -4107,13 +4111,14 @@ def index():
             elif known_datatypes[real_key] == 'date':
                 if type(data) in [str, unicode]:
                     data = data.strip()
-                    try:
-                        dateutil.parser.parse(data)
-                    except:
-                        validated = False
-                        field_error[orig_key] = word("You need to enter a valid date.")
-                        continue
-                    test_data = data
+                    if data != '':
+                        try:
+                            dateutil.parser.parse(data)
+                        except:
+                            validated = False
+                            field_error[orig_key] = word("You need to enter a valid date.")
+                            continue
+                        test_data = data
                 data = repr(data)
             elif known_datatypes[real_key] == 'integer':
                 if data == '':
@@ -4200,7 +4205,7 @@ def index():
         else:
             the_string = key + ' = ' + data
             if orig_key in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_key] and hasattr(the_question.fields[field_numbers[orig_key]], 'validate'):
-                #logmessage("field has validation function")
+                logmessage("field has validation function")
                 the_func = eval(the_question.fields[field_numbers[orig_key]].validate['compute'], user_dict)
                 try:
                     the_result = the_func(test_data)
@@ -4215,8 +4220,10 @@ def index():
         #logmessage("Doing " + str(the_string))
         try:
             exec(the_string, user_dict)
-            changed = True
-            steps += 1
+            if not changed:
+                steps += 1
+                user_dict['_internal']['steps'] = steps
+                changed = True
         except Exception as errMess:
             error_messages.append(("error", "Error: " + str(errMess)))
             logmessage("Error: " + str(errMess))
@@ -4310,8 +4317,10 @@ def index():
                             #logmessage("Doing " + the_string)
                             try:
                                 exec(the_string, user_dict)
-                                changed = True
-                                steps += 1
+                                if not changed:
+                                    steps += 1
+                                    user_dict['_internal']['steps'] = steps
+                                    changed = True
                             except Exception as errMess:
                                 sys.stderr.write("Error: " + str(errMess) + "\n")
                                 error_messages.append(("error", "Error: " + str(errMess)))
@@ -4353,7 +4362,7 @@ def index():
         if current_user.is_authenticated and 'visitor_secret' not in request.cookies:
             save_user_dict_key(user_code, yaml_filename)
             session['key_logged'] = True
-        steps = 0
+        steps = 1
         changed = False
         interview.assemble(user_dict, interview_status)
     will_save = True
@@ -4452,12 +4461,13 @@ def index():
     #     del user_dict['_internal']['answers'][interview_status.question.name]
     if action and not changed:
         changed = True
-        #logmessage("Incrementing steps because action")
         steps += 1
+        user_dict['_internal']['steps'] = steps
+        #logmessage("Incrementing steps because action")
     if changed and interview_status.question.interview.use_progress_bar:
         advance_progress(user_dict)
     #logmessage("index: saving user dict where encrypted is " + str(encrypted))
-    save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
+    save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted, steps=steps)
     if user_dict.get('multi_user', False) is True and encrypted is True:
         #logmessage("index: post interview, encryption should be False")
         encrypted = False
@@ -9071,6 +9081,8 @@ def sync_with_google_drive():
         while True:
             response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name, modifiedTime, trashed)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(subdir) + "' in parents").execute()
             for the_file in response.get('files', []):
+                if re.search(r'(\.tmp|\.gdoc)$', the_file['name']):
+                    continue
                 gd_ids[section][the_file['name']] = the_file['id']
                 gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])
                 if the_file['trashed']:
@@ -9096,8 +9108,10 @@ def sync_with_google_drive():
         for f in local_files[section]:
             if f not in gd_deleted[section]:
                 if f not in gd_files[section]:
-                    commentary += "Copied " + f + " to Google Drive.  "
                     the_path = os.path.join(area.directory, f)
+                    if os.path.getsize(the_path) == 0:
+                        continue
+                    commentary += "Copied " + f + " to Google Drive.  "
                     extension, mimetype = get_ext_and_mimetype(the_path)
                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
                     file_metadata = { 'name' : f, 'parents': [subdir], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
@@ -12319,7 +12333,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     del user_dict['_internal']['skip'][max_entry]
                 if 'command_cache' in user_dict['_internal'] and max_entry in user_dict['_internal']['command_cache']:
                     del user_dict['_internal']['command_cache'][max_entry]
-                save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted, changed=False)
+                save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted, changed=False, steps=steps)
                 accepting_input = False
                 inp = ''
                 continue
@@ -12416,8 +12430,10 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     try:
                         exec('import docassemble.base.core', user_dict)
                         exec(the_string, user_dict)
-                        changed = True
-                        steps += 1
+                        if not changed:
+                            steps += 1
+                            user_dict['_internal']['steps'] = steps
+                            changed = True
                     except Exception as errMess:
                         logmessage("do_sms: error: " + str(errMess))
                         special_messages.append(word("Error") + ": " + str(errMess))
@@ -12480,8 +12496,10 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         try:
                             exec('import docassemble.base.core', user_dict)
                             exec(the_string, user_dict)
-                            changed = True
-                            steps += 1
+                            if not changed:
+                                steps += 1
+                                user_dict['_internal']['steps'] = steps
+                                changed = True
                         except Exception as errMess:
                             logmessage("do_sms: error: " + str(errMess))
                             special_messages.append(word("Error") + ": " + str(errMess))
@@ -12724,7 +12742,10 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                     exec(pre_string, user_dict)
                         logmessage("do_sms: doing regular: " + the_string)
                         exec(the_string, user_dict)
-                        changed = True
+                        if not changed:
+                            steps += 1
+                            user_dict['_internal']['steps'] = steps
+                            changed = True
                 if next_field is None:
                     if skip_it:
                         # Run the commands that we have been storing up
@@ -12733,7 +12754,10 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                 for pre_string in user_dict['_internal']['command_cache'][field_num]:
                                     logmessage("do_sms: doing command cache: " + pre_string)
                                     exec(pre_string, user_dict)
-                            changed = True
+                            if not changed:
+                                steps += 1
+                                user_dict['_internal']['steps'] = steps
+                                changed = True
                     logmessage("do_sms: next_field is None")
                     if 'skip' in user_dict['_internal']:
                         user_dict['_internal']['skip'].clear()
@@ -12796,7 +12820,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 logmessage("do_sms: sought variable is None")
             #user_dict['_internal']['smsgather'] = interview_status.sought
         if (accepting_input or changed or action_performed or sms_info['next'] is not None) and save:
-            save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted, changed=changed)
+            save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted, changed=changed, steps=steps)
         for special_message in special_messages:
             qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + special_message + 'XXXXMESSAGE_AREAXXXX', qoutput)
         qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', '', qoutput)

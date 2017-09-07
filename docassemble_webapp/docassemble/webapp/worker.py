@@ -245,9 +245,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 sys.stderr.write("Error in assembly: " + str(e))
             # is this right?
             if str(user_info.get('the_user_id', None)).startswith('t'):
-                worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted)
+                worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
             else:
-                worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'])
+                worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
             worker_controller.release_lock(session_code, yaml_filename)
             if hasattr(interview_status, 'question'):
                 if interview_status.question.question_type == "response":

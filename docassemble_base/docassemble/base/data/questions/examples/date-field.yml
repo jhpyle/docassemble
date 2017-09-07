@@ -7,6 +7,7 @@ question: |
 fields:
   - Birthdate: target_variable
     datatype: date
+    required: False
 ---
 question: Result of question
 subquestion: |
