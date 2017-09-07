@@ -1130,7 +1130,7 @@ def noquote(string):
 def add_terms(termname, terms, status=None):
     lower_termname = termname.lower()
     if lower_termname in terms:
-        return('<a class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, status=status)) + '>' + unicode(termname) + '</a>')
+        return('<a class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, do_terms=False, status=status)) + '>' + unicode(termname) + '</a>')
     else:
         #logmessage(lower_termname + " is not in terms dictionary\n")
         return '[[' + termname + ']]'
