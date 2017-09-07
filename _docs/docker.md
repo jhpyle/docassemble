@@ -72,12 +72,15 @@ hostname of the machine that is running [Docker].  If you are running
 [Docker] on your own computer, this address is probably
 http://localhost.
 
+If you are running [Docker] on [AWS], the address will be something
+like `http://ec2-52-38-111-32.us-west-2.compute.amazonaws.com` (check
+your [EC2] configuration for the hostname).  On [AWS], you will need a
+[Security Group] that opens [HTTP] (port 80) to the outside world in
+order to allow web browsers to connect to your [EC2] instance.
+
 Using the web browser, you can log in using the default username
 ("admin@admin.com") and password ("password"), and make changes to the
 configuration from the menu.
-
-If you are already using port 80 on your machine, call [`docker run`]
-using `-p 8080:80` instead of `-p 80:80`.
 
 In the [`docker run`] command, the `-d` flag means that the container
 will run in the background.
@@ -90,9 +93,11 @@ then port 8080 on the host machine would be passed through to port 80
 on the [Docker] container.
 
 The `jhpyle/docassemble` tag refers to a [Docker] image that is
-[hosted on Docker Hub].  The image is about 4GB in size.  It is an
-[automated build] based on the "master" branch of the
-[docassemble repository] on [GitHub].
+[hosted on Docker Hub].  The image is about 2GB in size, and when it
+runs, the container uses about 10GB of hard drive space.  The
+`jhpyle/docassemble` image is based on the "master" branch of the
+[docassemble repository] on [GitHub].  It is rebuilt every time the
+minor version of **docassemble** increases.
 
 ## Shutting down
 
@@ -1487,3 +1492,5 @@ containers depend on the images.
 [ssh]: https://en.wikipedia.org/wiki/Secure_Shell
 [CNAME record]: https://en.wikipedia.org/wiki/CNAME_record
 [A record]: https://en.wikipedia.org/wiki/List_of_DNS_record_types#A
+[Security Group]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html
+[HTTP]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol

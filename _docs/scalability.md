@@ -671,13 +671,57 @@ web interface can be done using the [boto3] library.
 
 # Single-server configuration on EC2 Container Service
 
-You can use [EC2] to run **docassemble** in a single-server
-arrangement.  (It is not particularly "scalable" to do so, but you
-might find it convenient.)
+If you want, you can use [EC2] to run **docassemble** in a
+single-server arrangement.  (It is not particularly "scalable" to do
+so, but you might find it convenient.)
 
-To do so, start one [EC2] instance with an [ECS]-optimized [AMI], and
-then go to the [ECS Console] and set up a "service" that runs a single
-"task" with a [Task Definition] like the following.
+To do so, follow the instructions above for the multi-server
+configuration, but skip the creation of the [S3] bucket, [IAM] role,
+[Application Load Balancer], Target Groups, [Auto Scaling Group],
+[Task Definition]s, and the [ECS] services.
+
+Instead, just [start an EC2 instance using an ECS-optimized AMI] with a
+[Security Group] that allows incoming connections over [HTTP] (port
+80).  Then go to the [ECS Console] and set up a "service" called
+`docassemble` (or whatever name you want to give it) that runs a
+single "task" with a [Task Definition] like the following.
+
+{% highlight json %}
+{
+  "family": "docassemble-all",
+  "containerDefinitions": [
+    {
+      "name": "docassemble-all",
+      "image": "jhpyle/docassemble",
+      "memory": 900,
+      "cpu": 1,
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "EC2",
+          "value": "true"
+        }
+      ]
+    }
+  ]
+}
+{% endhighlight %}
+
+To start up the server, you would configure the [ECS] service to start
+one task.  To shut down the server, you would reduce the number of
+tasks to 0.
+
+A more complicated example of a configuration is the following, which
+assumes that you have a domain name that is mapped to your [EC2]
+instance, that you want to use [HTTPS], and you have set up the [S3]
+bucket and [IAM] role so that your server can use
+[S3 persistent storage].
 
 {% highlight json %}
 {
@@ -730,8 +774,12 @@ then go to the [ECS Console] and set up a "service" that runs a single
 }
 {% endhighlight %}
 
-Edit [`DAHOSTNAME`], [`LETSENCRYPTEMAIL`], and [`S3BUCKET`].  Note
-that [`CONTAINERROLE`] is not specified, but it will default to `all`.
+In this example, you would need to edit
+[`DAHOSTNAME`], [`LETSENCRYPTEMAIL`], and [`S3BUCKET`].  Note that
+[`CONTAINERROLE`] is not specified; it will default to `all`.
+
+For more information about configuring your server, see the section on
+[Docker].
 
 # How it works
 
@@ -1139,3 +1187,6 @@ number of PostgreSQL connections will be 12.
 [DKIM]: https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail
 [reverse DNS]: https://en.wikipedia.org/wiki/Reverse_DNS_lookup
 [Playground]: {{ site.baseurl }}/docs/playground.html
+[S3 persistent storage]: {{ site.baseurl }}/docs/docker.html#persistent s3
+[start an EC2 instance using an ECS-optimized AMI]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_container_instance.html
+[HTTPS]: {{ site.baseurl }}/docs/docker.html#https
