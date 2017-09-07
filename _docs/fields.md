@@ -581,19 +581,23 @@ suitable for passwords.
 ## <a name="date"></a>Dates
 
 `datatype: date` provides a date entry input box.  The style of the
-input box depends on the browser.  Input validation is applied, but it
-is not strict; April 32 is considered invalid, but April 31 is
-considered valid.
+input box depends on the browser.
 
 {% include side-by-side.html demo="date-field" %}
 
-Note that the resulting variable is plain text, not a special [Python]
-date object of any kind.
+Note that while input validation is applied, the resulting variable
+will be plain text, not a special [Python] date object.  For more
+information about working with date variables, see the documentation
+for the [date functions].  These functions are flexible and will work
+correctly if you give them dates as text, as long as a date can be
+discerned from the text.
 
-For more information about working with date variables, see the
-documentation for the [date functions].  These functions are flexible
-and will work correctly if you give them dates as text, as long as a
-date can be discerned from the text.
+If you set a [`default`] value for a date field, write the date in the
+format YYYY-MM-DD.  Many browsers have built-in "date pickers" that
+expect dates to be in this format.  See [Mozilla's documentation] of
+the date input field.  If the browser uses a date picker, then your
+interview will see text values in the form YYYY-MM-DD, but on other
+browsers, like [Firefox], the format may be some other format.
 
 ## <a name="email"></a>E-mail addresses
 
@@ -1312,3 +1316,6 @@ why this needs to be done manually as opposed to automatically:
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [`disable others`]: #disable others
 [`.append()`]: {{ site.baseurl }}/docs/objects.html#DAList.append
+[`default`]: #default
+[Mozilla's documentation]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/date
+[Firefox]: https://www.mozilla.org/en-US/firefox/

@@ -691,31 +691,41 @@ The setting can also be made on a per-attachment basis by setting the
 
 ## <a name="go full screen"></a>Going full screen when interview is embedded
 
-It is possible to embed a **docassemble** interviews in a web page
+It is possible to embed a **docassemble** interview in a web page
 using an [iframe].  However, the user experience on mobile is degraded
 when an interview is embedded.
 
 If you want the interview to switch to "full screen" after the user
-moves to the next screen in the embedded interview, you can set 
-`go full screen` to `True`.
+moves to the next screen in the embedded interview, you can do so.
+Within a `features` block, include `go full screen: True`.
 
 {% include side-by-side.html demo="exit-url-referer-fullscreen" path="/static/test-iframe.html" %}
 
 For more information about implementing an embedded interview like
-this, see the [HTML source of the web page in this example]({{ site.github.repository_url }}/blob/gh-pages/static/test-iframe.html)
+this, see the [HTML source of the web page used in this example]({{ site.github.repository_url }}/blob/gh-pages/static/test-iframe.html){:target="_blank"}.
 
-To send the user back to the original page at the end of the
-interview, you can use an [exit button] with a `url` set to the result
-of the [`referring_url()`] function.
+Note that in this example, the user is provided with an [exit button]
+at the end of the interview that directs the user back to the page
+that originally embedded the interview.  This is accomplished by
+setting the `url` of the [exit button] to the result of the
+[`referring_url()`] function.
 
 If you only want the interview to go full screen if the user is using
-a mobile device, set `go full screen` to `mobile`.
-
-If desktop users will not go full screen, you might want to use the
-[`device()`] function to make sure they see a special [ending screen]
-that offers no exit buttons.
+a mobile device, use `go full screen: mobile`.
 
 {% include side-by-side.html demo="exit-url-referer-fullscreen-mobile" path="/static/test-iframe-mobile.html" %}
+
+Note that this example provides a different [ending screen] depending
+on whether the user is on a desktop or a mobile device.  If a desktop
+user is viewing the interview in an [iframe] on a web site, the
+interview should not provide an exit button that takes the user to a
+web site, because then the user will see a web site embedded in a web
+site.  The interview in this example uses the [`device()`] function to
+detect whether the user is using a mobile device.  Note that the
+interview logic looks both at `device().is_mobile` as well as
+`device().is_tablet`.  This corresponds with the functionality of `go
+full screen: mobile`, which will make the interview go full screen if
+the user has either a mobile phone or a tablet.
 
 [ending screen]: {{ site.baseurl }}/docs/questions.html#ending screens
 [`device()`]: {{ site.baseurl }}/docs/functions.html#device
