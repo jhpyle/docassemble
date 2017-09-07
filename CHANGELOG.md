@@ -1,10 +1,15 @@
 # Change Log
 
-## [0.1.48]
+## [0.1.48] - 2017-09-06
 ### Added
 - Option for `go full screen` that limits behavior to mobile only.
+- Caching of assembled documents.
+### Changed
+- In Google Drive synchronization, .tmp and .gdoc files are ignored.
 ### Fixed
 - Spinner did not appear on signature pages.
+- Date validation forcing input even when date not required.
+- Images included in terms not appearing unless fully qualified.
 
 ## [0.1.47] - 2017-09-04
 ### Added

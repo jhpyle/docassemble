@@ -7,8 +7,6 @@ question: |
 fields:
   - Birthdate: target_variable
     datatype: date
-    default: 2005-05-06
-    required: False
 ---
 question: Result of question
 subquestion: |

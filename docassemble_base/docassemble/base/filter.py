@@ -1088,13 +1088,13 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
     if do_terms and question is not None and term_start.search(result):
         if status is not None:
             if len(question.terms):
-                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['terms'])), result)
+                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['terms'], status=status)), result)
             if len(question.autoterms):
-                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['autoterms'])), result)
+                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['autoterms'], status=status)), result)
         if question.language in question.interview.terms and len(question.interview.terms[question.language]):
-            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[question.language])), result)
+            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[question.language], status=status)), result)
         if question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]):
-            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[question.language])), result)
+            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[question.language], status=status)), result)
     if trim:
         if result.startswith('<p>') and result.endswith('</p>'):
             result = result[3:-4]
@@ -1127,10 +1127,10 @@ def noquote(string):
     #return json.dumps(string.replace('\n', ' ').rstrip())
     return '"' + string.replace('\n', ' ').replace('"', '&quot;').rstrip() + '"'
 
-def add_terms(termname, terms):
+def add_terms(termname, terms, status=None):
     lower_termname = termname.lower()
     if lower_termname in terms:
-        return('<a class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True)) + '>' + unicode(termname) + '</a>')
+        return('<a class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, status=status)) + '>' + unicode(termname) + '</a>')
     else:
         #logmessage(lower_termname + " is not in terms dictionary\n")
         return '[[' + termname + ']]'
