@@ -95,7 +95,7 @@ def textify(data, user_dict):
 #     save_numbered_file = func
 #     return
 
-initial_dict = dict(_internal=dict(progress=0, tracker=0, doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict(), nav=docassemble.base.functions.DANav())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict(), nav=docassemble.base.functions.DANav())
 
 def set_initial_dict(the_dict):
     global initial_dict
@@ -1820,6 +1820,8 @@ class Question:
             if 'variable name' in target:
                 variable_name = target['variable name']
                 self.fields_used.add(target['variable name'])
+            else:
+                variable_name = "_internal['docvar'][" + str(self.interview.next_attachment_number()) + "]"
             if 'metadata' in target:
                 if type(target['metadata']) is not dict:
                     raise DAError('Unknown data type ' + str(type(target['metadata'])) + ' in attachment metadata.' + self.idebug(target))
@@ -2260,8 +2262,6 @@ class Question:
     def processed_attachments(self, user_dict, **kwargs):
         steps = user_dict['_internal'].get('steps', -1)
         # logmessage("processed_attachments: steps is " + str(steps))
-        if 'doc_cache' not in user_dict['_internal']:
-            user_dict['_internal']['doc_cache'] = dict()
         if hasattr(self, 'name') and self.name in user_dict['_internal']['doc_cache'] and steps in user_dict['_internal']['doc_cache'][self.name]:
             #logmessage("processed_attachments: result was in document cache")
             return user_dict['_internal']['doc_cache'][self.name][steps]
@@ -2363,6 +2363,25 @@ class Question:
                     return(target.follow_multiple_choice(user_dict, interview_status))
         return(self)
     def finalize_attachment(self, attachment, result, user_dict):
+        if attachment['variable_name']:
+            try:
+                existing_object = eval(attachment['variable_name'], user_dict)
+                for doc_format in ['pdf', 'rtf', 'docx', 'tex', 'html']:
+                    if hasattr(existing_object, doc_format):
+                        the_file = getattr(existing_object, doc_format)
+                        for key in ['extension', 'mimetype', 'content', 'markdown']:
+                            if hasattr(the_file, key):
+                                result[key][doc_format] = getattr(the_file, key)
+                        if hasattr(the_file, 'number'):
+                            result['file'][doc_format] = the_file.number
+                #logmessage("finalize_attachment: returning " + attachment['variable_name'] + " from cache")
+                for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a']:
+                    if key in result:
+                        del result[key]
+                return result
+            except:
+                pass
+            #logmessage("finalize_attachment: " + attachment['variable_name'] + " was not in cache")
         for doc_format in result['formats_to_use']:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options']:
@@ -2376,14 +2395,15 @@ class Question:
                         docassemble.base.functions.reset_context()
                         docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                         result['template'].save(docx_file.name)
-                        del result['template']
-                        del result['field_data']
                         if 'docx' in result['formats_to_use']:
                             result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)
                         if 'pdf' in result['formats_to_use']:
                             pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
                             docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'])
                             result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
+                        for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a']:
+                            if key in result:
+                                del result[key]
                 else:
                     converter = MyPandoc(pdfa=result['convert_to_pdf_a'])
                     converter.output_format = doc_format
@@ -2436,9 +2456,24 @@ class Question:
                 # file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
                 if result['file'][doc_format] is None:
                     raise Exception("Could not save numbered file")
-                string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + '.' + doc_format) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "')"
+                if 'content' in result and doc_format in result['content']:
+                    content_string = ', content=' + repr(result['content'][doc_format])
+                else:
+                    content_string = ''
+                if 'markdown' in result and doc_format in result['markdown']:
+                    markdown_string = ', markdown=' + repr(result['markdown'][doc_format])
+                else:
+                    markdown_string = ''
+                string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + '.' + doc_format) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + ")"
                 #logmessage("Executing " + string + "\n")
                 exec(string, user_dict)
+            for doc_format in result['content']:
+                # logmessage("Considering " + doc_format)
+                if doc_format not in result['file']:
+                    variable_string = attachment['variable_name'] + '.' + doc_format
+                    # logmessage("Setting " + variable_string)
+                    string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ', markdown=' + repr(result['markdown'][doc_format]) + ', content=' + repr(result['content'][doc_format]) + ")"
+                    exec(string, user_dict)
         return(result)
     def prepare_attachment(self, attachment, user_dict, **kwargs):
         if 'language' in attachment['options']:
@@ -2666,6 +2701,7 @@ class Interview:
         self.sections = dict()
         self.names_used = set()
         self.attachment_options = dict()
+        self.attachment_index = 0
         self.external_files = dict()
         self.calls_process_action = False
         self.uses_action = False
@@ -2712,7 +2748,9 @@ class Interview:
                 title['short'] = metadata['short title'].rstrip()
         self.title = title
         return self.title
-                
+    def next_attachment_number(self):
+        self.attachment_index += 1
+        return(self.attachment_index - 1)
     def next_number(self):
         self.question_index += 1
         return(self.question_index - 1)
@@ -2776,11 +2814,16 @@ class Interview:
         return result
     def assemble(self, user_dict, *args):
         #sys.stderr.write("assemble\n")
+        #logmessage("assemble: starting")
         user_dict['_internal']['tracker'] += 1
         if len(args):
             interview_status = args[0]
         else:
             interview_status = InterviewStatus()
+        if 'docvar' not in user_dict['_internal']: # waste of CPU cycles; eventually take out!
+            user_dict['_internal']['docvar'] = dict()
+        if 'doc_cache' not in user_dict['_internal']: # waste of CPU cycles; eventually take out!
+            user_dict['_internal']['doc_cache'] = dict()
         if interview_status.current_info['url'] is not None:
             user_dict['_internal']['url'] = interview_status.current_info['url']
         interview_status.set_tracker(user_dict['_internal']['tracker'])
@@ -2791,7 +2834,7 @@ class Interview:
         docassemble.base.functions.this_thread.interview = self
         docassemble.base.functions.this_thread.interview_status = interview_status
         docassemble.base.functions.this_thread.internal = user_dict['_internal']
-        if 'nav' not in user_dict:
+        if 'nav' not in user_dict: # waste of CPU cycles; eventually take out!
             user_dict['nav'] = docassemble.base.functions.DANav()
         if user_dict['nav'].sections is None:
             user_dict['nav'].sections = self.sections
@@ -3066,7 +3109,7 @@ class Interview:
                 docassemble.base.functions.reset_context()
                 #if debug:
                 #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
-                logmessage("I am going to execute " + str(code_error.compute))
+                #logmessage("I am going to execute " + str(code_error.compute))
                 exec(code_error.compute, user_dict)
             except SyntaxException as qError:
                 docassemble.base.functions.reset_context()

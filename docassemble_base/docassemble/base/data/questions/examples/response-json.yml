@@ -1,14 +1,8 @@
 metadata:
   title: JSON response
   example start: 1
-  example end: 7
+  example end: 4
   documentation: "https://docassemble.org/docs/functions.html#response"
----
-imports:
-  - json
----
-modules:
-  - docassemble.base.util
 ---
 objects:
   - user: Individual
@@ -17,14 +11,10 @@ mandatory: True
 code: |
   multi_user = True
 ---
-initial: True
-code: |
-  process_action()
----
 event: query_fruit
 code: |
   data = dict(fruit=favorite_fruit, slices=number_of_slices)
-  response(json.dumps(data), content_type="application/json")
+  json_response(data)
 ---
 mandatory: True
 question: |

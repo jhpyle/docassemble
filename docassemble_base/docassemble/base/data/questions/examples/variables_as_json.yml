@@ -2,19 +2,12 @@ metadata:
   title: Variables as JSON
   short title: JSON variables
   documentation: "https://docassemble.org/docs/functions.html#variables_as_json"
-  example start: 2
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 3
 ---
 mandatory: True
 code: |
   multi_user = True
----
-initial: True
-code: |
-  process_action()
 ---
 event: query_variables
 code: |

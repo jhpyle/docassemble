@@ -6348,7 +6348,10 @@ def serve_stored_file(uid, number, filename, extension):
     number = re.sub(r'[^0-9]', '', str(number))
     if not can_access_file_number(number, uid=uid):
         abort(404)
-    file_info = get_info_from_file_number(number, privileged=True)
+    try:
+        file_info = get_info_from_file_number(number, privileged=True)
+    except:
+        abort(404)
     if 'path' not in file_info:
         abort(404)
     else:
@@ -6368,7 +6371,10 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
             abort(404)
         the_file = SavedFile(number)
     else:
-        file_info = get_info_from_file_number(number, privileged=privileged)
+        try:
+            file_info = get_info_from_file_number(number, privileged=privileged)
+        except:
+            abort(404)
         if 'path' not in file_info:
             abort(404)
         else:
@@ -6392,7 +6398,10 @@ def serve_uploaded_file_with_extension(number, extension):
             abort(404)
         the_file = SavedFile(number)
     else:
-        file_info = get_info_from_file_number(number, privileged=privileged)
+        try:
+            file_info = get_info_from_file_number(number, privileged=privileged)
+        except:
+            abort(404)
         if 'path' not in file_info:
             abort(404)
         else:
@@ -6411,7 +6420,10 @@ def serve_uploaded_file(number):
         privileged = True
     else:
         privileged = False
-    file_info = get_info_from_file_number(number, privileged=privileged)
+    try:
+        file_info = get_info_from_file_number(number, privileged=privileged)
+    except:
+        abort(404)
     #file_info = get_info_from_file_reference(number)
     if 'path' not in file_info:
         abort(404)
@@ -6430,7 +6442,10 @@ def serve_uploaded_page(number, page):
         privileged = True
     else:
         privileged = False
-    file_info = get_info_from_file_number(number, privileged=privileged)
+    try:
+        file_info = get_info_from_file_number(number, privileged=privileged)
+    except:
+        abort(404)
     if 'path' not in file_info:
         abort(404)
     else:
@@ -6452,7 +6467,10 @@ def serve_uploaded_pagescreen(number, page):
         privileged = True
     else:
         privileged = False
-    file_info = get_info_from_file_number(number, privileged=privileged)
+    try:
+        file_info = get_info_from_file_number(number, privileged=privileged)
+    except:
+        abort(404)
     if 'path' not in file_info:
         logmessage('serve_uploaded_pagescreen: no access to file number ' + str(number))
         abort(404)

@@ -1452,6 +1452,10 @@ class DAFile(DAObject):
             self.mimetype = kwargs['mimetype']
         if 'extension' in kwargs:
             self.extension = kwargs['extension']
+        if 'content' in kwargs:
+            self.content = kwargs['content']
+        if 'markdown' in kwargs:
+            self.markdown = kwargs['markdown']
         if 'number' in kwargs:
             self.number = kwargs['number']
             self.ok = True

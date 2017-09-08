@@ -1,0 +1,108 @@
+metadata:
+  title: Fill fields in DOCX templates
+  short title: DOCX
+  documentation: "https://docassemble.org/docs/documents.html#docx template file"
+  example start: 11
+  example end: 11
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  user: Individual
+  adverse_party: Individual
+  seeds_of_fruit: DADict
+---
+question: |
+  Assembling document from .docx
+  templates
+subquestion: |
+  This interview will fill fields in
+  two .docx templates.  You can
+  [download the first template]
+  and the [second template].
+
+  [download the first template]: ${ url_of('letter_template.docx') }
+  
+  [second template]: ${ url_of('table_template.docx') }
+field: introduction_shown
+---
+question: |
+  What is your name?
+fields:
+  - First Name: user.name.first
+  - Last Name: user.name.last
+---
+question: |
+  What is the adverse party's name?
+fields:
+  - First Name: adverse_party.name.first
+  - Last Name: adverse_party.name.last
+---
+question: |
+  What is the address of ${ adverse_party }?
+fields:
+  - Address: adverse_party.address.address
+  - Unit: adverse_party.address.unit
+    required: False
+  - City: adverse_party.address.city
+  - State: adverse_party.address.state
+    code: |
+      states_list()
+  - Zip: adverse_party.address.zip
+    required: False
+---
+question: |
+  What the subject of your complaint?
+field: subject_matter
+choices:
+  - world peace
+  - overpriced coffee
+  - so many channels, nothing on
+  - youth unemployment
+---
+question: |
+  Please sign your name below.
+subquestion: |
+  Your signature will be added to the letter.
+signature: user.signature
+under: |
+  ${ user.name }
+---
+template: phone_number
+content: |
+  \_\_\_Blah\_\_\_
+#code: |
+#  phone_number = "202-555-1234"
+---
+mandatory: true
+code: |
+  seeds_of_fruit.there_are_any = True
+  introduction_shown
+---
+question: |
+  Tell me about a fruit.
+fields:
+  - Name: seeds_of_fruit.new_item_name
+  - Seeds: seeds_of_fruit.new_item_value
+    datatype: integer
+    min: 0
+---
+question: |
+  Are there any other fruits you would
+  like to describe?
+yesno: seeds_of_fruit.there_is_another
+---
+mandatory: True
+question: |
+  Here are your documents.
+attachments:
+  - name: Your letter
+    filename: letter
+    docx template file: letter_template.docx
+  - name: Your table
+    filename: table
+    docx template file: table_template.docx
+---
+features:
+  pdf/a: True

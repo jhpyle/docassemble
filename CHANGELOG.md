@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.1.49] - 2017-09-07
+### Added
+- Additional document caching feature.
+### Fixed
+- Problem with caching of certain document types.
+
 ## [0.1.48] - 2017-09-06
 ### Added
 - Option for `go full screen` that limits behavior to mobile only.
