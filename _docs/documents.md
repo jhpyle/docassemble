@@ -1070,6 +1070,19 @@ Including `allow emailing: False` will disable this:
 
 {% include side-by-side.html demo="allow-emailing-false" %}
 
+# <a name="caching"></a>Document caching and regeneration
+
+Since document assembly can take the server a long time,
+**docassemble** uses caching to avoid assembling the same document
+more than once.
+
+In most situations, this is a welcome feature.  However, it might not
+always be what you want.  This interview demonstrates how the document
+caching works.
+
+{% include side-by-side.html demo="document-cache" %}
+
+
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [YAML]: https://en.wikipedia.org/wiki/YAML

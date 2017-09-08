@@ -175,7 +175,7 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   tesseract-ocr-vie build-essential nodejs exim4-daemon-heavy \
   libsvm3 libsvm-dev liblinear3 liblinear-dev libzbar-dev \
   cm-super libgs-dev ghostscript texlive-extra-utils \
-  libmysqlclient-dev
+  libmysqlclient-dev python-passlib
 {% endhighlight %}
 
 The libraries `libcurl4-openssl-dev` and `libssl-dev` are particularly
