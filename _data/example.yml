@@ -1279,6 +1279,14 @@
   mandatory: true
   code: |
     introduction_shown
+"docx-template-multiple": |-
+  question: |
+    Tell me about a fruit.
+  fields:
+    - Name: seeds_of_fruit.new_item_name
+    - Seeds: seeds_of_fruit.new_item_value
+      datatype: integer
+      min: 0
 "docx-template-table": |-
   objects:
     seeds_of_fruit: DADict
@@ -5570,16 +5578,15 @@
   mandatory: True
   code: |
     response("Hello, world!")
-"response-json": "imports:\n  - json\n---\nmodules:\n  - docassemble.base.util\n---\n\
-  objects:\n  - user: Individual\n---\nmandatory: True\ncode: |\n  multi_user = True\n\
-  ---\ninitial: True\ncode: |\n  process_action()\n---\nevent: query_fruit\ncode:\
-  \ |\n  data = dict(fruit=favorite_fruit, slices=number_of_slices)\n  response(json.dumps(data),\
-  \ content_type=\"application/json\")\n---\nmandatory: True\nquestion: |\n  You currently\
-  \ have\n  ${ nice_number(number_of_slices) }\n  ${ noun_plural('slice', number_of_slices)\
-  \ }\n  of\n  ${ noun_singular(favorite_fruit) }.\nsubquestion: |\n  Use\n  [this\
-  \ link](${ interview_url_action('query_fruit') })\n  to query the information from\n\
-  \  another application.\n\n  You can also change the \n  [fruit](${ url_action('favorite_fruit')\
-  \ })\n  and the\n  [number of slices](${ url_action('number_of_slices') })."
+"response-json": "objects:\n  - user: Individual\n---\nmandatory: True\ncode: |\n\
+  \  multi_user = True\n---\nevent: query_fruit\ncode: |\n  data = dict(fruit=favorite_fruit,\
+  \ slices=number_of_slices)\n  json_response(data)\n---\nmandatory: True\nquestion:\
+  \ |\n  You currently have\n  ${ nice_number(number_of_slices) }\n  ${ noun_plural('slice',\
+  \ number_of_slices) }\n  of\n  ${ noun_singular(favorite_fruit) }.\nsubquestion:\
+  \ |\n  Use\n  [this link](${ interview_url_action('query_fruit') })\n  to query\
+  \ the information from\n  another application.\n\n  You can also change the \n \
+  \ [fruit](${ url_action('favorite_fruit') })\n  and the\n  [number of slices](${\
+  \ url_action('number_of_slices') })."
 "response-svg": |-
   sets: all_done
   code: |
@@ -6741,14 +6748,13 @@
     Your favorite fruit is
     ${ value('favorite_fruit') }.
   mandatory: True
-"variables_as_json": "mandatory: True\ncode: |\n  multi_user = True\n---\ninitial:\
-  \ True\ncode: |\n  process_action()\n---\nevent: query_variables\ncode: |\n  variables_as_json()\n\
-  ---\nmandatory: True\nquestion: |\n  You currently have\n  ${ nice_number(number_of_slices)\
-  \ }\n  ${ noun_plural('slice', number_of_slices) }\n  of\n  ${ noun_singular(favorite_fruit)\
-  \ }.\nsubquestion: |\n  Use\n  [this link](${ interview_url_action('query_variables')\
-  \ })\n  to query the information from\n  another application.\n\n  You can also\
-  \ change the \n  [fruit](${ url_action('favorite_fruit') })\n  and the\n  [number\
-  \ of slices](${ url_action('number_of_slices') })."
+"variables_as_json": "mandatory: True\ncode: |\n  multi_user = True\n---\nevent: query_variables\n\
+  code: |\n  variables_as_json()\n---\nmandatory: True\nquestion: |\n  You currently\
+  \ have\n  ${ nice_number(number_of_slices) }\n  ${ noun_plural('slice', number_of_slices)\
+  \ }\n  of\n  ${ noun_singular(favorite_fruit) }.\nsubquestion: |\n  Use\n  [this\
+  \ link](${ interview_url_action('query_variables') })\n  to query the information\
+  \ from\n  another application.\n\n  You can also change the \n  [fruit](${ url_action('favorite_fruit')\
+  \ })\n  and the\n  [number of slices](${ url_action('number_of_slices') })."
 "video": |-
   field: ready_to_proceed
   question: |
