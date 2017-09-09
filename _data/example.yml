@@ -1080,6 +1080,14 @@
         ${ client } is entitled to
         benefits plan ${ benefits }.
   mandatory: True
+"document-cache": |-
+  modules:
+    - docassemble.base.util
+  ---
+  question: |
+    What is your name?
+  fields:
+    First Name: firstname
 "document-docx": "question: Here is your document.\nattachments:\n  - name: Summary\
   \ of Benefits\n    filename: benefits_summary\n    valid formats:\n      - docx\n\
   \      - pdf    \n    content: |\n      [BOLDCENTER] Summary of Benefits\n\n   \
