@@ -1,0 +1,90 @@
+metadata:
+  title: Document caching
+  short title: Cache
+  documentation: "https://docassemble.org/docs/documents.html#caching"
+  example start: 2
+  example end: 8
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  What is your name?
+fields:
+  First Name: firstname
+---
+mandatory: True
+field: first_round
+question: |
+  Here are your documents, ${ firstname }.
+subquestion: |
+  Look at the Preview tab of each
+  document and note the time.
+  This is the time the document
+  was generated.
+allow emailing: False
+attachments:
+  - name: Apples
+    filename: apples
+    variable name: apples
+    content: |
+      ${ firstname },
+
+      Apples are tasty as of
+      ${ format_time(current_datetime(), format='long') }.
+  - name: Oranges
+    filename: oranges
+    variable name: oranges
+    content: |
+      ${ firstname },
+
+      Oranges are tasty as of
+      ${ format_time(current_datetime(), format='long') }.
+---
+attachment:
+  name: Grapes
+  filename: grapes
+  variable name: grapes
+  content: |
+      ${ firstname },
+
+      Grapes are tasty as of
+      ${ format_time(current_datetime(), format='long') }.
+---
+mandatory: True
+field: second_round
+question: |
+  Here is another set of documents,
+  ${ firstname }.
+subquestion: |
+  You saw the Apples document on the
+  previous screen.  The Grapes
+  document is new.  The Apples
+  document has not changed.
+  
+  When you press Continue, I will ask
+  you again for your name.  Put in a
+  different name this time.
+allow emailing: False
+attachment code: |
+  [apples, grapes]
+---
+mandatory: True
+code: |
+  del firstname
+---
+mandatory: True
+code: |
+  firstname
+---
+mandatory: True
+question: |
+  Here is your final set of documents,
+  ${ firstname }.
+subquestion: |
+  Note that even though your name
+  changed, the documents did not.
+allow emailing: False
+attachment code: |
+  [apples, oranges, grapes]
+  

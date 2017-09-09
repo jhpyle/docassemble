@@ -895,12 +895,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
             output += '                <input type="hidden" name="_ml_info" value=' + myb64doublequote(json.dumps(ml_info)) + '/>\n'
         if len(files):
             output += '                <input type="hidden" name="_files" value=' + myb64doublequote(json.dumps(files)) + '/>\n'
-            init_string = '<script>'
-            for saveasname in files:
-                init_string += '$("#' + escape_for_jquery(saveasname) + '").fileinput();' + "\n"
-            init_string += '</script>'
+            #init_string = '<script>'
+            #for saveasname in files:
+            #    init_string += '$("#' + escape_for_jquery(saveasname) + '").fileinput();' + "\n"
+            #init_string += '</script>'
             #status.extra_scripts.append('<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + init_string)
-            status.extra_scripts.append(init_string)
+            #status.extra_scripts.append(init_string)
             #status.extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '                <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button></div>\n'
@@ -1234,9 +1234,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
               </div>
             </div>
 """
-            status.extra_scripts.append("""<script>
-      $("#emailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + repr(str(word("An e-mail address is required."))) + """, 'email': """ + repr(str(word("You need to enter a complete e-mail address."))) + """}}, 'errorClass': 'da-has-error'});
-    </script>""")
+#            status.extra_scripts.append("""<script>
+#      $("#emailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + repr(str(word("An e-mail address is required."))) + """, 'email': """ + repr(str(word("You need to enter a complete e-mail address."))) + """}}, 'errorClass': 'da-has-error'});
+#    </script>""")
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
     if status.question.question_type != "signature":
