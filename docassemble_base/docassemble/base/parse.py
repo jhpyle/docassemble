@@ -392,6 +392,8 @@ class Field:
             self.helptext = data['help']
         if 'validate' in data:
             self.validate = data['validate']
+        if 'max_image_size' in data:
+            self.max_image_size = data['max_image_size']
         if 'extras' in data:
             self.extras = data['extras']
         if 'selections' in data:
@@ -585,6 +587,8 @@ class Question:
                 self.interview.force_fullscreen = data['features']['go full screen']
             if 'navigation' in data['features'] and data['features']['navigation']:
                 self.interview.use_navigation = True
+            if 'maximum image size' in data['features']:
+                self.interview.max_image_size = eval(data['features']['maximum image size'])
             if 'pdf/a' in data['features'] and data['features']['pdf/a'] in [True, False]:
                 self.interview.use_pdf_a = data['features']['pdf/a']
             for key in ['javascript', 'css']:
@@ -1440,6 +1444,8 @@ class Question:
                                         field_info['extras']['ml_train'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
                             elif key == 'validate':
                                 field_info['validate'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
+                            elif 'datatype' in field and field['datatype'] in ['file', 'files', 'camera'] and key == 'maximum image size':
+                                field_info['max_image_size'] = {'compute': compile(unicode(field[key]), '', 'eval'), 'sourcecode': unicode(field[key])}
                             elif key == 'required':
                                 if type(field[key]) is bool:
                                     field_info['required'] = field[key]
@@ -2180,6 +2186,8 @@ class Question:
                     extras['required'][field.number] = field.required
                 else:
                     extras['required'][field.number] = eval(field.required['compute'], user_dict)
+                if hasattr(field, 'max_image_size') and hasattr(field, 'datatype') and field.datatype in ['file', 'files', 'camera']:
+                    extras['max_image_size'] = eval(field.max_image_size['compute'], user_dict)
                 if hasattr(field, 'validate'):
                     the_func = eval(field.validate['compute'], user_dict)
                     if hasattr(field, 'datatype'):
@@ -2698,6 +2706,7 @@ class Interview:
         self.force_fullscreen = False
         self.use_pdf_a = get_config('pdf/a', False)
         self.use_navigation = False
+        self.max_image_size = get_config('maximum image size', None)
         self.sections = dict()
         self.names_used = set()
         self.attachment_options = dict()

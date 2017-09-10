@@ -28,7 +28,7 @@ worker_controller = None
 def initialize_db():
     global worker_controller
     worker_controller = WorkerController()
-    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, get_attachment_info, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update
+    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update
     from docassemble.webapp.server import app as flaskapp
     import docassemble.base.functions
     import docassemble.base.interview_cache
@@ -40,7 +40,6 @@ def initialize_db():
     worker_controller.save_user_dict = save_user_dict
     worker_controller.obtain_lock = obtain_lock
     worker_controller.release_lock = release_lock
-    worker_controller.get_attachment_info = get_attachment_info
     worker_controller.Message = Message
     worker_controller.reset_user_dict = reset_user_dict
     worker_controller.da_send_mail = da_send_mail
@@ -125,72 +124,114 @@ def update_packages():
         return worker_controller.functions.ReturnValue(ok=False, error_message=str(e))
     sys.stderr.write("update_packages in worker: all done\n")
     return worker_controller.functions.ReturnValue(ok=False, error_message="Reached end")
-    
+
 @workerapp.task
-def email_attachments(yaml_filename, user_info, user_code, secret, url, url_root, email_address, question_number, include_editable):
+def email_attachments(user_code, email_address, attachment_info):
     success = False
     if worker_controller is None:
         initialize_db()
     worker_controller.functions.set_uid(user_code)
     with worker_controller.flaskapp.app_context():
         worker_controller.set_request_active(False)
-        the_user_dict, encrypted = worker_controller.get_attachment_info(user_code, question_number, yaml_filename, secret)
-        if the_user_dict is not None:
-            interview = worker_controller.interview_cache.get_interview(yaml_filename)
-            interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=user_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=encrypted, interface='worker', arguments=dict()))
-            interview.assemble(the_user_dict, interview_status)
-            if len(interview_status.attachments) > 0:
-                attached_file_count = 0
-                attachment_info = list()
-                for the_attachment in interview_status.attachments:
-                    file_formats = list()
-                    if 'pdf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
-                        file_formats.append('pdf')
-                    if include_editable or 'pdf' not in file_formats:
-                        if 'rtf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
-                            file_formats.append('rtf')
-                        if 'docx' in the_attachment['valid_formats']:
-                            file_formats.append('docx')
-                    for the_format in file_formats:
-                        the_filename = the_attachment['file'][the_format]
-                        if the_format == "pdf":
-                            mime_type = 'application/pdf'
-                        elif the_format == "rtf":
-                            mime_type = 'application/rtf'
-                        elif the_format == "docx":
-                            mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                        attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(the_format), 'path': str(the_filename), 'mimetype': str(mime_type), 'attachment': the_attachment})
-                        #sys.stderr.write("Need to attach to the e-mail a file called " + str(the_attachment['filename']) + '.' + str(the_format) + ", which is located on the server at " + str(the_filename) + ", with mime type " + str(mime_type) + "\n")
-                        attached_file_count += 1
-                if attached_file_count > 0:
-                    doc_names = list()
-                    for attach_info in attachment_info:
-                        if attach_info['attachment']['name'] not in doc_names:
-                            doc_names.append(attach_info['attachment']['name'])
-                    subject = worker_controller.functions.comma_and_list(doc_names)
-                    if len(doc_names) > 1:
-                        body = worker_controller.functions.word("Your documents, ") + " " + subject + worker_controller.functions.word(", are attached") + "."
-                    else:
-                        body = worker_controller.functions.word("Your document, ") + " " + subject + worker_controller.functions.word(", is attached") + "."
-                    html = "<p>" + body + "</p>"
-                    #sys.stderr.write("Need to send an e-mail with subject " + subject + " to " + str(email_address) + " with " + str(attached_file_count) + " attachment(s)\n")
-                    msg = worker_controller.Message(subject, recipients=[email_address], body=body, html=html)
-                    for attach_info in attachment_info:
-                        with open(attach_info['path'], 'rb') as fp:
-                            msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
-                    try:
-                        sys.stderr.write("Starting to send\n")
-                        worker_controller.da_send_mail(msg)
-                        sys.stderr.write("Finished sending\n")
-                        success = True
-                    except Exception as errmess:
-                        sys.stderr.write(str(errmess) + "\n")
-                        success = False
-    
+        doc_names = list()
+        for attach_info in attachment_info:
+            if attach_info['attachment']['name'] not in doc_names:
+                doc_names.append(attach_info['attachment']['name'])
+        subject = worker_controller.functions.comma_and_list(doc_names)
+        if len(doc_names) > 1:
+            body = worker_controller.functions.word("Your documents, ") + " " + subject + worker_controller.functions.word(", are attached") + "."
+        else:
+            body = worker_controller.functions.word("Your document, ") + " " + subject + worker_controller.functions.word(", is attached") + "."
+        html = "<p>" + body + "</p>"
+        msg = worker_controller.Message(subject, recipients=[email_address], body=body, html=html)
+        success_attach = True
+        for attach_info in attachment_info:
+            file_info = worker_controller.get_info_from_file_number(attach_info['number'])
+            if 'fullpath' in file_info:
+                with open(file_info['fullpath'], 'rb') as fp:
+                    msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
+            else:
+                success_attach = False
+        if success_attach:
+            try:
+                sys.stderr.write("Starting to send\n")
+                worker_controller.da_send_mail(msg)
+                sys.stderr.write("Finished sending\n")
+                success = True
+            except Exception as errmess:
+                sys.stderr.write(str(errmess) + "\n")
+                success = False
     if success:
         return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("E-mail was sent to") + " " + email_address, extra='flash')
     else:
         return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("Unable to send e-mail to") + " " + email_address, extra='flash')
+
+# @workerapp.task
+# def old_email_attachments(yaml_filename, user_info, user_code, secret, url, url_root, email_address, question_number, include_editable):
+#     success = False
+#     if worker_controller is None:
+#         initialize_db()
+#     worker_controller.functions.set_uid(user_code)
+#     with worker_controller.flaskapp.app_context():
+#         worker_controller.set_request_active(False)
+#         #the_user_dict, encrypted = worker_controller.get_attachment_info(user_code, question_number, yaml_filename, secret)
+#         steps, the_user_dict, is_encrypted = worker_controller.fetch_user_dict(user_code, yaml_filename, secret=secret)
+#         if the_user_dict is not None:
+#             interview = worker_controller.interview_cache.get_interview(yaml_filename)
+#             interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=user_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=encrypted, interface='worker', arguments=dict()))
+#             interview.assemble(the_user_dict, interview_status)
+#             if len(interview_status.attachments) > 0:
+#                 attached_file_count = 0
+#                 attachment_info = list()
+#                 for the_attachment in interview_status.attachments:
+#                     file_formats = list()
+#                     if 'pdf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
+#                         file_formats.append('pdf')
+#                     if include_editable or 'pdf' not in file_formats:
+#                         if 'rtf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
+#                             file_formats.append('rtf')
+#                         if 'docx' in the_attachment['valid_formats']:
+#                             file_formats.append('docx')
+#                     for the_format in file_formats:
+#                         the_filename = the_attachment['file'][the_format]
+#                         if the_format == "pdf":
+#                             mime_type = 'application/pdf'
+#                         elif the_format == "rtf":
+#                             mime_type = 'application/rtf'
+#                         elif the_format == "docx":
+#                             mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+#                         attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(the_format), 'path': str(the_filename), 'mimetype': str(mime_type), 'attachment': the_attachment})
+#                         #sys.stderr.write("Need to attach to the e-mail a file called " + str(the_attachment['filename']) + '.' + str(the_format) + ", which is located on the server at " + str(the_filename) + ", with mime type " + str(mime_type) + "\n")
+#                         attached_file_count += 1
+#                 if attached_file_count > 0:
+#                     doc_names = list()
+#                     for attach_info in attachment_info:
+#                         if attach_info['attachment']['name'] not in doc_names:
+#                             doc_names.append(attach_info['attachment']['name'])
+#                     subject = worker_controller.functions.comma_and_list(doc_names)
+#                     if len(doc_names) > 1:
+#                         body = worker_controller.functions.word("Your documents, ") + " " + subject + worker_controller.functions.word(", are attached") + "."
+#                     else:
+#                         body = worker_controller.functions.word("Your document, ") + " " + subject + worker_controller.functions.word(", is attached") + "."
+#                     html = "<p>" + body + "</p>"
+#                     #sys.stderr.write("Need to send an e-mail with subject " + subject + " to " + str(email_address) + " with " + str(attached_file_count) + " attachment(s)\n")
+#                     msg = worker_controller.Message(subject, recipients=[email_address], body=body, html=html)
+#                     for attach_info in attachment_info:
+#                         with open(attach_info['path'], 'rb') as fp:
+#                             msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
+#                     try:
+#                         sys.stderr.write("Starting to send\n")
+#                         worker_controller.da_send_mail(msg)
+#                         sys.stderr.write("Finished sending\n")
+#                         success = True
+#                     except Exception as errmess:
+#                         sys.stderr.write(str(errmess) + "\n")
+#                         success = False
+    
+#     if success:
+#         return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("E-mail was sent to") + " " + email_address, extra='flash')
+#     else:
+#         return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("Unable to send e-mail to") + " " + email_address, extra='flash')
 
 @workerapp.task
 def background_action(yaml_filename, user_info, session_code, secret, url, url_root, action, extra=None):

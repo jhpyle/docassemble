@@ -4,7 +4,7 @@ from docassemble.base.config import daconfig, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.base.logger import logmessage
 from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, ObjectStorage, Shortener, MachineLearning
+from docassemble.webapp.core.models import Uploads, SpeakList, ObjectStorage, Shortener, MachineLearning #Attachments
 from docassemble.base.generate_key import random_string
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
@@ -402,8 +402,8 @@ def reset_user_dict(user_code, filename):
         old_file.delete()
     Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).delete()
     db.session.commit()
-    Attachments.query.filter_by(key=user_code, filename=filename).delete()
-    db.session.commit()
+    # Attachments.query.filter_by(key=user_code, filename=filename).delete()
+    # db.session.commit()
     SpeakList.query.filter_by(key=user_code, filename=filename).delete()
     db.session.commit()
     ChatLog.query.filter_by(key=user_code, filename=filename).delete()

@@ -848,6 +848,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                 if (field.datatype in ['files', 'file', 'camera', 'camcorder', 'microphone']):
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(field.saveas)
+                    validation_rules['messages'][field.saveas] = {'required': word("You must provide a file.")}
                 if field.datatype in ['boolean', 'threestate']:
                     checkboxes.append(field.saveas)
                 elif field.datatype in ['checkboxes', 'object_checkboxes']:
@@ -1224,7 +1225,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                 output += """
                         <div class="form-group"><div class="col-sm-4"></div><div class="col-sm-8"><input alt="' + word ("Check box") + ", " + word('Include ' + editable_name + ' for editing') + '" type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
             output += """
-                        <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="_email_attachments" value="1"/><input type="hidden" name="_question_number" value="' + str(status.question.number) + '"/>'
+                        <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="_email_attachments" value="1"/>'#<input type="hidden" name="_question_number" value="' + str(status.question.number) + '"/>'
             output += """
                       </fieldset>
                       <input type="hidden" name="csrf_token" value=""" + '"' + server.generate_csrf() + '"' + """/>
@@ -1441,6 +1442,15 @@ def add_validation(extra_scripts, validation_rules, field_error):
         }
         else if (element.hasClass('input-embedded')){
           error.insertAfter(element.parent());
+        }
+        else if (element.hasClass('dafile')){
+          var fileContainer = $(element).parents(".file-input").first();
+          if (fileContainer.length > 0){
+            $(fileContainer).append(error);
+          }
+          else{
+            error.insertAfter(element.parent());
+          }
         }
         else if (element.parent('.input-group').length) {
           error.insertAfter(element.parent());
@@ -1697,10 +1707,16 @@ def input_for(status, field, wide=False, embedded=False):
                 accept = ' accept="audio/*;capture=microphone"'
             else:
                 accept = ''
+            maximagesize = ''
+            if 'max_image_size' in status.extras:
+                if status.extras['max_image_size']:
+                    maximagesize = 'data-maximagesize="' + str(int(status.extras['max_image_size'])) + '" '
+            elif status.question.interview.max_image_size:
+                maximagesize = 'data-maximagesize="' + str(int(status.question.interview.max_image_size)) + '" '
             if embedded:
-                output += '<input alt="' + word("You can upload a file here") + '" type="file" class="file file-embedded" name="' + escape_id(saveas_string) + '"' + title_text + ' id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/>'
+                output += '<input alt="' + word("You can upload a file here") + '" type="file" class="dafile file-embedded" name="' + escape_id(saveas_string) + '"' + title_text + ' id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/>'
             else:
-                output += '<input alt="' + word("You can upload a file here") + '" type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
+                output += '<input alt="' + word("You can upload a file here") + '" type="file" class="dafile" data-show-upload="false" ' + maximagesize + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
             #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
         elif field.datatype == 'range':
             ok = True

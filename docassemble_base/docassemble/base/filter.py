@@ -853,17 +853,17 @@ def image_url_string(match, emoji=False, question=None, playground=False):
         if the_url is None:
             return ('[ERROR: File reference ' + str(file_reference) + ' cannot be displayed]')
         if file_info.get('extension', '') in ['png', 'jpg', 'gif', 'svg', 'jpe', 'jpeg']:
-            return('<img class="daicon" style="' + width_string + '" src="' + the_url + '"/>')
+            return('<img class="daicon daimageref" style="' + width_string + '" src="' + the_url + '"/>')
         elif file_info['extension'] == 'pdf':
             image_url = server.url_finder(file_reference, size="screen", page=1, _question=question, ext=file_info.get('extension', None))
             if image_url is None:
                 return ('[ERROR: File reference ' + str(file_reference) + ' cannot be displayed]')
-            output = '<a href="' + the_url + '"><img class="daicon" style="' + width_string + '" src="' + image_url + '"/></a>'
+            output = '<a class="daimageref" href="' + the_url + '"><img class="daicon" style="' + width_string + '" src="' + image_url + '"/></a>'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + str(file_info['pages']) + " " + word('pages') + ")"
             return(output)
         else:
-            return('<a href="' + the_url + '">' + file_info['filename'] + '</a>')
+            return('<a class="daimageref" href="' + the_url + '">' + file_info['filename'] + '</a>')
     else:
         return('[Invalid image reference; reference=' + str(file_reference) + ', width=' + str(width) + ', filename=' + file_info.get('filename', 'unknown') + ']')
 

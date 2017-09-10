@@ -1,0 +1,21 @@
+metadata:
+  title: Maximum image size
+  short title: Resize
+  example start: 1
+  example end: 1
+  documentation: "https://docassemble.org/docs/initial.html#maximum image size"
+---
+features:
+  maximum image size: 100
+---
+question: |
+  Please upload a picture of yourself.
+fields:
+  - Picture: user_picture
+    datatype: file
+---
+question: |
+  You're so small!
+subquestion: |
+  ${ user_picture }
+mandatory: True

@@ -1336,3 +1336,7 @@ div.danavbar {
 .dainterviewhaserror:focus {
     color: #843534;
 }
+
+.daimageref + .daimageref {
+    margin-left: 5px;
+}

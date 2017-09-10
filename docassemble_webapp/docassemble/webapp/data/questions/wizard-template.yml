@@ -333,6 +333,7 @@ question: |
 fields:
   - no label: x.additional_fields
     datatype: checkboxes
+    none of the above: False
     code: |
       x.other_variables()
 ---

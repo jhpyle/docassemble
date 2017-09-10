@@ -499,7 +499,7 @@ from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVar
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
 from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning
+from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning #Attachments
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
@@ -842,16 +842,16 @@ def decrypt_session(secret, user_code=None, filename=None):
         changed = True
     if changed:
         db.session.commit()
-    changed = False
-    for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
-        if record.dictionary:
-            the_dict = decrypt_dictionary(record.dictionary, secret)
-            record.dictionary = pack_dictionary(the_dict)
-            record.encrypted = False
-            record.modtime = nowtime
-            changed = True
-    if changed:
-        db.session.commit()
+    # changed = False
+    # for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
+    #     if record.dictionary:
+    #         the_dict = decrypt_dictionary(record.dictionary, secret)
+    #         record.dictionary = pack_dictionary(the_dict)
+    #         record.encrypted = False
+    #         record.modtime = nowtime
+    #         changed = True
+    # if changed:
+    #     db.session.commit()
     changed = False
     for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).all():
         the_dict = decrypt_dictionary(record.dictionary, secret)
@@ -884,14 +884,14 @@ def encrypt_session(secret, user_code=None, filename=None):
         changed = True
     if changed:
         db.session.commit()
-    changed = False
-    for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=False).all():
-        if record.dictionary:
-            the_dict = unpack_dictionary(record.dictionary)
-            record.dictionary = encrypt_dictionary(the_dict, secret)
-            record.encrypted = True
-            record.modtime = nowtime
-            changed = True
+    # changed = False
+    # for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=False).all():
+    #     if record.dictionary:
+    #         the_dict = unpack_dictionary(record.dictionary)
+    #         record.dictionary = encrypt_dictionary(the_dict, secret)
+    #         record.encrypted = True
+    #         record.modtime = nowtime
+    #         changed = True
     if changed:
         db.session.commit()
     changed = False
@@ -932,14 +932,14 @@ def substitute_secret(oldsecret, newsecret):
             changed = True
         if changed:
             db.session.commit()
-        changed = False
-        for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
-            if record.dictionary:
-                the_dict = decrypt_dictionary(record.dictionary, oldsecret)
-                record.dictionary = encrypt_dictionary(the_dict, newsecret)
-                changed = True
-        if changed:
-            db.session.commit()
+        # changed = False
+        # for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
+        #     if record.dictionary:
+        #         the_dict = decrypt_dictionary(record.dictionary, oldsecret)
+        #         record.dictionary = encrypt_dictionary(the_dict, newsecret)
+        #         changed = True
+        # if changed:
+        #     db.session.commit()
         changed = False
         for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).all():
             #logmessage("substitute_secret: record was encrypted")
@@ -1518,26 +1518,26 @@ def get_unique_name(filename, secret):
         db.session.commit()
         return newname
 
-def get_attachment_info(the_user_code, question_number, filename, secret):
-    the_user_dict = None
-    existing_entry = Attachments.query.filter_by(key=the_user_code, question=question_number, filename=filename).first()
-    if existing_entry and existing_entry.dictionary:
-        if existing_entry.encrypted:
-            the_user_dict = decrypt_dictionary(existing_entry.dictionary, secret)
-        else:
-            the_user_dict = unpack_dictionary(existing_entry.dictionary)
-    return the_user_dict, existing_entry.encrypted
+# def get_attachment_info(the_user_code, question_number, filename, secret):
+#     the_user_dict = None
+#     existing_entry = Attachments.query.filter_by(key=the_user_code, question=question_number, filename=filename).first()
+#     if existing_entry and existing_entry.dictionary:
+#         if existing_entry.encrypted:
+#             the_user_dict = decrypt_dictionary(existing_entry.dictionary, secret)
+#         else:
+#             the_user_dict = unpack_dictionary(existing_entry.dictionary)
+#     return the_user_dict, existing_entry.encrypted
 
-def update_attachment_info(the_user_code, the_user_dict, the_interview_status, secret, encrypt=True):
-    Attachments.query.filter_by(key=the_user_code, question=the_interview_status.question.number, filename=the_interview_status.question.interview.source.path).delete()
-    db.session.commit()
-    if encrypt:
-        new_attachment = Attachments(key=the_user_code, dictionary=encrypt_dictionary(the_user_dict, secret), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path, encrypted=True)
-    else:
-        new_attachment = Attachments(key=the_user_code, dictionary=pack_dictionary(the_user_dict), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path, encrypted=False)
-    db.session.add(new_attachment)
-    db.session.commit()
-    return
+# def update_attachment_info(the_user_code, the_user_dict, the_interview_status, secret, encrypt=True):
+#     Attachments.query.filter_by(key=the_user_code, question=the_interview_status.question.number, filename=the_interview_status.question.interview.source.path).delete()
+#     db.session.commit()
+#     if encrypt:
+#         new_attachment = Attachments(key=the_user_code, dictionary=encrypt_dictionary(the_user_dict, secret), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path, encrypted=True)
+#     else:
+#         new_attachment = Attachments(key=the_user_code, dictionary=pack_dictionary(the_user_dict), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path, encrypted=False)
+#     db.session.add(new_attachment)
+#     db.session.commit()
+#     return
 
 def obtain_lock(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
@@ -3646,7 +3646,7 @@ def index():
             #logmessage("index: change in yaml filename detected")
             show_flash = False
             session['i'] = yaml_filename
-            if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base"):
+            if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo"):
                 show_flash = True
             if session_parameter is None:
                 #logmessage("index: change in yaml filename detected and session_parameter is None")
@@ -3804,63 +3804,63 @@ def index():
         the_user_id = 't' + str(session['tempuser'])
     else:
         the_user_id = current_user.id
-    if '_email_attachments' in post_data and '_attachment_email_address' in post_data and '_question_number' in post_data:
-        success = False
-        question_number = post_data['_question_number']
-        attachment_email_address = post_data['_attachment_email_address']
-        if '_attachment_include_editable' in post_data:
-            if post_data['_attachment_include_editable'] == 'True':
-                include_editable = True
-            else:
-                include_editable = False
-            del post_data['_attachment_include_editable']
-        else:
-            include_editable = False
-        del post_data['_question_number']
-        del post_data['_email_attachments']
-        del post_data['_attachment_email_address']
-        ci = current_info(yaml=yaml_filename, req=request)
-        worker_key = 'da:worker:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-        for email_address in re.split(r' *[,;] *', attachment_email_address.strip()):
-            try:
-                result = docassemble.webapp.worker.email_attachments.delay(yaml_filename, ci['user'], user_code, secret, ci['url'], ci['url_root'], email_address, question_number, include_editable)
-                r.rpush(worker_key, result.id)
-                success = True
-            except Exception as errmess:
-                success = False
-                logmessage("index: failed with " + str(errmess))
-                break
-        if success:
-            flash(word("Your documents will be e-mailed to") + " " + str(attachment_email_address) + ".", 'success')
-        else:
-            flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
+    # if '_email_attachments' in post_data and '_attachment_email_address' in post_data and '_question_number' in post_data:
+    #     success = False
+    #     question_number = post_data['_question_number']
+    #     attachment_email_address = post_data['_attachment_email_address']
+    #     if '_attachment_include_editable' in post_data:
+    #         if post_data['_attachment_include_editable'] == 'True':
+    #             include_editable = True
+    #         else:
+    #             include_editable = False
+    #         del post_data['_attachment_include_editable']
+    #     else:
+    #         include_editable = False
+    #     del post_data['_question_number']
+    #     del post_data['_email_attachments']
+    #     del post_data['_attachment_email_address']
+    #     ci = current_info(yaml=yaml_filename, req=request)
+    #     worker_key = 'da:worker:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+    #     for email_address in re.split(r' *[,;] *', attachment_email_address.strip()):
+    #         try:
+    #             result = docassemble.webapp.worker.email_attachments.delay(yaml_filename, ci['user'], user_code, secret, ci['url'], ci['url_root'], email_address, question_number, include_editable)
+    #             r.rpush(worker_key, result.id)
+    #             success = True
+    #         except Exception as errmess:
+    #             success = False
+    #             logmessage("index: failed with " + str(errmess))
+    #             break
+    #     if success:
+    #         flash(word("Your documents will be e-mailed to") + " " + str(attachment_email_address) + ".", 'success')
+    #     else:
+    #         flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
     if '_back_one' in post_data and steps > 1:
         steps, user_dict, is_encrypted = fetch_previous_user_dict(user_code, yaml_filename, secret)
         if encrypted != is_encrypted:
             encrypted = is_encrypted
             session['encrypted'] = encrypted
-    elif 'filename' in request.args:
-        the_user_dict, attachment_encrypted = get_attachment_info(user_code, request.args.get('question'), request.args.get('i'), secret)
-        if the_user_dict is not None:
-            interview = docassemble.base.interview_cache.get_interview(request.args.get('i'))
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=request.args.get('i'), req=request, action=action))
-            interview.assemble(the_user_dict, interview_status)
-            if len(interview_status.attachments) > 0:
-                the_attachment = interview_status.attachments[int(request.args.get('index'))]
-                the_file_number = the_attachment['file'][request.args.get('format')]
-                the_format = request.args.get('format')
-                if the_format == "pdf":
-                    mime_type = 'application/pdf'
-                elif the_format == "tex":
-                    mime_type = 'application/x-latex'
-                elif the_format == "rtf":
-                    mime_type = 'application/rtf'
-                elif the_format == "docx":
-                    mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                response = send_file(the_filename, mimetype=str(mime_type), as_attachment=True, attachment_filename=str(the_attachment['filename']) + '.' + str(the_format))
-                response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-                release_lock(user_code, yaml_filename)
-                return(response)
+    # elif 'filename' in request.args:
+    #     the_user_dict, attachment_encrypted = get_attachment_info(user_code, request.args.get('question'), request.args.get('i'), secret)
+    #     if the_user_dict is not None:
+    #         interview = docassemble.base.interview_cache.get_interview(request.args.get('i'))
+    #         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=request.args.get('i'), req=request, action=action))
+    #         interview.assemble(the_user_dict, interview_status)
+    #         if len(interview_status.attachments) > 0:
+    #             the_attachment = interview_status.attachments[int(request.args.get('index'))]
+    #             the_file_number = the_attachment['file'][request.args.get('format')]
+    #             the_format = request.args.get('format')
+    #             if the_format == "pdf":
+    #                 mime_type = 'application/pdf'
+    #             elif the_format == "tex":
+    #                 mime_type = 'application/x-latex'
+    #             elif the_format == "rtf":
+    #                 mime_type = 'application/rtf'
+    #             elif the_format == "docx":
+    #                 mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    #             response = send_file(the_filename, mimetype=str(mime_type), as_attachment=True, attachment_filename=str(the_attachment['filename']) + '.' + str(the_format))
+    #             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    #             release_lock(user_code, yaml_filename)
+    #             return(response)
     if '_checkboxes' in post_data:
         checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
         for checkbox_field in checkbox_fields:
@@ -3908,12 +3908,58 @@ def index():
     # if should_assemble and '_action_context' in post_data:
     #     action = json.loads(myb64unquote(post_data['_action_context']))
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location), tracker=user_dict['_internal']['tracker'])
+    if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
+        should_assemble = True
     if should_assemble or something_changed:
         interview.assemble(user_dict, interview_status)
         if '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
             logmessage("index: not the same question name: " + post_data['_question_name'] + " versus " + interview_status.question.name)
     changed = False
     error_messages = list()
+    if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
+        success = False
+        attachment_email_address = post_data['_attachment_email_address']
+        if '_attachment_include_editable' in post_data:
+            if post_data['_attachment_include_editable'] == 'True':
+                include_editable = True
+            else:
+                include_editable = False
+            del post_data['_attachment_include_editable']
+        else:
+            include_editable = False
+        del post_data['_email_attachments']
+        del post_data['_attachment_email_address']
+        if len(interview_status.attachments) > 0:
+            attached_file_count = 0
+            attachment_info = list()
+            for the_attachment in interview_status.attachments:
+                file_formats = list()
+                if 'pdf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
+                    file_formats.append('pdf')
+                if include_editable or 'pdf' not in file_formats:
+                    if 'rtf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
+                        file_formats.append('rtf')
+                    if 'docx' in the_attachment['valid_formats']:
+                        file_formats.append('docx')
+                for the_format in file_formats:
+                    attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(the_format), 'number': the_attachment['file'][the_format], 'mimetype': the_attachment['mimetype'][the_format], 'attachment': the_attachment})
+                    attached_file_count += 1
+            worker_key = 'da:worker:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+            for email_address in re.split(r' *[,;] *', attachment_email_address.strip()):
+                try:
+                    result = docassemble.webapp.worker.email_attachments.delay(user_code, email_address, attachment_info)
+                    r.rpush(worker_key, result.id)
+                    success = True
+                except Exception as errmess:
+                    success = False
+                    logmessage("index: failed with " + str(errmess))
+                    break
+            if success:
+                flash(word("Your documents will be e-mailed to") + " " + str(attachment_email_address) + ".", 'success')
+            else:
+                flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
+        else:
+            flash(word("Unable to find documents to e-mail."), 'error')
     if '_the_image' in post_data:
         file_field = from_safeid(post_data['_save_as']);
         if match_invalid.search(file_field):
@@ -3986,7 +4032,7 @@ def index():
         the_question = None
     known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action'] or orig_key.startswith('_ignore'):
+        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action'] or orig_key.startswith('_ignore'):
             continue
         try:
             key = myb64unquote(orig_key)
@@ -4009,7 +4055,7 @@ def index():
     field_error = dict()
     validated = True
     for orig_key in post_data:
-        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action'] or orig_key.startswith('_ignore'):
+        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action'] or orig_key.startswith('_ignore'):
             continue
         #logmessage("Got a key: " + key)
         data = post_data[orig_key]
@@ -4250,6 +4296,91 @@ def index():
                 error_messages.append(("error", the_error_message))
                 validated = False
     if validated:
+        if '_files_inline' in post_data:
+            fileDict = json.loads(myb64unquote(post_data['_files_inline']))
+            if type(fileDict) is not dict:
+                raise DAError("inline files was not a dict")
+            file_fields = fileDict['keys']
+            has_invalid_fields = False
+            should_assemble_now = False
+            for orig_file_field in file_fields:
+                try:
+                    file_field = from_safeid(orig_file_field)
+                except:
+                    error_messages.append(("error", "Error: Invalid file_field: " + orig_file_field))
+                    break
+                if match_invalid.search(file_field):
+                    has_invalid_fields = True
+                    error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                    break
+                if key_requires_preassembly.search(file_field):
+                    should_assemble_now = True
+            if not has_invalid_fields:
+                initial_string = 'import docassemble.base.core'
+                try:
+                    exec(initial_string, user_dict)
+                except Exception as errMess:
+                    error_messages.append(("error", "Error: " + str(errMess)))
+                if something_changed and should_assemble_now and not should_assemble:
+                    interview.assemble(user_dict, interview_status)
+                for orig_file_field_raw in file_fields:
+                    orig_file_field = orig_file_field_raw
+                    var_to_store = orig_file_field_raw
+                    if orig_file_field not in fileDict['values'] and len(known_varnames):
+                        for key, val in known_varnames.iteritems():
+                            if val == orig_file_field_raw:
+                                orig_file_field = key
+                                var_to_store = val
+                                break
+                    if orig_file_field in fileDict['values']:
+                        the_files = fileDict['values'][orig_file_field]
+                        if the_files:
+                            files_to_process = list()
+                            for the_file in the_files:
+                                filename = secure_filename(the_file['name'])
+                                file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
+                                extension, mimetype = get_ext_and_mimetype(filename)
+                                saved_file = SavedFile(file_number, extension=extension, fix=True)
+                                temp_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.' + extension, delete=False)
+                                start_index = 0
+                                char_index = 0
+                                for char in the_file['content']:
+                                    char_index += 1
+                                    if char == ',':
+                                        start_index = char_index
+                                        break
+                                temp_file.write(codecs.decode(the_file['content'][start_index:], 'base64'))
+                                temp_file.close()
+                                process_file(saved_file, temp_file.name, mimetype, extension)
+                                #sys.stderr.write("Upload was processed\n")
+                                files_to_process.append((filename, file_number, mimetype, extension))
+                            try:
+                                file_field = from_safeid(var_to_store)
+                            except:
+                                error_messages.append(("error", "Error: Invalid file_field: " + var_to_store))
+                                break
+                            if match_invalid.search(file_field):
+                                error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                                break
+                            if len(files_to_process) > 0:
+                                elements = list()
+                                indexno = 0
+                                for (filename, file_number, mimetype, extension) in files_to_process:
+                                    elements.append("docassemble.base.core.DAFile('" + file_field + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", make_pngs=True, mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
+                                    indexno += 1
+                                the_string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
+                            else:
+                                the_string = file_field + " = None"
+                            #logmessage("Doing " + the_string)
+                            try:
+                                exec(the_string, user_dict)
+                                if not changed:
+                                    steps += 1
+                                    user_dict['_internal']['steps'] = steps
+                                    changed = True
+                            except Exception as errMess:
+                                sys.stderr.write("Error: " + str(errMess) + "\n")
+                                error_messages.append(("error", "Error: " + str(errMess)))
         if '_files' in post_data:
             file_fields = json.loads(myb64unquote(post_data['_files'])) #post_data['_files'].split(",")
             has_invalid_fields = False
@@ -4342,9 +4473,9 @@ def index():
         session['language'] = current_language
     if not interview_status.can_go_back:
         user_dict['_internal']['steps_offset'] = steps
-    if len(interview_status.attachments) > 0:
-        #logmessage("Updating attachment info")
-        update_attachment_info(user_code, user_dict, interview_status, secret)
+    # if len(interview_status.attachments) > 0:
+    #     #logmessage("Updating attachment info")
+    #     update_attachment_info(user_code, user_dict, interview_status, secret)
     if interview_status.question.question_type == "review":
         next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
     else:
@@ -5025,7 +5156,6 @@ def index():
       var daChatRoles = """ + json.dumps(user_dict['_internal']['livehelp']['roles']) + """;
       var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['livehelp']['partner_roles']) + """;
       function daValidationHandler(form){
-        //PPP
         //form.submit();
         $("#daform").each(function(){
           $(this).find(':input').off('change', pushChanges);
@@ -5055,16 +5185,132 @@ def index():
           }
         }
         whichButton = null;
+        if (daSubmitter != null){
+          $('<input>').attr({
+            type: 'hidden',
+            name: daSubmitter.name,
+            value: daSubmitter.value
+          }).appendTo($(form));
+        }
+        if (daInformedChanged){
+          $("<input>").attr({
+            type: 'hidden',
+            name: 'informed',
+            value: Object.keys(daInformed).join(',')
+          }).appendTo($(form));
+        }
+        $('<input>').attr({
+          type: 'hidden',
+          name: 'ajax',
+          value: '1'
+        }).appendTo($(form));
+        daSpinnerTimeout = setTimeout(showSpinner, 1000);
         if ($('input[name="_files"]').length){
+          var filesToRead = 0;
+          var filesRead = 0;
+          var fileArray = {keys: Array(), values: Object()};
+          var newFileList = Array();
+          var file_list = JSON.parse(atob($('input[name="_files"]').val()));
+          var inline_file_list = Array();
+          for (var i = 0; i < file_list.length; i++){
+            var file_input = $('#' + file_list[i].replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1'))[0];
+            var max_size = $(file_input).data('maximagesize');
+            var hasImages = false;
+            if (typeof max_size != 'undefined'){
+              for (var j = 0; j < file_input.files.length; j++){
+                var the_file = file_input.files[j];
+                if (the_file.type.match(/image.*/)){
+                  hasImages = true;
+                }
+              }
+            }
+            if (hasImages){
+              for (var j = 0; j < file_input.files.length; j++){
+                var the_file = file_input.files[j];
+                filesToRead++;
+              }
+              inline_file_list.push(file_list[i]);
+            }
+            else{
+              newFileList.push(file_list[i]);
+            }
+          }
+          if (inline_file_list.length > 0){
+            if (newFileList.length == 0){
+              $('input[name="_files"]').remove();
+            }
+            else{
+              $('input[name="_files"]').val(btoa(JSON.stringify(newFileList)));
+            }
+            for (var i = 0; i < inline_file_list.length; i++){
+              fileArray.keys.push(inline_file_list[i])
+              fileArray.values[inline_file_list[i]] = Array()
+              var fileInfoList = fileArray.values[inline_file_list[i]];
+              var file_input = $('#' + inline_file_list[i].replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1'))[0];
+              var max_size = parseInt($(file_input).data('maximagesize'));
+              for (var j = 0; j < file_input.files.length; j++){
+                var the_file = file_input.files[j];
+                var tempFunc = function(the_file, max_size){
+                  var reader = new FileReader();
+                  var thisFileInfo = {name: the_file.name, size: the_file.size, type: the_file.type};
+                  fileInfoList.push(thisFileInfo);
+                  //console.log("need to check type property " + the_file.type + " for " + the_file.name);
+                  reader.onload = function(readerEvent){
+                    //console.log("checking type property " + the_file.type + " for " + the_file.name);
+                    if (the_file.type.match(/image.*/)){
+                      //console.log("this one is an image");
+                      var image = new Image();
+                      image.onload = function(imageEvent) {
+                        var canvas = document.createElement('canvas'),
+                          width = image.width,
+                          height = image.height;
+                        if (width > height) {
+                          if (width > max_size) {
+                              height *= max_size / width;
+                              width = max_size;
+                          }
+                        }
+                        else {
+                          if (height > max_size) {
+                            width *= max_size / height;
+                            height = max_size;
+                          }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        canvas.getContext('2d').drawImage(image, 0, 0, width, height);
+                        thisFileInfo['content'] = canvas.toDataURL(the_file.type);
+                        filesRead++;
+                        //console.log("file read");
+                        if (filesRead >= filesToRead){
+                          //console.log("this is the last one!");
+                          resumeUploadSubmission(form, fileArray, inline_file_list, newFileList);
+                        }
+                      };
+                      image.src = reader.result;
+                    }
+                    else{
+                      //console.log("this one is not an image");
+                      thisFileInfo['content'] = reader.result;
+                      filesRead++;
+                      if (filesRead >= filesToRead){
+                        //console.log("this is the last one!");
+                        resumeUploadSubmission(form, fileArray, inline_file_list, newFileList);
+                      }
+                    }
+                    //console.log("done checking type property");
+                  };
+                  reader.readAsDataURL(the_file);
+                };
+                tempFunc(the_file, max_size);
+              }
+            }
+            return;
+          }
           $("#uploadiframe").remove();
           var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
           $("body").append(iframe);
           $(form).attr("target", "uploadiframe");
-          $('<input>').attr({
-              type: 'hidden',
-              name: 'ajax',
-              value: '1'
-          }).appendTo($(form));
           iframe.bind('load', function(){
             setTimeout(function(){
               daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form);
@@ -5073,20 +5319,10 @@ def index():
           form.submit();
         }
         else{
-          if (daSubmitter != null){
-            var input = $("<input>")
-              .attr("type", "hidden")
-              .attr("name", daSubmitter.name).val(daSubmitter.value);
-            $(form).append($(input));
-          }
-          var informed = '';
-          if (daInformedChanged){
-            informed = '&informed=' + Object.keys(daInformed).join(',');
-          }
           $.ajax({
             type: "POST",
             url: $(form).attr('action'),
-            data: $(form).serialize() + '&ajax=1' + informed, 
+            data: $(form).serialize(), 
             success: function(data){
               setTimeout(function(){
                 daProcessAjax(data, form);
@@ -5099,8 +5335,46 @@ def index():
             }
           });
         }
-        daSpinnerTimeout = setTimeout(showSpinner, 1000);
         return(false);
+      }
+      function resumeUploadSubmission(form, fileArray, inline_file_list, newFileList){
+        $('<input>').attr({
+          type: 'hidden',
+          name: '_files_inline',
+          value: btoa(JSON.stringify(fileArray))
+        }).appendTo($(form));
+        for (var i = 0; i < inline_file_list.length; ++i){
+          document.getElementById(inline_file_list[i]).disabled = true;
+        }
+        if (newFileList.length > 0){
+          $("#uploadiframe").remove();
+          var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
+          $("body").append(iframe);
+          $(form).attr("target", "uploadiframe");
+          iframe.bind('load', function(){
+            setTimeout(function(){
+              daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form);
+            }, 0);
+          });
+          form.submit();
+        }
+        else{
+          $.ajax({
+            type: "POST",
+            url: $(form).attr('action'),
+            data: $(form).serialize(), 
+            success: function(data){
+              setTimeout(function(){
+                daProcessAjax(data, form);
+              }, 0);
+            },
+            error: function(xhr, status, error){
+              setTimeout(function(){
+                daProcessAjaxError(xhr, status, error);
+              }, 0);
+            }
+          });
+        }
       }
       function pushChanges(){
         //console.log("pushChanges");
@@ -5606,7 +5880,7 @@ def index():
             $(this).prop('checked', false);
           });
         });
-        $("input.file").fileinput();
+        $("input.dafile").fileinput();
         $("#emailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + repr(str(word("An e-mail address is required."))) + """, 'email': """ + repr(str(word("You need to enter a complete e-mail address."))) + """}}, 'errorClass': 'da-has-error'});
         $("a[data-embaction]").click(daEmbeddedAction);
         $("a[data-js]").click(daEmbeddedJs);

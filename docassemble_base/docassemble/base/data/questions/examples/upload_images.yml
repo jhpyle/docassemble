@@ -1,0 +1,17 @@
+metadata:
+  title: Upload photos
+  example start: 1
+  example end: 2
+  documentation: "https://docassemble.org/docs/fields.html#camera"
+---
+question: Please take a picture.
+fields:
+  - Picture: user_image
+    datatype: camera
+    maximum image size: 1200
+---
+question: |
+  Let's look at what you uploaded.
+subquestion: |
+  ${ user_image }
+mandatory: True
