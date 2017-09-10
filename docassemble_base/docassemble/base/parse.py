@@ -589,6 +589,8 @@ class Question:
                 self.interview.use_navigation = True
             if 'maximum image size' in data['features']:
                 self.interview.max_image_size = eval(data['features']['maximum image size'])
+            if 'cache documents' in data['features']:
+                self.interview.cache_documents = data['features']['cache documents']
             if 'pdf/a' in data['features'] and data['features']['pdf/a'] in [True, False]:
                 self.interview.use_pdf_a = data['features']['pdf/a']
             for key in ['javascript', 'css']:
@@ -2270,7 +2272,7 @@ class Question:
     def processed_attachments(self, user_dict, **kwargs):
         steps = user_dict['_internal'].get('steps', -1)
         # logmessage("processed_attachments: steps is " + str(steps))
-        if hasattr(self, 'name') and self.name in user_dict['_internal']['doc_cache'] and steps in user_dict['_internal']['doc_cache'][self.name]:
+        if self.interview.cache_documents and hasattr(self, 'name') and self.name in user_dict['_internal']['doc_cache'] and steps in user_dict['_internal']['doc_cache'][self.name]:
             #logmessage("processed_attachments: result was in document cache")
             return user_dict['_internal']['doc_cache'][self.name][steps]
         result_list = list()
@@ -2279,14 +2281,15 @@ class Question:
             items.append([x, self.prepare_attachment(x, user_dict, **kwargs)])
         if self.compute_attachment is not None:
             computed_attachment_list = eval(self.compute_attachment, user_dict)
-            if type(computed_attachment_list) is list:
-                for x in computed_attachment_list:
-                    if str(type(x)) == "<class 'docassemble.base.core.DAFileCollection'>" and 'attachment' in x.info:
-                        attachment = self.interview.questions_by_name[x.info['attachment']['name']].attachments[x.info['attachment']['number']]
-                        items.append([attachment, self.prepare_attachment(attachment, user_dict, **kwargs)])
+            if type(computed_attachment_list) is not list:
+                computed_attachment_list = [computed_attachment_list]
+            for x in computed_attachment_list:
+                if str(type(x)) == "<class 'docassemble.base.core.DAFileCollection'>" and 'attachment' in x.info:
+                    attachment = self.interview.questions_by_name[x.info['attachment']['name']].attachments[x.info['attachment']['number']]
+                    items.append([attachment, self.prepare_attachment(attachment, user_dict, **kwargs)])
         for item in items:
             result_list.append(self.finalize_attachment(item[0], item[1], user_dict))
-        if hasattr(self, 'name'):
+        if self.interview.cache_documents and hasattr(self, 'name'):
             if self.name not in user_dict['_internal']['doc_cache']:
                 user_dict['_internal']['doc_cache'][self.name] = dict()
             user_dict['_internal']['doc_cache'][self.name][steps] = result_list
@@ -2371,7 +2374,7 @@ class Question:
                     return(target.follow_multiple_choice(user_dict, interview_status))
         return(self)
     def finalize_attachment(self, attachment, result, user_dict):
-        if attachment['variable_name']:
+        if self.interview.cache_documents and attachment['variable_name']:
             try:
                 existing_object = eval(attachment['variable_name'], user_dict)
                 for doc_format in ['pdf', 'rtf', 'docx', 'tex', 'html']:
@@ -2705,6 +2708,7 @@ class Interview:
         self.use_progress_bar = False
         self.force_fullscreen = False
         self.use_pdf_a = get_config('pdf/a', False)
+        self.cache_documents = True
         self.use_navigation = False
         self.max_image_size = get_config('maximum image size', None)
         self.sections = dict()

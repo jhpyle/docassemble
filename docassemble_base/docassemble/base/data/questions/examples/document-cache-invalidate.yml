@@ -1,0 +1,41 @@
+metadata:
+  title: Reassembling a document
+  documentation: "https://docassemble.org/docs/documents.html#caching"
+  example start: 1
+  example end: 6
+---
+mandatory: True
+code: |
+  client = "Jane Doe"
+  benefits = "G-432"
+---
+mandatory: True
+code: |
+  document_initially_shown
+  first_draft_deleted
+  client = "John Doe"
+  benefits = "H-545"
+  document_shown_again
+---
+attachment:
+  name: Summary of Benefits
+  filename: benefits_summary
+  variable name: benefits_summary
+  content: |
+    [BOLDCENTER] Summary of Benefits
+    
+    ${ client } is entitled to
+    benefits plan ${ benefits }.
+---
+question: |
+  Here is your document.
+attachment code: benefits_summary
+field: document_initially_shown
+---
+code: |
+  del benefits_summary
+  first_draft_deleted = True
+---
+question: Here is your document again.
+attachment code: benefits_summary
+event: document_shown_again

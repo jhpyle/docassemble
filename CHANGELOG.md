@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.1.50] - 2017-09-10
+### Added
+- Options for `maximum image size` to reduce size of uploaded images
+  in the browser before uploading.
+- Interview feature `cache documents` for disabling document caching.
+### Fixed
+- E-mailing of assembled documents.
+
 ## [0.1.49] - 2017-09-07
 ### Added
 - Additional document caching feature.
