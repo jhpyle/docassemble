@@ -1080,14 +1080,37 @@
         ${ client } is entitled to
         benefits plan ${ benefits }.
   mandatory: True
-"document-cache": |-
-  modules:
-    - docassemble.base.util
-  ---
-  question: |
-    What is your name?
-  fields:
-    First Name: firstname
+"document-cache": "question: |\n  What is your name?\nfields:\n  First Name: firstname\n\
+  ---\nmandatory: True\nfield: first_round\nquestion: |\n  Here are your documents,\
+  \ ${ firstname }.\nsubquestion: |\n  Look at the Preview tab of each\n  document\
+  \ and note the time.\n  This is the time the document\n  was generated.\nallow emailing:\
+  \ False\nattachments:\n  - name: Apples\n    filename: apples\n    variable name:\
+  \ apples\n    content: |\n      ${ firstname },\n\n      Apples are tasty as of\n\
+  \      ${ format_time(current_datetime(), format='long') }.\n  - name: Oranges\n\
+  \    filename: oranges\n    variable name: oranges\n    content: |\n      ${ firstname\
+  \ },\n\n      Oranges are tasty as of\n      ${ format_time(current_datetime(),\
+  \ format='long') }.\n---\nattachment:\n  name: Grapes\n  filename: grapes\n  variable\
+  \ name: grapes\n  content: |\n      ${ firstname },\n\n      Grapes are tasty as\
+  \ of\n      ${ format_time(current_datetime(), format='long') }.\n---\nmandatory:\
+  \ True\nfield: second_round\nquestion: |\n  Here is another set of documents,\n\
+  \  ${ firstname }.\nsubquestion: |\n  You saw the Apples document on the\n  previous\
+  \ screen.  The Grapes\n  document is new.  The Apples\n  document has not changed.\n\
+  \  \n  When you press Continue, I will ask\n  you again for your name.  Put in a\n\
+  \  different name this time.\nallow emailing: False\nattachment code: |\n  [apples,\
+  \ grapes]\n---\nmandatory: True\ncode: |\n  del firstname\n---\nmandatory: True\n\
+  code: |\n  firstname\n---\nmandatory: True\nquestion: |\n  Here is your final set\
+  \ of documents,\n  ${ firstname }.\nsubquestion: |\n  Note that even though your\
+  \ name\n  changed, the documents did not.\nallow emailing: False\nattachment code:\
+  \ |\n  [apples, oranges, grapes]"
+"document-cache-invalidate": "mandatory: True\ncode: |\n  client = \"Jane Doe\"\n\
+  \  benefits = \"G-432\"\n---\nmandatory: True\ncode: |\n  document_initially_shown\n\
+  \  first_draft_deleted\n  client = \"John Doe\"\n  benefits = \"H-545\"\n  document_shown_again\n\
+  ---\nattachment:\n  name: Summary of Benefits\n  filename: benefits_summary\n  variable\
+  \ name: benefits_summary\n  content: |\n    [BOLDCENTER] Summary of Benefits\n \
+  \   \n    ${ client } is entitled to\n    benefits plan ${ benefits }.\n---\nquestion:\
+  \ |\n  Here is your document.\nattachment code: benefits_summary\nfield: document_initially_shown\n\
+  ---\ncode: |\n  del benefits_summary\n  first_draft_deleted = True\n---\nquestion:\
+  \ Here is your document again.\nattachment code: benefits_summary\nevent: document_shown_again"
 "document-docx": "question: Here is your document.\nattachments:\n  - name: Summary\
   \ of Benefits\n    filename: benefits_summary\n    valid formats:\n      - docx\n\
   \      - pdf    \n    content: |\n      [BOLDCENTER] Summary of Benefits\n\n   \
@@ -6657,6 +6680,22 @@
   subquestion: |
     ${ user_picture }
   mandatory: True
+"upload-max-image-size": |-
+  question: |
+    Please upload a picture of yourself.
+  fields:
+    - Picture: user_picture
+      datatype: file
+      maximum image size: None
+  ---
+  question: |
+    You're so small!
+  subquestion: |
+    ${ user_picture }
+  mandatory: True
+"upload-max-image-size-features": |-
+  features:
+    maximum image size: 100
 "upload-multiple": |-
   question: |
     Please upload pictures of yourself.
@@ -6666,7 +6705,8 @@
   ---
   question: |
     Look at all those adorable photos!
-  audio: ${ user_pictures }
+  subquestion: |
+    ${ user_pictures }
   mandatory: True
 "upload-show": |-
   question: |
@@ -6681,14 +6721,14 @@
     ${ user_picture.show(width='250px') }
   mandatory: True
 "upload_audio": |-
-  question: Please upload an MP3
+  question: Please record some audio.
   fields:
-    - MP3 file: user_mp3_file
+    - MP3 file: user_audio_file
       datatype: file
   ---
   question: |
-    Let's listen to what you uploaded.
-  audio: ${ user_mp3_file }
+    Let's listen to what you recorded.
+  audio: ${ user_audio_file }
   mandatory: True
 "upload_audio_microphone": |-
   question: Please record some audio.
@@ -6699,6 +6739,18 @@
   question: |
     Let's listen to what you recorded.
   audio: ${ user_audio_file }
+  mandatory: True
+"upload_images": |-
+  question: Please take a picture.
+  fields:
+    - Picture: user_image
+      datatype: camera
+      maximum image size: 1200
+  ---
+  question: |
+    Let's look at what you uploaded.
+  subquestion: |
+    ${ user_image }
   mandatory: True
 "url-of": |-
   question: |

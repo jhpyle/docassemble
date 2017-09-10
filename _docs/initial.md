@@ -675,6 +675,17 @@ features:
   table width: 75
 {% endhighlight %}
 
+## <a name="cache documents"></a>Disabling document caching
+
+By default, **docassemble** caches assembled documents for performance
+reasons.  To disable the [document caching feature] for a given
+interview, set `cache documents` to `False`.
+
+{% highlight yaml %}
+features:
+  cache documents: False
+{% endhighlight %}
+
 ## <a name="pdfa"></a>Producing PDF/A files
 
 If you want the [PDF] files produced by your interview to be in
@@ -688,6 +699,28 @@ features:
 The default is determined by the [`pdf/a` configuration directive].
 The setting can also be made on a per-attachment basis by setting the
 [`pdf/a` attachment setting].
+
+## <a name="maximum image size"></a>Limiting size of uploaded images
+
+If your users upload digital photos into your interviews, the uploads
+may take a long time.  Images can be reduced in size before they are
+uploaded.  To require by default for all uploads in your interview,
+set `maximum image size` in the `features` block for your interview.
+
+{% include side-by-side.html demo="upload-max-image-size-features" %}
+
+In this example, images will be reduced in size so that they are no
+taller than 100 pixels and no wider than 100 pixels.
+
+This is just a default value; you can override it by setting the
+[`maximum image size` in a field definition].
+
+If you have an interview-wide default, but you want to override it for
+a particular field to allow full-resolution camera uploads, you can
+set the [`maximum image size` field modifier] to `None`.
+
+If you want to use a site-side default value, set the
+[`maximum image size` in the configuration].
 
 ## <a name="go full screen"></a>Going full screen when interview is embedded
 
@@ -792,3 +825,7 @@ the user has either a mobile phone or a tablet.
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
 [`dispatch`]: {{ site.baseurl}}/docs/config.html#dispatch
 [configuration]: {{ site.baseurl}}/docs/config.html
+[`maximum image size` in a field definition]: {{ site.baseurl }}/docs/fields.html#maximum image size
+[`maximum image size` in the configuration]: {{ site.baseurl }}/docs/config.html#maximum image size
+[`maximum image size` field modifier]: {{ site.baseurl }}/docs/fields.html#maximum image size
+[document caching feature]: {{ site.baseurl}}/docs/documents.html#caching

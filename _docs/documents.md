@@ -1076,13 +1076,27 @@ Since document assembly can take the server a long time,
 **docassemble** uses caching to avoid assembling the same document
 more than once.
 
-In most situations, this is a welcome feature.  However, it might not
-always be what you want.  This interview demonstrates how the document
-caching works.
+This interview demonstrates how the document caching works:
 
 {% include side-by-side.html demo="document-cache" %}
 
+In most situations, document caching is a welcome feature because
+users do not have to wait as long.  However, it might not always be
+what you want.
 
+For example, if you present the same document in two different
+[`question`]s using [`attachment code`], the same document that was
+assembled for the first [`question`] will be presented in the second
+[`question`], even if changes were made to the underlying variables in
+the interim.  To force the re-assembly of the document, use [`code`]
+to deletes the variable that represents the document.  Here is an example:
+
+{% include side-by-side.html demo="document-cache-invalidate" %}
+
+If you want to turn off document caching entirely for a given
+interview, see the [`cache documents` feature].
+
+[`cache documents` feature]: {{ site.baseurl }}/docs/initial.html#cache documents
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [YAML]: https://en.wikipedia.org/wiki/YAML
@@ -1099,7 +1113,9 @@ caching works.
 [objects]: {{ site.baseurl }}/docs/objects.html
 [function]: {{ site.baseurl }}/docs/functions.html
 [functions]: {{ site.baseurl }}/docs/functions.html
+[`code`]: {{ site.baseurl }}/docs/code.html#code
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`attachment code`]: #attachment code
 [`attachment`]: #attachment
 [`attachments`]: #attachments
 [`IndividualName`]: #IndividualName
@@ -1156,3 +1172,4 @@ caching works.
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
 ["Templates" folder]: {{ site.baseurl }}/docs/playground.html#templates
 [Playground]: {{ site.baseurl }}/docs/playground.html
+[`variable name`]: #variable name

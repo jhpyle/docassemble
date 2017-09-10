@@ -1470,6 +1470,31 @@ pdf/a: True
 The default is `False`.  The setting can also be made on a
 per-interview basis by setting the [`pdf/a` features setting].
 
+## <a name="maximum image size"></a>Limiting size of uploaded images
+
+If your users upload digital photos into your interviews, the uploads
+may take a long time.  Using the [`maximum image size` field modifier]
+or the [`maximum image size` interview feature], you can cause your
+users' web browsers to reduce the size of your images before uploading
+them.  For example, if `maximum image size` is set to 1200, then the
+image will be reduced in size if it is taller or wider than 1200
+pixels.
+
+If you would like to set a site-wide default value for the maximum
+image size, you can use the `maximum image size` configuration
+directive:
+
+{% highlight yaml %}
+maximum image size: 1200
+{% endhighlight %}
+
+This is just a default value; it can be overridden for a given
+interview using the [`maximum image size` interview feature] and it
+can be overridden for a given field using the
+[`maximum image size` field modifier].  To override the setting in
+order to allow image uploads of any resolution, use `None` as the
+override value.
+
 ## <a name="timezone"></a>Setting the time zone
 
 Functions like [`as_datetime()`] that deal with dates will use a
@@ -1906,3 +1931,5 @@ and Facebook API keys.
 [`$( document ).ready`]: https://api.jquery.com/ready/
 [`$.get()`]: https://api.jquery.com/jquery.get/
 [`.html()`]: https://api.jquery.com/html/
+[`maximum image size` field modifier]: {{ site.baseurl }}/docs/fields.html#maximum image size
+[`maximum image size` interview feature]: {{ site.baseurl }}/docs/initial.html#maximum image size

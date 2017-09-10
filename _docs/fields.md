@@ -653,15 +653,41 @@ necessary information about the uploaded files.
 
 {% include side-by-side.html demo="upload-multiple" %}
 
-<a name="camera"></a>`datatype: camera` is just like `file`, except with [HTML5] that
-suggests using the device's camera to take a picture.  On many
-devices, this is no different from `datatype: file`.
+<a name="maximum image size"></a>If your users upload digital photos
+into your interviews, the uploads may take a long time.  You can
+configure an upload field so that images are reduced in size before
+they are uploaded by modifying your field definition with a 
+`maximum image size`.  The image will be reduced in size so that is 
+no taller than or wider than the number of pixels designated by 
+`maximum image size`.
+
+In this example, images will be reduced in size to no more than 100
+pixels in height or width:
+
+{% include side-by-side.html demo="upload-max-image-size" %}
+
+If you have a lot of document upload fields, you can set a default 
+`maximum image size` on an interview-wide basis with the
+[`maximum image size` interview feature] and on a site-wide basis with
+the [`maximum image size` configuration directive].  If you have a
+default set up, but you want to override it for a particular field,
+you can set the `maximum image size` field modifier to `None`.
+
+There are a few other data types that result in file uploads:
+
+<a name="camera"></a>`datatype: camera` is just like `file`, except
+with an [HTML5] input type that suggests using the device's camera to take a
+picture.  On many devices, this is no different from `datatype: file`.
 
 <a name="camcorder"></a>`datatype: camcorder` is just like `camera`,
 except for recording a video.
 
 <a name="microphone"></a>`datatype: microphone` is just like `camera`,
 except for recording an audio clip.
+
+Whether these special data types do anything different from the `file`
+data type is dependent on the web browser.  Mobile browsers are the
+most likely to respond to these features.
 
 ## <a name="fields yesno"></a><a name="fields noyes"></a>Yes/no fields
 
@@ -1319,3 +1345,5 @@ why this needs to be done manually as opposed to automatically:
 [`default`]: #default
 [Mozilla's documentation]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/date
 [Firefox]: https://www.mozilla.org/en-US/firefox/
+[`maximum image size` configuration directive]: {{ site.baseurl }}/docs/config.html#maximum image size
+[`maximum image size` interview feature]: {{ site.baseurl }}/docs/initial.html#maximum image size

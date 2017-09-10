@@ -1047,7 +1047,7 @@ answers" or navigate to `/user/sign-in`.  Log in with:
 
 It should immediately prompt you to change your password to something secure.
 
-# Debugging
+# <a name="debug"></a>Debugging
 
 Run `sudo supervisorctl status` to see the status of the processes `supervisor` is
 controlling.  A healthy output would look like this:

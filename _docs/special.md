@@ -100,6 +100,21 @@ subquestion: |
 You can test this out by trying the following link:
 [{{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder]({{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder){:target="_blank"}.
 
+The following parameter names are not available for use as URL
+parameters because they are used for other purposes by
+**docassemble**:
+
+* `action`
+* `cache`
+* `filename`
+* `format`
+* `from_list`
+* `i`
+* `index`
+* `question`
+* `reset`
+* `session`
+
 ## <a name="role_needed"></a>role_needed
 
 If you use the [multi-user interview feature] and the user reaches a
