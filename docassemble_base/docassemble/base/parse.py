@@ -19,6 +19,7 @@ import copy
 import codecs
 import random
 import tempfile
+import json
 import docassemble.base.filter
 import docassemble.base.pdftk
 import docassemble.base.file_docx
@@ -360,6 +361,13 @@ class InterviewStatus(object):
         if 'questionText' not in result and self.question.question_type == "signature":
             result['questionText'] = word('Sign Your Name')
         result['questionType'] = self.question.question_type
+        if hasattr(self.question, 'name'):
+            result['questionName'] = self.question.name
+        result['tracker'] = self.tracker
+        if hasattr(self, 'datatypes'):
+            result['datatypes'] = safeid(json.dumps(self.datatypes))
+        if hasattr(self, 'varnames'):
+            result['varnames'] = safeid(json.dumps(self.varnames))
         if len(self.question.fields) > 0:
             result['fields'] = list()
         if self.decorations is not None:
@@ -3117,15 +3125,16 @@ class Interview:
                         logmessage("warning: reference in an order directive to id " + question_id + " that does not exist in interview")
             self.orderings.append(new_list)
         for ordering in self.orderings:
-            mode = -1
             for question_a in ordering:
+                mode = 1
                 for question_b in ordering:
                     if question_a == question_b:
-                        mode = 1
+                        mode = -1
                         continue
-                    if question_b.number not in orderings_by_question:
-                        orderings_by_question[question_b] = dict()
-                    orderings_by_question[question_b][question_a] = mode
+                    if question_b not in self.orderings_by_question:
+                        self.orderings_by_question[question_b] = dict()
+                    self.orderings_by_question[question_b][question_a] = mode
+        #logmessage(repr(self.orderings_by_question))
         self.sorter = self.make_sorter()
     def make_sorter(self):
         lookup_dict = self.orderings_by_question
@@ -3169,9 +3178,9 @@ class Interview:
     def sort_with_orderings(self, the_list):
         if len(the_list) <= 1:
             return the_list
-        result = sorted(the_list, key=self.sorter, reverse=True)
-        logmessage(repr([x.number for x in result]))
-        return result
+        result = sorted(the_list, key=self.sorter)
+        #logmessage(repr([y for y in reversed([x.number for x in result])]))
+        return reversed(result)
     def processed_helptext(self, user_dict, language):
         result = list()
         if language in self.helptext:
@@ -3556,7 +3565,7 @@ class Interview:
                         if generic_object in self.generic_questions and missingVariable in self.generic_questions[generic_object] and (language in self.generic_questions[generic_object][missingVariable] or '*' in self.generic_questions[generic_object][missingVariable]):
                             for lang in [language, '*']:
                                 if lang in self.generic_questions[generic_object][missingVariable]:
-                                    for the_question_to_use in sort_with_orderings(self.generic_questions[generic_object][missingVariable][lang]):
+                                    for the_question_to_use in self.sort_with_orderings(self.generic_questions[generic_object][missingVariable][lang]):
                                         questions_to_try.append((the_question_to_use, True, mv['generic'], mv['iterators'], missingVariable, generic_object))
                 except:
                     pass
@@ -3564,7 +3573,7 @@ class Interview:
             if missingVariable in self.questions:
                 for lang in [language, '*']:
                     if lang in self.questions[missingVariable]:
-                        for the_question in sort_with_orderings(self.questions[missingVariable][lang]):
+                        for the_question in self.sort_with_orderings(self.questions[missingVariable][lang]):
                             questions_to_try.append((the_question, False, 'None', mv['iterators'], missingVariable, None))
         #logmessage("askfor: questions to try is " + str(questions_to_try))
         while True:

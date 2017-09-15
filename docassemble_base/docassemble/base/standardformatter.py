@@ -567,7 +567,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
+        status.datatypes = datatypes
         output += varname_tag(varnames)
+        status.varnames = varnames
         output += '              </fieldset>\n            </form>\n'
     elif status.question.question_type in ["noyes", "noyesmaybe"]:
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
@@ -587,7 +589,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
+        status.datatypes = datatypes
         output += varname_tag(varnames)
+        status.varnames = varnames
         output += '              </fieldset>\n            </form>\n'
     elif status.question.question_type == "review":
         fieldlist = list()
@@ -861,7 +865,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
+        status.datatypes = datatypes
         output += varname_tag(varnames)
+        status.varnames = varnames
         output += '              </fieldset>\n            </form>\n'
     elif status.question.question_type == "settrue":
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
@@ -879,7 +885,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
+        status.datatypes = datatypes
         output += varname_tag(varnames)
+        status.varnames = varnames
         output += '              </fieldset>\n            </form>\n'
     elif status.question.question_type == "multiple_choice":
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
@@ -1028,7 +1036,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
+        status.datatypes = datatypes
         output += varname_tag(varnames)
+        status.varnames = varnames
         output += '              </fieldset>\n            </form>\n'
     elif status.question.question_type == 'deadend':
         output += indent_by(audio_text, 12) + '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'

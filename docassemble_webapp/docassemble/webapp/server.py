@@ -1,7 +1,7 @@
 min_system_version = '0.1.22'
 import re
 re._MAXCACHE = 10000
-import pprint #comment out
+#import pprint #comment out
 import os
 import sys
 import tempfile
@@ -6449,7 +6449,7 @@ def index():
             inputkey = 'da:input:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
             r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_json:
-        logmessage(pprint.pformat(interview_status.as_data(), indent=4))
+        #logmessage(pprint.pformat(interview_status.as_data(), indent=4))
         data = dict(browser_title=browser_title, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back)
         data.update(interview_status.as_data())
         if next_action_review:
