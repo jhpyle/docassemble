@@ -329,7 +329,264 @@ class InterviewStatus(object):
         self.sought = question_result['sought']
     def set_tracker(self, tracker):
         self.tracker = tracker
-
+    def as_data(self):
+        result = dict()
+        for param in ['questionText', 'subquestionText', 'underText', 'continueLabel']:
+            if hasattr(self, param) and getattr(self, param) is not None:
+                result[param] = getattr(self, param).rstrip()
+        if hasattr(self, 'audiovideo') and self.audiovideo is not None:
+            audio_result = docassemble.base.filter.get_audio_urls(self.audiovideo)
+            video_result = docassemble.base.filter.get_video_urls(self.audiovideo)
+            if len(audio_result) > 0:
+                result['audio'] = [dict(url=x[0], mime_type=x[1]) for x in audio_result]
+            if len(video_result) > 0:
+                result['video'] = [dict(url=x[0], mime_type=x[1]) for x in video_result]
+        if hasattr(self, 'helpText') and len(self.helpText) > 0:
+            result['helpText'] = list()
+            for help_text in self.helpText:
+                the_help = dict()
+                if 'audiovideo' in help_text and help_text['audiovideo'] is not None:
+                    audio_result = docassemble.base.filter.get_audio_urls(help_text['audiovideo'])
+                    video_result = docassemble.base.filter.get_video_urls(help_text['audiovideo'])
+                    if len(audio_result) > 0:
+                        the_help['audio'] = [dict(url=x[0], mime_type=x[1]) for x in audio_result]
+                    if len(video_result) > 0:
+                        the_help['video'] = [dict(url=x[0], mime_type=x[1]) for x in video_result]
+                if 'content' in help_text and help_text['content'] is not None:
+                    the_help['content'] = help_text['content'].rstrip()
+                if 'heading' in help_text and help_text['heading'] is not None:
+                    the_help['heading'] = help_text['heading'].rstrip()
+                result['helpText'].append(the_help)
+        if 'questionText' not in result and self.question.question_type == "signature":
+            result['questionText'] = word('Sign Your Name')
+        result['questionType'] = self.question.question_type
+        if len(self.question.fields) > 0:
+            result['fields'] = list()
+        if self.decorations is not None:
+            for decoration in self.decorations:
+                if 'image' in decoration:
+                    the_image = self.question.interview.images.get(decoration['image'], None)
+                    if the_image is not None:
+                        the_url = docassemble.base.functions.server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
+                        if the_url is not None and the_image.attribution is not None:
+                            result['decoration_url'] = the_url
+                            self.attributions.add(the_image.attribution)
+                        break
+        if len(self.attachments) > 0:
+            result['attachments'] = list()
+            if self.current_info['user']['is_authenticated'] and self.current_info['user']['email']:
+                result['default_email'] = self.current_info['user']['email']
+            for attachment in self.attachments:
+                the_attachment = dict(url=dict())
+                for key in ['valid_formats', 'filename', 'name', 'description', 'content', 'markdown']:
+                    if key in attachment:
+                        the_attachment[key] = attachment[key]
+                for the_format in attachment['file']:
+                    the_attachment['url'][the_format] = docassemble.base.functions.server.url_finder(attachment['file'][the_format])
+        for field in self.question.fields:
+            the_field = dict()
+            the_field['number'] = field.number
+            if hasattr(field, 'saveas'):
+                the_field['variable_name'] = from_safeid(field.saveas)
+                the_field['variable_name_encoded'] = field.saveas
+            for param in ['datatype', 'fieldtype', 'sign', 'inputtype']:
+                if hasattr(field, param):
+                    the_field[param] = getattr(field, param)
+            if hasattr(field, 'shuffle') and field.shuffle is not False:
+                the_field['shuffle'] = True
+            if hasattr(field, 'disableothers') and field.disableothers and hasattr(field, 'saveas'):
+                the_field['disable_others'] = True
+            if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
+                the_field['uncheck_others'] = True
+            for key in ['minlength', 'maxlength', 'min', 'max', 'step']:
+                if hasattr(field, 'extras') and key in field.extras and key in self.extras:
+                    the_field[key] = self.extras[key][field.number]
+            if hasattr(field, 'saveas') and field.saveas in self.embedded:
+                the_field['embedded'] = True
+            if hasattr(self, 'shuffle'):
+                the_field['shuffle'] = self.shuffle
+            if field.number in self.defaults:
+                the_default = self.defaults[field.number]
+                if type(the_default) in [str, unicode, int, bool, float]:
+                    the_field['default'] = the_default
+            else:
+                the_default = None
+            if self.question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ['object', 'checkboxes', 'object_checkboxes', 'object_radio']):
+                the_field['choices'] = self.get_choices_data(field, the_default)
+            if hasattr(field, 'nota'):
+                the_field['none_of_the_above'] = self.extras['nota'][field.number]
+            the_field['active'] = self.extras['ok'][field.number]
+            if field.number in self.extras['required']:
+                the_field['required'] = True
+            else:
+                the_field['required'] = False
+            if hasattr(field, 'extras'):
+                if 'ml_group' in field.extras or 'ml_train' in field.extras:
+                    the_field['ml_info'] = dict()
+                    if 'ml_group' in field.extras:
+                        the_field['ml_info']['group_id'] = self.extras['ml_group'][field.number]
+                    if 'ml_train' in field.extras:
+                        the_field['ml_info']['train'] = self.extras['ml_train'][field.number]
+                if 'show_if_var' in field.extras and 'show_if_val' in self.extras:
+                    the_field['show_if_sign'] = field.extras['show_if_sign']
+                    the_field['show_if_var'] = field.extras['show_if_var']
+                    the_field['show_if_val'] = self.extras['show_if_val'][field.number]
+            if hasattr(field, 'datatype'):
+                if field.datatype == 'note' and 'note' in self.extras and field.number in self.extras['note']:
+                    the_field['note'] = self.extras['note'][field.number]
+                if field.datatype == 'html' and 'html' in self.extras and field.number in self.extras['html']:
+                    the_field['html'] = self.extras['html'][field.number]
+                if field.number in self.labels:
+                    the_field['label'] = self.labels[field.number]
+                if field.number in self.helptexts:
+                    the_field['helptext'] = self.helptexts[field.number]
+            result['fields'].append(the_field)
+            if self.question.question_type in ["yesno", "yesnomaybe"]:
+                the_field['true_label'] = self.question.yes()
+                the_field['false_label'] = self.question.no()
+            if self.question.question_type == 'yesnomaybe':
+                the_field['maybe_label'] = self.question.maybe()
+        if len(self.attributions):
+            result['attributions'] = [x.rstrip() for x in self.attributions]
+        return result
+    def get_choices(self, field):
+        question = self.question
+        choice_list = list()
+        if hasattr(field, 'saveas') and field.saveas is not None:
+            saveas = from_safeid(field.saveas)
+            if self.question.question_type == "multiple_choice":
+                if hasattr(field, 'has_code') and field.has_code:
+                    pairlist = list(self.selectcompute[field.number])
+                    for pair in pairlist:
+                        choice_list.append([pair[1], saveas, pair[0]])
+                else:
+                    for choice in field.choices:
+                        for key in choice:
+                            if key == 'image':
+                                continue
+                            choice_list.append([key, saveas, choice[key]])
+            elif hasattr(field, 'choicetype'):
+                if field.choicetype in ['compute', 'manual']:
+                    pairlist = list(self.selectcompute[field.number])
+                elif field.datatype in ['checkboxes', 'object_checkboxes']:
+                    pairlist = list()
+                if field.datatype in ['object_checkboxes']:
+                    for pair in pairlist:
+                        choice_list.append([pair[1], saveas, from_safeid(pair[0])])
+                elif field.datatype in ['object', 'object_radio']:
+                    for pair in pairlist:
+                        choice_list.append([pair[1], saveas, from_safeid(pair[0])])
+                elif field.datatype in ['checkboxes']:
+                    for pair in pairlist:
+                        choice_list.append([pair[1], saveas + "[" + repr(pair[0]) + "]", True])
+                else:
+                    for pair in pairlist:
+                        choice_list.append([pair[1], saveas, pair[0]])
+                if hasattr(field, 'nota') and self.extras['nota'][field.number] is not False:
+                    if self.extras['nota'][field.number] is True:
+                        formatted_item = word("None of the above")
+                    else:
+                        formatted_item = self.extras['nota'][field.number]
+                    choice_list.append([formatted_item, None, None])
+        else:
+            indexno = 0
+            for choice in field.choices:
+                for key in choice:
+                    if key == 'image':
+                        continue
+                    choice_list.append([key, '_internal["answers"][' + repr(question.name) + ']', indexno])
+                indexno += 1
+        return choice_list
+    def icon_url(self, name):
+        the_image = self.question.interview.images.get(name, None)
+        if the_image is None:
+            return None
+        if the_image.attribution is not None:
+            self.attributions.add(the_image.attribution)
+        url = docassemble.base.functions.server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
+        return url
+    def get_choices_data(self, field, defaultvalue):
+        question = self.question
+        choice_list = list()
+        if hasattr(field, 'saveas') and field.saveas is not None:
+            saveas = from_safeid(field.saveas)
+            if self.question.question_type == "multiple_choice":
+                if hasattr(field, 'has_code') and field.has_code:
+                    pairlist = list(self.selectcompute[field.number])
+                    for pair in pairlist:
+                        item = dict(label=pair[1], value=pair[0])
+                        if len(pair) >= 4:
+                            item['help'] = pair[3]
+                        choice_list.append(item)
+                else:
+                    for choice in field.choices:
+                        for key in choice:
+                            if key == 'image':
+                                continue
+                            item = dict(label=key, value=choice[key])
+                            if 'image' in choice:
+                                the_image = self.icon_url(choice['image'])
+                                if the_image:
+                                    item['image'] = the_image
+                            choice_list.append(item)
+            elif hasattr(field, 'choicetype'):
+                if field.choicetype in ['compute', 'manual']:
+                    pairlist = list(self.selectcompute[field.number])
+                elif field.datatype in ['checkboxes', 'object_checkboxes']:
+                    pairlist = list()
+                if field.datatype in ['object_checkboxes']:
+                    for pair in pairlist:
+                        item = dict(label=pair[1], value=from_safeid(pair[0]))
+                        if (len(pair) >= 3 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in (list, set) and unicode(pair[0]) in defaultvalue) or (type(defaultvalue) is dict and unicode(pair[0]) in defaultvalue and defaultvalue[unicode(pair[0])]) or (type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
+                            item['selected'] = True
+                        if len(pair) >= 4:
+                            item['help'] = pair[3]
+                        choice_list.append(item)
+                elif field.datatype in ['object', 'object_radio']:
+                    for pair in pairlist:
+                        item = dict(label=pair[1], value=from_safeid(pair[0]))
+                        if (len(pair) >= 3 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
+                            item['selected'] = True
+                        if len(pair) >= 3:
+                            item['default'] = unicode(pair[2])
+                        if len(pair) >= 4:
+                            item['help'] = pair[3]
+                        choice_list.append(item)
+                elif field.datatype in ['checkboxes']:
+                    for pair in pairlist:
+                        item = dict(label=pair[1], variable_name=saveas + "[" + repr(pair[0]) + "]", variable_name_encoded=safeid(saveas + "[" + repr(pair[0]) + "]"), value=True)
+                        if (len(pair) >= 3 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in (list, set) and unicode(pair[0]) in defaultvalue) or (type(defaultvalue) is dict and unicode(pair[0]) in defaultvalue and defaultvalue[unicode(pair[0])]) or (type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
+                            item['selected'] = True
+                        if len(pair) >= 4:
+                            item['help'] = pair[3]
+                        choice_list.append(item)
+                else:
+                    for pair in pairlist:
+                        item = dict(label=pair[1], value=pair[0])
+                        if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
+                            item['selected'] = True
+                        choice_list.append(item)
+                if hasattr(field, 'nota') and self.extras['nota'][field.number] is not False:
+                    if self.extras['nota'][field.number] is True:
+                        formatted_item = word("None of the above")
+                    else:
+                        formatted_item = self.extras['nota'][field.number]
+                    choice_list.append(dict(label=formatted_item))
+        else:
+            indexno = 0
+            for choice in field.choices:
+                for key in choice:
+                    if key == 'image':
+                        continue
+                    item = dict(label=key, variable_name='_internal["answers"][' + repr(question.name) + ']', variable_name_encoded=safeid('_internal["answers"][' + repr(question.name) + ']'), value=indexno)
+                    if 'image' in choice:
+                        the_image = self.icon_url(choice['image'])
+                        if the_image:
+                            item['image'] = the_image
+                    choice_list.append(item)
+                indexno += 1
+        return choice_list
+    
 # def new_counter(initial_value=0):
 #     d = {'counter': initial_value}
 #     def f():
@@ -588,7 +845,7 @@ class Question:
             if 'navigation' in data['features'] and data['features']['navigation']:
                 self.interview.use_navigation = True
             if 'maximum image size' in data['features']:
-                self.interview.max_image_size = eval(data['features']['maximum image size'])
+                self.interview.max_image_size = data['features']['maximum image size']
             if 'cache documents' in data['features']:
                 self.interview.cache_documents = data['features']['cache documents']
             if 'pdf/a' in data['features'] and data['features']['pdf/a'] in [True, False]:
@@ -607,8 +864,9 @@ class Question:
                         self.interview.external_files[key].append(the_file)
         if 'question' in data and 'code' in data:
             raise DAError("A block can be a question block or a code block but cannot be both at the same time." + self.idebug(data))
-        if 'event' in data and ('field' in data or 'fields' in data or 'yesno' in data or 'noyes' in data):
-            raise DAError("An 'event' block is for special screens that do not gather information and can only be used with 'buttons' or with no other controls." + self.idebug(data))
+        if 'event' in data:
+            if 'field' in data or 'fields' in data or 'yesno' in data or 'noyes' in data:
+                raise DAError("The 'event' designator is for special screens that do not gather information and can only be used with 'buttons' or with no other controls." + self.idebug(data))
         if 'default language' in data:
             should_append = False
             self.from_source.set_language(data['default language'])
@@ -785,7 +1043,24 @@ class Question:
                 else:
                     raise DAError("An objects section cannot contain a nested list." + self.idebug(data))
         if 'id' in data:
-            self.id = data['id']
+            # if unicode(data['id']) in self.interview.ids_in_use:
+            #     raise DAError("The id " + unicode(data['id']) + " is already in use by another block.  Id names must be unique." + self.idebug(data))
+            self.id = unicode(data['id'])
+            self.interview.ids_in_use.add(self.id)
+            self.interview.questions_by_id[self.id] = self
+        if 'supersedes' in data:
+            if type(data['supersedes']) is not list:
+                supersedes_list = [unicode(data['supersedes'])]
+            else:
+                supersedes_list = [unicode(x) for x in data['supersedes']]
+            self.interview.id_orderings.append(dict(type="supersedes", question=self, supersedes=supersedes_list))
+        if 'order' in data:
+            should_append = False
+            if 'question' in data or 'code' in data or 'attachment' in data or 'attachments' in data or 'template' in data:
+                raise DAError("An 'order' block cannot be combined with another type of block." + self.idebug(data))
+            if type(data['order']) is not list:
+                raise DAError("An 'order' block must be a list." + self.idebug(data))
+            self.interview.id_orderings.append(dict(type="order", order=[unicode(x) for x in data['order']]))
         for key in ['image sets', 'images']:
             if key not in data:
                 continue
@@ -1417,7 +1692,12 @@ class Question:
                 if type(data['reconsider']) is not bool:
                     raise DAError("A reconsider designation must be true or false." + self.idebug(data))
                 if data['reconsider'] is True:
-                    self.interview.reconsider.update(self.fields_used)
+                    if self.is_generic:
+                        if self.generic_object not in self.interview.reconsider_generic:
+                            self.interview.reconsider_generic[self.generic_object] = set()
+                        self.interview.reconsider_generic[self.generic_object].update(self.fields_used)
+                    else:
+                        self.interview.reconsider.update(self.fields_used)
         if 'fields' in data:
             self.question_type = 'fields'
             if type(data['fields']) is dict:
@@ -1719,11 +1999,11 @@ class Question:
             self.number = self.interview.next_number()
             #self.number = len(self.interview.questions_list) - 1
             self.name = "Question_" + str(self.number)
-        if hasattr(self, 'id'):
-            try:
-                self.interview.questions_by_id[self.id].append(self)
-            except:
-                self.interview.questions_by_id[self.id] = [self]
+        # if hasattr(self, 'id'):
+        #     try:
+        #         self.interview.questions_by_id[self.id].append(self)
+        #     except:
+        #         self.interview.questions_by_id[self.id] = [self]
         if hasattr(self, 'name'):
             self.interview.questions_by_name[self.name] = self
         for field_name in self.fields_used:
@@ -2399,6 +2679,9 @@ class Question:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
                         the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'])
                         result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + doc_format, the_pdf_file, yaml_file_name=self.interview.source.path)
+                        for key in ['images', 'data_strings', 'convert_to_pdf_a']:
+                            if key in result:
+                                del result[key]
                     elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
                         #logmessage("field_data is " + str(result['field_data']))
                         docassemble.base.functions.set_context('docx', template=result['template'])
@@ -2693,6 +2976,10 @@ class Interview:
         self.questions_by_id = dict()
         self.questions_by_name = dict()
         self.questions_list = list()
+        self.ids_in_use = set()
+        self.id_orderings = list()
+        self.orderings = list()
+        self.orderings_by_question = dict()
         self.images = dict()
         self.metadata = list()
         self.helptext = dict()
@@ -2702,6 +2989,7 @@ class Interview:
         self.autoterms = dict()
         self.includes = set()
         self.reconsider = set()
+        self.reconsider_generic = dict()
         self.question_index = 0
         self.default_role = None
         self.title = None
@@ -2723,6 +3011,9 @@ class Interview:
         self.success = True
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
+    def ordered(self, the_list):
+        if len(the_list) <= 1:
+            return the_list
     def get_ml_store(self):
         if hasattr(self, 'ml_store'):
             return self.ml_store
@@ -2809,6 +3100,30 @@ class Interview:
                     except SyntaxException as qError:
                         self.success = False
                         raise Exception("SyntaxException: " + str(qError) + "\n\nIn file " + str(source.path) + " from package " + str(source_package) + ":\n" + source_code)
+        for ordering in self.id_orderings:
+            if ordering['type'] == 'supersedes':
+                new_list = [ordering['question'].number]
+                for question_id in ordering['supersedes']:
+                    if question_id in self.questions_by_id:
+                        new_list.append(self.questions_by_id[question_id].number)
+                    else:
+                        logmessage("warning: reference in a supersedes directive to an id " + question_id + " that does not exist in interview")
+            elif ordering['type'] == 'order':
+                new_list = list()
+                for question_id in ordering['supersedes']:
+                    if question_id in self.questions_by_id:
+                        new_list.append(self.questions_by_id[question_id].number)
+                    else:
+                        logmessage("warning: reference in an order directive to id " + question_id + " that does not exist in interview")
+            self.orderings.append(new_list)
+        for ordering in self.orderings:
+            for question in ordering:
+                if question.number not in orderings_by_question:
+                    orderings_by_question[question.number] = list()
+                if ordering not in orderings_by_question[question.number]:
+                    orderings_by_question[question.number].append(ordering)
+    def sort_with_orderings(self):
+        pass
     def processed_helptext(self, user_dict, language):
         result = list()
         if language in self.helptext:
@@ -2873,6 +3188,12 @@ class Interview:
                             pass
                     elif var in user_dict:
                         del user_dict[var]
+        if 'x' in user_dict and user_dict['x'].__class__.__name__ in self.reconsider_generic:
+            for var in self.reconsider_generic[user_dict['x'].__class__.__name__]:
+                try:
+                    exec('del ' + str(var), user_dict)
+                except:
+                    pass
         for var in self.reconsider:
             if complications.search(var):
                 try:

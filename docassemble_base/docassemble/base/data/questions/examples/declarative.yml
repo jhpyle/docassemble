@@ -1,0 +1,56 @@
+metadata:
+  title: Declarative style
+  example start: 1
+  example end: 1
+---
+objects:
+  injury_location: Address
+  defendant_address: Address
+  plaintiff_address: Address
+  court: Court
+---
+mandatory: True
+question: |
+  % if has_a_case:
+  Your claim against ${ defendant } is valid under
+  Kalamazoo law.
+  % else:
+  Sorry, you do not have a valid claim against
+  ${ defendant }.
+  % endif
+---
+code: |
+  has_a_case = jurisdiction_proper and venue_proper
+---
+code: |
+  if injury_location.within_jurisdiction_of(court):
+    venue_proper = True
+  elif defendant_address.within_jurisdiction_of(court) and defendant_address.state != plaintiff_address.state:
+    venue_proper = True
+  else:
+    venue_proper = False
+---
+code: |
+  jurisdiction_proper = subject_matter_jurisdiction_exists and personal_jurisdiction_exists
+---
+code: |
+  if case_type in court.case_types_heard and amount_in_dispute > court.dispute_minimum:
+    subject_matter_jurisdiction_exists = True
+  else:
+    subject_matter_jurisdiction_exists = False
+---
+comment: |
+  This is set in the Kalamazoo Constitution.
+code: |
+  court.dispute_minimum = 10000
+---
+comment: |
+  Added in the Kalamazoo Tort Reform Act of 2015
+code: |
+  if as_datetime(injury_date) > as_datetime('4/17/2016') and case_type == 'personal_injury':
+    court.dispute_minimum = 40000
+---
+code: |
+  personal_jurisdiction_exists = defendant_address.within_jurisdiction_of(court) or defendant.has_contacts_with(court.jurisdiction)
+
+  

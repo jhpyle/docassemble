@@ -1,6 +1,7 @@
 min_system_version = '0.1.22'
 import re
 re._MAXCACHE = 10000
+import pprint #comment out
 import os
 import sys
 import tempfile
@@ -492,7 +493,7 @@ import docassemble.base.parse
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
 import docassemble.webapp.update
-from docassemble.base.standardformatter import as_html, as_sms, get_choices, get_choices_with_abb, is_empty_mc
+from docassemble.base.standardformatter import as_html, as_sms, get_choices_with_abb, is_empty_mc
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
@@ -1196,10 +1197,15 @@ def chat_partners_available(session_id, yaml_filename, the_user_id, mode, partne
     #return (dict(peer=num_peer, help=len(potential_partners)))
     return result
     
-def do_redirect(url, is_ajax):
+def do_redirect(url, is_ajax, is_json):
     if is_ajax:
         return jsonify(action='redirect', url=url, csrf_token=generate_csrf())
     else:
+        if is_json:
+            if re.search(r'\?', url):
+                url = url + '&json=1'
+            else:
+                url = url + '?json=1'
         return redirect(url)
 
 def do_refresh(is_ajax, yaml_filename):
@@ -3330,7 +3336,7 @@ def checkin():
             if form_parameters is not None:
                 form_parameters = json.loads(form_parameters)
                 for param in form_parameters:
-                    if param['name'] in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action'] or param['name'].startswith('_ignore'):
+                    if param['name'] in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action'] or param['name'].startswith('_ignore'):
                         continue
                     try:
                         parameters[from_safeid(param['name'])] = param['value']
@@ -3588,6 +3594,10 @@ def index():
         #     response.set_cookie('secret', session['newsecret'])
         #     del session['newsecret']
         #     return response
+    if 'json' in request.form or 'json' in request.args:
+        is_json = True
+    else:
+        is_json = False
     chatstatus = session.get('chatstatus', 'off')
     session_id = session.get('uid', None)
     #logmessage("index: session uid is " + str(session_id))
@@ -3681,7 +3691,7 @@ def index():
                         message = "Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews."
             if show_flash:
                 flash(word(message), 'info')
-    elif not is_ajax:
+    elif not (is_ajax or is_json):
         #logmessage("index: need_to_reset is True because not ajax and yaml_parameter is None")
         need_to_reset = True
     if session_parameter is not None:
@@ -3769,7 +3779,7 @@ def index():
         #logmessage("index: there were args")
         if 'action' in request.args:
             session['action'] = request.args['action']
-            response = do_redirect(url_for('index', i=yaml_filename), is_ajax)
+            response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json)
             if set_cookie:
                 response.set_cookie('secret', secret)
             if expire_visitor_secret:
@@ -3778,7 +3788,7 @@ def index():
             #logmessage("index: returning action response")
             return response
         for argname in request.args:
-            if argname in ['filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session', 'cache', 'reset']:
+            if argname in ['filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session', 'cache', 'reset', 'json']:
                 continue
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
@@ -3791,7 +3801,7 @@ def index():
             docassemble.base.parse.interview_source_from_string(yaml_filename).reset_modtime()
         if need_to_resave:
             save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
-        response = do_redirect(url_for('index', i=yaml_filename), is_ajax)
+        response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json)
         if set_cookie:
             response.set_cookie('secret', secret)
         if expire_visitor_secret:
@@ -3892,7 +3902,7 @@ def index():
         the_location = None
     should_assemble = False
     for key in post_data:
-        if key.startswith('_') or key in ['csrf_token', 'ajax', 'informed']:
+        if key.startswith('_') or key in ['csrf_token', 'ajax', 'json', 'informed']:
             continue
         try:
             if key_requires_preassembly.search(from_safeid(key)):
@@ -4032,7 +4042,7 @@ def index():
         the_question = None
     known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action'] or orig_key.startswith('_ignore'):
+        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action'] or orig_key.startswith('_ignore'):
             continue
         try:
             key = myb64unquote(orig_key)
@@ -4055,7 +4065,7 @@ def index():
     field_error = dict()
     validated = True
     for orig_key in post_data:
-        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'informed', 'csrf_token', '_action'] or orig_key.startswith('_ignore'):
+        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action'] or orig_key.startswith('_ignore'):
             continue
         #logmessage("Got a key: " + key)
         data = post_data[orig_key]
@@ -4502,16 +4512,16 @@ def index():
         return do_refresh(is_ajax, yaml_filename)
     if interview_status.question.question_type == "signin":
         release_lock(user_code, yaml_filename)
-        return do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax)
+        return do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json)
     if interview_status.question.question_type == "register":
         release_lock(user_code, yaml_filename)
-        return do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax)
+        return do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json)
     if interview_status.question.question_type == "leave":
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
-            return do_redirect(interview_status.questionText, is_ajax)
+            return do_redirect(interview_status.questionText, is_ajax, is_json)
         else:
-            return do_redirect(exit_page, is_ajax)
+            return do_redirect(exit_page, is_ajax, is_json)
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
@@ -4533,9 +4543,9 @@ def index():
         #     session['key_logged'] = True
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
-            return do_redirect(interview_status.questionText, is_ajax)
+            return do_redirect(interview_status.questionText, is_ajax, is_json)
         else:
-            return do_redirect(exit_page, is_ajax)
+            return do_redirect(exit_page, is_ajax, is_json)
     if interview_status.question.question_type == "response":
         if is_ajax:
             # Duplicative to save here?
@@ -4579,7 +4589,7 @@ def index():
     elif interview_status.question.question_type == "redirect":
         # Duplicative to save here?
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
-        response_to_send = do_redirect(interview_status.questionText, is_ajax)
+        response_to_send = do_redirect(interview_status.questionText, is_ajax, is_json)
     else:
         response_to_send = None
     # Why do this?  To prevent loops of redirects?
@@ -6438,7 +6448,19 @@ def index():
         if user_dict['_internal']['livehelp']['availability'] != 'unavailable':
             inputkey = 'da:input:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
             r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
-    if is_ajax:
+    if is_json:
+        logmessage(pprint.pformat(interview_status.as_data(), indent=4))
+        data = dict(browser_title=browser_title, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back)
+        data.update(interview_status.as_data())
+        if next_action_review:
+            data['next_action'] = next_action_review
+        if reload_after and reload_after > 0:
+            data['reload_after'] = reload_after
+        if 'action' in data and data['action'] == 'redirect' and 'url' in data:
+            response = redirect(data['url'])
+        else:
+            response = jsonify(**data)
+    elif is_ajax:
         if interview_status.question.checkin is not None:
             do_action = interview_status.question.checkin
         else:
@@ -10276,6 +10298,7 @@ def playground_packages():
                         for sec in area:
                             area[sec].finalize()
                         the_file = package_name
+                    zippath.close()
                 #except Exception as errMess:
                     #flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
         if need_to_restart:
@@ -10330,6 +10353,7 @@ def playground_packages():
                 tar.close()
             except Exception as err:
                 raise DAError("playground_packages: error unpacking PyPI package.  " + str(err))
+            package_file.close()
         initial_directories = len(splitall(directory)) + 1
         for root, dirs, files in os.walk(directory):
             for file in files:
@@ -11497,6 +11521,7 @@ def logs():
                     if reg_exp.search(line):
                         temp_file.write(line)
             lines = tailer.tail(temp_file, 30)
+            temp_file.close()
         else:
             lines = tailer.tail(open(filename), 30)
         content = "\n".join(lines)
@@ -11599,6 +11624,7 @@ def utilities():
                 the_file = request.files['pdfdocxfile']
                 the_file.save(pdf_file.name)
                 fields = docassemble.base.pdftk.read_fields(pdf_file.name)
+                pdf_file.close()
                 if fields is None:
                     fields_output = word("Error: no fields could be found in the file")
                 else:
@@ -11612,6 +11638,7 @@ def utilities():
                 the_file = request.files['pdfdocxfile']
                 the_file.save(docx_file.name)
                 result_file = word_to_markdown(docx_file.name, 'docx')
+                docx_file.close()
                 if result_file is None:
                     fields_output = word("Error: no fields could be found in the file")
                 else:
@@ -11779,6 +11806,7 @@ def train():
             except:
                 flash(word("Error reading JSON file.  Not a valid JSON file."), 'error')
                 return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
+            json_file.close()
             if type(href) is not dict:
                 flash(word("Error reading JSON file.  The JSON file needs to contain a dictionary at the root level."), 'error')
                 return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))

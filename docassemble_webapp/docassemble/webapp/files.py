@@ -107,6 +107,7 @@ class SavedFile(object):
         c.setopt(pycurl.COOKIEFILE, cookiefile.name)
         c.perform()
         c.close()
+        cookiefile.close()
         # cookiejar = cookielib.LWPCookieJar()
         # opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
         # response = opener.open(url)

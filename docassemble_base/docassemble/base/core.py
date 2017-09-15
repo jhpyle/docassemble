@@ -715,6 +715,7 @@ class DADict(DAObject):
             for key, value in sorted(self.elements.iteritems()):
                 if value is not False:
                     return False
+            self._trigger_gather()
             return True
         for key in the_list:
             if key not in self.elements:
@@ -726,6 +727,7 @@ class DADict(DAObject):
             else:
                 if exclusive and value is False:
                     return False
+        self._trigger_gather()
         return True
     def all_true(self, *pargs, **kwargs):
         """Returns True if the values of all keys are True.  If one or more
@@ -746,6 +748,7 @@ class DADict(DAObject):
             for key, value in sorted(self.elements.iteritems()):
                 if value is not True:
                     return False
+            self._trigger_gather()
             return True
         for key in the_list:
             if key not in self.elements:
@@ -757,6 +760,7 @@ class DADict(DAObject):
             else:
                 if exclusive and value is True:
                     return False
+        self._trigger_gather()
         return True
     def true_values(self):
         """Returns the keys for which the corresponding value is True."""

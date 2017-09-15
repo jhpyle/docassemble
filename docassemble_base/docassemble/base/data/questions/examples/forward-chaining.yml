@@ -1,0 +1,25 @@
+metadata:
+  title: Forward chaining
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  pet: Thing
+---
+include:
+  - forward-chaining-assumptions.yml
+---
+mandatory: True
+code: |
+  pet.name.text = "George"
+  pet.croaks = True
+  pet.eats_flies = True
+---
+mandatory: True
+question: |
+  % if pet.is_green:
+  ${ pet } is green.
+  % else:
+  ${ pet } is not green.
+  % endif

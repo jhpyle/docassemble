@@ -1,0 +1,62 @@
+generic object: DAObject
+question: |
+  Does ${ x } croak?
+yesno: x.croaks
+---
+generic object: DAObject
+question: |
+  Does ${ x } eat flies?
+yesno: x.eats_flies
+---
+generic object: DAObject
+question: |
+  Does ${ x } chirp?
+yesno: x.chirps
+---
+generic object: DAObject
+question: |
+  Does ${ x } sings?
+yesno: x.sings
+---
+generic object: DAObject
+question: |
+  Is ${ x } a frog?
+yesno: x.is_a_frog
+---
+generic object: DAObject
+question: |
+  Is ${ x } a canary?
+yesno: x.is_a_canary
+---
+generic object: DAObject
+question: |
+  Is ${ x } green?
+yesno: x.is_green
+---
+generic object: DAObject
+question: |
+  Is ${ x } yellow?
+yesno: x.is_yellow
+---
+generic object: DAObject
+code: |
+  if x.croaks and x.eats_flies:
+    x.is_a_frog = True
+---
+generic object: DAObject
+code: |
+  if x.chirps and x.sings:
+    x.is_a_canary = True
+---
+generic object: DAObject
+code: |
+  if x.is_a_frog:
+    x.is_green = True
+---
+generic object: DAObject
+code: |
+  if x.is_a_canary:
+    x.is_yellow = True
+
+
+

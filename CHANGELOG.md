@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.1.51] - 2017-09-14
+### Added
+- JSON version of information on each screen.
+### Fixed
+- Problem with signatures in pdf fill documents.
+
 ## [0.1.50] - 2017-09-10
 ### Added
 - Options for `maximum image size` to reduce size of uploaded images

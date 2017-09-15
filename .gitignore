@@ -36,3 +36,4 @@ conflict_check.yml
 publish.sh
 pypi-publish.sh
 newversion.sh
+json_files

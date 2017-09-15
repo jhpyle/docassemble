@@ -7,6 +7,11 @@ do
     area=${area##*_}
     file=${path##*/}
     file=${file%.*}
+    url="http://localhost?i=docassemble.$area:data/questions/examples/$file.yml&json=1"
+    wget --quiet -O "json_files/"$file".json" "$url"
+    sleep 1
+    continue
+    
     if [ "$file" = "audio" -o "$file" = "video" -o "$file" = "vimeo" -o "$file" = "video-static" -o "$file" = "immediate-file" -o "$file" = "table" -o "$file" = "table-alt" -o "$file" = "table-python" -o "$file" = "table-if-then" -o "$file" = "table-mako" -o "$file" = "no-mandatory" -o "$file" = "exit-url-referer-fullscreen" -o "$file" = "exit-url-referer-fullscreen-mobile" ] || [[ $file == sections* ]]
     then
 	continue

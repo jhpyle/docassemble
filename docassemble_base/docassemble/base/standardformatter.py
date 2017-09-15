@@ -37,10 +37,10 @@ def varname_tag(varnames):
 
 def icon_html(status, name, width_value=1.0, width_units='em'):
     the_image = status.question.interview.images.get(name, None)
-    if the_image.attribution is not None:
-        status.attributions.add(the_image.attribution)
     if the_image is None:
         return('')
+    if the_image.attribution is not None:
+        status.attributions.add(the_image.attribution)
     url = server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
     sizing = 'width:' + str(width_value) + str(width_units) + ';'
     filename = server.file_finder(str(the_image.package) + ':' + str(the_image.filename))
@@ -86,7 +86,7 @@ def get_choices_with_abb(status, field, terms=None, links=None):
         terms = dict()
     if links is None:
         links = list()
-    choice_list = get_choices(status, field)
+    choice_list = status.get_choices(field)
     data = dict()
     while True:
         success = True
@@ -103,55 +103,6 @@ def get_choices_with_abb(status, field, terms=None, links=None):
             break
     return data, choice_list
     
-def get_choices(interview_status, field):
-    question = interview_status.question
-    choice_list = list()
-    if hasattr(field, 'saveas') and field.saveas is not None:
-        saveas = myb64unquote(field.saveas)
-        if interview_status.question.question_type == "multiple_choice":
-            if hasattr(field, 'has_code') and field.has_code:
-                pairlist = list(interview_status.selectcompute[field.number])
-                for pair in pairlist:
-                    choice_list.append([pair[1], saveas, pair[0]])
-            else:
-                for choice in field.choices:
-                    for key in choice:
-                        if key == 'image':
-                            continue
-                        choice_list.append([key, saveas, choice[key]])
-        elif hasattr(field, 'choicetype'):
-            if field.choicetype in ['compute', 'manual']:
-                pairlist = list(interview_status.selectcompute[field.number])
-            elif field.datatype in ['checkboxes', 'object_checkboxes']:
-                pairlist = list()
-            if field.datatype in ['object_checkboxes']:
-                for pair in pairlist:
-                    choice_list.append([pair[1], saveas, from_safeid(pair[0])])
-            elif field.datatype in ['object', 'object_radio']:
-                for pair in pairlist:
-                    choice_list.append([pair[1], saveas, from_safeid(pair[0])])
-            elif field.datatype in ['checkboxes']:
-                for pair in pairlist:
-                    choice_list.append([pair[1], saveas + "[" + repr(pair[0]) + "]", True])
-            else:
-                for pair in pairlist:
-                    choice_list.append([pair[1], saveas, pair[0]])
-            if hasattr(field, 'nota') and interview_status.extras['nota'][field.number] is not False:
-                if interview_status.extras['nota'][field.number] is True:
-                    formatted_item = word("None of the above")
-                else:
-                    formatted_item = interview_status.extras['nota'][field.number]
-                choice_list.append([formatted_item, None, None])
-    else:
-        indexno = 0
-        for choice in field.choices:
-            for key in choice:
-                if key == 'image':
-                    continue
-                choice_list.append([key, '_internal["answers"][' + repr(question.name) + ']', indexno])
-            indexno += 1
-    return choice_list
-
 sms_bad_words = ['cancel', 'end', 'help', 'info', 'quit', 'stop', 'stopall', 'unsubscribe', 'back', 'question', 'exit']
 
 def try_to_abbreviate(label, flabel, data, length):

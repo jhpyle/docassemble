@@ -1,0 +1,4 @@
+generic object: Company
+reconsider: True
+code: |
+  x.employees = [emp.employee for emp in x.employment_relationship if emp.hire_date < as_datetime('today') and (emp._date is None or emp.termination_date > as_datetime('today'))]
