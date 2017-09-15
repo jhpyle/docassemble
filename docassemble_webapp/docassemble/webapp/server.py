@@ -8754,9 +8754,9 @@ def create_playground_package():
             for field in ['dependencies', 'dependency_links', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
                 if field not in info:
                     info[field] = list()
-            for package in ['docassemble']:
-                if package not in info['dependencies']:
-                    info['dependencies'].append(package)
+            for package in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
+                if package in info['dependencies']:
+                    del info['dependencies'][package]
             for package in info['dependencies']:
                 logmessage("create_playground_package: considering " + str(package))
                 existing_package = Package.query.filter_by(name=package, active=True).first()
@@ -10214,8 +10214,9 @@ def playground_packages():
                         else:
                             form[field].data = ''
                     if 'dependencies' in old_info and type(old_info['dependencies']) is list and len(old_info['dependencies']):
-                        for item in old_info['dependencies']:
-                            pass#PPP
+                        for item in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
+                            if item in old_info['dependencies']:
+                                del old_info['dependencies'][item]
                     for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
                         if field in old_info and type(old_info[field]) is list and len(old_info[field]):
                             form[field].data = old_info[field]
@@ -10291,6 +10292,9 @@ def playground_packages():
                                     the_list.append(inner_item)
                                 extracted[m.group(1)] = the_list
                         info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
+                        for pitem in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
+                            if pitem in info_dict['dependencies']:
+                                del info_dict['dependencies'][pitem]
                         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
                         with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w') as fp:
                             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
@@ -10405,6 +10409,9 @@ def playground_packages():
                     the_list.append(inner_item)
                 extracted[m.group(1)] = the_list
         info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
+        for pitem in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
+            if pitem in info_dict['dependencies']:
+                del info_dict['dependencies'][pitem]
         #output += "info_dict is set\n"
         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
         if not user_can_edit_package(pkgname='docassemble.' + package_name):

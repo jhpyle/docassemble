@@ -89,7 +89,7 @@ class DAInterview(DAObject):
         for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
             if field not in info:
                 info[field] = list()
-        for package in ['docassemble', 'docassemble.base']:
+        for package in ['docassemble']:
             if package not in info['dependencies']:
                 info['dependencies'].append(package)
         info['readme'] = ""

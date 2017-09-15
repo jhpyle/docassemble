@@ -1,8 +1,12 @@
 # Change Log
 
+## [0.1.53] - 2017-09-15
+### Fixed
+- Problem with docassemble.base as a dependency in extension packages.
+
 ## [0.1.52] - 2017-09-15
 ### Fixed
-- Problem with assembled documents on cloud storage
+- Problem with assembled documents on cloud storage.
 
 ## [0.1.51] - 2017-09-14
 ### Added
