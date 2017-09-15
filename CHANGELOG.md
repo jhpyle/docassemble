@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.52] - 2017-09-15
+### Fixed
+- Problem with assembled documents on cloud storage
+
 ## [0.1.51] - 2017-09-14
 ### Added
 - JSON version of information on each screen.

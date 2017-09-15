@@ -3117,13 +3117,61 @@ class Interview:
                         logmessage("warning: reference in an order directive to id " + question_id + " that does not exist in interview")
             self.orderings.append(new_list)
         for ordering in self.orderings:
-            for question in ordering:
-                if question.number not in orderings_by_question:
-                    orderings_by_question[question.number] = list()
-                if ordering not in orderings_by_question[question.number]:
-                    orderings_by_question[question.number].append(ordering)
-    def sort_with_orderings(self):
-        pass
+            mode = -1
+            for question_a in ordering:
+                for question_b in ordering:
+                    if question_a == question_b:
+                        mode = 1
+                        continue
+                    if question_b.number not in orderings_by_question:
+                        orderings_by_question[question_b] = dict()
+                    orderings_by_question[question_b][question_a] = mode
+        self.sorter = self.make_sorter()
+    def make_sorter(self):
+        lookup_dict = self.orderings_by_question
+        class K(object):
+            def __init__(self, obj, *args):
+                self.obj = obj.number
+                self.lookup = lookup_dict
+            def __lt__(self, other):
+                if self.obj == other.obj:
+                    return False
+                if self.obj in self.lookup and other.obj in self.lookup[self.obj] and self.lookup[self.obj][other.obj] == -1:
+                    return True
+                return False
+            def __gt__(self, other):
+                if self.obj == other.obj:
+                    return False
+                if self.obj in self.lookup and other.obj in self.lookup[self.obj] and self.lookup[self.obj][other.obj] == 1:
+                    return True
+                return False
+            def __eq__(self, other):
+                if self.obj == other.obj or self.obj not in self.lookup or other.obj not in self.lookup:
+                    return True
+                return False
+            def __le__(self, other):
+                if self.obj == other.obj or self.obj not in self.lookup or other.obj not in self.lookup:
+                    return True
+                if self.lookup[self.obj][other.obj] == -1:
+                    return True
+                return False
+            def __ge__(self, other):
+                if self.obj == other.obj or self.obj not in self.lookup or other.obj not in self.lookup:
+                    return True
+                if self.lookup[self.obj][other.obj] == 1:
+                    return True
+                return False
+            def __ne__(self, other):
+                if self.obj == other.obj or self.obj not in self.lookup or other.obj not in self.lookup:
+                    return False
+                return True
+        return K
+    def sort_with_orderings(self, the_list):
+        if len(the_list) <= 1:
+            return the_list
+        result = sorted(the_list, key=self.sorter, reverse=True)
+        logmessage(repr([x.number for x in result]))
+        return result
     def processed_helptext(self, user_dict, language):
         result = list()
         if language in self.helptext:
@@ -3508,7 +3556,7 @@ class Interview:
                         if generic_object in self.generic_questions and missingVariable in self.generic_questions[generic_object] and (language in self.generic_questions[generic_object][missingVariable] or '*' in self.generic_questions[generic_object][missingVariable]):
                             for lang in [language, '*']:
                                 if lang in self.generic_questions[generic_object][missingVariable]:
-                                    for the_question_to_use in reversed(self.generic_questions[generic_object][missingVariable][lang]):
+                                    for the_question_to_use in sort_with_orderings(self.generic_questions[generic_object][missingVariable][lang]):
                                         questions_to_try.append((the_question_to_use, True, mv['generic'], mv['iterators'], missingVariable, generic_object))
                 except:
                     pass
@@ -3516,7 +3564,7 @@ class Interview:
             if missingVariable in self.questions:
                 for lang in [language, '*']:
                     if lang in self.questions[missingVariable]:
-                        for the_question in reversed(self.questions[missingVariable][lang]):
+                        for the_question in sort_with_orderings(self.questions[missingVariable][lang]):
                             questions_to_try.append((the_question, False, 'None', mv['iterators'], missingVariable, None))
         #logmessage("askfor: questions to try is " + str(questions_to_try))
         while True:
