@@ -37,7 +37,10 @@ def get_info_from_file_reference(file_reference, **kwargs):
         privileged = None
     has_info = False
     if re.match('[0-9]+', str(file_reference)):
-        result = get_info_from_file_number(int(file_reference), privileged=privileged)
+        if 'filename' in kwargs:
+            result = get_info_from_file_number(int(file_reference), privileged=privileged, filename=filename)
+        else:
+            result = get_info_from_file_number(int(file_reference), privileged=privileged)
         if 'fullpath' not in result:
             result['fullpath'] = None
         has_info = True

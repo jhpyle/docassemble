@@ -1229,7 +1229,10 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
         if success:
             for the_attachment in attachment_list:
                 if the_attachment.ok:
-                    file_info = server.file_finder(str(the_attachment.number))
+                    if the_attachment.has_specific_filename:
+                        file_info = server.file_finder(str(the_attachment.number), filename=the_attachment.filename)
+                    else:
+                        file_info = server.file_finder(str(the_attachment.number))
                     if 'fullpath' in file_info:
                         failed = True
                         with open(file_info['fullpath'], 'rb') as fp:

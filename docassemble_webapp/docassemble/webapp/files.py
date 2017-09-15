@@ -192,7 +192,7 @@ class SavedFile(object):
             extn = None
         filename = kwargs.get('filename', self.filename)
         if cloud is not None:
-            keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
+            keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(self.filename)
             page = kwargs.get('page', None)
             if page:
                 size = kwargs.get('size', 'page')

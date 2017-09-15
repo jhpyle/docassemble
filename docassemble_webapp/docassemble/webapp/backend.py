@@ -67,7 +67,7 @@ def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
         raise Exception("save_numbered_file: uid not defined")
     file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
     extension, mimetype = get_ext_and_mimetype(filename)
-    new_file = SavedFile(file_number, extension=extension, fix=True, filename=filename)
+    new_file = SavedFile(file_number, extension=extension, fix=True)
     new_file.copy_from(orig_path)
     new_file.save(finalize=True)
     return(file_number, extension, mimetype)
@@ -79,7 +79,7 @@ def savedfile_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
         else:
             uid = docassemble.base.functions.get_uid()
     if uid is None:
-        raise Exception("save_numbered_file: uid not defined")
+        raise Exception("savedfile_numbered_file: uid not defined")
     file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
     extension, mimetype = get_ext_and_mimetype(filename)
     new_file = SavedFile(file_number, extension=extension, fix=True)

@@ -853,7 +853,7 @@ class Question:
             if 'navigation' in data['features'] and data['features']['navigation']:
                 self.interview.use_navigation = True
             if 'maximum image size' in data['features']:
-                self.interview.max_image_size = data['features']['maximum image size']
+                self.interview.max_image_size = eval(str(data['features']['maximum image size']))
             if 'cache documents' in data['features']:
                 self.interview.cache_documents = data['features']['cache documents']
             if 'pdf/a' in data['features'] and data['features']['pdf/a'] in [True, False]:
