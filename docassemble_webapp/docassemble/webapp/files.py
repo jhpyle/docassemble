@@ -34,7 +34,7 @@ class SavedFile(object):
                 self.directory = os.path.join(UPLOAD_DIRECTORY, *parts)
             else:
                 self.directory = os.path.join(UPLOAD_DIRECTORY, str(self.section), str(file_number))
-            self.path = os.path.join(self.directory, filename)
+            self.path = os.path.join(self.directory, self.filename)
         if fix:
             self.fix()
     # def __del__(self):
@@ -185,14 +185,14 @@ class SavedFile(object):
             self.save()
         return
     def url_for(self, **kwargs):
-        if 'ext' in kwargs:
+        if 'ext' in kwargs and kwargs['ext'] is not None:
             extn = kwargs['ext']
             extn = re.sub(r'^\.', '', extn)
         else:
             extn = None
         filename = kwargs.get('filename', self.filename)
         if cloud is not None:
-            keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(self.filename)
+            keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
             page = kwargs.get('page', None)
             if page:
                 size = kwargs.get('size', 'page')
@@ -226,6 +226,8 @@ class SavedFile(object):
                 else:
                     if re.search(r'\.', str(filename)):
                         url = fileroot + 'uploadedfile/' + str(self.file_number) + '/' + str(filename)
+                    elif extn != '':
+                        url = fileroot + 'uploadedfile/' + str(self.file_number) + '/' + str(filename) + extn
                     else:
                         url = fileroot + 'uploadedfile/' + str(self.file_number)
             else:
@@ -249,9 +251,11 @@ class SavedFile(object):
                         save = False
                 else:
                     key = cloud.get_key(str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
-                    if filename == self.filename:
+                    if extension is not None and filename == self.filename:
                         extension, mimetype = get_ext_and_mimetype(filename + '.' + self.extension)
-                        key.content_type = mimetype
+                    else:
+                        extension, mimetype = get_ext_and_mimetype(filename)
+                    key.content_type = mimetype
                 if save:
                     key.set_contents_from_filename(fullpath)
         for filename, key in self.keydict.iteritems():

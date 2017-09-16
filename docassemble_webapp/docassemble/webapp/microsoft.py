@@ -19,14 +19,14 @@ class azureobject(object):
     def list_keys(self, prefix):
         output = list()
         for blob in self.conn.list_blobs(self.container, prefix=prefix, delimiter='/'):
-            output.append(azurekey(self, blob.name))
+            output.append(azurekey(self, blob.name, load=False))
         return output
     
 class azurekey(object):
-    def __init__(self, azure_object, key_name):
+    def __init__(self, azure_object, key_name, load=True):
         self.azure_object = azure_object
         self.name = key_name
-        if self.exists():
+        if load and self.exists():
             properties = self.azure_object.conn.get_blob_properties(self.azure_object.container, self.name).properties
             self.size = properties.content_length
             self.last_modified = properties.last_modified
@@ -46,5 +46,5 @@ class azurekey(object):
     def set_contents_from_string(self, text):
         self.azure_object.conn.create_blob_from_text(self.azure_object.container, self.name, text)
     def generate_url(self, seconds):
-        sas_token = self.azure_object.conn.generate_blob_shared_access_signature(self.azure_object.container, self.name, permission=BlobPermissions.READ, expiry=datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds))
+        sas_token = self.azure_object.conn.generate_blob_shared_access_signature(self.azure_object.container, self.name, permission=BlobPermissions.READ, expiry=datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds), content_type=self.content_type)
         return self.azure_object.conn.make_blob_url(self.azure_object.container, self.name, sas_token=sas_token)

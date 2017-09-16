@@ -72,21 +72,6 @@ def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     new_file.save(finalize=True)
     return(file_number, extension, mimetype)
 
-def savedfile_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
-    if uid is None:
-        if has_request_context():
-            uid = session.get('uid', None)
-        else:
-            uid = docassemble.base.functions.get_uid()
-    if uid is None:
-        raise Exception("savedfile_numbered_file: uid not defined")
-    file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
-    extension, mimetype = get_ext_and_mimetype(filename)
-    new_file = SavedFile(file_number, extension=extension, fix=True)
-    new_file.copy_from(orig_path)
-    new_file.save(finalize=True)
-    return new_file
-
 def fix_ml_files(playground_number):
     playground = SavedFile(playground_number, section='playgroundsources', fix=False)
     changed = False

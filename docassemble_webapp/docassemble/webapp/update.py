@@ -11,6 +11,7 @@ import re
 from cStringIO import StringIO
 import sys
 import shutil
+import time
 
 from distutils.version import LooseVersion
 if __name__ == "__main__":
@@ -275,6 +276,9 @@ def install_package(package):
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
+    sys.stderr.flush()
+    sys.stdout.flush()
+    time.sleep(1)
     with open(pip_log.name, 'rU') as x:
         logfilecontents += x.read().decode('utf8')
     pip_log.close()
@@ -304,6 +308,9 @@ def uninstall_package(package):
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
+    sys.stderr.flush()
+    sys.stdout.flush()
+    time.sleep(1)
     sys.stderr.write('Finished running pip' + "\n")
     with open(pip_log.name, 'rU') as x:
         logfilecontents += x.read().decode('utf8')

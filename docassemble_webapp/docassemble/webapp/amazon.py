@@ -1,21 +1,59 @@
-import boto
-import boto.s3.connection
-import boto.s3.key
-#from docassemble.base.logger import logmessage
+import boto3
+from botocore.errorfactory import ClientError
 
 class s3object(object):
     def __init__(self, s3_config):
-        #logmessage("Trying to connect with " + s3_config['access_key_id'] + " and " + s3_config['secret_access_key'] + " and " + s3_config['bucket'])
         if 'access key id' in s3_config and s3_config['access key id'] is not None:
-            self.conn = boto.s3.connection.S3Connection(s3_config['access key id'], s3_config['secret access key'])
+            self.conn = boto3.resource('s3', region_name=s3_config.get('region', None), aws_access_key_id=s3_config['access key id'], aws_secret_access_key=s3_config['secret access key'])
         else:
-            self.conn = boto.connect_s3()
-        self.bucket = self.conn.get_bucket(s3_config['bucket'])
+            self.conn = boto3.resource('s3', region_name=s3_config.get('region', None))
+        self.bucket = self.conn.Bucket(s3_config['bucket'])
+        self.bucket_name = s3_config['bucket']
     def get_key(self, key_name):
-        key = boto.s3.key.Key(bucket=self.bucket, name=key_name)
-        return key
+        return s3key(self.conn.Object(self.bucket_name, key_name))
     def search_key(self, key_name):
-        for key in self.bucket.list(prefix=key_name, delimiter='/'):
-            return key
+        for key in self.bucket.objects.filter(Prefix=key_name, Delimiter='/')
+            return s3key(key)
     def list_keys(self, prefix):
-        return self.bucket.list(prefix=prefix, delimiter='/')
+        output = list()
+        for obj in self.bucket.objects.filter(Prefix=key_name, Delimiter='/'):
+            output.append(s3key(self, obj, load=False))
+        return output
+
+class s3key(object):
+    def __init__(self, s3_object, key_obj, load=True):
+        self.s3_object = s3_object
+        self.key_obj = key_obj
+        self.name = key_obj.key
+        if load and self.exists():
+            self.size = self.key_obj.content_length
+            self.last_modified = self.key_obj.last_modified
+            self.content_type = self.key_obj.content_type
+    def get_contents_as_string(self):
+        return self.key_obj.get()['Body'].read()
+    def exists(self):
+        try:
+            self.s3_object.conn.head_object(Bucket=self.s3_object.bucket_name, Key=self.key_obj.key)
+        except ClientError as e:
+            return False
+        return True
+    def delete(self):
+        self.key_obj.delete()
+    def get_contents_to_filename(self, filename):
+        try:
+            self.s3_object.conn.Bucket(self.s3_object.bucket_name).download_file(self.key_obj.key, filename)
+        except ClientError as e:
+            raise    
+        secs = time.mktime(self.last_modified.timetuple())
+        os.utime(filename, (secs, secs))
+    def set_contents_from_filename(self, filename):
+        self.key_obj.upload_file(filename)
+    def set_contents_from_string(self, text):
+        self.key_obj.put(text)
+    def generate_url(self, ):
+        return self.s3_object.generate_presigned_url(
+            ClientMethod='get_object',
+            Params={
+                'Bucket': self.s3_object.bucket_name,
+                'Key': self.key_obj.name
+            })

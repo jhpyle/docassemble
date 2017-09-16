@@ -499,7 +499,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes
 from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning #Attachments
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -748,7 +748,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
         package_arg = kwargs.get('_package', None)
         root = daconfig.get('root', '/')
         fileroot = daconfig.get('fileserver', root)
-        if 'ext' in kwargs:
+        if 'ext' in kwargs and kwargs['ext'] is not None:
             extn = kwargs['ext']
             extn = re.sub(r'^\.', '', extn)
             extn = '.' + extn
@@ -6679,6 +6679,11 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
             if os.path.isfile(file_info['path'] + '.' + extension):
                 extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
                 response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype)
+                response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+                return(response)
+            elif os.path.isfile(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension)):
+                extension, mimetype = get_ext_and_mimetype(filename + '.' + extension)
+                response = send_file(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension), mimetype=mimetype)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
             else:
@@ -12771,7 +12776,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 temp_image_file = tempfile.NamedTemporaryFile(suffix='.' + extension)
                 image = Image.new("RGBA", (200, 50))
                 image.save(temp_image_file.name, 'PNG')
-                saved_file = savedfile_numbered_file(filename, temp_image_file.name, yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
+                saved_file = save_numbered_file(filename, temp_image_file.name, yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
                 if inp_lower in [word('x')]:
                     the_string = saveas + " = docassemble.base.core.DAFile('" + saveas + "', filename='" + str(filename) + "', number=" + str(saved_file.file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
                     logmessage("do_sms: doing import docassemble.base.core")
@@ -13199,7 +13204,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         if doc_format not in ['pdf', 'rtf']:
                             continue
                         filename = attachment['filename'] + '.' + doc_format
-                        saved_file = savedfile_numbered_file(filename, attachment['file'][doc_format], yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
+                        saved_file = save_numbered_file(filename, attachment['file'][doc_format], yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
                         url = re.sub(r'/$', r'', url_root) + url_for('serve_stored_file', uid=sess_info['uid'], number=saved_file.file_number, filename=attachment['filename'], extension=doc_format)
                         #logmessage('sms: url is ' + str(url))
                         m.media(url)
