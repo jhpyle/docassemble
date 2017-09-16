@@ -19,7 +19,7 @@ class azureobject(object):
     def list_keys(self, prefix):
         output = list()
         for blob in self.conn.list_blobs(self.container, prefix=prefix, delimiter='/'):
-            output.append(azurekey(self, blob.name, load=False))
+            output.append(azurekey(self, blob.name, load=True))
         return output
     
 class azurekey(object):
@@ -45,6 +45,11 @@ class azurekey(object):
         self.azure_object.conn.create_blob_from_path(self.azure_object.container, self.name, filename)
     def set_contents_from_string(self, text):
         self.azure_object.conn.create_blob_from_text(self.azure_object.container, self.name, text)
-    def generate_url(self, seconds):
-        sas_token = self.azure_object.conn.generate_blob_shared_access_signature(self.azure_object.container, self.name, permission=BlobPermissions.READ, expiry=datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds), content_type=self.content_type)
+    def generate_url(self, seconds, display_filename=None, content_type=None):
+        if content_type is None:
+            content_type = self.content_type
+        params = dict(permission=BlobPermissions.READ, expiry=datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds), content_type=content_type)
+        if display_filename is not None:
+            params['content_disposition'] = "attachment; filename=" + display_filename
+        sas_token = self.azure_object.conn.generate_blob_shared_access_signature(self.azure_object.container, self.name, **params)
         return self.azure_object.conn.make_blob_url(self.azure_object.container, self.name, sas_token=sas_token)

@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.1.54] - 2017-09-16
+### Fixed
+- Upgraded from boto to boto3.
+- Fixed issues with documents and cloud storage.
+
 ## [0.1.53] - 2017-09-15
 ### Fixed
 - Problem with docassemble.base as a dependency in extension packages.
