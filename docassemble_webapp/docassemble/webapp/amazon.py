@@ -5,8 +5,10 @@ class s3object(object):
     def __init__(self, s3_config):
         if 'access key id' in s3_config and s3_config['access key id'] is not None:
             self.conn = boto3.resource('s3', region_name=s3_config.get('region', None), aws_access_key_id=s3_config['access key id'], aws_secret_access_key=s3_config['secret access key'])
+            self.client = boto3.client('s3', region_name=s3_config.get('region', None), aws_access_key_id=s3_config['access key id'], aws_secret_access_key=s3_config['secret access key'])
         else:
             self.conn = boto3.resource('s3', region_name=s3_config.get('region', None))
+            self.client = boto3.client('s3', region_name=s3_config.get('region', None))
         self.bucket = self.conn.Bucket(s3_config['bucket'])
         self.bucket_name = s3_config['bucket']
     def get_key(self, key_name):
@@ -33,7 +35,7 @@ class s3key(object):
         return self.key_obj.get()['Body'].read()
     def exists(self):
         try:
-            self.s3_object.meta.client.head_object(Bucket=self.s3_object.bucket_name, Key=self.key_obj.key)
+            self.s3_object.client.head_object(Bucket=self.s3_object.bucket_name, Key=self.key_obj.key)
         except ClientError as e:
             return False
         return True
