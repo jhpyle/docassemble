@@ -48,6 +48,7 @@ s3:
   access key id: {{S3ACCESSKEY}}
   secret access key: {{S3SECRETACCESSKEY}}
   bucket: {{S3BUCKET}}
+  region: {{S3REGION}}
 azure:
   enable: {{AZUREENABLE}}
   account name: {{AZUREACCOUNTNAME}}

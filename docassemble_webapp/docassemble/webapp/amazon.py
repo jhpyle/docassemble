@@ -18,7 +18,7 @@ class s3object(object):
             return s3key(self, key)
     def list_keys(self, prefix):
         output = list()
-        for obj in self.bucket.objects.filter(Prefix=key_name, Delimiter='/'):
+        for obj in self.bucket.objects.filter(Prefix=prefix, Delimiter='/'):
             output.append(s3key(self, obj, load=False))
         return output
 
