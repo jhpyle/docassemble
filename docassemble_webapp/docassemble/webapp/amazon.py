@@ -51,11 +51,12 @@ class s3key(object):
     def set_contents_from_filename(self, filename):
         self.key_obj.upload_file(filename)
     def set_contents_from_string(self, text):
-        self.key_obj.put(text)
-    def generate_url(self, ):
+        self.key_obj.put(Body=bytes(text))
+    def generate_url(self, content_type=None, display_filename=None):
+        params = dict(Bucket=self.s3_object.bucket_name, Key=self.key_obj.name)
+        if content_type is not None:
+            params['ResponseContentType'] = content_type
+            params['ResponseContentDisposition'] = "attachment; filename=" + display_filename
         return self.s3_object.conn.generate_presigned_url(
             ClientMethod='get_object',
-            Params={
-                'Bucket': self.s3_object.bucket_name,
-                'Key': self.key_obj.name
-            })
+            Params=params)

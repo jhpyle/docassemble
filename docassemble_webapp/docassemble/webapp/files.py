@@ -205,7 +205,10 @@ class SavedFile(object):
                 keyname += '.' + extn
             key = cloud.get_key(keyname)
             if key.exists():
-                return(key.generate_url(3600))
+                if 'display_filename' in kwargs:
+                    return(key.generate_url(3600, display_filename=kwargs['display_filename']))
+                else:
+                    return(key.generate_url(3600))
             else:
                 return('about:blank')
         else:
@@ -215,6 +218,8 @@ class SavedFile(object):
                 extn = '.' + extn
             root = daconfig.get('root', '/')
             fileroot = daconfig.get('fileserver', root)
+            if 'display_filename' in kwargs:
+                filename = kwargs['display_filename']
             if self.section == 'files':
                 if 'page' in kwargs and kwargs['page']:
                     page = re.sub(r'[^0-9]', '', str(kwargs['page']))
@@ -251,7 +256,7 @@ class SavedFile(object):
                         save = False
                 else:
                     key = cloud.get_key(str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
-                    if extension is not None and filename == self.filename:
+                    if self.extension is not None and filename == self.filename:
                         extension, mimetype = get_ext_and_mimetype(filename + '.' + self.extension)
                     else:
                         extension, mimetype = get_ext_and_mimetype(filename)
