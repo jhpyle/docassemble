@@ -10,10 +10,10 @@ class s3object(object):
         self.bucket = self.conn.Bucket(s3_config['bucket'])
         self.bucket_name = s3_config['bucket']
     def get_key(self, key_name):
-        return s3key(self.conn.Object(self.bucket_name, key_name))
+        return s3key(self, self.conn.Object(self.bucket_name, key_name))
     def search_key(self, key_name):
-        for key in self.bucket.objects.filter(Prefix=key_name, Delimiter='/')
-            return s3key(key)
+        for key in self.bucket.objects.filter(Prefix=key_name, Delimiter='/'):
+            return s3key(self, key)
     def list_keys(self, prefix):
         output = list()
         for obj in self.bucket.objects.filter(Prefix=key_name, Delimiter='/'):
@@ -33,7 +33,7 @@ class s3key(object):
         return self.key_obj.get()['Body'].read()
     def exists(self):
         try:
-            self.s3_object.conn.head_object(Bucket=self.s3_object.bucket_name, Key=self.key_obj.key)
+            self.s3_object.meta.client.head_object(Bucket=self.s3_object.bucket_name, Key=self.key_obj.key)
         except ClientError as e:
             return False
         return True
@@ -51,7 +51,7 @@ class s3key(object):
     def set_contents_from_string(self, text):
         self.key_obj.put(text)
     def generate_url(self, ):
-        return self.s3_object.generate_presigned_url(
+        return self.s3_object.conn.generate_presigned_url(
             ClientMethod='get_object',
             Params={
                 'Bucket': self.s3_object.bucket_name,
