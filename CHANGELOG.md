@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.1.55] - 2017-09-16
+### Added
+- The `id` and `precedence` modifiers and the `order` initial block.
+- The JSON interface.
+
 ## [0.1.54] - 2017-09-16
 ### Fixed
 - Upgraded from boto to boto3.
