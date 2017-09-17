@@ -25,8 +25,8 @@ subquestion: |
   ${ noun[1] }, which tried to zap
   ${ person[0] }.
 
-  But luckily, ${ person[1] } came out of
-  the back room just in time and
+  But luckily, ${ person[1] } came out
+  of the back room just in time and
   lunged at the ${ noun[1] }, thereby
   saving the day.
 buttons:
@@ -35,7 +35,8 @@ buttons:
 generic object: DAList
 question: |
   % if i == 0:
-  Give me ${ indefinite_article(x.object_name()) }.
+  Give me
+  ${ indefinite_article(x.object_name()) }.
   % else:
   Give me another ${ x.object_name() }.
   % endif

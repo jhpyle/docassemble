@@ -1,6 +1,18 @@
 # Change Log
 
 ## [0.1.56] - 2017-09-17
+### Changed
+- The way that the `objects` block gets executed has changed.  It no
+  longer executes as a mandatory block unless it is marked as
+  mandatory.
+- In addition, the way that questions are asked has changed
+  accordingly.  If any fields that would be set by the question have
+  attributes, **docassemble** will try to ensure that the underlying
+  variable is already defined, which may trigger a process of defining
+  the variable.  This will ensure that objects mentioned in object
+  blocks will be created before they are necessary.
+- These new changes enable the use of iterator variables like `i` in
+ `objects` blocks.
 ### Fixed
 - Problem with deletion of keys on S3.
 - Problem with response() on second and subsequent screens.

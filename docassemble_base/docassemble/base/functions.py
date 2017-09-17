@@ -95,10 +95,12 @@ def set_context(new_context, template=None):
 
 def set_current_variable(var):
     #logmessage("set_current_variable: " + str(var))
+    # if len(this_thread.current_variable) > 0 and this_thread.current_variable[-1] == var:
+    #     return
     this_thread.current_variable.append(var)
 
 def pop_current_variable():
-    #logmessage("pop_current_variable")
+    # logmessage("pop_current_variable: " + str(this_thread.current_variable))
     if len(this_thread.current_variable):
         var = this_thread.current_variable.pop()
         #logmessage("pop_current_variable: " + str(var))

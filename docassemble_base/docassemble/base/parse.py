@@ -339,9 +339,9 @@ class InterviewStatus(object):
             audio_result = docassemble.base.filter.get_audio_urls(self.audiovideo)
             video_result = docassemble.base.filter.get_video_urls(self.audiovideo)
             if len(audio_result) > 0:
-                result['audio'] = [dict(url=x[0], mime_type=x[1]) for x in audio_result]
+                result['audio'] = [dict(url=re.sub(r'.*"(http[^"]+)".*', r'\1', x)) if type(x) in (str, unicode) else dict(url=x[0], mime_type=x[1]) for x in audio_result]
             if len(video_result) > 0:
-                result['video'] = [dict(url=x[0], mime_type=x[1]) for x in video_result]
+                result['video'] = [dict(url=re.sub(r'.*"(http[^"]+)".*', r'\1', x)) if type(x) in (str, unicode) else dict(url=x[0], mime_type=x[1]) for x in video_result]
         if hasattr(self, 'helpText') and len(self.helpText) > 0:
             result['helpText'] = list()
             for help_text in self.helpText:
@@ -2541,6 +2541,15 @@ class Question:
                     if hasattr(field, 'hint'):
                         hints[field.number] = field.hint.text(user_dict)
         attachment_text = self.processed_attachments(user_dict, the_x=the_x, iterators=iterators)
+        assumed_objects = set()
+        for field in self.fields:
+            if hasattr(field, 'saveas'):
+                m = re.match(r'(.*)\.[^\.]+', from_safeid(field.saveas))
+                if m and m.group(1) != 'x':
+                    assumed_objects.add(m.group(1))
+        for var in assumed_objects:
+            if complications.search(var) or var not in user_dict:
+                eval(var, user_dict)
         if 'menu_items' in user_dict:
             extras['menu_items'] = user_dict['menu_items']
         if 'track_location' in user_dict:
@@ -3531,7 +3540,7 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        logmessage("askfor: I don't have " + str(missingVariable) + " for language " + str(language))
+        # logmessage("askfor: I don't have " + str(missingVariable) + " for language " + str(language))
         #sys.stderr.write("I don't have " + str(missingVariable) + " for language " + str(language) + "\n")
         origMissingVariable = missingVariable
         docassemble.base.functions.set_current_variable(origMissingVariable)
@@ -3574,20 +3583,24 @@ class Interview:
                 except:
                     pass
                 continue
+            # logmessage("askfor: questions to try is " + str(questions_to_try))
             if missingVariable in self.questions:
                 for lang in [language, '*']:
+                    # logmessage("lang is " + lang)
                     if lang in self.questions[missingVariable]:
                         for the_question in self.sort_with_orderings(self.questions[missingVariable][lang]):
                             questions_to_try.append((the_question, False, 'None', mv['iterators'], missingVariable, None))
-        #logmessage("askfor: questions to try is " + str(questions_to_try))
+        # logmessage("askfor: questions to try is " + str(questions_to_try))
         while True:
             docassemble.base.functions.reset_gathering_mode(origMissingVariable)
             a_question_was_skipped = False
+            # logmessage("Starting the while loop")
             try:
                 for the_question, is_generic, the_x, iterators, missing_var, generic_object in questions_to_try:
+                    # logmessage("In for loop with question " + the_question.name)
                     if missing_var in questions_tried and the_question in questions_tried[missing_var]:
                         a_question_was_skipped = True
-                        logmessage("Skipping question")
+                        # logmessage("Skipping question " + the_question.name)
                         continue
                     current_question = the_question
                     if follow_mc:
@@ -3599,6 +3612,7 @@ class Interview:
                     if question.question_type == "objects":
                         success = False
                         for keyvalue in question.objects:
+                            # logmessage("In a for loop for keyvalue")
                             for variable, object_type in keyvalue.iteritems():
                                 if variable != missing_var:
                                     continue
@@ -3621,16 +3635,21 @@ class Interview:
                                     variable = m.group(1)
                                     attribute = m.group(2)
                                     command = variable + "." + attribute + " = " + object_type + "()"
+                                    # logmessage("Running " + command)
                                     exec(command, user_dict)
                                 else:
                                     command = variable + ' = ' + object_type + '("' + variable + '")'
+                                    # logmessage("Running " + command)
                                     exec(command, user_dict)
                                 if missing_var in variable_stack:
                                     variable_stack.remove(missing_var)
                                 try:
                                     eval(missing_var, user_dict)
                                     success = True
+                                    # logmessage("the variable was defined")
+                                    break
                                 except:
+                                    # logmessage("the variable was not defined")
                                     if was_defined:
                                         try:
                                             exec(str(missing_var) + " = __oldvariable__", user_dict)
@@ -3639,10 +3658,17 @@ class Interview:
                                         except:
                                             pass
                                     continue
+                            if success:
+                                # logmessage("success, break")
+                                break
+                        # logmessage("testing for success")
                         if not success:
+                            # logmessage("no success, continue")
                             continue
                         #question.mark_as_answered(user_dict)
+                        # logmessage("pop current variable")
                         docassemble.base.functions.pop_current_variable()
+                        # logmessage("Returning")
                         return({'type': 'continue', 'var': missing_var})
                     if question.question_type == "template":
                         if question.target is not None:
@@ -3779,8 +3805,8 @@ class Interview:
                     raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
                 raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
             except NameError as the_exception:
+                # logmessage("NameError: " + str(the_exception))
                 docassemble.base.functions.reset_context()
-                logmessage("got this error: " + str(the_exception))
                 if isinstance(the_exception, ForcedNameError):
                     #logmessage("askfor: got a ForcedNameError for " + the_exception.name)
                     follow_mc = False
@@ -3796,13 +3822,13 @@ class Interview:
                     questions_tried[newMissingVariable] = set()
                 questions_tried[newMissingVariable].add(current_question)
                 question_result = self.askfor(newMissingVariable, user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=follow_mc)
-                if question_result['type'] == 'continue':
-                    #logmessage("Continuing after asking for newMissingVariable " + str(newMissingVariable))
+                if question_result['type'] == 'continue' and missing_var != newMissingVariable:
+                    # logmessage("Continuing after asking for newMissingVariable " + str(newMissingVariable))
                     continue
                 docassemble.base.functions.pop_current_variable()
                 return(question_result)
             except UndefinedError as the_exception:
-                #logmessage("UndefinedError: " + str(the_exception))
+                # logmessage("UndefinedError: " + str(the_exception))
                 docassemble.base.functions.reset_context()
                 newMissingVariable = extract_missing_name(the_exception)
                 if newMissingVariable not in questions_tried:
@@ -3814,6 +3840,7 @@ class Interview:
                 docassemble.base.functions.pop_current_variable()
                 return(question_result)
             except CommandError as qError:
+                # logmessage("CommandError: " + str(qError))
                 docassemble.base.functions.reset_context()
                 question_data = dict(command=qError.return_type, url=qError.url)
                 new_interview_source = InterviewSourceString(content='')
@@ -3823,6 +3850,7 @@ class Interview:
                 new_question.name = "Question_Temp"
                 return(new_question.ask(user_dict, 'None', [], missing_var))
             except ResponseError as qError:
+                # logmessage("ResponseError")
                 docassemble.base.functions.reset_context()
                 #logmessage("Trapped ResponseError2")
                 question_data = dict(extras=dict())
@@ -3847,6 +3875,7 @@ class Interview:
                 #the_question = new_question.follow_multiple_choice(user_dict)
                 return(new_question.ask(user_dict, 'None', [], missing_var))
             except BackgroundResponseError as qError:
+                # logmessage("BackgroundResponseError")
                 docassemble.base.functions.reset_context()
                 #logmessage("Trapped BackgroundResponseError2")
                 question_data = dict(extras=dict())
@@ -3859,6 +3888,7 @@ class Interview:
                 new_question.name = "Question_Temp"
                 return(new_question.ask(user_dict, 'None', [], missing_var))
             except BackgroundResponseActionError as qError:
+                # logmessage("BackgroundResponseActionError")
                 docassemble.base.functions.reset_context()
                 #logmessage("Trapped BackgroundResponseActionError2")
                 question_data = dict(extras=dict())
@@ -3871,6 +3901,7 @@ class Interview:
                 new_question.name = "Question_Temp"
                 return(new_question.ask(user_dict, 'None', [], missing_var))
             except QuestionError as qError:
+                # logmessage("QuestionError")
                 docassemble.base.functions.reset_context()
                 #logmessage("Trapped QuestionError")
                 question_data = dict()
@@ -3907,6 +3938,7 @@ class Interview:
                 # the_question = new_question.follow_multiple_choice(user_dict)
                 return(new_question.ask(user_dict, 'None', [], missing_var))
             except CodeExecute as code_error:
+                # logmessage("CodeExecute")
                 docassemble.base.functions.reset_context()
                 #if debug:
                 #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
@@ -3925,6 +3957,7 @@ class Interview:
                     #raise DAError("Problem setting that variable")
                     continue
             except SyntaxException as qError:
+                # logmessage("SyntaxException")
                 docassemble.base.functions.reset_context()
                 the_question = None
                 try:

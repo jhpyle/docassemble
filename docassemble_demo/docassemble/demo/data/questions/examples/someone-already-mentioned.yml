@@ -15,8 +15,6 @@ objects:
 ---
 question: |
   Who is the cook?
-need:
-  - cook
 fields:
   - Somebody already mentioned: cook
     datatype: object
@@ -31,8 +29,6 @@ fields:
 ---
 question: |
   Who is the gardener?
-need:
-  - gardener
 fields:
   - Somebody already mentioned: gardener
     datatype: object
@@ -47,8 +43,6 @@ fields:
 ---
 question: |
   Who is the maid?
-need:
-  - maid
 fields:
   - Somebody already mentioned: maid
     datatype: object

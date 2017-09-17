@@ -12,4 +12,5 @@ question: |
   You are going to New York City.
   % else:
   You are not going to New York City.
+  % endif
 mandatory: True

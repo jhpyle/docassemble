@@ -1,0 +1,23 @@
+metadata:
+  title: Object
+  documentation: "https://docassemble.org/docs/objects.html#DAObject"
+  example start: 1
+  example end: 5
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - tree: DAObject
+  - tree.branch: DAObject
+---
+mandatory: True
+question: |
+  The length of the branch is
+  ${ tree.branch.length }.
+---
+question: |
+  What is the length of the branch
+  on the tree?
+fields:
+  - Length: tree.branch.length

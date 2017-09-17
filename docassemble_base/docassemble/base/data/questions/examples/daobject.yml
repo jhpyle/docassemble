@@ -17,7 +17,8 @@ code: |
 ---
 mandatory: True
 question: |
-  The ${ turnip.color } turnip sat before the
+  The ${ turnip.color } turnip sat
+  before the
   ${ park.front_gate.color } gate.
 ---
 generic object: DAObject

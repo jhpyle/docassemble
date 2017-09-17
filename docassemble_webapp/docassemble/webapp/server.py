@@ -4485,7 +4485,10 @@ def index():
         the_next_action = next_action.pop(0)
         interview_status.next_action = next_action
         interview_status.current_info.update(the_next_action)
+    #startTime = int(round(time.time() * 1000))
     interview.assemble(user_dict, interview_status)
+    #endTime = int(round(time.time() * 1000))
+    #logmessage(str(endTime - startTime))
     current_language = docassemble.base.functions.get_language()
     if current_language != DEFAULT_LANGUAGE:
         session['language'] = current_language
