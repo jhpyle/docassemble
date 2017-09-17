@@ -371,6 +371,11 @@ The function `json_response(data)` is a shorthand for
 In other words, it takes a single argument and returns it as an HTTP
 response in [JSON] format.
 
+Another way to get [JSON] output from **docassemble** is to use the
+[JSON interface], which provides a [JSON] representation of a
+**docassemble** screen.  This can be useful if you are developing your
+own front end to **docassemble**.
+
 ## <a name="variables_as_json"></a>variables_as_json()
 
 The `variables_as_json()` function acts like [`response()`] in the
@@ -3926,3 +3931,4 @@ $(document).on('daPageLoad', function(){
 [table]: {{ site.baseurl }}/docs/template.html#table
 [referer header]: https://en.wikipedia.org/wiki/HTTP_referer
 [`exitpage`]: {{ site.baseurl }}/docs/config.html#exitpage
+[JSON interface]: {{ site.baseurl }}/docs/frontend.html

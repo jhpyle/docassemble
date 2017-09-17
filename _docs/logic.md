@@ -842,6 +842,10 @@ which sets `veggies[i][j]`, when applicable:
 
 {% include side-by-side.html demo="nested-veggies-override" %}
 
+If you would like to explicitly indicate which blocks take precedence
+over other blocks, see the [`order` initial block] and the
+[`id` and `supersedes`] modifiers.
+
 # <a name="multiple interviews"></a>Combining multiple interviews into one
 
 If you have multiple interviews and you want the user to choose which
@@ -958,3 +962,5 @@ provide a list of interviews available on your server.
 [`need` directive]: #need
 [`reconsider`]: #reconsider
 [`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
+[`id` and `supersedes`]: {{ site.baseurl}}/docs/modifiers.html#precedence
+[`order` initial block]: {{ site.baseurl }}/docs/initial.html#order

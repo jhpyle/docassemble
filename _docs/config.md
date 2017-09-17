@@ -1092,7 +1092,7 @@ bandwidth on your web server(s) by setting `fileserver` to a URL path to
 a dedicated file server:
 
 {% highlight yaml %}
-fileserver: files.example.com/da/
+fileserver: https://files.example.com/da/
 {% endhighlight %}
 
 Always use a trailing slash.
@@ -1100,8 +1100,9 @@ Always use a trailing slash.
 If this directive is not set, the value of [`root`] will be used to
 create URLs to uploaded files and static files.
 
-Whether there will be a performance benefit to using a dedicated file
-server is not certain.
+Note that if you are using [Azure blob storage] or [S3], the URLs to
+files will point directly to files stored in the cloud, so there would
+be no reason for a **docassemble** file server.
 
 ## <a name="google"></a>Google API key
 
@@ -1791,7 +1792,7 @@ and Facebook API keys.
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
 [list of language codes]: http://www.voicerss.org/api/documentation.aspx
 [supervisor]: http://supervisord.org/
-[S3]: https://aws.amazon.com/s3/
+[S3]: {{ site.baseurl }}/docs/docker.html#persistent s3
 [Azure blob storage]: {{ site.baseurl }}/docs/docker.html#persistent azure
 [Amazon S3]: https://aws.amazon.com/s3/
 [avconv]: https://libav.org/avconv.html

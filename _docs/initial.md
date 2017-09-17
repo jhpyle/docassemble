@@ -260,6 +260,34 @@ Effectively, this causes variables to act like functions.
 For information about how to cause **docassemble** to reset variables
 set by [`code` blocks], see the [`reconsider` modifier].
 
+# <a name="order"></a>Changing order of precedence
+
+As explained in [how **docassemble** finds questions for variables],
+if there is more than one [`question`] or [`code`] block that offers
+to define a particular variable, blocks that are later in the [YAML]
+file will be tried first.
+
+If you would like to specify the order of precedence of blocks in a
+more explicit way, so that you can order the blocks in the [YAML] file
+in whatever way you want, you can tag two or more blocks with [`id`]s
+and insert an `order` block indicating the order of precedence of the
+blocks.
+
+For example, suppose you have an interview with two blocks that could
+define the variable `favorite_fruit`.  Normally, **docassemble** will
+try the the second block first because it appears later in the [YAML]
+file; the second block will "override" the first.
+
+{% include side-by-side.html demo="supersede-regular" %}
+
+However, if you actually want the first block to be tried first, you
+can manually specify the order of blocks:
+
+{% include side-by-side.html demo="supersede-order" %}
+
+Another way to override the order in which blocks will be tried is by
+using the [`id` and `supersedes`] modifiers.
+
 # <a name="terms"></a><a name="auto terms"></a>Vocabulary `terms` and `auto terms`
 
 {% highlight yaml %}
@@ -829,3 +857,8 @@ the user has either a mobile phone or a tablet.
 [`maximum image size` in the configuration]: {{ site.baseurl }}/docs/config.html#maximum image size
 [`maximum image size` field modifier]: {{ site.baseurl }}/docs/fields.html#maximum image size
 [document caching feature]: {{ site.baseurl}}/docs/documents.html#caching
+[`id` and `supersedes`]: {{ site.baseurl}}/docs/modifiers.html#precedence
+[`id`]: {{ site.baseurl}}/docs/modifiers.html#precedence
+[how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`code`]: {{ site.baseurl }}/docs/code.html#code

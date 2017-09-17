@@ -465,6 +465,52 @@ You can use [Mako] to determine the number of seconds.  If the
 `reload` value evaluates to `False` or `None`, the screen will not
 reload.
 
+# <a name="precedence"></a>Changing order of precedence
+
+As explained in [how **docassemble** finds questions for variables],
+if there is more than one [`question`] or [`code`] block that offers
+to define a particular variable, blocks that are later in the [YAML]
+file will be tried first.
+
+For example, suppose your friend developed a [YAML] file with
+questions and code blocks that define the variables `client.age`,
+`client.eligible`, and `docket_number`.  In your interview, you would
+like to define `client.age` and `client.eligible` the same way your
+friend does.  You can accomplish this by using [`include`] to
+incorporate by reference your friend's [YAML] file.  But suppose you
+don't like the way your friend asks the question to determine
+`docket_number`.  No problem; just write a [`question`] in your own
+[YAML] file that defines `docket_number`, and make sure that this
+[`question`] appears after the [`include`] block that incorporates
+your friend's [YAML] file.  That way, your question will be used
+instead of your friend's.
+
+However, there may be times when the relative placement of blocks
+within the [YAML] file is not a convenient way for you to designate
+which questions override other questions.
+
+For example, suppose there are two [`question`] blocks in your
+interview that define `favorite_fruit`.  The second one is always used
+because it appears later in the [YAML]; the second question supersedes
+the first.
+
+{% include side-by-side.html demo="supersede-regular" %}
+
+If you wanted the first question to be asked instead, you could
+rearrange the order of questions, but what if you wanted to keep the
+order the same?
+
+One alternative is to use the `id` and `supersedes` directives:
+
+{% include side-by-side.html demo="supersede" %}
+
+In this example, the `id` and `supersedes` directives tell the
+interview that the first question takes precedence over the second.
+Adding an `id` to a block has no other side effects.
+
+Another way of changing the order of precedence is to use the
+[`order` initial block].
+
 # <a name="comment"></a>Hidden `comment`s
 
 To make a note to yourself about a question, which will not be seen by
@@ -473,6 +519,9 @@ by **docassemble**, so it can contain any valid [YAML].
 
 {% include side-by-side.html demo="comment-weather" %}
 
+[`order` initial block]: {{ site.baseurl }}/docs/initial.html#order
+[`include`]: {{ site.baseurl }}/docs/initial.html#include
+[how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [language support]: {{ site.baseurl }}/docs/language.html

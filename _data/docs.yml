@@ -27,6 +27,7 @@
     - background
     - ml
     - sms
+    - frontend
 - title: Development
   docs:
     - development

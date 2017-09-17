@@ -989,6 +989,13 @@
   subquestion: |
     I hope you had a good time!
   sets: all_done
+"declarative": |-
+  objects:
+    injury_location: Address
+    defendant_address: Address
+    plaintiff_address: Address
+    court: Court
+"declarative-classes": ""
 "decoration": |-
   decoration: kids
   question:
@@ -2701,6 +2708,14 @@
   \ here beside\n      the Potomac. We now find it\n      necessary to provide by\
   \ great\n      additional buildings for the\n      business of the government.\n\
   mandatory: True"
+"forward-chaining": |-
+  modules:
+    - docassemble.base.util
+"forward-chaining-assumptions": |-
+  generic object: DAObject
+  question: |
+    Does ${ x } eat flies?
+  yesno: x.eats_flies
 "fruit-template-alt-1": |-
   mandatory: True
   question: Here is your document.
@@ -6220,6 +6235,60 @@
   subquestion: Be careful how you answer.
   fields:
     - Velocity: swallow_velocity
+"supersede": |-
+  id: informal favorite fruit question
+  supersedes: regular favorite fruit question
+  question: |
+    What the heck is your favorite fruit?
+  fields:
+    Fruit: favorite_fruit
+  ---
+  id: regular favorite fruit question
+  question: |
+    What is your favorite fruit?
+  fields:
+    Fruit: favorite_fruit
+  ---
+  mandatory: True
+  question: |
+    Your favorite fruit is
+    ${ favorite_fruit }.
+"supersede-order": |-
+  order:
+    - informal favorite fruit question
+    - regular favorite fruit question
+  ---
+  id: informal favorite fruit question
+  question: |
+    What the heck is your favorite fruit?
+  fields:
+    Fruit: favorite_fruit
+  ---
+  id: regular favorite fruit question
+  question: |
+    What is your favorite fruit?
+  fields:
+    Fruit: favorite_fruit
+  ---
+  mandatory: True
+  question: |
+    Your favorite fruit is
+    ${ favorite_fruit }.
+"supersede-regular": |-
+  question: |
+    What the heck is your favorite fruit?
+  fields:
+    Fruit: favorite_fruit
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    Fruit: favorite_fruit
+  ---
+  mandatory: True
+  question: |
+    Your favorite fruit is
+    ${ favorite_fruit }.
 "table": |-
   objects:
     - fruit: DAList
