@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.1.56] - 2017-09-17
+### Fixed
+- Problem with deletion of keys on S3.
+- Problem with response() on second and subsequent screens.
+
 ## [0.1.55] - 2017-09-16
 ### Added
 - The `id` and `precedence` modifiers and the `order` initial block.

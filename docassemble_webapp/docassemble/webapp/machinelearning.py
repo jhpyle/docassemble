@@ -21,6 +21,7 @@ lastmodtime = dict()
 reset_counter = dict()
 
 class MachineLearningEntry(DAObject):
+    """An entry in the machine learning system"""
     def classify(self, dependent=None):
         """Sets the dependent variable of the machine learning entry"""
         if dependent is not None:
@@ -46,6 +47,7 @@ class MachineLearningEntry(DAObject):
         return self.ml.predict(self.independent, probabilities=probabilities)
 
 class MachineLearner(object):
+    """Base class for machine learning objects"""
     def __init__(self, *pargs, **kwargs):
         if len(pargs) > 0:
             self.group_id = pargs[0]

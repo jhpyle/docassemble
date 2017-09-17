@@ -615,6 +615,10 @@ class Thing(DAObject):
         return self.name.full()
 
 class Event(DAObject):
+    """A DAObject with pre-set attributes address, which is a City, and
+    location, which is a LatitudeLongitude.
+
+    """
     def init(self, *pargs, **kwargs):
         if 'address' not in kwargs:
             self.address = City()

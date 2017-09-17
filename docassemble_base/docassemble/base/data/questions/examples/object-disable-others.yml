@@ -8,6 +8,7 @@ metadata:
 modules:
   - docassemble.base.legal
 ---
+mandatory: True
 objects:
   protagonist: Individual
   antagonist: Individual

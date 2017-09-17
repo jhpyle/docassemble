@@ -76,8 +76,11 @@ class SavedFile(object):
     def delete(self):
         if cloud is not None:
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
-            for key in cloud.list_keys(prefix):
-                key.delete()
+            for key in [x for x in cloud.list_keys(prefix)]:
+                try:
+                    key.delete()
+                except:
+                    pass
         if hasattr(self, 'directory') and os.path.isdir(self.directory):
             shutil.rmtree(self.directory)
     def save(self, finalize=False):

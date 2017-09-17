@@ -5472,6 +5472,7 @@ def index():
           daRefreshSubmit();
         }
         else if (data.action == 'resubmit'){
+          $("input[name='ajax']").remove();
           if (daSubmitter != null){
             var input = $("<input>")
               .attr("type", "hidden")
@@ -6434,7 +6435,7 @@ def index():
                 elif 'variable' in stage:
                     output += "          <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
 #                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.functions.pickleable_objects(user_dict))]) + '</p>' + "\n"
-            output += '          <h4>' + word('Names defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
+        output += '          <h4>' + word('Names defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
             # output += '          <h4>' + word('Variables as JSON') + '</h4>' + "\n        <pre>" + docassemble.base.functions.dict_as_json(user_dict) + '</pre>' + "\n"
         output += '        </div>' + "\n"
         output += '      </div>' + "\n"
@@ -10453,19 +10454,20 @@ def playground_packages():
     if not is_new:
         pkgname = 'docassemble.' + the_file
         pypi_info = pypi_status(pkgname)
-        if pypi_info['error']:
-            pypi_message = word("Unable to determine if the package is published on PyPI.")
-        else:
-            if pypi_info['exists'] and 'info' in pypi_info['info']:
-                pypi_version = pypi_info['info']['info'].get('version', None)
-                pypi_message = word('This package is') + ' <a target="_blank" href="' + pypi_url + '/' + pkgname + '/' + pypi_version + '">' + word("published on PyPI") + '</a>.'
-                pypi_author = pypi_info['info']['info'].get('author', None)
-                if pypi_author:
-                    pypi_message += "  " + word("The author is") + " " + pypi_author + "."
-                if pypi_version != form['version'].data:
-                    pypi_message += "  " + word("The version on PyPI is") + " " + str(pypi_version) + ".  " + word("Your version is") + " " + str(form['version'].data) + "."
+        if can_publish_to_pypi:
+            if pypi_info['error']:
+                pypi_message = word("Unable to determine if the package is published on PyPI.")
             else:
-                pypi_message = word('This package is not yet published on PyPI.')
+                if pypi_info['exists'] and 'info' in pypi_info['info']:
+                    pypi_version = pypi_info['info']['info'].get('version', None)
+                    pypi_message = word('This package is') + ' <a target="_blank" href="' + pypi_url + '/' + pkgname + '/' + pypi_version + '">' + word("published on PyPI") + '</a>.'
+                    pypi_author = pypi_info['info']['info'].get('author', None)
+                    if pypi_author:
+                        pypi_message += "  " + word("The author is") + " " + pypi_author + "."
+                    if pypi_version != form['version'].data:
+                        pypi_message += "  " + word("The version on PyPI is") + " " + str(pypi_version) + ".  " + word("Your version is") + " " + str(form['version'].data) + "."
+                else:
+                    pypi_message = word('This package is not yet published on PyPI.')
     if request.method == 'POST' and validated:
         new_info = dict()
         for field in ['license', 'description', 'version', 'url', 'readme', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
@@ -10565,8 +10567,11 @@ def playground_packages():
     else:
         any_files = False
     back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
-    if pypi_message is not None:
-        pypi_message = Markup(pypi_message)
+    if can_publish_to_pypi:
+        if pypi_message is not None:
+            pypi_message = Markup(pypi_message)
+    else:
+        pypi_message = None
     if github_message is not None:
         github_message = Markup(github_message)
     return render_template('pages/playgroundpackages.html', version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_http=github_http, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    ' + kbLoad + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      $("#daPyPI").click(function(event){if(!confirm("' + word("Are you sure that you want to publish this package to PyPI?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200

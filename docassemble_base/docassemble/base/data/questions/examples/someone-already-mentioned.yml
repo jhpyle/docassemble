@@ -5,6 +5,7 @@ include:
 import:
   - .change_suffix
 ---
+mandatory: True
 objects:
   successor_agent: Individual
   conservator: Individual

@@ -2,6 +2,7 @@
 include:
   - basic-questions.yml
 ---
+mandatory: True
 objects:
   successor_agent: Individual
   conservator: Individual

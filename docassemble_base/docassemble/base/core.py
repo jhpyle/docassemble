@@ -1676,6 +1676,7 @@ class DAFileList(DAList):
                 element.set_attributes(**kwargs)
 
 class DAEmailRecipientList(DAList):
+    """Represents a list of DAEmailRecipient objects."""
     def init(self, *pargs, **kwargs):
         #logmessage("DAEmailRecipientList: pargs is " + str(pargs) + " and kwargs is " + str(kwargs))
         self.object_type = DAEmailRecipient
@@ -1690,6 +1691,10 @@ class DAEmailRecipientList(DAList):
                 self.appendObject(DAEmailRecipient, **parg)
     
 class DAEmailRecipient(DAObject):
+    """An object type used within DAEmail objects to represent a single
+    e-mail address and the name associated with that e-mail address.
+
+    """
     def init(self, *pargs, **kwargs):
         #logmessage("DAEmailRecipient: pargs is " + str(pargs) + " and kwargs is " + str(kwargs))
         if 'address' in kwargs:
@@ -1726,6 +1731,10 @@ class DAEmailRecipient(DAObject):
         return '[' + unicode(name) + '](mailto:' + unicode(self.address) + ')'
 
 class DAEmail(DAObject):
+    """An object type used to represent an e-mail that has been received
+    through the e-mail receiving feature.
+
+    """
     def __str__(self):
         return("This is an e-mail")
 

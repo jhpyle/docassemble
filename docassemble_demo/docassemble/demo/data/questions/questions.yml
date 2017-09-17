@@ -90,12 +90,17 @@ comment: |
   package.  The files are located in the directory
   docassemble/demo/data/static.
 ---
+mandatory: True
 objects:
   - village_idiot: Individual
 comment: |
   In a later question we will refer to the variable "village_idiot."
   This "objects" block creates the variable "village_idiot" and
   specifies that it is an object of type "Individual."
+
+  This block needs to be "mandatory" because the question that is
+  asked later uses the "Somebody already mentioned" feature, which
+  presumes that the object already exists.
 ---
 auto terms:
   rhododendron: |
