@@ -430,6 +430,45 @@
     What is your Zodiac sign?
   fields:
     - "": target_variable
+"branch-error": |-
+  modules:
+    - docassemble.base.core
+  ---
+  objects:
+    - tree: DAObject
+    - long_branch: DAObject
+  ---
+  mandatory: True
+  question: |
+    The length of the branch is
+    ${ tree.branch.length }.
+  ---
+  code: |
+    tree.branch = long_branch
+  ---
+  question: |
+    What is the length of the branch
+    on the tree?
+  fields:
+    - Length: tree.branch.length
+"branch-no-error": |-
+  modules:
+    - docassemble.base.core
+  ---
+  objects:
+    - tree: DAObject
+    - tree.branch: DAObject
+  ---
+  mandatory: True
+  question: |
+    The length of the branch is
+    ${ tree.branch.length }.
+  ---
+  question: |
+    What is the length of the branch
+    on the tree?
+  fields:
+    - Length: tree.branch.length
 "buttons": |-
   question: |
     What type of belly button do you
@@ -916,7 +955,8 @@
   ---
   mandatory: True
   question: |
-    The ${ turnip.color } turnip sat before the
+    The ${ turnip.color } turnip sat
+    before the
     ${ park.front_gate.color } gate.
   ---
   generic object: DAObject
@@ -4003,8 +4043,8 @@
     ${ noun[1] }, which tried to zap
     ${ person[0] }.
 
-    But luckily, ${ person[1] } came out of
-    the back room just in time and
+    But luckily, ${ person[1] } came out
+    of the back room just in time and
     lunged at the ${ noun[1] }, thereby
     saving the day.
   buttons:
@@ -4013,7 +4053,8 @@
   generic object: DAList
   question: |
     % if i == 0:
-    Give me ${ indefinite_article(x.object_name()) }.
+    Give me
+    ${ indefinite_article(x.object_name()) }.
     % else:
     Give me another ${ x.object_name() }.
     % endif
@@ -4746,6 +4787,7 @@
 
     The colors are ${ colors }.
 "object-disable-others": |-
+  mandatory: True
   objects:
     protagonist: Individual
     antagonist: Individual
@@ -6190,6 +6232,7 @@
   import:
     - .change_suffix
 "someone-already-mentioned2": |-
+  mandatory: True
   objects:
     successor_agent: Individual
     conservator: Individual

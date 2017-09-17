@@ -69,7 +69,7 @@ A code block like this would effectively do the same thing as the
 ---
 code: |
   spouse = Individual('spouse')
-  user.initializeAttribue(name='case', objectType=Case)
+  user.initializeAttribute(name='case', objectType=Case)
 ---
 {% endhighlight %}
 
@@ -78,10 +78,16 @@ initialization because the full name of the variable needs to be
 supplied to the function that creates and initializes the object.  The
 base class `DAObject` keeps track of variable names.
 
-Whenever possible, you should use `objects` blocks rather than code to
-initialize your objects.  `objects` blocks are clean and readable.
+In some situations, running `spouse = Individual()` will correctly
+detect the variable name `spouse`, but in other situations, the name
+cannot be detected.  Running `spouse = Individual('spouse')` will
+always set the name correctly.
 
-# <a name="objects from file"></a>Importing `objects from file`
+Whenever possible, you should use `objects` blocks rather than code to
+initialize your objects because `objects` blocks are clean and
+readable.
+
+<a name="objects from file"></a>Importing `objects from file`
 
 {% highlight yaml %}
 ---

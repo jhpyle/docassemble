@@ -433,28 +433,7 @@ like ordinary [Python objects] in most ways, but there are exceptions.
 
 Suppose you try the following:
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.core
----
-objects:
-  - tree: DAObject
-  - long_branch: DAObject
----
-mandatory: True
-question: |
-  The length of the branch is ${ tree.branch.length }.
----
-code: |
-  tree.branch = long_branch
----
-question: |
-  What is the length of the branch on the tree?
-fields:
-  - Length: tree.branch.length
----
-{% endhighlight %}
+{% include side-by-side.html demo="branch-error" %}
 
 This will result in the following error:
 
@@ -471,42 +450,7 @@ name of the branch is `long_branch`, not `tree.branch`.
 
 However, this will work as intended:
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.core
----
-objects:
-  - tree: DAObject
----
-sets: tree.branch
-code: |
-  tree.initializeAttribute('branch', DAObject)
----
-mandatory: True
-question: |
-  The length of the branch is ${ tree.branch.length }.
----
-question: |
-  What is the length of the branch on the tree?
-fields:
-  - Length: tree.branch.length
----
-{% endhighlight %}
-
-The `initializeAttribute` section here creates a new `DAObject` with
-the intrinsic name of `tree.branch`, and adds the `branch` attribute
-to the object `tree`.
-
-Note that we had to add `sets: tree.branch` to the `code` section with
-`tree.initializeAttribute('branch', DAObject)`, but this was not
-necessary when the code was `tree.branch = long_branch`.  This is
-because **docassemble** reads the code in `code` sections and looks
-for assignments with the `=` operator, and keeps track of which code
-sections define which variables.  But sometimes variables are assigned
-by functions, and **docassemble** does not realize that.  The
-`sets: tree.branch` line tells **docassemble** that the code promises
-to define `tree.branch`.  See [`sets`] for more information.
+{% include side-by-side.html demo="branch-no-error" %}
 
 One of the useful things about `DAObject`s is that you can write
 [`generic object`] questions that work in a wide variety of
