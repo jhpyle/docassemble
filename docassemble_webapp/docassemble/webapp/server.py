@@ -944,14 +944,22 @@ def substitute_secret(oldsecret, newsecret):
         changed = False
         for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).all():
             #logmessage("substitute_secret: record was encrypted")
-            the_dict = decrypt_dictionary(record.dictionary, oldsecret)
+            try:
+                the_dict = decrypt_dictionary(record.dictionary, oldsecret)
+            except Exception as e:
+                logmessage("substitute_secret: error decrypting dictionary for filename " + filename + " and uid " + user_code + ": " + str(e))
+                continue
             record.dictionary = encrypt_dictionary(the_dict, newsecret)
             changed = True
         if changed:
             db.session.commit()
         changed = False
         for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
-            phrase = decrypt_phrase(record.message, oldsecret)
+            try:
+                phrase = decrypt_phrase(record.message, oldsecret)
+            except Exception as e:
+                logmessage("substitute_secret: error decrypting phrase for filename " + filename + " and uid " + user_code + ": " + str(e))
+                continue
             record.message = encrypt_phrase(phrase, newsecret)
             changed = True
         if changed:
@@ -6426,7 +6434,7 @@ def index():
                 elif 'variable' in stage:
                     output += "          <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
 #                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.functions.pickleable_objects(user_dict))]) + '</p>' + "\n"
-            output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
+            output += '          <h4>' + word('Names defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
             # output += '          <h4>' + word('Variables as JSON') + '</h4>' + "\n        <pre>" + docassemble.base.functions.dict_as_json(user_dict) + '</pre>' + "\n"
         output += '        </div>' + "\n"
         output += '      </div>' + "\n"

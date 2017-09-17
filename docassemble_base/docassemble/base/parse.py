@@ -362,12 +362,12 @@ class InterviewStatus(object):
             result['questionText'] = word('Sign Your Name')
         result['questionType'] = self.question.question_type
         if hasattr(self.question, 'name'):
-            result['questionName'] = self.question.name
-        result['tracker'] = self.tracker
+            result['_question_name'] = self.question.name
+        result['_tracker'] = self.tracker
         if hasattr(self, 'datatypes'):
-            result['datatypes'] = safeid(json.dumps(self.datatypes))
+            result['_datatypes'] = safeid(json.dumps(self.datatypes))
         if hasattr(self, 'varnames'):
-            result['varnames'] = safeid(json.dumps(self.varnames))
+            result['_varnames'] = safeid(json.dumps(self.varnames))
         if len(self.question.fields) > 0:
             result['fields'] = list()
         if self.decorations is not None:
@@ -388,9 +388,11 @@ class InterviewStatus(object):
                 the_attachment = dict(url=dict())
                 for key in ['valid_formats', 'filename', 'name', 'description', 'content', 'markdown']:
                     if key in attachment:
-                        the_attachment[key] = attachment[key]
+                        if attachment[key]:
+                            the_attachment[key] = attachment[key]
                 for the_format in attachment['file']:
-                    the_attachment['url'][the_format] = docassemble.base.functions.server.url_finder(attachment['file'][the_format])
+                    the_attachment['url'][the_format] = docassemble.base.functions.server.url_finder(attachment['file'][the_format], filename=attachment['filename'] + '.' + the_format)
+                result['attachments'].append(the_attachment)
         for field in self.question.fields:
             the_field = dict()
             the_field['number'] = field.number
@@ -3118,7 +3120,7 @@ class Interview:
                         logmessage("warning: reference in a supersedes directive to an id " + question_id + " that does not exist in interview")
             elif ordering['type'] == 'order':
                 new_list = list()
-                for question_id in ordering['supersedes']:
+                for question_id in ordering['order']:
                     if question_id in self.questions_by_id:
                         new_list.append(self.questions_by_id[question_id].number)
                     else:
@@ -3179,7 +3181,7 @@ class Interview:
         if len(the_list) <= 1:
             return the_list
         result = sorted(the_list, key=self.sorter)
-        #logmessage(repr([y for y in reversed([x.number for x in result])]))
+        # logmessage(repr([y for y in reversed([x.number for x in result])]))
         return reversed(result)
     def processed_helptext(self, user_dict, language):
         result = list()

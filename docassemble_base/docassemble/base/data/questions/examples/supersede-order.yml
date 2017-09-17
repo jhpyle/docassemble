@@ -1,0 +1,27 @@
+metadata:
+  title: Precedence of blocks
+  short title: Precedence
+  documentation: "https://docassemble.org/docs/modifiers.html#precedence"
+  example start: 1
+  example end: 4
+---
+order:
+  - informal favorite fruit question
+  - regular favorite fruit question
+---
+id: informal favorite fruit question
+question: |
+  What the heck is your favorite fruit?
+fields:
+  Fruit: favorite_fruit
+---
+id: regular favorite fruit question
+question: |
+  What is your favorite fruit?
+fields:
+  Fruit: favorite_fruit
+---
+mandatory: True
+question: |
+  Your favorite fruit is
+  ${ favorite_fruit }.
