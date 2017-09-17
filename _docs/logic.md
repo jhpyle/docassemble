@@ -675,6 +675,10 @@ particular variable, it goes from bottom to top; if a block is later
 in the file, it is considered to "supersede" blocks that are earlier
 in the file.
 
+As explained [below](#supersede), however, instead of relying on
+relative placement of blocks in the [YAML] file, you can explicitly
+indicate which blocks take precedence over other blocks.
+
 # <a name="howitworks"></a>How **docassemble** runs your code
 
 **docassemble** goes through your interview [YAML] file from start to
@@ -842,9 +846,9 @@ which sets `veggies[i][j]`, when applicable:
 
 {% include side-by-side.html demo="nested-veggies-override" %}
 
-If you would like to explicitly indicate which blocks take precedence
-over other blocks, see the [`order` initial block] and the
-[`id` and `supersedes`] modifiers.
+<a name="precedence"></a>These rules about which blocks are tried
+before other blocks can be overriden using the [`order` initial block]
+or the [`id` and `supersedes`] modifiers.
 
 # <a name="multiple interviews"></a>Combining multiple interviews into one
 
