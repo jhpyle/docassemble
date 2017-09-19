@@ -630,6 +630,16 @@
     - Sandals
     - Clogs
     - Other
+"choices-dropdown": |-
+question: | 
+  What type of shoes do you wear?
+  fields:
+    - Shoe Type: target_variable
+      choices: 
+        - Sneakers
+        - Sandals
+        - Clogs
+        - Other    
 "choices-icons": |-
   question: |
     What is the most important question
