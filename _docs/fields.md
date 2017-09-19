@@ -132,6 +132,11 @@ different text in the labels.
 
 ## <a name="field with choices"></a>Multiple choice list
 
+To provide a multiple-choice question with a dropdown "select" and a
+"Continue" button, use" `field` with a `choices` list:
+
+{% include side-by-side.html demo="choices-dropdown" %}
+
 To provide a multiple choice question with "radio buttons" and a
 "Continue" button, use `field` with a `choices` list:
 
