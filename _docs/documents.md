@@ -148,8 +148,9 @@ files, specify `docx` as one of the [`valid formats`]:
 
 {% include side-by-side.html demo="document-docx" %}
 
-Note that you can also create .docx files using the
-[`docx template file`] feature, which is described below.
+Note that you can also assemble .docx files from templates that you
+compose in Mirosoft Word.  See the [`docx template file`] feature,
+which is described [below](#docx template file).
 
 To customize document styles, headers, and footers in your .docx file,
 see the [`docx reference file`] setting, discussed below.

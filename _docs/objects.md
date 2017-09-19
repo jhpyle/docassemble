@@ -1272,6 +1272,17 @@ If you include `${ pet_rock }` in text, the name of the `Thing` will
 be inserted.  **docassemble** will look for a definition of
 `pet_rock.name.text`.
 
+## <a name="Event"></a>Event
+
+An `Event` is a type of [`DAObject`] with the following attributes
+initialized by default:
+
+* `address`: an [`Address`] object
+* `location`: a [`LatitudeLongitude`] object
+
+There may be many other attributes you want to use for an `Event`, but
+they are up to you to choose.
+
 ## <a name="Person"></a>Person
 
 The `Person` class encompasses [`Individual`]s as well as legal persons,
@@ -1715,6 +1726,7 @@ An `Address` has the following text attributes:
 * `state`: e.g., "MA"
 * `zip`: e.g. "01199"
 * `country`: e.g., 'US'
+* `city_only`: defaults to `False`.  See [`City`], below.
 
 It also has an attribute `location`, which is a [`LatitudeLongitude`]
 object representing the GPS coordinates of the address.
@@ -1742,6 +1754,12 @@ consisting of the city, state, and zip code.
 <a name="Address.on_one_line"></a>
 The `.on_one_line()` method returns the address, consisting of
 the city, state, and zip code, as a single line of text.
+
+### <a name="City"></a>City
+
+A `City` is a type of `Address` for which the attribute `.city_only`
+is set to `True`.  Functions that display the address will only
+display the city, the state, and (if set) the zip code.
 
 ## <a name="LatitudeLongitude"></a>LatitudeLongitude
 
@@ -2300,6 +2318,10 @@ The `.instanceName` is not simply an internal attribute; it is used by
 the [`.object_possessive()`] method to refer to the object in
 human-readable format.
 
+# Writing your own classes
+
+You can write and use your own classes in **docassemble**.  The
+
 # Extending existing classes
 
 If you want to add a method to an existing **docassemble** class, such
@@ -2495,3 +2517,4 @@ and not an instance of the `Attorney` class.
 [`.set_attributes()`]: #DAFile.set_attributes
 [`datatype: file`]: {{ site.baseurl }}/docs/fields.html#file
 [`datatype: files`]: {{ site.baseurl }}/docs/fields.html#files
+[`City`]: #City

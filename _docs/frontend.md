@@ -7,7 +7,8 @@ short_title: Custom Front Ends
 If you are a software developer, you can develop your own front end
 for **docassemble**.  If you add `&json=1` to the end of the URL, or
 include `json=1` as parameter of a POST request, a [JSON]
-representation of the screen will be returned.
+representation of the screen will be returned.  (In fact, `json` set
+to anything will cause a [JSON] representation to be returned.)
 
 To communicate back with the server, you will need to mimic the way
 that the browser communicates with the server.  The easiest way to
