@@ -296,3 +296,6 @@ xrange:
 zip:
   doc: |
     This is a built-in Python function.
+self:
+  doc: |
+    This is a built-in Python variable.

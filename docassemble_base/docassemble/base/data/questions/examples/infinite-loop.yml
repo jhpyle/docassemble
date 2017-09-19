@@ -1,0 +1,27 @@
+metadata:
+  title: Infinite loop
+  short title: Infinite
+---
+modules: docassemble.base.util
+---
+mandatory: True
+question: |
+  The variable is
+  ${ target_variable }.
+---
+code: |
+  target_variable = "foo"
+---
+code: |
+  if target_variable:
+    target_variable = "bar"
+---
+code: |
+  if target_variable:
+    target_variable = "foo"
+---
+question: |
+  What is the target variable,
+  ${ target_variable }?
+fields:
+  Variable: target_variable

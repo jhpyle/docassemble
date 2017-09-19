@@ -3546,7 +3546,7 @@ class Interview:
         docassemble.base.functions.set_current_variable(origMissingVariable)
         # if missingVariable in variable_stack:
         #     raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
-        variable_stack.add(missingVariable)
+        # variable_stack.add(missingVariable)
         found_generic = False
         realMissingVariable = missingVariable
         totry = list()
@@ -3592,8 +3592,8 @@ class Interview:
                             questions_to_try.append((the_question, False, 'None', mv['iterators'], missingVariable, None))
         # logmessage("askfor: questions to try is " + str(questions_to_try))
         while True:
-            docassemble.base.functions.reset_gathering_mode(origMissingVariable)
             a_question_was_skipped = False
+            docassemble.base.functions.reset_gathering_mode(origMissingVariable)
             # logmessage("Starting the while loop")
             try:
                 for the_question, is_generic, the_x, iterators, missing_var, generic_object in questions_to_try:
@@ -3818,8 +3818,12 @@ class Interview:
                     follow_mc = True
                     newMissingVariable = extract_missing_name(the_exception)
                 #newMissingVariable = str(the_exception).split("'")[1]
+                if newMissingVariable in questions_tried and newMissingVariable in variable_stack:
+                    raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
                 if newMissingVariable not in questions_tried:
                     questions_tried[newMissingVariable] = set()
+                else:
+                    variable_stack.add(missingVariable)
                 questions_tried[newMissingVariable].add(current_question)
                 question_result = self.askfor(newMissingVariable, user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=follow_mc)
                 if question_result['type'] == 'continue' and missing_var != newMissingVariable:
@@ -3833,6 +3837,8 @@ class Interview:
                 newMissingVariable = extract_missing_name(the_exception)
                 if newMissingVariable not in questions_tried:
                     questions_tried[newMissingVariable] = set()
+                else:
+                    variable_stack.add(missingVariable)
                 questions_tried[newMissingVariable].add(current_question)
                 question_result = self.askfor(newMissingVariable, user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=True)
                 if question_result['type'] == 'continue':

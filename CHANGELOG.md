@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.1.57] - 2017-09-19
+### Fixed
+- Bug that affected some file-related operations.
+- Detection of infinite loops.
+
 ## [0.1.56] - 2017-09-17
 ### Changed
 - The way that the `objects` block gets executed has changed.  It no

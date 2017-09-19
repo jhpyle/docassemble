@@ -2462,4 +2462,3 @@ def indent(text, by=None):
     text = re.sub(r'\r', '', text)
     text = re.sub(r'\n', '\n' + (" " * by), text)
     return text
-

@@ -1,0 +1,19 @@
+metadata:
+  title: Infinite loop
+  short title: Infinite
+---
+modules: docassemble.base.util
+---
+mandatory: True
+question: |
+  I need ${ foo }.
+---
+question: |
+  What is foo, given ${ bar }?
+fields:
+  - Foo: foo
+---
+question: |
+  What is bar, given ${ foo }?
+fields:
+  - Bar: bar
