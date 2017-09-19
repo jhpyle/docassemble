@@ -630,16 +630,6 @@
     - Sandals
     - Clogs
     - Other
-"choices-dropdown": |-
-question: | 
-  What type of shoes do you wear?
-  fields:
-    - Shoe Type: target_variable
-      choices: 
-        - Sneakers
-        - Sandals
-        - Clogs
-        - Other    
 "choices-icons": |-
   question: |
     What is the most important question
@@ -2281,6 +2271,9 @@ question: |
         - Apples: apple
         - Oranges: orange
         - Pears: pear
+"fields-choices-dropdown": "question: | \n  What type of shoes do you wear?\nfields:\n\
+  \  - Shoe Type: target_variable\n    choices: \n      - Sneakers\n      - Sandals\n\
+  \      - Clogs\n      - Other"
 "fields-mc": |-
   question: |
     What is your favorite fruit?
@@ -3695,6 +3688,10 @@ question: |
   fields:
     - First: people[i].name.first
     - Last: people[i].name.last
+"infinite-loop": |-
+  modules: docassemble.base.util
+"infinite-loop-2": |-
+  modules: docassemble.base.util
 "initial": |-
   mandatory: True
   code: |

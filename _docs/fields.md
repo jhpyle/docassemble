@@ -132,11 +132,6 @@ different text in the labels.
 
 ## <a name="field with choices"></a>Multiple choice list
 
-To provide a multiple-choice question with a dropdown "select" and a
-"Continue" button, use" `field` with a `choices` list:
-
-{% include side-by-side.html demo="choices-dropdown" %}
-
 To provide a multiple choice question with "radio buttons" and a
 "Continue" button, use `field` with a `choices` list:
 
@@ -145,6 +140,9 @@ To provide a multiple choice question with "radio buttons" and a
 You can specify a default value using `default`:
 
 {% include side-by-side.html demo="choices-with-default" %}
+
+To provide a multiple-choice question with a dropdown "select"
+element, you need to use a [`fields`] statement; see [below](#select).
 
 ## <a name="image button"></a>Adding images to buttons and list items
 
@@ -802,11 +800,21 @@ This also works if your code returns a [list] of [list]s:
 
 {% include side-by-side.html demo="fields-checkboxes-default-6" %}
 
+## <a name="select"></a>Multiple-choice selection list
+
+If you provide a list of [`choices`](#choices) or some
+choice-generating [`code`](#code) for a field within a list of
+`fields`, the user will see a dropdown [select] element.  The variable
+will be set to the value of the selected choice.
+
+{% include side-by-side.html demo="fields-choices-dropdown" %}
+
 ## <a name="radio"></a>Radio buttons
 
 `datatype: radio` shows a [`choices`](#choices) list as a list of
-radio buttons instead of as a dropdown [select] tag (which is the
-default).  The variable will be set to the value of the choice.
+radio buttons instead of as a dropdown [select] element (which is
+[the default](#select)).  The variable will be set to the value of the
+selected choice.
 
 {% include side-by-side.html demo="radio-list" %}
 
