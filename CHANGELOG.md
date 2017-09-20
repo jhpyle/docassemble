@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.1.58] - 2017-09-19
+### Added
+- Multiple choice type `dropdown`.
+- Code example for `fields` dropdown.
+### Fixed
+- YouTube video widths not responsive.
+- Javascript and CSS files in features not loading without full
+  package/file references.
+
 ## [0.1.57] - 2017-09-19
 ### Fixed
 - Bug that affected some file-related operations.

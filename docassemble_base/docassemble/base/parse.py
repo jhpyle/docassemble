@@ -835,11 +835,11 @@ class Question:
         self.mako_names = set()
         self.validation_code = None
         num_directives = 0
-        for directive in ['yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'fields', 'buttons', 'choices', 'signature', 'review']:
+        for directive in ['yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'fields', 'buttons', 'choices', 'dropdown', 'signature', 'review']:
             if directive in data:
                 num_directives += 1
         if num_directives > 1:
-            raise DAError("There can only be one directive in a question.  You had more than one.\nThe directives are yesno, noyes, yesnomaybe, noyesmaybe, fields, buttons, choices, and signature." + self.idebug(data))
+            raise DAError("There can only be one directive in a question.  You had more than one.\nThe directives are yesno, noyes, yesnomaybe, noyesmaybe, fields, buttons, choices, dropdown, and signature." + self.idebug(data))
         if 'features' in data:
             should_append = False
             if type(data['features']) is not dict:
@@ -1544,7 +1544,7 @@ class Question:
                     self.fields_used.add(key)
             else:
                 raise DAError("An event phrase must be text or a list." + self.idebug(data))
-        if 'choices' in data or 'buttons' in data:
+        if 'choices' in data or 'buttons' in data or 'dropdown' in data:
             if 'field' in data:
                 uses_field = True
             else:
@@ -1553,14 +1553,18 @@ class Question:
                 shuffle = True
             else:
                 shuffle = False
-            if 'choices' in data:
-                has_code, choices = self.parse_fields(data['choices'], register_target, uses_field)
+            if 'choices' in data or 'dropdown' in data:
+                if 'choices' in data:
+                    has_code, choices = self.parse_fields(data['choices'], register_target, uses_field)
+                    self.question_variety = 'radio'
+                else:
+                    has_code, choices = self.parse_fields(data['dropdown'], register_target, uses_field)
+                    self.question_variety = 'dropdown'
                 field_data = {'choices': choices, 'shuffle': shuffle}
                 if has_code:
                     field_data['has_code'] = True
                 if 'default' in data:
                     field_data['default'] = TextObject(definitions + unicode(data['default']), names_used=self.mako_names)
-                self.question_variety = 'radio'
             elif 'buttons' in data:
                 has_code, choices = self.parse_fields(data['buttons'], register_target, uses_field)
                 field_data = {'choices': choices, 'shuffle': shuffle}

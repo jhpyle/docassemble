@@ -907,7 +907,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
         output += '                <p class="sr-only">' + word('Your choices are:') + '</p>\n'
         validation_rules['errorElement'] = "span"
         validation_rules['errorLabelContainer'] = "#errorcontainer"
-        if status.question.question_variety == "radio":
+        if status.question.question_variety in ["radio", "dropdown"]:
+            if status.question.question_variety == "radio":
+                verb = 'check'
+            else:
+                verb = 'select'
+                inner_fieldlist = ['<option value="">' + word('Select...') + '</option>']
             if hasattr(status.question.fields[0], 'saveas'):
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
                     id_index = 0
@@ -919,19 +924,21 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                             helptext = pair[3]
                         else:
                             helptext = None
+                        ischecked = ''
                         if len(pair) > 2 and pair[2] and defaultvalue is None:
-                            ischecked = ' checked="checked"'
-                        else:
-                            ischecked = ''
+                            ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
                         formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
                         if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue):
-                            ischecked = ' checked="checked"'
+                            ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
+                        if status.question.question_variety == "radio":
+                            if pair[0] is not None:
+                                output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext) + '</div></div>\n'
+                            else:
+                                output += '                <div class="form-group"><div class="col-md-12">' + help_wrap(markdown_to_html(pair[1], status=status), helptext) + '</div></div>\n'
                         else:
-                            ischecked = ''
-                        if pair[0] is not None:
-                            output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext) + '</div></div>\n'
-                        else:
-                            output += '                <div class="form-group"><div class="col-md-12">' + help_wrap(markdown_to_html(pair[1], status=status), helptext) + '</div></div>\n'
+                            if pair[0] is not None:
+                                inner_fieldlist.append('<option value="' + unicode(pair[0]) + '"' + ischecked + '>' + formatted_item + '</option>')
+                                
                         id_index += 1
                 else:
                     id_index = 0
@@ -948,15 +955,19 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                                 continue
                             formatted_key = markdown_to_html(key, status=status, trim=True, escape=True, do_terms=False)
                             if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(choice[key]) == unicode(defaultvalue):
-                                ischecked = ' checked="checked"'
+                                ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
                             else:
                                 ischecked = ''
-                            output += '                <div class="row"><div class="col-md-12"><input alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(choice[key]) + '"' + ischecked + '/></div></div>\n'
+                            if status.question.question_variety == "radio":
+                                output += '                <div class="row"><div class="col-md-12"><input alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(choice[key]) + '"' + ischecked + '/></div></div>\n'
+                            else:
+                                inner_fieldlist.append('<option value="' + unicode(choice[key]) + '"' + ischecked + '>' + formatted_key + '</option>')
                         id_index += 1
+                if status.question.question_variety == "dropdown":
+                    output += '                <div class="row"><div class="col-md-12"><select class="form-control daspaceafter" name="' + escape_id(status.question.fields[0].saveas) + '" id="' + escape_id(status.question.fields[0].saveas) + '">' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 validation_rules['ignore'] = None
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
                 validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
-                output += '                <div id="errorcontainer" style="display:none"></div>\n'
             else:
                 indexno = 0
                 for choice in status.question.fields[0].choices:
@@ -969,12 +980,18 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                         if key == 'image':
                             continue
                         formatted_key = markdown_to_html(key, status=status, trim=True, escape=True, do_terms=False)
-                        output += '                <div class="row"><div class="col-md-12"><input alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ==" type="radio" value="' + str(indexno) + '"/></div></div>\n'
+                        if status.question.question_variety == "radio":
+                            output += '                <div class="row"><div class="col-md-12"><input alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ==" type="radio" value="' + str(indexno) + '"/></div></div>\n'
+                        else:
+                            inner_fieldlist.append('<option value="' + str(indexno) + '">' + formatted_key + '</option>')
                         id_index += 1
                     indexno += 1
-                    validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': True}
-                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
-                    output += '                <div id="errorcontainer" style="display:none"></div>\n'
+                if status.question.question_variety == "dropdown":
+                    output += '                <div class="row"><div class="col-md-12"><select class="form-control daspaceafter" name="X211bHRpcGxlX2Nob2ljZQ==">' + "".join(inner_fieldlist) + '</select></div></div>\n'
+                validation_rules['ignore'] = None
+                validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': True}
+                validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
+            output += '                <div id="errorcontainer" style="display:none"></div>\n'
             output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
             output += '                <button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button>\n'
         else:
@@ -1445,6 +1462,7 @@ def add_validation(extra_scripts, validation_rules, field_error):
   }, """ + json.dumps(word("Please check at least one.")) + """);
   validation_rules.submitHandler = daValidationHandler;
   if ($("#daform").length > 0){
+    console.log("Running validator")
     var validator = $("#daform").validate(validation_rules);""" + error_show + """
   }
 </script>""")

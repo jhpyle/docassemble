@@ -4658,7 +4658,7 @@ def index():
         scripts = standard_scripts()
         if 'javascript' in interview_status.question.interview.external_files:
             for fileref in interview_status.question.interview.external_files['javascript']:
-                scripts += "\n" + '    <script src="' + get_url_from_file_reference(fileref, question=interview_status.question) + '"></script>'
+                scripts += "\n" + '    <script src="' + get_url_from_file_reference(fileref, _question=interview_status.question) + '"></script>'
         if interview_status.question.checkin is not None:
             do_action = repr(str(interview_status.question.checkin))
         else:
@@ -5178,6 +5178,7 @@ def index():
       var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['livehelp']['partner_roles']) + """;
       function daValidationHandler(form){
         //form.submit();
+        //console.log("daValidationHandler");
         $("#daform").each(function(){
           $(this).find(':input').off('change', pushChanges);
         });
@@ -6371,7 +6372,7 @@ def index():
         start_output = standard_header_start
         if 'css' in interview_status.question.interview.external_files:
             for fileref in interview_status.question.interview.external_files['css']:
-                start_output += "\n" + '    <link href="' + get_url_from_file_reference(fileref, question=interview_status.question) + '" rel="stylesheet">'
+                start_output += "\n" + '    <link href="' + get_url_from_file_reference(fileref, _question=interview_status.question) + '" rel="stylesheet">'
         start_output += global_css
         if len(interview_status.extra_css):
             start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()

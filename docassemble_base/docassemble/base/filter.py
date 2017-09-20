@@ -9,6 +9,7 @@ import qrcode
 import qrcode.image.svg
 import StringIO
 import tempfile
+import types
 from docassemble.base.functions import server, word
 import docassemble.base.functions
 from docassemble.base.pandoc import MyPandoc
@@ -186,8 +187,8 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
     text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
     text = re.sub(r'\[TARGET ([^\]]+)\]', '', text)
-    text = re.sub(r'\[YOUTUBE ([^\]]+)\]', '', text)
-    text = re.sub(r'\[VIMEO ([^\]]+)\]', '', text)
+    text = re.sub(r'\[YOUTUBE[^ ]* ([^\]]+)\]', '', text)
+    text = re.sub(r'\[VIMEO[^ ]* ([^\]]+)\]', '', text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\s*\[VERTICAL_LINE\]\s*(.+?)\[END_CAPTION\]', rtf_caption_table, text, flags=re.DOTALL)
     text = re.sub(r'\[NBSP\]', r'\\~ ', text)
     text = re.sub(r'\[ENDASH\]', r'{\\endash}', text)
@@ -336,8 +337,8 @@ def docx_filter(text, metadata=None, question=None):
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
     text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
     text = re.sub(r'\[TARGET ([^\]]+)\]', '', text)
-    text = re.sub(r'\[YOUTUBE ([^\]]+)\]', '', text)
-    text = re.sub(r'\[VIMEO ([^\]]+)\]', '', text)
+    text = re.sub(r'\[YOUTUBE[^ ]* ([^\]]+)\]', '', text)
+    text = re.sub(r'\[VIMEO[^ ]* ([^\]]+)\]', '', text)
     text = re.sub(r'\\clearpage *\\clearpage', '', text)
     text = re.sub(r'\[START_INDENTATION\]', '', text)
     text = re.sub(r'\[STOP_INDENTATION\]', '', text)    
@@ -392,8 +393,8 @@ def docx_template_filter(text):
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
     text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
     text = re.sub(r'\[TARGET ([^\]]+)\]', '', text)
-    text = re.sub(r'\[YOUTUBE ([^\]]+)\]', '', text)
-    text = re.sub(r'\[VIMEO ([^\]]+)\]', '', text)
+    text = re.sub(r'\[YOUTUBE[^ ]* ([^\]]+)\]', '', text)
+    text = re.sub(r'\[VIMEO[^ ]* ([^\]]+)\]', '', text)
     text = re.sub(r'\\clearpage *\\clearpage', '', text)
     text = re.sub(r'\[START_INDENTATION\]', '', text)
     text = re.sub(r'\[STOP_INDENTATION\]', '', text)    
@@ -461,8 +462,8 @@ def pdf_filter(text, metadata=None, question=None):
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
     text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
     text = re.sub(r'\[TARGET ([^\]]+)\]', '', text)
-    text = re.sub(r'\[YOUTUBE ([^\]]+)\]', '', text)
-    text = re.sub(r'\[VIMEO ([^\]]+)\]', '', text)
+    text = re.sub(r'\[YOUTUBE[^ ]* ([^\]]+)\]', '', text)
+    text = re.sub(r'\[VIMEO[^ ]* ([^\]]+)\]', '', text)
     text = re.sub(r'\\clearpage *\\clearpage', r'\\clearpage', text)
     text = re.sub(r'\[BORDER\]\s*\[(BEGIN_TWOCOL|BEGIN_CAPTION|TIGHTSPACING|SINGLESPACING|DOUBLESPACING|START_INDENTATION|STOP_INDENTATION|NOINDENT|FLUSHLEFT|FLUSHRIGHT|CENTER|BOLDCENTER|INDENTBY[^\]]*)\]', r'[\1] [BORDER]', text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\[START_INDENTATION\]', r'\\setlength{\\parindent}{\\myindentamount}\\setlength{\\RaggedRightParindent}{\\parindent}', text)    
@@ -519,8 +520,14 @@ def html_filter(text, status=None, question=None, embedder=None):
     text = re.sub(r'\[QR ([^,\]]+)\]', qr_url_string, text)
     if map_match.search(text):
         text = map_match.sub((lambda x: map_string(x.group(1), status)), text)
-    text = re.sub(r'\[YOUTUBE ([^\]]+)\]', r'<iframe width="420" height="315" src="https://www.youtube.com/embed/\1" frameborder="0" allowfullscreen></iframe>', text)
-    text = re.sub(r'\[VIMEO ([^\]]+)\]', r'<iframe src="https://player.vimeo.com/video/\1?byline=0&portrait=0" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>', text)
+    # width="420" height="315"
+    text = re.sub(r'\[YOUTUBE ([^\]]+)\]', r'<div class="davideo davideo169"><iframe src="https://www.youtube.com/embed/\1" frameborder="0" allowfullscreen></iframe></div>', text)
+    text = re.sub(r'\[YOUTUBE4:3 ([^\]]+)\]', r'<div class="davideo davideo43"><iframe src="https://www.youtube.com/embed/\1" frameborder="0" allowfullscreen></iframe></div>', text)
+    text = re.sub(r'\[YOUTUBE16:9 ([^\]]+)\]', r'<div class="davideo davideo169"><iframe src="https://www.youtube.com/embed/\1" frameborder="0" allowfullscreen></iframe></div>', text)
+    # width="500" height="281" 
+    text = re.sub(r'\[VIMEO ([^\]]+)\]', r'<div class="davideo davideo169"><iframe src="https://player.vimeo.com/video/\1?byline=0&portrait=0" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>', text)
+    text = re.sub(r'\[VIMEO4:3 ([^\]]+)\]', r'<div class="davideo davideo43"><iframe src="https://player.vimeo.com/video/\1?byline=0&portrait=0" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>', text)
+    text = re.sub(r'\[VIMEO16:9 ([^\]]+)\]', r'<div class="davideo davideo169"><iframe src="https://player.vimeo.com/video/\1?byline=0&portrait=0" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>', text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\]\s*(.+?)\[END_CAPTION\]', html_caption, text, flags=re.DOTALL)
     text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\]\s*(.+?)\[END_TWOCOL\]', html_two_col, text, flags=re.DOTALL)
     text = re.sub(r'\[TIGHTSPACING\] *', r'', text)
@@ -1152,8 +1159,8 @@ def audio_control(files, preload="metadata"):
 
 def video_control(files):
     for d in files:
-        if type(d) in (str, unicode):
-            return d
+        if type(d) in (str, unicode, types.NoneType):
+            return unicode(d)
     output = '<video width="320" height="240" controls="controls">' + "\n"
     for d in files:
         if type(d) is list:
@@ -1241,7 +1248,7 @@ def get_video_urls(the_video, question=None):
         if video_item['type'] != 'video':
             continue
         found_upload = False
-        if re.search(r'^\[(YOUTUBE|VIMEO) ', video_item['text']):
+        if re.search(r'^\[(YOUTUBE|VIMEO)[0-9\:]* ', video_item['text']):
             output.append(html_filter(video_item['text']))
             continue
         pattern = re.compile(r'^\[FILE ([^,\]]+)')

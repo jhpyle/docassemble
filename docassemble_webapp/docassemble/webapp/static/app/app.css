@@ -1340,3 +1340,29 @@ div.danavbar {
 .daimageref + .daimageref {
     margin-left: 5px;
 }
+
+.davideo43 {
+	padding-bottom: 75%;
+}
+
+.davideo169 {
+	padding-bottom: 56.25%;
+}
+
+.davideo {
+	position: relative;
+	height: 0;
+	margin-bottom: 10px;
+}
+
+.davideo iframe {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.daspaceafter {
+    margin-bottom: 10px;
+}
