@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.59] - 2017-09-21
+### Changed
+- Added a different type of infinite loop detection.
+
 ## [0.1.58] - 2017-09-19
 ### Added
 - Multiple choice type `dropdown`.

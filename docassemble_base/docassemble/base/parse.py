@@ -787,7 +787,7 @@ class FileOnServer:
 
 class Question:
     def idebug(self, data):
-        return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n" + ruamel.yaml.dump(data)
+        return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n\n" + ruamel.yaml.dump(data)
     def __init__(self, orig_data, caller, **kwargs):
         if type(orig_data) is not dict:
             raise DAError("A block must be in the form of a dictionary." + self.idebug(orig_data))
@@ -840,6 +840,8 @@ class Question:
                 num_directives += 1
         if num_directives > 1:
             raise DAError("There can only be one directive in a question.  You had more than one.\nThe directives are yesno, noyes, yesnomaybe, noyesmaybe, fields, buttons, choices, dropdown, and signature." + self.idebug(data))
+        if num_directives > 0 and 'question' not in data:
+            raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if 'features' in data:
             should_append = False
             if type(data['features']) is not dict:
@@ -3538,12 +3540,16 @@ class Interview:
     def askfor(self, missingVariable, user_dict, interview_status, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())
         questions_tried = kwargs.get('questions_tried', dict())
+        recursion_depth = kwargs.get('recursion_depth', 0)
+        recursion_depth += 1
         language = get_language()
         current_question = None
         follow_mc = kwargs.get('follow_mc', True)
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
+        if recursion_depth > 500:
+            raise DAError("There appears to be an infinite loop.  Variables in stack are " + ", ".join(variable_stack) + ".")
         # logmessage("askfor: I don't have " + str(missingVariable) + " for language " + str(language))
         #sys.stderr.write("I don't have " + str(missingVariable) + " for language " + str(language) + "\n")
         origMissingVariable = missingVariable
@@ -3822,14 +3828,14 @@ class Interview:
                     follow_mc = True
                     newMissingVariable = extract_missing_name(the_exception)
                 #newMissingVariable = str(the_exception).split("'")[1]
-                if newMissingVariable in questions_tried and newMissingVariable in variable_stack:
-                    raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
+                #if newMissingVariable in questions_tried and newMissingVariable in variable_stack:
+                #    raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
                 if newMissingVariable not in questions_tried:
                     questions_tried[newMissingVariable] = set()
                 else:
                     variable_stack.add(missingVariable)
                 questions_tried[newMissingVariable].add(current_question)
-                question_result = self.askfor(newMissingVariable, user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=follow_mc)
+                question_result = self.askfor(newMissingVariable, user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=follow_mc, recursion_depth=recursion_depth)
                 if question_result['type'] == 'continue' and missing_var != newMissingVariable:
                     # logmessage("Continuing after asking for newMissingVariable " + str(newMissingVariable))
                     continue
@@ -3844,7 +3850,7 @@ class Interview:
                 else:
                     variable_stack.add(missingVariable)
                 questions_tried[newMissingVariable].add(current_question)
-                question_result = self.askfor(newMissingVariable, user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=True)
+                question_result = self.askfor(newMissingVariable, user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=True, recursion_depth=recursion_depth)
                 if question_result['type'] == 'continue':
                     continue
                 docassemble.base.functions.pop_current_variable()

@@ -1,0 +1,22 @@
+metadata:
+  title: ML from line of text
+  short title: ML
+  documentation: "https://docassemble.org/docs/ml.html#howtouse"
+  example start: 1
+  example end: 2
+---
+question: |
+  Describe how you feel.
+fields:
+  - no label: mood
+    datatype: ml
+---
+mandatory: True
+question: |
+  You sound ${ mood }.
+help: |
+  If `mood` is `None`, then
+  go to Train from the menu
+  and train the model "mood"
+  in the `docassemble.base`
+  package.

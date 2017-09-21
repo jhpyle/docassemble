@@ -8,6 +8,20 @@ mandatory: True
 question: |
   I need ${ foo }.
 ---
+code: |
+  foo = '123'
+---
+code: |
+  bar = '098'
+---
+code: |
+  if bar:
+    bar = 'asdf'
+---
+code: |
+  if foo:
+    foo = 'qwer'
+---
 question: |
   What is foo, given ${ bar }?
 fields:
