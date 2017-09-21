@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.60] - 2017-09-21
+### Changed
+- Added a new type of infinite loop detection.
+
 ## [0.1.59] - 2017-09-21
 ### Changed
 - Added a different type of infinite loop detection.
