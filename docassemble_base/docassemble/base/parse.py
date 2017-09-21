@@ -3276,7 +3276,12 @@ class Interview:
                     pass
             elif var in user_dict:
                 del user_dict[var]
+        number_loops = 0
+        variables_sought = set()
         while True:
+            number_loops += 1
+            if number_loops > 250:
+                raise DAError("Your code contains a circularity.  Variables involved: " + ", ".join(variables_sought) + ".")
             docassemble.base.functions.reset_gathering_mode()
             try:
                 # if 'sms_variable' in interview_status.current_info and interview_status.current_info['sms_variable'] is not None:
@@ -3371,6 +3376,7 @@ class Interview:
                 else:
                     follow_mc = True
                     missingVariable = extract_missing_name(the_exception)
+                variables_sought.add(missingVariable)
                 question_result = self.askfor(missingVariable, user_dict, interview_status, seeking=interview_status.seeking, follow_mc=follow_mc)
                 if question_result['type'] == 'continue':
                     continue
@@ -3382,6 +3388,7 @@ class Interview:
             except UndefinedError as the_exception:
                 docassemble.base.functions.reset_context()
                 missingVariable = extract_missing_name(the_exception)
+                variables_sought.add(missingVariable)
                 question_result = self.askfor(missingVariable, user_dict, interview_status, seeking=interview_status.seeking, follow_mc=True)
                 if question_result['type'] == 'continue':
                     continue
