@@ -33,6 +33,7 @@ from docassemble.base.mako.exceptions import SyntaxException
 from types import CodeType, NoneType
 
 debug = True
+import_core = "import docassemble.base.core"
 import_and_run_process_action = compile('from docassemble.base.util import *\nprocess_action()', '', 'exec')
 run_process_action = compile('process_action()', '', 'exec')
 match_process_action = re.compile(r'process_action\(')
@@ -2766,7 +2767,7 @@ class Question:
             the_filename = attachment['filename'].text(user_dict)
             if the_filename == '':
                 the_filename = docassemble.base.functions.space_to_underscore(the_name)
-            user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(user_dict), attachment=dict(name=attachment['question_name'], number=attachment['indexno']))
+            user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(user_dict), formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']))
             exec(attachment['variable_name'] + '.info = _attachment_info', user_dict)
             del user_dict['_attachment_info']
             for doc_format in result['file']:
@@ -2992,9 +2993,6 @@ def is_threestate(field_data):
 
 class Interview:
     def __init__(self, **kwargs):
-        #questionFilepath = kwargs.get('questionFilepath', None)
-        #self.questionPath = None
-        #self.rootDirectory = None
         self.source = None
         self.questions = dict()
         self.generic_questions = dict()
@@ -3021,6 +3019,8 @@ class Interview:
         self.use_progress_bar = False
         self.force_fullscreen = False
         self.use_pdf_a = get_config('pdf/a', False)
+        self.loop_limit = get_config('loop limit', 500)
+        self.recursion_limit = get_config('recursion limit', 500)
         self.cache_documents = True
         self.use_navigation = False
         self.max_image_size = get_config('maximum image size', None)
@@ -3280,19 +3280,15 @@ class Interview:
         variables_sought = set()
         while True:
             number_loops += 1
-            if number_loops > 250:
+            if number_loops > self.loop_limit:
+                docassemble.base.functions.close_files()
                 raise DAError("Your code contains a circularity.  Variables involved: " + ", ".join(variables_sought) + ".")
             docassemble.base.functions.reset_gathering_mode()
             try:
-                # if 'sms_variable' in interview_status.current_info and interview_status.current_info['sms_variable'] is not None:
-                #     #logmessage("assemble: raising ForcedNameError on " + str(interview_status.current_info['sms_variable']))
-                #     raise ForcedNameError(interview_status.current_info['sms_variable'])
                 if (self.uses_action or 'action' in interview_status.current_info) and not self.calls_process_action:
                     if self.imports_util:
-                        #logmessage("util was imported")
                         exec(run_process_action, user_dict)
                     else:
-                        #logmessage("util was not imported")
                         exec(import_and_run_process_action, user_dict)
                 for question in self.questions_list:
                     if question.question_type == 'code' and (question.is_initial or (question.initial_code is not None and eval(question.initial_code, user_dict))):
@@ -3308,19 +3304,10 @@ class Interview:
                     if question.question_type == "objects_from_file":
                         for keyvalue in question.objects_from_file:
                             for variable, the_file in keyvalue.iteritems():
-                                if False and re.search(r"\.", variable):
-                                    m = re.search(r"(.*)\.(.*)", variable)
-                                    variable = m.group(1)
-                                    attribute = m.group(2)
-                                    command = variable + "." + attribute + " = " + object_type + "()"
-                                    #logmessage("Running " + command)
-                                    exec(command, user_dict)
-                                else:
-                                    string = "import docassemble.base.core"
-                                    exec(string, user_dict)                       
-                                    command = variable + ' = docassemble.base.core.objects_from_file("' + str(the_file) + '", name=' + repr(variable) + ')'
-                                    #logmessage("Running " + command)
-                                    exec(command, user_dict)
+                                exec(import_core, user_dict)
+                                command = variable + ' = docassemble.base.core.objects_from_file("' + str(the_file) + '", name=' + repr(variable) + ')'
+                                #logmessage("Running " + command)
+                                exec(command, user_dict)
                         question.mark_as_answered(user_dict)
                     if (question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict))):
                         if question.question_type == "objects":
@@ -3555,7 +3542,7 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        if recursion_depth > 500:
+        if recursion_depth > self.recursion_limit:
             raise DAError("There appears to be an infinite loop.  Variables in stack are " + ", ".join(variable_stack) + ".")
         # logmessage("askfor: I don't have " + str(missingVariable) + " for language " + str(language))
         #sys.stderr.write("I don't have " + str(missingVariable) + " for language " + str(language) + "\n")

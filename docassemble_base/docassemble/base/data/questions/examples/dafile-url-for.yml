@@ -1,0 +1,28 @@
+metadata:
+  title: URL of a file
+  short title: URL file
+  documentation: "https://docassemble.org/docs/objects.html#DAFile.url_for"
+  example start: 1
+  example end: 2
+---
+mandatory: True
+question: |
+  This interview is all done.
+subquestion: |
+  To start your case,
+  [download your pleading],
+  print it, and take it
+  to court.
+
+  [download your pleading]: ${ complaint.pdf.url_for() }
+---
+attachment:
+  filename: complaint
+  name: Complaint
+  variable name: complaint
+  content: |
+    This is a complaint.
+
+    Blah, blah, blah
+  valid formats:
+    - pdf

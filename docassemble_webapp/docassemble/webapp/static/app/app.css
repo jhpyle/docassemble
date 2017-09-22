@@ -1366,3 +1366,9 @@ div.danavbar {
 .daspaceafter {
     margin-bottom: 10px;
 }
+
+.dapdfscreen {
+    border-radius: 5px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 16px rgba(77, 77, 77, .6);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 16px rgba(77, 77, 77, .6);
+}

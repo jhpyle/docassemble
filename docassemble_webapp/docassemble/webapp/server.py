@@ -508,6 +508,7 @@ import docassemble.webapp.backend
 import docassemble.base.util
 from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile, DAObject
 from user_agents import parse as ua_parse
+import docassemble.base.ocr
 
 mimetypes.add_type('application/x-yaml', '.yml')
 mimetypes.add_type('application/x-yaml', '.yaml')
@@ -6791,9 +6792,11 @@ def serve_uploaded_pagescreen(number, page):
         logmessage('serve_uploaded_pagescreen: no access to file number ' + str(number))
         abort(404)
     else:
-        max_pages = 1 + int(file_info['pages'])
-        formatter = '%0' + str(len(str(max_pages))) + 'd'
-        filename = file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
+        the_file = DAFile(mimetype=file_info['mimetype'], extension=file_info['extension'], number=number, make_pngs=True)
+        # max_pages = 1 + int(file_info['pages'])
+        # formatter = '%0' + str(len(str(max_pages))) + 'd'
+        # filename = file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
+        filename = the_file.page_path(1, 'screen')
         if os.path.isfile(filename):
             response = send_file(filename, mimetype='image/png')
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'

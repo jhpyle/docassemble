@@ -1644,6 +1644,20 @@ class DAFileCollection(DAObject):
     """
     def init(self, *pargs, **kwargs):
         self.info = dict()
+    def _extension_list(self):
+        if hasattr(self, 'info') and 'formats' in self.info:
+            return self.info['formats']
+        return ['pdf', 'docx', 'rtf']
+    def url_for(self):
+        """Returns a URL to one of the attachments in the collection."""
+        for ext in self._extension_list():
+            if hasattr(self, ext):
+                return getattr(self, ext).url_for()
+        raise Exception("Could not find a file within a DACollection.")
+    def __str__(self):
+        return " ".join([str(getattr(self, ext)) for ext in self._extension_list() if hasattr(self, ext)])
+    def __unicode__(self):
+        return " ".join([unicode(getattr(self, ext)) for ext in self._extension_list() if hasattr(self, ext)])
 
 class DAFileList(DAList):
     """Used internally by docassemble to refer to a list of files, such as
