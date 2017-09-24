@@ -22,11 +22,14 @@ The [Python] packages of **docassemble** are also available on [PyPI]:
 pip install docassemble.webapp
 {% endhighlight %}
 
+See the [Change Log] for a description of recent updates.
+
 The **docassemble** web application requires more than just its
 [Python] packages to run.  (This is why [using Docker] is
 recommended.)  For details of how **docassemble** works, see the
 [installation] section.
 
+[Change Log]: {{ site.baseurl }}/docs/changelog.html
 [using Docker]: {{ site.baseurl }}/docs/docker.html
 [installation]: {{ site.baseurl }}/docs/installation.html
 [tarball]: https://github.com/jhpyle/docassemble/archive/master.tar.gz
