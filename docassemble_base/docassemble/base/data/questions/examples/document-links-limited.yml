@@ -1,0 +1,25 @@
+metadata:
+  title: Document links
+  short title: Links
+  documentation: "https://docassemble.org/docs/documents.html#display"
+  example start: 1
+  example end: 2
+---
+mandatory: True
+question: |
+  This interview is all done.
+subquestion: |
+  Here is your document!
+  
+  ${ complaint }
+---
+attachment:
+  filename: complaint
+  name: Complaint
+  variable name: complaint
+  content: |
+    This is a complaint.
+
+    Blah, blah, blah
+  valid formats:
+    - pdf

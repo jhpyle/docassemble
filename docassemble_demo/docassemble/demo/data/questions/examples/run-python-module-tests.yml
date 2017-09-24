@@ -1,0 +1,24 @@
+metadata:
+  title: Run a Python module
+  short title: Module
+  documentation: "https://docassemble.org/docs/functions.html#run_python_module"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+code: |
+  output, return_code = run_python_module('tests.py', ['-v'])
+---
+mandatory: True
+question: |
+  Result of unit tests
+subquestion: |
+  % if return_code == 0:
+  Command succeeded.
+  % else:
+  Command failed!
+  % endif
+  
+  ${ indent(output) }

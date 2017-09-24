@@ -1,7 +1,7 @@
 metadata:
-  title: URL of a file
-  short title: URL file
-  documentation: "https://docassemble.org/docs/objects.html#DAFile.url_for"
+  title: Document links
+  short title: Links
+  documentation: "https://docassemble.org/docs/documents.html#display"
   example start: 1
   example end: 2
 ---
@@ -15,7 +15,14 @@ subquestion: |
   to clerk's office at the
   court.
 
-  [download your pleading]: ${ complaint.pdf.url_for() }
+  ${ complaint }
+
+  If you want to make changes
+  to it first, you can download
+  the [RTF version].
+
+  [download your pleading]: ${ complaint.url_for() }
+  [RTF version]: ${ complaint.rtf.url_for() }
 ---
 attachment:
   filename: complaint

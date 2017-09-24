@@ -2263,7 +2263,7 @@ class Question:
         else:
             raise DAError("Unknown data type in attachment")
 
-    def ask(self, user_dict, the_x, iterators, sought):
+    def ask(self, user_dict, old_user_dict, the_x, iterators, sought):
         docassemble.base.functions.this_thread.current_question = self
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
@@ -2534,7 +2534,13 @@ class Question:
                                 extras[key][field.number] = eval(field.extras[key]['compute'], user_dict)
                 if hasattr(field, 'saveas'):
                     try:
-                        defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
+                        if old_user_dict is not None:
+                            try:
+                                defaults[field.number] = eval(from_safeid(field.saveas), old_user_dict)
+                            except:
+                                defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
+                        else:
+                            defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
                     except:
                         if hasattr(field, 'default'):
                             if isinstance(field.default, TextObject):
@@ -3220,8 +3226,13 @@ class Interview:
         user_dict['_internal']['tracker'] += 1
         if len(args):
             interview_status = args[0]
+            if len(args) >= 2:
+                old_user_dict = args[1]
+            else:
+                old_user_dict = None
         else:
             interview_status = InterviewStatus()
+            old_user_dict = None
         if 'docvar' not in user_dict['_internal']: # waste of CPU cycles; eventually take out!
             user_dict['_internal']['docvar'] = dict()
         if 'doc_cache' not in user_dict['_internal']: # waste of CPU cycles; eventually take out!
@@ -3344,9 +3355,9 @@ class Interview:
                             if question.name and question.name in user_dict['_internal']['answers']:
                                 #logmessage("in answers")
                                 #question.mark_as_answered(user_dict)
-                                interview_status.populate(question.follow_multiple_choice(user_dict, interview_status).ask(user_dict, 'None', [], None))
+                                interview_status.populate(question.follow_multiple_choice(user_dict, interview_status).ask(user_dict, old_user_dict, 'None', [], None))
                             else:
-                                interview_status.populate(question.ask(user_dict, 'None', [], None))
+                                interview_status.populate(question.ask(user_dict, old_user_dict, 'None', [], None))
                             if interview_status.question.question_type == 'continue':
                                 user_dict['_internal']['answered'].add(question.name)
                             else:
@@ -3364,7 +3375,7 @@ class Interview:
                     follow_mc = True
                     missingVariable = extract_missing_name(the_exception)
                 variables_sought.add(missingVariable)
-                question_result = self.askfor(missingVariable, user_dict, interview_status, seeking=interview_status.seeking, follow_mc=follow_mc)
+                question_result = self.askfor(missingVariable, user_dict, old_user_dict, interview_status, seeking=interview_status.seeking, follow_mc=follow_mc)
                 if question_result['type'] == 'continue':
                     continue
                 elif question_result['type'] == 'refresh':
@@ -3376,7 +3387,7 @@ class Interview:
                 docassemble.base.functions.reset_context()
                 missingVariable = extract_missing_name(the_exception)
                 variables_sought.add(missingVariable)
-                question_result = self.askfor(missingVariable, user_dict, interview_status, seeking=interview_status.seeking, follow_mc=True)
+                question_result = self.askfor(missingVariable, user_dict, old_user_dict, interview_status, seeking=interview_status.seeking, follow_mc=True)
                 if question_result['type'] == 'continue':
                     continue
                 elif question_result['type'] == 'refresh':
@@ -3392,7 +3403,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                interview_status.populate(new_question.ask(user_dict, 'None', [], None))
+                interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None))
                 break
             except ResponseError as qError:
                 docassemble.base.functions.reset_context()
@@ -3422,7 +3433,7 @@ class Interview:
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 #the_question = new_question.follow_multiple_choice(user_dict)
-                interview_status.populate(new_question.ask(user_dict, 'None', [], None))
+                interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None))
                 break
             except BackgroundResponseError as qError:
                 docassemble.base.functions.reset_context()
@@ -3435,7 +3446,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                interview_status.populate(new_question.ask(user_dict, 'None', [], None))
+                interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None))
                 break
             except BackgroundResponseActionError as qError:
                 docassemble.base.functions.reset_context()
@@ -3448,7 +3459,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                interview_status.populate(new_question.ask(user_dict, 'None', [], None))
+                interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None))
                 break
             # except SendFileError as qError:
             #     #logmessage("Trapped SendFileError")
@@ -3461,7 +3472,7 @@ class Interview:
             #     new_interview = new_interview_source.get_interview()
             #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
             #     new_question.name = "Question_Temp"
-            #     interview_status.populate(new_question.ask(user_dict, 'None', [], None))
+            #     interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None))
             #     break
             except QuestionError as qError:
                 docassemble.base.functions.reset_context()
@@ -3497,7 +3508,7 @@ class Interview:
                 new_question.name = "Question_Temp"
                 # will this be a problem?  Maybe, since the question name can vary by thread.
                 #the_question = new_question.follow_multiple_choice(user_dict)
-                interview_status.populate(new_question.ask(user_dict, 'None', [], None))
+                interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None))
                 break
             except AttributeError as the_error:
                 docassemble.base.functions.reset_context()
@@ -3531,7 +3542,7 @@ class Interview:
             interview_status.can_go_back = False
         docassemble.base.functions.close_files()
         return(pickleable_objects(user_dict))
-    def askfor(self, missingVariable, user_dict, interview_status, **kwargs):
+    def askfor(self, missingVariable, user_dict, old_user_dict, interview_status, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())
         questions_tried = kwargs.get('questions_tried', dict())
         recursion_depth = kwargs.get('recursion_depth', 0)
@@ -3804,7 +3815,7 @@ class Interview:
                     else:
                         if question.question_type == 'continue':
                             continue
-                        return question.ask(user_dict, the_x, iterators, missing_var)
+                        return question.ask(user_dict, old_user_dict, the_x, iterators, missing_var)
                 if a_question_was_skipped:
                     raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
                 raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
@@ -3829,7 +3840,7 @@ class Interview:
                 else:
                     variable_stack.add(missingVariable)
                 questions_tried[newMissingVariable].add(current_question)
-                question_result = self.askfor(newMissingVariable, user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=follow_mc, recursion_depth=recursion_depth)
+                question_result = self.askfor(newMissingVariable, user_dict, old_user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=follow_mc, recursion_depth=recursion_depth)
                 if question_result['type'] == 'continue' and missing_var != newMissingVariable:
                     # logmessage("Continuing after asking for newMissingVariable " + str(newMissingVariable))
                     continue
@@ -3844,7 +3855,7 @@ class Interview:
                 else:
                     variable_stack.add(missingVariable)
                 questions_tried[newMissingVariable].add(current_question)
-                question_result = self.askfor(newMissingVariable, user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=True, recursion_depth=recursion_depth)
+                question_result = self.askfor(newMissingVariable, user_dict, old_user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=True, recursion_depth=recursion_depth)
                 if question_result['type'] == 'continue':
                     continue
                 docassemble.base.functions.pop_current_variable()
@@ -3858,7 +3869,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                return(new_question.ask(user_dict, 'None', [], missing_var))
+                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var))
             except ResponseError as qError:
                 # logmessage("ResponseError")
                 docassemble.base.functions.reset_context()
@@ -3883,7 +3894,7 @@ class Interview:
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 #the_question = new_question.follow_multiple_choice(user_dict)
-                return(new_question.ask(user_dict, 'None', [], missing_var))
+                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var))
             except BackgroundResponseError as qError:
                 # logmessage("BackgroundResponseError")
                 docassemble.base.functions.reset_context()
@@ -3896,7 +3907,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                return(new_question.ask(user_dict, 'None', [], missing_var))
+                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var))
             except BackgroundResponseActionError as qError:
                 # logmessage("BackgroundResponseActionError")
                 docassemble.base.functions.reset_context()
@@ -3909,7 +3920,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                return(new_question.ask(user_dict, 'None', [], missing_var))
+                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var))
             except QuestionError as qError:
                 # logmessage("QuestionError")
                 docassemble.base.functions.reset_context()
@@ -3946,7 +3957,7 @@ class Interview:
                 new_question.name = "Question_Temp"
                 # will this be a problem? yup
                 # the_question = new_question.follow_multiple_choice(user_dict)
-                return(new_question.ask(user_dict, 'None', [], missing_var))
+                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var))
             except CodeExecute as code_error:
                 # logmessage("CodeExecute")
                 docassemble.base.functions.reset_context()
@@ -3988,7 +3999,7 @@ class Interview:
             #     new_interview = new_interview_source.get_interview()
             #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
             #     new_question.name = "Question_Temp"
-            #     return(new_question.ask(user_dict, 'None', [], None))
+            #     return(new_question.ask(user_dict, old_user_dict, 'None', [], None))
         raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.")
 
 def reproduce_basics(interview, new_interview):

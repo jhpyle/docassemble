@@ -1654,6 +1654,11 @@ class DAFileCollection(DAObject):
             if hasattr(self, ext):
                 return getattr(self, ext).url_for()
         raise Exception("Could not find a file within a DACollection.")
+    def show(self, **kwargs):
+        """Inserts markup that displays each part of the file collection as an
+        image or link.
+        """
+        return " ".join([getattr(self, ext).show(**kwargs) for ext in self._extension_list() if hasattr(self, ext)])
     def __str__(self):
         return " ".join([str(getattr(self, ext)) for ext in self._extension_list() if hasattr(self, ext)])
     def __unicode__(self):

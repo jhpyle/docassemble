@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.1.61] - 2017-09-23
+### Changed
+- After back button is pressed, defaults will be populated on fields
+  that accept defaults.
+### Added
+- Methods on `DAFileCollection` so that it can be used like a
+  `DAFile`.
+- `run_python_module()` function.
+
 ## [0.1.60] - 2017-09-21
 ### Changed
 - Added a new type of infinite loop detection.

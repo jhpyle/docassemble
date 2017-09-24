@@ -3854,10 +3854,13 @@ def index():
     #     else:
     #         flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
     if '_back_one' in post_data and steps > 1:
+        old_user_dict = user_dict
         steps, user_dict, is_encrypted = fetch_previous_user_dict(user_code, yaml_filename, secret)
         if encrypted != is_encrypted:
             encrypted = is_encrypted
             session['encrypted'] = encrypted
+    else:
+        old_user_dict = None
     # elif 'filename' in request.args:
     #     the_user_dict, attachment_encrypted = get_attachment_info(user_code, request.args.get('question'), request.args.get('i'), secret)
     #     if the_user_dict is not None:
@@ -4487,7 +4490,7 @@ def index():
         interview_status.next_action = next_action
         interview_status.current_info.update(the_next_action)
     #startTime = int(round(time.time() * 1000))
-    interview.assemble(user_dict, interview_status)
+    interview.assemble(user_dict, interview_status, old_user_dict)
     #endTime = int(round(time.time() * 1000))
     #logmessage(str(endTime - startTime))
     current_language = docassemble.base.functions.get_language()
@@ -12712,6 +12715,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 inp = ''
                 continue
             elif steps > 1 and interview_status.can_go_back:
+                old_user_dict = user_dict
                 steps, user_dict, is_encrypted = fetch_previous_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
                 if 'question' in sess_info:
                     del sess_info['question']
