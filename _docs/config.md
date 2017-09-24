@@ -1734,7 +1734,7 @@ send **docassemble** into an infinite loop.  Sometimes these infinite
 loops can be detected and a warning raised, but other times they are
 hard to detect because even deliberate code could loop or recurse for
 a long time.  Thus, **docassemble** has hard limits on the amount of
-looping and recursion it will do.  By default, these limits are set at
+looping and recursion it will do.  By default, these limits are set to
 500 loops and 500 recursions.  If you get an error that "there appears to
 be an infinite loop" or "there appears to be a circularity," then
 these limits were exceeded.  If you want to change these limits on a
