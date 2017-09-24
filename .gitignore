@@ -37,3 +37,7 @@ publish.sh
 pypi-publish.sh
 newversion.sh
 json_files
+posttoslack.sh
+CHANGELOG.yml
+copychangelog.sh
+cc-changelog.sh

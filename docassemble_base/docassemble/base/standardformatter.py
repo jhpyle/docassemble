@@ -1522,7 +1522,6 @@ def input_for(status, field, wide=False, embedded=False):
                     inner_field = safeid(from_safeid(saveas_string) + "[" + myb64quote(pair[0]) + "]")
                     #sys.stderr.write("I've got a " + repr(pair[1]) + "\n")
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
-                    logmessage("defaultvalue is " + repr(defaultvalue))
                     if len(pair) > 2 and pair[2]:
                         ischecked = ' checked'
                     elif defaultvalue is None:

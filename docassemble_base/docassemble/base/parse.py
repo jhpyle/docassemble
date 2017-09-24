@@ -861,6 +861,10 @@ class Question:
                 self.interview.max_image_size = eval(str(data['features']['maximum image size']))
             if 'cache documents' in data['features']:
                 self.interview.cache_documents = data['features']['cache documents']
+            if 'loop limit' in data['features']:
+                self.interview.loop_limit = data['features']['loop limit']
+            if 'recursion limit' in data['features']:
+                self.interview.recursion_limit = data['features']['recursion limit']
             if 'pdf/a' in data['features'] and data['features']['pdf/a'] in [True, False]:
                 self.interview.use_pdf_a = data['features']['pdf/a']
             for key in ['javascript', 'css']:
@@ -3293,7 +3297,7 @@ class Interview:
             number_loops += 1
             if number_loops > self.loop_limit:
                 docassemble.base.functions.close_files()
-                raise DAError("Your code contains a circularity.  Variables involved: " + ", ".join(variables_sought) + ".")
+                raise DAError("There appears to be a circularity.  Variables involved: " + ", ".join(variables_sought) + ".")
             docassemble.base.functions.reset_gathering_mode()
             try:
                 if (self.uses_action or 'action' in interview_status.current_info) and not self.calls_process_action:
