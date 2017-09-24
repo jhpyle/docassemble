@@ -4,7 +4,7 @@ title: Interview logic
 short_title: Interview Logic
 ---
 
-# Introduction
+# <a name="intro"></a>Introduction
 
 Unlike other guided interview systems, in which the interview author
 maps out a decision tree or flowchart to indicate which questions
@@ -44,7 +44,7 @@ and in the specification of the interview questions.  In
 implicitly from the requirements of the end result (in this case, a
 document).  So the logic only needs to be specified in one place.
 
-# End goals and the satisfaction of prerequisites
+# <a name="endgoals"></a>End goals and the satisfaction of prerequisites
 
 By default, all questions in a **docassemble** interview are asked
 only if and when they are needed.
@@ -175,7 +175,7 @@ The most "scalable" approach to building an interview is to allow
 **docassemble**'s prerequisite-satisfying algorithm to do the heavy
 lifting.  This means using `mandatory` as little as possible.
 
-## Changing the order of questions
+## <a name="changeorder"></a>Changing the order of questions
 
 You may encounter situations where you don't like the order
 in which **docassemble** asks questions.  You can always tweak the
@@ -273,7 +273,7 @@ In this case, [Python] will not "need" the value of `apples` unless
 the number of peaches and pears exceeds 113,121, so the mention of
 `apples` does not necessarily trigger the asking of a question.
 
-# Directives that control interview logic
+# <a name="directives"></a>Directives that control interview logic
 
 ## <a name="mandatory"></a>`mandatory`
 
@@ -553,7 +553,7 @@ When your interviews get complicated, there is no natural order to
 questions.  In some situations, a question may be asked early, and in
 other situations, a question may be asked later.
 
-## Overriding one question with another
+## <a name="overriding"></a>Overriding one question with another
 
 The order in which non-[`mandatory`] blocks appear in the [YAML] file
 is only important if you have multiple blocks that each offer to
@@ -892,13 +892,13 @@ You might also offer these hyperlinks in the menu, using the
 You can also use the [`dispatch`] configuration directive to
 provide a list of interviews available on your server.
 
-# Best practices for interview logic and organization
+# <a name="bplogic"></a>Best practices for interview logic and organization
 
 * Use only a single [`mandatory`]<span></span> [`code`] block for each
   interview, and put it at the top of the file after the
   [initial blocks].
 
-# Best practices for sharing with others
+# <a name="bpsharing"></a>Best practices for sharing with others
 
 * Don't reinvent the wheel; [`include`] other people's questions.
 * Share your [`question`]s, [`code`], and [`template`]s with others.

@@ -4,7 +4,7 @@ title: Functions
 short_title: Functions
 ---
 
-# What is a function?
+# <a name="function"></a>What is a function?
 
 A function is a piece of code that takes one or more pieces of input
 and returns something as output or does something behind the scenes.
@@ -410,7 +410,7 @@ should be redirected.
 One use of `command()` is to delete interviews after a period of
 inactivity.  See [scheduled tasks] for more information.
 
-# Text transformation functions
+# <a name="texttransformation"></a>Text transformation functions
 
 ## <a name="from_b64_json"></a>from_b64_json()
 
@@ -819,7 +819,7 @@ The `url_of()` function also has a few special uses.
   on-going interviews of a signed-in user.
 * `url_of('playground')` returns a URL to the [Playground].
 
-# QR code functions
+# <a name="qrfunctions"></a>QR code functions
 
 ## <a name="qr_code"></a>qr_code()
 
@@ -896,7 +896,7 @@ customize the reading of the PDF files (they are passed directly to
 The function returns a [Python list] with the codes found, in the
 order in which they were found.
 
-# E-mail functions
+# <a name="emailfunctions"></a>E-mail functions
 
 ## <a name="send_email"></a>send_email()
 
@@ -1033,7 +1033,7 @@ only return information about e-mail addresses created with
 to the e-mail address created by `interview_email(key='evidence',
 index=2)`.
 
-# Geographic functions
+# <a name="geofunctions"></a>Geographic functions
 
 ## <a name="map_of"></a>map_of()
 
@@ -1156,7 +1156,7 @@ this function will return `None`.
 
 The data come from the [`pycountry` package].
 
-# Navigation and progress bar functions
+# <a name="navigation"></a>Navigation and progress bar functions
 
 For more information about the progress bar, see the documentation for
 the [progress bar] initial block and the [`progress`] modifier.
@@ -1230,7 +1230,7 @@ keyword arguments `style`, the options for which are `None` or
 `'inline'`, and `show_links`, which you can set to `True` if you want
 users to be able to click on section names.
 
-# Functions for managing global variables
+# <a name="globalvars"></a>Functions for managing global variables
 
 If you try writing your own functions, you will learn that functions
 do not have access to all of the variables in your interview.
@@ -1417,7 +1417,7 @@ yesno: email_is_best
 ---
 {% endhighlight %}
 
-# Functions for determining information about the browser
+# <a name="browser"></a>Functions for determining information about the browser
 
 ## <a name="language_from_browser"></a>language_from_browser()
 
@@ -1466,7 +1466,7 @@ returned:
 
 {% include side-by-side.html demo="device-ip" %}
 
-# Language and locale functions()
+# <a name="langlocale"></a>Language and locale functions()
 
 These functions access and change the active language and locale.  See
 [language support] for more information about these features of
@@ -1599,7 +1599,7 @@ code: |
 ---
 {% endhighlight %}
 
-# Access time functions
+# <a name="time"></a>Access time functions
 
 Internally, **docassemble** keeps track of the last time the interview
 was accessed.  The following functions retrieve information about
@@ -1897,7 +1897,7 @@ number of times the task has been performed.
 `remind_user` task to zero, which means that
 `task_performed('remind_user')` would subsequently return `False`.
 
-# Simple translation of words
+# <a name="translation"></a>Simple translation of words
 
 ## <a name="word"></a>word()
 
@@ -2226,7 +2226,7 @@ arguments to the `conjugate()` function of the [pattern.en].
 * `verb_present('helps', '1sg')` returns `help` (first person singular).
 * `verb_present('helps', 'pl')` returns `help` (plural).
 
-# Simple language functions
+# <a name="simplelang"></a>Simple language functions
 
 The following simple language functions all have the property that if
 the optional argument `capitalize=True` is added, the resulting phrase
@@ -3077,6 +3077,72 @@ The following interview retrieves an image from the Internet and saves
 it to a variable `logo`, which is a [`DAFile`] object.
 
 {% include side-by-side.html demo="save-url-to-file" %}
+
+## <a name="run_python_module"></a>run_python_module()
+
+The `run_python_module()` runs a [Python module] as though it were
+being run from the command line, and returns the output of the command
+(standard output as well as standard error) along with the return code
+from running the command.
+
+The first argument, which is required, is the name of the module.
+This can be expressed in a few ways.  If it is the name of a file
+ending in .py, it is assumed to be a module in the same package as the
+interview file.  Or, if you are using the [Playground], it is assumed
+to be a file in the [Modules folder].  The module file is executed as
+you would execute a module file by using `python modulename.py` from
+the command line.  If the first argument is the name of a module, that
+module will be run, much as you would execute a module by using `python
+-m modulename` from the command line.
+
+The function returns a tuple of two variables: the output of the
+command (text) and the return value (an integer).  If the command
+was successful, the return value will be zero.
+
+The following three example interviews refer to a very simple
+[Python module] file, [`hello.py`].  The contents of this file are:
+
+{% highlight python %}
+print "Hello, world!"
+{% endhighlight %}
+
+The interviews and the [`hello.py`] module are all in the
+[`docassemble.demo`] package.
+
+The first example refers to the .py file:
+
+{% include demo-side-by-side.html demo="run-python-module" %}
+
+The second example refers to the same [Python module], but by its full
+module name:
+
+{% include demo-side-by-side.html demo="run-python-module-2" %}
+
+The third example refers to the same [Python module], but using a
+[relative module name] instead of a full module name:
+
+{% include demo-side-by-side.html demo="run-python-module-3" %}
+
+Note that the first example and the third example only work because
+the interviews and the module are in the same package.
+
+When calling `run_python_module()`, you can also include an optional
+second argument, which must be a list of command line arguments to be
+passed to the module.
+
+The following example demonstrates how you can use
+`run_python_module()` to run unit tests using the standard
+[`unittest` framework].  The interview, the [`tests.py`] file it
+refers to, and the [`my_name_suffix`] module that is being tested in
+[`tests.py`], are all in [`docassemble.demo`] package.
+
+The command line argument `-v` results in "verbose" output.
+
+{% include demo-side-by-side.html demo="run-python-module-tests" %}
+
+The [`indent()`] function is used here because it indents each line in
+the output by four spaces.  In [Markdown], this causes the text to be
+displayed in a monospace font.
 
 # <a name="sms"></a>Functions for working with SMS messages
 
@@ -3932,3 +3998,10 @@ $(document).on('daPageLoad', function(){
 [referer header]: https://en.wikipedia.org/wiki/HTTP_referer
 [`exitpage`]: {{ site.baseurl }}/docs/config.html#exitpage
 [JSON interface]: {{ site.baseurl }}/docs/frontend.html
+[Modules folder]: {{ site.baseurl }}/docs/playground.html#modules
+[`hello.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/hello.py
+[relative module name]: https://docs.python.org/2.5/whatsnew/pep-328.html
+[`unittest` framework]: https://docs.python.org/2/library/unittest.html
+[`tests.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/tests.py
+[`my_name_suffix`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/my_name_suffix.py
+[`indent()`]: #indent

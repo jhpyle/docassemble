@@ -8,7 +8,7 @@ The "Playground" within the **docassemble** web application is a
 testing ground for interviews.  It allows you to write [YAML] in one
 or more "files" and then run an interview with one click.
 
-# Components of the Playground page
+# <a name="components"></a>Components of the Playground page
 
 ![playground]({{ site.baseurl }}/img/playground.png){: .maybe-full-width }
 
@@ -332,7 +332,7 @@ purposes of populating the "Variables, etc." section.  Usually the
 file you want to select here is the "top level" file for your
 interview, which [`include`]s the file you are editing.
 
-## Meaning of icons
+## <a name="icons"></a>Meaning of icons
 
 * Clicking ![magnifying glass]({{ site.baseurl
   }}/img/playground-icon-magnifying-glass.png) next to a variable name
@@ -346,7 +346,7 @@ interview, which [`include`]s the file you are editing.
   }}/img/playground-icon-question-mark.png) next to a category name
   shows information about that category.
 
-## The buttons
+## <a name="buttons"></a>The buttons
 
 ![buttons]({{ site.baseurl }}/img/playground-buttons.png){: .maybe-full-width }
 
@@ -533,7 +533,7 @@ Note that this synchronization feature does not work with
 [Google Docs]; it will not convert a [Google Docs] file to a .docx
 file, for example.
 
-# Recovering from infinite loops
+# <a name="infiniteloops"></a>Recovering from infinite loops
 
 If you accidentially write code that gets into an infinite loop, the
 only way to stop the code is to terminate the process in which the

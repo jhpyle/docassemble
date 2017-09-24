@@ -630,6 +630,15 @@
     - Sandals
     - Clogs
     - Other
+"choices-dropdown": |-
+  question: |
+    What type of shoes do you wear?
+  field: target_variable
+  dropdown:
+    - Sneakers
+    - Sandals
+    - Clogs
+    - Other
 "choices-icons": |-
   question: |
     What is the most important question
@@ -910,6 +919,27 @@
     Here is the picture.
   subquestion: |
     ${ myfile }
+"dafile-url-for": |-
+  mandatory: True
+  question: |
+    This interview is all done.
+  subquestion: |
+    To start your case,
+    [download your pleading],
+    print it, and take it
+    to clerk's office at the
+    court.
+
+    [download your pleading]: ${ complaint.pdf.url_for() }
+  ---
+  attachment:
+    filename: complaint
+    name: Complaint
+    variable name: complaint
+    content: |
+      This is a complaint.
+
+      Blah, blah, blah
 "dalist": |-
   modules:
     - docassemble.base.legal
@@ -1178,6 +1208,38 @@
   language: es\nquestion: El documento est\xE1 listo.\nattachment:\n  - name: Alimentos\n\
   \    language: en\n    filename: food_order\n    docx template file: document-language.docx\n\
   \    field variables:\n      - food_list"
+"document-links": |-
+  mandatory: True
+  question: |
+    This interview is all done.
+  subquestion: |
+    To start your case,
+    [download your pleading],
+    print it, and take it
+    to clerk's office at the
+    court.
+
+    ${ complaint }
+
+    If you want to make changes
+    to it first, you can download
+    the [RTF version].
+
+    [download your pleading]: ${ complaint.url_for() }
+    [RTF version]: ${ complaint.rtf.url_for() }
+  ---
+  attachment:
+    filename: complaint
+    name: Complaint
+    variable name: complaint
+    content: |
+      This is a complaint.
+
+      Blah, blah, blah
+"document-links-limited": "mandatory: True\nquestion: |\n  This interview is all done.\n\
+  subquestion: |\n  Here is your document!\n  \n  ${ complaint }\n---\nattachment:\n\
+  \  filename: complaint\n  name: Complaint\n  variable name: complaint\n  content:\
+  \ |\n    This is a complaint.\n\n    Blah, blah, blah\n  valid formats:\n    - pdf"
 "document-markup": "mandatory: True\nquestion: Here is your document.\nattachment:\n\
   \  name: A demonstration\n  filename: demo_document\n  description: |\n    This\
   \ document demonstrates the\n    markup codes you can insert into\n    document\
@@ -5410,6 +5472,38 @@
     % else:
     Get a job!
     % endif
+"predict-happy-sad": |-
+  question: |
+    Describe how you feel.
+  fields:
+    - no label: mood
+      datatype: ml
+  ---
+  mandatory: True
+  question: |
+    You sound ${ mood }.
+  help: |
+    If `mood` is `None`, then
+    go to Train from the menu
+    and train the model "mood"
+    in the `docassemble.base`
+    package.
+"predict-happy-sad-area": |-
+  question: |
+    Describe how you feel.
+  fields:
+    - no label: mood
+      datatype: mlarea
+  ---
+  mandatory: True
+  question: |
+    You sound ${ mood }.
+  help: |
+    If `mood` is `None`, then
+    go to Train from the menu
+    and train the model "mood"
+    in the `docassemble.base`
+    package.
 "prevent-back": |-
   code: |
     app_submitted = True
@@ -7199,6 +7293,31 @@
   ---\nmandatory: true\nquestion: |\n  The imported data\nsubquestion: |\n  % for\
   \ item in raw_data:\n  The `inventory` of\n  \"${ item.title }\" is:\n  \n  > `${\
   \ item.inventory }`\n  \n  % endfor"
+"run-python-module": |-
+  code: |
+    output, return_code = run_python_module('hello.py')
+  ---
+  mandatory: True
+  question: |
+    ${ output }
+"run-python-module-2": |-
+  code: |
+    output, return_code = run_python_module('docassemble.demo.hello')
+  ---
+  mandatory: True
+  question: |
+    ${ output }
+"run-python-module-3": |-
+  code: |
+    output, return_code = run_python_module('.hello')
+  ---
+  mandatory: True
+  question: |
+    ${ output }
+"run-python-module-tests": "code: |\n  output, return_code = run_python_module('tests.py',\
+  \ ['-v'])\n---\nmandatory: True\nquestion: |\n  Result of unit tests\nsubquestion:\
+  \ |\n  % if return_code == 0:\n  Command succeeded.\n  % else:\n  Command failed!\n\
+  \  % endif\n  \n  ${ indent(output) }"
 "someone-already-mentioned": |-
   objects:
     cook: Individual

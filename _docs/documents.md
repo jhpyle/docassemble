@@ -18,12 +18,12 @@ templates.  The `name` and `description` filenames can also contain
 [Markdown].  (The `filename` cannot contain [Markdown], since it's a
 filename, after all.)
 
-# Overview of document creation methods
+# <a name="oview"></a>Overview of document creation methods
 
 There are several ways to make downloadable documents using the
 `attachments` block.  Each has its own features and limitations.
 
-## Method 1: generating documents from scratch using Markdown
+## <a name="scratch"></a>Method 1: generating documents from scratch using Markdown
 
 First, you can [generate attachments from Markdown](#from markdown).
 In the same way that you format the text of questions, you can format
@@ -44,7 +44,7 @@ In addition to using [Markdown], you can use **docassemble**-specific
 [markup](#markup) codes to do things like center text, insert a page
 break, or insert a case caption.
 
-## Method 2: filling in fields
+## <a name="filling"></a>Method 2: filling in fields
 
 The second way to make attachments is to generate [PDF](#pdf template
 file) or [DOCX](#docx template file) using templates that you prepare
@@ -63,7 +63,7 @@ Here is an example that generates a .docx file:
 
 {% include side-by-side.html demo="docx-template" %}
 
-## Comparison of the methods
+## <a name="comparison"></a>Comparison of the methods
 
 Each method has benefits.
 
@@ -694,7 +694,7 @@ For more information about gathering items into a [`DADict`] object,
 see the [Dictionary] subsection of the [Groups] section of the
 documentation.
 
-### Passing values only for particular fields
+### <a name="particfields"></a>Passing values only for particular fields
 
 By default, all of the variables in your interview will be available
 in the .docx template.  If you do not want this, perhaps because your
@@ -1021,6 +1021,32 @@ name).  The expression can return:
   * If the text is `docassemble.missouri:data/static/sample_form.pdf`,
     that file will be retrieved from the `docassemble.missouri` package.
 
+# <a name="display"></a>Alternative ways of displaying documents
+
+There are alternatives to using [`attachment`] or [`attachment code`]
+for displaying assembled files to the user.  If you use
+[`variable name`] to create a [`DAFileCollection`] object that
+represents the assembled file, you can use this variable to provide
+the file to the user in the context of a [`question`] in a number of
+different ways:
+
+{% include side-by-side.html demo="document-links" %}
+
+The [`.url_for()`] method works on [`DAFileCollection`] and [`DAFile`]
+objects.
+
+If a [`DAFile`] is inserted into a template 
+(e.g., with `${ complaint }`), and the [`DAFile`] is a PDF, a shrunken
+image of the first page is shown.  If the [`DAFile`] is an RTF or a
+.docx file, a link is shown.
+
+If a [`DAFileCollection`] object is inserted into a template, each
+file type is inserted.  If you use [`valid formats`] to limit the file
+types created, only the specified file types will be inserted.  For
+example:
+
+{% include side-by-side.html demo="document-links-limited" %}
+
 # <a name="pdfa"></a>Producing PDF/A files
 
 If you want the [PDF] file produced by an attachment to be in
@@ -1174,3 +1200,4 @@ interview, see the [`cache documents` feature].
 ["Templates" folder]: {{ site.baseurl }}/docs/playground.html#templates
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [`variable name`]: #variable name
+[`.url_for()`]: {{ site.baseurl }}/docs/objects.html#DAFile.url_for

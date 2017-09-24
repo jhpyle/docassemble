@@ -43,9 +43,9 @@ See [reserved variable names] for a list of variable names that you
 cannot use because they conflict with built-in names that [Python] and
 **docassemble** use.
 
-# Multiple choice questions (one variable only)
+# <a name="mconevar"></a>Multiple choice questions (one variable only)
 
-## Yes or no questions
+## <a name="yesornoquestions"></a>Yes or no questions
 
 ### <a name="yesno"></a><a name="noyes"></a>The `yesno` and `noyes` statements
 
@@ -141,8 +141,12 @@ You can specify a default value using `default`:
 
 {% include side-by-side.html demo="choices-with-default" %}
 
-To provide a multiple-choice question with a dropdown "select"
-element, you need to use a [`fields`] statement; see [below](#select).
+## <a name="field with dropdown"></a>Multiple choice dropdown
+
+To provide a multiple choice question with a dropdown selector, use
+`field` with a `dropdown` list:
+
+{% include side-by-side.html demo="choices-dropdown" %}
 
 ## <a name="image button"></a>Adding images to buttons and list items
 
@@ -163,7 +167,7 @@ can only be asked by way of the questions in which they are embedded.
 
 You embed a question by providing a [YAML] key-value list (a
 dictionary) (as opposed to text) as the value of a label in a
-`buttons` or `choices` list.
+`buttons`, `choices`, or `dropdown` list.
 
 {% include side-by-side.html demo="buttons-code-color" %}
 
@@ -193,7 +197,7 @@ A [`question`] with a `field` and no `buttons` will offer the user a
 "Continue" button.  When the user presses "Continue," the variable
 indicated by `field` will be set to `True`.
 
-# Uploads
+# <a name="uploads"></a>Uploads
 
 ## <a name="uploading"></a>Storing files as variables
 
@@ -281,7 +285,7 @@ the key; if the key is uses one of the names listed below, it will be
 treated as a modifier; if it is anything else, it will be treated as a
 label.
 
-## Customizing each field
+## <a name="customizingfields"></a>Customizing each field
 
 The following are the keys that have special meaning:
 
@@ -442,7 +446,7 @@ text you want to be displayed.
 
 {% include side-by-side.html demo="fields-mc-nota" %}
 
-### When the list of choices is empty
+### <a name="emptychoices"></a>When the list of choices is empty
 
 If the list of choices for a multiple choice question is empty,
 **docassemble** will try to deal with the situation gracefully.  If
@@ -562,7 +566,7 @@ values, which affect what the user sees and how the input is stored in
 a variable.  The following sections describe the available
 `datatype`s.
 
-## Plain text
+## <a name="plaintext"></a>Plain text
 
 <a name="text"></a>A `datatype: text` provides a single-line text
 input box.  This is the default, so you never need to specify it
@@ -574,7 +578,7 @@ unless you want to.
 
 {% include side-by-side.html demo="text-box-field" %}
 
-## Passwords
+## <a name="password"></a>Passwords
 
 <a name="password"></a>`datatype: password` provides an input box
 suitable for passwords.
@@ -608,7 +612,7 @@ browsers, like [Firefox], the format may be some other format.
 
 {% include side-by-side.html demo="email-field" %}
 
-## Numbers
+## <a name="numbers"></a>Numbers
 
 <a name="integer"></a>`datatype: integer` indicates that the input
 should be a valid whole number.
@@ -618,7 +622,7 @@ should be a valid numeric value.
 
 {% include side-by-side.html demo="number-field" %}
 
-## Currency
+## <a name="currencysec"></a>Currency
 
 <a name="currency"></a>`datatype: currency` indicates that the input
 should be a valid numeric value.  In addition, the input box shows a
@@ -630,7 +634,7 @@ The variable will be set to a number, just as if `datatype: number`
 was used.  For information about how to display currency values, see
 the [`currency()`] function.
 
-## Sliders
+## <a name="sliders"></a>Sliders
 
 <a name="range"></a>`datatype: range` shows a slider that the user can use to
 select a number within a given range.  The range must be supplied by
@@ -800,12 +804,12 @@ This also works if your code returns a [list] of [list]s:
 
 {% include side-by-side.html demo="fields-checkboxes-default-6" %}
 
-## <a name="select"></a>Multiple-choice selection list
+## <a name="select"></a>Multiple-choice dropdown
 
 If you provide a list of [`choices`](#choices) or some
 choice-generating [`code`](#code) for a field within a list of
-`fields`, the user will see a dropdown [select] element.  The variable
-will be set to the value of the selected choice.
+`fields`, the user will see a dropdown.  The variable will be set to
+the value of the selected choice.
 
 {% include side-by-side.html demo="fields-choices-dropdown" %}
 
@@ -821,14 +825,14 @@ selected choice.
 ## <a name="object"></a>Multiple-choice with objects
 
 `datatype: object` is used when you would like to use a variable to
-refer to an existing object.  You need to include `choices`, which can
-be a list of objects.
+refer to an existing object.  You need to include
+[`choices`](#choices), which can be a list of objects.
 
 {% include side-by-side.html demo="object" %}
 
-If `choices` refers to a variable that is a list of things, the list
-will be unpacked and used as the list of items from which the user can
-select.  [Python] code can be used here.
+If [`choices`](#choices) refers to a variable that is a list of
+things, the list will be unpacked and used as the list of items from
+which the user can select.  [Python] code can be used here.
 
 {% include side-by-side.html demo="object-selections" %}
 
@@ -994,7 +998,7 @@ If the input is invalid, the user will see a message at the top of the
 screen containing the error message passed to the [`Exception`] that
 was raised.
 
-## A comprehensive example
+## <a name="bigexample"></a>A comprehensive example
 
 Here is a lengthy example that illustrates many of these features.
 
@@ -1058,11 +1062,11 @@ they are created.  (You can inspect this by referring to
 the documenation for [DAObject].  (All **docassemble** objects are
 subtypes of [DAObject].)
 
-If any of the objects listed under `choices` represent lists of
-objects, such as `case.defendant` or `client.child` (objects of type
-`PartyList`, those lists will be expanded and every item will be
-included.  You can also include under `choices` [Python] code, such as
-`case.parties()` or `case.all_known_people()`.
+If any of the objects listed under [`choices`](#choices) represent
+lists of objects, such as `case.defendant` or `client.child` (objects
+of type `PartyList`, those lists will be expanded and every item will
+be included.  You can also include under `choices` [Python] code, such
+as `case.parties()` or `case.all_known_people()`.
 
 The [`datatype`] of `object` presents the list of choices as a
 pull-down.  If you prefer to present the user with radio buttons, set
@@ -1147,7 +1151,7 @@ question to ask in order to define a given variable, see the
 [interview logic]({{ site.baseurl }}/docs/logic.html#variablesearching)
 section.
 
-# Special screens
+# <a name="specialscreens"></a>Special screens
 
 ## <a name="event"></a>Performing special actions requested by the user
 

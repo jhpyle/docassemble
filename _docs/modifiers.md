@@ -149,6 +149,12 @@ This would generate an error because [YAML] thinks square brackets
 indicate a list of items, not plain text.  If you want to write the
 declaration on one line, write `video: "[VIMEO 96044910]"`.
 
+`[YOUTUBE ...]` and `[VIMEO ...]` assume that the aspect ratio of the
+vide is 16:9.  If the aspect ratio of the video is 4:3, you can use
+`[YOUTUBE4:3 ...]` or `[VIMEO4:3 ...]`.  You can also explicitly state
+that the aspect ratio is 16:9 by using `[YOUTUBE16:9 ...]` or
+`[VIMEO16:9 ...]`
+
 # <a name="help"></a>Providing `help` text to users
 
 {% include side-by-side.html demo="help-damages" %}

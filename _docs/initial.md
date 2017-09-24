@@ -136,7 +136,7 @@ referring to their package names.  E.g.,
 `questions.yml` in the `docassemble/helloworld/data/questions`
 directory of that package.
 
-# Images
+# <a name="im"></a>Images
 
 ## <a name="image sets"></a>With attribution: `image sets`
 
@@ -205,7 +205,7 @@ image sets:
 ---
 {% endhighlight %}
 
-# Python modules
+# <a name="mods"></a>Python modules
 
 ## <a name="imports"></a>Importing module itself: `imports`
 
@@ -794,6 +794,22 @@ interview logic looks both at `device().is_mobile` as well as
 full screen: mobile`, which will make the interview go full screen if
 the user has either a mobile phone or a tablet.
 
+## <a name="loop limit"></a><a name="recursion limit"></a>Infinite loop protection
+
+The [infinite loop protection] section of the [configuration]
+documentation explains how you can change the default limits on
+recursion and looping for all interviews on the server.
+
+You can also set these limits on a per-interview basis using the `loop
+limit` and `recursion limit` features.
+
+{% highlight yaml %}
+features:
+  loop limit: 600
+  recursion limit: 600
+{% endhighlight %}
+   
+[infinite loop protection]: {{ site.baseurl }}/docs/config.html#loop limit
 [ending screen]: {{ site.baseurl }}/docs/questions.html#ending screens
 [`device()`]: {{ site.baseurl }}/docs/functions.html#device
 [exit button]: {{ site.baseurl }}/docs/questions.html#special buttons

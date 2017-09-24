@@ -4,7 +4,7 @@ title: How to write an interview
 short_title: Interviews
 ---
 
-# What is a **docassemble** interview?
+# <a name="whatis"></a>What is a **docassemble** interview?
 
 An "interview" in **docassemble** is a [YAML] file that
 **docassemble** reads, and on the basis of what it finds, asks
@@ -197,7 +197,7 @@ then if the user clicks on the link after having already visited the
 same interview during the same browser session, then the user will be
 taken back to the "current" screen of the interview.
 
-# How answers are stored
+# <a name="howstored"></a>How answers are stored
 
 When a user starts a new interview, a new "variable store" is created.
 A variable store is a [Python dictionary] containing the names of the
@@ -210,7 +210,7 @@ the interview.  If the user presses the **docassemble** back button
 (not the browser back button), **docassemble** will restore the
 variable store to the next earliest version.
 
-# Leaving an interview and coming back
+# <a name="comingback"></a>Leaving an interview and coming back
 
 If the user is not logged in through **docassemble**'s
 [username and password system], then the user's progress through an
@@ -219,7 +219,7 @@ interview will be lost if the web browser is closed.
 If the user is logged in, however, then when the user logs in again,
 the user will resume the interview where he left off.
 
-# How to author your own interviews
+# <a name="htauthor"></a>How to author your own interviews
 
 To write and test your own interviews, you will need:
 
@@ -242,7 +242,7 @@ There are three ways to author your own interviews:
    [package] on **docassemble** (which will retrieve your code from
    [GitHub]).
 
-# Brief introduction to YAML
+# <a name="yaml"></a>Brief introduction to YAML
 
 **docassemble** interviews are written in [YAML] format, rather than
 assembled using a [graphical user interface], because once authors

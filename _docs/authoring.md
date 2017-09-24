@@ -4,7 +4,7 @@ title: Documentation overview
 short_title: Overview
 ---
 
-# Sections of the documentation relating to interview authoring
+# <a name="sections"></a>Sections of the documentation relating to interview authoring
 
 **docassemble** is a platform for creating mobile-friendly web
 applications called [Interviews] that ask one question at a time in
@@ -133,7 +133,7 @@ communication by phone is necessary, operators can provide users with
 a special phone number and code that forwards a call without revealing
 the operator's actual phone number.
 
-# Other sections of the documentation
+# <a name="othersections"></a>Other sections of the documentation
 
 Authors should focus on the creative aspects of interview writing and
 not have to worry about how the **docassemble** software is made

@@ -4,7 +4,7 @@ title: System-wide configuration
 short_title: Configuration
 ---
 
-# Location of the configuration file
+# <a name="configfile"></a>Location of the configuration file
 
 **docassemble** reads its configuration directives from a [YAML] file,
 which by default is located in `/usr/share/docassemble/config/config.yml`.
@@ -12,7 +12,7 @@ If you are using [Docker] and [S3] or [Azure blob storage],
 **docassemble** will attempt to copy the configuration file from your
 [S3] bucket or [Azure blob storage] container before starting.
 
-# How to edit the configuration file
+# <a name="edit"></a>How to edit the configuration file
 
 The configuration file can be edited through the web application by
 any user with `admin` privileges.  The editing screen is located on
@@ -24,7 +24,7 @@ You can also edit the configuration file directly on the file system.
 configuration file through the web application that render the web
 application inoperative.)
 
-# Sample configuration file
+# <a name="sample"></a>Sample configuration file
 
 Here is an example of what a configuration file may look like:
 
@@ -85,7 +85,7 @@ mail:
   default sender: '"Administrator" <no-reply@example.com>'
 {% endhighlight %}
 
-# Configuration directives
+# <a name="directives"></a>Configuration directives
 
 ## <a name="debug"></a>Development vs. production
 
@@ -1576,7 +1576,7 @@ oauth:
 {% endhighlight %}
 
 For more information about obtaining these keys, see the 
-[Google Drive]({{ site.baseurl }}/docs/installation.html#googledrive)
+[Google Drive]({{ site.baseurl }}/docs/installation.html#google drive)
 section of the [installation] page.
 
 Note that in [YAML], dictionary keys must be unique.  So you can
@@ -1725,6 +1725,35 @@ verification code digits: 6
 verification code timeout: 360
 {% endhighlight %}
 
+## <a name="loop limit"></a><a name="recursion limit"></a>Infinite loop protection
+
+Since **docassemble** allows you to write code in a declarative
+fashion, it needs to do a lot of looping and recursion.  If you make a
+mistake in your [interview logic] and use circular reasoning, you may
+send **docassemble** into an infinite loop.  Sometimes these infinite
+loops can be detected and a warning raised, but other times they are
+hard to detect because even deliberate code could loop or recurse for
+a long time.  Thus, **docassemble** has hard limits on the amount of
+looping and recursion it will do.  By default, these limits are set at
+500 loops and 500 recursions.  If you get an error that "there appears to
+be an infinite loop" or "there appears to be a circularity," then
+these limits were exceeded.  If you want to change these limits on a
+global level in your system, you can include use the `loop limit` and
+`recursion limit` directives:
+
+{% highlight yaml %}
+loop limit: 600
+recursion limit 600
+{% endhighlight %}
+
+It is important that some reasonable limit be in place, because if the
+server is in development mode, an infinite loop could result in the
+memory of the machine being exceeded, which could
+cause the system to crash.
+
+You can also change these limits on a per-interview basis with the
+[`loop limit` and `recursion limit` features]
+
 # <a name="get_config"></a>Adding your own configuration variables
 
 Feel free to use the configuration file to pass your own variables to
@@ -1753,7 +1782,7 @@ sensitive information, such as passwords and API keys.  This allows
 you to share your code on [GitHub] without worrying about redacting it
 first.
 
-# Using a configuration file in a different location
+# <a name="alternatelocation"></a>Using a configuration file in a different location
 
 If you want **docassemble** to read its configuration from a location
 other than `/usr/share/docassemble/config/config.yml`, you can set the
@@ -1781,6 +1810,7 @@ and Facebook API keys.
 [Flask]: http://flask.pocoo.org/
 [language and locale settings]: {{ site.baseurl }}/docs/language.html
 [user login system]: {{ site.baseurl }}/docs/users.html
+[interview logic]: {{ site.baseurl }}/docs/logic.html
 [protection]: http://flask-wtf.readthedocs.org/en/latest/csrf.html
 [cross-site request forgery]: https://en.wikipedia.org/wiki/Cross-site_request_forgery
 [document]: {{ site.baseurl }}/docs/documents.html
@@ -1934,3 +1964,4 @@ and Facebook API keys.
 [`.html()`]: https://api.jquery.com/html/
 [`maximum image size` field modifier]: {{ site.baseurl }}/docs/fields.html#maximum image size
 [`maximum image size` interview feature]: {{ site.baseurl }}/docs/initial.html#maximum image size
+[`loop limit` and `recursion limit` features]: {{ site.baseurl }}/docs/initial.html#loop limit

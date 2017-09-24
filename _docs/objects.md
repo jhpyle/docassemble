@@ -4,7 +4,7 @@ title: Objects
 short_title: Objects
 ---
 
-# How docassemble uses objects
+# <a name="how"></a>How docassemble uses objects
 
 [Python] allows [object-oriented programming] and so does
 **docassemble**.
@@ -135,7 +135,7 @@ trustee's name (so it can say "Remember that John Smith's phone number
 is ..."), and then ask for the trustee's `phone_number` if it is not
 already defined.
 
-# Writing your own classes
+# <a name="writing"></a>Writing your own classes
 
 If you are prepared to write your own [Python] code, it is pretty easy
 to write your own classes.
@@ -192,7 +192,7 @@ include the words `Ingredients` and `Instructions` in a translation
 [YAML] file referenced in a `words` directive in the **docassemble**
 [configuration].
 
-## Using global variables in your classes
+## <a name="usingglob"></a>Using global variables in your classes
 
 Normally in [Python] you can use global variables to keep track of
 information that your methods need to know but that is not passed in
@@ -413,7 +413,7 @@ Set your oven to ${ apple_pie.get_oven_temperature(temperature_type) }
 and let it warm up.
 {% endhighlight %}
     
-# Standard docassemble classes
+# <a name="stdclasses"></a>Standard docassemble classes
 
 ## <a name="DAObject"></a>DAObject
 
@@ -981,6 +981,8 @@ example, if you are using cloud storage as your form of
 expire after an hour.  If you are not using cloud storage, the server
 will only allow access to the file to the current user.
 
+{% include side-by-side.html demo="dafile-url-for" %}
+
 <a name="DAFile.retrieve"></a>The `.retrieve()` command ensures that a
 stored file is ready for use on the system.  Calling `.retrieve` is
 necessary because if **docassemble** is configured to use [Amazon S3]
@@ -1108,6 +1110,19 @@ the filename (before an extension is added), and a description.  The
 * `filename` is the base name used to generate the filename.  If
   `filename` is `custody_complaint`, the PDF file will be `custody_complaint.pdf`.
 * `description` is the description of the attachment.
+
+The `DAFileCollection` also has some methods so that you can use it
+much as you would use a `DAFile`.
+
+<a name="DAFileCollection.url_for"></a>The `.url_for()` method returns
+a URL to the first document type in the collection.  By default, this
+is the PDF version, but this can be changed with the [valid formats]
+modifier.
+
+<a name="DAFileCollection.url_for"></a>The `.show()` method inserts
+markup that displays each file in the collection as an image, or as a
+link if the file cannot be displayed as an image.  This
+method takes an optional keyword argument, `width`.
 
 ## <a name="DAFileList"></a>DAFileList
 
@@ -1860,7 +1875,7 @@ asking for it."  Otherwise, it returns `True`, which means "the
 browser has not yet been asked for the location information, so let's
 ask it."
 
-# Classes for currency
+# <a name="currencyclasses"></a>Classes for currency
 
 ## <a name="Value"></a>Value
 
@@ -1927,7 +1942,7 @@ Referring to a `PeriodicValue` in a [Mako] template will show the
 `.amount()`.  The value of `.amount()` is also returned when you pass
 a `PeriodicValue` to the [`currency()`] function.
 
-# Classes for lists of things
+# <a name="listclasses"></a>Classes for lists of things
 
 ## <a name="PartyList"></a>PartyList
 
@@ -2119,7 +2134,7 @@ An `OfficeList` object is a type of [`DAList`], the items of which are
 expected to be [`Address`] objects.  It is used in [`Organization`]
 objects.
 
-# Classes for special purposes
+# <a name="specialclasses"></a>Classes for special purposes
 
 ## <a name="RoleChangeTracker"></a>RoleChangeTracker
 
@@ -2318,11 +2333,11 @@ The `.instanceName` is not simply an internal attribute; it is used by
 the [`.object_possessive()`] method to refer to the object in
 human-readable format.
 
-# Writing your own classes
+# <a name="yourownclasses"></a>Writing your own classes
 
-You can write and use your own classes in **docassemble**.  The
+You can write and use your own classes in **docassemble**.
 
-# Extending existing classes
+# <a name="extending"></a>Extending existing classes
 
 If you want to add a method to an existing **docassemble** class, such
 as [`Individual`], you do not need to reinvent the wheel or copy and
@@ -2518,3 +2533,4 @@ and not an instance of the `Attorney` class.
 [`datatype: file`]: {{ site.baseurl }}/docs/fields.html#file
 [`datatype: files`]: {{ site.baseurl }}/docs/fields.html#files
 [`City`]: #City
+[valid formats]: {{ site.baseurl }}/docs/documents.html#valid formats

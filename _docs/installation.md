@@ -8,7 +8,7 @@ If you are only interested in seeing how **docassemble** works, you do
 not need to worry about installing it; you can run a [demonstration]
 on-line instead of installing **docassemble**.
 
-# Just use Docker
+# <a name="docker"></a>Just use Docker
 
 If you just want to try out running an instance of **docassemble**, it
 is strongly recommended that you [install it using Docker] rather than
@@ -38,7 +38,7 @@ on a machine is if you want it to run on a server for which the HTTP
 and HTTPS ports are serving other applications.  ([Docker] can only
 use the HTTP and HTTPS ports if it has exclusive use of them.)
 
-# Supported platforms
+# <a name="platforms"></a>Supported platforms
 
 The installation instructions in this section assume you are
 installing **docassemble** into a 64 bit [Debian stretch] environment
@@ -59,7 +59,7 @@ why bother, when you can install **docassemble** on a Mac or PC using
 For instructions on installing **docassemble** in a multi-server
 arrangement, see the [scalability] section.
 
-# Overview of application structure
+# <a name="overview"></a>Overview of application structure
 
 Although **docassemble** is a [Python] application, it requires more
 than a `pip install` to install.
@@ -124,7 +124,7 @@ services:
 The authentication keys for these services can be set up in the
 [configuration].
 
-# Installing underlying packages
+# <a name="packages"></a>Installing underlying packages
 
 Before installing packages, update the package lists.
 
@@ -260,7 +260,7 @@ update-locale LANG=en_US.UTF-8
 On [Ubuntu], you may need to do `sudo apt-get install
 language-pack-en` (or other package appropriate for your locale).
 
-# Installing **docassemble** itself
+# <a name="docassemble"></a>Installing **docassemble** itself
 
 The recommended way to install **docassemble** is to create a
 [Python virtual environment] with ownership permissions set to the web
@@ -423,7 +423,7 @@ instructions for [Apache] to use the virtual environment to run the
 [Apache] site configuration directives for the **docassemble** web
 application.
 
-# Setting up the web application
+# <a name="webapp"></a>Setting up the web application
 
 Enable the [Apache]<span></span> [wsgi], [xsendfile], [rewrite], [proxy], [proxy_http],
 and [proxy_wstunnel] modules, if they are not already enabled, by
@@ -670,7 +670,7 @@ permissions.
 **docassemble** will use [Let's Encrypt] to obtain certificates and
 deploy them both for the web server and for [Exim].
 
-# Connecting to other external services
+# <a name="external services"></a>Connecting to other external services
 
 To obtain the full benefit of **docassemble**, you will need to obtain
 IDs and secrets for the web services that **docassemble** uses, which
@@ -794,7 +794,7 @@ Google.
 * Under "Credentials," create an OAuth 2.0 client ID for a "web
   application."
 * Note the "Client ID."  You need to set this value as the `id` in the
-  [`oauth`] configuration, under `googledrive`.
+  [`oauth`] configuration, under [`googledrive`].
 * Note also the "Client secret."  You need to set this as the `secret`
   in the [`oauth`] configuration.
 * Under Authorized JavaScript origins, add the URL for your
@@ -939,7 +939,7 @@ be flagged as spam, you will need to spend some time configuring
 possible to use an [SMTP] server from [Google Apps] if you have a
 [G Suite] account.
 
-# Start the server and background processes
+# <a name="start"></a>Start the server and background processes
 
 First, we need to disable the automatic starting and stopping of
 [Apache] on your server.  Your server will still run [Apache], but we
@@ -1211,7 +1211,7 @@ source /usr/share/docassemble/local/bin/activate
 If you encounter any errors, please register an "issue" on the
 **docassemble** [issues page]({{ site.github.repository_url }}/issues).
 
-# Known issues
+# <a name="issues"></a>Known issues
 
 As of August 2017, harmless errors have been issuing when a script exits:
 
@@ -1223,7 +1223,7 @@ Exception TypeError: "'NoneType' object is not callable" in <function remove at 
 This error message is caused by the `weakref` [Python] package.  It
 appears to be harmless and may be fixed soon.
 
-# Using different web servers and/or SQL database backends
+# <a name="backends"></a>Using different web servers and/or SQL database backends
 
 **docassemble** needs a web server and a SQL server, but it is not
   dependent on [Apache] or [PostgreSQL].
@@ -1244,7 +1244,7 @@ columns if a new version of **docassemble** requires changes to
 columns in existing database tables.  If you use a non-[PostgreSQL]
 database, you will need to make these changes manually.
 
-# Running services on different machines
+# <a name="othermachines"></a>Running services on different machines
 
 You can run the SQL server, [Redis], and [RabbitMQ] services on a
 different machine.  Just edit the [`db`], [`redis`], and [`rabbitmq`]
@@ -1471,3 +1471,4 @@ All of these system administration headaches can be avoided by
 [LaTeX]: https://en.wikipedia.org/wiki/LaTeX
 [Debian stretch]: https://wiki.debian.org/DebianStretch
 [npm]: https://www.npmjs.com
+[`googledrive`]: {{ site.baseurl }}/docs/config.html#googledrive

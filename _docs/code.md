@@ -34,7 +34,7 @@ As general purpose programming languages go, [Python] is relatively
 user-friendly and readable.  Python programmers don't need to worry
 that their code will fail because of a missing semicolon.
 
-## Simple examples: arithmetic
+## <a name="simpleexamples"></a>Simple examples: arithmetic
 
 Here is some very simple [Python] code:
 
@@ -161,7 +161,7 @@ The following conditions apply when the variables are text.
 * `a.endswith(b)` returns true if the text in `b` is at the tail end
   of the text in `a`.
 
-## Going through the items in a group
+## <a name="looping"></a>Going through the items in a group
 
 There are special types of variables in [Python] that help you manage
 collections of things.  For more information about this, see the
