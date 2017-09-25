@@ -4,6 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.62](https://github.com/jhpyle/docassemble/releases/tag/v0.1.62) - 2017-09-24
+
+### Changed
+- Fields can now be embedded in `note` text.
+
+### Added
+- Multiple choice type `combobox` and `datatype: combobox` for
+  `fields`.
+
+### Fixed
+- Mandatory multiple-choices questions with embedded code blocks.
+- `DAList` and `DADict` objects valid in choices lists.
+
 ## [0.1.61](https://github.com/jhpyle/docassemble/releases/tag/v0.1.61) - 2017-09-23
 
 ### Changed

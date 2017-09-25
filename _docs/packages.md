@@ -7,7 +7,7 @@ short_title: Packages
 # How **docassemble** uses packages
 
 **docassemble** interviews can be packaged into [Python packages] that
-are installed on a server.  The [Python package] also includes:
+are installed on a server.  The [Python package] can also include:
 
 * [Python modules], which include any [classes] and other code that you might
 write to go along with your interviews;
@@ -18,10 +18,11 @@ with your interview;
 * Any [document templates] you created.
 
 A package containing **docassemble** code needs to be a subpackage of
-the `docassemble` package.  The `docassemble` package itself is just
-a shell (a [namespace package]) that contains subpackages.  These
-subpackages include **docassemble**'s core components as well as
-user-created packages.
+the `docassemble` package.  The `docassemble` package itself is just a
+shell (a [namespace package]) that contains subpackages.  These
+subpackages include **docassemble**'s core components
+(`docassemble.base`, `docassemble.webapp`) as well as user-created
+packages.
 
 # Anatomy of a docassemble package
 
@@ -106,17 +107,18 @@ modules:
   - docassemble.baseball.baseball-stats
 {% endhighlight %}
 
-The first example uses [`include`] to incorporate by reference a
-[YAML] file located in the `data/questions` directory of the package.
+The first block uses [`include`] to incorporate by reference a
+[YAML] interview file located in the `data/questions` directory of the
+package.
 
-The second example uses a [file reference] to refer to an image file in
+The second block uses a [file reference] to refer to an image file in
 the `data/static` directory of the package.
 
-The third example uses [`content file`] within an [`attachment`] to
+The third block uses [`content file`] within an [`attachment`] to
 refer to a [Markdown] file in the `data/templates` directory of the
 package.
 
-The fourth example uses [`modules`] to import [Python] names from the
+The fourth block uses [`modules`] to import [Python] names from the
 `baseball-stats.py` file.
 
 # Creating your own packages

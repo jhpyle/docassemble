@@ -137,20 +137,22 @@ already defined.
 
 # <a name="writing"></a>Writing your own classes
 
-If you are prepared to write your own [Python] code, it is pretty easy
+If you know how to write your own [Python] code, it is pretty easy
 to write your own classes.
 
 For example, you could create your own [package] for interviews
 related to cooking.
 
 You would start by using the [package system] to create a
-**docassemble** package called `cooking`, which would be given the
-name `docassemble.cooking` (interview packages are subpackages of the
+**docassemble** package called `cooking`, the full name of which would
+be `docassemble.cooking` (interview packages are subpackages of the
 `docassemble` namespace package).
 
-You would go into the package and edit the file
-`docassemble/cooking/objects.py` and set the contents to the
-following:
+You would create a module file within this package called
+`objects.py`.  If you are using the [Playground], you would create
+this file in the [Modules folder] of the [Playground].  Otherwise, you
+would create this file in the `docassemble/cooking` directory in your
+package.  You would set the contents of `objects.py` to the following:
 
 {% highlight python %}
 from docassemble.base.core import DAObject
@@ -161,8 +163,9 @@ class Recipe(DAObject):
 {% endhighlight %}
 
 Your class `Recipe` needs to "inherit" from the basic **docassemble**
-object called `DAObject`.  If you did not do this, **docassemble**
-would not be able to ask questions to define attributes of `Recipe` objects.
+object called [`DAObject`].  If you did not do this, **docassemble**
+would not be able to ask questions to define attributes of `Recipe`
+objects.
 
 The purpose of the `summary()` method is to summarize the contents of
 the recipe.  It makes use of the attributes `ingredients` and
@@ -173,24 +176,75 @@ indicates a line break and `+` in the context of text indicates that
 the text should be strung together.  In [Markdown], `####` at the
 start of a line indicates that the line is a section name.
 
-Once you install the package on your server, you can use your class in
-an interview:
+You can use your class in an interview like this:
 
-{% include side-by-side.html demo="madlibs" %}
+{% include demo-side-by-side.html demo="testcooking" %}
+
+Note that the [`modules`] block refers to `.objects`, which is a
+[relative module name].  The `.` at the beginning means "in the
+current package."  You could also have written
+`docassemble.cooking.objects`.  The [relative module name] works so
+long as the interview file is in the same package as the module.
 
 By the way, there is way to write the `summary()` method that is more
 friendly to other interview authors:
 
 {% highlight python %}
-return "#### " + word('Ingredients') + "\n\n" + self.ingredients + "\n\n#### " + word('Instructions') + "\n\n" + self.instructions
+from docassemble.base.core import DAObject
+from docassemble.base.functions import word
+
+class Recipe(DAObject):
+    def summary(self):
+        return "#### " + word('Ingredients') + "\n\n" + self.ingredients + "\n\n#### " + word('Instructions') + "\n\n" + self.instructions
 {% endhighlight %}
 
-If you use the [`word()`] function in this way, other people will be
-able to use `docassemble.cooking.objects` in non-English interviews
-without having to edit your code.  All they would have to do is
-include the words `Ingredients` and `Instructions` in a translation
-[YAML] file referenced in a `words` directive in the **docassemble**
+If you use the [`word()`] function in this way, interview authors will
+be able to translate the "cooking" interview from English to another
+language without having to edit your code.  All they would need to do
+is include the words `Ingredients` and `Instructions` in a translation
+[YAML] file referenced in a [`words`] directive in the **docassemble**
 [configuration].
+
+## <a name="ownclassattributes"></a>Initializing object attributes
+
+In the example above, all the attributes of the `Recipe` object were
+plain text values.  What if you want attributes of your objects to be
+objects themselves?
+
+Suppose you want the `ingredients` attribute to be a [`DAList`].
+
+There are several ways that `ingredients` can be initialized.  In the
+interview itself, you can do:
+
+{% highlight yaml %}
+modules:
+  - docassemble.cooking
+  - docassemble.base.util
+---
+objects:
+  - dinner: Recipe
+  - dinner.ingredients: DAList
+{% endhighlight %}
+
+Or, you could use [`sets`] in combination with [`initializeAttribute()`]:
+
+{% highlight yaml %}
+modules:
+  - docassemble.cooking
+  - docassemble.base.util
+---
+objects:
+  - dinner: Recipe
+---
+generic object: Recipe
+sets: x.ingredients
+code: |
+  x.initializeAttribute('ingredients', DAList)
+---
+{% endhighlight %}
+
+
+
 
 ## <a name="usingglob"></a>Using global variables in your classes
 
@@ -222,7 +276,7 @@ text.  Here, it is necessary because `self.oven_temperature` may be a
 number, and [Python] will complain if you ask it to "add" text to a
 number.)
 
-Then you to change the `temperature_type` from an interview, you might
+Then to change the `temperature_type` from an interview, you might
 write:
 
 {% highlight yaml %}
@@ -499,6 +553,40 @@ and behaviors.  For example, if `friend` is an [`Individual`] (from
 will not return `friend.object_name()`; rather, it will return
 `friend.full_name()`, which may require asking the user for the
 `friend`'s name.
+
+<a name="DAObject.initializeAttribute"></a>A [`DAObject`] can have any
+attributes you want to give it.  When those attributes are objects
+themselves, you need to use the `initializeAttribute()` method.
+
+You might be tempted to initialize an attribute this way:
+
+{% highlight yaml %}
+objects:
+  - fish: DAObject
+---
+code: |
+  fish.best_friend = DAObject()
+{% endhighlight %}
+
+However, **this will not work**.  The reason has to do with the
+internals of how **docassemble** works.  Instead, you need to do:
+
+{% highlight yaml %}
+objects:
+  - fish: DAObject
+---
+sets: fish.best_friend
+code: |
+  fish.initializeAttribute('best_friend', DAObject)
+{% endhighlight %}
+
+The first argument to `initializeAttribute` is the attribute name, as
+quoted text.  The second argument is the name of object the attribute
+should be (not quoted).
+
+It is necessary to modify the [`code`] block with [`sets`] because
+**docassemble** needs help figuring out that that the code block
+offers to define `fish.best_friend`.
 
 ## <a name="DAList"></a>DAList
 
@@ -2333,10 +2421,6 @@ The `.instanceName` is not simply an internal attribute; it is used by
 the [`.object_possessive()`] method to refer to the object in
 human-readable format.
 
-# <a name="yourownclasses"></a>Writing your own classes
-
-You can write and use your own classes in **docassemble**.
-
 # <a name="extending"></a>Extending existing classes
 
 If you want to add a method to an existing **docassemble** class, such
@@ -2534,3 +2618,6 @@ and not an instance of the `Attorney` class.
 [`datatype: files`]: {{ site.baseurl }}/docs/fields.html#files
 [`City`]: #City
 [valid formats]: {{ site.baseurl }}/docs/documents.html#valid formats
+["new style" Python objects]: http://realmike.org/blog/2010/07/18/introduction-to-new-style-classes-in-python/
+[relative module name]: https://docs.python.org/2.5/whatsnew/pep-328.html
+[`words`]: {{ site.baseurl }}/docs/config.html#words

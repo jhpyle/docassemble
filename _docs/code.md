@@ -233,7 +233,7 @@ or pick a random value from a list:
 
 {% highlight yaml %}
 ---
-import:
+imports:
   - random
 ---
 code:
@@ -241,7 +241,7 @@ code:
 ---
 {% endhighlight %}
 
-(If you don't remember what an [`import`] block does, see
+(If you don't remember what an [`imports`] block does, see
 [initial blocks].)
 
 All of the variables you set with [`question`] blocks are available to
@@ -297,9 +297,54 @@ You can change the way `code` blocks work by adding modifiers:
 For more information about these modifiers and how they are used, see
 the [Interview Logic] section.
 
+# <a name="limitations"></a>Limitations
+
+You can run any [Python] code within [`code`] blocks, but there are
+some constraints based on the way **docassemble** works:
+
+* After each screen loads, the variables are serialized with [pickle].
+  Any name in the global namespace that refers to something
+  non-pickleable will be omitted from this serialization.  So, you can
+  define a function `foo()` with some code, but when the next screen
+  loads, the name `foo` will be undefined (as though `reconsider` is
+  set to `True`).  Thus, **docassemble** will need to seek out the
+  definition of `foo`, and will re-run the [`code`] block that defines
+  the function `foo`.
+* You can include a `class` definition in [`code`], but any instances
+  of objects of that class will not be serializable, and an exception
+  will be raised.  So if you want to use [custom classes], write a
+  [module], use [`modules`] to import all the names from the module, and
+  use [`objects`] to instantiate objects of your custom class.
+* You can use the standard [Python] statements `import` and `from
+  ... import` to import names, but if the names you are importing
+  refer to classes of objects that you will create and expect to be
+  serialized, put your `import` and `from ... import` statements in
+  [`initial`] code.  Otherwise, the serialization process may raise an
+  exception.  Better yet, stick with using [`modules`] and [`imports`]
+  to bring in names from other packages, and then you don't have to
+  worry about this.
+* When **docassemble** prepares the variables for serialization, it
+  will discard non-serializable names in the global namespace, but it
+  **does not do this recursively**.  So you can feel free to use
+  non-serializable types in the global namespace, but if you use
+  non-serializable types within lists, dictionaries, or attributes, an
+  exception will be raised.
+
+While **docassemble** will allow you to do many things with code in
+[`code`] blocks, it is a best practice to put complicated code into
+modules, and only use rudimentary [Python] code in your interviews.
+Ideally, non-programmers should at least be able to read and edit
+interview files, because subject matter experts are often not adept at
+coding.  The more [Python] code you put into an interview file, the
+more non-programmers will be intimidated by the interview file and be
+unwilling to work with it.  If you can hide complexity behind a simple
+functional interface, you should do so.
+
+[pickle]: https://docs.python.org/2/library/pickle.html
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
-[`import`]: {{ site.baseurl }}/docs/initial.html#import
+[`imports`]: {{ site.baseurl }}/docs/initial.html#imports
+[`modules`]: {{ site.baseurl }}/docs/initial.html#modules
 [`reconsider`]: {{ site.baseurl }}/docs/logic.html#reconsider
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
@@ -316,3 +361,5 @@ the [Interview Logic] section.
 [questions]: {{ site.baseurl }}/docs/questions.html
 [documents]: {{ site.baseurl }}/docs/documents.html
 [groups]: {{ site.baseurl }}/docs/groups.html
+[custom classes]: {{ site.baseurl }}/docs/objects.html#writing
+[module]: {{ site.baseurl }}/docs/packages.html

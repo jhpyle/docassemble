@@ -630,6 +630,20 @@
     - Sandals
     - Clogs
     - Other
+"choices-combobox": |-
+  question: |
+    What is your favorite color?
+  field: favorite_color
+  combobox:
+    - Red
+    - Green
+    - Purple
+  ---
+  mandatory: True
+  question: All done
+  subquestion: |
+    Your favorite color is
+    ${ favorite_color }.
 "choices-dropdown": |-
   question: |
     What type of shoes do you wear?
@@ -764,6 +778,19 @@
     else:
       answer = 40 + b
     b = 0
+"combobox": |-
+  question: |
+    What is your favorite color?
+  field: favorite_color
+  combobox:
+    - Red
+    - Green
+    - Purple
+  ---
+  mandatory: True
+  question: All done
+  subquestion: |
+    Your favorite color is ${ favorite_color }.
 "comment": |-
   question: Do you like turnips?
   yesno: likes_turnips
@@ -2333,6 +2360,10 @@
         - Apples: apple
         - Oranges: orange
         - Pears: pear
+"fields-choices-combobox": "question: |\n  What is your favorite color?\nfields:\n\
+  \  - Color: favorite_color\n    datatype: combobox\n    choices: \n      - Red\n\
+  \      - Green\n      - Purple\n---\nmandatory: True\nquestion: All done\nsubquestion:\
+  \ |\n  Your favorite color is\n  ${ favorite_color }."
 "fields-choices-dropdown": "question: | \n  What type of shoes do you wear?\nfields:\n\
   \  - Shoe Type: target_variable\n    choices: \n      - Sneakers\n      - Sandals\n\
   \      - Clogs\n      - Other"
@@ -6329,7 +6360,7 @@
     % else:
     Sorry to hear that!
     % endif
-"someone-already-mentioned": |-
+"someone-already-mentioned-bad": |-
   import:
     - .change_suffix
 "someone-already-mentioned2": |-
@@ -6710,38 +6741,6 @@
 "testage2": |-
   modules:
     - docassemble.base.util
-"testcooking": |-
-  modules:
-    - docassemble.demo.cooking
-  ---
-  objects:
-    - submission: Recipe
-  ---
-  mandatory: True
-  question: |
-    Recipe for ${ submission.name }
-  subquestion: |
-    ${ submission.summary() }
-  ---
-  generic object: Recipe
-  question: |
-    What do you want to cook?
-  fields:
-    - Food: x.name
-  ---
-  generic object: Recipe
-  question: |
-    What are the ingredients in ${ x.name }?
-  fields:
-    - no label: x.ingredients
-      datatype: area
-  ---
-  generic object: Recipe
-  question: |
-    What are the instructions for cooking ${ x.name }?
-  fields:
-    - no label: x.instructions
-      datatype: area
 "testdalist": |-
   modules:
     - docassemble.base.util
@@ -7351,6 +7350,40 @@
     - Suffix: gardener.name.suffix
       required: False
       code: name_suffix()
+"testcooking": |-
+  modules:
+    - .objects
+  ---
+  objects:
+    - submission: Recipe
+  ---
+  mandatory: True
+  question: |
+    Recipe for ${ submission.name }
+  subquestion: |
+    ${ submission.summary() }
+  ---
+  generic object: Recipe
+  question: |
+    What do you want to cook?
+  fields:
+    - Food: x.name
+  ---
+  generic object: Recipe
+  question: |
+    What are the ingredients in
+    ${ x.name }?
+  fields:
+    - no label: x.ingredients
+      datatype: area
+  ---
+  generic object: Recipe
+  question: |
+    What are the instructions
+    for cooking ${ x.name }?
+  fields:
+    - no label: x.instructions
+      datatype: area
 "validation-code": |-
   question: |
     There are 10 fruit in all.

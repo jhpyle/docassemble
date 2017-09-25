@@ -148,6 +148,13 @@ To provide a multiple choice question with a dropdown selector, use
 
 {% include side-by-side.html demo="choices-dropdown" %}
 
+## <a name="field with combobox"></a>Multiple choice combobox
+
+To provide a multiple choice question with a "combobox" selector, use
+`field` with a `combobox` list:
+
+{% include side-by-side.html demo="choices-combobox" %}
+
 ## <a name="image button"></a>Adding images to buttons and list items
 
 To add a decorative icon to a choice, use a key/value pair and add
@@ -323,6 +330,10 @@ starts typing in the information.  In HTML, this text is known as the
 `hint`.  You can use [Mako] templates.
 
 {% include side-by-side.html demo="text-hint" %}
+
+The `hint` is also used to provide the default text the user sees when
+they fill out a [multiple-choice dropdown] or a [`combobox`] input
+element within a [`fields`] question.
 
 ### <a name="help"></a>`help`
 
@@ -812,6 +823,15 @@ choice-generating [`code`](#code) for a field within a list of
 the value of the selected choice.
 
 {% include side-by-side.html demo="fields-choices-dropdown" %}
+
+## <a name="combobox"></a>Multiple-choice combobox
+
+`datatype: combobox` shows a [`choices`](#choices) list as a
+[combobox] instead of as a dropdown [select] element (which is
+[the default](#select)).  The variable will be set to the value of the
+selected choice.
+
+{% include side-by-side.html demo="fields-choices-combobox" %}
 
 ## <a name="radio"></a>Radio buttons
 
@@ -1364,3 +1384,6 @@ why this needs to be done manually as opposed to automatically:
 [Firefox]: https://www.mozilla.org/en-US/firefox/
 [`maximum image size` configuration directive]: {{ site.baseurl }}/docs/config.html#maximum image size
 [`maximum image size` interview feature]: {{ site.baseurl }}/docs/initial.html#maximum image size
+[combobox]: https://github.com/danielfarrell/bootstrap-combobox
+[multiple-choice dropdown]: #select
+[`combobox`]: #combobox
