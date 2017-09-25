@@ -78,7 +78,8 @@
     - choices
     - choices-with-default
     - choices-icons
-    - fields-choices
+    - choices-dropdown
+    - choices-combobox
     - fields-mc
     - fields-mc-exclude
     - fields-yesno
@@ -86,6 +87,8 @@
     - fields-yesnoradio
     - fields-yesnomaybe
     - fields-noyesmaybe
+    - radio-list
+    - fields-choices-combobox
     - fields-checkboxes
     - shuffle
 - Files:

@@ -307,6 +307,11 @@ class InterviewStatus(object):
         self.embedded = set()
         self.extras = dict()
         self.followed_mc = False
+        self.tentatively_answered = set()
+    def mark_tentative_as_answered(self, user_dict):
+        for question in self.tentatively_answered:
+            question.mark_as_answered(user_dict)
+        self.tentatively_answered.clear()
     def initialize_screen_reader(self):
         self.using_screen_reader = True
         self.screen_reader_text = dict()
@@ -836,11 +841,11 @@ class Question:
         self.mako_names = set()
         self.validation_code = None
         num_directives = 0
-        for directive in ['yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'fields', 'buttons', 'choices', 'dropdown', 'signature', 'review']:
+        for directive in ['yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'fields', 'buttons', 'choices', 'dropdown', 'combobox', 'signature', 'review']:
             if directive in data:
                 num_directives += 1
         if num_directives > 1:
-            raise DAError("There can only be one directive in a question.  You had more than one.\nThe directives are yesno, noyes, yesnomaybe, noyesmaybe, fields, buttons, choices, dropdown, and signature." + self.idebug(data))
+            raise DAError("There can only be one directive in a question.  You had more than one.\nThe directives are yesno, noyes, yesnomaybe, noyesmaybe, fields, buttons, choices, dropdown, combobox, and signature." + self.idebug(data))
         if num_directives > 0 and 'question' not in data:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if 'features' in data:
@@ -1551,7 +1556,7 @@ class Question:
                     self.fields_used.add(key)
             else:
                 raise DAError("An event phrase must be text or a list." + self.idebug(data))
-        if 'choices' in data or 'buttons' in data or 'dropdown' in data:
+        if 'choices' in data or 'buttons' in data or 'dropdown' in data or 'combobox' in data:
             if 'field' in data:
                 uses_field = True
             else:
@@ -1560,10 +1565,13 @@ class Question:
                 shuffle = True
             else:
                 shuffle = False
-            if 'choices' in data or 'dropdown' in data:
+            if 'choices' in data or 'dropdown' in data or 'combobox' in data:
                 if 'choices' in data:
                     has_code, choices = self.parse_fields(data['choices'], register_target, uses_field)
                     self.question_variety = 'radio'
+                elif 'combobox' in data:
+                    has_code, choices = self.parse_fields(data['combobox'], register_target, uses_field)
+                    self.question_variety = 'combobox'
                 else:
                     has_code, choices = self.parse_fields(data['dropdown'], register_target, uses_field)
                     self.question_variety = 'dropdown'
@@ -2658,8 +2666,6 @@ class Question:
         return(has_code, result_list)
     def mark_as_answered(self, user_dict):
         user_dict['_internal']['answered'].add(self.name)
-        # logmessage("mark_as_answered: question " + str(self.name) + " marked as answered")
-        return
     def follow_multiple_choice(self, user_dict, interview_status):
         # logmessage("follow_multiple_choice")
         # if self.name:
@@ -2669,7 +2675,8 @@ class Question:
         # logmessage("question type is " + str(self.question_type))
         if self.name and self.name in user_dict['_internal']['answers']:
             interview_status.followed_mc = True
-            self.mark_as_answered(user_dict)
+            interview_status.tentatively_answered.add(self)
+            # self.mark_as_answered(user_dict)
             # logmessage("question in answers")
             # user_dict['_internal']['answered'].add(self.name)
             # logmessage("2 Question name was " + self.name)
@@ -2686,7 +2693,6 @@ class Question:
                     pass
                 elif isinstance(target, Question):
                     # logmessage("Reassigning question")
-                    # self.mark_as_answered(user_dict)
                     return(target.follow_multiple_choice(user_dict, interview_status))
         return(self)
     def finalize_attachment(self, attachment, result, user_dict):
@@ -3300,7 +3306,7 @@ class Interview:
                 raise DAError("There appears to be a circularity.  Variables involved: " + ", ".join(variables_sought) + ".")
             docassemble.base.functions.reset_gathering_mode()
             try:
-                if (self.uses_action or 'action' in interview_status.current_info) and not self.calls_process_action:
+                if (self.imports_util or self.uses_action or 'action' in interview_status.current_info) and not self.calls_process_action:
                     if self.imports_util:
                         exec(run_process_action, user_dict)
                     else:
@@ -3359,7 +3365,18 @@ class Interview:
                             if question.name and question.name in user_dict['_internal']['answers']:
                                 #logmessage("in answers")
                                 #question.mark_as_answered(user_dict)
-                                interview_status.populate(question.follow_multiple_choice(user_dict, interview_status).ask(user_dict, old_user_dict, 'None', [], None))
+                                #interview_status.populate(question.follow_multiple_choice(user_dict, interview_status).ask(user_dict, old_user_dict, 'None', [], None))
+                                the_question = question.follow_multiple_choice(user_dict, interview_status)
+                                if the_question.question_type in ["code", "event_code"]:
+                                    docassemble.base.functions.this_thread.current_question = the_question
+                                    exec(the_question.compute, user_dict)
+                                    interview_status.mark_tentative_as_answered(user_dict)
+                                    continue
+                                elif hasattr(the_question, 'content'):
+                                    interview_status.populate(the_question.ask(user_dict, old_user_dict, 'None', [], None))
+                                    interview_status.mark_tentative_as_answered(user_dict)
+                                else:
+                                    raise DAError("An embedded question can only be a code block or a regular question block.  The question type was " + getattr(the_question, 'question_type', 'unknown'))
                             else:
                                 interview_status.populate(question.ask(user_dict, old_user_dict, 'None', [], None))
                             if interview_status.question.question_type == 'continue':
@@ -3797,6 +3814,7 @@ class Interview:
                         except:
                             pass
                         exec(question.compute, user_dict)
+                        interview_status.mark_tentative_as_answered(user_dict)
                         if missing_var in variable_stack:
                             variable_stack.remove(missing_var)
                         if question.question_type == 'event_code':
@@ -3817,6 +3835,7 @@ class Interview:
                                     pass
                             continue
                     else:
+                        interview_status.mark_tentative_as_answered(user_dict)
                         if question.question_type == 'continue':
                             continue
                         return question.ask(user_dict, old_user_dict, the_x, iterators, missing_var)
@@ -4060,6 +4079,29 @@ class myvisitnode(ast.NodeVisitor):
         #ast.NodeVisitor.generic_visit(self, node)
         self.generic_visit(node)
         self.depth -= 1
+    def visit_FunctionDef(self, node):
+        if hasattr(node, 'name'):
+            self.targets[node.name] = 1
+    def visit_Import(self, node):
+        for alias in node.names:
+            if alias.asname is None:
+                the_name = alias.name
+            else:
+                the_name = alias.asname
+            while(re.search(r'\.', the_name)):
+                self.targets[the_name] = 1
+                the_name = re.sub(r'\.[^\.]+$', '', the_name)
+            self.targets[the_name] = 1
+    def visit_ImportFrom(self, node):
+        for alias in node.names:
+            if alias.asname is None:
+                the_name = alias.name
+            else:
+                the_name = alias.asname
+            while(re.search(r'\.', the_name)):
+                self.targets[the_name] = 1
+                the_name = re.sub(r'\.[^\.]+$', '', the_name)
+            self.targets[the_name] = 1
     def visit_For(self, node):
         if hasattr(node.target, 'id'):
             self.targets[node.target.id] = 1

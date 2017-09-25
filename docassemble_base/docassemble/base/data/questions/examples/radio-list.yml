@@ -1,5 +1,6 @@
 metadata:
-  title: Radio buttons
+  title: Radio buttons within fields
+  short title: Radio buttons
   documentation: "https://docassemble.org/docs/fields.html#radio"
 ---
 question: |

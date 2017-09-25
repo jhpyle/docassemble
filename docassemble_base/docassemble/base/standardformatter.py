@@ -42,6 +42,8 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
     if the_image.attribution is not None:
         status.attributions.add(the_image.attribution)
     url = server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
+    if url is None:
+        raise Exception("Could not find filename " + str(the_image.filename) + " for image " + str(name) + " in package " + str(the_image.package))
     sizing = 'width:' + str(width_value) + str(width_units) + ';'
     filename = server.file_finder(str(the_image.package) + ':' + str(the_image.filename))
     if 'extension' in filename and filename['extension'] == 'svg':
@@ -49,7 +51,7 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
             sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
     else:
         sizing += 'height:auto;'    
-    return('<img class="daicon" src="' + url + '" style="' + sizing + '"/>')
+    return('<img class="daicon" src="' + url + '" style="' + str(sizing) + '"/>')
 
 # def signature_html(status, debug, root, validation_rules):
 #     if (status.continueLabel):
@@ -433,7 +435,7 @@ def as_sms(status, links=None, menu_items=None):
 
 def embed_input(status, variable):
     for field in status.question.fields:
-        if variable == from_safeid(field.saveas):
+        if hasattr(field, 'saveas') and variable == from_safeid(field.saveas):
             status.embedded.add(field.saveas)
             return input_for(status, field, embedded=True)
     return 'ERROR: field not found'
@@ -643,9 +645,13 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
         files = list()
         hiddens = dict()
         ml_info = dict()
+        note_fields = dict()
         checkbox_validation = False
         if status.subquestionText:
             sub_question_text = markdown_to_html(status.subquestionText, status=status, indent=18, embedder=embed_input)
+        for field in status.question.fields:
+            if hasattr(field, 'datatype') and field.datatype == 'note':
+                note_fields[field.number] = '                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, embedder=embed_input) + '</div></div>\n'
         for field in status.question.fields:
             if is_empty_mc(status, field):
                 if hasattr(field, 'datatype'):
@@ -685,7 +691,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                     fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-md-12"><note>' + status.extras['html'][field.number].rstrip() + '</note></div></div>\n')
                     #continue
                 elif field.datatype == 'note':
-                    fieldlist.append('                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, strip_newlines=True) + '</div></div>\n')
+                    fieldlist.append(note_fields[field.number])
+                    #fieldlist.append('                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, strip_newlines=True) + '</div></div>\n')
                     #continue
                 # elif field.datatype in ['script', 'css']:
                 #     continue
@@ -804,6 +811,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(field.saveas)
                     validation_rules['messages'][field.saveas] = {'required': word("You must provide a file.")}
+                if field.datatype == 'combobox':
+                    validation_rules['ignore'] = list()
                 if field.datatype in ['boolean', 'threestate']:
                     checkboxes.append(field.saveas)
                 elif field.datatype in ['checkboxes', 'object_checkboxes']:
@@ -907,12 +916,15 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
         output += '                <p class="sr-only">' + word('Your choices are:') + '</p>\n'
         validation_rules['errorElement'] = "span"
         validation_rules['errorLabelContainer'] = "#errorcontainer"
-        if status.question.question_variety in ["radio", "dropdown"]:
+        if status.question.question_variety in ["radio", "dropdown", "combobox"]:
             if status.question.question_variety == "radio":
                 verb = 'check'
             else:
                 verb = 'select'
-                inner_fieldlist = ['<option value="">' + word('Select...') + '</option>']
+                if status.question.question_variety == "dropdown":
+                    inner_fieldlist = ['<option value="">' + word('Select...') + '</option>']
+                else:
+                    inner_fieldlist = ['<option value="">' + word('Select one') + '</option>']
             if hasattr(status.question.fields[0], 'saveas'):
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
                     id_index = 0
@@ -963,9 +975,18 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                             else:
                                 inner_fieldlist.append('<option value="' + unicode(choice[key]) + '"' + ischecked + '>' + formatted_key + '</option>')
                         id_index += 1
-                if status.question.question_variety == "dropdown":
-                    output += '                <div class="row"><div class="col-md-12"><select class="form-control daspaceafter" name="' + escape_id(status.question.fields[0].saveas) + '" id="' + escape_id(status.question.fields[0].saveas) + '">' + "".join(inner_fieldlist) + '</select></div></div>\n'
-                validation_rules['ignore'] = None
+                if status.question.question_variety in ["dropdown", "combobox"]:
+                    if status.question.question_variety == 'combobox':
+                        combobox = ' combobox'
+                        daspaceafter = ' daspaceafter'
+                    else:
+                        combobox = ''
+                        daspaceafter = ''
+                    output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="form-control daspaceafter' + combobox + '" name="' + escape_id(status.question.fields[0].saveas) + '" id="' + escape_id(status.question.fields[0].saveas) + '">' + "".join(inner_fieldlist) + '</select></div></div>\n'
+                if status.question.question_variety == 'combobox':
+                    validation_rules['ignore'] = list()
+                else:
+                    validation_rules['ignore'] = None
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
                 validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
             else:
@@ -986,9 +1007,18 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                             inner_fieldlist.append('<option value="' + str(indexno) + '">' + formatted_key + '</option>')
                         id_index += 1
                     indexno += 1
-                if status.question.question_variety == "dropdown":
-                    output += '                <div class="row"><div class="col-md-12"><select class="form-control daspaceafter" name="X211bHRpcGxlX2Nob2ljZQ==">' + "".join(inner_fieldlist) + '</select></div></div>\n'
-                validation_rules['ignore'] = None
+                if status.question.question_variety in ["dropdown", "combobox"]:
+                    if status.question.question_variety == 'combobox':
+                        combobox = ' combobox'
+                        daspaceafter = ' daspaceafter'
+                    else:
+                        combobox = ' daspaceafter'
+                        daspaceafter = ''
+                    output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="form-control ' + combobox + '" name="X211bHRpcGxlX2Nob2ljZQ==">' + "".join(inner_fieldlist) + '</select></div></div>\n'
+                if status.question.question_variety == 'combobox':
+                    validation_rules['ignore'] = list()
+                else:
+                    validation_rules['ignore'] = None
                 validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': True}
                 validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
             output += '                <div id="errorcontainer" style="display:none"></div>\n'
@@ -1418,6 +1448,9 @@ def add_validation(extra_scripts, validation_rules, field_error):
         if (element.hasClass('uncheckable') && lastInGroup){
           $("input[name='" + lastInGroup + "']").parent().append(error);
         }
+        else if (element.parent().hasClass('combobox-container')){
+          error.insertAfter(element.parent());
+        }
         else if (element.hasClass('input-embedded')){
           error.insertAfter(element.parent());
         }
@@ -1462,7 +1495,7 @@ def add_validation(extra_scripts, validation_rules, field_error):
   }, """ + json.dumps(word("Please check at least one.")) + """);
   validation_rules.submitHandler = daValidationHandler;
   if ($("#daform").length > 0){
-    console.log("Running validator")
+    //console.log("Running validator")
     var validator = $("#daform").validate(validation_rules);""" + error_show + """
   }
 </script>""")
@@ -1584,9 +1617,21 @@ def input_for(status, field, wide=False, embedded=False):
                     emb_text += 'title="' + label_text + '" '
             else:
                 output += '<p class="sr-only">' + word('Select box') + '</p>'
-                emb_text = 'class="form-control" '
+                if hasattr(field, 'datatype') and field.datatype == 'combobox':
+                    emb_text = 'class="form-control combobox" '
+                else:
+                    emb_text = 'class="form-control" '
             output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" >'
-            output += '<option value="">' + word('Select...') + '</option>'
+            if hasattr(field, 'datatype') and field.datatype == 'combobox' and not embedded:
+                if placeholdertext == '':
+                    output += '<option value="">' + word('Select one') + '</option>'
+                else:
+                    output += '<option value="">' + unicode(status.hints[field.number].replace('\n', ' ')) + '</option>'
+            else:
+                if placeholdertext == '':
+                    output += '<option value="">' + word('Select...') + '</option>'
+                else:
+                    output += '<option value="">' + unicode(status.hints[field.number].replace('\n', ' ')) + '</option>'
             for pair in pairlist:
                 if pair[0] is not None:
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, do_terms=False)

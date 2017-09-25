@@ -5,7 +5,7 @@ metadata:
   example end: 6
 ---
 modules:
-  - docassemble.demo.cooking
+  - .objects
 ---
 objects:
   - submission: Recipe
@@ -24,14 +24,16 @@ fields:
 ---
 generic object: Recipe
 question: |
-  What are the ingredients in ${ x.name }?
+  What are the ingredients in
+  ${ x.name }?
 fields:
   - no label: x.ingredients
     datatype: area
 ---
 generic object: Recipe
 question: |
-  What are the instructions for cooking ${ x.name }?
+  What are the instructions
+  for cooking ${ x.name }?
 fields:
   - no label: x.instructions
     datatype: area
