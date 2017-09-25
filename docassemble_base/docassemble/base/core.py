@@ -294,6 +294,12 @@ class DAList(DAObject):
             if isinstance(item, DAObject):
                 item._reset_gathered_recursively()
         return super(DAList, self)._reset_gathered_recursively()
+    def _reset_instance_names(self):
+        indexno = 0
+        for item in self.elements:
+            if isinstance(item, DAObject) and item.instanceName.startswith(self.instanceName + '['):
+                item._set_instance_name_recursively(self.instanceName + '[' + str(indexno) + ']')
+            indexno += 1
     def appendObject(self, *pargs, **kwargs):
         """Creates a new object and adds it to the list.
         Takes an optional argument, which is the type of object
@@ -326,6 +332,7 @@ class DAList(DAObject):
         for value in pargs:
             if value in self.elements:
                 self.elements.remove(value)
+        self._reset_instance_names()
     def extend(self, the_list):
         """Adds each of the elements of the given list to the end of the list."""
         self.elements.extend(the_list)
@@ -902,6 +909,9 @@ class DADict(DAObject):
         """Returns the number of keys in the dictionary, spelling out the number if ten 
         or below.  Forces the gathering of the dictionary items if necessary."""
         return nice_number(self.number())
+    def validate(self):
+        """Ensures that each element of the list has been gathered appropriately."""
+        self._validate(self, self.object_type, self.complete_attribute)
     def _validate(self, item_object_type, complete_attribute):
         if self.ask_object_type:
             for key, elem in sorted(self.elements.iteritems()):

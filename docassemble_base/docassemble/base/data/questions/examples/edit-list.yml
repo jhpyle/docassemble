@@ -1,0 +1,91 @@
+metadata:
+  title: Edit list
+  short title: Edit list
+  documentation: "https://docassemble.org/docs/groups.html#editing"
+  example start: 2
+  example end: 13
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - person: DAList
+---
+mandatory: True
+code: |
+  person.object_type = Individual
+  person.there_are_any = True
+  person.complete_attribute = 'complete'
+---
+code: |
+  person[i].name.first
+  person[i].favorite_fruit
+  person[i].complete = True
+---
+question: |
+  Who is the ${ ordinal(i) } person?
+fields:
+  - First Name: person[i].name.first
+  - Last Name: person[i].name.last
+---
+question: |
+  What is ${ person[i].possessive('favorite fruit') }?
+fields:
+  - Fruit: person[i].favorite_fruit
+---
+question: |
+  Are there any more people
+  you would like to mention?
+yesno: person.there_is_another
+---
+question: |
+  Who is your favorite person?
+fields:
+  - Favorite: favorite
+    code: person
+---
+mandatory: True
+question: |
+  All done
+subquestion: |
+  The people are ${ person }.
+
+  Your favorite is ${ favorite }.
+  
+  ${ people_table }
+  
+  [<i class="glyphicon glyphicon-plus-sign"></i> Add another person](${ url_action('person_add') })
+---
+table: people_table
+rows: person
+columns:
+  - Name: |
+      row_item.name.full()
+  - Fruit: |
+      row_item.favorite_fruit
+  - Action: |
+      '[<i title="Edit" class="glyphicon glyphicon-pencil"></i>](' + url_action(row_item.instanceName + '.review') + ')&nbsp;&nbsp;&nbsp;&nbsp;' + \
+      '[<i title="Remove" class="glyphicon glyphicon-trash"></i>](' + url_action('person_del', item=row_item.instanceName) + ')'
+---
+event: person[i].review
+question: |
+  Edit information about 
+  ${ person[i] }.
+review:
+  - Edit name: person[i].name.first
+    button: |
+      **Name**: ${ person[i] }
+  - Edit fruit: person[i].favorite_fruit
+    button: |
+      **Favorite fruit**: 
+      ${ person[i].favorite_fruit }
+---
+event: person_del
+code: |
+  person.remove(value(action_argument('item')))
+---
+event: person_add
+code: |
+  person.appendObject()
+  person.reset_gathered()
+  person.there_is_another = False

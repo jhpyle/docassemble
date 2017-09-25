@@ -5492,13 +5492,13 @@ def index():
       }
       function daEmbeddedJs(e){
         //console.log("using embedded js");
-        var data = decodeURIComponent($(e.target).data('js'));
+        var data = decodeURIComponent($(this).data('js'));
         eval(data);
         e.preventDefault();
         return false;
       }
       function daEmbeddedAction(e){
-        var data = decodeURIComponent($(e.target).data('embaction'));
+        var data = decodeURIComponent($(this).data('embaction'));
         $.ajax({
           type: "POST",
           url: """ + '"' + url_for('index') + '"' + """,
@@ -5519,7 +5519,7 @@ def index():
         return false;
       }
       function daReviewAction(e){
-        url_action_perform_with_next($(e.target).data('action'), null, daNextAction);
+        url_action_perform_with_next($(this).data('action'), null, daNextAction);
         e.preventDefault();
         return false;
       }
