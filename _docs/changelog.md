@@ -15,7 +15,7 @@ short_title: Change Log
 
 ### Fixed
 - Mandatory multiple-choices questions with embedded code blocks.
-- `DAList` and `DADict` objects valid in choices lists.
+- `DAList` and `DADict` objects in choices lists.
 
 ## [0.1.61](https://github.com/jhpyle/docassemble/releases/tag/v0.1.61) - 2017-09-23
 

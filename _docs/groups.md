@@ -742,6 +742,16 @@ question: |
 For more information about "for loops" in [Mako], see the
 [markup section].
 
+# <a name="editing"></a>Editing an already-gathered list
+
+It is possible to allow your users to edit a list that has already
+been gathered.  Here is an example.
+
+{% include side-by-side.html demo="edit-list" %}
+
+For more information about how this works, consult the documentation
+for the functions and block types that this example uses.
+
 [markup section]: {{ site.baseurl }}/docs/markup.html#for
 [legal applications]: {{ site.baseurl }}/docs/legal.html
 [Mako]: http://www.makotemplates.org/

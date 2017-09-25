@@ -1506,6 +1506,30 @@
 "dual-dict": |-
   objects:
     fruit: DADict
+"edit-list": "objects:\n  - person: DAList\n---\nmandatory: True\ncode: |\n  person.object_type\
+  \ = Individual\n  person.there_are_any = True\n  person.complete_attribute = 'complete'\n\
+  ---\ncode: |\n  person[i].name.first\n  person[i].favorite_fruit\n  person[i].complete\
+  \ = True\n---\nquestion: |\n  Who is the ${ ordinal(i) } person?\nfields:\n  - First\
+  \ Name: person[i].name.first\n  - Last Name: person[i].name.last\n---\nquestion:\
+  \ |\n  What is ${ person[i].possessive('favorite fruit') }?\nfields:\n  - Fruit:\
+  \ person[i].favorite_fruit\n---\nquestion: |\n  Are there any more people\n  you\
+  \ would like to mention?\nyesno: person.there_is_another\n---\nquestion: |\n  Who\
+  \ is your favorite person?\nfields:\n  - Favorite: favorite\n    code: person\n\
+  ---\nmandatory: True\nquestion: |\n  All done\nsubquestion: |\n  The people are\
+  \ ${ person }.\n\n  Your favorite is ${ favorite }.\n  \n  ${ people_table }\n \
+  \ \n  [<i class=\"glyphicon glyphicon-plus-sign\"></i> Add another person](${ url_action('person_add')\
+  \ })\n---\ntable: people_table\nrows: person\ncolumns:\n  - Name: |\n      row_item.name.full()\n\
+  \  - Fruit: |\n      row_item.favorite_fruit\n  - Action: |\n      '[<i title=\"\
+  Edit\" class=\"glyphicon glyphicon-pencil\"></i>](' + url_action(row_item.instanceName\
+  \ + '.review') + ')&nbsp;&nbsp;&nbsp;&nbsp;' + \\\n      '[<i title=\"Remove\" class=\"\
+  glyphicon glyphicon-trash\"></i>](' + url_action('person_del', item=row_item.instanceName)\
+  \ + ')'\n---\nevent: person[i].review\nquestion: |\n  Edit information about \n\
+  \  ${ person[i] }.\nreview:\n  - Edit name: person[i].name.first\n    button: |\n\
+  \      **Name**: ${ person[i] }\n  - Edit fruit: person[i].favorite_fruit\n    button:\
+  \ |\n      **Favorite fruit**: \n      ${ person[i].favorite_fruit }\n---\nevent:\
+  \ person_del\ncode: |\n  person.remove(value(action_argument('item')))\n---\nevent:\
+  \ person_add\ncode: |\n  person.appendObject()\n  person.reset_gathered()\n  person.there_is_another\
+  \ = False"
 "email-field": |-
   question: |
     What is your e-mail address?
