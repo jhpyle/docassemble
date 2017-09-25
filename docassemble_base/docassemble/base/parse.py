@@ -4140,9 +4140,9 @@ def process_selections(data, manual=False, exclude=None):
     else:
         to_exclude = unpack_list(exclude)
     result = []
-    if type(data) is list:
+    if type(data) is list or (hasattr(data, 'elements') and type(data.elements) is list):
         for entry in data:
-            if type(entry) is dict:
+            if type(entry) is dict or (hasattr(data, 'elements') and type(data.elements) is dict):
                 for key in entry:
                     if key in ['default', 'help'] and len(entry) > 1:
                         continue
@@ -4162,7 +4162,7 @@ def process_selections(data, manual=False, exclude=None):
                                 is_not_boolean = True
                         if key not in to_exclude and (is_not_boolean or entry[key] is True):
                             result.append([key, entry[key]])
-            if type(entry) is list and len(entry) > 0:
+            if (type(entry) is list or (hasattr(entry, 'elements') and type(entry.elements) is list)) and len(entry) > 0:
                 if entry[0] not in to_exclude:
                     if len(entry) == 4:
                         result.append([entry[0], entry[1], entry[2], entry[3]])
@@ -4175,12 +4175,18 @@ def process_selections(data, manual=False, exclude=None):
             elif type(entry) in (str, unicode, bool, int, float):
                 if entry not in to_exclude:
                     result.append([entry, entry])
-    elif type(data) is dict:
+            else:
+                if entry not in to_exclude:
+                    result.append([unicode(entry), unicode(entry)])
+    elif type(data) is dict or (hasattr(data, 'elements') and type(data.elements) is dict):
         for key, value in sorted(data.items(), key=operator.itemgetter(1)):
             if key not in to_exclude:
-                result.append([key, value])
+                if type(value) in (str, unicode, bool, int, float):
+                    result.append([key, value])
+                else:
+                    result.append([key, unicode(value)])
     else:
-        raise DAError("Unknown data type in choices selection")
+        raise DAError("Unknown data type in choices selection: " + re.sub(r'[<>]', '', repr(data)))
     return(result)
 
 def process_selections_manual(data, exclude=None):
@@ -4206,7 +4212,7 @@ def process_selections_manual(data, exclude=None):
             if value not in to_exclude:
                 result.append([value, key])
     else:
-        raise DAError("Unknown data type in choices selection")
+        raise DAError("Unknown data type in manual choices selection: " + re.sub(r'[<>]', '', repr(data)))
     return(result)
 
 def extract_missing_name(string):

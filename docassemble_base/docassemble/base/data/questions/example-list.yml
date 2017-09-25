@@ -88,6 +88,7 @@
     - fields-yesnomaybe
     - fields-noyesmaybe
     - radio-list
+    - fields-choices
     - fields-choices-combobox
     - fields-checkboxes
     - shuffle

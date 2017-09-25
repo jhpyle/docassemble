@@ -8,6 +8,7 @@
   `fields`.
 ### Fixed
 - Mandatory multiple-choices questions with embedded code blocks.
+- `DAList` and `DADict` objects valid in choices lists.
 
 ## [0.1.61] - 2017-09-23
 ### Changed

@@ -383,3 +383,4 @@ DANav.get_section: "https://docassemble.org/docs/functions.html#DANav.get_sectio
 DANav.set_sections: "https://docassemble.org/docs/functions.html#DANav.set_sections"
 DANav.get_sections: "https://docassemble.org/docs/functions.html#DANav.get_sections"
 DANav.show_sections: "https://docassemble.org/docs/functions.html#DANav.show_sections"
+run_python_module: "https://docassemble.org/docs/functions.html#run_python_module"
