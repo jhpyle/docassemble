@@ -2173,6 +2173,8 @@ def value(var):
     """Returns the value of the variable given by the string 'var'."""
     if type(var) not in [str, unicode]:
         raise Exception("value() must be given a string")
+    if re.search(r'[\(\)\n\r]|lambda', var):
+        raise Exception("value() is invalid")
     frame = inspect.stack()[1][0]
     components = components_of(var)
     variable = components[0][1]

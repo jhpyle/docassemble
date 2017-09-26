@@ -4142,7 +4142,7 @@ def process_selections(data, manual=False, exclude=None):
     result = []
     if type(data) is list or (hasattr(data, 'elements') and type(data.elements) is list):
         for entry in data:
-            if type(entry) is dict or (hasattr(data, 'elements') and type(data.elements) is dict):
+            if type(entry) is dict or (hasattr(entry, 'elements') and type(entry.elements) is dict):
                 for key in entry:
                     if key in ['default', 'help'] and len(entry) > 1:
                         continue
@@ -4175,7 +4175,7 @@ def process_selections(data, manual=False, exclude=None):
             elif type(entry) in (str, unicode, bool, int, float):
                 if entry not in to_exclude:
                     result.append([entry, entry])
-            else:
+            elif hasattr(entry, 'instanceName'):
                 if entry not in to_exclude:
                     result.append([unicode(entry), unicode(entry)])
     elif type(data) is dict or (hasattr(data, 'elements') and type(data.elements) is dict):
@@ -4183,7 +4183,7 @@ def process_selections(data, manual=False, exclude=None):
             if key not in to_exclude:
                 if type(value) in (str, unicode, bool, int, float):
                     result.append([key, value])
-                else:
+                elif hasattr(entry, 'instanceName'):
                     result.append([key, unicode(value)])
     else:
         raise DAError("Unknown data type in choices selection: " + re.sub(r'[<>]', '', repr(data)))

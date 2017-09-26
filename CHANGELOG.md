@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.1.63] - 2017-09-26
+### Added
+- Example of editing a list after it has been gathered.
+### Fixed
+- Embedded fields where the variable names contain iterators.
+- Lists instanceNames adjusting after removal of a list element.
+
 ## [0.1.62] - 2017-09-24
 ### Changed
 - Fields can now be embedded in `note` text.

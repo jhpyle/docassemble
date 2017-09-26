@@ -434,6 +434,7 @@ def as_sms(status, links=None, menu_items=None):
     return dict(question=qoutput, help=houtput, next=next_variable)
 
 def embed_input(status, variable):
+    variable = re.sub(r'^\[FIELD +(.*?) *\]$', r'\1', variable)
     for field in status.question.fields:
         if hasattr(field, 'saveas') and variable == from_safeid(field.saveas):
             status.embedded.add(field.saveas)

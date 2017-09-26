@@ -185,7 +185,8 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_as_rtf, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_as_rtf, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
-    text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
+    text = replace_fields(text)
+    # text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
     text = re.sub(r'\[TARGET ([^\]]+)\]', '', text)
     text = re.sub(r'\[YOUTUBE[^ ]* ([^\]]+)\]', '', text)
     text = re.sub(r'\[VIMEO[^ ]* ([^\]]+)\]', '', text)
@@ -335,7 +336,8 @@ def docx_filter(text, metadata=None, question=None):
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_docx, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_include_docx, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
-    text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
+    text = replace_fields(text)
+    # text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
     text = re.sub(r'\[TARGET ([^\]]+)\]', '', text)
     text = re.sub(r'\[YOUTUBE[^ ]* ([^\]]+)\]', '', text)
     text = re.sub(r'\[VIMEO[^ ]* ([^\]]+)\]', '', text)
@@ -391,7 +393,8 @@ def docx_template_filter(text):
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', '', text)
     text = re.sub(r'\[QR ([^\]]+)\]', '', text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
-    text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
+    text = replace_fields(text)
+    # text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
     text = re.sub(r'\[TARGET ([^\]]+)\]', '', text)
     text = re.sub(r'\[YOUTUBE[^ ]* ([^\]]+)\]', '', text)
     text = re.sub(r'\[VIMEO[^ ]* ([^\]]+)\]', '', text)
@@ -460,7 +463,8 @@ def pdf_filter(text, metadata=None, question=None):
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_string, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_include_string, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
-    text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
+    text = replace_fields(text)
+    # text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
     text = re.sub(r'\[TARGET ([^\]]+)\]', '', text)
     text = re.sub(r'\[YOUTUBE[^ ]* ([^\]]+)\]', '', text)
     text = re.sub(r'\[VIMEO[^ ]* ([^\]]+)\]', '', text)
@@ -508,10 +512,11 @@ def html_filter(text, status=None, question=None, embedder=None):
         question = status.question
     text = text + "\n\n"
     text = re.sub(r'^[|] (.*)$', r'\1<br>', text, flags=re.MULTILINE)
-    if embedder is not None:
-        text = re.sub(r'\[FIELD ([^\]]+)\]', lambda x: embedder(status, x.group(1)), text)
-    else:
-        text = re.sub(r'\[FIELD ([^\]]+)\]', 'ERROR: FIELD cannot be used here', text)
+    text = replace_fields(text, status=status, embedder=embedder)
+    # if embedder is not None:
+    #     text = re.sub(r'\[FIELD ([^\]]+)\]', lambda x: embedder(status, x.group(1)), text)
+    # else:
+    #     text = re.sub(r'\[FIELD ([^\]]+)\]', 'ERROR: FIELD cannot be used here', text)
     text = re.sub(r'\[TARGET ([^\]]+)\]', target_html, text)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, emoji=True, question=question), text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, question=question), text)
@@ -1378,3 +1383,41 @@ def hidden(element):
             if element.attrs['type'] == 'hidden':
                 return True
     return False
+
+def replace_fields(string, status=None, embedder=None):
+    if not re.search(r'\[FIELD ', string):
+        return string
+    matches = list()
+    in_match = False
+    start_match = None
+    depth = 0
+    i = 0
+    while i < len(string):
+        if string[i:i+7] == '[FIELD ':
+            in_match = True
+            start_match = i
+            i += 7
+            continue
+        if in_match:
+            if string[i] == '[':
+                depth += 1
+            elif string[i] == ']':
+                if depth == 0:
+                    i += 1
+                    matches.append((start_match, i))
+                    in_match = False
+                    continue
+                else:
+                    depth -= 1
+        i += 1
+
+    field_strings = list()
+    for (start, end) in matches:
+        field_strings.append(string[start:end])
+    logmessage(repr(field_strings))
+    for field_string in field_strings:
+        if embedder is None:
+            string = string.replace(field_string, 'ERROR: FIELD cannot be used here')
+        else:
+            string = string.replace(field_string, embedder(status, field_string))
+    return string

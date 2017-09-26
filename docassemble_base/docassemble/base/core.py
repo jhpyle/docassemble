@@ -909,9 +909,6 @@ class DADict(DAObject):
         """Returns the number of keys in the dictionary, spelling out the number if ten 
         or below.  Forces the gathering of the dictionary items if necessary."""
         return nice_number(self.number())
-    def validate(self):
-        """Ensures that each element of the list has been gathered appropriately."""
-        self._validate(self, self.object_type, self.complete_attribute)
     def _validate(self, item_object_type, complete_attribute):
         if self.ask_object_type:
             for key, elem in sorted(self.elements.iteritems()):
