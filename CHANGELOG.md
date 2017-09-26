@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.64] - 2017-09-26
+### Fixed
+- Gathering of Asset items.
+
 ## [0.1.63] - 2017-09-26
 ### Added
 - Example of editing a list after it has been gathered.

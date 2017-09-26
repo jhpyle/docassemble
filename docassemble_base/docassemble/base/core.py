@@ -1,4 +1,4 @@
-#from docassemble.base.logger import logmessage
+from docassemble.base.logger import logmessage
 from docassemble.base.generate_key import random_string
 import re
 import os
@@ -950,13 +950,13 @@ class DADict(DAObject):
                     minimum = 0
             else:
                 minimum = 1
-        #logmessage("foo foo call there_is_another")
         while (number is not None and len(self.elements) < int(number)) or (minimum is not None and len(self.elements) < int(minimum)) or (self.ask_number is False and minimum != 0 and self.there_is_another):
-            #logmessage("foo foo done there_is_another")
             if item_object_type is not None:
                 self.initializeObject(self.new_item_name, item_object_type)
-                delattr(self, 'new_item_name')
+                if hasattr(self, 'there_is_another'):
+                    delattr(self, 'there_is_another')
                 self._new_item_init_callback()
+                delattr(self, 'new_item_name')
             else:
                 self.new_item_name
                 if hasattr(self, 'new_item_value'):
@@ -977,9 +977,12 @@ class DADict(DAObject):
         if self.auto_gather:
             self.gathered = True
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
-        #logmessage("foo foo done")
         return True
     def _new_item_init_callback(self):
+        if hasattr(self, 'new_item_name'):
+            delattr(self, 'new_item_name')
+        if hasattr(self, 'new_item_value'):
+            delattr(self, 'new_item_value')
         for elem in sorted(self.elements.values()):
             str(elem)
             if self.object_type is not None and self.complete_attribute is not None:
@@ -1453,7 +1456,6 @@ class DASet(DAObject):
 class DAFile(DAObject):
     """Used internally by docassemble to represent a file."""
     def init(self, *pargs, **kwargs):
-        #logmessage("init")
         if 'filename' in kwargs:
             self.filename = kwargs['filename']
             self.has_specific_filename = True

@@ -1,0 +1,56 @@
+metadata:
+  title: Assets
+  documentation: "https://docassemble.org/docs/objects.html#asset"
+  example start: 2
+  example end: 10
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - decedent: Individual
+  - estate: Thing
+  - estate.asset: Asset
+---
+question: |
+  Who is the decedent?
+fields:
+  - First Name: decedent.name.first
+  - Last Name: decedent.name.last
+---
+code: |
+  estate.name.text = "estate of " + decedent.name.full()
+---
+question: |
+  Does the ${ estate } have
+  any assets?
+yesno: estate.asset.there_are_any
+---
+question: |
+  What type of asset does
+  the ${ estate } have?
+fields:
+  - Type of asset: estate.asset.new_item_name
+    hint: |
+      e.g., real estate, 401(k), jewelry
+---
+question: |
+  What is the value of ${ i }
+  in the ${ estate }?
+fields:
+  - Value: estate.asset[i].value
+    datatype: currency
+---
+question: |
+  Is there another asset in
+  the ${ estate }?
+yesno: estate.asset.there_is_another
+---
+mandatory: True
+question: |
+  Summary of the ${ estate }.
+subquestion: |
+  The total value of
+  ${ decedent.possessive('estate') }
+  is
+  ${ currency(estate.asset.total()) }.

@@ -1013,7 +1013,6 @@ class PeriodicValue(Value):
         or 0 if the value does not exist."""
         if not self.exists:
             return 0
-        #logmessage("period is a " + str(type(self.period).__name__))
         return (Decimal(self.value) * Decimal(self.period)) / Decimal(period_to_use)
 
 class OfficeList(DAList):
@@ -1037,7 +1036,6 @@ class Organization(Person):
     def will_handle(self, problem=None, county=None):
         """Returns True or False depending on whether the organization 
         serves the given county and/or handles the given problem."""
-        #logmessage("Testing " + str(problem) + " against " + str(self.handles))
         if problem:
             if not (hasattr(self, 'handles') and problem in self.handles):
                 return False
