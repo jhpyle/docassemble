@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.63](https://github.com/jhpyle/docassemble/releases/tag/v0.1.63) - 2017-09-25
+
+### Fixed
+- Embedded fields that used iterators.
+- Lists not readjusting their instanceNames after a removal of 
+  a list element.
+
 ## [0.1.62](https://github.com/jhpyle/docassemble/releases/tag/v0.1.62) - 2017-09-24
 
 ### Changed
