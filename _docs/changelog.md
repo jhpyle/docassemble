@@ -4,12 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.1.63](https://github.com/jhpyle/docassemble/releases/tag/v0.1.63) - 2017-09-25
+## [0.1.64](https://github.com/jhpyle/docassemble/releases/tag/v0.1.64) - 2017-09-26
 
 ### Fixed
-- Embedded fields that used iterators.
-- Lists not readjusting their instanceNames after a removal of 
-  a list element.
+- Gathering of Asset items.
+
+## [0.1.63](https://github.com/jhpyle/docassemble/releases/tag/v0.1.63) - 2017-09-26
+
+### Added
+- Example of editing a list after it has been gathered.
+
+### Fixed
+- Embedded fields where the variable names contain iterators.
+- Lists instanceNames adjusting after removal of a list element.
 
 ## [0.1.62](https://github.com/jhpyle/docassemble/releases/tag/v0.1.62) - 2017-09-24
 

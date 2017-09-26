@@ -1295,7 +1295,7 @@ docker push yourdockerhubusername/mydocassemble
 # Upgrading docassemble when using Docker
 
 As new versions of **docassemble** become available, you can obtain
-the latest version by running:
+the latest version by running this within the "docassemble" directory:
 
 {% highlight bash %}
 docker pull jhpyle/docassemble

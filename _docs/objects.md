@@ -781,10 +781,11 @@ will be the output of the `comma_and_list()` method.
 
 The `DAList` uses the following attributes:
 
-* `object_type`: a class of type [`DAObject`] or subclass thereof, or
-  `None`.  Initially, this is set to `None`.  If set to an object
-  type, such as `DAObject` or `Individual`, then new items will be
-  created as objects of this type.
+* <a name="object_type"></a>`object_type`: a class of type
+  [`DAObject`] or subclass thereof, or `None`.  Initially, this is set
+  to `None`.  If set to an object type, such as `DAObject` or
+  `Individual`, then new items will be created as objects of this
+  type.
 * `gathered`: a boolean value, initially undefined.  It is set to
   `True` when then all of the items of the list are defined.
 * `items`: a [Python list] containing the items of the list.
@@ -818,7 +819,7 @@ example, if the dictionary is called `positions`, calling
 `positions.new('file clerk', 'supervisor')` will result in the
 creation of the object `positions['file clerk']` and the object
 `positions['supervisor']`.  The type of object is given by the
-`object_type` attribute, or `DAObject` if `object_type` is not set.
+[`object_type`] attribute, or `DAObject` if [`object_type`] is not set.
 You can also pass a [list] and it will unpack the list, initializing
 dictionary entries for each value.
 
@@ -2047,28 +2048,17 @@ It is indended to contain a list of [`Individual`]s who are children.
 
 ## <a name="FinancialList"></a>FinancialList
 
-This is a class intended to collect a set of financial items, such as
-an individual's assets.
-
-The `FinancialList` uses the following attributes:
-
-* `gathering`: a boolean value that is initialized to `False`.  Set
-this to `True` when your process of initializing the items of the
-list is ongoing and will span multiple questions.
-* `gathered`: a boolean value that is initially undefined.  Set this
-to `True` when you have finished determining what the items of the
-list are going to be.
+The `FinancialList` is intended to collect a set of financial items,
+such as an individual's assets.  It is a [`DADict`] object with an
+[`object_type`] of [`Value`].  The `exists` attribute of each
+[`Value`] item is set by default to `True`.
 
 The `FinancialList` has three methods:
 
-* <a name="FinancialList.new"></a>`.new(item_name)`: gives the
-  `FinancialList` a new attribute with the name `item_name` and the
-  object type `Value`.
 * <a name="FinancialList.total"></a>`.total()`: tallies up the total
   value of all `Value`s in the list for which the `exists` attribute
-  is `True`.  It requires `.gathered` to be `True`, which means that a
-  reference to `.total()` will cause **docassemble** to ask the
-  questions necessary to gather the full list of items.
+  is `True`.  A reference to `.total()` will cause **docassemble** to
+  ask the questions necessary to gather the full list of items.
 * <a name="FinancialList.existing_items"></a>`.existing_items()`:
   returns a list of types of amounts that exist within the financial
   list.
@@ -2076,95 +2066,37 @@ The `FinancialList` has three methods:
 In the context of a [Mako] template, a `FinancialList` returns the result of
 `.total()`.
 
-Note that a `FinancialList` is a [`DAObject`] but not a [`DAList`].  It
-tracks the items in the list using the attribute `elements`, which is
-a [Python set].
-
 ### <a name="Asset"></a>Asset
 
 This is a subclass of [`FinancialList`] that is intended to be used to
 track assets.
 
 Here is some example code that triggers questions that ask about asset
-items.  Note that every [`Individual`] is initialized with an attribute
-called `asset` that is an object of type `Asset`.
+items.
 
-{% highlight yaml %}
----
-mandatory: True
-question: |
-  Your total assets are ${ user.asset }.
----
-generic object: Individual
-code: |
-  for asset_item in ['checking', 'savings', 'stocksbonds']:
-    x.asset.new(asset_item)
-  x.asset.gathered = True
----
-generic object: Individual
-question: |
-  What kinds of assets ${ x.do_question("own") }?
-fields:
-  - Checking Account: x.asset.checking.exists
-    datatype: yesnowide
-  - Savings Account: x.asset.savings.exists
-    datatype: yesnowide
-  - Stocks and Bonds: x.asset.stocksbonds.exists
-    datatype: yesnowide
----
-generic object: Individual
-question: |
-  How much ${ x.do_question("have") } in 
-  ${ x.pronoun_possessive("checking account") }?
-fields:
-  - Amount in Checking Account: x.asset.checking.value
-    datatype: currency
----
-{% endhighlight %}
-
-(Additional questions asking about the value of asset items are
-omitted.)
-
-1. The inclusion of `user.asset` in a [Mako] template returns the value of
-`user.asset.total()`.
-2. The `.total()` method checks to see if `user.asset.gathered` is
-`True`.  Since `user.asset.gathered` is initially undefined, this
-triggers the code block that defines the items of `user.asset`.
-Note that we say the items are "gathered" even though the
-attributes of each item, `exists` and `value`, are still undefined.
-3. The `.total()` method then goes through each item and checks to
-see if the item `exists`.  This triggers the question that will
-define `user.asset.checking.exists` and the other values.
-4. If the `.total()` method finds that an item exists, it adds its
-`value` to a subtotal.  This triggers the question that will
-define `user.asset.checking.value`.
-5. The `.total()` method does this for every item in `user.asset`
-and finally returns a total.
-
-Note that in this example, we did not have to worry about setting
-`user.asset.gathering` because the process of populating the items
-of the asset list did not span multiple questions.
+{% include side-by-side.html demo="assets" %}
 
 ## <a name="PeriodicFinancialList"></a>PeriodicFinancialList
 
-This is a class intended to collect a set of financial items that have
-a periodic nature, such as an individual's income.
+This is a subclass of [`FinancialList`] intended to collect a set of
+financial items that have a periodic nature, such as an individual's
+income.  Instead of each item being a [`Value`], each item is a
+[`PeriodicValue`].
 
-The `PeriodicFinancialList` uses the following attributes:
+The `PeriodicFinancialList` has the following method:
 
-* `gathering`: a boolean value that is initialized to `False`.  Set
-this to `True` when your process of initializing the items of the
-list is ongoing and will span multiple questions.
-* `gathered`: a boolean value that is initially undefined.  Set this
-to `True` when you have finished gathering all of the items.
+* <a name="PeriodicFinancialList.total"></a>`.total()`: tallies up the
+  total annual value of all [`PeriodicValue`]s in the list for which the
+  `exists` attribute is `True`.
 
-The `PeriodicFinancialList` has three methods:
+If you have a `PeriodicFinancialList` called `income`, you can have a
+single question that asks for the item name for a new item, and also
+the value and period of the new item.  Just write a question that sets
+these three attributes:
 
-* <a name="PeriodicFinancialList.new"></a>`.new(item_name)`: gives the
-  `PeriodicFinancialList` a new attribute with the name `item_name`
-  and the object type `PeriodicValue`.
-* <a name="PeriodicFinancialList.total"></a>`.total()`: tallies up the total annual value of all `PeriodicValue`s in the list
-  for which the `exists` attribute is `True`.
+* `income.new_item_name`
+* `income.new_item_value`
+* `income.new_item_period`
 
 In the context of a [Mako] template, a `PeriodicFinancialList` returns `.total()`.
 
@@ -2173,44 +2105,7 @@ In the context of a [Mako] template, a `PeriodicFinancialList` returns `.total()
 This is a subclass of [`PeriodicFinancialList`].
 
 Here is some example code that triggers questions that ask about
-income items.  Note that ever [`Individual`] has an attribute `income`
-that is an object of type `Income`.
-
-{% highlight yaml %}
----
-mandatory: True
-question: |
-  Your total annual income is ${ user.income }.
----
-generic object: Individual
-code: |
-  for income_item in ['employment', 'selfemployment']:
-    x.income.new(income_item, period=12)
-  x.income.gathered = True
----
-generic object: Individual
-question: |
-  What kinds of income ${ x.do_question("have") }?
-fields:
-  - Employment: x.income.employment.exists
-    datatype: yesnowide
-  - Self-employment: x.income.selfemployment.exists
-    datatype: yesnowide
----
-generic object: Individual
-question: |
-  How much ${ x.do_question("make") } from employment?
-fields:
-  - Employment Income: x.income.employment.value
-    datatype: currency
-  - "": x.income.employment.period
-    datatype: number
-    code: |
-      period_list()
----
-{% endhighlight %}
-
-(Not all necessary questions are shown.)
+income items.
 
 ### <a name="Expense"></a>Expense
 
@@ -2621,3 +2516,4 @@ and not an instance of the `Attorney` class.
 ["new style" Python objects]: http://realmike.org/blog/2010/07/18/introduction-to-new-style-classes-in-python/
 [relative module name]: https://docs.python.org/2.5/whatsnew/pep-328.html
 [`words`]: {{ site.baseurl }}/docs/config.html#words
+[`object_type`]: #object_type
