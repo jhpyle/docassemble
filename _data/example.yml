@@ -582,6 +582,40 @@
       image: calendar
     - "Where?": where
       image: map
+"buttons-icons-code": |-
+  question: |
+    What is the most important question
+    to ask?
+  field: interrogatory
+  buttons:
+    code: myoptions
+  ---
+  code: |
+    myoptions = \
+      [{"when": "When?",
+        "image": "calendar"},
+       {"where": "Where?",
+        "image": "map"}]
+"buttons-icons-code-upload": |-
+  question: |
+    What is the most important question
+    to ask?
+  field: interrogatory
+  buttons:
+    code: myoptions
+  ---
+  code: |
+    myoptions = \
+      [{"when": "When?",
+        "image": uploaded_file},
+       {"where": "Where?",
+        "image": "map"}]
+  ---
+  question: |
+    Please upload an image.
+  fields:
+    - Image: uploaded_file
+      datatype: file
 "buttons-labels": |-
   question: |
     How would you like to pay for your
@@ -686,12 +720,6 @@
     - Red
     - Green
     - Purple
-  ---
-  mandatory: True
-  question: All done
-  subquestion: |
-    Your favorite color is
-    ${ favorite_color }.
 "choices-dropdown": |-
   question: |
     What type of shoes do you wear?
@@ -1221,6 +1249,176 @@
     Your favorite color is
     ${ favorite_color }.
   mandatory: True
+"dispatch": |-
+  mandatory: True
+  code: |
+    dispatch('main_menu_selection')
+    final_screen
+  ---
+  question: |
+    Main menu
+  field: main_menu_selection
+  buttons:
+    - Fruit: fruit_menu
+    - Vegetables: vegetable_menu
+    - Rocks: rocks_page
+    - Continue: Null
+  ---
+  code: |
+    fruit_menu = dispatch('fruit_menu_selection')
+  ---
+  question: |
+    Fruit menu
+  field: fruit_menu_selection
+  choices:
+    - Apple: apple
+    - Peach: peach
+    - Back: Null
+  ---
+  code: |
+    vegetable_menu = dispatch('vegetable_menu_selection')
+  ---
+  question: |
+    Vegetable menu
+  field: vegetable_menu_selection
+  choices:
+    - Turnip: turnip
+    - Potato: potato
+    - Back: Null
+  ---
+  question: Rocks screen
+  field: rocks_page
+  ---
+  question: Apples screen
+  subquestion: |
+    % if likes_apples:
+    You like apples.
+    % endif
+  field: apple
+  ---
+  question: |
+    Do you like apples?
+  yesno: likes_apples
+  ---
+  question: Peaches screen
+  subquestion: |
+    You selected
+    ${ main_menu_selection }
+    on the main menu and
+    ${ fruit_menu_selection }
+    on the fruit menu.
+  field: peach
+  ---
+  event: turnip
+  question: Turnip screen
+  subquestion: |
+    You cannot go forward from
+    the turnip screen.
+  ---
+  question: Potato screen
+  field: potato
+  ---
+  event: final_screen
+  question: |
+    Done with the interview.
+"dispatch-count": |-
+  mandatory: True
+  code: |
+    visited_apple = 0
+    visited_orange = 0
+  ---
+  mandatory: True
+  code: |
+    dispatch('main_menu_selection')
+    final_screen
+  ---
+  question: |
+    Main menu
+  field: main_menu_selection
+  buttons:
+    - Apple: apple
+    - Orange: orange
+    - Continue: Null
+  ---
+  question: Apple screen
+  field: apple
+  need: apple_tracked
+  ---
+  reconsider: True
+  code: |
+    visited_apple += 1
+    apple_tracked = True
+  ---
+  question: Orange screen
+  field: orange
+  need: orange_tracked
+  ---
+  reconsider: True
+  code: |
+    visited_orange += 1
+    orange_tracked = True
+  ---
+  event: final_screen
+  question: |
+    All done.
+  subquestion: |
+    % if visited_apple > 0:
+    You visited the apple screen
+    ${ nice_number(visited_apple) }
+    times.
+    % endif
+
+    % if visited_orange > 0:
+    You visited the orange screen
+    ${ nice_number(visited_orange) }
+    times.
+    % endif
+"dispatch-track": |-
+  mandatory: True
+  code: |
+    visited_apple = False
+    visited_orange = False
+  ---
+  mandatory: True
+  code: |
+    dispatch('main_menu_selection')
+    final_screen
+  ---
+  question: |
+    Main menu
+  field: main_menu_selection
+  buttons:
+    - Apple: apple
+    - Orange: orange
+    - Continue: Null
+  ---
+  question: Apple screen
+  field: apple
+  need: apple_tracked
+  ---
+  code: |
+    visited_apple = True
+    apple_tracked = True
+  ---
+  question: Orange screen
+  field: orange
+  need: orange_tracked
+  ---
+  code: |
+    visited_orange = True
+    orange_tracked = True
+  ---
+  event: final_screen
+  question: |
+    All done.
+  subquestion: |
+    % if visited_apple:
+    You visited the apple menu.
+    % endif
+
+    % if visited_orange:
+    You visited the orange menu.
+    % endif
 "document": |-
   question: Here is your document.
   attachments:
@@ -2429,7 +2627,7 @@
   fields:
     - Fruit: favorite_fruit
       choices:
-        - Apples: apple
+        - "${ 'Apples' }": apple
         - Oranges: orange
         - Pears: pear
 "fields-choices-combobox": "question: |\n  What is your favorite color?\nfields:\n\
@@ -3776,6 +3974,37 @@
     <script>
       $("#today_time").html(Date());
     </script>
+"if": |-
+  question: |
+    Describe your intelligence.
+  field: user_intelligence
+  choices:
+    - Smart
+    - Dumb
+  ---
+  if: |
+    user_intelligence == 'Smart'
+  question: |
+    What is the square root of 50% of 32?
+  fields:
+    - Answer: answer
+      datatype: integer
+  ---
+  if: |
+    user_intelligence == 'Dumb'
+  question: |
+    What is 2+2?
+  fields:
+    - Answer: answer
+      datatype: integer
+  ---
+  mandatory: True
+  question: |
+    % if answer == 4:
+    That is correct.
+    % else:
+    Wrong answer.
+    % endif
 "image-sets": |-
   image sets:
     freepik:
@@ -4434,6 +4663,16 @@
   \                  'label': 'Vegetables'}, \n                 {'url': interview_url(i='docassemble.demo:data/questions/interview-about-flowers.yml'),\n\
   \                  'label': 'Flowers'} ]\n---\nmandatory: True\nquestion: |\n  Select\
   \ an option from the\n  menu in the upper right."
+"menu-system": |-
+  objects:
+    -  client: Individual
+    -  client.people: PartyList
+    -  client.people[i].photo: DAFileList
+    -  client.things: DAList
+    -  client.things[i].heirs: PartyList
+    -  client.things[i].photo: DAFileList
+    -  client.assets: DAList
+    -  client.assets[i].photo: DAFileList
 "message": |-
   code: |
     message("The interview is over.", "Better luck next time!")
@@ -4895,6 +5134,7 @@
       - protagonist
       - antagonist
 "object-checkboxes-default": |-
+  mandatory: True
   objects:
     protagonist: Individual
     antagonist: Individual
@@ -4909,6 +5149,7 @@
     villain.auto_gather = False
     villain.append(antagonist)
   ---
+  mandatory: True
   question: Who are the villains, if any?
   fields:
     no label: villain
@@ -6054,6 +6295,102 @@
     Here is the file.
   subquestion: |
     ${ logo }
+"scan-for-variables": |-
+  question: |
+    What is the best color?
+  fields:
+    - Color: best_color
+  ---
+  question: |
+    What is the time of day?
+  field: time_of_day
+  choices:
+    - Night
+    - Day
+  ---
+  mandatory: True
+  question: |
+    The best color is
+    ${ best_color }.
+  field: initial_color_seen
+  ---
+  scan for variables: False
+  mandatory: True
+  code: |
+    if time_of_day == 'Night':
+      best_color = 'black'
+    else:
+      best_color = 'blue'
+  ---
+  mandatory: True
+  question: |
+    The best color is now
+    ${ best_color }.
+"scan-for-variables-original": |-
+  question: |
+    What is the best color?
+  fields:
+    - Color: best_color
+  ---
+  question: |
+    What is the time of day?
+  field: time_of_day
+  choices:
+    - Night
+    - Day
+  ---
+  mandatory: True
+  question: |
+    The best color is
+    ${ best_color }.
+  field: initial_color_seen
+  ---
+  mandatory: True
+  code: |
+    if time_of_day == 'Night':
+      best_color = 'black'
+    else:
+      best_color = 'blue'
+  ---
+  mandatory: True
+  question: |
+    The best color is now
+    ${ best_color }.
+"scan-for-variables-sets": |-
+  question: |
+    What is the best color?
+  fields:
+    - Color: best_color
+  ---
+  question: |
+    What is the time of day?
+  field: time_of_day
+  choices:
+    - Night
+    - Day
+  ---
+  scan for variables: False
+  sets:
+    - best_thing
+  code: |
+    if time_of_day == 'Night':
+      best_thing = 'astronomy'
+      best_color = 'black'
+    else:
+      best_thing = 'the beach'
+      best_color = 'blue'
+  ---
+  mandatory: True
+  field: initial_screen
+  question: |
+    According to you, the best color
+    is ${ best_color }.
+  ---
+  mandatory: True
+  question: |
+    Since the best thing is
+    ${ best_thing }, the best color is
+    ${ best_color }.
 "script": |-
   question: |
     Do you want to build a snowman?
@@ -7456,6 +7793,24 @@
   fields:
     - no label: x.instructions
       datatype: area
+"testgeolocate": |-
+  objects:
+    - user: Individual
+    - enemy: Individual
+  ---
+  initial: True
+  code: |
+    set_info(user=user, role='user')
+    track_location = user.location.status()
+  ---
+  mandatory: True
+  code: |
+    need(welcome_screen, map_shown)
+  ---
+  sets: map_shown
+  question: Map of you and your enemy
+  subquestion: |
+    ${ map_of(user, enemy) }
 "validation-code": |-
   question: |
     There are 10 fruit in all.

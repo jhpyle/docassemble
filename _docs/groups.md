@@ -628,7 +628,7 @@ user with the `more_fruit` question, which asks "Are there more
 fruits?"  If `more_fruits` is `True`, however, the interview deletes
 the definition of `more_fruit` (making the variable undefined again),
 and then makes sure that `fruit[len(fruit)]` is defined.  The
-expression `len(fruit)` returns the number of items in the `fruit`
+[expression] `len(fruit)` returns the number of items in the `fruit`
 list.  If there is only one item in the list (i.e., `fruit[0]`), then
 `len(fruit)` will return `1`, and the interview will look for the
 second element in the list, `fruit[1]`.
@@ -794,3 +794,4 @@ for the functions and block types that this example uses.
 [`DAEmailRecipient`]: {{ site.baseurl }}/docs/objects.html#DAEmailRecipient
 [`.current_index()` method]: "https://docassemble.org/docs/objects.html#DAList.current_index"
 [embedding a code block within a multiple choice question]: http://docassemble.org/docs/fields.html#code%20button
+[expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python

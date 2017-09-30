@@ -243,9 +243,6 @@ code: |
 ---
 {% endhighlight %}
 
-
-
-
 ## <a name="usingglob"></a>Using global variables in your classes
 
 Normally in [Python] you can use global variables to keep track of
@@ -773,6 +770,10 @@ Other methods available on a `DAList` are:
   complete.  If called with the optional keyword argument `recursive`
   set to `True` (the default is `False`), the lists inside the list
   are also marked as not-yet-gathered.
+* <a name="DAList.has_been_gathered"></a><a name="DADict.has_been_gathered"></a><a
+  name="DASet.has_been_gathered"></a>`has_been_gathered()` - returns
+  `True` if the group has been gathered yet.  Does not trigger the
+  gathering process.
 
 If you refer to a list in a [Mako] template (e.g., `The applicants
 include: ${ applicant }`) or convert it to text with the
@@ -2475,7 +2476,7 @@ and not an instance of the `Attorney` class.
 [`nice_number()`]: {{ site.baseurl }}/docs/functions.html#nice_number
 [`comma_and_list()`]: {{ site.baseurl }}/docs/functions.html#comma_and_list
 [`user_lat_lon()`]: {{ site.baseurl }}/docs/functions.html#user_lat_lon
-[`sets`]: {{ site.baseurl }}/docs/fields.html#sets
+[`sets`]: {{ site.baseurl }}/docs/modifiers.html#sets
 [`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
 [`send_sms()`]: {{ site.baseurl }}/docs/functions.html#send_sms
 [E.164]: https://support.twilio.com/hc/en-us/articles/223183008-Formatting-International-Phone-Numbers

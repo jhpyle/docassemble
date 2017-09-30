@@ -105,14 +105,18 @@ is equivalent to this:
 
 {% include side-by-side.html demo="buttons-variation-2" %}
 
-A powerful feature of `buttons` is the ability to use [Python] code to
-generate button choices.  If an item under `buttons` is a key-value
-pair in which the key is the word [`code`](#code), then **docassemble**
-executes the value as [Python] code, which is expected to return a list.
-This code is executed at the time the question is asked, and the code
-can include variables from the interview.  **docassemble** will
-process the resulting list and create additional buttons for each
-item.
+### <a name="code generated buttons"></a>Using code to generate the choices
+
+A powerful feature of `buttons` (which also works with
+[`choices`](#field with choices), [`dropdown`](#field with dropdown),
+and [`combobox`](#field with combobox)) is the ability to use [Python]
+code to generate button choices.  If an item under `buttons` is a
+key-value pair in which the key is the word [`code`](#code), then
+**docassemble** executes the value as [Python] code, which is expected
+to return a list.  This code is executed at the time the question is
+asked, and the code can include variables from the interview.
+**docassemble** will process the resulting list and create additional
+buttons for each item.
 
 {% include side-by-side.html demo="buttons-code-list" %}
 
@@ -129,6 +133,9 @@ You can use `buttons` as an alternative to [`yesno`] where you want
 different text in the labels.
 
 {% include side-by-side.html demo="yesno-custom" %}
+
+As explained below, you can also use this code to
+[decorate the buttons with images](#image button).
 
 ## <a name="field with choices"></a>Multiple choice list
 
@@ -157,14 +164,33 @@ To provide a multiple choice question with a "combobox" selector, use
 
 ## <a name="image button"></a>Adding images to buttons and list items
 
-To add a decorative icon to a choice, use a key/value pair and add
-`image` as an additional key.
+To add a decorative icon to a `buttons` choice, use a key/value pair
+and add `image` as an additional key.
 
 {% include side-by-side.html demo="buttons-icons" %}
 
 This works with `choices` as well:
 
 {% include side-by-side.html demo="choices-icons" %}
+
+It is not possible to decorate `dropdown` or `combobox` choices with
+images.
+
+In these examples, `calendar` and `map` are the names of decorations
+that are defined in an [`images`] or [`image sets`] block.
+
+If you create the list of choices with [`code`](#code generated
+buttons), you can specify an image by including an additional
+key/value pair within an item, where the key is `image`.
+
+{% include side-by-side.html demo="buttons-icons-code" %}
+
+There is an additional feature available when you assemble buttons
+with [`code`](#code generated buttons): you can use [`DAFile`] or
+[`DAFileList`] objects to indicate the image.  This example uses an
+uploaded image file as the source of the image for one of the buttons:
+
+{% include side-by-side.html demo="buttons-icons-code-upload" %}
 
 ## <a name="code button"></a>Embedding [`question`] and [`code`] blocks within multiple choice questions
 
@@ -1180,7 +1206,7 @@ that take the user to a special screen that the user would not
 ordinarily encounter in the course of the interview.  You can create
 such a screen using the `event` statement.
 
-An `event` statement acts just like `sets`: it advertises to
+An `event` statement acts just like [`sets`]: it advertises to
 **docassemble** that the question will potentially define a variable.
 
 In the following example, the variable `show_date` is never defined;
@@ -1387,3 +1413,6 @@ why this needs to be done manually as opposed to automatically:
 [combobox]: https://github.com/danielfarrell/bootstrap-combobox
 [multiple-choice dropdown]: #select
 [`combobox`]: #combobox
+[`images`]: {{ site.baseurl }}/docs/initial.html#images
+[`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
+[`sets`]: {{ site.baseurl }}/docs/modifiers.html#sets

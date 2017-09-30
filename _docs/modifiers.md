@@ -471,6 +471,22 @@ You can use [Mako] to determine the number of seconds.  If the
 `reload` value evaluates to `False` or `None`, the screen will not
 reload.
 
+# <a name="sets"></a>Manually indicating that a block sets a variable
+
+Usually, **docassemble** can figure out which variables a block is
+capable of defining.  If a code block consists of:
+
+{% highlight yaml %}
+---
+code: |
+  if hell.temperature_in_celcius == 0:
+    claim_is_valid = True
+---
+{% endhighlight %}
+
+then **docassemble** will try to run it if it needs a definition for
+`claim_is_valid`.  Sometimes, however, **docassemble** needs a hint.
+
 # <a name="precedence"></a>Changing order of precedence
 
 As explained in [how **docassemble** finds questions for variables],
@@ -517,6 +533,150 @@ Adding an `id` to a block has no other side effects.
 Another way of changing the order of precedence is to use the
 [`order` initial block].
 
+# <a name="if"></a>Putting conditions on whether a question is applicable
+
+If you have multiple [`question`]s in your interview that define a
+given variable, you can tell **docassemble** under what conditions a
+given question may be asked.  You do so by using the `if` modifier.
+
+{% include side-by-side.html demo="if" %}
+
+Here's how this works:
+
+* The [`mandatory`] question requires a definition of `answer`, so the
+  interview looks for blocks that offer to define `answer`.
+* The interview considers asking the "What is 2+2?" question.  It
+  considers this question first because it appears last in the [YAML]
+  source.
+* This question has a condition, so the interview evaluates the
+  [Python expression].  However, the expression depends on the
+  variable `user_intelligence`, which is undefined, so the interview
+  asks a question to determine that value of this variable.
+* When the user answers the `user_intelligence` question, the
+  interview tries to ask the `mandatory` question again, then
+  looks for a definition of `answer`, then considers asking the
+  "What is 2+2?" question, then evaluates the `if` expression.
+* If the expression evaluates to true, then the interview asks "What
+  is 2+2?"
+* If the expression evaluates to false, then the interview skips the
+  question and moves on to the "What is the square root of 50% of 32?"
+  question.  It evaluates the `if` statement, and will ask the
+  question if the expression evaluates to true.
+
+The content of the `if` modifier must be a [Python expression] or a
+list of [Python expression]s.  If a list of expressions is provided,
+each expression must evaluate to true in order for the question to be
+asked.
+
+# <a name="scan for variables"></a>Turn off variable scanning
+
+By default, **docassemble** looks at every block in your interview and
+automatically discerns what variables each block is capable of
+setting.  Then, when it is running the interview, if it encounters an
+undefined variable it goes through all the blocks that are capable of
+defining the variable.  As discussed above, if there are multiple
+blocks that are capable of defining a variable, it tries the ones that
+are later in the file first, unless an [`order` initial block] or a
+[`supersedes` modifier] alters that order.
+
+Sometimes, however, a block that **docassemble** tries to use to
+define a variable is one that you don't **docassemble** to even
+consider when looking for a way to define a variable.
+
+This is particularly likely to happen when you have code that changes
+the values of previously-defined variables.
+
+For example, in this interview, the intention is that:
+
+* A variable is gathered from the user 
+* The variable is reported back to the user
+* Then variable is changed through code
+* The variable is reported to the user again.
+
+{% include side-by-side.html demo="scan-for-variables-original" %}
+
+However, this interview does something the author did not intend: when
+it goes looking for a definition for `best_color`, the first thing it
+does is run the [`mandatory`] code block that depends on
+`time_of_day`.  So the first question that gets asked is
+`time_of_day`, not `best_color`.  "Ugh!" the author thinks, "that's
+not what I wanted!  I only wanted that mandatory code block to be run
+later in the interview."
+
+To fix this problem, the author can modify the code block with 
+`scan for variables: False`:
+
+{% include side-by-side.html demo="scan-for-variables" %}
+
+Now, when **docassemble** goes searching for a block that will define
+`best_color`, it will disregard the [`code`] block that depends on
+`time_of_day`.
+
+This modifier can be used on any block that sets variables to make it
+effectively "invisible" to **docassemble**'s automatic logic.  If a
+block is marked with `scan for variables: False`, the [`event`] and
+[`sets`] modifiers will still be effective, so you can use them to
+explicitly indicate that a block should be tried when the interview
+needs a definition of a particular variable.
+
+In this variation of the interview, for example, we first want to
+gather `best_color` from the user.  Then we want to determine
+`best_thing` based on the time of day, and we want a side effect of
+setting `best_thing` to be setting `best_color` to something different.
+
+{% include side-by-side.html demo="scan-for-variables-sets" %}
+
+If we did not use `scan for variables: False`, then the interview
+would never ask the user for `best_color`; the [`code`] block would
+have been used to get an initial definition of `best_color`.  But by
+turning off automatic variable scanning and explicitly indicating that
+the [`code`] block should only be used for determining the definition
+of `best_thing`, we were able to get the interview to behave the way
+we wanted it to.
+
+# <a name="sets"></a>Specifying which variables a block `sets`
+
+As discussed in the previous section, **docassemble** looks at every
+block in your interview and tries to discern what variables each block
+is capable of setting.  However, sometimes it is not able to determine
+this correctly.
+
+For example, if you have a [`code`] block that uses a method to set an
+attribute on an object, **docassemble** will not be able to see that
+the code block is capable of setting the attribute.  Here is one such
+[`code`] block:
+
+{% highlight yaml %}
+---
+code: |
+  user.initializeAttribute('allergies', DAList)
+---
+{% endhighlight %}
+
+If you want **docassemble** to run this [`code`] block when it needs a
+definition of `user.allergies`, then you need to add a `sets` modifier:
+
+{% highlight yaml %}
+---
+sets: user.allergies
+code: |
+  user.initializeAttribute('allergies', DAList)
+---
+{% endhighlight %}
+
+You can also give `sets` a list of variables:
+
+{% highlight yaml %}
+---
+sets: 
+  - user.allergies
+  - user.skills
+code: |
+  user.initializeAttribute('allergies', DAList)
+  user.initializeAttribute('skills', DAList)
+---
+{% endhighlight %}
+
 # <a name="comment"></a>Hidden `comment`s
 
 To make a note to yourself about a question, which will not be seen by
@@ -525,6 +685,9 @@ by **docassemble**, so it can contain any valid [YAML].
 
 {% include side-by-side.html demo="comment-weather" %}
 
+[YAML]: https://en.wikipedia.org/wiki/YAML
+[`event`]: {{ site.baseurl }}/docs/fields.html#event
+[`sets`]: #sets
 [`order` initial block]: {{ site.baseurl }}/docs/initial.html#order
 [`include`]: {{ site.baseurl }}/docs/initial.html#include
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
@@ -551,6 +714,7 @@ by **docassemble**, so it can contain any valid [YAML].
 [`Organization`]: {{ site.baseurl }}/docs/objects.html#Organization
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`microphone`]: {{ site.baseurl }}/docs/fields.html#microphone
+[`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`field` with `choices`]: {{ site.baseurl }}/docs/fields.html#field with choices
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [`field` without `buttons` or `choices`]: {{ site.baseurl }}/docs/fields.html#field
@@ -567,3 +731,5 @@ by **docassemble**, so it can contain any valid [YAML].
 [index variable `i`]: {{ site.baseurl }}/docs/fields.html#index variables
 [groups section]: {{ site.baseurl }}/docs/groups.html
 [index variable documentation]: {{ site.baseurl }}/docs/fields.html#index variables
+[`supersedes` modifier]: #precedence
+[Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python

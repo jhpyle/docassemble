@@ -675,7 +675,7 @@ particular variable, it goes from bottom to top; if a block is later
 in the file, it is considered to "supersede" blocks that are earlier
 in the file.
 
-As explained [below](#supersede), however, instead of relying on
+As explained [below](#precedence), however, instead of relying on
 relative placement of blocks in the [YAML] file, you can explicitly
 indicate which blocks take precedence over other blocks.
 
@@ -848,7 +848,11 @@ which sets `veggies[i][j]`, when applicable:
 
 <a name="precedence"></a>These rules about which blocks are tried
 before other blocks can be overriden using the [`order` initial block]
-or the [`id` and `supersedes`] modifiers.
+or the [`id` and `supersedes`] modifiers.  You can use the
+[`if` modifier] to indicate that a given [`question`] should only be
+asked under certain conditions.  You can use the
+[`scan for variables` modifier] to indicate that a [`question`] or
+[`code`] block should
 
 # <a name="multiple interviews"></a>Combining multiple interviews into one
 
@@ -968,3 +972,5 @@ provide a list of interviews available on your server.
 [`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
 [`id` and `supersedes`]: {{ site.baseurl}}/docs/modifiers.html#precedence
 [`order` initial block]: {{ site.baseurl }}/docs/initial.html#order
+[`if` modifier]: {{ site.baseurl}}/docs/modifiers.html#if
+[`scan for variables` modifier]: {{ site.baseurl}}/docs/modifiers.html#scan for variables

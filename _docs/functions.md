@@ -83,6 +83,23 @@ entirely different.  The first will treat the value of the
 `meaning_of_life` is "chocolate," `value(meaning_of_life)` will
 attempt to find the value of the variable `chocolate`.
 
+## <a name="undefine"></a>undefine()
+
+The `undefine()` function makes a variable undefined.  The name
+of the variable must be provided as a string.  If the variable is not
+defined to begin with, the function does not do anything.
+
+{% highlight python %}
+undefine('favorite_fruit')
+{% endhighlight %}
+
+This effectively does the same thing as the [del statement] in
+[Python].
+
+{% highlight python %}
+del favorite_fruit
+{% endhighlight %}
+
 ## <a name="need"></a>need()
 
 The `need()` function takes one or more variables as arguments and
@@ -209,6 +226,109 @@ sure that the variables get defined.  The [`force_ask()`] and
 [`force_gather()`] functions are primarily useful when you are using
 [actions] to do things that are outside the normal course of the
 [interview logic].
+
+## <a name="dispatch"></a>dispatch()
+
+The `dispatch()` function provides logic so that an interview can
+present a menu system within a screen.  For example:
+
+{% include side-by-side.html demo="dispatch" %}
+
+To make a menu, you need to add a few components to your interview:
+
+* Some code that runs `dispatch()` in order to launch the menu at a
+  particular place in your interview logic.
+* A screen that shows the menu.  This is typically a
+  [multiple-choice question] in which each choice represents a screen
+  that the user can visit.
+* Screens corresponding to each choice.  These can be standalone
+  screens, or they can be sub-menus.
+
+In the example above, the main menu is a [multiple-choice question]
+that sets the variable `main_menu_selection`.
+
+When the interview logic calls `dispatch('main_menu_selection')`, it
+looks for a definition of the variable `main_menu_selection`.  It
+finds a [multiple-choice question] that offers to define
+`main_menu_selection`.  This question will set the variable
+to one of four values:
+
+* `fruit_menu`
+* `vegetable_menu`
+* `rocks_page`
+* `Null`
+
+The first three values are the names of other variables in the
+interview.  Note that in the interview, `fruit_menu` and
+`vegetable_menu` are variables defined by [`code`] blocks, and
+`rocks_page` is defined by a [`question`] block.  If the user selects
+one of these choices, the interview will look for a definition of the
+selected variable.  This all done by the `dispatch()` function.
+
+The last value, `Null`, is special; it ends the menu.  (Note that
+`Null` or `null` is a special value in [YAML]; it becomes `None` in
+[Python].)  When the user selects "Continue," the `dispatch()`
+function will end.  In this sample interview, the next step after the
+menu is to show the `final_screen`.  Thus, when the user selects
+"Continue," the user sees the `final_screen` question.  If you want
+the interview logic to be able to move past the `dispatch()` function,
+you must include a `Null` option.
+
+This sample interview features two sub-menus.  You can tell this
+because the variable `fruit_menu` is defined with:
+
+{% highlight python %}
+fruit_menu = dispatch('fruit_menu_selection')
+{% endhighlight %}
+
+and the variable `vegetable_menu` is defined with:
+
+{% highlight python %}
+vegetable_menu = dispatch('vegetable_menu_selection')
+{% endhighlight %}
+
+If the user selects "Fruit" from the main menu, the interview will
+seek a definition of `fruit_menu`.  This in turn leads to calling the
+`dispatch()` function on `'fruit_menu_selection'`.  This leads to
+seeking a definition of the variable `fruit_menu_selection`.  If the
+user selects the `Null` option on this menu, the user will go back to
+the main menu.
+
+If the user selects "Rocks" from the main menu, the interview will
+seek a definition of `rocks_page`.  In this case, the block that
+offers to define `rocks_page` is a [`question`] with a "Continue"
+button.  When the user presses "Continue" on the "Rocks screen," the
+user will return to the menu.
+
+Note that when the interview seeks definitions of variables and
+displays screens, it will ask questions to satisfy prerequisites.  For
+example, when the user selects "Apple" from the "Fruit menu," the
+interview will seek the definition of `apple`, but in order to pose
+the `question` that defines `apple`, it needs the definition of
+`likes_apples`.  So it will stop and ask "Do you like apples?" before
+proceeding to the `question` that defines `apple`.
+
+One very important thing to know about the `dispatch()` function is
+that the variables it uses to navigate among the screens are
+temporary.  After the call to `dispatch('main_menu_selection')`, the
+variables `main_menu_selection`, `fruit_menu`, `fruit_menu_selection`,
+`apple`, `rocks_page`, etc., will all be undefined.  However,
+questions _will_ be able to access these variables from within the
+`dispatch()` function.  For example, the "Peaches screen" successfully
+accesses the values of `main_menu_selection` and
+`fruit_menu_selection`.
+
+If you want to gather information about what screens your user visited
+or did not visit, you can use prerequisites to do so.  Here is an
+example that uses the [`need` directive] to run a code block when a
+user selects a menu item.
+
+{% include side-by-side.html demo="dispatch-track" %}
+
+Or, if you want to keep a count of the number of times a user has
+visited a page, you could do:
+
+{% include side-by-side.html demo="dispatch-count" %}
 
 ## <a name="all_variables"></a>all_variables()
 
@@ -1068,6 +1188,8 @@ does not work within documents.)  The arguments are expected to be
   address.  The marker icon can be customized by setting `person.icon`
   (for a [`Person`] object called `person`).  If the [`Person`] object
   is the user, the default icon is a blue circle.
+
+{% include demo-side-by-side.html demo="testgeolocate.yml" %}
 
 ## <a name="location_known"></a>location_known()
 
@@ -4005,3 +4127,6 @@ $(document).on('daPageLoad', function(){
 [`tests.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/tests.py
 [`my_name_suffix`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/my_name_suffix.py
 [`indent()`]: #indent
+[del statement]: https://docs.python.org/2/tutorial/datastructures.html#the-del-statement
+[multiple-choice question]: {{ site.baseurl }}/docs/fields.html#field with buttons
+[`need` directive]: {{ site.baseurl }}/docs/logic.html#need

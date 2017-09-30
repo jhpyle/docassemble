@@ -105,22 +105,22 @@ Next, `columns` describes the header of each column and what should be
 printed in each cell under that header.  Like a [`fields`] list within
 a [`question`], `columns` must contain a [YAML] list where each item
 is a key/value pair (a one-item dictionary) where the key is the
-header of the column and the value is a [Python] expression
+header of the column and the value is a [Python expression]
 representing the contents of the cell for that column, for a given row.
 
 In the example above, the header of the first column is "Fruit Name"
-and the [Python] expression that produces the name of the fruit is
+and the [Python expression] that produces the name of the fruit is
 `row_item.name`.
 
-There are two special variables available to these [Python]
-expressions:
+There are two special variables available to these
+[Python expression]s:
 
 * `row_item`: this is the item in the [group] corresponding to the
   current row.
 * `row_index`: this is `0` for the first row, `1` for the second row,
   `2` for the third row, etc. 
 
-You can pretend that the [Python] expressions are evaluated in a
+You can pretend that the [Python expression]s are evaluated in a
 context like this:
 
 {% highlight python %}
@@ -134,7 +134,7 @@ In this example, the first column will show name of the fruit
 (`row_item.name`) and the second column will show the number of seeds
 (`row_item.seeds`).
 
-The header of each column is plain text (not a [Python] expression).
+The header of each column is plain text (not a [Python expression]).
 The header can include [Mako] and [Markdown].
 
 If you have a complicated header, you can use the special keys
@@ -247,6 +247,7 @@ setting value of [`table width`] in a [`features`] block.
 [`table width`]: {{ site.baseurl }}/docs/initial.html#table width
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
 [`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
+[Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [tables]: {{ site.baseurl }}/docs/markup.html#tables
