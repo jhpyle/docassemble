@@ -954,12 +954,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue):
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
                     if status.question.question_variety == "radio":
-                        if pair['key'] is not None:
+                        if True or pair['key'] is not None: #not sure why this was added
                             output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext) + '</div></div>\n'
                         else:
                             output += '                <div class="form-group"><div class="col-md-12">' + help_wrap(markdown_to_html(pair['label'], status=status), helptext) + '</div></div>\n'
                     else:
-                        if pair['key'] is not None:
+                        if True or pair['key'] is not None:
                             inner_fieldlist.append('<option value="' + unicode(pair['key']) + '"' + ischecked + '>' + formatted_item + '</option>')
 
                     id_index += 1
@@ -1035,7 +1035,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                             btn_class = ' btn-default btn-da-custom'
                         else:
                             the_icon = ''
-                        if pair['key'] is not None:
+                        if True or pair['key'] is not None:
                             output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(pair['key']) + '">' + the_icon + markdown_to_html(pair['label'], status=status, trim=True, do_terms=False) + '</button>\n'
                         else:
                             output += markdown_to_html(pair['label'], status=status)
@@ -1561,7 +1561,7 @@ def input_for(status, field, wide=False, embedded=False):
                 else:
                     the_icon = ''
                 helptext = pair.get('help', None)
-                if pair['key'] is not None:
+                if True or pair['key'] is not None:
                     inner_field = safeid(from_safeid(saveas_string) + "[" + myb64quote(pair['key']) + "]")
                     #sys.stderr.write("I've got a " + repr(pair['label']) + "\n")
                     formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
@@ -1608,7 +1608,7 @@ def input_for(status, field, wide=False, embedded=False):
                 else:
                     the_icon = ''
                 helptext = pair.get('help', None)
-                if pair['key'] is not None:
+                if True or pair['key'] is not None:
                     #sys.stderr.write(str(saveas_string) + "\n")
                     formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
                     if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
@@ -1644,7 +1644,7 @@ def input_for(status, field, wide=False, embedded=False):
                 else:
                     output += '<option value="">' + unicode(status.hints[field.number].replace('\n', ' ')) + '</option>'
             for pair in pairlist:
-                if pair['key'] is not None:
+                if True or pair['key'] is not None:
                     formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, do_terms=False)
                     output += '<option value="' + unicode(pair['key']) + '"'
                     if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
