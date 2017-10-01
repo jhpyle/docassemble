@@ -5233,11 +5233,12 @@ def index():
           value: '1'
         }).appendTo($(form));
         daSpinnerTimeout = setTimeout(showSpinner, 1000);
+        var do_iframe_upload = false;
         if ($('input[name="_files"]').length){
           var filesToRead = 0;
           var filesRead = 0;
-          var fileArray = {keys: Array(), values: Object()};
           var newFileList = Array();
+          var fileArray = {keys: Array(), values: Object()};
           var file_list = JSON.parse(atob($('input[name="_files"]').val()));
           var inline_file_list = Array();
           for (var i = 0; i < file_list.length; i++){
@@ -5259,7 +5260,7 @@ def index():
               }
               inline_file_list.push(file_list[i]);
             }
-            else{
+            else if (file_input.files.length > 0){
               newFileList.push(file_list[i]);
             }
           }
@@ -5335,6 +5336,14 @@ def index():
             }
             return;
           }
+          if (newFileList.length == 0){
+            $('input[name="_files"]').remove();
+          }
+          else{
+            do_iframe_upload = true;            
+          }
+        }
+        if (do_iframe_upload){
           $("#uploadiframe").remove();
           var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
           $("body").append(iframe);

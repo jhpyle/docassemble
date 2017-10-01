@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.66] - 2017-10-01
+### Fixed
+- Problem with empty upload fields.
+
 ## [0.1.65] - 2017-09-30
 ### Changed
 - More consistent behavior in multiple choice listings.
