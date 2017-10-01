@@ -21,6 +21,7 @@ short_title: Change Log
 ### Fixed
 - Errors if variable names in `question` blocks are invalid.
 - Error in `date_difference()`.
+- Layout problem when sections and progress meter both turned on.
 
 ## [0.1.64](https://github.com/jhpyle/docassemble/releases/tag/v0.1.64) - 2017-09-26
 

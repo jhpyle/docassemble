@@ -129,13 +129,20 @@ This is equivalent to:
 
 {% include side-by-side.html demo="buttons-code-list-equivalent" %}
 
+You can mix choices that are specified manually with choices that are
+specified with code:
+
+{% include side-by-side.html demo="buttons-code-list-partial" %}
+
+As explained [below](#image button), you can also use code to
+[decorate the buttons with images](#image button).
+
+### <a name="boolean buttons"></a>True/False buttons
+
 You can use `buttons` as an alternative to [`yesno`] where you want
 different text in the labels.
 
 {% include side-by-side.html demo="yesno-custom" %}
-
-As explained below, you can also use this code to
-[decorate the buttons with images](#image button).
 
 ## <a name="field with choices"></a>Multiple choice list
 
@@ -147,6 +154,20 @@ To provide a multiple choice question with "radio buttons" and a
 You can specify a default value using `default`:
 
 {% include side-by-side.html demo="choices-with-default" %}
+
+Another way to set a default is by adding `default: True` to the
+choice that you want to be the default.
+
+{% include side-by-side.html demo="choices-with-default-item" %}
+
+You can also provide help text for a radio button using `help`:
+
+{% include side-by-side.html demo="choices-with-help" %}
+
+These modifications can also be specified when building a list of
+choices using code:
+
+{% include side-by-side.html demo="choices-from-code" %}
 
 ## <a name="field with dropdown"></a>Multiple choice dropdown
 

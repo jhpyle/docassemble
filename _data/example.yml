@@ -559,9 +559,8 @@
     mean that you have a lawyer.  Do
     you understand this?
   buttons:
-    - "I understand": understands
-    - code: |
-        [{'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
+    code: |
+      [{'understands':"I understand"}, {'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
 "buttons-code-list-equivalent": |-
   field: target_variable
   question: |
@@ -572,6 +571,16 @@
     - "I understand": understands
     - "I do not understand": does not understand
     - "I'm not sure": unsure
+"buttons-code-list-partial": |-
+  field: target_variable
+  question: |
+    Your use of this system does not
+    mean that you have a lawyer.  Do
+    you understand this?
+  buttons:
+    - "I understand": understands
+    - code: |
+        [{'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
 "buttons-icons": |-
   question: |
     What is the most important question
@@ -729,6 +738,21 @@
     - Sandals
     - Clogs
     - Other
+"choices-from-code": |-
+  question: |
+    What type of shoes do you wear?
+  field: target_variable
+  choices:
+    code: |
+      [{'sneakers': "Sneakers",
+        'help': "Comfortable shoes."},
+       {'sandals': "Sandals",
+        'help': "For summer."},
+       {'clogs': "Clogs",
+        'help': "For hippies."},
+       {'other': "Other",
+        'default': True,
+        'help': "Because the other types suck."}]
 "choices-icons": |-
   question: |
     What is the most important question
@@ -749,6 +773,34 @@
     - Sandals
     - Clogs
     - Other
+"choices-with-default-item": |-
+  question: |
+    What type of shoes do you wear?
+  field: target_variable
+  choices:
+    - Sneakers: sneakers
+    - Sandals: sandals
+      default: True
+    - Clogs: clogs
+    - Other: other
+"choices-with-help": |-
+  question: |
+    What type of shoes do you wear?
+  field: target_variable
+  choices:
+    - Sneakers: sneakers
+      help: |
+        Comfortable shoes.
+    - Sandals: sandals
+      help: |
+        For summer.
+    - Clogs: clogs
+      help: |
+        For hippies.
+    - Other: other
+      default: True
+      help: |
+        Because the other types suck.
 "classify": |-
   code: |
     entry = ml.one_unclassified_entry()
@@ -5161,6 +5213,7 @@
   modules:
     - docassemble.base.core
   ---
+  mandatory: True
   objects:
     - fruit: DAList
     - feet: DADict
