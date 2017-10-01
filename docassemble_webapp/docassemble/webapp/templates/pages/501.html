@@ -5,6 +5,14 @@
 
 {{ error|safe }}
 
+{% if historytext != 'None' %}
+
+<h3>{{ word('History') }}</h3>
+
+{{ historytext | safe }}
+
+{% endif %}
+
 {% if logtext != 'None' %}
 
 <h3>{{ word('Log') }}</h3>

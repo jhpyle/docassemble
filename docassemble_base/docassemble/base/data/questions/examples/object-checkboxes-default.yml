@@ -8,6 +8,7 @@ metadata:
 modules:
   - docassemble.base.legal
 ---
+mandatory: True
 objects:
   protagonist: Individual
   antagonist: Individual
@@ -22,6 +23,7 @@ code: |
   villain.auto_gather = False
   villain.append(antagonist)
 ---
+mandatory: True
 question: Who are the villains, if any?
 fields:
   no label: villain
@@ -30,6 +32,7 @@ fields:
     - protagonist
     - antagonist
 ---
+mandatory: True
 question: |
   % if villain.number() == 0:
   There are no villains here.
@@ -38,4 +41,3 @@ question: |
   ${ villain.does_verb("include") }
   ${ villain }.
   % endif
-mandatory: True

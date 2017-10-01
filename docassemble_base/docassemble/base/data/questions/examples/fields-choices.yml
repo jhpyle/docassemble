@@ -16,6 +16,6 @@ question: |
 fields:
   - Fruit: favorite_fruit
     choices:
-      - Apples: apple
+      - "${ 'Apples' }": apple
       - Oranges: orange
       - Pears: pear

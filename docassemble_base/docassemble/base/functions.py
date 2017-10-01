@@ -33,7 +33,7 @@ from user_agents import parse as ua_parse
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch']
 
 # debug = False
 # default_dialect = 'us'
@@ -2118,6 +2118,44 @@ def get_user_dict():
             the_user_dict = frame.f_locals
     return the_user_dict
 
+def undefine(var):
+    """Deletes the variable"""
+    if type(var) not in [str, unicode]:
+        raise Exception("undefine() must be given a string, not " + str(var) + ", a " + str(var.__class__.__name__))
+    if var == 'None':
+        return
+    frame = inspect.stack()[1][0]
+    components = components_of(var)
+    variable = components[0][1]
+    the_user_dict = frame.f_locals
+    while variable not in the_user_dict:
+        frame = frame.f_back
+        if frame is None:
+            return False
+        if 'user_dict' in frame.f_locals:
+            the_user_dict = eval('user_dict', frame.f_locals)
+            if variable in the_user_dict:
+                break
+            else:
+                return False
+        else:
+            the_user_dict = frame.f_locals
+    try:
+        exec('del ' + var, the_user_dict)
+    except:
+        pass
+
+def dispatch(var):
+    """Shows a menu screen."""
+    if type(var) not in [str, unicode]:
+        raise Exception("dispatch() must be given a string")
+    while value(var) != 'None':
+        value(value(var))
+        undefine(value(var))
+        undefine(var)
+    undefine(var)
+    return True
+    
 def defined(var):
     """Returns true if the variable has already been defined.  Otherwise, returns false."""
     if type(var) not in [str, unicode]:
@@ -2173,6 +2211,12 @@ def value(var):
     """Returns the value of the variable given by the string 'var'."""
     if type(var) not in [str, unicode]:
         raise Exception("value() must be given a string")
+    if var == 'None':
+        return None
+    if var == 'True':
+        return True
+    if var == 'False':
+        return False
     if re.search(r'[\(\)\n\r]|lambda', var):
         raise Exception("value() is invalid")
     frame = inspect.stack()[1][0]

@@ -1,0 +1,54 @@
+metadata:
+  title: Dispatch
+  documentation: "https://docassemble.org/docs/functions.html#dispatch"
+  example start: 2
+  example end: 10
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  visited_apple = False
+  visited_orange = False
+---
+mandatory: True
+code: |
+  dispatch('main_menu_selection')
+  final_screen
+---
+question: |
+  Main menu
+field: main_menu_selection
+buttons:
+  - Apple: apple
+  - Orange: orange
+  - Continue: Null
+---
+question: Apple screen
+field: apple
+need: apple_tracked
+---
+code: |
+  visited_apple = True
+  apple_tracked = True
+---
+question: Orange screen
+field: orange
+need: orange_tracked
+---
+code: |
+  visited_orange = True
+  orange_tracked = True
+---
+event: final_screen
+question: |
+  All done.
+subquestion: |
+  % if visited_apple:
+  You visited the apple menu.
+  % endif
+
+  % if visited_orange:
+  You visited the orange menu.
+  % endif

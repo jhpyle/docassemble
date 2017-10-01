@@ -1,0 +1,36 @@
+metadata:
+  title: Conditional question
+  documentation: "https://docassemble.org/docs/modifiers.html#if"
+  example start: 1
+  example end: 4
+---
+question: |
+  Describe your intelligence.
+field: user_intelligence
+choices:
+  - Smart
+  - Dumb
+---
+if: |
+  user_intelligence == 'Smart'
+question: |
+  What is the square root of 50% of 32?
+fields:
+  - Answer: answer
+    datatype: integer
+---
+if: |
+  user_intelligence == 'Dumb'
+question: |
+  What is 2+2?
+fields:
+  - Answer: answer
+    datatype: integer
+---
+mandatory: True
+question: |
+  % if answer == 4:
+  That is correct.
+  % else:
+  Wrong answer.
+  % endif

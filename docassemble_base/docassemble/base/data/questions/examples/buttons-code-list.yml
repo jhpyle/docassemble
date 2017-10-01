@@ -8,9 +8,8 @@ question: |
   mean that you have a lawyer.  Do
   you understand this?
 buttons:
-  - "I understand": understands
-  - code: |
-      [{'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
+  code: |
+    [{'understands':"I understand"}, {'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
 ---
 question: Result of question
 subquestion: |

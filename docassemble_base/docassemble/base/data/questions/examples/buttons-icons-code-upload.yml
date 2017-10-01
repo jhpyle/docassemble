@@ -1,0 +1,44 @@
+metadata:
+  title: Buttons with icons from code
+  short title: Buttons
+  documentation: "https://docassemble.org/docs/fields.html#image button"
+  example start: 1
+  example end: 3
+---
+question: |
+  What is the most important question
+  to ask?
+field: interrogatory
+buttons:
+  code: myoptions
+---
+code: |
+  myoptions = \
+    [{"when": "When?",
+      "image": uploaded_file},
+     {"where": "Where?",
+      "image": "map"}]
+---
+question: |
+  Please upload an image.
+fields:
+  - Image: uploaded_file
+    datatype: file
+---
+image sets:
+  freepik:
+    attribution: |
+      Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
+    images:
+      calendar: calendar146.svg
+      map: map32.svg
+---
+question: |
+  In that case, ${ interrogatory }
+  were you born?
+fields:
+  - no label: target_variable
+---
+question: |
+  You were born in ${ target_variable }.
+mandatory: True

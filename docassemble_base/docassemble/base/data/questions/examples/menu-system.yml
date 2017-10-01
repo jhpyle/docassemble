@@ -1,0 +1,182 @@
+modules:
+  - docassemble.base.legal
+---
+objects:
+  -  client: Individual
+  -  client.people: PartyList
+  -  client.people[i].photo: DAFileList
+  -  client.things: DAList
+  -  client.things[i].heirs: PartyList
+  -  client.things[i].photo: DAFileList
+  -  client.assets: DAList
+  -  client.assets[i].photo: DAFileList
+---
+mandatory: True
+code: |
+  client.people.there_are_any = True
+  client.things.there_are_any = True
+  client.assets.there_are_any = True
+
+  client.people.complete_attribute = 'complete'
+  client.things.complete_attribute = 'complete'
+  client.assets.complete_attribute = 'complete'
+  
+  client.people.gathered = True
+  client.things.gathered = True
+  client.assets.gathered = True
+  
+  client.things.object_type = Thing
+  client.assets.object_type = Thing
+---
+mandatory: True
+code: |
+  while action != 'done':    
+    if action == "people":
+      del done_managing_people
+    elif action == "things":
+      del done_managing_things
+    elif action == "needs":
+      del done_managing_needs
+    elif action == "tracking":
+      del done_managing_tracking
+    elif action == "assets":
+      del done_managing_assets
+    elif action == "estateplan":
+      del done_managing_estateplan
+    del action
+  final_screen
+---
+code: |
+  while manage_people_action != 'done':
+    if manage_people_action == "edit":
+      del done_editing_people
+    elif manage_people_action == "add":
+      del done_adding_person
+    del manage_people_action
+  del manage_people_action
+  done_managing_people = True
+---
+code: |
+  del seen_edit_people_screen
+  done_editing_people = True
+---
+code: |
+  if hasattr(client.people, 'gathered'):
+    client.people.reset_gathered()
+    client.people.appendObject()
+  client.people.gather()
+  done_adding_person = True
+---
+code: |
+  while type_of_thing != 'done':
+    if hasattr(client.things, 'gathered'):
+      client.things.reset_gathered()  
+      client.things.appendObject()
+    client.things.gather()
+    del type_of_thing
+  del type_of_thing
+  done_managing_things = True
+---
+code: |
+  client.people[i].name.first
+  client.people[i].complete = True
+---
+code: |
+  client.things[i].name.text
+  client.things[i].type
+  client.things[i].complete = True
+---
+code: |
+  client.assets[i].name.text
+  client.assets[i].complete = True
+---
+code: |
+  client.things[i].type = type_of_thing
+---
+reconsider: True
+code: |
+  things = [x for x in client.things if x.type == type_of_thing]
+---
+question: |
+  Manage Life
+subquestion: |
+  Let's get a snapshot of your life.
+field: action
+buttons:
+  - People: people
+  - Things: things
+  - Done: done
+---
+question: |
+  Manage People
+subquestion: |
+  % if client.people.number() > 0:
+  So far, you have told me about ${ client.people }.
+  % endif
+field: manage_people_action
+buttons:
+  - Edit: edit
+  - Add: add
+  - Done: done
+---      
+question: |
+  Manage Things
+subquestion: |
+  % if client.things.number() > 0:
+  So far, you have told me about ${ client.things}.
+  % endif
+field: type_of_thing
+buttons:
+  - Valuables: valuables
+  - Art: art
+  - Heirlooms: heirlooms
+  - Clothes: clothes
+  - Equipment: equipment
+  - Other: other
+  - Done: done
+---
+question: |
+  Do you have any other ${ type_of_thing }?
+subquestion: |
+  % if len(things):
+  So far, you have mentioned
+  ${ comma_and_list(things) }.
+  % endif
+yesno: client.things.there_is_another
+---
+question: |
+  Edit people screen
+subquestion: |
+  Table of people goes here
+field: seen_edit_people_screen
+---
+question: |
+  What is the name of the ${ ordinal(i) } person in your life?
+fields:
+  - First Name: client.people[i].name.first
+  - Last Name: client.people[i].name.last
+---
+question: |
+  Is there another person in your life?
+yesno: client.people.there_is_another
+---
+question: |
+  Tell me about one of your ${ type_of_thing }.
+fields:
+  - Name: client.things[i].name.text
+---
+question: |
+  Do you have any other ${ type_of_thing }?
+subquestion: |
+  % if len(things):
+  So far, you have mentioned:
+    
+  % for thing in things:
+  * ${ thing }
+  % endfor
+  % endif
+yesno: client.things.there_is_another
+---
+event: final_screen
+question: |
+  All done

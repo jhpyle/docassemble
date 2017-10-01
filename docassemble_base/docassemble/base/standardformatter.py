@@ -36,21 +36,29 @@ def varname_tag(varnames):
     return ('')
 
 def icon_html(status, name, width_value=1.0, width_units='em'):
-    the_image = status.question.interview.images.get(name, None)
-    if the_image is None:
-        return('')
-    if the_image.attribution is not None:
-        status.attributions.add(the_image.attribution)
-    url = server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
+    if type(name) is dict and name['type'] == 'decoration':
+        name = name['value']
+    if type(name) is not dict:
+        is_decoration = True
+        the_image = status.question.interview.images.get(name, None)
+        if the_image is None:
+            return('')
+        if the_image.attribution is not None:
+            status.attributions.add(the_image.attribution)
+        url = server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
+    else:
+        is_decoration = False
+        url = name['value']
     if url is None:
         raise Exception("Could not find filename " + str(the_image.filename) + " for image " + str(name) + " in package " + str(the_image.package))
     sizing = 'width:' + str(width_value) + str(width_units) + ';'
-    filename = server.file_finder(str(the_image.package) + ':' + str(the_image.filename))
-    if 'extension' in filename and filename['extension'] == 'svg':
-        if filename['width'] and filename['height']:
-            sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
-    else:
-        sizing += 'height:auto;'    
+    if is_decoration:
+        filename = server.file_finder(str(the_image.package) + ':' + str(the_image.filename))
+        if 'extension' in filename and filename['extension'] == 'svg' and 'width' in filename and 'height' in filename:
+            if filename['width'] and filename['height']:
+                sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
+        else:
+            sizing += 'height:auto;'    
     return('<img class="daicon" src="' + url + '" style="' + str(sizing) + '"/>')
 
 # def signature_html(status, debug, root, validation_rules):
@@ -461,9 +469,9 @@ def help_wrap(content, helptext):
     if helptext is None:
         return content
     else:
-        return '<div class="choicewithhelp"><div><div>' + content + '</div><div class="choicehelp"><a data-container="body" data-toggle="popover" data-placement="left" data-content=' + noquote(helptext) + '><i class="glyphicon glyphicon-question-sign"></i></a></div></div></div>'
+        return '<div class="choicewithhelp"><div><div>' + content + '</div><div class="choicehelp"><a data-container="body" data-toggle="popover" data-placement="left" data-content=' + noquote(markdown_to_html(helptext, trim=True, do_terms=False)) + '><i class="glyphicon glyphicon-question-sign"></i></a></div></div></div>'
 
-def as_html(status, url_for, debug, root, validation_rules, field_error):
+def as_html(status, url_for, debug, root, validation_rules, field_error, the_progress_bar):
     decorations = list()
     uses_audio_video = False
     audio_text = ''
@@ -523,6 +531,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
     master_output = ""
     master_output += '          <section id="question" class="tab-pane active col-lg-6 col-md-7 col-sm-9">\n'
     output = ""
+    if the_progress_bar and status.question.question_type != "signature":
+        output += the_progress_bar
     if status.question.question_type == "signature":
         output += '            <div class="sigpage" id="sigpage">\n              <div class="sigshowsmallblock sigheader" id="sigheader">\n                <div class="siginnerheader">\n                  <a class="btn btn-sm btn-warning signav-left sigclear">' + word('Clear') + '</a>\n                  <a class="btn btn-sm btn-primary signav-right sigsave">' + continue_label + '</a>\n                  <div class="sigtitle">'
         if status.questionText:
@@ -775,7 +785,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                         pairlist = list(status.selectcompute[field.number])
                     else:
                         raise Exception("Unknown choicetype " + field.choicetype)
-                    name_list = [safeid(from_safeid(the_saveas) + "[" + myb64quote(pairlist[indexno][0]) + "]") for indexno in range(len(pairlist))]
+                    name_list = [safeid(from_safeid(the_saveas) + "[" + myb64quote(pairlist[indexno]['key']) + "]") for indexno in range(len(pairlist))]
                     for the_name in name_list:
                         validation_rules['rules'][the_name] = dict(require_from_group=[1, '.dafield' + str(field.number)])
                         validation_rules['messages'][the_name] = dict(require_from_group=word("Please select one."))
@@ -824,8 +834,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                     if hasattr(field, 'shuffle') and field.shuffle:
                         random.shuffle(pairlist)
                     for pair in pairlist:
-                        if pair[0] is not None:
-                            checkboxes.append(safeid(from_safeid(field.saveas) + "[" + myb64quote(pair[0]) + "]"))
+                        if pair['key'] is not None:
+                            checkboxes.append(safeid(from_safeid(field.saveas) + "[" + myb64quote(pair['key']) + "]"))
             if hasattr(field, 'saveas') and field.saveas in status.embedded:
                 continue
             if hasattr(field, 'label'):
@@ -927,55 +937,32 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                 else:
                     inner_fieldlist = ['<option value="">' + word('Select one') + '</option>']
             if hasattr(status.question.fields[0], 'saveas'):
-                if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
-                    id_index = 0
-                    pairlist = list(status.selectcompute[status.question.fields[0].number])
-                    if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
-                        random.shuffle(pairlist)
-                    for pair in pairlist:
-                        if len(pair) > 3:
-                            helptext = pair[3]
+                id_index = 0
+                pairlist = list(status.selectcompute[status.question.fields[0].number])
+                if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
+                    random.shuffle(pairlist)
+                for pair in pairlist:
+                    if 'image' in pair:
+                        the_icon = icon_html(status, pair['image']) + ' '
+                    else:
+                        the_icon = ''
+                    helptext = pair.get('help', None)
+                    ischecked = ''
+                    if 'default' in pair and pair['default'] and defaultvalue is None:
+                        ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
+                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
+                    if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue):
+                        ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
+                    if status.question.question_variety == "radio":
+                        if pair['key'] is not None:
+                            output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext) + '</div></div>\n'
                         else:
-                            helptext = None
-                        ischecked = ''
-                        if len(pair) > 2 and pair[2] and defaultvalue is None:
-                            ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
-                        formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
-                        if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue):
-                            ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
-                        if status.question.question_variety == "radio":
-                            if pair[0] is not None:
-                                output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext) + '</div></div>\n'
-                            else:
-                                output += '                <div class="form-group"><div class="col-md-12">' + help_wrap(markdown_to_html(pair[1], status=status), helptext) + '</div></div>\n'
-                        else:
-                            if pair[0] is not None:
-                                inner_fieldlist.append('<option value="' + unicode(pair[0]) + '"' + ischecked + '>' + formatted_item + '</option>')
-                                
-                        id_index += 1
-                else:
-                    id_index = 0
-                    choicelist = list(status.question.fields[0].choices)
-                    if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
-                        random.shuffle(choicelist)
-                    for choice in choicelist:
-                        if 'image' in choice:
-                            the_icon = icon_html(status, choice['image']) + ' '
-                        else:
-                            the_icon = ''
-                        for key in choice:
-                            if key == 'image':
-                                continue
-                            formatted_key = markdown_to_html(key, status=status, trim=True, escape=True, do_terms=False)
-                            if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(choice[key]) == unicode(defaultvalue):
-                                ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
-                            else:
-                                ischecked = ''
-                            if status.question.question_variety == "radio":
-                                output += '                <div class="row"><div class="col-md-12"><input alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(choice[key]) + '"' + ischecked + '/></div></div>\n'
-                            else:
-                                inner_fieldlist.append('<option value="' + unicode(choice[key]) + '"' + ischecked + '>' + formatted_key + '</option>')
-                        id_index += 1
+                            output += '                <div class="form-group"><div class="col-md-12">' + help_wrap(markdown_to_html(pair['label'], status=status), helptext) + '</div></div>\n'
+                    else:
+                        if pair['key'] is not None:
+                            inner_fieldlist.append('<option value="' + unicode(pair['key']) + '"' + ischecked + '>' + formatted_item + '</option>')
+
+                    id_index += 1
                 if status.question.question_variety in ["dropdown", "combobox"]:
                     if status.question.question_variety == 'combobox':
                         combobox = ' combobox'
@@ -992,21 +979,29 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                 validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
             else:
                 indexno = 0
-                for choice in status.question.fields[0].choices:
+                for choice in status.selectcompute[status.question.fields[0].number]:
+                #for choice in status.question.fields[0].choices:
                     if 'image' in choice:
                         the_icon = icon_html(status, choice['image']) + ' '
                     else:
                         the_icon = ''
+                    if 'help' in choice:
+                        helptext = choice['help']
+                    else:
+                        helptext = None
+                    if 'default' in choice:
+                        is_a_default = choice['default']
+                        ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
+                    else:
+                        is_a_default = False
+                        ischecked = ''
                     id_index = 0
-                    for key in choice:
-                        if key == 'image':
-                            continue
-                        formatted_key = markdown_to_html(key, status=status, trim=True, escape=True, do_terms=False)
-                        if status.question.question_variety == "radio":
-                            output += '                <div class="row"><div class="col-md-12"><input alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ==" type="radio" value="' + str(indexno) + '"/></div></div>\n'
-                        else:
-                            inner_fieldlist.append('<option value="' + str(indexno) + '">' + formatted_key + '</option>')
-                        id_index += 1
+                    formatted_key = markdown_to_html(choice['label'], status=status, trim=True, escape=True, do_terms=False)
+                    if status.question.question_variety == "radio":
+                        output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ==" type="radio" value="' + str(indexno) + '"' + ischecked + '/>', helptext) + '</div></div>\n'
+                    else:
+                        inner_fieldlist.append('<option value="' + str(indexno) + '"' + ischecked + '>' + formatted_key + '</option>')
+                    id_index += 1
                     indexno += 1
                 if status.question.question_variety in ["dropdown", "combobox"]:
                     if status.question.question_variety == 'combobox':
@@ -1035,12 +1030,18 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                     if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
                         random.shuffle(pairlist)
                     for pair in pairlist:
-                        if pair[0] is not None:
-                            output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(pair[0]) + '">' + markdown_to_html(pair[1], status=status, trim=True, do_terms=False) + '</button>\n'
+                        if 'image' in pair:
+                            the_icon = '<div>' + icon_html(status, pair['image'], width_value=4.0) + '</div>';
+                            btn_class = ' btn-default btn-da-custom'
                         else:
-                            output += markdown_to_html(pair[1], status=status)
+                            the_icon = ''
+                        if pair['key'] is not None:
+                            output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(pair['key']) + '">' + the_icon + markdown_to_html(pair['label'], status=status, trim=True, do_terms=False) + '</button>\n'
+                        else:
+                            output += markdown_to_html(pair['label'], status=status)
                 else:
-                    choicelist = list(status.question.fields[0].choices)
+                    choicelist = status.selectcompute[status.question.fields[0].number]
+                    #choicelist = list(status.question.fields[0].choices)
                     if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
                         random.shuffle(choicelist)
                     for choice in choicelist:
@@ -1049,34 +1050,41 @@ def as_html(status, url_for, debug, root, validation_rules, field_error):
                             btn_class = ' btn-default btn-da-custom'
                         else:
                             the_icon = ''
-                        for key in choice:
-                            if key == 'image':
-                                continue
-                            output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(choice[key]) + '">' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button>\n'
+                        if 'help' in choice:
+                            the_help = choice['help']
+                        else:
+                            the_help = ''
+                        output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(choice['key']) + '">' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False) + '</button>\n'
             else:
                 indexno = 0
-                for choice in status.question.fields[0].choices:
+                for choice in status.selectcompute[status.question.fields[0].number]:
+                #for choice in status.question.fields[0].choices:
                     btn_class = ' btn-primary'
                     if 'image' in choice:
                         the_icon = '<div>' + icon_html(status, choice['image'], width_value=4.0) + '</div>'
                         btn_class = ' btn-default btn-da-custom'
                     else:
                         the_icon = ''
-                    for key in choice:
-                        if key == 'image':
-                            continue
-                        if isinstance(choice[key], Question) and choice[key].question_type in ["exit", "continue", "restart", "refresh", "signin", "register", "leave", "link"]:
-                            if choice[key].question_type in ["continue", "register"]:
-                                btn_class = ' btn-primary'
-                            elif choice[key].question_type in ["leave", "link", "restart"]:
-                                btn_class = ' btn-warning'
-                            elif choice[key].question_type == "refresh":
-                                btn_class = ' btn-success'
-                            elif choice[key].question_type == "signin":
-                                btn_class = ' btn-info'
-                            elif choice[key].question_type == "exit":
-                                btn_class = ' btn-danger'
-                        output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ==" value="' + str(indexno) + '">' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False, strip_newlines=True) + '</button>\n'
+                    if 'help' in choice:
+                        the_help = choice['help']
+                    else:
+                        the_help = ''
+                    if 'default' in choice:
+                        is_default = choice['default']
+                    else:
+                        is_default = False
+                    if isinstance(choice['key'], Question) and choice['key'].question_type in ["exit", "continue", "restart", "refresh", "signin", "register", "leave", "link"]:
+                        if choice['key'].question_type in ["continue", "register"]:
+                            btn_class = ' btn-primary'
+                        elif choice['key'].question_type in ["leave", "link", "restart"]:
+                            btn_class = ' btn-warning'
+                        elif choice['key'].question_type == "refresh":
+                            btn_class = ' btn-success'
+                        elif choice['key'].question_type == "signin":
+                            btn_class = ' btn-info'
+                        elif choice['key'].question_type == "exit":
+                            btn_class = ' btn-danger'
+                    output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ==" value="' + str(indexno) + '">' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False, strip_newlines=True) + '</button>\n'
                     indexno += 1
             output += '                </div>\n'
         #output += question_name_tag(status.question)
@@ -1548,33 +1556,34 @@ def input_for(status, field, wide=False, embedded=False):
             id_index = 0
             output += '<p class="sr-only">' + word('Checkboxes:') + '</p>'
             for pair in pairlist:
-                if len(pair) > 3:
-                    helptext = pair[3]
+                if 'image' in pair:
+                    the_icon = icon_html(status, pair['image']) + ' '
                 else:
-                    helptext = None
-                if pair[0] is not None:
-                    inner_field = safeid(from_safeid(saveas_string) + "[" + myb64quote(pair[0]) + "]")
-                    #sys.stderr.write("I've got a " + repr(pair[1]) + "\n")
-                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
-                    if len(pair) > 2 and pair[2]:
+                    the_icon = ''
+                helptext = pair.get('help', None)
+                if pair['key'] is not None:
+                    inner_field = safeid(from_safeid(saveas_string) + "[" + myb64quote(pair['key']) + "]")
+                    #sys.stderr.write("I've got a " + repr(pair['label']) + "\n")
+                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
+                    if 'default' in pair and pair['default']:
                         ischecked = ' checked'
                     elif defaultvalue is None:
                         ischecked = ''
-                    elif type(defaultvalue) in (list, set) and unicode(pair[0]) in defaultvalue:
+                    elif type(defaultvalue) in (list, set) and unicode(pair['key']) in defaultvalue:
                         ischecked = ' checked'
-                    elif type(defaultvalue) is dict and unicode(pair[0]) in defaultvalue and defaultvalue[unicode(pair[0])]:
+                    elif type(defaultvalue) is dict and unicode(pair['key']) in defaultvalue and defaultvalue[unicode(pair['key'])]:
                         ischecked = ' checked'
-                    elif (hasattr(defaultvalue, 'elements') and type(defaultvalue.elements) is dict) and unicode(pair[0]) in defaultvalue.elements and defaultvalue.elements[unicode(pair[0])]:
+                    elif (hasattr(defaultvalue, 'elements') and type(defaultvalue.elements) is dict) and unicode(pair['key']) in defaultvalue.elements and defaultvalue.elements[unicode(pair['key'])]:
                         ischecked = ' checked'
-                    elif pair[0] is defaultvalue:
+                    elif pair['key'] is defaultvalue:
                         ischecked = ' checked'
-                    elif type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue):
+                    elif type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue):
                         ischecked = ' checked'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="' + 'dafield' + str(field.number) + ' non-nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>', helptext))
+                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="' + 'dafield' + str(field.number) + ' non-nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>', helptext))
                 else:
-                    inner_fieldlist.append(help_wrap('<div>' + markdown_to_html(pair[1], status=status) + '</div>', helptext))
+                    inner_fieldlist.append(help_wrap('<div>' + markdown_to_html(pair['label'], status=status) + '</div>', helptext))
                 id_index += 1
             if hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
                 if defaultvalue_set and defaultvalue is None:
@@ -1594,20 +1603,21 @@ def input_for(status, field, wide=False, embedded=False):
             id_index = 0
             output += '<p class="sr-only">' + word('Choices:') + '</p>'
             for pair in pairlist:
-                if len(pair) > 3:
-                    helptext = pair[3]
+                if 'image' in pair:
+                    the_icon = icon_html(status, pair['image']) + ' '
                 else:
-                    helptext = None
-                if pair[0] is not None:
+                    the_icon = ''
+                helptext = pair.get('help', None)
+                if pair['key'] is not None:
                     #sys.stderr.write(str(saveas_string) + "\n")
-                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
-                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
+                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext))
+                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
                 else:
-                    inner_fieldlist.append(help_wrap('<div>' + markdown_to_html(unicode(pair[1]), status=status) + '</div>', helptext))
+                    inner_fieldlist.append(help_wrap('<div>' + the_icon + markdown_to_html(unicode(pair['label']), status=status) + '</div>', helptext))
                 id_index += 1
             output += "".join(inner_fieldlist)
         else:
@@ -1634,10 +1644,10 @@ def input_for(status, field, wide=False, embedded=False):
                 else:
                     output += '<option value="">' + unicode(status.hints[field.number].replace('\n', ' ')) + '</option>'
             for pair in pairlist:
-                if pair[0] is not None:
-                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, do_terms=False)
-                    output += '<option value="' + unicode(pair[0]) + '"'
-                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
+                if pair['key'] is not None:
+                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, do_terms=False)
+                    output += '<option value="' + unicode(pair['key']) + '"'
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
                         output += ' selected="selected"'
                     output += '>' + formatted_item + '</option>'
             output += '</select> '
@@ -1649,30 +1659,32 @@ def input_for(status, field, wide=False, embedded=False):
                 inner_fieldlist = list()
                 id_index = 0
                 if field.sign > 0:
-                    for pair in [['True', status.question.yes()], ['False', status.question.no()]]:
-                        formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
-                        if len(pair) > 3:
-                            helptext = pair[3]
+                    for pair in [dict(key='True', label=status.question.yes()), dict(key='False', label=status.question.no())]:
+                        formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
+                        if 'image' in pair:
+                            the_icon = icon_html(status, pair['image']) + ' '
                         else:
-                            helptext = None
-                        if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
+                            the_icon = ''
+                        helptext = pair.get('help', None)
+                        if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
-                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext))
+                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
                         id_index += 1
                 else:
-                    for pair in [['False', status.question.yes()], ['True', status.question.no()]]:
-                        formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
-                        if len(pair) > 3:
-                            helptext = pair[3]
+                    for pair in [dict(key='False', label=status.question.yes()), dict(key='True', label=status.question.no())]:
+                        formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
+                        if 'image' in pair:
+                            the_icon = icon_html(status, pair['image']) + ' '
                         else:
-                            helptext = None
-                        if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
+                            the_icon = ''
+                        helptext = pair.get('help', None)
+                        if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
-                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext))
+                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
                         id_index += 1
                 output += "".join(inner_fieldlist)
             else:
@@ -1695,30 +1707,32 @@ def input_for(status, field, wide=False, embedded=False):
             id_index = 0
             output += '<p class="sr-only">' + word('Choices:') + '</p>'
             if field.sign > 0:
-                for pair in [['True', status.question.yes()], ['False', status.question.no()], ['None', status.question.maybe()]]:
-                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
-                    if len(pair) > 3:
-                        helptext = pair[3]
+                for pair in [dict(key='True', label=status.question.yes()), dict(key='False', label=status.question.no()), dict(key='None', label=status.question.maybe())]:
+                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
+                    if 'image' in pair:
+                        the_icon = icon_html(status, pair['image']) + ' '
                     else:
-                        helptext = None
-                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
+                        the_icon = ''
+                    helptext = pair.get('help', None)
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext))
+                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
                     id_index += 1
             else:
-                for pair in [['False', status.question.yes()], ['True', status.question.no()], ['None', status.question.maybe()]]:
-                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True, do_terms=False)
-                    if len(pair) > 3:
-                        helptext = pair[3]
+                for pair in [dict(key='False', label=status.question.yes()), dict(key='True', label=status.question.no()), dict(key='None', label=status.question.maybe())]:
+                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
+                    if 'image' in pair:
+                        the_icon = icon_html(status, pair['image']) + ' '
                     else:
-                        helptext = None
-                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
+                        the_icon = ''
+                    helptext = pair.get('help', None)
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>', helptext))
+                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
                     id_index += 1
             output += "".join(inner_fieldlist)
         elif field.datatype in ['file', 'files', 'camera', 'camcorder', 'microphone']:

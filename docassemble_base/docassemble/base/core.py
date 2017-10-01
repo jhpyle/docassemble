@@ -257,6 +257,11 @@ class DAList(DAObject):
             delattr(self, 'new_object_type')
         if recursive:
             self._reset_gathered_recursively()
+    def has_been_gathered(self):
+        """Returns whether the list has been gathered"""
+        if hasattr(self, 'gathered'):
+            return True
+        return False
     def clear(self):
         """Removes all the items from the list."""
         self.elements = list()
@@ -821,6 +826,11 @@ class DADict(DAObject):
             delattr(self, 'new_object_type')
         if recursive:
             self._reset_gathered_recursively()
+    def has_been_gathered(self):
+        """Returns whether the dictionary has been gathered"""
+        if hasattr(self, 'gathered'):
+            return True
+        return False
     def does_verb(self, the_verb, **kwargs):
         """Returns the appropriate conjugation of the given verb depending on
         whether there is only one key in the dictionary or multiple
@@ -1185,6 +1195,11 @@ class DASet(DAObject):
             delattr(self, 'new_object_type')
         if recursive:
             self._reset_gathered_recursively()
+    def has_been_gathered(self):
+        """Returns whether the set has been gathered"""
+        if hasattr(self, 'gathered'):
+            return True
+        return False
     def _reset_gathered_recursively(self):
         self.reset_gathered()
     def copy(self):
@@ -1522,6 +1537,8 @@ class DAFile(DAObject):
             self.file_info = server.file_number_finder(self.number, filename=self.filename)
         else:
             self.file_info = server.file_number_finder(self.number)
+        self.extension = self.file_info.get('extension', None)
+        self.mimetype = self.file_info.get('mimetype', None)
         self.persistent = self.file_info['persistent']
         self.private = self.file_info['private']
     def slurp(self):

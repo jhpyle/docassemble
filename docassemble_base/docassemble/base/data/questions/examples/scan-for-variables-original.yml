@@ -1,0 +1,37 @@
+metadata:
+  title: Opt out of variable seeking
+  short title: Scan for variables
+  documentation: "https://docassemble.org/docs/logic.html#scan for variables"
+  example start: 1
+  example end: 5
+---
+question: |
+  What is the best color?
+fields:
+  - Color: best_color
+---
+question: |
+  What is the time of day?
+field: time_of_day
+choices:
+  - Night
+  - Day
+---
+mandatory: True
+question: |
+  The best color is
+  ${ best_color }.
+field: initial_color_seen
+---
+mandatory: True
+code: |
+  if time_of_day == 'Night':
+    best_color = 'black'
+  else:
+    best_color = 'blue'
+---
+mandatory: True
+question: |
+  The best color is now
+  ${ best_color }.
+  

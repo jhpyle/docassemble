@@ -3,7 +3,7 @@ metadata:
   short title: Combobox
   documentation: "https://docassemble.org/docs/fields.html#field with combobox"
   example start: 1
-  example end: 2
+  example end: 1
 ---
 question: |
   What is your favorite color?

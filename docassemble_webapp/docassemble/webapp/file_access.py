@@ -130,14 +130,18 @@ def add_info_about_file(filename, result):
         im = Image.open(filename)
         result['width'], result['height'] = im.size
     elif result['extension'] == 'svg':
-        tree = ET.parse(filename)
-        root = tree.getroot()
-        viewBox = root.attrib.get('viewBox', None)
-        if viewBox is not None:
-            dimen = viewBox.split(' ')
-            if len(dimen) == 4:
-                result['width'] = float(dimen[2]) - float(dimen[0])
-                result['height'] = float(dimen[3]) - float(dimen[1])
+        try:
+            tree = ET.parse(filename)
+            root = tree.getroot()
+            viewBox = root.attrib.get('viewBox', None)
+            if viewBox is not None:
+                dimen = viewBox.split(' ')
+                if len(dimen) == 4:
+                    result['width'] = float(dimen[2]) - float(dimen[0])
+                    result['height'] = float(dimen[3]) - float(dimen[1])
+        except:
+            raise Exception("problem reading " + str(filename))
+            logmessage('add_info_about_file: could not read ' + str(filename))
     return
 
 def get_info_from_file_number(file_number, privileged=False, filename=None):

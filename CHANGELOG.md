@@ -1,5 +1,21 @@
 # Change Log
 
+## [0.1.65] - 2017-09-30
+### Changed
+- More consistent behavior in multiple choice listings.
+- When a multiple choice question's choices are determined by code,
+  the image can be an uploaded file.
+### Added
+- The `if` modifier.
+- The `scan for variables` modifier.
+- The `dispatch` function.
+- The `has_been_gathered()` method on groups.
+- More expansive error messages in debug mode.
+### Fixed
+- Errors if variable names in `question` blocks are invalid.
+- Error in `date_difference()`.
+- Layout problem when sections and progress meter both turned on.
+
 ## [0.1.64] - 2017-09-26
 ### Fixed
 - Gathering of Asset items.

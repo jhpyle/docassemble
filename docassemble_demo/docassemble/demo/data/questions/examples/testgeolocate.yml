@@ -1,3 +1,8 @@
+metadata:
+  title: Google Map
+  documentation: "https://docassemble.org/docs/functions.html#map_of"
+  example start: 2
+  example end: 5
 ---
 modules:
   - docassemble.base.util

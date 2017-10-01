@@ -1,0 +1,80 @@
+metadata:
+  title: Dispatch
+  documentation: "https://docassemble.org/docs/functions.html#dispatch"
+  example start: 2
+  example end: 14
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  dispatch('main_menu_selection')
+  final_screen
+---
+question: |
+  Main menu
+field: main_menu_selection
+buttons:
+  - Fruit: fruit_menu
+  - Vegetables: vegetable_menu
+  - Rocks: rocks_page
+  - Continue: Null
+---
+code: |
+  fruit_menu = dispatch('fruit_menu_selection')
+---
+question: |
+  Fruit menu
+field: fruit_menu_selection
+choices:
+  - Apple: apple
+  - Peach: peach
+  - Back: Null
+---
+code: |
+  vegetable_menu = dispatch('vegetable_menu_selection')
+---
+question: |
+  Vegetable menu
+field: vegetable_menu_selection
+choices:
+  - Turnip: turnip
+  - Potato: potato
+  - Back: Null
+---
+question: Rocks screen
+field: rocks_page
+---
+question: Apples screen
+subquestion: |
+  % if likes_apples:
+  You like apples.
+  % endif
+field: apple
+---
+question: |
+  Do you like apples?
+yesno: likes_apples
+---
+question: Peaches screen
+subquestion: |
+  You selected
+  ${ main_menu_selection }
+  on the main menu and
+  ${ fruit_menu_selection }
+  on the fruit menu.
+field: peach
+---
+event: turnip
+question: Turnip screen
+subquestion: |
+  You cannot go forward from
+  the turnip screen.
+---
+question: Potato screen
+field: potato
+---
+event: final_screen
+question: |
+  Done with the interview.

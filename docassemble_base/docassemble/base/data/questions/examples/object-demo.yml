@@ -8,6 +8,7 @@ metadata:
 modules:
   - docassemble.base.core
 ---
+mandatory: True
 objects:
   - fruit: DAList
   - feet: DADict

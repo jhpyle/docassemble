@@ -442,6 +442,7 @@ import babel.dates
 import pytz
 import httplib2
 import zipfile
+import pprint
 import operator
 import traceback
 from Crypto.Hash import MD5
@@ -480,7 +481,7 @@ from flask_mail import Mail, Message
 import flask_user.signals
 import flask_user.translations
 import flask_user.views
-from werkzeug import secure_filename, FileStorage
+import werkzeug
 from rauth import OAuth2Service
 import apiclient
 import oauth2client
@@ -517,6 +518,7 @@ redis_host = daconfig.get('redis', None)
 if redis_host is None:
     redis_host = 'redis://localhost'
 
+#docassemble.base.parse.debug = DEBUG
 docassemble.base.util.set_redis_server(redis_host)
 
 store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
@@ -1517,7 +1519,7 @@ def progress_bar(progress):
         return('');
     if progress > 100:
         progress = 100
-    return('<div class="row"><div class="col-lg-6 col-md-8 col-sm-10"><div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div></div></div>\n')
+    return('<div class="row"><div class="progress top-progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div></div>\n')
 
 def get_unique_name(filename, secret):
     nowtime = datetime.datetime.utcnow()
@@ -5868,6 +5870,8 @@ def index():
           hideSpinner();
         }
         notYetScrolled = true;
+        $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
+        $(".to-labelauty-icon").labelauty({ label: false });
         $("button").on('click', function(){
           whichButton = this;
         });
@@ -6012,8 +6016,6 @@ def index():
             }
           }
         }
-        $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
-        $(".to-labelauty-icon").labelauty({ label: false });
         $(".uncheckothers").on('change', function(){
           if ($(this).is(":checked")){
             $(".uncheckable").prop("checked", false);
@@ -6317,7 +6319,11 @@ def index():
         the_field_errors = None
     if next_action_to_set:
         interview_status.next_action.append(next_action_to_set)
-    content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules, the_field_errors)
+    if interview_status.question.interview.use_progress_bar:
+        the_progress_bar = progress_bar(user_dict['_internal']['progress'])
+    else:
+        the_progress_bar = None
+    content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules, the_field_errors, the_progress_bar)
     if debug_mode:
         readability = dict()
         for question_type in ['question', 'help']:
@@ -6386,8 +6392,6 @@ def index():
     if interview_status.question.interview.use_navigation:
         output += navigation_bar(user_dict['nav'], interview_status.question.interview)
     output += '        <div class="tab-content">\n'
-    if interview_status.question.interview.use_progress_bar:
-        output += progress_bar(user_dict['_internal']['progress'])
     output += content + "        </div>"
     if debug_mode:
         output += '\n        <div class="col-md-4" style="display: none" id="readability">' + readability_report + '</div>'
@@ -6419,31 +6423,7 @@ def index():
             # for foo in user_dict['_internal']['answered']:
             #     output += "<li>" + str(foo) + "</li>"
             # output += '</ul>\n'
-            for stage in interview_status.seeking:
-                if 'question' in stage and 'reason' in stage and stage['question'] is not interview_status.question:
-                    if stage['reason'] == 'initial':
-                        output += "          <h5>" + word('Ran initial code') + "</h5>\n"
-                    elif stage['reason'] == 'mandatory question':
-                        output += "          <h5>" + word('Tried to ask mandatory question') + "</h5>\n"
-                    elif stage['reason'] == 'mandatory code':
-                        output += "          <h5>" + word('Tried to run mandatory code') + "</h5>\n"
-                    elif stage['reason'] == 'asking':
-                        output += "          <h5>" + word('Tried to ask question') + "</h5>\n"
-                    if stage['question'].from_source.path != interview.source.path:
-                        output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_source.path +")</small></p>\n"
-                    if stage['question'].source_code is None:
-                        output += word('unavailable')
-                    else:
-                        output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
-                    # if len(stage['question'].fields_used):
-                    #     output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].fields_used)]) + "</p>"
-                    # if len(stage['question'].names_used):
-                    #     output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].names_used)]) + "</p>"
-                    # if len(stage['question'].mako_names):
-                    #     output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].mako_names)]) + "</p>"
-                elif 'variable' in stage:
-                    output += "          <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
-#                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.functions.pickleable_objects(user_dict))]) + '</p>' + "\n"
+            output += get_history(interview, interview_status)
         output += '          <h4>' + word('Names defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
             # output += '          <h4>' + word('Variables as JSON') + '</h4>' + "\n        <pre>" + docassemble.base.functions.dict_as_json(user_dict) + '</pre>' + "\n"
         output += '        </div>' + "\n"
@@ -6496,6 +6476,39 @@ def index():
     #logmessage("Request time final: " + str(g.request_time()))
     #sys.stderr.write("11\n")
     return response
+
+def get_history(interview, interview_status):
+    output = ''
+    if hasattr(interview_status, 'question'):
+        has_question = True
+    else:
+        has_question = False
+    for stage in interview_status.seeking:
+        if 'question' in stage and 'reason' in stage and (has_question is False or stage['question'] is not interview_status.question):
+            if stage['reason'] == 'initial':
+                output += "          <h5>" + word('Ran initial code') + "</h5>\n"
+            elif stage['reason'] == 'mandatory question':
+                output += "          <h5>" + word('Tried to ask mandatory question') + "</h5>\n"
+            elif stage['reason'] == 'mandatory code':
+                output += "          <h5>" + word('Tried to run mandatory code') + "</h5>\n"
+            elif stage['reason'] == 'asking':
+                output += "          <h5>" + word('Tried to ask question') + "</h5>\n"
+            if stage['question'].from_source.path != interview.source.path:
+                output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_source.path +")</small></p>\n"
+            if stage['question'].source_code is None:
+                output += word('unavailable')
+            else:
+                output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
+            # if len(stage['question'].fields_used):
+            #     output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].fields_used)]) + "</p>"
+            # if len(stage['question'].names_used):
+            #     output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].names_used)]) + "</p>"
+            # if len(stage['question'].mako_names):
+            #     output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].mako_names)]) + "</p>"
+        elif 'variable' in stage:
+            output += "          <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
+#                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.functions.pickleable_objects(user_dict))]) + '</p>' + "\n"
+    return output
 
 def is_mobile_or_tablet():
     ua_string = request.headers.get('User-Agent', None)
@@ -11441,13 +11454,20 @@ def package_page():
 
 @app.errorhandler(Exception)
 def server_error(the_error):
+    if DEBUG and hasattr(the_error, 'interview') and hasattr(the_error, 'interview_status'):
+        the_history = get_history(the_error.interview, the_error.interview_status)
+    else:
+        the_history = None
     if isinstance(the_error, DAError):
         errmess = unicode(the_error)
         the_trace = None
         logmessage(errmess)
     else:
         errmess = unicode(type(the_error).__name__) + ": " + unicode(the_error)
-        the_trace = traceback.format_exc()
+        if hasattr(the_error, 'traceback'):
+            the_trace = the_error.traceback
+        else:
+            the_trace = traceback.format_exc()
         logmessage(the_trace)
     if isinstance(the_error, DAError):
         error_code = the_error.error_code
@@ -11464,7 +11484,7 @@ def server_error(the_error):
         errmess = '<pre>' + errmess + '</pre>'
     else:
         errmess = '<blockquote>' + errmess + '</blockquote>'
-    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, logtext=str(the_trace)), error_code
+    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=str(the_history), logtext=str(the_trace)), error_code
 
 # @app.route('/testpost', methods=['GET', 'POST'])
 # def test_post():
@@ -13405,6 +13425,12 @@ def pypi_status(packagename):
             result['error'] = False
             result['exists'] = True
     return result
+
+def secure_filename(filename):
+    filename = werkzeug.secure_filename(filename)
+    extension, mimetype = get_ext_and_mimetype(filename)
+    filename = re.sub(r'\..*', '', filename) + '.' + extension
+    return filename
 
 def get_short_code(**pargs):
     key = pargs.get('key', None)
