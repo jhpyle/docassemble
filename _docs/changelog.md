@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.66](https://github.com/jhpyle/docassemble/releases/tag/v0.1.66) - 2017-10-01
+
+### Fixed
+- Problem with empty upload fields.
+
 ## [0.1.65](https://github.com/jhpyle/docassemble/releases/tag/v0.1.65) - 2017-09-30
 
 ### Changed
