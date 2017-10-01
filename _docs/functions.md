@@ -1189,7 +1189,7 @@ does not work within documents.)  The arguments are expected to be
   (for a [`Person`] object called `person`).  If the [`Person`] object
   is the user, the default icon is a blue circle.
 
-{% include demo-side-by-side.html demo="testgeolocate.yml" %}
+{% include demo-side-by-side.html demo="testgeolocate" %}
 
 ## <a name="location_known"></a>location_known()
 
