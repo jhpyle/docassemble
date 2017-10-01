@@ -52,7 +52,8 @@ else:
 Although **docassemble** has extensive [documentation], you may have
 questions about how to use it.  To get help from the community of
 developers and other users, you can submit questions to the
-[docassemble mailing list].  If you find a bug, you can
+[docassemble mailing list] or chat in real time with other users on
+the [**docassemble** Slack group].  If you find a bug, you can
 [submit an issue on GitHub].
 
 [documentation]: {{ site.baseurl }}/docs.html
@@ -62,4 +63,4 @@ developers and other users, you can submit questions to the
 [Markdown]: https://daringfireball.net/projects/markdown/syntax
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [YAML]: https://en.wikipedia.org/wiki/YAML
-
+[**docassemble** Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTAzYzY5NWExMzUxNTNhNjUyZjRkMDg0NGE2Yjc2YjI0OGNlMTcwNjhjYzRhMjljZWU0MTI2N2U0MTFlM2ZjNzg
