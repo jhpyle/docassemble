@@ -60,6 +60,6 @@ question: Here is your document.
 attachment:
   pdf template file: letter.pdf
   field code:
-    letter_date: today()
-    subject_line: subject_of_letter
-    recipient_address: recipient.address_block()
+    - letter_date: today()
+    - subject_line: subject_of_letter
+    - recipient_address: recipient.address_block()

@@ -74,7 +74,7 @@
   </li>
   {%- endif %}
 </ul>
-<form action="{{ url_for('playground_page') }}" method="POST" class="form" role="form" id="form">
+<form action="{{ url_for('playground_page') }}" method="POST" class="form" role="form" id="form" autocomplete="off">
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.original_playground_name, value=current_file) }}
   {# <div class="daspacer"></div> #}

@@ -56,16 +56,16 @@ attachment:
   filename: filled-form
   pdf template file: sample-form.pdf
   fields:
-    Your Name: |
-      ${ user }
-    Your Organization: |
-      ${ user.organization }
-    Apple Checkbox: |
-      ${ likes_apples }
-    Orange Checkbox: |
-      ${ likes_oranges }
-    Pear Checkbox: |
-      ${ likes_pears }
-    Toast Checkbox: |
-      ${ likes_toast }
+    - Your Name: |
+        ${ user }
+    - Your Organization: |
+        ${ user.organization }
+    - Apple Checkbox: |
+        ${ likes_apples }
+    - Orange Checkbox: |
+        ${ likes_oranges }
+    - Pear Checkbox: |
+        ${ likes_pears }
+    - Toast Checkbox: |
+        ${ likes_toast }
 mandatory: True

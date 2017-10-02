@@ -470,6 +470,8 @@
 "Version": Null
 "View documentation": Null
 "v.": Null
+"Warning: a file by that name already exists.  If you save, you will overwrite it.": Null
+"Warning: a package definition by that name already exists.  If you save, you will overwrite it.": Null
 "was saved at": Null
 "WebRTC": Null
 "We just sent you a text message with a verification code.  Enter the verification code to proceed.": Null

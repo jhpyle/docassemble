@@ -4361,11 +4361,7 @@ def index():
                         if the_files:
                             files_to_process = list()
                             for the_file in the_files:
-                                filename = secure_filename(the_file['name'])
-                                file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
-                                extension, mimetype = get_ext_and_mimetype(filename)
-                                saved_file = SavedFile(file_number, extension=extension, fix=True)
-                                temp_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.' + extension, delete=False)
+                                temp_file = tempfile.NamedTemporaryFile(prefix="datemp", delete=False)
                                 start_index = 0
                                 char_index = 0
                                 for char in the_file['content']:
@@ -4375,8 +4371,21 @@ def index():
                                         break
                                 temp_file.write(codecs.decode(the_file['content'][start_index:], 'base64'))
                                 temp_file.close()
+                                filename = secure_filename(the_file['name'])
+                                extension, mimetype = get_ext_and_mimetype(filename)
+                                try:
+                                    img = Image.open(temp_file.name)
+                                    the_format = img.format.lower()
+                                    the_format = re.sub(r'jpeg', 'jpg', the_format)
+                                except:
+                                    the_format = extension
+                                    logmessage("Could not read file type from file " + str(filename))
+                                if the_format != extension:
+                                    filename = re.sub(r'\.[^\.]+$', '', filename) + '.' + the_format
+                                    extension, mimetype = get_ext_and_mimetype(filename)
+                                file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
+                                saved_file = SavedFile(file_number, extension=extension, fix=True)
                                 process_file(saved_file, temp_file.name, mimetype, extension)
-                                #sys.stderr.write("Upload was processed\n")
                                 files_to_process.append((filename, file_number, mimetype, extension))
                             try:
                                 file_field = from_safeid(var_to_store)
@@ -4446,6 +4455,11 @@ def index():
                                 filename = secure_filename(the_file.filename)
                                 file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
                                 extension, mimetype = get_ext_and_mimetype(filename)
+                                # original_extension = extension
+                                # if extension == 'gif':
+                                #     extension == 'png'
+                                #     mimetype = 'image/png'
+                                #     filename = re.sub(r'\.gif$', '.png', filename, re.IGNORECASE)
                                 saved_file = SavedFile(file_number, extension=extension, fix=True)
                                 temp_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.' + extension, delete=False)
                                 the_file.save(temp_file.name)
@@ -5286,7 +5300,7 @@ def index():
                   //console.log("need to check type property " + the_file.type + " for " + the_file.name);
                   reader.onload = function(readerEvent){
                     //console.log("checking type property " + the_file.type + " for " + the_file.name);
-                    if (the_file.type.match(/image.*/)){
+                    if (the_file.type.match(/image.*/) && !the_file.type.startsWith('image/svg')){
                       //console.log("this one is an image");
                       var image = new Image();
                       image.onload = function(imageEvent) {
@@ -10013,13 +10027,12 @@ def playground_files():
       var daCodeMirror;
       var daTextArea;
       var vocab = [];
+      var currentFile = """ + json.dumps(the_file) + """;
       var daIsNew = """ + ('true' if is_new else 'false') + """;
+      var existingFiles = """ + json.dumps(files) + """;
       var daSection = """ + '"' + section + '";' + """
-
-""" + variables_js(form='formtwo') + """
-
-""" + search_js(form='formtwo') + """
-
+""" + indent_by(variables_js(form='formtwo'), 6) + """
+""" + indent_by(search_js(form='formtwo'), 6) + """
       function saveCallback(data){
         fetchVars(true);
         if ($("#flash").length){
@@ -10036,6 +10049,19 @@ def playground_files():
         }, "slow");
       }
       $( document ).ready(function() {
+        $("#file_name").on('change', function(){
+          var newFileName = $(this).val();
+          if ((!daIsNew) && newFileName == currentFile){
+            return;
+          }
+          for (var i = 0; i < existingFiles.length; i++){
+            if (newFileName == existingFiles[i]){
+              alert('""" + word("Warning: a file by that name already exists.  If you save, you will overwrite it.") + """');
+              return;
+            }
+          }
+          return;
+        });
         $("#uploadbutton").click(function(event){
           if ($("#uploadfile").val() == ""){
             event.preventDefault();
@@ -10549,46 +10575,44 @@ def playground_packages():
     description = Markup("""Describe your package and choose the files from your Playground that will go into it.""")
     after_text = None
     if scroll:
-        extra_command = "      scrollBottom();\n"
+        extra_command = "        scrollBottom();"
     else:
         extra_command = ""
-    extra_command += upload_js() + "\n";
-    extra_command += """\
-      $("#daCancel").click(function(event){
-        var whichButton = this;
-        $("#commit_message_div").hide();
-        $(".btn-lg").each(function(){
-          if (this != whichButton && $(this).is(":hidden")){
-            $(this).show();
-          }
-        });
-        $("#daGitHub").html('""" + word("GitHub") + """');
-        $(this).hide();
-        event.preventDefault();
-        return false;
-      });
-      $("#daGitHub").click(function(event){
-        var whichButton = this;
-        if ($("#commit_message").val().length == 0 || $("#commit_message_div").is(":hidden")){
-          if ($("#commit_message_div").is(":visible")){
-            $("#commit_message").parent().addClass("has-error");
-          }
-          else{
-            $("#commit_message_div").show();
-            $(".btn-lg").each(function(){
-              if (this != whichButton && $(this).is(":visible")){
-                $(this).hide();
-              }
-            });
-            $(this).html('""" + word("Commit") + """');
-            $("#daCancel").show();
-          }
-          $("#commit_message").focus();
+    extra_command += upload_js() + """
+        $("#daCancel").click(function(event){
+          var whichButton = this;
+          $("#commit_message_div").hide();
+          $(".btn-lg").each(function(){
+            if (this != whichButton && $(this).is(":hidden")){
+              $(this).show();
+            }
+          });
+          $("#daGitHub").html('""" + word("GitHub") + """');
+          $(this).hide();
           event.preventDefault();
           return false;
-        }
-      });
-"""
+        });
+        $("#daGitHub").click(function(event){
+          var whichButton = this;
+          if ($("#commit_message").val().length == 0 || $("#commit_message_div").is(":hidden")){
+            if ($("#commit_message_div").is(":visible")){
+              $("#commit_message").parent().addClass("has-error");
+            }
+            else{
+              $("#commit_message_div").show();
+              $(".btn-lg").each(function(){
+                if (this != whichButton && $(this).is(":visible")){
+                  $(this).hide();
+                }
+              });
+              $(this).html('""" + word("Commit") + """');
+              $("#daCancel").show();
+            }
+            $("#commit_message").focus();
+            event.preventDefault();
+            return false;
+          }
+        });"""
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
         kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js") + '"></script>\n    '
@@ -10607,7 +10631,56 @@ def playground_packages():
         pypi_message = None
     if github_message is not None:
         github_message = Markup(github_message)
-    return render_template('pages/playgroundpackages.html', version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_http=github_http, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    ' + kbLoad + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      $("#daPyPI").click(function(event){if(!confirm("' + word("Are you sure that you want to publish this package to PyPI?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+    extra_js = '\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    '
+    extra_js += kbLoad
+    extra_js += """<script>
+      var isNew = """ + repr(str(is_new)) + """;
+      var existingFiles = """ + json.dumps(files) + """;
+      var currentFile = """ + json.dumps(the_file) + """;
+      function scrollBottom(){
+        $("html, body").animate({ scrollTop: $(document).height() }, "slow");
+      }
+      $( document ).ready(function() {
+        $("#file_name").on('change', function(){
+          var newFileName = $(this).val();
+          if ((!isNew) && newFileName == currentFile){
+            return;
+          }
+          for (var i = 0; i < existingFiles.length; i++){
+            if (newFileName == existingFiles[i]){
+              alert('""" + word("Warning: a package definition by that name already exists.  If you save, you will overwrite it.") + """');
+              return;
+            }
+          }
+          return;
+        });
+        $("#daDelete").click(function(event){
+          if (!confirm(""" + '"' + word("Are you sure that you want to delete this package?") + '"' + """)){
+            event.preventDefault();
+          }
+        });
+        $("#daPyPI").click(function(event){
+          if(!confirm(""" + '"' + word("Are you sure that you want to publish this package to PyPI?") + '"' + """)){
+            event.preventDefault();
+          }
+        });
+        daTextArea = document.getElementById("readme");
+        var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", """ + kbOpt + """tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});
+        $(window).bind("beforeunload", function(){
+          daCodeMirror.save();
+          $("#form").trigger("checkform.areYouSure");
+        });
+        $("#form").areYouSure(""" + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + """);
+        $("#form").bind("submit", function(){
+          daCodeMirror.save();
+          $("#form").trigger("reinitialize.areYouSure");
+          return true;
+        });
+        daCodeMirror.setOption("extraKeys", { Tab: function(cm){ var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});
+        daCodeMirror.setOption("coverGutterNextToScrollbar", true);""" + extra_command + """
+      });
+    </script>"""
+    return render_template('pages/playgroundpackages.html', version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_http=github_http, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
 
 def copy_if_different(source, destination):
     if (not os.path.isfile(destination)) or filecmp.cmp(source, destination) is False:
@@ -10646,23 +10719,23 @@ def playground_redirect():
 
 def upload_js():
     return """
-      $("#uploadlink").on('click', function(event){
-        $("#uploadlabel").click();
-        event.preventDefault();
-        return false;
-      });
-      $("#uploadlabel").on('click', function(event){
-        event.stopPropagation();
-        event.preventDefault();
-        $("#uploadfile").click();
-        return false;
-      });
-      $("#uploadfile").on('click', function(event){
-        event.stopPropagation();
-      });
-      $("#uploadfile").on('change', function(event){
-        $("#fileform").submit();
-      });"""
+        $("#uploadlink").on('click', function(event){
+          $("#uploadlabel").click();
+          event.preventDefault();
+          return false;
+        });
+        $("#uploadlabel").on('click', function(event){
+          event.stopPropagation();
+          event.preventDefault();
+          $("#uploadfile").click();
+          return false;
+        });
+        $("#uploadfile").on('click', function(event){
+          event.stopPropagation();
+        });
+        $("#uploadfile").on('change', function(event){
+          $("#fileform").submit();
+        });"""
     
 def search_js(form=None):
     if form is None:
@@ -11219,6 +11292,8 @@ var exampleData;
 var originalFileName = """ + repr(str(the_file)) + """;
 var isNew = """ + repr(str(is_new)) + """;
 var vocab = """ + json.dumps(vocab_list) + """;
+var existingFiles = """ + json.dumps(files) + """;
+var currentFile = """ + json.dumps(the_file) + """;
 
 """ + variables_js() + """
 
@@ -11292,6 +11367,19 @@ function saveCallback(data){
 $( document ).ready(function() {
   variablesReady();
   searchReady();
+  $("#playground_name").on('change', function(){
+    var newFileName = $(this).val();
+    if ((!isNew) && newFileName == currentFile){
+      return;
+    }
+    for (var i = 0; i < existingFiles.length; i++){
+      if (newFileName == existingFiles[i] || newFileName + '.yml' == existingFiles[i]){
+        alert('""" + word("Warning: a file by that name already exists.  If you save, you will overwrite it.") + """');
+        return;
+      }
+    }
+    return;
+  });
   $("#daRun").click(function(event){
     if (originalFileName != $("#playground_name").val()){
       $("#form button[name='submit']").click();
@@ -11420,22 +11508,24 @@ $( document ).ready(function() {
     cm_setup = """
     <script>
       var word_re = /[\w$]+/
-      CodeMirror.registerHelper("hint", "yaml", function(editor, options){
-        var cur = editor.getCursor(), curLine = editor.getLine(cur.line);
-        var end = cur.ch, start = end;
-        while (start && word_re.test(curLine.charAt(start - 1))) --start;
-        var curWord = start != end && curLine.slice(start, end);
-        var list = [];
-        if (curWord){
-          var n = vocab.length;
-          for (var i = 0; i < n; ++i){
-            if (vocab[i].indexOf(curWord) == 0){
-              list.push(vocab[i]);
+      $( document ).ready(function(){
+        CodeMirror.registerHelper("hint", "yaml", function(editor, options){
+          var cur = editor.getCursor(), curLine = editor.getLine(cur.line);
+          var end = cur.ch, start = end;
+          while (start && word_re.test(curLine.charAt(start - 1))) --start;
+          var curWord = start != end && curLine.slice(start, end);
+          var list = [];
+          if (curWord){
+            var n = vocab.length;
+            for (var i = 0; i < n; ++i){
+              if (vocab[i].indexOf(curWord) == 0){
+                list.push(vocab[i]);
+              }
             }
           }
-        }
-        return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
-      });""" + upload_js() + """
+          return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
+        });""" + upload_js() + """
+      });
     </script>"""
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
@@ -11493,7 +11583,8 @@ def server_error(the_error):
         errmess = '<pre>' + errmess + '</pre>'
     else:
         errmess = '<blockquote>' + errmess + '</blockquote>'
-    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=str(the_history), logtext=str(the_trace)), error_code
+    #return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=str(the_history), logtext=str(the_trace)), error_code
+    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=None, logtext=str(the_trace)), error_code
 
 # @app.route('/testpost', methods=['GET', 'POST'])
 # def test_post():
@@ -11689,13 +11780,16 @@ def utilities():
                 the_file = request.files['pdfdocxfile']
                 the_file.save(pdf_file.name)
                 fields = docassemble.base.pdftk.read_fields(pdf_file.name)
+                fields_seen = set()
                 pdf_file.close()
                 if fields is None:
                     fields_output = word("Error: no fields could be found in the file")
                 else:
                     fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', the_file.filename) + "\n    fields:\n"
                     for field, default, pageno, rect, field_type in fields:
-                        fields_output += '      "' + field + '": ' + default + "\n"
+                        if field not in fields_seen:
+                            fields_output += '      - "' + field + '": ' + default + "\n"
+                            fields_seen.add(field)
                     fields_output += "---"
             elif mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 file_type = 'docx'
@@ -12883,6 +12977,10 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         extension = re.sub(r'\.', r'', mimetypes.guess_extension(mimetype))
                         if extension == 'jpe':
                             extension = 'jpg'
+                        # original_extension = extension
+                        # if extension == 'gif':
+                        #     extension == 'png'
+                        #     mimetype = 'image/png'
                         filename = 'file' + '.' + extension
                         file_number = get_new_file_number(sess_info['uid'], filename, yaml_file_name=sess_info['yaml_filename'])
                         saved_file = SavedFile(file_number, extension=extension, fix=True)

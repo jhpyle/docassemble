@@ -2250,8 +2250,8 @@ class Question:
                     raise DAError(template_type + ' template file supplied to attachment must be a string or a dict' + self.idebug(target))
                 if field_mode == 'auto':
                     options['fields'] = 'auto'
-                elif type(target['fields']) is not dict:
-                    raise DAError('fields supplied to attachment must be a dictionary' + self.idebug(target))
+                elif type(target['fields']) not in (list, dict):
+                    raise DAError('fields supplied to attachment must be a list or dictionary' + self.idebug(target))
                 target['content'] = ''
                 options[template_type + '_template_file'] = FileInPackage(target[template_type + ' template file'], 'template', package=self.package)
                 if template_type == 'docx' and type(target[template_type + ' template file']) in [str, unicode]:
@@ -2967,7 +2967,14 @@ class Question:
                         if type(attachment['options']['fields']) in [str, unicode]:
                             result['field_data'] = user_dict
                         else:
-                            result['field_data'] = recursive_eval_textobject(attachment['options']['fields'], user_dict, self, result['template'])
+                            the_field_data = recursive_eval_textobject(attachment['options']['fields'], user_dict, self, result['template'])
+                            if type(the_field_data) is list:
+                                new_field_data = dict()
+                                for item in the_field_data:
+                                    if type(item) is dict:
+                                        new_field_data.update(item)
+                                the_field_data = new_field_data
+                            result['field_data'] = new_field_data
                         if 'code' in attachment['options']:
                             additional_dict = eval(attachment['options']['code'], user_dict)
                             if type(additional_dict) is dict:
@@ -2991,28 +2998,37 @@ class Question:
                 elif doc_format == 'pdf' and 'fields' in attachment['options'] and 'pdf_template_file' in attachment['options']:
                     result['data_strings'] = []
                     result['images'] = []
-                    for key, val in attachment['options']['fields'].iteritems():
-                        answer = val.text(user_dict).rstrip()
-                        if answer == 'True':
-                            answer = 'Yes'
-                        elif answer == 'False':
-                            answer = 'No'
-                        elif answer == 'None':
-                            answer = ''
-                        answer = re.sub(r'\[(NEWLINE|BR)\]', r'\n', answer)
-                        answer = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', answer)
-                        #logmessage("Found a " + str(key) + " with a |" + str(answer) + '|')
-                        m = re.search(r'\[FILE ([^\]]+)\]', answer)
-                        if m:
-                            file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                            file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
-                            result['images'].append((key, file_info))
-                        else:
-                            result['data_strings'].append((key, answer))
+                    if type(attachment['options']['fields']) is dict:
+                        the_fields = [attachment['options']['fields']]
+                    else:
+                        the_fields = attachment['options']['fields']
+                    for item in the_fields:
+                        for key, val in item.iteritems():
+                            answer = val.text(user_dict).rstrip()
+                            if answer == 'True':
+                                answer = 'Yes'
+                            elif answer == 'False':
+                                answer = 'No'
+                            elif answer == 'None':
+                                answer = ''
+                            answer = re.sub(r'\[(NEWLINE|BR)\]', r'\n', answer)
+                            answer = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', answer)
+                            #logmessage("Found a " + str(key) + " with a |" + str(answer) + '|')
+                            m = re.search(r'\[FILE ([^\]]+)\]', answer)
+                            if m:
+                                file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                                file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                result['images'].append((key, file_info))
+                            else:
+                                result['data_strings'].append((key, answer))
                     if 'code' in attachment['options']:
-                        additional_dict = eval(attachment['options']['code'], user_dict)
-                        if type(additional_dict) is dict:
-                            for key, val in additional_dict.iteritems():
+                        additional_fields = eval(attachment['options']['code'], user_dict)
+                        if type(additional_fields) is not list:
+                            additional_fields = [additional_fields]
+                        for item in additional_fields:
+                            if type(item) is not dict:
+                                raise DAError("code in an attachment returned something other than a dictionary or a list of dictionaries")
+                            for key, val in item.iteritems():
                                 if val is True:
                                     val = 'Yes'
                                 elif val is False:
@@ -3022,32 +3038,42 @@ class Question:
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
                                 val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
                                 result['data_strings'].append((key, val))
-                        else:
-                            raise DAError("code in an attachment returned something other than a dictionary")
                     if 'code dict' in attachment['options']:
-                        for key, var_code in attachment['options']['code dict'].iteritems():
-                            val = eval(var_code, user_dict)
-                            if val is True:
-                                val = 'Yes'
-                            elif val is False:
-                                val = 'No'
-                            elif val is None:
-                                val = ''
-                            val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
-                            val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
-                            result['data_strings'].append((key, val))
+                        additional_fields = attachment['options']['code dict']
+                        if type(additional_fields) is not list:
+                            additional_fields = [additional_fields]
+                        for item in additional_fields:
+                            if type(item) is not dict:
+                                raise DAError("code dict in an attachment returned something other than a dictionary or a list of dictionaries")
+                            for key, var_code in item.iteritems():
+                                val = eval(var_code, user_dict)
+                                if val is True:
+                                    val = 'Yes'
+                                elif val is False:
+                                    val = 'No'
+                                elif val is None:
+                                    val = ''
+                                val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
+                                val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
+                                result['data_strings'].append((key, val))
                     if 'raw code dict' in attachment['options']:
-                        for key, var_code in attachment['options']['raw code dict'].iteritems():
-                            val = eval(var_code, user_dict)
-                            if val is True:
-                                val = 'Yes'
-                            elif val is False:
-                                val = 'No'
-                            elif val is None:
-                                val = ''
-                            val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
-                            val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
-                            result['data_strings'].append((key, val))
+                        additional_fields = attachment['options']['raw code dict']
+                        if type(additional_fields) is not list:
+                            additional_fields = [additional_fields]
+                        for item in additional_fields:
+                            if type(item) is not dict:
+                                raise DAError("raw code dict in an attachment returned something other than a dictionary or a list of dictionaries")
+                            for key, var_code in item.iteritems():
+                                val = eval(var_code, user_dict)
+                                if val is True:
+                                    val = 'Yes'
+                                elif val is False:
+                                    val = 'No'
+                                elif val is None:
+                                    val = ''
+                                val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
+                                val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
+                                result['data_strings'].append((key, val))
                 else:
                     the_markdown = ""
                     if len(result['metadata']):
@@ -3240,7 +3266,10 @@ class Interview:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code)
                         self.names_used.update(question.fields_used)
                 except Exception as errMess:
-                    logmessage('Interview: error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
+                    try:
+                        logmessage('Interview: error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
+                    except:
+                        logmessage('Interview: error reading YAML file ' + str(source.path) + '. Error was:\n\n' + str(errMess))
                     self.success = False
                     pass
             else:
@@ -3248,7 +3277,10 @@ class Interview:
                     document = ruamel.yaml.safe_load(source_code)
                 except Exception as errMess:
                     self.success = False
-                    raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
+                    try:
+                        raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
+                    except:
+                        raise DAError('Error reading YAML file ' + str(source.path) + '.  Error was:\n\n' + str(errMess))
                 if document is not None:
                     try:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code)
@@ -4313,7 +4345,7 @@ def process_selections(data, manual=False, exclude=None):
             if key not in to_exclude:
                 if type(value) in (str, unicode, bool, int, float):
                     result.append(dict(key=key, label=value))
-                elif hasattr(entry, 'instanceName'):
+                elif hasattr(value, 'instanceName'):
                     result.append(dict(key=key, label=unicode(value)))
     else:
         raise DAError("Unknown data type in choices selection: " + re.sub(r'[<>]', '', repr(data)))

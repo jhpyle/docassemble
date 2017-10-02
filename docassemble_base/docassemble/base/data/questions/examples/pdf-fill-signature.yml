@@ -52,7 +52,7 @@ attachment:
     pdf template file: |
       Transfer-of-Ownership.pdf
     fields:
-      "grantor": ${ user }
-      "grantee": ${ friend }
-      "collection": ${ prized_collection }
-      "signature": ${ user.signature }
+      - "grantor": ${ user }
+      - "grantee": ${ friend }
+      - "collection": ${ prized_collection }
+      - "signature": ${ user.signature }

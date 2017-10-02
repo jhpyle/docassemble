@@ -388,3 +388,8 @@ DANav.get_sections: "https://docassemble.org/docs/functions.html#DANav.get_secti
 DANav.show_sections: "https://docassemble.org/docs/functions.html#DANav.show_sections"
 run_python_module: "https://docassemble.org/docs/functions.html#run_python_module"
 dispatch: "https://docassemble.org/docs/functions.html#dispatch"
+yesno: "https://docassemble.org/docs/functions.html#yesno"
+split: "https://docassemble.org/docs/functions.html#split"
+showif: "https://docassemble.org/docs/functions.html#showif"
+showifdef: "https://docassemble.org/docs/functions.html#showifdef"
+phone_number_part: "https://docassemble.org/docs/functions.html#phone_number_part"

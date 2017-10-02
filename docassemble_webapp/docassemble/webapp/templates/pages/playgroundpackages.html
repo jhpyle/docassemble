@@ -1,160 +1,168 @@
 {%- extends 'base_templates/page_base_half_wider.html' %}
 {%- from "base_templates/form_macros.html" import render_addon_field, render_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
 {%- block top %}
-{# <div class="container"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div> #}
 {%- endblock %}
 {%- block content %}
-{# <div class="page-header">
-  <h1>{{ header }}</h1>
-</div> #}
-{%- if description %}
-<div class="panel panel-default">
-  <div class="panel-body">
-    {{ description }}
-  </div>
-</div>
-{%- endif %}
-
-<ul class="nav nav-pills navpillssmaller">
-  <li>
-    <a title="{{ word('Create a new package') }}" href="?new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span> {{ word('Add') }}</a>
-  </li>
-  <li role="presentation" class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another package')}}">
-      <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
-    </a>
-    <ul class="dropdown-menu">
-      {%- if any_files %}
-      {%- for file in editable_files %}
-      {%- if file == current_file %}
-      <li class="active">
-        <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
-        </a>
-      </li>
-      {%- else %}
-      <li>
-        <a href="?file={{ file }}"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
-        </a>
-      </li>
-      {%- endif %}
-      {%- endfor %}
-      {%- else %}
-      <li class="active">
-        <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
-        </a>
-      </li>
-      {%- endif %}
-    </ul>
-  </li>
-  {%- if current_file != '' %}
-  <li role="presentation">
-    <a tabindex="6" href="{{ url_for('create_playground_package', package=current_file) }}" title="{{ word('Download the current package') }}">
-      <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-      {{ word("Download") }}
-    </a>
-  </li>
-  {% endif %}
-  <li role="presentation">
-    <a tabindex="5" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a package ZIP file to the Playground') }}">
-      <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
-        {{ fileform.hidden_tag() }}
-        <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
-          <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
-          {{ word("Upload") }}
-        </label>
-        <div style="width: 0px; height: 0px; overflow: hidden">
-          <input type="file" name="uploadfile" id="uploadfile"/>
+        <div class="row">
+          <div class="col-sm-8 col-md-7 col-lg-6">
+            {%- if description %}
+            <div class="panel panel-default">
+              <div class="panel-body">
+                {{ description }}
+              </div>
+            </div>
+            {%- endif %}
+            <ul class="nav nav-pills navpillssmaller">
+              <li>
+                <a title="{{ word('Create a new package') }}" href="?new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span> {{ word('Add') }}</a>
+              </li>
+              <li role="presentation" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another package')}}">
+                  <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                  {%- if any_files %}
+                  {%- for file in editable_files %}
+                  {%- if file == current_file %}
+                  <li class="active">
+                    <a href="#">
+                      <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+                      {{ file }}
+                    </a>
+                  </li>
+                  {%- else %}
+                  <li>
+                    <a href="?file={{ file }}">
+                      <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+                      {{ file }}
+                    </a>
+                  </li>
+                  {%- endif %}
+                  {%- endfor %}
+                  {%- else %}
+                  <li class="active">
+                    <a href="#">
+                      <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+                      {% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
+                    </a>
+                  </li>
+                  {%- endif %}
+                </ul>
+              </li>
+              {%- if current_file != '' %}
+              <li role="presentation">
+                <a tabindex="6" href="{{ url_for('create_playground_package', package=current_file) }}" title="{{ word('Download the current package') }}">
+                  <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                  {{ word("Download") }}
+                </a>
+              </li>
+              {%- endif %}
+              <li role="presentation">
+                <a tabindex="5" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a package ZIP file to the Playground') }}">
+                  <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
+                    {{ fileform.hidden_tag() }}
+                    <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
+                      <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+                      {{ word("Upload") }}
+                    </label>
+                    <div style="width: 0px; height: 0px; overflow: hidden">
+                      <input type="file" name="uploadfile" id="uploadfile"/>
+                    </div>
+                  </form>
+                </a>
+              </li>
+              <li role="presentation">
+                <a tabindex="7" id="daPull" href="{{ url_for('pull_playground_package', file=github_http) if github_http else url_for('pull_playground_package') }}" title="{{ word('Pull a package from GitHub or PyPI into the Playground') }}">
+                  <span class="glyphicon glyphicon-cloud" aria-hidden="true"></span>
+                  {{ word("Pull") }}
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
-      </form>
-    </a>
-  </li>
-  <li role="presentation">
-    <a tabindex="7" id="daPull" href="{{ url_for('pull_playground_package', file=github_http) if github_http else url_for('pull_playground_package') }}" title="{{ word('Pull a package from GitHub or PyPI into the Playground') }}">
-      <span class="glyphicon glyphicon-cloud" aria-hidden="true"></span>
-      {{ word("Pull") }}
-    </a>
-  </li>
-</ul>
-
-<form action="{{ url_for('playground_packages') }}" method="POST" class="form" role="form" id="form">
-  {{ form.hidden_tag() }}
-  {{ myrender_hidden_field(form.original_file_name, value=current_file) }}
-  <div class="daspacer"></div>
-  {{ render_field(form.file_name) }}
-  {{ render_field(form.version) }}
-  {{ render_field(form.license) }}
-  {{ render_field(form.description) }}
-  {{ render_field(form.url) }}
-  <h2>{{ form.dependencies.label }}</h2>
-  <div class="form-group">
-    <label for="{{ form.dependencies.id }}">{{ word("Select zero or more packages") }}</label>
-    <select multiple size="{% if package_names.__len__() < 10 %}{{ package_names.__len__() }}{% else %}10{% endif %}" class="form-control" name="{{ form.dependencies.id }}" id="{{ form.dependencies.id }}">
-      {%- for package in package_names %}
-      <option value="{{ package }}"{% if form.dependencies.data and package in form.dependencies.data %} selected{% endif %}>{{ package }}</option>
-      {%- endfor %}
-    </select>
-  </div>
-  {%- for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'] %}
-  <h2>{{ section_field[sec].label }}</h2>
-  <div class="form-group">
-    <label for="{{ section_field[sec].id }}">{{ word("Select zero or more files") }}</label>
-    <select multiple size="{% if file_list[sec].__len__() < 10 %}{{ file_list[sec].__len__() }}{% else %}10{% endif %}" class="form-control" name="{{ section_field[sec].id }}" id="{{ section_field[sec].id }}">
-      {%- for file in file_list[sec] %}
-      <option value="{{ file }}"{% if section_field[sec].data and file in section_field[sec].data %} selected{% endif %}>{{ file }}</option>
-      {%- endfor %}
-    </select>
-  </div>
-  {%- endfor %}
-{%- endblock %}
-{%- block below %}
-  <h2>{{ form.readme.label }}</h2>
-  <div class="form-group">
-    <label for="{{ form.readme.id }}">{{ word("The README.md file for the package") }}</label>
-    <textarea rows="24" cols="80" id="{{ form.readme.id }}" name="{{ form.readme.id }}">{{ form.readme.data }}</textarea>
-  </div>
-  {%- if pypi_message %}
-  <div class="panel panel-default">
-    <div class="panel-body">
-      {{ pypi_message|safe }}
-    </div>
-  </div>
-  {%- endif %}
-  {%- if github_message %}
-  <div class="panel panel-default">
-    <div class="panel-body">
-      {{ github_message|safe }}
-    </div>
-  </div>
-  {%- endif %}
-  {%- if can_publish_to_github %}
-  <div id="commit_message_div" style="display:none">
-    {{ render_field(form.commit_message) }}
-  </div>
-  {%- endif %}
-  <div class="form-actions">
-    {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }}
-    {%- if current_file != '' %}
-    {{ render_submit_field(form.install, class="btn btn-success btn-lg") }}
-    {%- if can_publish_to_pypi %}
-    {{ render_submit_field(form.pypi, id="daPyPI", class="btn btn-warning btn-lg", title=word('Publish on PyPI')) }}
-    {%- endif %}
-    {%- if can_publish_to_github %}
-    {{ render_submit_field(form.github, id="daGitHub", class="btn btn-warning btn-lg", title=word('Push a commit to GitHub')) }}
-    {{ render_submit_field(form.cancel, id="daCancel", class="btn btn-default btn-lg", style="display:none") }}
-    {%- endif %}
-    {{ render_submit_field(form.delete, id="daDelete", class="btn btn-default btn-lg") }}
-    {%- else %}
-    <a class="btn btn-default btn-lg" href="{{ url_for('playground_packages') }}">{{ word('Cancel') }}</a>
-    {%- endif %}
-  </div>
-</form>
-
-{%- if after_text %}
-<p>{{ after_text }}</p>
-{%- endif %}
-
+        <form action="{{ url_for('playground_packages') }}" method="POST" class="form" role="form" id="form" autocomplete="off">
+          <div class="row">
+            <div class="col-sm-8 col-md-7 col-lg-6">
+              {{ form.hidden_tag() }}
+              {{ myrender_hidden_field(form.original_file_name, value=current_file) }}
+              <div class="daspacer"></div>
+              {{ render_field(form.file_name) }}
+              {{ render_field(form.version) }}
+              {{ render_field(form.license) }}
+              {{ render_field(form.description) }}
+              {{ render_field(form.url) }}
+              <h2>{{ form.dependencies.label }}</h2>
+              <div class="form-group">
+                <label for="{{ form.dependencies.id }}">{{ word("Select zero or more packages") }}</label>
+                <select multiple size="{% if package_names.__len__() < 10 %}{{ package_names.__len__() }}{% else %}10{% endif %}" class="form-control" name="{{ form.dependencies.id }}" id="{{ form.dependencies.id }}">
+                  {%- for package in package_names %}
+                  <option value="{{ package }}"{% if form.dependencies.data and package in form.dependencies.data %} selected{% endif %}>{{ package }}</option>
+                  {%- endfor %}
+                </select>
+              </div>
+              {%- for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'] %}
+              <h2>{{ section_field[sec].label }}</h2>
+              <div class="form-group">
+                <label for="{{ section_field[sec].id }}">{{ word("Select zero or more files") }}</label>
+                <select multiple size="{% if file_list[sec].__len__() < 10 %}{{ file_list[sec].__len__() }}{% else %}10{% endif %}" class="form-control" name="{{ section_field[sec].id }}" id="{{ section_field[sec].id }}">
+                  {%- for file in file_list[sec] %}
+                  <option value="{{ file }}"{% if section_field[sec].data and file in section_field[sec].data %} selected{% endif %}>{{ file }}</option>
+                  {%- endfor %}
+                </select>
+              </div>
+              {%- endfor %}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-8 col-md-8 col-lg-8">
+              <h2>{{ form.readme.label }}</h2>
+              <div class="form-group">
+                <label for="{{ form.readme.id }}">{{ word("The README.md file for the package") }}</label>
+                <textarea rows="24" cols="80" id="{{ form.readme.id }}" name="{{ form.readme.id }}">{{ form.readme.data }}</textarea>
+              </div>
+              {%- if pypi_message %}
+              <div class="panel panel-default">
+                <div class="panel-body">
+                  {{ pypi_message|safe }}
+                </div>
+              </div>
+              {%- endif %}
+              {%- if github_message %}
+              <div class="panel panel-default">
+                <div class="panel-body">
+                  {{ github_message|safe }}
+                </div>
+              </div>
+              {%- endif %}
+              {%- if can_publish_to_github %}
+              <div id="commit_message_div" style="display:none">
+                {{ render_field(form.commit_message) }}
+              </div>
+              {%- endif %}
+              <div class="form-actions">
+                {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }}
+                {%- if current_file != '' %}
+                {{ render_submit_field(form.install, class="btn btn-success btn-lg") }}
+                {%- if can_publish_to_pypi %}
+                {{ render_submit_field(form.pypi, id="daPyPI", class="btn btn-warning btn-lg", title=word('Publish on PyPI')) }}
+                {%- endif %}
+                {%- if can_publish_to_github %}
+                {{ render_submit_field(form.github, id="daGitHub", class="btn btn-warning btn-lg", title=word('Push a commit to GitHub')) }}
+                {{ render_submit_field(form.cancel, id="daCancel", class="btn btn-default btn-lg", style="display:none") }}
+                {%- endif %}
+                {{ render_submit_field(form.delete, id="daDelete", class="btn btn-default btn-lg") }}
+                {%- else %}
+                <a class="btn btn-default btn-lg" href="{{ url_for('playground_packages') }}">{{ word('Cancel') }}</a>
+                {%- endif %}
+              </div>
+            </div>
+          </div>
+        </form>
+        {%- if after_text %}
+        <p>{{ after_text }}</p>
+        {%- endif %}
 {%- endblock %}
 {%- block bottom %}
-<div class="daspacer-large"></div>
-<div class="container"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
+      <div class="daspacer-large"></div>
+      <div class="container"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
 {%- endblock %}

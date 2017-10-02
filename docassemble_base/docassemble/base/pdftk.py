@@ -40,13 +40,26 @@ def read_fields(pdffile):
     if 'AcroForm' not in doc.catalog:
         return None
     fields = resolve1(doc.catalog['AcroForm'])['Fields']
+    recursively_add_fields(fields, id_to_page, outfields)
+    return sorted(outfields, key=fieldsorter)
+
+def fieldsorter(x):
+    if x[3] and type(x[3]) is list:
+        x_coord = x[3][0]
+        y_coord = -1 * x[3][1]
+    else:
+        x_coord = 0
+        y_coord = 0
+    return (x[2], y_coord, x_coord)
+
+def recursively_add_fields(fields, id_to_page, outfields):
     for i in fields:
         field = resolve1(i)
         name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')
         if name is not None:
-            name = unicode(name)
+            name = str(name).decode('latin1')
         if value is not None:
-            value = str(value).decode('latin1').encode('utf-8')
+            value = str(value).decode('latin1')
         #logmessage("name is " + str(name) + " and FT is |" + str(field_type) + "| and value is " + str(value))
         if page is not None:
             pageno = id_to_page[page.objid]
@@ -61,16 +74,21 @@ def read_fields(pdffile):
             default = '${ user.signature }'
         else:
             if value is not None:
-                # for val in value:
-                #     logmessage("Got a " + str(ord(val)))
-                # logmessage(repr(value))
-                default = re.sub(r'^\xc3\xbe\xc3\xbf', '', value).decode('utf8')
+                #for val in value:
+                #    logmessage("Got a " + str(ord(val)))
+                #logmessage(repr(value.decode('utf8')))
+                #default = re.sub(r'^\xc3\xbe\xc3\xbf', '', value)
+                #default = re.sub(r'^þÿ', '', value)
+                default = value
                 if not default:
                     default = word("something")
             else:
                 default = word("something")
-        outfields.append((name, default, pageno, rect, field_type))
-    return outfields
+        kids = field.get('Kids')
+        if kids:
+            recursively_add_fields(kids, id_to_page, outfields)
+        else:
+            outfields.append((name, default, pageno, rect, field_type))
 
 def read_fields_pdftk(pdffile):
     output = unicode(check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode('utf8'))

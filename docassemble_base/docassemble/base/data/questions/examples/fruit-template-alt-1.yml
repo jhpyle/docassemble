@@ -45,7 +45,7 @@ question: Here is your document.
 attachment:
   pdf template file: fruit_template.pdf
   fields:
-    favorite_fruit: ${ favorite_fruit }
-    favorite_veggie: ${ favorite_veggie }
-    favorite_legume: ${ favorite_legume }
-    favorite_fungus: ${ favorite_fungus }
+    - favorite_fruit: ${ favorite_fruit }
+    - favorite_veggie: ${ favorite_veggie }
+    - favorite_legume: ${ favorite_legume }
+    - favorite_fungus: ${ favorite_fungus }

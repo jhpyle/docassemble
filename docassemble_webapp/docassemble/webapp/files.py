@@ -155,9 +155,10 @@ class SavedFile(object):
         filename = kwargs.get('filename', self.filename)
         if not self.fixed:
             self.fix()
+        #logmessage("Saving to " + os.path.join(self.directory, filename))
         shutil.copyfile(orig_path, os.path.join(self.directory, filename))
-        self.save()
-        return
+        if 'filename' not in kwargs:
+            self.save()
     def get_modtime(self, **kwargs):
         filename = kwargs.get('filename', self.filename)
         #logmessage("Get modtime called with filename " + str(filename))

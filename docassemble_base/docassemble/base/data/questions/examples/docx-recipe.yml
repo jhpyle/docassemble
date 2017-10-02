@@ -48,11 +48,11 @@ attachment:
   filename: recipe
   docx template file: recipe_template.docx
   fields:
-    title: Mandelbrot cookies
-    oven_temperature: ${ oven_degrees } degrees
-    ingredients:
-      - apple sauce
-      - ${ special_ingredient }
-      - flour
-      - sugar
-    preparation_time: 48 hours
+    - title: Mandelbrot cookies
+    - oven_temperature: ${ oven_degrees } degrees
+    - ingredients:
+        - apple sauce
+        - ${ special_ingredient }
+        - flour
+        - sugar
+    - preparation_time: 48 hours

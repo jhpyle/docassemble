@@ -33,7 +33,7 @@ from user_agents import parse as ua_parse
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'phone_number_part']
 
 # debug = False
 # default_dialect = 'us'
@@ -2397,6 +2397,20 @@ def phone_number_is_valid(number, country=None):
         return True
     return False
 
+def phone_number_part(number, part, country=None):
+    if country is None:
+        country = get_country()
+    try:
+        pn = phonenumbers.parse(number, country)
+    except:
+        return ''
+    formatted_number = phonenumbers.format_number(pn, phonenumbers.PhoneNumberFormat.NATIONAL)
+    parts = [x for x in re.split(r'[^0-9]+', formatted_number) if re.search(r'[0-9]', x)]
+    if part < len(parts):
+        return parts[part]
+    else:
+        return ''
+
 def dict_as_json(user_dict):
     return json.dumps(serializable_dict(user_dict))
 
@@ -2508,3 +2522,76 @@ def indent(text, by=None):
     text = re.sub(r'\r', '', text)
     text = re.sub(r'\n', '\n' + (" " * by), text)
     return text
+
+def yesno(value, invert=False):
+    """Returns 'Yes' or 'No' depending on whether the given value is true.
+    This is used for populating PDF checkboxes.
+
+    """
+    if value:
+        if invert:
+            return "No"
+        return "Yes"
+    if invert:
+        return "Yes"
+    return "No"
+
+def split(text, breaks, index):
+    """Splits text at particular breakpoints and returns the given piece."""
+    if type(breaks) is not list:
+        breaks = [breaks]
+    lastbreakpoint = 0
+    newbreaks = list()
+    for breakpoint in breaks:
+        newbreaks.append(breakpoint + lastbreakpoint)
+        lastbreakpoint = breakpoint
+    breaks = newbreaks
+    if len(breaks) == 0:
+        breaks = [0]
+    elif breaks[0] != 0:
+        breaks = [0] + breaks
+    breaks = breaks + [float("inf")]
+    parts = list()
+    current_index = 0
+    last_space = 0
+    last_break = 0
+    text_length = len(text)
+    i = 0
+    while i < text_length:
+        if text[i] == ' ':
+            last_space = i
+        if i > breaks[current_index + 1] - 1:
+            if last_space <= last_break:
+                parts.append(text[last_break:i].strip())
+                last_break = i
+                current_index += 1
+            else:
+                parts.append(text[last_break:last_space].strip())
+                last_break = last_space
+                i = last_space
+                current_index += 1
+        i += 1
+    parts.append(text[last_break:].strip())
+    if index == 'all':
+        return parts
+    if int(index) < len(parts):
+        return parts[int(index)]
+    return ''
+
+def showif(var, condition):
+    """Returns the variable indicated by the variable name if the
+    condition is true, but otherwise returns empty text.
+
+    """
+    if condition:
+        return value(var)
+    return ''
+
+def showifdef(var):
+    """Returns the variable indicated by the variable name if it is
+    defined, but otherwise returns empty text.
+
+    """
+    if defined(var):
+        return value(var)
+    return ''

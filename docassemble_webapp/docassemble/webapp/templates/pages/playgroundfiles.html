@@ -4,124 +4,123 @@
 {%- endblock %}
 {%- block content %}
 {%- if description %}
-<div class="panel panel-default">
-  <div class="panel-body">
-    {{ description }}
-  </div>
-</div>
-{%- endif %}
-{%- if use_gd %}
-<div>
-  <a tabindex="15" class="btn btn-default btn-md" href="{{ url_for('sync_with_google_drive', next=url_for('playground_files', section=section)) }}"><img src="{{ url_for('static', filename='app/google-drive-logo.png') }}"> {{ word('Sync') }}</a>
-</div>
-{%- endif %}
-{%- if upload_header %}
-{%- if files %}
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>{{ word("File name") }}</th>
-      <th style="text-align:right;">{{ word("Action") }}</th>
-    </tr>
-  </thead>
-  <tbody>
-  {%- for file in files %}
-    <tr>
-      <td><a tabindex="20" target="_blank" href="{{ url_for('playground_' + section, userid=userid, filename=file) }}">{{ file }}</a></td>
-      <td style="text-align:right;">{% if file in editable_files %}<a tabindex="20" class="label label-success" href="?section={{ section }}&file={{ file }}">{{ word('Edit') }}</a>&nbsp;{% endif %}{% if file in trainable_files %}<a tabindex="20" class="label label-success" href="{{ url_for('train', package=playground_package, file=trainable_files[file]) }}">{{ word('Train') }}</a>&nbsp;{% endif %}{% if file in convertible_files %}<a tabindex="20" class="label label-info" href="?section={{ section }}&convert={{ file }}">{{ word('Convert to .md') }}</a>&nbsp;{% endif %}<a tabindex="20" class="label label-warning" href="?section={{ section }}&delete={{ file }}">{{ word('Delete') }}</a></td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
-{%- else %}
-<p><em>{{ word("No files have been uploaded yet.") }}</em></p>
-{%- endif %}
+          <div class="panel panel-default">
+            <div class="panel-body">
+              {{ description }}
+            </div>
+          </div>
+          {%- endif %}
+          {%- if use_gd %}
+          <div>
+            <a tabindex="15" class="btn btn-default btn-md" href="{{ url_for('sync_with_google_drive', next=url_for('playground_files', section=section)) }}"><img src="{{ url_for('static', filename='app/google-drive-logo.png') }}"> {{ word('Sync') }}</a>
+          </div>
+          {%- endif %}
+          {%- if upload_header %}
+          {%- if files %}
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>{{ word("File name") }}</th>
+                <th style="text-align:right;">{{ word("Action") }}</th>
+              </tr>
+            </thead>
+            <tbody>
+            {%- for file in files %}
+              <tr>
+                <td><a tabindex="20" target="_blank" href="{{ url_for('playground_' + section, userid=userid, filename=file) }}">{{ file }}</a></td>
+                <td style="text-align:right;">{% if file in editable_files %}<a tabindex="20" class="label label-success" href="?section={{ section }}&file={{ file }}">{{ word('Edit') }}</a>&nbsp;{% endif %}{% if file in trainable_files %}<a tabindex="20" class="label label-success" href="{{ url_for('train', package=playground_package, file=trainable_files[file]) }}">{{ word('Train') }}</a>&nbsp;{% endif %}{% if file in convertible_files %}<a tabindex="20" class="label label-info" href="?section={{ section }}&convert={{ file }}">{{ word('Convert to .md') }}</a>&nbsp;{% endif %}<a tabindex="20" class="label label-warning" href="?section={{ section }}&delete={{ file }}">{{ word('Delete') }}</a></td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+          {%- else %}
+          <p><em>{{ word("No files have been uploaded yet.") }}</em></p>
+          {%- endif %}
 
-<div>
-  <h3>{{ upload_header }}</h3>
-</div>
+          <div>
+            <h3>{{ upload_header }}</h3>
+          </div>
 
-<form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
-  {{ form.hidden_tag() }}
-  {{ myrender_hidden_field(form.section, value=section) }}
-  {{ render_file_field(form.uploadfile, tabindex=60, multiple=True) }}
-  <div class="form-actions">
-    {{ render_submit_field(form.submit, tabindex=565, id="uploadbutton") }}
-  </div>
-</form>
-{%- endif %}
-{%- if edit_header %}
-<h3>{{ edit_header }}</h3>
-{%- endif %}
-{%- if lowerdescription %}
-<div class="panel panel-default">
-  <div class="panel-body">
-    {{ lowerdescription }}
-  </div>
-</div>
-{%- endif %}
+          <form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            {{ myrender_hidden_field(form.section, value=section) }}
+            {{ render_file_field(form.uploadfile, tabindex=60, multiple=True) }}
+            <div class="form-actions">
+              {{ render_submit_field(form.submit, tabindex=565, id="uploadbutton") }}
+            </div>
+          </form>
+          {%- endif %}
+          {%- if edit_header %}
+          <h3>{{ edit_header }}</h3>
+          {%- endif %}
+          {%- if lowerdescription %}
+          <div class="panel panel-default">
+            <div class="panel-body">
+              {{ lowerdescription }}
+            </div>
+          </div>
+          {%- endif %}
 {%- endblock %}
 {%- block below %}
-<ul id="editnav" class="nav nav-pills navpillssmaller">
-  <li>
-    <a tabindex="571" title="{{ word('Create a new file') }}" href="?section={{ section }}&new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span> {{ word('Add') }}</a>
-  </li>
-  <li role="presentation" class="dropdown">
-    <a tabindex="572" class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another file')}}">
-      <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
-    </a>
-    <ul class="dropdown-menu heightlim">
-      {%- if any_files %}
-      {%- for file in editable_files %}
-      {%- if file == current_file %}
-      <li class="active">
-        <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
-        </a>
-      </li>
-      {%- else %}
-      <li>
-        <a href="?section={{ section }}&file={{ file }}"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
-        </a>
-      </li>
-      {%- endif %}
-      {%- endfor %}
-      {%- else %}
-      <li class="active">
-        <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
-        </a>
-      </li>
-      {%- endif %}
-    </ul>
-  </li>
-</ul>
+            <ul id="editnav" class="nav nav-pills navpillssmaller">
+              <li>
+                <a tabindex="571" title="{{ word('Create a new file') }}" href="?section={{ section }}&new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span> {{ word('Add') }}</a>
+              </li>
+              <li role="presentation" class="dropdown">
+                <a tabindex="572" class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another file')}}">
+                  <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu heightlim">
+                  {%- if any_files %}
+                  {%- for file in editable_files %}
+                  {%- if file == current_file %}
+                  <li class="active">
+                    <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
+                    </a>
+                  </li>
+                  {%- else %}
+                  <li>
+                    <a href="?section={{ section }}&file={{ file }}"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
+                    </a>
+                  </li>
+                  {%- endif %}
+                  {%- endfor %}
+                  {%- else %}
+                  <li class="active">
+                    <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
+                    </a>
+                  </li>
+                  {%- endif %}
+                </ul>
+              </li>
+            </ul>
 
-<div class="daspacer"></div>
-<form action="{{ url_for('playground_files') }}" method="POST" class="form" role="form" id="formtwo">
-  {{ formtwo.hidden_tag() }}
-  {{ myrender_hidden_field(formtwo.section, value=section) }}
-  {{ myrender_hidden_field(formtwo.original_file_name, value=current_file) }}
-  <div class="row">
-    <div class="col-lg-6">
-      {{ render_addon_field(formtwo.file_name, tabindex=579) }}
-    </div>
-    <div class="col-lg-6">
-      {{ render_addon_field(formtwo.search_term, tabindex=590, autocomplete="off", extra='<a class="input-group-addon no-outline pointer" id="daSearchPrevious"><i class="glyphicon glyphicon-chevron-left"></i></a><a class="input-group-addon no-outline pointer" id="daSearchNext"><i class="glyphicon glyphicon-chevron-right"></i></a>', extra_class='pull-right') }}
-    </div>
-  </div>
-  <div class="daspacer"></div>
-  <div class="form-group">
-    <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="580">{{ content }}</textarea>
-  </div>
-  <div class="form-actions">
-    {{ render_submit_field(formtwo.submit, tabindex=600, class="btn btn-primary btn-lg") }}
-    {% if is_new == 'False' %}<a tabindex="610" class="btn btn-default btn-lg" href="?section={{ section }}&delete={{ current_file }}">{{ word('Delete') }}</a>{% endif %}
-    {# {{ render_submit_field(formtwo.delete, tabindex=610, id="daDelete", class="btn btn-default btn-lg") }} #}
-  </div>
-</form>
-{%- if after_text %}
-<p>{{ after_text }}</p>
-{%- endif %}
-
+            <div class="daspacer"></div>
+            <form action="{{ url_for('playground_files') }}" method="POST" class="form" role="form" id="formtwo" autocomplete="off">
+              {{ formtwo.hidden_tag() }}
+              {{ myrender_hidden_field(formtwo.section, value=section) }}
+              {{ myrender_hidden_field(formtwo.original_file_name, value=current_file) }}
+              <div class="row">
+                <div class="col-lg-6">
+                  {{ render_addon_field(formtwo.file_name, tabindex=579) }}
+                </div>
+                <div class="col-lg-6">
+                  {{ render_addon_field(formtwo.search_term, tabindex=590, autocomplete="off", extra='<a class="input-group-addon no-outline pointer" id="daSearchPrevious"><i class="glyphicon glyphicon-chevron-left"></i></a><a class="input-group-addon no-outline pointer" id="daSearchNext"><i class="glyphicon glyphicon-chevron-right"></i></a>', extra_class='pull-right') }}
+                </div>
+              </div>
+              <div class="daspacer"></div>
+              <div class="form-group">
+                <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="580">{{ content }}</textarea>
+              </div>
+              <div class="form-actions">
+                {{ render_submit_field(formtwo.submit, tabindex=600, class="btn btn-primary btn-lg") }}
+                {% if is_new == 'False' %}<a tabindex="610" class="btn btn-default btn-lg" href="?section={{ section }}&delete={{ current_file }}">{{ word('Delete') }}</a>{% endif %}
+                {# {{ render_submit_field(formtwo.delete, tabindex=610, id="daDelete", class="btn btn-default btn-lg") }} #}
+              </div>
+            </form>
+            {%- if after_text %}
+            <p>{{ after_text }}</p>
+            {%- endif %}
 {%- endblock %}
 {% block rightside %}
 {%- if active_file %}
@@ -137,6 +136,6 @@
 {%- endif %}
 {%- endblock %}
 {%- block bottom %}
-<div class="daspacer-large"></div>
-<div class="container"><p><a tabindex="620" href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
+      <div class="daspacer-large"></div>
+      <div class="container"><p><a tabindex="620" href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
 {%- endblock %}
