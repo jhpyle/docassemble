@@ -501,10 +501,19 @@ like this:
 
 ![sample form]({{ site.baseurl }}/img/sample-form.png){: .maybe-full-width }
 
-The `fields` must be in the form of a [YAML] dictionary.  The names of
-the fields listed in `fields` must correspond _exactly_ with the names
-of the fields in the PDF file.  Luckiliy, there is [a tool] that will help you
-extract the literal field names from a PDF file.
+The `fields` must be in the form of a [YAML] list of dictionaries, or
+a single dictionary.  The names of the fields listed in `fields` must
+correspond _exactly_ with the names of the fields in the PDF file.
+Luckiliy, there is [a tool] that will help you extract the literal
+field names from a PDF file.
+
+Note: if your PDF document has many fields, it is strongly recommended
+that you use [Adobe Acrobat Pro] to give each field a concise,
+meaningful, and accurate field name (as well as a helpful tooltip).
+[Adobe Acrobat Pro] has a feature for automatically assigning names to
+fields, but this tool often assigns incorrect names.  You should go
+through this process _before_ you [generate] the `attachment`
+statement for filling fields in the PDF file.
 
 When writing the values of the fields, you can use [Mako], but not
 [Markdown].  If you use [Markdown], it will be interpreted literally.
@@ -514,6 +523,12 @@ Checkbox fields will be checked if and only if the value evaluates to
 The section below on [passing values using code](#template code)
 explains alternative ways that you can populate the values of fields
 in a PDF file.
+
+You have a choice whether to list fields as a single dictionary or a
+list of dictionary items.  Providing the fields in the form of a list
+is usually preferable because it provides an order in which the fields
+should be evaluated; if you only provide a single dictionary, the
+items will be evaluated in a random order.
 
 <a name="editable"></a>By default, the PDF files created by filling in
 forms in a `pdf template file` can be edited by the user; the fill-in
@@ -552,9 +567,9 @@ name.  For example:
 
 {% highlight yaml %}
     fields:
-      first signature: ${ user.signature }
-      second signature: ${ user.signature }
-      third signature: ${ user.signature }
+      - first signature: ${ user.signature }
+      - second signature: ${ user.signature }
+      - third signature: ${ user.signature }
 {% endhighlight %}
 
 ## <a name="docx template file"></a>Filling DOCX templates
@@ -708,7 +723,7 @@ The content of `fields` is converted into a data structure, which is
 passed to the `render()` method of [`python-docx-template`].  The data
 structure needs to be a [Python dict], but it can contain other data
 types.  For example, in this interview, `fields` contains a list of
-ingredients.:
+ingredients:
 
 {% include side-by-side.html demo="docx-recipe" %}
 
@@ -1191,6 +1206,7 @@ interview, see the [`cache documents` feature].
 [Dictionary]: {{ site.baseurl }}/docs/groups.html#gather dictionary
 [Groups]: {{ site.baseurl }}/docs/groups.html
 [a tool]: #list field names
+[generate]: #list field names
 [`signature` block]: {{ site.baseurl }}/docs/fields.html#signature
 [dictionary]: {{ site.baseurl }}/docs/groups.html#gather dictionary
 [auto-format]: https://support.office.com/en-us/article/Change-curly-quotes-to-straight-quotes-and-vice-versa-017963a0-bc5f-486b-9c9d-0ec511a8fb8f

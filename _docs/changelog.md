@@ -4,6 +4,22 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.67](https://github.com/jhpyle/docassemble/releases/tag/v0.1.67) - 2017-10-02
+
+### Added
+- Warnings in the Playground when use of a particular file name would
+  overwrite an existing file.
+- Functions `yesno`, `split`, `showif`, `showifdef`, and `phone_number_part`.
+
+### Changed
+- Fields in a PDF fill-in form can be specified as
+  a list of dictionaries.
+
+### Fixed
+- When `maximum image size` in effect, files that got converted to PNG
+  by the browser still had original file extensions.
+- Typo introduced in 0.1.65 affecting choices.
+
 ## [0.1.66](https://github.com/jhpyle/docassemble/releases/tag/v0.1.66) - 2017-10-01
 
 ### Fixed

@@ -731,6 +731,10 @@ pixels in height or width:
 
 {% include side-by-side.html demo="upload-max-image-size" %}
 
+Note that the image file type of the uploaded file may be changed to
+[PNG] during the conversion process.  Different browsers behave
+differently.
+
 If you have a lot of document upload fields, you can set a default 
 `maximum image size` on an interview-wide basis with the
 [`maximum image size` interview feature] and on a site-wide basis with

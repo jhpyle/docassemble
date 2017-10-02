@@ -1481,6 +1481,10 @@ them.  For example, if `maximum image size` is set to 1200, then the
 image will be reduced in size if it is taller or wider than 1200
 pixels.
 
+Note that the image file type of the uploaded file may be changed to
+[PNG] during the conversion process.  Different browsers behave
+differently.
+
 If you would like to set a site-wide default value for the maximum
 image size, you can use the `maximum image size` configuration
 directive:

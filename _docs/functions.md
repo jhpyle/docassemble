@@ -2401,6 +2401,72 @@ from [`docassemble.base.util`]:
 docassemble.base.util.update_language_function('fr', 'her', docassemble.base.util.prefix_constructor('sa '))
 {% endhighlight %}
 
+# <a name="formfilling"></a>Helper functions for form filling
+
+## <a name="yesno"></a>yesno()
+
+The `yesno()` function returns `'Yes'` or `'No'` depending on the
+truth value of the argument.  This is useful for filling in checkboxes
+in [PDF templates].
+
+## <a name="split"></a>split()
+
+The `split()` function splits a phrase into parts that are a certain
+number of characters long.  It splits on word breaks when it can.
+This is useful for filling in [PDF templates] when a single phrase
+must be typed into more than one field.
+
+The first argument is the phrase.  The second argument is a list of
+maximum character lengths of each part.  If there are two numbers,
+there will be at most three parts.  The third argument is the index of
+the part you want.  The first index is `0`.
+
+In this example, the first part should be no more than 12 characters
+and the second part should be no more than 20 characters.
+
+* `split("The quick brown fox jumped over the lazy dog", [12, 20], 0)`
+returns `'The quick'`.
+* `split("The quick brown fox jumped over the lazy dog", [12, 20], 1)`
+returns `'brown fox jumped over'`.
+* `split("The quick brown fox jumped over the lazy dog", [12, 20], 2)`
+returns `'the lazy dog'`.
+
+If you only want to split in two parts, and you do not wish to limit
+the length of the second part, you can pass a single number instead of
+a list of numbers as the second argument.
+
+* `split("The quick brown fox jumped over the lazy dog", 12, 0)`
+returns `'The quick'`.
+* `split("The quick brown fox jumped over the lazy dog", 12, 1)`
+returns `'brown fox jumped over the lazy dog'`.
+
+If you refer to an index for a part that does not exist because the
+phrase was too short, empty text (`''`) is returned.
+
+To figure out what character lengths you should use, one method is to
+test the PDF file to see how many letter `M`s you can fit into a
+field.  If you can fit 10 `M`s into the first field and 22 `M`s in
+into the second field, the second argument to `split()` would be
+`[10, 22]`.
+
+## <a name="showif"></a>showif()
+
+The `showif()` function returns the value of variable if the given
+condition is true, and otherwise returns empty text (`''`).
+
+* `showif('favorite_fruit', likes_fruit)` returns the value of the
+  variable `favorite_fruit`, but only if the variable `likes_fruit` is
+  true.
+  
+Note that the first argument must be a variable name in quotes.  This
+ensures that a definition of the variable will not be sought unless
+the condition is true.
+
+## <a name="showifdef"></a>showifdef()
+
+The `showifdef()` function is like `showif()`, except that the value
+of the variable is only returned if the variable is defined.
+
 # <a name="functions"></a>Miscellaneous functions
 
 ## <a name="server_capabilities"></a>server_capabilities()
@@ -4130,3 +4196,4 @@ $(document).on('daPageLoad', function(){
 [del statement]: https://docs.python.org/2/tutorial/datastructures.html#the-del-statement
 [multiple-choice question]: {{ site.baseurl }}/docs/fields.html#field with buttons
 [`need` directive]: {{ site.baseurl }}/docs/logic.html#need
+[PDF templates]: {{ site.baseurl }}/docs/documents.html#pdf template file

@@ -746,6 +746,10 @@ set `maximum image size` in the `features` block for your interview.
 In this example, images will be reduced in size so that they are no
 taller than 100 pixels and no wider than 100 pixels.
 
+Note that the image file type of the uploaded file may be changed to
+[PNG] during the conversion process.  Different browsers behave
+differently.
+
 This is just a default value; you can override it by setting the
 [`maximum image size` in a field definition].
 
@@ -884,3 +888,4 @@ features:
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`code`]: {{ site.baseurl }}/docs/code.html#code
+[PNG]: https://en.wikipedia.org/wiki/Portable_Network_Graphics

@@ -1705,14 +1705,14 @@
     filename: recipe
     docx template file: recipe_template.docx
     fields:
-      title: Mandelbrot cookies
-      oven_temperature: ${ oven_degrees } degrees
-      ingredients:
-        - apple sauce
-        - ${ special_ingredient }
-        - flour
-        - sugar
-      preparation_time: 48 hours
+      - title: Mandelbrot cookies
+      - oven_temperature: ${ oven_degrees } degrees
+      - ingredients:
+          - apple sauce
+          - ${ special_ingredient }
+          - flour
+          - sugar
+      - preparation_time: 48 hours
 "docx-template": |-
   mandatory: True
   question: |
@@ -3180,10 +3180,10 @@
   attachment:
     pdf template file: fruit_template.pdf
     fields:
-      favorite_fruit: ${ favorite_fruit }
-      favorite_veggie: ${ favorite_veggie }
-      favorite_legume: ${ favorite_legume }
-      favorite_fungus: ${ favorite_fungus }
+      - favorite_fruit: ${ favorite_fruit }
+      - favorite_veggie: ${ favorite_veggie }
+      - favorite_legume: ${ favorite_legume }
+      - favorite_fungus: ${ favorite_fungus }
 "fruit-template-alt-2": |-
   mandatory: True
   question: Here is your document.
@@ -5715,18 +5715,18 @@
     filename: filled-form
     pdf template file: sample-form.pdf
     fields:
-      Your Name: |
-        ${ user }
-      Your Organization: |
-        ${ user.organization }
-      Apple Checkbox: |
-        ${ likes_apples }
-      Orange Checkbox: |
-        ${ likes_oranges }
-      Pear Checkbox: |
-        ${ likes_pears }
-      Toast Checkbox: |
-        ${ likes_toast }
+      - Your Name: |
+          ${ user }
+      - Your Organization: |
+          ${ user.organization }
+      - Apple Checkbox: |
+          ${ likes_apples }
+      - Orange Checkbox: |
+          ${ likes_oranges }
+      - Pear Checkbox: |
+          ${ likes_pears }
+      - Toast Checkbox: |
+          ${ likes_toast }
   mandatory: True
 "pdf-fill-code": |-
   question: |
@@ -5788,28 +5788,28 @@
       pdf template file: |
         Transfer-of-Ownership.pdf
       fields:
-        "grantor": ${ user }
-        "grantee": ${ friend }
-        "collection": ${ prized_collection }
-        "signature": ${ user.signature }
+        - "grantor": ${ user }
+        - "grantee": ${ friend }
+        - "collection": ${ prized_collection }
+        - "signature": ${ user.signature }
 "pdf-template-alt-1": |-
   mandatory: True
   question: Here is your document.
   attachment:
     pdf template file: letter.pdf
     fields:
-      letter_date: ${ today() }
-      subject_line: ${ subject_of_letter }
-      recipient_address: ${ recipient.address_block() }
+      - letter_date: ${ today() }
+      - subject_line: ${ subject_of_letter }
+      - recipient_address: ${ recipient.address_block() }
 "pdf-template-alt-2": |-
   mandatory: True
   question: Here is your document.
   attachment:
     pdf template file: letter.pdf
     field code:
-      letter_date: today()
-      subject_line: subject_of_letter
-      recipient_address: recipient.address_block()
+      - letter_date: today()
+      - subject_line: subject_of_letter
+      - recipient_address: recipient.address_block()
 "pdf-template-alt-3": "mandatory: True\nquestion: Here is your document.\nattachment:\n\
   \  pdf template file: letter.pdf\n  code:\n    dict(letter_date=today(), \n    \
   \     subject_line=subject_of_letter, \n         recipient_address=recipient.address_block())"
