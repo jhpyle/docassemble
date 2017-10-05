@@ -4866,10 +4866,20 @@
     - Check again: refresh
 "ml-datatype": |-
   question: |
-    What is your goal?
+    Describe how you feel.
   fields:
-    - no label: goal
-      datatype: mlarea
+    - no label: mood
+      datatype: ml
+  ---
+  mandatory: True
+  question: |
+    You sound ${ mood }.
+  help: |
+    If `mood` is `None`, then
+    go to Train from the menu
+    and train the model "mood"
+    in the `docassemble.base`
+    package.
 "ml-export": |-
   initial: True
   code: |
@@ -4911,6 +4921,22 @@
   \ provided was:\n  > ${ phrase }\n  \n  % if len(predictions):\n  The prediction\
   \ was:\n\n  > ${ predictions[0] }\n  % else:\n  There is not enough training data\n\
   \  to make a prediction yet.\n  % endif\nbuttons:\n  - Restart: restart"
+"mlarea-datatype": |-
+  question: |
+    Describe how you feel.
+  fields:
+    - no label: mood
+      datatype: mlarea
+  ---
+  mandatory: True
+  question: |
+    You sound ${ mood }.
+  help: |
+    If `mood` is `None`, then
+    go to Train from the menu
+    and train the model "mood"
+    in the `docassemble.base`
+    package.
 "modules": |-
   modules:
     - json
@@ -5869,38 +5895,6 @@
     % else:
     Get a job!
     % endif
-"predict-happy-sad": |-
-  question: |
-    Describe how you feel.
-  fields:
-    - no label: mood
-      datatype: ml
-  ---
-  mandatory: True
-  question: |
-    You sound ${ mood }.
-  help: |
-    If `mood` is `None`, then
-    go to Train from the menu
-    and train the model "mood"
-    in the `docassemble.base`
-    package.
-"predict-happy-sad-area": |-
-  question: |
-    Describe how you feel.
-  fields:
-    - no label: mood
-      datatype: mlarea
-  ---
-  mandatory: True
-  question: |
-    You sound ${ mood }.
-  help: |
-    If `mood` is `None`, then
-    go to Train from the menu
-    and train the model "mood"
-    in the `docassemble.base`
-    package.
 "prevent-back": |-
   code: |
     app_submitted = True

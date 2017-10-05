@@ -1942,13 +1942,18 @@ This function is a direct wrapper around
 
 # <a name="phone"></a>Functions for working with phone numbers
 
+The following functions help with mangaging phone numbers.  They rely
+on the [`phonenumbers`] package in [Python].
+
 ## <a name="phone_number_in_e164"></a>phone_number_in_e164()
 
 The `phone_number_in_e164()` function takes a phone number and formats
 it into [E.164] format.  It takes an optional keyword argument
-`country` that is used to determine the country code for the phone
-number.  If `country` is not provided, the [`get_country()`] function
-is used to determine the applicable country.
+`country`, which is expected to be a country abbreviation (e.g.,
+`'SE'` for Sweden).  (See the [`pycountry` package] for the list of
+codes.)  The `country` code is used to determine the country code for
+the phone number.  If `country` is not provided, the [`get_country()`]
+function is used to determine the applicable country.
 
 ## <a name="phone_number_is_valid"></a>phone_number_is_valid()
 
@@ -1959,6 +1964,20 @@ to determine the country whose phone number standards should be used
 to determine the validity of the phone number.  If `country` is not
 provided, the [`get_country()`] function is used to determine the
 applicable country.
+
+## <a name="phone_number_part"></a>phone_number_part()
+
+The `phone_number_part()` function is use to extract individual parts
+of a phone number.
+
+* `phone_number_part("555-212-5623", 0)` returns `'555'`.
+* `phone_number_part("555-212-5623", 1)` returns `'212'`.
+* `phone_number_part("555-212-5623", 2)` returns `'5623'`.
+
+The function takes an optional keyword argument `country` that is used
+to format the phone number according to the national conventions.  If
+`country` is not provided, the [`get_country()`] function is used to
+determine the applicable country.
 
 # <a name="tasks"></a>Functions for tracking tasks
 

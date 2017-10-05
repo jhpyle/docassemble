@@ -533,6 +533,24 @@ Note that this synchronization feature does not work with
 [Google Docs]; it will not convert a [Google Docs] file to a .docx
 file, for example.
 
+Keep in mind that Google Drive is not instantaneous.  If you make
+changes to a file on your hard drive, it may take several seconds for
+the file to upload to Google Drive.  So if you click the "Sync" too
+quickly, the changes to your file may not be seen.  Likewise, when
+**docassemble** makes changes to a file in the Google cloud, it may
+take several seconds for that change to be reflected in your local
+files.
+
+Many problems can happen during a two-way synchronization process, so
+it is important to be patient, to give the system time to do its work,
+and to avoid doing things that could confuse the system.  For example,
+if you press the "Sync" button but then you become impatient and you
+close the browser window before the synchronization process completes,
+you may find your files in an inconsistent state.  If you have a file
+open for editing locally but then you make changes to the same file in
+the web interface and press Sync, Google Drive might not be able to
+copy the modified file to your local drive.
+
 # <a name="infiniteloops"></a>Recovering from infinite loops
 
 If you accidentially write code that gets into an infinite loop, the

@@ -243,6 +243,47 @@ code: |
 ---
 {% endhighlight %}
 
+However, it is often cleaner to put the object initialization into the
+class definition itself:
+
+{% highlight python %}
+class Recipe(DAObject):
+    def init(self, *pargs, **kwargs):
+        self.initializeAttribute('ingredients', DAList)
+        return super(Recipe, self).init(*pargs, **kwargs)
+{% endhighlight %}
+
+Then, you would only need to write this in your interview file:
+
+{% highlight yaml %}
+---
+objects:
+  - dinner: Recipe
+---
+{% endhighlight %}
+
+The `init()` function is a special function that is called on all
+[`DAObject`] objects at the time they are initialized.  This is not to
+be confused with the `__init__()` function, which is built in to
+[Python]; you should use `init()`, not `__init__()`.
+
+When you write your own `init()` function for a class, you should (but
+are not required to) include the 
+`return super(Recipe, self).init(*pargs, **kwargs)` line at the end.
+This will ensure that `Recipe` objects can initialized properly.  For
+example, if you wrote:
+
+{% highlight python %}
+dinner.initializeAttribute('recipe', Recipe, oven_temperature=300)
+{% endhighlight %}
+
+then `dinner.recipe` would be a `Recipe` object and
+`dinner.recipe.oven_temperature` would be `300`.  However, if you
+included an `init()` function and failed to conclude it with 
+`return super(Recipe, self).init(*pargs, **kwargs)`, then the
+`oven_temperature` variable would not be set.  Therefore, it is a good
+practice to always write your `init()` methods in this way.
+
 ## <a name="usingglob"></a>Using global variables in your classes
 
 Normally in [Python] you can use global variables to keep track of
