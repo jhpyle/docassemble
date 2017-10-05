@@ -2538,6 +2538,7 @@ def yesno(value, invert=False):
 
 def split(text, breaks, index):
     """Splits text at particular breakpoints and returns the given piece."""
+    text = unicode(text)
     if type(breaks) is not list:
         breaks = [breaks]
     lastbreakpoint = 0

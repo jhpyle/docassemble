@@ -1,17 +1,31 @@
 # Change Log
 
+## [0.1.68] - 2017-10-05
+### Changed
+- Interview cache invalidation now handled through thread local
+  variables and a redis counter, rather than by modification times on
+  YAML files.  This may avoid potential problems with Google Drive
+  sync.
+- Google Drive sync now has a page that tells the user not to stop the
+  web browser.
+### Fixed
+- Error on URL redirection.
+- Playground package page asking for GitHub sign-in after expiration
+  of credentials.
+- History on error page restored.
+
 ## [0.1.67] - 2017-10-02
 ### Added
 - Warnings in the Playground when use of a particular file name would
   overwrite an existing file.
 - Functions `yesno`, `split`, `showif`, `showifdef`, and `phone_number_part`.
 ### Changed
-- Fields in a PDF fill-in form can be specified as
-  a list of dictionaries.
+- Fields in a PDF fill-in form can be specified as a list of dictionaries.
 ### Fixed
 - When `maximum image size` in effect, files that got converted to PNG
   by the browser still had original file extensions.
-- Typo introduced in 0.1.65 affecting choices.
+- Typo introduced in 0.1.65 affecting the processing of lists of
+  choices in multiple-choice questions.
 
 ## [0.1.66] - 2017-10-01
 ### Fixed

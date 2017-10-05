@@ -249,8 +249,8 @@
 - Scheduled tasks:
     - cron
 - Machine Learning:
-    - predict-happy-sad
-    - predict-happy-sad-area
+    - ml-datatype
+    - mlarea-datatype
 - Machine Learning (Low-Level):
     - ml-predict
     - ml-save-and-predict

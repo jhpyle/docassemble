@@ -3809,7 +3809,8 @@ def index():
     if need_to_reset:
         #logmessage("index: needed to reset, so redirecting; encrypted is " + str(encrypted))
         if use_cache == 0:
-            docassemble.base.parse.interview_source_from_string(yaml_filename).reset_modtime()
+            # docassemble.base.parse.interview_source_from_string(yaml_filename).reset_modtime()
+            docassemble.base.parse.interview_source_from_string(yaml_filename).update_index()
         if need_to_resave:
             save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
         response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json)
@@ -9397,6 +9398,14 @@ def trash_gd_file(section, filename):
 @login_required
 @roles_required(['admin', 'developer'])
 def sync_with_google_drive():
+    next = request.args.get('next', url_for('playground_page'))
+    extra_meta = """\n    <meta http-equiv="refresh" content="1; url='""" + url_for('do_sync_with_google_drive', next=next) + """'">"""
+    return render_template('pages/google_sync.html', version_warning=None, bodyclass='adminbody', extra_meta=Markup(extra_meta), tab_title=word('Synchronizing'), page_title=word('Synchronizing'))
+    
+@app.route('/do_sync_with_google_drive', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def do_sync_with_google_drive():
     if app.config['USE_GOOGLE_DRIVE'] is False:
         flash(word("Google Drive is not configured"), "error")
         return redirect(url_for('interview_list'))
@@ -9540,6 +9549,8 @@ def sync_with_google_drive():
                     if os.path.isfile(the_path):
                         area.delete_file(f)
         area.finalize()
+    for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+        r.incr(key)
     if commentary != '':
         flash(commentary, 'success')
         logmessage(commentary)
@@ -9832,12 +9843,16 @@ def playground_files():
             if os.path.exists(filename):
                 os.remove(filename)
                 area.finalize()
+                for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+                    r.incr(key)
                 if use_gd:
                     try:
                         trash_gd_file(section, argument)
                     except Exception as the_err:
                         logmessage("playground_files: unable to delete file on Google Drive.  " + str(the_err))
                 flash(word("Deleted file: ") + argument, "success")
+                for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+                    r.incr(key)
                 return redirect(url_for('playground_files', section=section))
             else:
                 flash(word("File not found: ") + argument, "error")
@@ -9878,6 +9893,8 @@ def playground_files():
                         the_file = filename
                         filename = os.path.join(area.directory, filename)
                         up_file.save(filename)
+                        for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+                            r.incr(key)
                         area.finalize()
                         if section == 'modules':
                             return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file)))
@@ -9889,6 +9906,8 @@ def playground_files():
                 filename = os.path.join(area.directory, the_file)
                 if os.path.exists(filename):
                     os.remove(filename)
+                    for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+                        r.incr(key)
                     area.finalize()
                     flash(word("Deleted file: ") + the_file, "success")
                     return redirect(url_for('playground_files', section=section))
@@ -9904,13 +9923,16 @@ def playground_files():
                 with open(filename, 'w') as fp:
                     fp.write(formtwo.file_content.data.encode('utf8'))
                 the_time = formatted_current_time()
+                for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+                    r.incr(key)
                 area.finalize()
-                if formtwo.active_file.data:
-                    interview_file = os.path.join(pgarea.directory, formtwo.active_file.data)
-                    if os.path.isfile(interview_file):
-                        with open(interview_file, 'a'):
-                            os.utime(interview_file, None)
-                        pgarea.finalize()
+                if formtwo.active_file.data and formtwo.active_file.data != the_file:
+                    #interview_file = os.path.join(pgarea.directory, formtwo.active_file.data)
+                    r.incr('da:interviewsource:docassemble.playground' + str(current_user.id) + ':' + formtwo.active_file.data)
+                    #if os.path.isfile(interview_file):
+                    #    with open(interview_file, 'a'):
+                    #        os.utime(interview_file, None)
+                    #    pgarea.finalize()
                 flash_message = flash_as_html(str(the_file) + ' ' + word('was saved at') + ' ' + the_time + '.', message_type='success', is_ajax=is_ajax)
                 if section == 'modules':
                     #restart_all()
@@ -10244,11 +10266,14 @@ def playground_packages():
             storage = RedisCredStorage(app='github')
             credentials = storage.get()
             if not credentials or credentials.invalid:
-                session['github_state'] = random_string(16)
-                session['github_next'] = 'playgroundpackages:' + the_file
-                flow = get_github_flow()
-                uri = flow.step1_get_authorize_url(state=session['github_state'])
-                return redirect(uri)
+                if form.github.data:
+                    session['github_state'] = random_string(16)
+                    session['github_next'] = 'playgroundpackages:' + the_file
+                    flow = get_github_flow()
+                    uri = flow.step1_get_authorize_url(state=session['github_state'])
+                    return redirect(uri)
+                else:
+                    raise Exception('GitHub integration expired.')
             http = credentials.authorize(httplib2.Http())
             resp, content = http.request("https://api.github.com/user", "GET")
             if int(resp['status']) == 200:
@@ -10372,6 +10397,8 @@ def playground_packages():
                         with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w') as fp:
                             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
                             fp.write(the_yaml.encode('utf8'))
+                        for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+                            r.incr(key)
                         for sec in area:
                             area[sec].finalize()
                         the_file = package_name
@@ -10499,6 +10526,8 @@ def playground_packages():
         area['playgroundpackages'].finalize()
         for sec in area:
             area[sec].finalize()
+        for key in r.keys('da:interviewsource:playground' + str(current_user.id) + ':*'):
+            r.incr(key)
         the_file = package_name
         flash(word("The package was unpacked into the Playground."), 'success')
         shutil.rmtree(directory)
@@ -11032,7 +11061,7 @@ def playground_variables():
             content = ''
             if 'playground_content' in post_data:
                 content = post_data['playground_content']
-            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, package="docassemble.playground" + str(current_user.id), path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
         interview = interview_source.get_interview()
         ensure_ml_file_exists(interview, active_file)
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
@@ -11101,6 +11130,7 @@ def playground_page():
                         flash(word("Sorry, only YAML files can be uploaded here.  To upload other types of files, use the Folders."), 'error')
                         return redirect(url_for('playground_page'))
                     filename = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', filename)
+                    new_file = filename
                     filename = os.path.join(playground.directory, filename)
                     up_file.save(filename)
                     try:
@@ -11111,6 +11141,7 @@ def playground_page():
                         flash(word("There was a problem reading the YAML file you uploaded.  Are you sure it is a YAML file?  File was not saved."), 'error')
                         return redirect(url_for('playground_page'))
                     playground.finalize()
+                    r.incr('da:interviewsource:docassemble.playground' + str(current_user.id) + ':' + new_file)
                     return redirect(url_for('playground_page', file=os.path.basename(filename)))
                 except Exception as errMess:
                     flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
@@ -11188,6 +11219,9 @@ def playground_page():
             if os.path.isfile(filename):
                 os.remove(filename)
                 flash(word('File deleted.'), 'info')
+                r.delete('da:interviewsource:docassemble.playground' + str(current_user.id) + ':' + the_file)
+                if active_file != the_file:
+                    r.incr('da:interviewsource:docassemble.playground' + str(current_user.id) + ':' + active_file)
                 playground.finalize()
                 if use_gd:
                     try:
@@ -11208,20 +11242,31 @@ def playground_page():
                     os.remove(old_filename)
                     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
             the_time = formatted_current_time()
-            with open(filename, 'w') as fp:
-                fp.write(form.playground_content.data.encode('utf8'))
+            should_save = True
+            if os.path.isfile(filename):
+                with open(filename, 'rU') as fp:
+                    orig_content = fp.read().decode('utf8')
+                    if orig_content == form.playground_content.data:
+                        logmessage("No need to save")
+                        should_save = False
+            if should_save:
+                with open(filename, 'w') as fp:
+                    fp.write(form.playground_content.data.encode('utf8'))
+            this_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + the_file
+            active_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + active_file
+            r.incr('da:interviewsource:' + this_interview_string)
+            if the_file != active_file:
+                r.incr('da:interviewsource:' + active_interview_string)
             # for a_file in files:
             #     docassemble.base.interview_cache.clear_cache('docassemble.playground' + str(current_user.id) + ':' + a_file)
             #     a_filename = os.path.join(playground.directory, a_file)
             #     if a_filename != filename and os.path.isfile(a_filename):
             #         with open(a_filename, 'a'):
             #             os.utime(a_filename, None)
-            this_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + the_file
-            active_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + active_file
-            a_filename = os.path.join(playground.directory, active_file)
-            if a_filename != filename and os.path.isfile(a_filename):
-                with open(a_filename, 'a'):
-                    os.utime(a_filename, None)
+            # a_filename = os.path.join(playground.directory, active_file)
+            # if a_filename != filename and os.path.isfile(a_filename):
+            #     with open(a_filename, 'a'):
+            #         os.utime(a_filename, None)
             playground.finalize()
             docassemble.base.interview_cache.clear_cache(this_interview_string)
             if active_interview_string != this_interview_string:
@@ -11583,8 +11628,8 @@ def server_error(the_error):
         errmess = '<pre>' + errmess + '</pre>'
     else:
         errmess = '<blockquote>' + errmess + '</blockquote>'
-    #return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=str(the_history), logtext=str(the_trace)), error_code
-    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=None, logtext=str(the_trace)), error_code
+    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=str(the_history), logtext=str(the_trace)), error_code
+    #return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=None, logtext=str(the_trace)), error_code
 
 # @app.route('/testpost', methods=['GET', 'POST'])
 # def test_post():
@@ -13714,6 +13759,8 @@ docassemble.base.util.set_machine_learning_entry(docassemble.webapp.machinelearn
 from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog
 with app.app_context():
     copy_playground_modules()
+    for interview_path in [x for x in r.keys('da:interviewsource:*')]:
+        r.delete(interview_path)
     write_pypirc()
 
 if __name__ == "__main__":

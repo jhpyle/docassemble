@@ -1,0 +1,9 @@
+{% extends 'base_templates/flask_wide_base.html' %}
+
+{% block content %}
+{% from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
+<h1>{{ word('Google Drive Sync') }}</h1>
+<p>{{ word('Please wait.') }}</p>
+<p>{{ word('Do not stop your web browser.') }}</p>
+<p>{{ word('The Playground is synchronizing with Google Drive.') }}</p>
+{% endblock %}

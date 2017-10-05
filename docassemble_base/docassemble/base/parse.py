@@ -129,6 +129,12 @@ class InterviewSource(object):
     def set_path(self, path):
         self.path = path
         return
+    def get_index(self):
+        the_index = docassemble.base.functions.server.server_redis.get('da:interviewsource:' + self.path)
+        if the_index is None:
+            return docassemble.base.functions.server.server_redis.incr('da:interviewsource:' + self.path)
+    def update_index(self):
+        docassemble.base.functions.server.server_redis.incr('da:interviewsource:' + self.path)
     def set_filepath(self, filepath):
         self.filepath = filepath
         return
@@ -807,6 +813,7 @@ class Question:
         self.is_generic = False
         self.name = None
         self.role = list()
+        self.condition = list()
         self.terms = dict()
         self.autoterms = dict()
         self.need = None
@@ -1327,8 +1334,6 @@ class Question:
                 self.condition = [compile(x, '', 'eval') for x in data['if']]
             else:
                 raise DAError("An if statement must either be text or a list." + self.idebug(data))
-        else:
-            self.condition = []
         if 'validation code' in data:
             if type(data['validation code']) not in [str, unicode]:
                 raise DAError("A validation code statement must be text." + self.idebug(data))
