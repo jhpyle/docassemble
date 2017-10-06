@@ -48,7 +48,19 @@ class DAObject(object):
     def init(self, *pargs, **kwargs):
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
-        return
+    @classmethod
+    def using(cls, **kwargs):
+        the_kwargs = dict()
+        for key, val in kwargs.iteritems():
+            the_kwargs[key] = val
+        def constructor(*pargs, **kwargs):
+            new_args = dict()
+            for key, val in the_kwargs.iteritems():
+                new_args[key] = val
+            for key, val in kwargs.iteritems():
+                new_args[key] = val
+            return cls(*pargs, **new_args)
+        return constructor
     def __init__(self, *pargs, **kwargs):
         thename = None
         if len(pargs):

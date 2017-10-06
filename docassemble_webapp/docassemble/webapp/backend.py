@@ -78,8 +78,11 @@ def fix_ml_files(playground_number):
     for filename in playground.list_of_files():
         if re.match(r'^ml-.*\.json', filename):
             playground.fix()
-            if write_ml_source(playground, playground_number, filename, finalize=False):
-                changed = True
+            try:
+                if write_ml_source(playground, playground_number, filename, finalize=False):
+                    changed = True
+            except:
+                logmessage("Error writing machine learning source file " + str(filename))
     if changed:
         playground.finalize()
 

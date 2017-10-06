@@ -3807,6 +3807,12 @@ class Interview:
                     else:
                         question = the_question
                     if len(question.condition) > 0:
+                        if is_generic:
+                            if the_x != 'None':
+                                exec("x = " + the_x, user_dict)
+                        if len(iterators):
+                            for indexno in range(len(iterators)):
+                                exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
                         condition_success = True
                         for condition in question.condition:
                             if not eval(condition, user_dict):
@@ -3820,7 +3826,7 @@ class Interview:
                         success = False
                         for keyvalue in question.objects:
                             # logmessage("In a for loop for keyvalue")
-                            for variable, object_type in keyvalue.iteritems():
+                            for variable, object_type_name in keyvalue.iteritems():
                                 if variable != missing_var:
                                     continue
                                 if is_generic:
@@ -3837,17 +3843,21 @@ class Interview:
                                     was_defined = True
                                 except:
                                     pass
+                                user_dict["__object_type"] = eval(object_type_name, user_dict)
                                 if re.search(r"\.", variable):
                                     m = re.search(r"(.*)\.(.*)", variable)
                                     variable = m.group(1)
                                     attribute = m.group(2)
-                                    command = variable + "." + attribute + " = " + object_type + "()"
+                                    # command = variable + "." + attribute + " = " + object_type + "()"
+                                    command = variable + ".initializeAttribute(" + repr(attribute) + ", __object_type)"
                                     # logmessage("Running " + command)
                                     exec(command, user_dict)
                                 else:
-                                    command = variable + ' = ' + object_type + '("' + variable + '")'
+                                    command = variable + ' = __object_type(' + repr(variable) + ')'
                                     # logmessage("Running " + command)
                                     exec(command, user_dict)
+                                if "__object_type" in user_dict:
+                                    del user_dict["__object_type"]
                                 if missing_var in variable_stack:
                                     variable_stack.remove(missing_var)
                                 try:

@@ -46,7 +46,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 			blob-cmd -f cp /tmp/letsencrypt.tar.gz 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/letsencrypt.tar.gz'
 		    fi
 		    for the_file in $( find /etc/apache2/sites-available/ -type f ); do
-			blob-cmd -f cp "$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/apache/'
+			blob-cmd -f cp "$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/apache/'"$the_file"
 		    done
 		fi
 		if [ ! -f /etc/ssl/docassemble/exim.crt ] && [ ! -f /etc/ssl/docassemble/exim.key ]; then
