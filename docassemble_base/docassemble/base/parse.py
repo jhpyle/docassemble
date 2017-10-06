@@ -3488,18 +3488,23 @@ class Interview:
                                 #logmessage("Going into objects")
                                 for keyvalue in question.objects:
                                     for variable in keyvalue:
-                                        object_type = keyvalue[variable]
+                                        object_type_name = keyvalue[variable]
+                                        user_dict["__object_type"] = eval(object_type_name, user_dict)
                                         if False and re.search(r"\.", variable):
                                             m = re.search(r"(.*)\.(.*)", variable)
                                             variable = m.group(1)
                                             attribute = m.group(2)
-                                            command = variable + "." + attribute + " = " + object_type + "()"
+                                            command = variable + ".initializeAttribute(" + repr(attribute) + ", __object_type)"
+                                            #command = variable + "." + attribute + " = " + object_type + "()"
                                             #logmessage("Running " + command)
                                             exec(command, user_dict)
                                         else:
-                                            command = variable + ' = ' + object_type + '(' + repr(variable) + ')'
+                                            command = variable + ' = __object_type(' + repr(variable) + ')'
+                                            # command = variable + ' = ' + object_type + '(' + repr(variable) + ')'
                                             #logmessage("Running " + command)
                                             exec(command, user_dict)
+                                        if "__object_type" in user_dict:
+                                            del user_dict["__object_type"]
                                 question.mark_as_answered(user_dict)
                             if question.question_type == 'code':
                                 if debug:
