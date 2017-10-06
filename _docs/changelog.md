@@ -4,7 +4,22 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.69](https://github.com/jhpyle/docassemble/releases/tag/v0.1.69) - 2017-10-05
+
+### Added
+- Class method `.using()` for adding parameters to object definitions.
+
+### Changed
+- Backups only kept now for 14 days.  Container upgrade necessary.
+
+### Fixed
+- Use of iterators and generic objects in `if` modifiers.
+- Azure cron backup.  Container upgrade necessary.
+
 ## [0.1.68](https://github.com/jhpyle/docassemble/releases/tag/v0.1.68) - 2017-10-05
+
+### Added
+- `if` modifier.
 
 ### Changed
 - Interview cache invalidation now handled through thread local

@@ -55,6 +55,16 @@ will find the above `objects` block and process it.  It will define
 `spouse` as an instance of the object class `Individual` and define
 `user.case` as an instance of the object class `Case`.
 
+If you want the objects to have certain parameters set, you can write:
+
+{% highlight yaml %}
+---
+objects:
+  - spouse: Individual.using(allergy='turtles')
+  - user.case: Case
+---
+{% endhighlight %}
+
 The use of objects in **docassemble** interviews is highly encouraged.
 However, the objects you use as variables in your interview [YAML] files
 need to inherit from the class `DAObject`.  Otherwise, **docassemble**
@@ -69,7 +79,7 @@ A code block like this would effectively do the same thing as the
 ---
 code: |
   spouse = Individual('spouse')
-  user.initializeAttribute(name='case', objectType=Case)
+  user.initializeAttribute('case', object_type=Case)
 ---
 {% endhighlight %}
 
