@@ -1,0 +1,40 @@
+metadata:
+  title: The item method
+  documentation: "https://docassemble.org/docs/objects.html#DAList.item"
+  example start: 3
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - fruit: DAList.using(there_are_any=True, object_type=DAObject, complete_attribute='name')
+---
+question: |
+  Describe the ${ ordinal(i) } fruit.
+fields:
+  - Name: fruit[i].name
+  - Color: fruit[i].color
+  - Seeds: fruit[i].seeds
+    datatype: integer
+---
+question: |
+  Are there any more fruit?
+yesno: fruit.there_is_another
+---
+mandatory: True
+question: |
+  Description of ten fruits.
+subquestion: |
+  % for index in range(10):
+  The name of the ${ ordinal(index) }
+  fruit is ${ fruit.item(index).name }.
+  It is ${ fruit.item(index).color }
+  and it has
+  ${ fruit.item(index).seeds } seeds.
+  
+  % endfor
+---
+code: |
+  if fruit.number_gathered() > 4:
+    fruit.there_is_another = False

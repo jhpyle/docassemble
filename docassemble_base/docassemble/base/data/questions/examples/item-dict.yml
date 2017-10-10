@@ -1,0 +1,55 @@
+metadata:
+  title: "Dictionary: gather keys, values"
+  short title: "Dictionary: gather keys, values"
+  documentation: "https://docassemble.org/docs/objects.html#DADict.item"
+  example start: 3
+  example end: 7
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - pet: DADict.using(there_are_any=True, object_type=DAObject, complete_attribute='name')
+---
+code: |
+  pet_types = [
+    'dog', 'cat', 'goldfish',
+    'turtle', 'lizard', 'rabbit',
+    'rock', 'hamster', 'gerbil',
+    'rat']
+---
+question: |
+  What type of pet do you have?
+fields:
+  - Type: pet.new_item_name
+    datatype: dropdown
+    code: pet_types
+---
+question: |
+  Describe your pet ${ i }.
+fields:
+  - Name: pet[i].name
+  - Color: pet[i].color
+  - Legs: pet[i].legs
+    datatype: integer
+---
+question: |
+  Do you have any other pets?
+yesno: pet.there_is_another
+---
+mandatory: True
+question: |
+  Description of ten pets.
+subquestion: |
+  % for pet_type in pet_types:
+  The name of your pet ${ pet_type }
+  is ${ pet.item(pet_type).name }.
+  It is ${ pet.item(pet_type).color }
+  and it has
+  ${ pet.item(pet_type).legs } legs.
+  
+  % endfor
+---
+code: |
+  if pet.number_gathered() > 4:
+    pet.there_is_another = False

@@ -74,6 +74,21 @@ x:
 i:
   doc: |
     This is a special variable that is used in questions that populate lists.
+j:
+  doc: |
+    This is a special variable that is used in questions that populate lists.
+k:
+  doc: |
+    This is a special variable that is used in questions that populate lists.
+l:
+  doc: |
+    This is a special variable that is used in questions that populate lists.
+m:
+  doc: |
+    This is a special variable that is used in questions that populate lists.
+n:
+  doc: |
+    This is a special variable that is used in questions that populate lists.
 list:
   doc: |
     This is a built-in Python data type that expresses an ordered list of things.

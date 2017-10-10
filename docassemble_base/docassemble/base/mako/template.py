@@ -245,9 +245,9 @@ class Template(object):
                  future_imports=None,
                  enable_loop=True,
                  preprocessor=None,
-                 lexer_cls=None,
-                 names_used=set()):
-        self.names_used = names_used
+                 lexer_cls=None):
+        self.names_used = set()
+        self.names_set = set()
         if uri:
             self.module_id = re.sub(r'\W', "_", uri)
             self.uri = uri
@@ -672,6 +672,7 @@ def _compile(template, text, filename, generate_magic_comment):
                              strict_undefined=template.strict_undefined,
                              enable_loop=template.enable_loop,
                              names_used=template.names_used,
+                             names_set=template.names_set,
                              reserved_names=template.reserved_names)
     return source, lexer
 

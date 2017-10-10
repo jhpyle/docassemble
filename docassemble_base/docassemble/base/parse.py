@@ -30,6 +30,7 @@ from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import MyPandoc, word_to_markdown
 from docassemble.base.mako.template import Template as MakoTemplate
 from docassemble.base.mako.exceptions import SyntaxException
+from docassemble.base.astparser import myvisitnode
 from types import CodeType, NoneType
 
 debug = True
@@ -50,7 +51,6 @@ match_inside_brackets = re.compile(r'\[(.+?)\]')
 match_brackets = re.compile(r'(\[.+?\])')
 match_brackets_or_dot = re.compile(r'(\[.+?\]|\.[a-zA-Z_][a-zA-Z0-9_]*)')
 complications = re.compile(r'[\.\[]')
-fix_assign = re.compile(r'\.(\[[^\]]*\])')
 list_of_indices = ['i', 'j', 'k', 'l', 'm', 'n']
 
 def process_audio_video_list(the_list, user_dict):
@@ -613,7 +613,10 @@ class TextObject(object):
     def __init__(self, x, names_used=set()):
         self.original_text = x
         if type(x) in [str, unicode] and match_mako.search(x):
-            self.template = MakoTemplate(x, strict_undefined=True, input_encoding='utf-8', names_used=names_used)
+            self.template = MakoTemplate(x, strict_undefined=True, input_encoding='utf-8')
+            for x in self.template.names_used:
+                if x not in self.template.names_set:
+                    names_used.add(x)
             self.uses_mako = True
         else:
             self.uses_mako = False
@@ -2738,7 +2741,7 @@ class Question:
             raise DAError("Multiple choices need to be provided in list form.  " + self.idebug(the_list))
         for the_dict in the_list:
             if type(the_dict) not in [dict, list]:
-                the_dict = {str(the_dict): the_dict}
+                the_dict = {unicode(the_dict): the_dict}
             elif type(the_dict) is not dict:
                 raise DAError("Unknown data type for the_dict in parse_fields.  " + self.idebug(the_list))
             result_dict = dict()
@@ -3499,7 +3502,10 @@ class Interview:
                                             #logmessage("Running " + command)
                                             exec(command, user_dict)
                                         else:
-                                            command = variable + ' = __object_type(' + repr(variable) + ')'
+                                            if user_dict["__object_type"].__class__.__name__ == 'DAObjectPlusParameters':
+                                                command = variable + ' = __object_type.object_type(' + repr(variable) + ', **__object_type.parameters)'
+                                            else:
+                                                command = variable + ' = __object_type(' + repr(variable) + ')'
                                             # command = variable + ' = ' + object_type + '(' + repr(variable) + ')'
                                             #logmessage("Running " + command)
                                             exec(command, user_dict)
@@ -3756,6 +3762,7 @@ class Interview:
         expression_as_list = [x for x in match_brackets_or_dot.split(missingVariable) if x != '']
         expression_as_list.append('')
         recurse_indices(expression_as_list, list_of_indices, [], variants, level_dict, [], generic_dict, [])
+        #logmessage(repr(variants))
         for variant in variants:
             totry.append({'real': missingVariable, 'vari': variant, 'iterators': level_dict[variant], 'generic': generic_dict[variant], 'is_generic': 0 if generic_dict[variant] == '' else 1, 'num_dots': variant.count('.'), 'num_iterators': variant.count('[')})
         totry = sorted(sorted(sorted(sorted(totry, key=lambda x: len(x['iterators'])), key=lambda x: x['num_iterators'], reverse=True), key=lambda x: x['num_dots'], reverse=True), key=lambda x: x['is_generic'])
@@ -3858,7 +3865,10 @@ class Interview:
                                     # logmessage("Running " + command)
                                     exec(command, user_dict)
                                 else:
-                                    command = variable + ' = __object_type(' + repr(variable) + ')'
+                                    if user_dict["__object_type"].__class__.__name__ == 'DAObjectPlusParameters':
+                                        command = variable + ' = __object_type.object_type(' + repr(variable) + ', **__object_type.parameters)'
+                                    else:
+                                        command = variable + ' = __object_type(' + repr(variable) + ')'
                                     # logmessage("Running " + command)
                                     exec(command, user_dict)
                                 if "__object_type" in user_dict:
@@ -4214,88 +4224,6 @@ class Interview:
 def reproduce_basics(interview, new_interview):
     new_interview.metadata = interview.metadata
     new_interview.external_files = interview.external_files
-
-class myextract(ast.NodeVisitor):
-    def __init__(self):
-        self.stack = []
-        self.in_subscript = False
-        self.seen_name = False
-    def visit_Name(self, node):
-        if not (self.in_subscript and self.seen_name is True):
-            self.stack.append(node.id)
-            if self.in_subscript:
-                self.seen_name = True
-        ast.NodeVisitor.generic_visit(self, node)
-    def visit_Attribute(self, node):
-        self.stack.append(node.attr)
-        ast.NodeVisitor.generic_visit(self, node)
-    def visit_Subscript(self, node):
-        if hasattr(node.slice.value, 'id'):
-            self.stack.append('[' + str(node.slice.value.id) + ']')
-            self.in_subscript = True
-            self.seen_name = False
-        ast.NodeVisitor.generic_visit(self, node)
-        if hasattr(node.slice.value, 'id'):
-            self.in_subscript = False
-
-class myvisitnode(ast.NodeVisitor):
-    def __init__(self):
-        self.names = {}
-        self.targets = {}
-        self.depth = 0;
-    def generic_visit(self, node):
-        #logmessage(' ' * self.depth + type(node).__name__)
-        self.depth += 1
-        ast.NodeVisitor.generic_visit(self, node)
-        self.depth -= 1
-    def visit_Assign(self, node):
-        for key, val in ast.iter_fields(node):
-            if key == 'targets':
-                for subnode in val:
-                    if type(subnode) is ast.Tuple:
-                        for subsubnode in subnode.elts:
-                            crawler = myextract()
-                            crawler.visit(subsubnode)
-                            self.targets[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
-                    else:
-                        crawler = myextract()
-                        crawler.visit(subnode)
-                        self.targets[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
-        self.depth += 1
-        #ast.NodeVisitor.generic_visit(self, node)
-        self.generic_visit(node)
-        self.depth -= 1
-    def visit_FunctionDef(self, node):
-        if hasattr(node, 'name'):
-            self.targets[node.name] = 1
-    def visit_Import(self, node):
-        for alias in node.names:
-            if alias.asname is None:
-                the_name = alias.name
-            else:
-                the_name = alias.asname
-            while(re.search(r'\.', the_name)):
-                self.targets[the_name] = 1
-                the_name = re.sub(r'\.[^\.]+$', '', the_name)
-            self.targets[the_name] = 1
-    def visit_ImportFrom(self, node):
-        for alias in node.names:
-            if alias.asname is None:
-                the_name = alias.name
-            else:
-                the_name = alias.asname
-            while(re.search(r'\.', the_name)):
-                self.targets[the_name] = 1
-                the_name = re.sub(r'\.[^\.]+$', '', the_name)
-            self.targets[the_name] = 1
-    def visit_For(self, node):
-        if hasattr(node.target, 'id'):
-            self.targets[node.target.id] = 1
-        self.generic_visit(node)
-    def visit_Name(self, node):
-        self.names[node.id] = 1
-        #ast.NodeVisitor.generic_visit(self, node)
-        self.generic_visit(node)
 
 def unpack_list(item, target_list=None):
     if target_list is None:

@@ -2538,7 +2538,7 @@ def yesno(value, invert=False):
 
 def split(text, breaks, index):
     """Splits text at particular breakpoints and returns the given piece."""
-    text = unicode(text)
+    text = re.sub(r'[\n\r]+', "\n", unicode(text.strip()))
     if type(breaks) is not list:
         breaks = [breaks]
     lastbreakpoint = 0
@@ -2559,6 +2559,13 @@ def split(text, breaks, index):
     text_length = len(text)
     i = 0
     while i < text_length:
+        if text[i] == "\n":
+            parts.append(text[last_break:i].strip())
+            last_space = i
+            last_break = i
+            current_index += 1
+            i += 1
+            continue
         if text[i] == ' ':
             last_space = i
         if i > breaks[current_index + 1] - 1:

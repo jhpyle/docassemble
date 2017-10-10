@@ -1077,18 +1077,7 @@ def proc_example_list(example_list, examples):
         start_block = 1
         end_block = 2
         if 'fullpath' not in file_info or file_info['fullpath'] is None:
-            continue
-        try:
-            interview = docassemble.base.interview_cache.get_interview(example_file)
-            if len(interview.metadata):
-                metadata = interview.metadata[0]
-                result['title'] = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
-                result['documentation'] = metadata.get('documentation', None)
-                start_block = int(metadata.get('example start', 1))
-                end_block = int(metadata.get('example end', start_block)) + 1
-            else:
-                continue
-        except:
+            logmessage("proc_example_list: could not find " + example_file)
             continue
         with open(file_info['fullpath'], 'rU') as fp:
             content = fp.read().decode('utf8')
@@ -1097,6 +1086,23 @@ def proc_example_list(example_list, examples):
             blocks = map(lambda x: x.strip(), document_match.split(content))
             if len(blocks):
                 has_context = False
+                for block in blocks:
+                    if re.search(r'metadata:', block):
+                        try:
+                            the_block = ruamel.yaml.safe_load(block)
+                            if type(the_block) is dict and 'metadata' in the_block:
+                                the_metadata = the_block['metadata']
+                                result['title'] = the_metadata.get('title', the_metadata.get('short title', word('Untitled'))).rstrip()
+                                result['documentation'] = the_metadata.get('documentation', None)
+                                start_block = int(the_metadata.get('example start', 1))
+                                end_block = int(the_metadata.get('example end', start_block)) + 1
+                                break
+                        except Exception as err:
+                            logmessage("proc_example_list: error processing " + example_file + ": " + str(err))
+                            continue
+                if 'title' not in result:
+                    logmessage("proc_example_list: no title in " + example_file)
+                    continue
                 if re.search(r'metadata:', blocks[0]) and start_block > 0:
                     initial_block = 1
                 else:
@@ -1114,6 +1120,9 @@ def proc_example_list(example_list, examples):
                 result['source'] = "\n---\n".join(blocks[start_block:end_block])
                 result['html'] = highlight(result['source'], YamlLexer(), HtmlFormatter())
                 result['has_context'] = has_context
+            else:
+                logmessage("proc_example_list: no blocks in " + example_file)
+                continue
         examples.append(result)
     
 def get_examples():
@@ -2001,8 +2010,8 @@ def find_needed_names(interview, needed_names, the_name=None, the_question=None)
                 find_needed_names(interview, needed_names, the_name=name)
     else:
         for question in interview.questions_list:
-            if not (question.is_mandatory or question.is_initial or question.question_type == "objects"):
-                continue
+            #if not (question.is_mandatory or question.is_initial):
+            #    continue
             find_needed_names(interview, needed_names, the_question=question)
 
 def get_ml_info(varname, default_package, default_file):
@@ -2128,7 +2137,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         if base_name_info[var]['show']:
             names_used.add(var)
     names_used = set([i for i in names_used if not extraneous_var.search(i)])
-    for var in ['_internal']:
+    for var in ['_internal', '__object_type']:
         names_used.discard(var)
     for var in interview.mlfields:
         names_used.discard(var + '.text')
@@ -2177,8 +2186,14 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     vocab_set = (names_used | functions | classes | modules | fields_used | set([key for key in base_name_info if not re.search(r'\.', key)]) | set([key for key in name_info if not re.search(r'\.', key)]) | set(templates) | set(static) | set(sources) | set(avail_modules) | set(interview.images.keys()))
     vocab_set = set([i for i in vocab_set if not extraneous_var.search(i)])
     names_used = names_used.difference( functions | classes | modules | set(avail_modules) )
-    undefined_names = names_used.difference(fields_used | set(base_name_info.keys()) )
-    for var in ['_internal']:
+    undefined_names = names_used.difference(fields_used | set(base_name_info.keys()) | set([x for x in names_used if '.' in x]))
+    implicitly_defined = set()
+    for var in fields_used:
+        the_var = var
+        while '.' in the_var:
+            the_var = re.sub(r'(.*)\..*$', r'\1', the_var)
+            implicitly_defined.add(the_var)
+    for var in ['_internal', '__object_type']:
         undefined_names.discard(var)
         vocab_set.discard(var)
     names_used = names_used.difference( undefined_names )
@@ -2207,6 +2222,9 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             if var in documentation_dict or var in base_name_info:
                 class_type = 'info'
                 title = 'title="' + word("Special variable") + '" '
+            elif var not in fields_used and var not in implicitly_defined:
+                class_type = 'default'
+                title = 'title="' + word("Possibly not defined") + '" '
             elif var not in needed_names:
                 class_type = 'warning'
                 title = 'title="' + word("Possibly not used") + '" '
@@ -9353,7 +9371,7 @@ def google_drive_callback():
 
 def trash_gd_file(section, filename):
     if section == 'template':
-        section == 'templates'
+        section = 'templates'
     the_folder = get_gd_folder()
     if the_folder is None:
         logmessage('trash_gd_file: folder not configured')
@@ -9392,6 +9410,7 @@ def trash_gd_file(section, filename):
     file_metadata = { 'trashed': True }
     service.files().update(fileId=id_of_filename,
                            body=file_metadata).execute()
+    logmessage('trash_gd_file: file ' + str(filename) + ' trashed from '  + str(section))
     return True
 
 @app.route('/sync_with_google_drive', methods=['GET', 'POST'])
@@ -10053,6 +10072,7 @@ def playground_files():
       var daIsNew = """ + ('true' if is_new else 'false') + """;
       var existingFiles = """ + json.dumps(files) + """;
       var daSection = """ + '"' + section + '";' + """
+      var attrs_showing = Object();
 """ + indent_by(variables_js(form='formtwo'), 6) + """
 """ + indent_by(search_js(form='formtwo'), 6) + """
       function saveCallback(data){
@@ -10953,12 +10973,26 @@ function activateVariables(){
     $("#" + target_id).slideToggle();
   });
 
+  $(".dashowattributes").each(function(){
+    var basename = $(this).data('name');
+    if (attrs_showing.hasOwnProperty(basename)){
+      if (attrs_showing[basename]){
+        $('tr[data-parent="' + basename + '"]').show();
+      }
+    }
+    else{
+      attrs_showing[basename] = false;
+    }
+  });
+
   $(".dashowattributes").on("click", function(event){
     var basename = $(this).data('name');
+    attrs_showing[basename] = !attrs_showing[basename];
     $('tr[data-parent="' + basename + '"]').each(function(){
       $(this).toggle();
     });
   });
+
   $(".dasearchicon").on("click", function(event){
     var query = $(this).data('name');
     if (query == null || query.length == 0){
@@ -11339,6 +11373,7 @@ var isNew = """ + repr(str(is_new)) + """;
 var vocab = """ + json.dumps(vocab_list) + """;
 var existingFiles = """ + json.dumps(files) + """;
 var currentFile = """ + json.dumps(the_file) + """;
+var attrs_showing = Object();
 
 """ + variables_js() + """
 
@@ -11628,7 +11663,7 @@ def server_error(the_error):
         errmess = '<pre>' + errmess + '</pre>'
     else:
         errmess = '<blockquote>' + errmess + '</blockquote>'
-    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=str(the_history), logtext=str(the_trace)), error_code
+    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=unicode(the_history), logtext=unicode(the_trace)), error_code
     #return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=None, logtext=str(the_trace)), error_code
 
 # @app.route('/testpost', methods=['GET', 'POST'])
@@ -11833,7 +11868,7 @@ def utilities():
                     fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', the_file.filename) + "\n    fields:\n"
                     for field, default, pageno, rect, field_type in fields:
                         if field not in fields_seen:
-                            fields_output += '      - "' + field + '": ' + default + "\n"
+                            fields_output += '      - "' + unicode(field) + '": ' + unicode(default) + "\n"
                             fields_seen.add(field)
                     fields_output += "---"
             elif mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
@@ -13744,7 +13779,6 @@ def define_examples():
     example_html.append('        <div class="col-md-6"><h4>Preview<a target="_blank" class="label label-primary example-documentation example-hidden" id="example-documentation-link">View documentation</a></h4><a href="#" target="_blank" id="example-image-link"><img title="Click to try this interview" class="example_screenshot" id="example-image"></a></div>')
     pg_ex['encoded_data_dict'] = safeid(json.dumps(data_dict))
     pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
-
 
 if LooseVersion(min_system_version) > LooseVersion(daconfig['system version']):
     version_warning = word("Your docassemble system needs to be upgraded.")

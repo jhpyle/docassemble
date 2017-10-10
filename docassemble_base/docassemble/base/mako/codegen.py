@@ -7,6 +7,7 @@
 """provides functionality for rendering a parsetree constructing into module
 source code."""
 
+#import sys
 import time
 import re
 from docassemble.base.mako.pygen import PythonPrinter
@@ -36,6 +37,7 @@ def compile(node,
             strict_undefined=False,
             enable_loop=True,
             names_used=set(),
+            names_set=set(),
             reserved_names=frozenset()):
     """Generate module source code given a parsetree node,
       uri, and optional source filename"""
@@ -63,6 +65,7 @@ def compile(node,
                                           strict_undefined,
                                           enable_loop,
                                           names_used,
+                                          names_set,
                                           reserved_names),
                           node)
     return buf.getvalue()
@@ -83,6 +86,7 @@ class _CompileContext(object):
                  strict_undefined,
                  enable_loop,
                  names_used,
+                 names_set,
                  reserved_names):
         self.uri = uri
         self.filename = filename
@@ -96,6 +100,7 @@ class _CompileContext(object):
         self.strict_undefined = strict_undefined
         self.enable_loop = enable_loop
         self.names_used = names_used
+        self.names_set = names_set
         self.reserved_names = reserved_names
 
 class _GenerateRenderMethod(object):
@@ -793,6 +798,9 @@ class _GenerateRenderMethod(object):
         return target
 
     def visitExpression(self, node):
+        if hasattr(node.code, 'names_used'):
+            for x in node.code.names_used:
+                self.compiler.names_used.add(x)
         self.printer.start_source(node.lineno)
         if len(node.escapes) or \
                 (
@@ -808,6 +816,9 @@ class _GenerateRenderMethod(object):
             self.printer.writeline("__M_writer(%s)" % node.text)
 
     def visitControlLine(self, node):
+        if hasattr(node, 'names_set'):
+            for x in node.names_set:
+                self.compiler.names_set.add(x)
         if node.isend:
             self.printer.writeline(None)
             if node.has_loop_context:

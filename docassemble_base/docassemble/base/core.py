@@ -43,6 +43,113 @@ def get_unique_name():
         unique_names.add(newname)
         return newname
 
+class DAEmpty(object):
+    def __getattr__(self, thename):
+        if thename.startswith('_'):
+            return object.__getattribute__(self, thename)
+        else:
+            return DAEmpty()
+    def __str__(self):
+        return ''
+    def __unicode__(self):
+        return unicode('')
+    def __dir__(self):
+        return list()
+    def __contains__(self, item):
+        return False
+    def __iter__(self):
+        the_list = list()
+        return the_list.__iter__()
+    def __len__(self):
+        return 0
+    def __reversed__(self):
+        return list()
+    def __getitem__(self, index):
+        return DAEmpty()
+    def __call__(self, *pargs, **kwargs):
+        return DAEmpty()
+    def __repr__(self):
+        return repr('')
+    def __add__(self, other):
+        return other
+    def __sub__(self, other):
+        return other
+    def __mul__(self, other):
+        return other
+    def __floordiv__(self, other):
+        return other
+    def __mod__(self, other):
+        return other
+    def __divmod__(self, other):
+        return other
+    def __pow__(self, other):
+        return other
+    def __lshift__(self, other):
+        return other
+    def __rshift__(self, other):
+        return other
+    def __and__(self, other):
+        return other
+    def __xor__(self, other):
+        return other
+    def __or__(self, other):
+        return other
+    def __div__(self, other):
+        return other
+    def __truediv__(self, other):
+        return other
+    def __radd__(self, other):
+        return other
+    def __rsub__(self, other):
+        return other
+    def __rmul__(self, other):
+        return other
+    def __rdiv__(self, other):
+        return other
+    def __rtruediv__(self, other):
+        return other
+    def __rfloordiv__(self, other):
+        return other
+    def __rmod__(self, other):
+        return other
+    def __rdivmod__(self, other):
+        return other
+    def __rpow__(self, other):
+        return other
+    def __rlshift__(self, other):
+        return other
+    def __rrshift__(self, other):
+        return other
+    def __rand__(self, other):
+        return other
+    def __ror__(self, other):
+        return other
+    def __neg__(self):
+        return 0
+    def __pos__(self):
+        return 0
+    def __abs__(self):
+        return 0
+    def __invert__(self):
+        return 0
+    def __complex__(self):
+        return 0
+    def __int__(self):
+        return int(0)
+    def __long__(self):
+        return long(0)
+    def __float__(self):
+        return float(0)
+    def __oct__(self):
+        return oct(0)
+    def __hex__(self):
+        return hex(0)
+    def __index__(self):
+        return int(0)
+        
+class DAObjectPlusParameters(object):
+    pass
+
 class DAObject(object):
     """The base class for all docassemble objects."""
     def init(self, *pargs, **kwargs):
@@ -50,17 +157,24 @@ class DAObject(object):
             setattr(self, key, value)
     @classmethod
     def using(cls, **kwargs):
-        the_kwargs = dict()
-        for key, val in kwargs.iteritems():
-            the_kwargs[key] = val
-        def constructor(*pargs, **kwargs):
-            new_args = dict()
-            for key, val in the_kwargs.iteritems():
-                new_args[key] = val
-            for key, val in kwargs.iteritems():
-                new_args[key] = val
-            return cls(*pargs, **new_args)
-        return constructor
+        object_plus = DAObjectPlusParameters()
+        object_plus.object_type = cls
+        object_plus.parameters = kwargs
+        return object_plus
+    # @classmethod
+    # def using(cls, **kwargs):
+    #     the_kwargs = dict()
+    #     for key, val in kwargs.iteritems():
+    #         the_kwargs[key] = val
+    #     class constructor(cls):
+    #         def init(self, *pargs, **kwargs):
+    #             new_args = dict()
+    #             for key, val in the_kwargs.iteritems():
+    #                 new_args[key] = val
+    #             for key, val in kwargs.iteritems():
+    #                 new_args[key] = val
+    #             return super(constructor, self).init(*pargs, **new_args)
+    #     return constructor
     def __init__(self, *pargs, **kwargs):
         thename = None
         if len(pargs):
@@ -167,10 +281,17 @@ class DAObject(object):
         pargs = [x for x in pargs]
         name = pargs.pop(0)
         objectType = pargs.pop(0)
+        new_object_parameters = dict()
+        if isinstance(objectType, DAObjectPlusParameters):
+            for key, val in objectType.parameters.iteritems():
+                new_object_parameters[key] = val
+            objectType = objectType.object_type
+        for key, val in kwargs.iteritems():
+            new_object_parameters[key] = val
         if name in self.__dict__:
             return
         else:
-            object.__setattr__(self, name, objectType(self.instanceName + "." + name, *pargs, **kwargs))
+            object.__setattr__(self, name, objectType(self.instanceName + "." + name, *pargs, **new_object_parameters))
             self.attrList.append(name)
     def reInitializeAttribute(self, *pargs, **kwargs):
         """Redefines an attribute for the object, setting it to a newly initialized object.
@@ -181,7 +302,14 @@ class DAObject(object):
         pargs = [x for x in pargs]
         name = pargs.pop(0)
         objectType = pargs.pop(0)
-        object.__setattr__(self, name, objectType(self.instanceName + "." + name, *pargs, **kwargs))
+        new_object_parameters = dict()
+        if isinstance(objectType, DAObjectPlusParameters):
+            for key, val in objectType.parameters.iteritems():
+                new_object_parameters[key] = val
+            objectType = objectType.object_type
+        for key, val in kwargs.iteritems():
+            new_object_parameters[key] = val
+        object.__setattr__(self, name, objectType(self.instanceName + "." + name, *pargs, **new_object_parameters))
         if name in self.__dict__:
             return
         else:
@@ -237,10 +365,17 @@ class DAList(DAObject):
             self.gathered = True
             del kwargs['elements']
         if 'object_type' in kwargs:
-            self.object_type = kwargs['object_type']
+            if isinstance(kwargs['object_type'], DAObjectPlusParameters):
+                self.object_type = kwargs['object_type'].object_type
+                self.object_type_parameters = kwargs['object_type'].parameters
+            else:
+                self.object_type = kwargs['object_type']
+                self.object_type_parameters = dict()
             del kwargs['object_type']
         if not hasattr(self, 'object_type'):
             self.object_type = None
+        if not hasattr(self, 'object_type_parameters'):
+            self.object_type_parameters = dict()
         if 'complete_attribute' in kwargs:
             self.complete_attribute = kwargs['complete_attribute']
             del kwargs['complete_attribute']
@@ -274,6 +409,12 @@ class DAList(DAObject):
         if hasattr(self, 'gathered'):
             return True
         return False
+    def item(self, index):
+        """Returns the value for the given index, or a blank value if the index does not exist."""
+        self._trigger_gather()
+        if index < len(self.elements):
+            return self[index]
+        return DAEmpty()
     def clear(self):
         """Removes all the items from the list."""
         self.elements = list()
@@ -328,12 +469,17 @@ class DAList(DAObject):
         if len(pargs) > 0:
             pargs = [x for x in pargs]
             objectFunction = pargs.pop(0)
+        new_obj_parameters = dict()
         if objectFunction is None:
             if self.object_type is not None:
                 objectFunction = self.object_type
+                for key, val in self.object_type_parameters.iteritems():
+                    new_obj_parameters[key] = val
             else:
                 objectFunction = DAObject
-        newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']', *pargs, **kwargs)
+        for key, val in kwargs.iteritems():
+            new_obj_parameters[key] = val
+        newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']', *pargs, **new_obj_parameters)
         self.elements.append(newobject)
         return newobject
     def append(self, *pargs):
@@ -457,11 +603,15 @@ class DAList(DAObject):
         if self.ask_object_type:
             for indexno in range(len(self.elements)):
                 if self.elements[indexno] is None:
+                    if isinstance(self.new_object_type, DAObjectPlusParameters):
+                        object_type_to_use = self.new_object_type.object_type
+                        parameters_to_use = self.new_object_type.parameters
                     if type(self.new_object_type) is type:
                         object_type_to_use = self.new_object_type
+                        parameters_to_use = dict()
                     else:
                         raise Exception("new_object_type must be an object type")
-                    self.elements[indexno] = object_type_to_use(self.instanceName + '[' + str(indexno) + ']')
+                    self.elements[indexno] = object_type_to_use(self.instanceName + '[' + str(indexno) + ']', **parameters_to_use)
             if hasattr(self, 'new_object_type'):
                 delattr(self, 'new_object_type')
         for elem in self.elements:
@@ -475,6 +625,12 @@ class DAList(DAObject):
             return True
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
+            item_object_parameters = self.object_type_parameters
+        elif isinstance(item_object_type, DAObjectPlusParameters):
+            item_object_parameters = item_object_type.parameters
+            item_object_type = item_object_type.object_type
+        else:
+            item_object_parameters = dict()
         if complete_attribute is None and self.complete_attribute is not None:
             complete_attribute = self.complete_attribute
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
@@ -491,7 +647,7 @@ class DAList(DAObject):
         while len(self.elements) < minimum:
             the_length = len(self.elements)
             if item_object_type is not None:
-                self.appendObject(item_object_type)
+                self.appendObject(item_object_type, **item_object_parameters)
             str(self.__getitem__(the_length))
             self._validate(item_object_type, complete_attribute)
             # if item_object_type is not None and complete_attribute is not None:
@@ -505,7 +661,7 @@ class DAList(DAObject):
         if number is not None:
             while the_length < int(number):
                 if item_object_type is not None:
-                    self.appendObject(item_object_type)
+                    self.appendObject(item_object_type, **item_object_parameters)
                 str(self.__getitem__(the_length))
                 self._validate(item_object_type, complete_attribute)
                 # if item_object_type is not None and complete_attribute is not None:
@@ -514,7 +670,7 @@ class DAList(DAObject):
             while self.there_is_another:
                 del self.there_is_another
                 if item_object_type is not None:
-                    self.appendObject(item_object_type)
+                    self.appendObject(item_object_type, **item_object_parameters)
                 str(self.__getitem__(the_length))
                 self._validate(item_object_type, complete_attribute)
                 # if item_object_type is not None and complete_attribute is not None:
@@ -555,14 +711,14 @@ class DAList(DAObject):
                 if self.object_type is None:
                     self.elements.append(None)
                 else:
-                    self.appendObject(self.object_type)
+                    self.appendObject(self.object_type, **self.object_type_parameters)
         elif len(self.elements) <= index:
             num_to_add = 1 + index - len(self.elements)
             for i in range(0, num_to_add):
                 if self.object_type is None:
                     self.elements.append(None)
                 else:
-                    self.appendObject(self.object_type)        
+                    self.appendObject(self.object_type, **self.object_type_parameters)
     def __setitem__(self, index, value):
         self._fill_up_to(index)
         if isinstance(value, DAObject) and not value.has_nonrandom_instance_name:
@@ -678,10 +834,17 @@ class DADict(DAObject):
             self.gathered = True
             del kwargs['elements']
         if 'object_type' in kwargs:
-            self.object_type = kwargs['object_type']
+            if isinstance(kwargs['object_type'], DAObjectPlusParameters):
+                self.object_type = kwargs['object_type'].object_type
+                self.object_type_parameters = kwargs['object_type'].parameters
+            else:
+                self.object_type = kwargs['object_type']
+                self.object_type_parameters = dict()
             del kwargs['object_type']
         if not hasattr(self, 'object_type'):
             self.object_type = None
+        if not hasattr(self, 'object_type_parameters'):
+            self.object_type_parameters = dict()
         if 'complete_attribute' in kwargs:
             self.complete_attribute = kwargs['complete_attribute']
             del kwargs['complete_attribute']
@@ -806,12 +969,22 @@ class DADict(DAObject):
         entry = pargs.pop(0)
         if len(pargs) > 0:
             objectFunction = pargs.pop(0)
+        new_obj_parameters = dict()
+        if isinstance(objectFunction, DAObjectPlusParameters):
+            for key, val in objectFunction.parameters.iteritems():
+                new_obj_parameters[key] = val
+            objectFunction = objectFunction.object_type
         if objectFunction is None:
             if self.object_type is not None:
                 objectFunction = self.object_type
+                for key, val in self.object_type_parameters.iteritems():
+                    new_obj_parameters[key] = val
             else:
                 objectFunction = DAObject
-        newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']', *pargs, **kwargs)
+                object_type_parameters = dict()
+        for key, val in kwargs.iteritems():
+            new_obj_parameters[key] = val
+        newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']', *pargs, **new_obj_parameters)
         self.elements[entry] = newobject
         return newobject
     def new(self, *pargs, **kwargs):
@@ -825,9 +998,17 @@ class DADict(DAObject):
                 for item in parg:
                     self.new(item, **kwargs)
             else:
-                if hasattr(self, 'object_type'):
-                    if parg not in self.elements:
-                        self.initializeObject(parg, self.object_type, **kwargs)
+                new_obj_parameters = dict()
+                if self.object_type is not None:
+                    item_object_type = self.object_type
+                    for key, val in self.object_type_parameters.iteritems():
+                        new_obj_parameters[key] = val
+                else:
+                    item_object_type = DAObject
+                for key, val in kwargs.iteritems():
+                    new_obj_parameters[key] = val
+                if parg not in self.elements:
+                    self.initializeObject(parg, item_object_type, **new_obj_parameters)
     def reset_gathered(self, recursive=False):
         """Indicates that there is more to be gathered"""
         if hasattr(self, 'there_is_another'):
@@ -935,11 +1116,15 @@ class DADict(DAObject):
         if self.ask_object_type:
             for key, elem in sorted(self.elements.iteritems()):
                 if elem is None:
-                    if type(self.new_object_type) is type:
+                    if isinstance(self.new_object_type, DAObjectPlusParameters):
+                        object_type_to_use = self.new_object_type.object_type
+                        parameters_to_use = self.new_object_type.parameters
+                    elif type(self.new_object_type) is type:
                         object_type_to_use = self.new_object_type
+                        parameters_to_use = dict()
                     else:
                         raise Exception("new_object_type must be an object type")
-                    self.elements[key] = object_type_to_use(self.instanceName + '[' + repr(key) + ']')
+                    self.elements[key] = object_type_to_use(self.instanceName + '[' + repr(key) + ']', **parameters_to_use)
             if hasattr(self, 'new_object_type'):
                 delattr(self, 'new_object_type')
         for elem in sorted(self.elements.values()):
@@ -952,6 +1137,12 @@ class DADict(DAObject):
             return True
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
+            new_item_parameters = self.object_type_parameters
+        elif isinstance(item_object_type, DAObjectPlusParameters):
+            new_item_parameters = item_object_type.parameters
+            item_object_type = item_object_type.object_type
+        else:
+            new_item_parameters = dict()
         if complete_attribute is None and self.complete_attribute is not None:
             complete_attribute = self.complete_attribute
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
@@ -974,7 +1165,7 @@ class DADict(DAObject):
                 minimum = 1
         while (number is not None and len(self.elements) < int(number)) or (minimum is not None and len(self.elements) < int(minimum)) or (self.ask_number is False and minimum != 0 and self.there_is_another):
             if item_object_type is not None:
-                self.initializeObject(self.new_item_name, item_object_type)
+                self.initializeObject(self.new_item_name, item_object_type, **new_item_parameters)
                 if hasattr(self, 'there_is_another'):
                     delattr(self, 'there_is_another')
                 self._new_item_init_callback()
@@ -1021,7 +1212,7 @@ class DADict(DAObject):
                 var_name = object.__getattribute__(self, 'instanceName') + "[" + repr(index) + "]"
                 raise NameError("name '" + var_name + "' is not defined")
             else:
-                self.initializeObject(index, self.object_type)
+                self.initializeObject(index, self.object_type, **self.object_type_parameters)
             return self.elements[index]
         return self.elements[index]
     def __setitem__(self, key, value):
@@ -1066,6 +1257,12 @@ class DADict(DAObject):
     def has_key(key):
         """Returns True if key is in the dictionary."""
         return self.elements.has_key(key)
+    def item(self, key):
+        """Returns the value for the given key, or a blank value if the key does not exist."""
+        self._trigger_gather()
+        if key in self.elements:
+            return self[key]
+        return DAEmpty()
     def items(self):
         """Returns a copy of the items of the dictionary."""
         self._trigger_gather()

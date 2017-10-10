@@ -1,5 +1,19 @@
 # Change Log
 
+## [0.1.70] - 2017-10-10
+### Added
+- Method `item()` for `DAList` and `DADict`.
+- Lettuce tests in directory `tests`.
+### Changed
+- Playground variable detection now shows attributes.
+- Playground variable detection now adjusts for temporary Mako variables.
+- The `split()` function now splits on newlines.
+- Playground no longer loads each example interview into memory.
+### Fixed
+- Template file Google Drive deletion.
+- Problem with pickling result of `.using()`.
+- Scanning for variable names involving patterns like `[i][j]`.
+
 ## [0.1.69] - 2017-10-05
 ### Added
 - Class method `.using()` for adding parameters to object definitions.

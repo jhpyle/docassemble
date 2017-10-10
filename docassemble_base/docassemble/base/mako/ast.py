@@ -9,13 +9,21 @@ code, as well as generating Python from AST nodes"""
 
 from docassemble.base.mako import exceptions, pyparser, compat
 import re
-
+from docassemble.base.astparser import myvisitnode
+from docassemble.base.astparser import ast as base_ast
 
 class PythonCode(object):
 
     """represents information about a string containing Python code"""
 
     def __init__(self, code, **exception_kwargs):
+        myvisitor = myvisitnode()
+        t = base_ast.parse(code.strip())
+        myvisitor.visit(t)
+        self.names_used = set()
+        for item in myvisitor.names.keys():
+            self.names_used.add(item)
+
         self.code = code
 
         # represents all identifiers which are assigned to at some point in
@@ -88,6 +96,10 @@ class PythonFragment(PythonCode):
         if m.group(3):
             code = code[:m.start(3)]
         (keyword, expr) = m.group(1, 2)
+        if keyword == 'for':
+            thevar = re.sub(r'^for (.+?) in .*', r'\1', code)
+            if thevar and thevar != code:
+                self.names_set = set([thevar])
         if keyword in ['for', 'if', 'while']:
             code = code + "pass"
         elif keyword == 'try':

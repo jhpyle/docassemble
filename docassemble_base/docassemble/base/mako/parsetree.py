@@ -9,7 +9,6 @@
 from docassemble.base.mako import exceptions, ast, util, filters, compat
 import re
 
-
 class Node(object):
 
     """base class for a Node in the parse tree."""
@@ -83,6 +82,8 @@ class ControlLine(Node):
             code = ast.PythonFragment(text, **self.exception_kwargs)
             self._declared_identifiers = code.declared_identifiers
             self._undeclared_identifiers = code.undeclared_identifiers
+            if hasattr(code, 'names_set'):
+                self.names_set = code.names_set
 
     def get_children(self):
         return self.nodes
