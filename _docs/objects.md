@@ -549,10 +549,10 @@ One of the useful things about `DAObject`s is that you can write
 circumstances because the questions can use the variable name itself
 when forming the text of the question to ask the user.
 
-If you refer to a `DAObject` in a [Mako] template (or reduce it to
-text with Python's [str function]), this will have the effect of
-calling the `object_name()` method, which attempts to return a
-human-friendly name for the object.
+<a name="DAObject.object_name"></a>If you refer to a `DAObject` in a
+[Mako] template (or reduce it to text with Python's [str function]),
+this will have the effect of calling the [`object_name()`] method,
+which attempts to return a human-friendly name for the object.
 
 For example:
 
@@ -560,17 +560,17 @@ For example:
 
 Although there is only one question for `x.color`, this question
 generates both "What is the color of the turnip?" and "What is the
-color of the front gate in the park?"  This is because `object_name()`
+color of the front gate in the park?"  This is because [`object_name()`]
 is implicitly called and it turns `park.front_gate` into "front gate
 in the park."
 
-The `object_name()` method is multi-lingual-friendly.  By using
+The [`object_name()`] method is multi-lingual-friendly.  By using
 `docassemble.base.util.update_word_collection()`, you can provide
 non-English translations for words that come from variable names, such
 as "turnip," "park," and "front gate."  By using
 `docassemble.base.util.update_language_function()`, you can define a
 non-English version of the `a_in_the_b()` function, which
-`object_name()` uses to convert an attribute name like
+[`object_name()`] uses to convert an attribute name like
 `park.front_gate` into "front gate in the park."  (It calls
 `a_in_the_b('front gate', 'park')`.)  So in a Spanish interview,
 `park.front_gate.object_name()` would return "puerta de entrada en el
@@ -626,6 +626,69 @@ It is necessary to modify the [`code`] block with [`sets`] because
 **docassemble** needs help figuring out that that the code block
 offers to define `fish.best_friend`.
 
+<a name="DAObject.reInitializeAttribute"></a>The
+[`initializeAttribute()`] method will have no effect if the attribute
+is already defined.  If you want to force the setting of an attribute
+in situations when the attribute is already defined, use
+`reInitializeAttribute()` instead of [`initializeAttribute()`], and it
+will overwrite the attribute.
+
+The [`DAObject`] provides some convenience functions for working with
+object attributes.
+
+<a name="DAObject.attribute_defined"></a>The `attribute_defined()`
+method will return `True` or `False` depending on whether the given
+attribute is defined.  The attribute name must be provided as quoted
+text.  For example:
+
+{% highlight yaml %}
+---
+objects:
+  - client: Individual
+---
+mandatory: True
+question: |
+  % if client.address.attribute_defined('city'):
+  You live in ${ client.address.city }.
+  % else:
+  I don't know where you live.
+  % endif
+{% endhighlight %}
+
+<a name="DAObject.attr"></a>The `attr()` method will return the value
+of the given attribute.  The attribute must be provided as text.
+(E.g., `client.address.attr('city')`.)  If the attribute is not
+defined, `None` will be returned.  This can be useful if you have
+several attributes but you want to access them programmatically.  For
+example:
+
+{% highlight yaml %}
+---
+mandatory: True
+question: |
+  Your address.
+subquestion: |
+  % for part in ['address', 'city', 'state', 'zip']:
+  Your ${ part } is ${ client.address.attr(part) }.
+  
+  % endfor
+---
+{% endhighlight %}
+
+Note that because `None` is returned when the attribute is not
+defined, this method will not trigger a process of retrieving a
+definition for the attribute.  If you want to trigger this process,
+use the built-in [Python] function [`getattr()`].
+
+{% highlight yaml %}
+---
+code: |
+  for characteristic in ['eye_color', 'hair_color', 'weight']:
+    getattr(client.child[i], characteristic)
+  client.child[i].complete = True
+---
+{% endhighlight %}
+
 ## <a name="DAList"></a>DAList
 
 A `DAList` acts like an ordinary [Python list], except that
@@ -659,13 +722,14 @@ This will result in the following five questions being asked:
 * What is the name of the fourth recipient?
 * What is the name of the fifth recipient?
 
-<a name="DAList.appendObject"></a>
-The `appendObject()` method is similar to the `initializeAttribute()`
-method we discussed earlier.  Running
-`recipient.appendObject(Individual)` creates a new object of the class
-[`Individual`] and adds it to the list.  In the example above, the first
-such object is the fourth item in the list, which means that the
-intrinsic name of the new object is `recipient[3]`.
+<a name="DAList.appendObject"></a> The `appendObject()` method is
+similar to the `initializeAttribute()` method we discussed earlier.
+Running `recipient.appendObject(Individual)` creates a new object of
+the class [`Individual`] and adds it to the list.  In the example
+above, the first such object is the fourth item in the list, which
+means that the intrinsic name of the new object is `recipient[3]`.
+The result of [`using()`] can be used in place of the name of a
+class.used as the second parameter.
 
 A `DAList` can be given a default object type, so that
 `appendObject()` can be called without an argument.  This default
@@ -713,6 +777,16 @@ Other methods available on a `DAList` are:
   the list; error triggered if list is empty.
 * <a name="DAList.last"></a>`last()` - returns the last item of the
   list; error triggered if list is empty.
+* <a name="DAList.item"></a>`item()` - if `fruit` is a `DAList`,
+  `fruit.item(2)` is equivalent to `fruit[2]`, except that if `fruit`
+  does not have an item `2`, the result will be empty text.  This is
+  a helpful method in some contexts, such as fillable PDF forms.
+  Empty text will also result if you try to use attributes on
+  the result, so `fruit.item(2).seeds` or
+  `fruit.item(2).total_value()` will also result in empty text.
+  
+{% include side-by-side.html demo="item" %}
+
 * <a name="DAList.does_verb"></a><a name="DADict.does_verb"></a><a
   name="DASet.does_verb"></a>`does_verb(verb)` - like the
   `verb_present()` function from [`docassemble.base.util`], except
@@ -827,21 +901,39 @@ The `DAList` uses the following attributes:
   [`DAObject`] or subclass thereof, or `None`.  Initially, this is set
   to `None`.  If set to an object type, such as `DAObject` or
   `Individual`, then new items will be created as objects of this
-  type.
+  type.  You can also use the result of the [`using()`] method here.
 * `gathered`: a boolean value, initially undefined.  It is set to
   `True` when then all of the items of the list are defined.
-* `items`: a [Python list] containing the items of the list.
+* `elements`: a [Python list] containing the items of the list.
 * `are_there_any`: a boolean value, initially undefined, indicating
   whether any values should be gathered.  The expectation is that the
   interview will define a [question] or [code block] that defines this
   attribute.
 * `is_there_another`: a boolean value, initially undefined, indicating
   whether there are any additional values that should be gathered.
-* `auto_gather`: a boolean value, initially `True`, indicating whether
-  the interview should attempt to 
+* `auto_gather`: a boolean value, set to `True` by default, which
+  indicates whether the interview should use the `.gather()` method to
+  ask questions to gather the items of the list.
+* `complete_attribute`: a text string indicating the name of an
+  attribute of each item of the list.  If you have a [`DAList`] called
+  `fruit` and you set `fruit.complete_attribute = 'weight'`, then then
+  when the `.gather()` method is gathering the items of the list, it
+  will seek a definition of `fruit[i].weight` for every item of the
+  list, as it is gathering the items of the list.
+* `ask_object_type`: a boolean value, initially set to `False`.  This
+  is used when you want to build a list of objects of diverse types.
+  When `ask_object_type` is `True`, then when items are added to the
+  list, **docassemble** will seek out a definition of the
+  `new_object_type` attribute before adding an item to the list.  When
+  it gets the object type, the object it adds to the list will be of
+  this type.
+* `new_object_type`: this works like `object_type`, except the
+  attribute is undefined and a definition is sought every time an
+  object is added to the list.  It is used in conjunction with the
+  `ask_object_type` attribute.
 
-For more information about using [`DAList`] objects, see the section
-on [groups].
+For more information about gathering items using [`DAList`] objects,
+see the section on [groups].
 
 ## <a name="DADict"></a><a name="DADict.initializeObject"></a><a name="DADict.new"></a>DADict
 
@@ -855,13 +947,17 @@ For example:
 
 {% include side-by-side.html demo="dadict" %}
 
+The first parameter is the name of the attribute.  The second
+parameter is the type of object.  The result of [`using()`] can be
+used in place of the class name.
+
 The `DADict` also uses a similar method called `.new()`.  This method
 initializes a new object and makes it an entry in the dictionary.  For
 example, if the dictionary is called `positions`, calling
 `positions.new('file clerk', 'supervisor')` will result in the
 creation of the object `positions['file clerk']` and the object
 `positions['supervisor']`.  The type of object is given by the
-[`object_type`] attribute, or `DAObject` if [`object_type`] is not set.
+[`object_type`] attribute, or [`DAObject`] if [`object_type`] is not set.
 You can also pass a [list] and it will unpack the list, initializing
 dictionary entries for each value.
 
@@ -966,6 +1062,17 @@ Here is an example that uses `.all_false()`:
 
 For more information about using checkboxes, see the documentation for
 [checkbox groups].
+
+<a name="DADict.item"></a>Like the [`DAList`], the [`DADict`] supports
+the method `item()`.  If `Fruit` is a `DADict`, `fruit.item('apple')`
+is equivalent to `fruit['apple']`, except that if `fruit` does not
+have an item `'apple'`, the result will be empty text.  This is
+a helpful method in some contexts, such as fillable PDF forms.
+Empty text will also result if you try to use attributes on the
+result, so `fruit.item('apple').seeds` or
+`fruit.item('apple').total_value()` will also result in empty text.
+
+{% include side-by-side.html demo="item-dict" %}
 
 For more information about using [`DADict`] objects, see the section
 on [groups].
@@ -2255,6 +2362,52 @@ defined.
 * `email`: this needs to a [`DATemplate`] containing the subject and
 body of the e-mail that will be sent.
 
+# <a name="DAObject.using"></a>Special object method `using()`
+
+If you wanted to initialize the variable `possession` as a [`DAList`]
+of [`Thing`]s, you could write
+
+{% highlight yaml %}
+---
+objects:
+  - possession: DAList
+---
+mandatory: True
+code: |
+  possession.object_type = Thing
+{% endhighlight %}
+
+The [`DAObject`] class has a special object method, `using()`, which
+can be used to accomplish the same thing in a more compact way, so
+that you could instead write:
+
+{% highlight yaml %}
+---
+objects:
+  - possession: DAList.using(object_type=Thing)
+---
+{% endhighlight %}
+
+You can use `using()` when indicating an `object_type`:
+
+{% highlight yaml %}
+---
+objects:
+  - client: Individual
+  - possession: DAList.using(object_type=Thing.using(owner=client))
+---
+{% endhighlight %}
+
+The result of this will be that `possession` is a [`DAList`] of
+[`Thing`]s, and each item in the list will be initialized so that the
+`owner` attribute is set to `client` by default.
+
+The result of `.using()` can be used in a number of contexts,
+including [`objects`] initial blocks, as a parameter in the methods
+[`initializeAttribute()`], [`reInitializeAttribute()`],
+[`appendObject()`], and [`gather()`], or as the [`object_type`]
+attribute of a [`DAList`] or [`DADict`].
+
 # <a name="instanceName"></a>How docassemble objects are different
 
 For most purposes, **docassemble** objects behave just like [Python]
@@ -2488,6 +2641,7 @@ and not an instance of the `Attorney` class.
 [`track_location`]:  {{ site.baseurl }}/docs/special.html#track_location
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
 [classes]: https://docs.python.org/2/tutorial/classes.html
+[Python class]: https://docs.python.org/2/tutorial/classes.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [fields]: {{ site.baseurl }}/docs/fields.html
 [Python function]: https://docs.python.org/2/tutorial/controlflow.html#defining-functions
@@ -2559,3 +2713,11 @@ and not an instance of the `Attorney` class.
 [relative module name]: https://docs.python.org/2.5/whatsnew/pep-328.html
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`object_type`]: #object_type
+[`initializeAttribute()`]: #DAObject.initializeAttribute
+[`reInitializeAttribute()`]: #DAObject.reInitializeAttribute
+[`appendObject()`]: #DAList.appendObject
+[`gather()`]: #DAList.gather
+[`object_name()`]: #DAObject.object_name
+[`getattr()`]: https://docs.python.org/2/library/functions.html#getattr
+[`Thing`]: #Thing
+[`using()`]: #DAObject.using

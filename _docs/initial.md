@@ -55,16 +55,6 @@ will find the above `objects` block and process it.  It will define
 `spouse` as an instance of the object class `Individual` and define
 `user.case` as an instance of the object class `Case`.
 
-If you want the objects to have certain parameters set, you can write:
-
-{% highlight yaml %}
----
-objects:
-  - spouse: Individual.using(allergy='turtles')
-  - user.case: Case
----
-{% endhighlight %}
-
 The use of objects in **docassemble** interviews is highly encouraged.
 However, the objects you use as variables in your interview [YAML] files
 need to inherit from the class `DAObject`.  Otherwise, **docassemble**
@@ -79,14 +69,14 @@ A code block like this would effectively do the same thing as the
 ---
 code: |
   spouse = Individual('spouse')
-  user.initializeAttribute('case', object_type=Case)
+  user.initializeAttribute('case', Case)
 ---
 {% endhighlight %}
 
 This code is more complicated than normal Python code for object
 initialization because the full name of the variable needs to be
 supplied to the function that creates and initializes the object.  The
-base class `DAObject` keeps track of variable names.
+base class [`DAObject`] keeps track of variable names.
 
 In some situations, running `spouse = Individual()` will correctly
 detect the variable name `spouse`, but in other situations, the name
@@ -96,6 +86,10 @@ always set the name correctly.
 Whenever possible, you should use `objects` blocks rather than code to
 initialize your objects because `objects` blocks are clean and
 readable.
+
+You can also use `objects` blocks to initialize attributes of the
+objects you create.  For information on how to do this, see the
+documentation for the [`using()`] method.
 
 <a name="objects from file"></a>Importing `objects from file`
 
@@ -899,3 +893,5 @@ features:
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`code`]: {{ site.baseurl }}/docs/code.html#code
 [PNG]: https://en.wikipedia.org/wiki/Portable_Network_Graphics
+[`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
+[`using()`]: {{ site.baseurl }}/docs/objects.html#DAObject.using

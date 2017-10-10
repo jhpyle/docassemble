@@ -4301,6 +4301,23 @@
     * Change to [normal](${ interview_url_action('check_update_status', status='normal') })
     * Change to [danger](${ interview_url_action('check_update_status', status='danger') })
     * Change to [critical](${ interview_url_action('check_update_status', status='critical') })
+"item": "question: |\n  Describe the ${ ordinal(i) } fruit.\nfields:\n  - Name: fruit[i].name\n\
+  \  - Color: fruit[i].color\n  - Seeds: fruit[i].seeds\n    datatype: integer\n---\n\
+  question: |\n  Are there any more fruit?\nyesno: fruit.there_is_another\n---\nmandatory:\
+  \ True\nquestion: |\n  Description of ten fruits.\nsubquestion: |\n  % for index\
+  \ in range(10):\n  The name of the ${ ordinal(index) }\n  fruit is ${ fruit.item(index).name\
+  \ }.\n  It is ${ fruit.item(index).color }\n  and it has\n  ${ fruit.item(index).seeds\
+  \ } seeds.\n  \n  % endfor"
+"item-dict": "code: |\n  pet_types = [\n    'dog', 'cat', 'goldfish',\n    'turtle',\
+  \ 'lizard', 'rabbit',\n    'rock', 'hamster', 'gerbil',\n    'rat']\n---\nquestion:\
+  \ |\n  What type of pet do you have?\nfields:\n  - Type: pet.new_item_name\n   \
+  \ datatype: dropdown\n    code: pet_types\n---\nquestion: |\n  Describe your pet\
+  \ ${ i }.\nfields:\n  - Name: pet[i].name\n  - Color: pet[i].color\n  - Legs: pet[i].legs\n\
+  \    datatype: integer\n---\nquestion: |\n  Do you have any other pets?\nyesno:\
+  \ pet.there_is_another\n---\nmandatory: True\nquestion: |\n  Description of ten\
+  \ pets.\nsubquestion: |\n  % for pet_type in pet_types:\n  The name of your pet\
+  \ ${ pet_type }\n  is ${ pet.item(pet_type).name }.\n  It is ${ pet.item(pet_type).color\
+  \ }\n  and it has\n  ${ pet.item(pet_type).legs } legs.\n  \n  % endfor"
 "join": |-
   initial: True
   code: |
@@ -4484,6 +4501,12 @@
   code: |
     lucky_number = 2
 "madlibs": |-
+  objects:
+    - adjective: DAList
+    - noun: DAList
+    - person: DAList
+    - place: DAList
+  ---
   mandatory: True
   question: A funny story
   subquestion: |

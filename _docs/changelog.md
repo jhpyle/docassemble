@@ -4,6 +4,27 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.71](https://github.com/jhpyle/docassemble/releases/tag/v0.1.71)
+
+### Added
+- Method `item()` for `DAList` and `DADict`.
+- Lettuce tests in directory `tests`.
+
+### Changed
+- Playground variable detection now shows attributes.
+- Playground variable detection now adjusts for temporary Mako variables.
+- The `split()` function now splits on newlines.
+- Playground no longer loads each example interview into memory.
+
+### Fixed
+- Template file Google Drive deletion.
+
+## [0.1.70](https://github.com/jhpyle/docassemble/releases/tag/v0.1.70)
+
+### Fixed
+- Problem with pickling result of `.using()`.
+- Scanning for variable names involving patterns like `[i][j]`.
+
 ## [0.1.69](https://github.com/jhpyle/docassemble/releases/tag/v0.1.69) - 2017-10-05
 
 ### Added

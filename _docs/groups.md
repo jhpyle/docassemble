@@ -433,6 +433,51 @@ However, this would set `location.new_object_type` to a piece of text
 `City`).  Thus, when setting `.new_object_type` (or `.object_type`),
 make sure to use [Python] code.
 
+Note that there are two questions that ask about attributes of the
+list items:
+
+{% highlight yaml %}
+---
+question: |
+  What is the address of the
+  ${ ordinal(i) } location?
+fields:
+  - Address: location[i].address
+  - Unit: location[i].unit
+    required: False
+  - City: location[i].city
+  - State: location[i].state
+    code: |
+      states_list()
+  - Zip: location[i].zip
+    required: False
+---
+question: |
+  What is the city of the
+  ${ ordinal(i) } location?
+fields:
+  - City: location[i].city
+  - State: location[i].state
+    code: |
+      states_list()
+---
+{% endhighlight %}
+
+You might be wondering how **docassemble** knows which of these two
+questions to ask for a given item in the `location` list.  If the
+object is a `City`, a textual representation of the object will first
+ask for `.city` and then `.state`.  If the object is an `Address`, a
+textual representation of the object will first ask for `.address`.
+When **docassemble** gathers items into a list, it asks whatever
+questions are necessary to construct a textual representation of the
+item.  So if the attribute **docassemble** needs is `.city`, both
+questions are capable of defining that attribute.  The "What is the
+city" question comes last in the [YAML] file, so it takes precedence
+over the "What is the address" question, and it will be asked.  If the
+attribute **docassemble** needs is `.address`, only the "What is the
+address" question is capable of defining that, so only that question
+will be asked.
+
 ### <a name="gather dictionary"></a>Dictionaries
 
 The process of gathering the items in a [`DADict`] dictionary is
