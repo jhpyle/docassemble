@@ -4,7 +4,7 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.1.71](https://github.com/jhpyle/docassemble/releases/tag/v0.1.71)
+## [0.1.70](https://github.com/jhpyle/docassemble/releases/tag/v0.1.70) - 2017-10-10
 
 ### Added
 - Method `item()` for `DAList` and `DADict`.
@@ -18,10 +18,6 @@ short_title: Change Log
 
 ### Fixed
 - Template file Google Drive deletion.
-
-## [0.1.70](https://github.com/jhpyle/docassemble/releases/tag/v0.1.70)
-
-### Fixed
 - Problem with pickling result of `.using()`.
 - Scanning for variable names involving patterns like `[i][j]`.
 
