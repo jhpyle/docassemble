@@ -66,6 +66,7 @@ s3:
   access key id: FWIEJFIJIDGISEJFWOEF
   secret access key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
   bucket: yourbucketname
+  region: us-west-2
 azure:
   enable: False
   account name: example-com
@@ -1177,7 +1178,7 @@ For more information, see the documentation of the [`ocr_file()`] function.
 ### <a name="s3"></a>s3
 
 If you are using [Amazon S3] to store shared files, enter your access
-keys and [bucket] name as follows:
+keys, [bucket] name, and [region name] as follows:
 
 {% highlight yaml %}
 s3:
@@ -1185,6 +1186,7 @@ s3:
   access_key_id: FWIEJFIJIDGISEJFWOEF
   secret_access_key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
   bucket: yourbucketname
+  region: us-west-1
 {% endhighlight %}
 
 You will need to create the [bucket] before using it; **docassemble**
@@ -1969,3 +1971,4 @@ and Facebook API keys.
 [`maximum image size` field modifier]: {{ site.baseurl }}/docs/fields.html#maximum image size
 [`maximum image size` interview feature]: {{ site.baseurl }}/docs/initial.html#maximum image size
 [`loop limit` and `recursion limit` features]: {{ site.baseurl }}/docs/initial.html#loop limit
+[region name]: http://docs.aws.amazon.com/general/latest/gr/rande.html

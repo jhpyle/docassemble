@@ -304,6 +304,9 @@ indicated location, **docassemble** will create an initial
   using [S3], set this to the [S3] access secret.  You can ignore this
   environment variable if you are using [EC2] with an [IAM] role that
   allows access to your [S3] bucket.
+* <a name="S3REGION"></a>`S3REGION`: If you are using [S3], set this
+  to the [region] you are using (e.g., `us-west-1`, `us-west-2`,
+  `ca-central-1`).
 * <a name="AZUREENABLE"></a>`AZUREENABLE`: Set this to `True` if you
   are using [Azure blob storage](#persistent azure) as a repository
   for uploaded files, [Playground] files, the [configuration] file,
@@ -342,7 +345,8 @@ in `env.list`.
 * <a name="DBUSER"></a>`DBUSER`: The username for connecting to the
   [PostgreSQL] server.  The default is `docassemble`.
 * <a name="DBPASSWORD"></a>`DBPASSWORD`: The password for connecting
-  to the SQL server.  The default is `abc123`.
+  to the SQL server.  The default is `abc123`.  The password cannot
+  contain the character `#`.
 * <a name="DBPREFIX"></a>`DBPREFIX`: This sets the prefix for the
   database specifier.  The default is `postgresql+psycopg2://`.
 * <a name="DBPORT"></a>`DBPORT`: This sets the port that
@@ -429,6 +433,10 @@ in `env.list`.
   `PACKAGES` environment variable.  The packages will be installed
   when the image is run.  See the [`debian packages`] configuration
   directive.
+* <a name="PACKAGES"></a>`DASECRETKEY`: The secret key for protecting
+  against cross-site forgery.  See the [`secret key`] configuration
+  directive.  If `DASECRETKEY` is not set, a random secret key will be
+  generated.
 
 ## Changing the configuration
 
@@ -1497,3 +1505,4 @@ containers depend on the images.
 [A record]: https://en.wikipedia.org/wiki/List_of_DNS_record_types#A
 [Security Group]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html
 [HTTP]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
+[region]: http://docs.aws.amazon.com/general/latest/gr/rande.html

@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.71](https://github.com/jhpyle/docassemble/releases/tag/v0.1.71) - 2017-10-11
+
+### Changed
+- `currency()` now returns `''` on non-numeric input.
+
+### Fixed
+- AWS secret access codes with slashes.
+- Recognition of iterators with constant integers.
+
 ## [0.1.70](https://github.com/jhpyle/docassemble/releases/tag/v0.1.70) - 2017-10-10
 
 ### Added

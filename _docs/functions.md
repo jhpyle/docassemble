@@ -1802,6 +1802,8 @@ For example:
 * `format_date("March 3, 2016")` returns `March 3, 2016`.
 * `format_date('April 5, 2014', format='full')` returns `Saturday, April 5, 2014`.
 * `format_date('April 5, 2014', format='EEEE')` returns `Saturday`.
+* `format_date('April 5, 2014', format='MMMM')` returns `April`.
+* `format_date('April 5, 2014', format='MMM')` returns `Apr`.
 * `format_date('April 5, 2014', format='E')` returns `Sat`.
 * `format_date('April 5, 2014', format='e')` returns `6` (numbers range from
   1 to 7).
@@ -1814,7 +1816,8 @@ For more information about how to specify date formats, see the
 documentation for
 [babel.dates](http://babel.pocoo.org/en/latest/api/dates.html).  The
 `format` argument, which defaults to `long`, is passed directly to the
-`babel.dates.format_date()` function.
+`babel.dates.format_date()` function.  The patterns used in date
+formatting are based on [Unicode Technical Standard #35].
 
 ## <a name="format_time"></a>format_time()
 
@@ -1824,12 +1827,19 @@ it returns a time, rather than a date.
 For example:
 
 * `format_time("04:01:23")` returns `4:00 AM`.
+* `format_time("04:01:23", format='h')` returns `4`.
+* `format_time("04:01:23", format='hh')` returns `04`.
+* `format_time("04:01:23", format='m')` returns `1`.
+* `format_time("04:01:23", format='mm')` returns `01`.
+* `format_time("04:01:23", format='ss')` returns `23`.
+* `format_time("04:01:23", format='a')` returns `AM`.
 
 For more information about how to specify time formats, see the
 documentation for
 [babel.dates](http://babel.pocoo.org/en/latest/api/dates.html).  The
 `format` argument, which defaults to `short`, is passed directly to
-the `babel.dates.format_time()` function.
+the `babel.dates.format_time()` function.  The patterns used in time
+formatting are based on [Unicode Technical Standard #35].
 
 ## <a name="today"></a>today()
 
@@ -2426,7 +2436,14 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 
 The `yesno()` function returns `'Yes'` or `'No'` depending on the
 truth value of the argument.  This is useful for filling in checkboxes
-in [PDF templates].
+in [PDF templates].  It takes an optional keyword argument `invert`,
+which, if set to true, returns `'No'` in place of `'Yes'` and
+vice-versa.
+
+## <a name="noyes"></a>noyes()
+
+The `noyes()` function does the opposite of [`yesno()`], or the same
+thing as `yesno(some_fact, invert=True)`.
 
 ## <a name="split"></a>split()
 
@@ -4216,3 +4233,5 @@ $(document).on('daPageLoad', function(){
 [multiple-choice question]: {{ site.baseurl }}/docs/fields.html#field with buttons
 [`need` directive]: {{ site.baseurl }}/docs/logic.html#need
 [PDF templates]: {{ site.baseurl }}/docs/documents.html#pdf template file
+[`yesno()`]: #yesno
+[Unicode Technical Standard #35]: https://unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns
