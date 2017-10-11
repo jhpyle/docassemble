@@ -1757,6 +1757,8 @@ class Question:
                 for field in data['fields']:
                     if type(field) is dict:
                         field_info = {'type': 'text', 'number': field_number}
+                        if 'datatype' in field and field['datatype'] in ['radio', 'object', 'object_radio', 'combobox', 'checkboxes', 'object_checkboxes'] and not ('choices' in field or 'code' in field):
+                            raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
                         for key in field:
                             if key == 'default' and 'datatype' in field and field['datatype'] in ['object', 'object_radio', 'object_checkboxes']:
                                 continue

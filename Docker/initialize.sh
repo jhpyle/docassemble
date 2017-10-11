@@ -247,13 +247,13 @@ if [ ! -f $DA_CONFIG_FILE ]; then
     sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2:\/\/}"'@' \
 	-e 's/{{DBNAME}}/'"${DBNAME:-docassemble}"'/' \
 	-e 's/{{DBUSER}}/'"${DBUSER:-docassemble}"'/' \
-	-e 's/{{DBPASSWORD}}/'"${DBPASSWORD:-abc123}"'/' \
+	-e 's#{{DBPASSWORD}}#'"${DBPASSWORD:-abc123}"'#' \
 	-e 's/{{DBHOST}}/'"${DBHOST:-null}"'/' \
 	-e 's/{{DBPORT}}/'"${DBPORT:-null}"'/' \
 	-e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX:-null}"'/' \
 	-e 's/{{S3ENABLE}}/'"${S3ENABLE:-false}"'/' \
-	-e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY:-null}"'/' \
-	-e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY:-null}"'/' \
+	-e 's#{{S3ACCESSKEY}}#'"${S3ACCESSKEY:-null}"'#' \
+	-e 's#{{S3SECRETACCESSKEY}}#'"${S3SECRETACCESSKEY:-null}"'#' \
 	-e 's/{{S3BUCKET}}/'"${S3BUCKET:-null}"'/' \
 	-e 's/{{S3REGION}}/'"${S3REGION:-null}"'/' \
 	-e 's/{{AZUREENABLE}}/'"${AZUREENABLE:-false}"'/' \
@@ -267,10 +267,10 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{USEHTTPS}}/'"${USEHTTPS:-false}"'/' \
 	-e 's/{{USELETSENCRYPT}}/'"${USELETSENCRYPT:-false}"'/' \
 	-e 's/{{LETSENCRYPTEMAIL}}/'"${LETSENCRYPTEMAIL:-null}"'/' \
-	-e 's/{{LOGSERVER}}/'"${LOGSERVER:-null}"'/' \
+	-e 's@{{LOGSERVER}}@'"${LOGSERVER:-null}"'@' \
 	-e 's/{{DAHOSTNAME}}/'"${DAHOSTNAME:-null}"'/' \
 	-e 's/{{LOCALE}}/'"${LOCALE:-null}"'/' \
-	-e 's/{{DASECRETKEY}}/'"${DEFAULT_SECRET}"'/' \
+	-e 's@{{DASECRETKEY}}@'"${DEFAULT_SECRET}"'@' \
 	-e 's@{{URLROOT}}@'"${URLROOT:-null}"'@' \
 	-e 's@{{POSTURLROOT}}@'"${POSTURLROOT:-/}"'@' \
 	-e 's/{{BEHINDHTTPSLOADBALANCER}}/'"${BEHINDHTTPSLOADBALANCER:-false}"'/' \

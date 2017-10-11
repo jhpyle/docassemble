@@ -9488,6 +9488,8 @@ def do_sync_with_google_drive():
             for the_file in response.get('files', []):
                 if re.search(r'(\.tmp|\.gdoc)$', the_file['name']):
                     continue
+                if re.search(r'^\~', the_file['name']):
+                    continue
                 gd_ids[section][the_file['name']] = the_file['id']
                 gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])
                 if the_file['trashed']:

@@ -22,6 +22,10 @@ class myextract(ast.NodeVisitor):
             self.stack.append('[' + str(node.slice.value.id) + ']')
             self.in_subscript += 1
             self.seen_name = False
+        elif hasattr(node.slice.value, 'n'):
+            self.stack.append('[' + str(node.slice.value.n) + ']')
+            self.in_subscript += 1
+            self.seen_name = False
         ast.NodeVisitor.generic_visit(self, node)
         if hasattr(node.slice.value, 'id'):
             self.in_subscript -= 1
