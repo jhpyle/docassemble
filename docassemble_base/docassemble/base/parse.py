@@ -873,6 +873,10 @@ class Question:
                 self.interview.recursion_limit = data['features']['recursion limit']
             if 'pdf/a' in data['features'] and data['features']['pdf/a'] in [True, False]:
                 self.interview.use_pdf_a = data['features']['pdf/a']
+            if 'bootstrap theme' in data['features'] and data['features']['bootstrap theme']:
+                self.interview.bootstrap_theme = data['features']['bootstrap theme']
+            if 'inverse navbar' in data['features']:
+                self.interview.options['inverse navbar'] = data['features']['inverse navbar']
             for key in ['javascript', 'css']:
                 if key in data['features']:
                     if type(data['features'][key]) is list:
@@ -884,7 +888,7 @@ class Question:
                     for the_file in the_list:
                         if key not in self.interview.external_files:
                             self.interview.external_files[key] = list()
-                        self.interview.external_files[key].append(the_file)
+                        self.interview.external_files[key].append((self.from_source.get_package(), the_file))
         if 'scan for variables' in data:
             if data['scan for variables']:
                 self.scan_for_variables = True
@@ -3191,11 +3195,13 @@ class Interview:
         self.cache_documents = True
         self.use_navigation = False
         self.max_image_size = get_config('maximum image size', None)
+        self.bootstrap_theme = get_config('bootstrap theme', None)
         self.sections = dict()
         self.names_used = set()
         self.attachment_options = dict()
         self.attachment_index = 0
         self.external_files = dict()
+        self.options = dict()
         self.calls_process_action = False
         self.uses_action = False
         self.imports_util = False
@@ -3227,6 +3233,13 @@ class Interview:
         else:
             ml_store += 'ml-default.json'
         return ml_store
+    def get_bootstrap_theme(self):
+        if self.bootstrap_theme is None:
+            logmessage("bootstrap theme is None")
+            return None
+        result = docassemble.base.functions.server.url_finder(self.bootstrap_theme, _package=self.source.package)
+        logmessage("bootstrap theme from interview is " + result)
+        return result
     def get_title(self):
         if self.title is not None:
             return self.title

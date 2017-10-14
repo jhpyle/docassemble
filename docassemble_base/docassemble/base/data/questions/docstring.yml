@@ -68,6 +68,9 @@ menu_items:
   doc: |
     This is a built-in Python variable that expresses a variable that exists but that lacks a value.
   type: NoneType
+Exception:
+  doc: |
+    This is a built-in Python class that represents an exception.
 x:
   doc: |
     This is a special variable that is used in generic object questions.

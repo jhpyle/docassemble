@@ -1414,7 +1414,7 @@ def replace_fields(string, status=None, embedder=None):
     field_strings = list()
     for (start, end) in matches:
         field_strings.append(string[start:end])
-    logmessage(repr(field_strings))
+    #logmessage(repr(field_strings))
     for field_string in field_strings:
         if embedder is None:
             string = string.replace(field_string, 'ERROR: FIELD cannot be used here')

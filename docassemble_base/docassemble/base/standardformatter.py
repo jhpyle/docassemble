@@ -529,12 +529,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     else:
         decoration_text = ''
     master_output = ""
-    master_output += '          <section id="question" class="tab-pane active col-lg-6 col-md-7 col-sm-9">\n'
+    master_output += '          <section role="tabpanel" id="question" class="tab-pane active col-lg-6 col-md-7 col-sm-9">\n'
     output = ""
     if the_progress_bar and status.question.question_type != "signature":
         output += the_progress_bar
     if status.question.question_type == "signature":
-        output += '            <div class="sigpage" id="sigpage">\n              <div class="sigshowsmallblock sigheader" id="sigheader">\n                <div class="siginnerheader">\n                  <a class="btn btn-sm btn-warning signav-left sigclear">' + word('Clear') + '</a>\n                  <a class="btn btn-sm btn-primary signav-right sigsave">' + continue_label + '</a>\n                  <div class="sigtitle">'
+        output += '            <div class="sigpage" id="sigpage">\n              <div class="sigshowsmallblock sigheader" id="sigheader">\n                <div class="siginnerheader">\n                  <a class="btn btn-sm btn-warning signav-left signavbutton sigclear">' + word('Clear') + '</a>\n                  <a class="btn btn-sm btn-primary signav-right signavbutton sigsave">' + continue_label + '</a>\n                  <div class="sigtitle">'
         if status.questionText:
             output += markdown_to_html(status.questionText, trim=True)
         else:
@@ -1266,8 +1266,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         status.screen_reader_text['question'] = unicode(output)
     master_output += output
     master_output += '          </section>\n'
-    master_output += '          <section id="help" class="tab-pane col-lg-6 col-md-7 col-sm-9">\n'
-    output = '<div><a id="backToQuestion" data-toggle="tab" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
+    master_output += '          <section role="tabpanel" id="help" class="tab-pane col-lg-6 col-md-7 col-sm-9">\n'
+    output = '<div><a id="backToQuestion" data-toggle="tab" data-target="#question" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
     output += """
 <div id="daPhoneMessage" class="row invisible">
   <div class="col-md-12">

@@ -1,0 +1,22 @@
+metadata:
+  title: Inverted navbar
+  documentation: "https://docassemble.org/docs/initial.html#inverse navbar"
+  example start: 1
+  example end: 1
+---
+features:
+  inverse navbar: False
+---
+question: |
+  Welcome to the interview!
+subquestion:
+  Do you like the style of the navigation bar?
+yesno: likes_navbar
+---
+mandatory: True
+question: |
+  % if likes_navbar:
+  I like it too.
+  % else:
+  Yeah, I don't care for it either.
+  % endif

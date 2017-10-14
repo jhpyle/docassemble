@@ -50,6 +50,10 @@ class myvisitnode(ast.NodeVisitor):
             crawler.visit(node)
             self.names[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
         ast.NodeVisitor.generic_visit(self, node)
+    def visit_ExceptHandler(self, node):
+        if node.name is not None and hasattr(node.name, 'id') and node.name.id is not None:
+            self.targets[node.name.id] = 1
+        ast.NodeVisitor.generic_visit(self, node)
     def visit_Assign(self, node):
         for key, val in ast.iter_fields(node):
             if key == 'targets':

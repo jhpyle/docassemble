@@ -107,6 +107,9 @@ class PythonFragment(PythonCode):
         elif keyword == 'elif' or keyword == 'else':
             code = "if False:pass\n" + code + "pass"
         elif keyword == 'except':
+            thevar = re.sub(r'^.*(,| as)\s+([a-zA-z\_][0-9a-zA-Z\_]*):.*', r'\2', code)
+            if thevar and thevar != code:
+                self.names_set = set([thevar])
             code = "try:pass\n" + code + "pass"
         elif keyword == 'with':
             code = code + "pass"

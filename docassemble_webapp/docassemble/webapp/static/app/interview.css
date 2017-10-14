@@ -64,6 +64,10 @@
     float:right
 }
 
+.signavbutton {
+    max-height: 30px;
+}
+
 #sigcanvas{
     cursor:crosshair;
     border-style: solid;
@@ -103,7 +107,7 @@
 
 @media (min-width: 768px) {
     .dasignature section {
-        padding: 60px 0px 0px 0px;
+        padding: 70px 0px 0px 0px;
     }
     .dasignature > .navbar {
         display: block;

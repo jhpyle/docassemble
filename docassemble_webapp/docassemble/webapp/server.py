@@ -312,13 +312,14 @@ def custom_login():
             register_form=register_form)
 
 def logout():
-    secret = request.cookies.get('secret', None)
-    if secret is None:
-        secret = random_string(16)
-        set_cookie = True
-    else:
-        secret = str(secret)
-        set_cookie = False
+    # secret = request.cookies.get('secret', None)
+    # if secret is None:
+    #     secret = random_string(16)
+    #     set_cookie = True
+    # else:
+    #     secret = str(secret)
+    #     set_cookie = False
+    set_cookie = False
     user_manager = current_app.user_manager
     flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
@@ -328,6 +329,10 @@ def logout():
     response = redirect(next)
     if set_cookie:
         response.set_cookie('secret', secret)
+    else:
+        response.set_cookie('visitor_secret', '', expires=0)
+        response.set_cookie('secret', '', expires=0)
+        response.set_cookie('session', '', expires=0)
     return response
 
 # def custom_login():
@@ -1237,8 +1242,12 @@ def do_refresh(is_ajax, yaml_filename):
 def standard_scripts():
     return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-combobox/js/bootstrap-combobox.js') + '"></script>'
     
-def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False):
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/interview.css') + '" rel="stylesheet">'
+def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None):
+    if bootstrap_theme is None:
+        bootstrap_theme = url_for('static', filename='bootstrap/css/bootstrap.min.css')
+        #bootstrap_theme = url_for('static', filename='bootstrap/css/bootstrap-theme.min.css')
+        #<link href="' + bootstrap_theme + '" rel="stylesheet">\n    
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <link href="' + bootstrap_theme + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/interview.css') + '" rel="stylesheet">'
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
     return output
@@ -1589,8 +1598,17 @@ def release_lock(user_code, filename):
     r.delete(key)
 
 def make_navbar(status, page_title, page_short_title, steps, show_login, chat_info, debug_mode):
+    if 'inverse navbar' in status.question.interview.options:
+        if status.question.interview.options['inverse navbar']:
+            inverse = 'navbar-inverse '
+        else:
+            inverse = ''
+    elif daconfig.get('inverse navbar', True):
+        inverse = 'navbar-inverse '
+    else:
+        inverse = ''
     navbar = """\
-    <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar """ + inverse + """navbar-fixed-top">
       <div class="container-fluid">
         <div class="navbar-header danavbar">
 """
@@ -1604,36 +1622,32 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
 """
     if status.question.can_go_back and steps > 1:
         navbar += """\
-          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon" type="submit" title=""" + '"' + word("Go back to the previous question") + '"' + """><i class="glyphicon glyphicon-chevron-left dalarge"></i>""" + word('Back') + """</button></form></span>
+          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon backbuttoncolor navbar-btn" type="submit" title=""" + '"' + word("Go back to the previous question") + '"' + """><i class="glyphicon glyphicon-chevron-left dalarge"></i><span class="dalargefix">""" + word('Back') + """</span></button></form></span>
 """
-    navbar += """\
-          <a class="invisible" id="questionlabel" href="#question" data-toggle="tab">""" + word('Question') + """</a>
-"""
+    #navbar += """\
+    #      <a class="invisible" id="questionlabel" data-target="#question" data-toggle="tab">""" + word('Question') + """</a>
+#"""
     help_message = word("Help is available")
     extra_help_message = word("Help is available for this question")
     phone_message = word("Phone help is available")
     chat_message = word("Live chat is available")
     source_message = word("How this question came to be asked")
+    if debug_mode:
+        source_button = '<ul role="tablist" class="nav navbar-nav navbar-tabs mynavbar-right hidden-xs"><li><a role="tab" class="no-outline" title=' + repr(str(source_message)) + ' id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li></ul>'
+    else:
+        source_button = ''
+    navbar += '          ' + source_button + '<ul role="tablist" class="nav navbar-nav navbar-tabs mynavbar-right tabbuttons"><li class="invisible"><a id="questionlabel" data-target="#question">' + word('Question') + '</a></li>'
     if len(status.helpText):
         if status.question.helptext is None:
-            navbar += '          <a title="' + help_message + '" class="mynavbar-text" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + '</a> <a title="' + phone_message + '" id="daPhoneAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
+            navbar += '<li><a role="tab" class="pointer no-outline" data-target="#help" id="helptoggle" title="' + help_message + '">' + word('Help') + '</a></li>'
         else:
-            navbar += '          <a title="' + extra_help_message + '" class="mynavbar-text daactivetext" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></a> <a title="' + phone_message + '" id="daPhoneAvailable" class="mynavbar-icon daactivetext invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable" class="mynavbar-icon daactivetext invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
-    elif chat_info['availability'] == 'available':
-        navbar += '          <a title="' + phone_message + '" id="daPhoneAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
+            navbar += '<li><a role="tab" class="pointer no-outline" data-target="#help" id="helptoggle" title="' + extra_help_message + '"><span class="daactivetext">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></span></a></li>'
+    navbar += '<li class="invisible" id="daPhoneAvailable"><a data-target="#help" title="' + phone_message + '" class="pointer navbar-icon"><i class="glyphicon glyphicon-earphone chat-active"></i></a></li><li class="invisible" id="daChatAvailable"><a data-target="#help" title="' + chat_message + '" class="pointer navbar-icon" ><i class="glyphicon glyphicon-comment"></i></a></li></ul>'
     navbar += """
-          <a id="pagetitle" href="#question" data-toggle="tab" class="navbar-brand dabrand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
+          <a id="pagetitle" class="navbar-brand pointer"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
       
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
-          <ul class="nav navbar-nav navbar-left hidden-xs">
-"""
-    if debug_mode:
-        navbar += """\
-            <li><a class="no-outline" title=""" + repr(str(source_message)) + """ id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">""" + word('Source') + """</a></li>
-"""
-    navbar += """\
-          </ul>
           <ul class="nav navbar-nav navbar-right">
 """
     if 'menu_items' in status.extras:
@@ -2655,37 +2669,37 @@ class AzureSignIn(OAuthSignIn):
             me.get('mail')
         )
 
-# class TwitterSignIn(OAuthSignIn):
-#     def __init__(self):
-#         super(TwitterSignIn, self).__init__('twitter')
-#         self.service = OAuth1Service(
-#             name='twitter',
-#             consumer_key=self.consumer_id,
-#             consumer_secret=self.consumer_secret,
-#             request_token_url='https://api.twitter.com/oauth/request_token',
-#             authorize_url='https://api.twitter.com/oauth/authorize',
-#             access_token_url='https://api.twitter.com/oauth/access_token',
-#             base_url='https://api.twitter.com/1.1/'
-#         )
-#     def authorize(self):
-#         request_token = self.service.get_request_token(
-#             params={'oauth_callback': self.get_callback_url()}
-#         )
-#         session['request_token'] = request_token
-#         return redirect(self.service.get_authorize_url(request_token[0]))
-#     def callback(self):
-#         request_token = session.pop('request_token')
-#         if 'oauth_verifier' not in request.args:
-#             return None, None, None
-#         oauth_session = self.service.get_auth_session(
-#             request_token[0],
-#             request_token[1],
-#             data={'oauth_verifier': request.args['oauth_verifier']}
-#         )
-#         me = oauth_session.get('account/verify_credentials.json').json()
-#         social_id = 'twitter$' + str(me.get('id'))
-#         username = me.get('screen_name')
-#         return social_id, username, None   # Twitter does not provide email
+class TwitterSignIn(OAuthSignIn):
+    def __init__(self):
+        super(TwitterSignIn, self).__init__('twitter')
+        self.service = OAuth1Service(
+            name='twitter',
+            consumer_key=self.consumer_id,
+            consumer_secret=self.consumer_secret,
+            request_token_url='https://api.twitter.com/oauth/request_token',
+            authorize_url='https://api.twitter.com/oauth/authorize',
+            access_token_url='https://api.twitter.com/oauth/access_token',
+            base_url='https://api.twitter.com/1.1/'
+        )
+    def authorize(self):
+        request_token = self.service.get_request_token(
+            params={'oauth_callback': self.get_callback_url()}
+        )
+        session['request_token'] = request_token
+        return redirect(self.service.get_authorize_url(request_token[0]))
+    def callback(self):
+        request_token = session.pop('request_token')
+        if 'oauth_verifier' not in request.args:
+            return None, None, None
+        oauth_session = self.service.get_auth_session(
+            request_token[0],
+            request_token[1],
+            data={'oauth_verifier': request.args['oauth_verifier']}
+        )
+        me = oauth_session.get('account/verify_credentials.json').json()
+        social_id = 'twitter$' + str(me.get('id'))
+        username = me.get('screen_name')
+        return social_id, username, None   # Twitter does not provide email
 
 @flaskbabel.localeselector
 def get_locale():
@@ -4696,8 +4710,12 @@ def index():
     if not is_ajax:
         scripts = standard_scripts()
         if 'javascript' in interview_status.question.interview.external_files:
-            for fileref in interview_status.question.interview.external_files['javascript']:
-                scripts += "\n" + '    <script src="' + get_url_from_file_reference(fileref, _question=interview_status.question) + '"></script>'
+            for packageref, fileref in interview_status.question.interview.external_files['javascript']:
+                the_url = get_url_from_file_reference(fileref, _package=packageref)
+                if the_url is not None:
+                    scripts += "\n" + '    <script src="' + get_url_from_file_reference(fileref, _package=packageref) + '"></script>'
+                else:
+                    logmessage("index: could not find javascript file " + str(fileref))
         if interview_status.question.checkin is not None:
             do_action = repr(str(interview_status.question.checkin))
         else:
@@ -4806,7 +4824,7 @@ def index():
       preloadImage('""" + str(url_for('static', filename='bootstrap-fileinput/img/loading-sm.gif')) + """');
       preloadImage('""" + str(url_for('static', filename='bootstrap-fileinput/img/loading.gif')) + """');
       function show_help_tab(){
-          $('#helptoggle').trigger('click');
+          $('#helptoggle').tab('show');
       }
       function url_action(action, args){
           if (args == null){
@@ -4910,15 +4928,15 @@ def index():
         var message;
         var waitPeriod = 3000;
         if (subject == 'chat'){
-          target = "#daChatAvailable i";
+          target = "#daChatAvailable a i";
           message = """ + repr(str(word("Get help through live chat by clicking here."))) + """;
         }
         else if (subject == 'chatmessage'){
-          target = "#daChatAvailable i";
+          target = "#daChatAvailable a i";
           message = """ + repr(str(word("A chat message has arrived."))) + """;
         }
         else if (subject == 'phone'){
-          target = "#daPhoneAvailable i";
+          target = "#daPhoneAvailable a i";
           message = """ + repr(str(word("Click here to get help over the phone."))) + """;
         }
         else{
@@ -5620,13 +5638,13 @@ def index():
         if (daChatStatus == 'waiting'){
           //console.log("I see waiting")
           if (chatHistory.length > 0){
-            $("#daChatAvailable i").removeClass("chat-active");
-            $("#daChatAvailable i").addClass("chat-inactive");
+            $("#daChatAvailable a i").removeClass("chat-active");
+            $("#daChatAvailable a i").addClass("chat-inactive");
             $("#daChatAvailable").removeClass("invisible");
           }
           else{
-            $("#daChatAvailable i").removeClass("chat-active");
-            $("#daChatAvailable i").removeClass("chat-inactive");
+            $("#daChatAvailable a i").removeClass("chat-active");
+            $("#daChatAvailable a i").removeClass("chat-inactive");
             $("#daChatAvailable").addClass("invisible");
           }
           $("#daChatOnButton").addClass("invisible");
@@ -5637,8 +5655,8 @@ def index():
         if (daChatStatus == 'standby' || daChatStatus == 'ready'){
           //console.log("I see standby")
           $("#daChatAvailable").removeClass("invisible");
-          $("#daChatAvailable i").removeClass("chat-inactive");
-          $("#daChatAvailable i").addClass("chat-active");
+          $("#daChatAvailable a i").removeClass("chat-inactive");
+          $("#daChatAvailable a i").addClass("chat-active");
           $("#daChatOnButton").removeClass("invisible");
           $("#daChatOffButton").addClass("invisible");
           $("#daMessage").prop('disabled', true);
@@ -5647,8 +5665,8 @@ def index():
         }
         if (daChatStatus == 'on'){
           $("#daChatAvailable").removeClass("invisible");
-          $("#daChatAvailable i").removeClass("chat-inactive");
-          $("#daChatAvailable i").addClass("chat-active");
+          $("#daChatAvailable a i").removeClass("chat-inactive");
+          $("#daChatAvailable a i").addClass("chat-active");
           $("#daChatOnButton").addClass("invisible");
           $("#daChatOffButton").removeClass("invisible");
           $("#daMessage").prop('disabled', false);
@@ -5879,13 +5897,14 @@ def index():
       //}
       function showSpinner(){
         if ($("#question").length > 0){
-          $('<div id="daSpinner" class="spinner-container"><div class="container"><div class="row"><div class="col-lg-6 col-md-8 col-sm-10"><img class="da-spinner" src=""" + '"' + str(url_for('static', filename='app/loader.gif')) + '"' + """></div></div></div></div>').appendTo("body");
+          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-lg-6 col-md-8 col-sm-10"><img class="da-spinner" src=""" + '"' + str(url_for('static', filename='app/loader.gif')) + '"' + """></div></div></div></div>').appendTo("body");
         }
         else{
           var newImg = document.createElement('img');
           $(newImg).attr("src", """ + repr(str(url_for('static', filename='app/loader.gif'))) + """);
           $(newImg).attr("id", "daSpinner");
           $(newImg).addClass("da-sig-spinner");
+          $(newImg).addClass("top-for-navbar");
           $(newImg).appendTo("#sigtoppart");
         }
         daShowingSpinner = true;
@@ -5912,6 +5931,18 @@ def index():
           hideSpinner();
         }
         notYetScrolled = true;
+        $('.tabbuttons a').click(function(e) {
+          e.preventDefault();
+          $(this).tab('show');
+        });
+        $('#questionlabel').click(function(e) {
+          e.preventDefault();
+          $(this).tab('show');
+        });
+        $('#pagetitle').click(function(e) {
+          e.preventDefault();
+          $('#questionlabel').tab('show');
+        });
         $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
         $(".to-labelauty-icon").labelauty({ label: false });
         $("button").on('click', function(){
@@ -5932,14 +5963,14 @@ def index():
           $("#readability").slideDown();
         });
         $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-          if ($(e.target).attr("href") == '#help'){
+          if ($(e.target).data("target") == '#help'){
             daShowingHelp = 1;
             if (notYetScrolled){
               scrollChatFast();
               notYetScrolled = false;
             }""" + debug_readability_help + """
           }
-          else if ($(e.target).attr("href") == '#question'){
+          else if ($(e.target).data("target") == '#question'){
             daShowingHelp = 0;""" + debug_readability_question + """
           }
         });
@@ -6074,16 +6105,18 @@ def index():
             navMain.collapse('hide');
           }
         });
-        $("#helptoggle").on("click", function(){
+        $("#help").on("shown.bs.tab", function(){
           window.scrollTo(0, 1);
-          $(this).removeClass('daactivetext')
+          $("#helptoggle span").removeClass('daactivetext')
+          $("#helptoggle").blur();
         });
         $("#sourcetoggle").on("click", function(){
-          $(this).toggleClass("sourceactive");
+          $(this).parent().toggleClass("active");
+          $(this).blur();
         });
         $('#backToQuestion').click(function(event){
           event.preventDefault();
-          $('#questionlabel').trigger('click');
+          $('#questionlabel').tab('show');
         });
         $(".showif").each(function(){
           var showIfSign = $(this).data('showif-sign');
@@ -6315,13 +6348,14 @@ def index():
     # else:
     #     reload_after = ''
     browser_title = interview_status.question.interview.get_title().get('full', default_title)
+    bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
     if not is_ajax:
-        standard_header_start = standard_html_start(interview_language=interview_language, debug=debug_mode)
+        standard_header_start = standard_html_start(interview_language=interview_language, debug=debug_mode, bootstrap_theme=bootstrap_theme)
     if interview_status.question.question_type == "signature":
         interview_status.extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature();});</script>')
         bodyclass="dasignature"
     else:
-        bodyclass="dabody"
+        bodyclass="dabody pad-for-navbar"
         # if not is_ajax:
         #     start_output = standard_header_start + '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dasignature">\n'
         # output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode)
@@ -6424,8 +6458,12 @@ def index():
     if not is_ajax:
         start_output = standard_header_start
         if 'css' in interview_status.question.interview.external_files:
-            for fileref in interview_status.question.interview.external_files['css']:
-                start_output += "\n" + '    <link href="' + get_url_from_file_reference(fileref, _question=interview_status.question) + '" rel="stylesheet">'
+            for packageref, fileref in interview_status.question.interview.external_files['css']:
+                the_url = get_url_from_file_reference(fileref, _package=packageref)
+                if the_url is not None:
+                    start_output += "\n" + '    <link href="' + the_url + '" rel="stylesheet">'
+                else:
+                    logmessage("index: could not find css file " + str(fileref))
         start_output += global_css
         if len(interview_status.extra_css):
             start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
@@ -6479,7 +6517,7 @@ def index():
         key = 'da:html:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
         #logmessage("Setting html key " + key)
         pipe = r.pipeline()
-        pipe.set(key, json.dumps(dict(body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass)))
+        pipe.set(key, json.dumps(dict(body=output, extra_scripts=interview_status.extra_scripts, global_css=global_css, extra_css=interview_status.extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, bootstrap_theme=bootstrap_theme)))
         pipe.expire(key, 60)
         pipe.execute()
         #sys.stderr.write("10\n")
@@ -7030,7 +7068,7 @@ def observer():
         $('#dawidth').remove();
       }
       function show_help_tab(){
-          $('#helptoggle').trigger('click');
+          $('#helptoggle').tab('show');
       }
       function url_action(action, args){
           //console.log("Got to a url_action");
@@ -7148,16 +7186,30 @@ def observer():
         });
         $("input.input-embedded").on('keyup', adjustInputWidth);
         $("input.input-embedded").each(adjustInputWidth);
-        $("#helptoggle").on("click", function(){
+        $('.tabbuttons a').click(function(e) {
+          e.preventDefault();
+          $(this).tab('show');
+        });
+        $('#questionlabel').click(function(e) {
+          e.preventDefault();
+          $(this).tab('show');
+        });
+        $('#pagetitle').click(function(e) {
+          e.preventDefault();
+          $('#questionlabel').tab('show');
+        });        
+        $("#help").on("shown.bs.tab", function(){
           window.scrollTo(0, 1);
-          $(this).removeClass('daactivetext')
+          $("#helptoggle span").removeClass('daactivetext')
+          $("#helptoggle").blur();
         });
         $("#sourcetoggle").on("click", function(){
-          $(this).toggleClass("sourceactive");
+          $(this).parent().toggleClass("active");
+          $(this).blur();
         });
         $('#backToQuestion').click(function(event){
           event.preventDefault();
-          $('#questionlabel').trigger('click');
+          $('#questionlabel').tab('show');
         });
         $(".showif").each(function(){
           var showIfSign = $(this).data('showif-sign');
@@ -7359,9 +7411,9 @@ def observer():
     else:
         logmessage("observer: failed to load JSON from key " + the_key)
         obj = dict()
-    output = standard_html_start(interview_language=obj.get('lang', 'en'), debug=DEBUG)
-    output += indent_by("".join(obj.get('extra_css', list())), 4)
-    output += '\n    <title>' + word('Observation') + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody') + '">\n'
+    output = standard_html_start(interview_language=obj.get('lang', 'en'), debug=DEBUG, bootstrap_theme=obj.get('bootstrap_theme', None))
+    output += obj.get('global_css', '') + "\n" + indent_by("".join(obj.get('extra_css', list())), 4)
+    output += '\n    <title>' + word('Observation') + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody pad-for-navbar') + '">\n'
     output += obj.get('body', '')
     output += standard_scripts() + observation_script + "\n    " + "".join(obj.get('extra_scripts', list())) + "\n  </body>\n</html>"
     response = make_response(output.encode('utf8'), '200 OK')
@@ -9499,6 +9551,7 @@ def do_sync_with_google_drive():
             page_token = response.get('nextPageToken', None)
             if page_token is None:
                 break
+        gd_deleted[section] = gd_deleted[section] - gd_files[section]
         for f in gd_files[section]:
             #logmessage("Considering " + f + " on GD")
             if f not in local_files[section] or gd_modtimes[section][f] - local_modtimes[section][f] > 3:
@@ -11682,6 +11735,8 @@ def server_error(the_error):
 
 @app.route('/packagestatic/<package>/<filename>', methods=['GET'])
 def package_static(package, filename):
+    if package == 'fonts':
+        return redirect(url_for('static', filename='bootstrap/fonts/' + filename))
     the_file = docassemble.base.functions.package_data_filename(str(package) + ':data/static/' + str(filename))
     if the_file is None:
         abort(404)
@@ -13786,7 +13841,7 @@ if LooseVersion(min_system_version) > LooseVersion(daconfig['system version']):
     version_warning = word("Your docassemble system needs to be upgraded.")
 else:
     version_warning = None
-    
+
 import docassemble.webapp.machinelearning
 docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)
 docassemble.base.util.set_svm_machine_learner(docassemble.webapp.machinelearning.SVMMachineLearner)
@@ -13794,6 +13849,10 @@ docassemble.base.util.set_machine_learning_entry(docassemble.webapp.machinelearn
 
 from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog
 with app.app_context():
+    if 'bootstrap theme' in daconfig and daconfig['bootstrap theme']:
+        app.config['BOOTSTRAP_THEME'] = get_url_from_file_reference(daconfig['bootstrap theme'])
+    else:
+        app.config['BOOTSTRAP_THEME'] = None
     copy_playground_modules()
     for interview_path in [x for x in r.keys('da:interviewsource:*')]:
         r.delete(interview_path)

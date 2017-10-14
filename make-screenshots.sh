@@ -22,12 +22,15 @@ do
     	continue
     fi
     casperjs screenshot.js $file.yml $tempfile $area
-    if [ "$file" = "signature" -o "$file" = "metadata" -o "$file" = "help" -o "$file" = "help-damages" -o "$file" = "help-damages-audio" -o "$file" = "progress" -o "$file" = "progress-features" -o "$file" = "response" -o "$file" = "response-hello" -o "$file" = "menu-item" -o "$file" = "ml-export" -o "$file" = "ml-export-yaml" -o "$file" = "live_chat" ]
+    if [ "$file" = "signature" -o "$file" = "metadata" -o "$file" = "help" -o "$file" = "help-damages" -o "$file" = "help-damages-audio" -o "$file" = "progress" -o "$file" = "progress-features" -o "$file" = "response" -o "$file" = "response-hello" -o "$file" = "menu-item" -o "$file" = "ml-export" -o "$file" = "ml-export-yaml" -o "$file" = "live_chat" -o "$file" = "bootstrap-theme" ]
     then
 	convert $tempfile -resize 650x9999 -trim docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "markdown" -o "$file" = "allow-emailing-true" -o "$file" = "allow-emailing-false" -o "$file" = "markdown-demo" -o "$file" = "document-links" -o "$file" = "document-links-limited" ]
     then
 	convert $tempfile -crop 650x999+13+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+    elif [ "$file" = "inverse-navbar" ]
+    then
+	convert $tempfile -crop 1005x260+0+0 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "fields" -o "$file" = "attachment-code" -o "$file" = "attachment-simple" -o "$file" = "document-markup" -o "$file" = "document-variable-name" -o "$file" = "document-cache-invalidate" ]
     then
 	convert $tempfile -crop 650x1999+13+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png

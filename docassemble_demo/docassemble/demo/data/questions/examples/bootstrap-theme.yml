@@ -1,0 +1,22 @@
+metadata:
+  title: Bootstrap theme
+  documentation: "https://docassemble.org/docs/initial.html#bootstrap theme"
+  example start: 1
+  example end: 1
+---
+features:
+  bootstrap theme: lumen.min.css
+---
+question: |
+  Welcome to the interview!
+subquestion:
+  Do you like the style of this interview?
+yesno: likes_style
+---
+mandatory: True
+question: |
+  % if likes_style:
+  I like it too.
+  % else:
+  Yeah, I don't care for it either.
+  % endif
