@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.72](https://github.com/jhpyle/docassemble/releases/tag/v0.1.72) - 2017-10-14
+
+### Added
+- `bootstrap theme` and `inverse navbar` features and configuration
+  directives.
+
+### Fixed
+- CSS and JavaScript files imported through features without a
+  specified package now use the package of the features block.
+- Logout now deletes cookies.
+
 ## [0.1.71](https://github.com/jhpyle/docassemble/releases/tag/v0.1.71) - 2017-10-11
 
 ### Changed

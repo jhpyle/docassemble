@@ -700,6 +700,40 @@ If you want to include [CSS] or [Javascript] code in a specific
 question, rather than in all questions of your interview you can use
 the [`script`] and [`css`] modifiers.
 
+## <a name="bootstrap theme"></a>Bootstrap theme
+
+Using the `bootstrap theme` feature, you can change the look and feel
+of your interview's web interface by instructing your interview to use
+a non-standard [CSS] file in place of the standard [CSS] file used by
+[Bootstrap].
+
+{% include demo-side-by-side.html demo="bootstrap-theme" %}
+
+The file can be referenced in a number of ways:
+
+* `lumen.min.css`: the file `lumen.min.css` in the "static" folder of
+  the current package.
+* `docassemble.demo:lumen.min.css`: the file `lumen.min.css` in the
+  "static" folder (`data/static/`) of the `docassemble.demo` package.
+* `docassemble.demo:data/static/lumen.min.css`: the same.
+* `https://bootswatch.com/lumen/bootstrap.min.css`: a file on the internet.
+
+For more information about using custom [Bootstrap] themes, and for
+information about applying themese on a global level, see the
+documentation for the [`bootstrap theme` configuration directive].
+
+## <a name="inverse navbar"></a>Inverted Bootstrap navbar
+
+By default, **docassemble** uses the [inverted navbar] option in
+[Bootstrap] so that the navigation bar stands out from the white
+background.  If you do not want to use the inverted navbar, set the
+`inverse navbar` feature to `False`.
+
+{% include side-by-side.html demo="inverse-navbar" %}
+
+To make this change at a global level, see the
+[`inverse navbar` configuration directive].
+
 ## <a name="table width"></a>Width of tables in attachments
 
 As explained more fully in the [tables] section, if you include a
@@ -895,3 +929,7 @@ features:
 [PNG]: https://en.wikipedia.org/wiki/Portable_Network_Graphics
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`using()`]: {{ site.baseurl }}/docs/objects.html#DAObject.using
+[Bootstrap]: http://getbootstrap.com/
+[inverted navbar]: https://getbootstrap.com/docs/3.3/components/#navbar-inverted
+[`inverse navbar` configuration directive]: {{ site.baseurl }}/docs/config.html#inverse navbar
+[`bootstrap theme` configuration directive]: {{ site.baseurl }}/docs/config.html#bootstrap theme

@@ -4301,6 +4301,9 @@
     * Change to [normal](${ interview_url_action('check_update_status', status='normal') })
     * Change to [danger](${ interview_url_action('check_update_status', status='danger') })
     * Change to [critical](${ interview_url_action('check_update_status', status='critical') })
+"inverse-navbar": |-
+  features:
+    inverse navbar: False
 "item": "question: |\n  Describe the ${ ordinal(i) } fruit.\nfields:\n  - Name: fruit[i].name\n\
   \  - Color: fruit[i].color\n  - Seeds: fruit[i].seeds\n    datatype: integer\n---\n\
   question: |\n  Are there any more fruit?\nyesno: fruit.there_is_another\n---\nmandatory:\
@@ -7636,6 +7639,9 @@
     Is Topeka the capital of Kansas?
   yesnomaybe: topeka_is_capital_of_kansas
 
+"bootstrap-theme": |-
+  features:
+    bootstrap theme: lumen.min.css
 "discovery": |-
   template: discovery['rent records']
   content: |

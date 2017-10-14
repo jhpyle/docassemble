@@ -358,6 +358,73 @@ global css:
 These [Javascript] and [CSS] files are loaded after the other
 [Javascript] and [CSS] files on the page.
 
+## <a name="bootstrap theme"></a>Bootstrap theme
+
+Using the `bootstrap theme` directive, you can change the look and
+feel of your site's web interface by substituting a non-standard [CSS]
+file in place of the standard [CSS] file used by [Bootstrap].
+
+{% highlight yaml %}
+bootstrap theme: docassemble.webapp:data/static/paper.min.css
+{% endhighlight %}
+
+You can also refer to files on the internet:
+
+{% highlight yaml %}
+bootstrap theme: https://bootswatch.com/paper/bootstrap.min.css
+{% endhighlight %}
+
+There are many alternative [Bootstrap] themes available on
+[Bootswatch].  Note that you may need to use apply additional [CSS]
+changes in order to get a [Bootstrap] theme to work with
+**docassemble**.  For example, by default **docassemble** assumes that
+the navigation bar is 50 pixels in height.  But if your theme makes
+the navigation bar 60 pixels tall, you will need to add the following
+styles:
+
+{% highlight css %}
+.pad-for-navbar         { padding-top: 70px; }
+.top-for-navbar         { top: 70px;         }
+{% endhighlight %}
+
+Also, some of the colors that **docassemble** uses in the navigation
+bar might not work well with every theme.  You can override these
+colors with [CSS] like the following:
+
+{% highlight css %}
+button.backbuttoncolor  { color: #539ac7;    }
+span.daactivetext       { color: yellow;     }
+span.daactivetext:hover { color: #ffff99;    }
+i.chat-active           { color: #45bf41;    }
+i.chat-active:hover     { color: #55cf51;    }
+i.chat-inactive         { color: #4f4f4f;    }
+i.chat-inactive:hover   { color: #5f5f5f;    }
+{% endhighlight %}
+
+These styles refer to the blue back button, the yellow "Help" button
+that appears when question-specific help is available, the green icons
+that appear in the navigation bar when [live help] features are
+available, and the grey color that these icons become when [live help]
+is no longer available.
+
+You can also control the [Bootstrap] theme on a per-interview basis
+with the [`bootstrap theme` feature].  You can also alter [CSS] on a
+per-interview basis using the [`css` features setting].
+
+## <a name="inverse navbar"></a>Inverted Bootstrap navbar
+
+By default, **docassemble** uses the [inverted navbar] option in
+[Bootstrap] so that the navigation bar stands out from the white
+background.  If you do not want to use the inverted navbar, set the
+`inverse navbar` to `False`.
+
+{% highlight yaml %}
+inverse navbar: False
+{% endhighlight %}
+
+You can also control this on a per-interview basis with the
+[`inverse navbar` feature].
+
 ## <a name="favicon"></a>Custom favicon in browser tab
 
 The icon in the browser tab is known as a [favicon].  This is the icon
@@ -1956,7 +2023,7 @@ and Facebook API keys.
 [Javascript]: https://en.wikipedia.org/wiki/JavaScript
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [`javascript` features setting]: {{ site.baseurl }}/docs/initial.html#javascript
-[`css` features setting]: {{ site.baseurl }}/docs/initial.html#javascript
+[`css` features setting]: {{ site.baseurl }}/docs/initial.html#css
 [start page]: #dispatch
 [GET request]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Request_methods
 [`global css`]: #global css
@@ -1972,3 +2039,9 @@ and Facebook API keys.
 [`maximum image size` interview feature]: {{ site.baseurl }}/docs/initial.html#maximum image size
 [`loop limit` and `recursion limit` features]: {{ site.baseurl }}/docs/initial.html#loop limit
 [region name]: http://docs.aws.amazon.com/general/latest/gr/rande.html
+[Bootstrap]: http://getbootstrap.com/
+[inverted navbar]: https://getbootstrap.com/docs/3.3/components/#navbar-inverted
+[Bootswatch]: https://bootswatch.com/
+[live help]: {{ site.baseurl }}/docs/livehelp.html
+[`bootstrap theme` feature]: {{ site.baseurl }}/docs/initial.html#bootstrap theme
+[`inverse navbar` feature]: {{ site.baseurl }}/docs/initial.html#inverse navbar
