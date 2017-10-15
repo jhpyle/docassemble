@@ -13851,8 +13851,10 @@ from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, 
 with app.app_context():
     if 'bootstrap theme' in daconfig and daconfig['bootstrap theme']:
         app.config['BOOTSTRAP_THEME'] = get_url_from_file_reference(daconfig['bootstrap theme'])
+        app.config['BOOTSTRAP_THEME_DEFAULT'] = False
     else:
         app.config['BOOTSTRAP_THEME'] = None
+        app.config['BOOTSTRAP_THEME_DEFAULT'] = True
     copy_playground_modules()
     for interview_path in [x for x in r.keys('da:interviewsource:*')]:
         r.delete(interview_path)

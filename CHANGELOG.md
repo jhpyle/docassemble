@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.1.73] - 2017-10-15
+### Changed
+- Referring to a non-existent DAList item after the list has been
+  gathered will now generate an exception.
+### Fixed
+- Brought back gradients on buttons, which had been removed in 0.1.72.
+
 ## [0.1.72] - 2017-10-14
 ### Added
 - `bootstrap theme` and `inverse navbar` features and configuration
