@@ -3481,7 +3481,7 @@
     What is the name of the
     ${ ordinal(i) } fruit?
   subquestion: |
-    % if fruit.number() > 0:
+    % if fruit.number_gathered() > 0:
     So far, you have mentioned ${ fruit }.
     % endif
   fields:
