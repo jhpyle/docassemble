@@ -730,7 +730,9 @@ class DAList(DAObject):
         try:
             return self.elements[index]
         except:
-            if self.object_type is None and not self.ask_object_type:
+            if hasattr(self, 'gathered'):
+                raise IndexError("list index out of range")
+            elif self.object_type is None and not self.ask_object_type:
                 var_name = object.__getattribute__(self, 'instanceName') + '[' + str(index) + ']'
                 #force_gather(var_name)
                 raise NameError("name '" + var_name + "' is not defined")
