@@ -853,8 +853,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + sub_question_text 
-            for saveas_string in status.embedded:
-                output += '<label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label> '
+            #for saveas_string in status.embedded:
+            #    output += '<label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label> '
             output += '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
@@ -1454,13 +1454,22 @@ def add_validation(extra_scripts, validation_rules, field_error):
             return null;
           }
         })[0];
-        if (element.hasClass('uncheckable') && lastInGroup){
+        if (element.hasClass('input-embedded')){
+          error.insertAfter(element);
+        }
+        else if (element.hasClass('file-embedded')){
+          error.insertAfter(element);
+        }
+        else if (element.hasClass('radio-embedded')){
+          element.parent().append(error);
+        }
+        else if (element.hasClass('checkbox-embedded')){
+          element.parent().append(error);
+        }
+        else if (element.hasClass('uncheckable') && lastInGroup){
           $("input[name='" + lastInGroup + "']").parent().append(error);
         }
         else if (element.parent().hasClass('combobox-container')){
-          error.insertAfter(element.parent());
-        }
-        else if (element.hasClass('input-embedded')){
           error.insertAfter(element.parent());
         }
         else if (element.hasClass('dafile')){
@@ -1531,7 +1540,7 @@ def input_for(status, field, wide=False, embedded=False):
     if embedded:
         extra_class = ' input-embedded'
         extra_checkbox = ' checkbox-embedded'
-        extra_radio = ' radio-embedded'
+        extra_radio = 'radio-embedded'
         label_text = strip_quote(to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), dict(), list(), status).strip())
         if label_text != 'no label':
             title_text = ' title="' + label_text + '"'
@@ -1554,7 +1563,10 @@ def input_for(status, field, wide=False, embedded=False):
             #    return '<input type="hidden" name="' + safeid(from_safeid(saveas_string))+ '" value="None"/>'
             inner_fieldlist = list()
             id_index = 0
-            output += '<p class="sr-only">' + word('Checkboxes:') + '</p>'
+            if embedded:
+                output += '<span class="embed-checkbox-wrapper">'
+            else:
+                output += '<p class="sr-only">' + word('Checkboxes:') + '</p>'
             for pair in pairlist:
                 if 'image' in pair:
                     the_icon = icon_html(status, pair['image']) + ' '
@@ -1564,7 +1576,7 @@ def input_for(status, field, wide=False, embedded=False):
                 if True or pair['key'] is not None:
                     inner_field = safeid(from_safeid(saveas_string) + "[" + myb64quote(pair['key']) + "]")
                     #sys.stderr.write("I've got a " + repr(pair['label']) + "\n")
-                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
+                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                     if 'default' in pair and pair['default']:
                         ischecked = ' checked'
                     elif defaultvalue is None:
@@ -1581,7 +1593,10 @@ def input_for(status, field, wide=False, embedded=False):
                         ischecked = ' checked'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="' + 'dafield' + str(field.number) + ' non-nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>', helptext))
+                    if embedded:
+                        inner_fieldlist.append('<input class="checkbox-embedded dafield' + str(field.number) + ' non-nota-checkbox" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
+                    else:
+                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="' + 'dafield' + str(field.number) + ' non-nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>', helptext))
                 else:
                     inner_fieldlist.append(help_wrap('<div>' + markdown_to_html(pair['label'], status=status) + '</div>', helptext))
                 id_index += 1
@@ -1593,33 +1608,59 @@ def input_for(status, field, wide=False, embedded=False):
                 if status.extras['nota'][field.number] is True:
                     formatted_item = word("None of the above")
                 else:
-                    formatted_item = markdown_to_html(unicode(status.extras['nota'][field.number]), status=status, trim=True, escape=True, do_terms=False)
-                inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="' + 'dafield' + str(field.number) + ' nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' type="checkbox" name="_ignore' + str(field.number) + '" ' + ischecked + '/>')
-            output += u''.join(inner_fieldlist)
+                    formatted_item = markdown_to_html(unicode(status.extras['nota'][field.number]), status=status, trim=True, escape=(not embedded), do_terms=False)
+                if embedded:
+                    inner_fieldlist.append('<input class="dafield' + str(field.number) + ' checkbox-embedded nota-checkbox" id="_ignore' + str(field.number) + '" type="checkbox" name="_ignore' + str(field.number) + '"/>&nbsp;<label for="_ignore' + str(field.number) + '">' + formatted_item + '</label>')
+                else:
+                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="' + 'dafield' + str(field.number) + ' nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' type="checkbox" name="_ignore' + str(field.number) + '" ' + ischecked + '/>')
+            if embedded:
+                output += u' '.join(inner_fieldlist) + '</span>'
+            else:
+                output += u''.join(inner_fieldlist)
             if field.datatype in ['object_checkboxes']:                
-                output += '<input type="hidden" name="' + safeid(from_safeid(saveas_string) + ".gathered")+ '" value="True"/>'
+                output += '<input type="hidden" name="' + safeid(from_safeid(saveas_string) + ".gathered") + '" value="True"/>'
         elif field.datatype in ['radio', 'object_radio']:
             inner_fieldlist = list()
             id_index = 0
-            output += '<p class="sr-only">' + word('Choices:') + '</p>'
-            for pair in pairlist:
-                if 'image' in pair:
-                    the_icon = icon_html(status, pair['image']) + ' '
-                else:
-                    the_icon = ''
-                helptext = pair.get('help', None)
-                if True or pair['key'] is not None:
-                    #sys.stderr.write(str(saveas_string) + "\n")
-                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
+            if embedded:
+                for pair in pairlist:
+                    if 'image' in pair:
+                        the_icon = icon_html(status, pair['image']) + ' '
+                    else:
+                        the_icon = ''
+                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                     if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
+                    inner_fieldlist.append('<input class="radio-embedded" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
+                    id_index += 1
+                output += '<span class="embed-radio-wrapper">'
+                output += " ".join(inner_fieldlist)
+                output += '</span>'
+            else:
+                output += '<p class="sr-only">' + word('Choices:') + '</p>'
+                for pair in pairlist:
+                    if 'image' in pair:
+                        the_icon = icon_html(status, pair['image']) + ' '
+                    else:
+                        the_icon = ''
+                    helptext = pair.get('help', None)
+                    if True or pair['key'] is not None:
+                        #sys.stderr.write(str(saveas_string) + "\n")
+                        formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
+                        if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
+                            ischecked = ' checked="checked"'
+                        else:
+                            ischecked = ''
+                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
+                    else:
+                        inner_fieldlist.append(help_wrap('<div>' + the_icon + markdown_to_html(unicode(pair['label']), status=status) + '</div>', helptext))
+                    id_index += 1
+                if embedded:
+                    output += '<span class="embed-radio-wrapper">' + " ".join(inner_fieldlist) + '</span>'
                 else:
-                    inner_fieldlist.append(help_wrap('<div>' + the_icon + markdown_to_html(unicode(pair['label']), status=status) + '</div>', helptext))
-                id_index += 1
-            output += "".join(inner_fieldlist)
+                    output += "".join(inner_fieldlist)
         else:
             if embedded:
                 emb_text = 'class="input-embedded" '
@@ -1632,6 +1673,8 @@ def input_for(status, field, wide=False, embedded=False):
                     emb_text = 'class="form-control combobox" '
                 else:
                     emb_text = 'class="form-control" '
+            if embedded:
+                output += '<span class="inline-error-wrapper">'
             output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" >'
             if hasattr(field, 'datatype') and field.datatype == 'combobox' and not embedded:
                 if placeholdertext == '':
@@ -1650,17 +1693,23 @@ def input_for(status, field, wide=False, embedded=False):
                     if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
                         output += ' selected="selected"'
                     output += '>' + formatted_item + '</option>'
-            output += '</select> '
+            if embedded:
+                output += '</select></span> '
+            else:
+                output += '</select> '
     elif hasattr(field, 'datatype'):
         if field.datatype == 'boolean':
-            label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=True, do_terms=False)
+            label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=(not embedded), do_terms=False)
             if hasattr(field, 'inputtype') and field.inputtype in ['yesnoradio', 'noyesradio']:
-                output += '<p class="sr-only">' + word('Choices:') + '</p>'
                 inner_fieldlist = list()
                 id_index = 0
+                if embedded:
+                    output += '<span class="embed-radio-wrapper">'
+                else:
+                    output += '<p class="sr-only">' + word('Choices:') + '</p>'
                 if field.sign > 0:
                     for pair in [dict(key='True', label=status.question.yes()), dict(key='False', label=status.question.no())]:
-                        formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
+                        formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                         if 'image' in pair:
                             the_icon = icon_html(status, pair['image']) + ' '
                         else:
@@ -1670,11 +1719,14 @@ def input_for(status, field, wide=False, embedded=False):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
-                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
+                        if embedded:
+                            inner_fieldlist.append('<input class="radio-embedded" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
+                        else:
+                            inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
                         id_index += 1
                 else:
                     for pair in [dict(key='False', label=status.question.yes()), dict(key='True', label=status.question.no())]:
-                        formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
+                        formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                         if 'image' in pair:
                             the_icon = icon_html(status, pair['image']) + ' '
                         else:
@@ -1684,9 +1736,15 @@ def input_for(status, field, wide=False, embedded=False):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
-                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
+                        if embedded:
+                            inner_fieldlist.append('<input class="radio-embedded" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
+                        else:
+                            inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
                         id_index += 1
-                output += "".join(inner_fieldlist)
+                if embedded:
+                    output += " ".join(inner_fieldlist) + '</span>'
+                else:
+                    output += "".join(inner_fieldlist)
             else:
                 if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                     if type(field.uncheckothers) is list:
@@ -1695,20 +1753,34 @@ def input_for(status, field, wide=False, embedded=False):
                         uncheck = ' uncheckothers'
                 else:
                     uncheck = ' uncheckable'
-                if field.sign > 0:
-                    output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + ' type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
-                else:
-                    output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + ' type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
                 if defaultvalue:
-                    output += ' checked'
-                output += '/> '
+                    docheck = ' checked'
+                else:
+                    docheck = ''
+                if embedded:
+                    output += '<span class="embed-yesno-wrapper">'
+                if field.sign > 0:
+                    if embedded:
+                        output += '<input class="checkbox-embedded' + uncheck + '" type="checkbox" value="True" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + '/>&nbsp;<label for="' + escape_id(saveas_string) + '">' + label_text + '</label>'
+                    else:
+                        output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + ' type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + '/> '
+                else:
+                    if embedded:
+                        output += '<input class="checkbox-embedded' + uncheck + '" type="checkbox" value="False" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + '/>&nbsp;<label for="' + escape_id(saveas_string) + '">' + label_text + '</label>'
+                    else:
+                        output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + ' type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + '/> '
+                if embedded:
+                    output += '</span>'
         elif field.datatype == 'threestate':
             inner_fieldlist = list()
             id_index = 0
-            output += '<p class="sr-only">' + word('Choices:') + '</p>'
+            if embedded:
+                output += '<span class="embed-threestate-wrapper">'
+            else:
+                output += '<p class="sr-only">' + word('Choices:') + '</p>'
             if field.sign > 0:
                 for pair in [dict(key='True', label=status.question.yes()), dict(key='False', label=status.question.no()), dict(key='None', label=status.question.maybe())]:
-                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
+                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                     if 'image' in pair:
                         the_icon = icon_html(status, pair['image']) + ' '
                     else:
@@ -1718,11 +1790,14 @@ def input_for(status, field, wide=False, embedded=False):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
+                    if embedded:
+                        inner_fieldlist.append('<input class="radio-embedded" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
+                    else:
+                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
                     id_index += 1
             else:
                 for pair in [dict(key='False', label=status.question.yes()), dict(key='True', label=status.question.no()), dict(key='None', label=status.question.maybe())]:
-                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
+                    formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                     if 'image' in pair:
                         the_icon = icon_html(status, pair['image']) + ' '
                     else:
@@ -1732,9 +1807,15 @@ def input_for(status, field, wide=False, embedded=False):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
+                    if embedded:
+                        inner_fieldlist.append('<input class="radio-embedded" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
+                    else:
+                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext))
                     id_index += 1
-            output += "".join(inner_fieldlist)
+            if embedded:
+                output += " ".join(inner_fieldlist) + '</span>'
+            else:
+                output += "".join(inner_fieldlist)
         elif field.datatype in ['file', 'files', 'camera', 'camcorder', 'microphone']:
             if field.datatype == 'files':
                 multipleflag = ' multiple'
@@ -1755,7 +1836,7 @@ def input_for(status, field, wide=False, embedded=False):
             elif status.question.interview.max_image_size:
                 maximagesize = 'data-maximagesize="' + str(int(status.question.interview.max_image_size)) + '" '
             if embedded:
-                output += '<input alt="' + word("You can upload a file here") + '" type="file" class="dafile file-embedded" name="' + escape_id(saveas_string) + '"' + title_text + ' id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/>'
+                output += '<span class="inline-error-wrapper"><input alt="' + word("You can upload a file here") + '" type="file" class="file-embedded" name="' + escape_id(saveas_string) + '"' + title_text + ' id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/></span>'
             else:
                 output += '<input alt="' + word("You can upload a file here") + '" type="file" class="dafile" data-show-upload="false" ' + maximagesize + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
             #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
@@ -1776,15 +1857,19 @@ def input_for(status, field, wide=False, embedded=False):
                 max_string = str(int(status.extras['max'][field.number]))
                 min_string = str(int(status.extras['min'][field.number]))
                 if embedded:
-                    output += '<div class="form-group slider-embedded"' + title_text + '><input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + '></div>'
+                    output += '<span class="form-group slider-embedded"' + title_text + '><input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + '></span><br>'
                 else:
                     output += '<input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + '>'
                 status.extra_scripts.append('<script>$("#' + escape_for_jquery(saveas_string) + '").slider({tooltip: "always"});</script>\n')
         elif field.datatype in ['area', 'mlarea']:
+            if embedded:
+                output += '<span class="embed-area-wrapper">'
             output += '<textarea alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + title_text + ' rows="4" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + '>'
             if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
                 output += defaultvalue
             output += '</textarea>'
+            if embedded:
+                output += '</span>'
         else:
             if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
                 defaultstring = ' value="' + defaultvalue + '"'
@@ -1800,14 +1885,25 @@ def input_for(status, field, wide=False, embedded=False):
                     step_string = ' step="0.01"'
                 if field.datatype == 'currency':
                     step_string = ' step="0.01"'
-                    output += '<div class="input-group"><span class="input-group-addon" id="addon-' + do_escape_id(saveas_string) + '">' + currency_symbol() + '</span>'
+                    if embedded:
+                        output += '<span class="embed-currency-wrapper"><span class="embed-currency-symbol">' + currency_symbol() + '</span>'
+                    else:
+                        output += '<div class="input-group"><span class="input-group-addon" id="addon-' + do_escape_id(saveas_string) + '">' + currency_symbol() + '</span>'
             if field.datatype == 'ml':
                 input_type = 'text'
+            if embedded:
+                output += '<span class="inline-error-wrapper">'
+                # output += '<span class="inline-error-wrapper"><label for="' + escape_id(saveas_string) + '" class="da-has-error inline-error-position inline-error" style="display: none" id="' + escape_id(saveas_string) + '-error"></label>'
             output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + title_text + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
-            if field.datatype in ('currency', 'file', 'files', 'camera', 'camcorder', 'microphone'):
+            if not embedded and field.datatype in ('currency', 'file', 'files', 'camera', 'camcorder', 'microphone'):
                 output += ' aria-describedby="addon-' + do_escape_id(saveas_string) + '"/></div><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
             else:
                 output += '/>'
+            if embedded:
+                if field.datatype == 'currency':
+                    output += '</span></span>'
+                else:
+                    output += '</span>'
     return output
 
 def get_ischecked(pair, defaultvalue):

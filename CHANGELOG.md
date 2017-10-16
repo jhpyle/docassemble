@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.1.74] - 2017-10-15
+### Added
+- `data` block.
+### Changed
+- Validation errors for embedded fill-in-the-blanks elements now
+  appear under the fields.
+- Embedded radio buttons and checkboxes now use standard HTML
+  input elements.
+- Embedded currency fields use standard text to represent the currency
+  symbol.
+
 ## [0.1.73] - 2017-10-15
 ### Changed
 - Referring to a non-existent DAList item after the list has been

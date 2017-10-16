@@ -1,0 +1,39 @@
+metadata:
+  title: Data structure
+  documentation: "https://docassemble.org/docs/initial.html#data"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+variable name: fruits
+data:
+  - Apple
+  - Orange
+  - Peach
+  - Pear
+---
+question: |
+  What is your favorite fruit?
+field: user_favorite_fruit
+dropdown:
+  code: fruits
+---
+question: |
+  What is your brother's favorite
+  fruit?
+field: brother_favorite_fruit
+dropdown:
+  code: fruits
+---
+mandatory: True
+question: |
+  Among the fruits
+  ${ comma_and_list(fruits) }
+  . . .
+subquestion: |
+  You like ${ user_favorite_fruit }.
+  
+  Your brother, on the other hand,
+  likes ${ brother_favorite_fruit }.

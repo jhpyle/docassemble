@@ -1,0 +1,61 @@
+metadata:
+  title: Data structure
+  documentation: "https://docassemble.org/docs/initial.html#data"
+  example start: 2
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+variable name: fruits
+data:
+  Apple:
+    description: |
+      The apple is a tasty red fruit.
+
+      Everyone on ${ planet } loves
+      to eat apples.
+    seeds: 5
+  Orange:
+    description: |
+      The orange is, surprisingly,
+      orange-colored.  Most people
+      on ${ planet } dislike
+      eating oranges.
+    seeds: 10
+  Peach:
+    description: |
+      The peach is a fragile fruit.
+
+      There are 165,323 peach
+      orchards on ${ planet }.
+    seeds: 1
+  Pear:
+    description: |
+      The pear is variously yellow,
+      green, or brown.
+
+      The planet ${ planet } is
+      shaped like a pear.
+    seeds: 0
+---
+question: |
+  On what planet were you born?
+fields:
+  Planet: planet
+---
+question: |
+  What is your favorite fruit?
+field: user_favorite_fruit
+choices:
+  code: fruits.keys()
+---
+mandatory: True
+question: |
+  Summary of ${ user_favorite_fruit }
+subquestion: |
+  ${ fruits[user_favorite_fruit]['description'] }
+
+  The ${ user_favorite_fruit } has
+  ${ nice_number(fruits[user_favorite_fruit]['seeds']) }
+  seeds.

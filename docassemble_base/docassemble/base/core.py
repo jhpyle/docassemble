@@ -856,6 +856,8 @@ class DADict(DAObject):
             self.ask_object_type = True
         if not hasattr(self, 'ask_object_type'):
             self.ask_object_type = False
+        if 'keys' in kwargs and hasattr(kwargs['keys'], '__iter__'):
+            self.new(kwargs['keys'])
         return super(DADict, self).init(*pargs, **kwargs)
     def _trigger_gather(self):
         """Triggers the gathering process."""

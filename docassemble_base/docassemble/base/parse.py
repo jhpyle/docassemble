@@ -660,6 +660,8 @@ class Field:
             self.default = data['default']
         if 'hint' in data:
             self.hint = data['hint']
+        if 'data' in data:
+            self.data = data['data']
         if 'help' in data:
             self.helptext = data['help']
         if 'validate' in data:
@@ -697,6 +699,49 @@ class Field:
             self.required = data['required']
         else:
             self.required = True
+
+def recursive_dataobject(target, names_used):
+    if type(target) is dict or (hasattr(target, 'elements') and type(target.elements) is dict):
+        new_dict = dict()
+        for key, val in target.iteritems():
+            new_dict[key] = recursive_dataobject(val, names_used)
+        return new_dict
+    if type(target) is list or (hasattr(target, 'elements') and type(target.elements) is list):
+        new_list = list()
+        for val in target.__iter__():
+            new_list.append(recursive_dataobject(val, names_used))
+        return new_list
+    if type(target) is set or (hasattr(target, 'elements') and type(target.elements) is set):
+        new_set = set()
+        for val in target.__iter__():
+            new_set.add(recursive_dataobject(val, names_used))
+        return new_set
+    if type(target) in [bool, float, int, NoneType]:
+        return target
+    return TextObject(unicode(target), names_used=names_used)
+
+def recursive_eval_dataobject(target, user_dict):
+    if type(target) is dict or (hasattr(target, 'elements') and type(target.elements) is dict):
+        new_dict = dict()
+        for key, val in target.iteritems():
+            new_dict[key] = recursive_eval_dataobject(val, user_dict)
+        return new_dict
+    if type(target) is list or (hasattr(target, 'elements') and type(target.elements) is list):
+        new_list = list()
+        for val in target.__iter__():
+            new_list.append(recursive_eval_dataobject(val, user_dict))
+        return new_list
+    if type(target) is set or (hasattr(target, 'elements') and type(target.elements) is set):
+        new_set = set()
+        for val in target.__iter__():
+            new_set.add(recursive_eval_dataobject(val, user_dict))
+        return new_set
+    if type(target) in [bool, float, int, NoneType]:
+        return target
+    if type(target) is TextObject:
+        return target.text(user_dict)
+    else:
+        raise DAError("recursive_eval_dataobject: expected a TextObject, but found a " + str(type(target)))
 
 def recursive_textobject(target, names_used):
     if type(target) is dict or (hasattr(target, 'elements') and type(target.elements) is dict):
@@ -738,7 +783,7 @@ def recursive_eval_textobject(target, user_dict, question, tpl):
         text = target.text(user_dict)
         return docassemble.base.file_docx.transform_for_docx(text, question, tpl)
     else:
-        raise DAError("Expected a TextObject, but found a " + str(type(target)))
+        raise DAError("recursive_eval_textobject: expected a TextObject, but found a " + str(type(target)))
 
 def docx_variable_fix(variable):
     variable = re.sub(r'\\', '', variable)
@@ -1062,6 +1107,13 @@ class Question:
                             self.fields_used.add(key)
                 else:
                     raise DAError("An objects section cannot contain a nested list." + self.idebug(data))
+        if 'data' in data and 'variable name' in data:
+            if type(data['variable name']) not in [str, unicode]:
+                raise DAError("A data section variable name must be plain text." + self.idebug(data))
+            if self.scan_for_variables:
+                self.fields_used.add(data['variable name'])
+            self.question_type = 'data'
+            self.fields.append(Field({'saveas': data['variable name'], 'type': 'data', 'data': recursive_dataobject(data['data'], self.mako_names)}))
         if 'objects' in data:
             if type(data['objects']) is not list:
                 data['objects'] = [data['objects']]
@@ -1603,7 +1655,7 @@ class Question:
                 self.question_variety = 'buttons'
             if uses_field:
                 if invalid_variable_name(data['field']):
-                    raise DAError("Missing or invalid variable name." + self.idebug(data))
+                    raise DAError("Missing or invalid variable name " + repr(data['field']) + "." + self.idebug(data))
                 if self.scan_for_variables:
                     self.fields_used.add(data['field'])
                 field_data['saveas'] = data['field']
@@ -1908,7 +1960,7 @@ class Question:
                                 if 'label' not in field:
                                     raise DAError("If you use 'field' to indicate a variable in a 'fields' section, you must also include a 'label.'" + self.idebug(data))
                                 if invalid_variable_name(field[key]):
-                                    raise DAError("Missing or invalid variable name." + self.idebug(data))
+                                    raise DAError("Missing or invalid variable name " + repr(field[key]) + "." + self.idebug(data))
                                 field_info['saveas'] = field[key]                                
                             elif key == 'label':
                                 if 'field' not in field:
@@ -1919,7 +1971,7 @@ class Question:
                                     raise DAError("Syntax error: field label '" + str(key) + "' overwrites previous label, '" + str(field_info['label'].original_text) + "'" + self.idebug(data))
                                 field_info['label'] = TextObject(definitions + interpret_label(key), names_used=self.mako_names)
                                 if invalid_variable_name(field[key]):
-                                    raise DAError("Missing or invalid variable name." + self.idebug(data))
+                                    raise DAError("Missing or invalid variable name " + repr(field[key]) + " for key " + repr(key) + "." + self.idebug(data))
                                 field_info['saveas'] = field[key]
                         if 'type' in field_info and field_info['type'] in ['checkboxes', 'object_checkboxes'] and 'nota' not in field_info:
                             field_info['nota'] = True
@@ -1970,7 +2022,7 @@ class Question:
                                         self.interview.mlfields[field_info['saveas']]['ml_group'] = field_info['extras']['ml_group']
                                     if re.search(r'\.text$', field_info['saveas']):
                                         if invalid_variable_name(field_info['saveas']):
-                                            raise DAError("Missing or invalid variable name." + self.idebug(data))
+                                            raise DAError("Missing or invalid variable name " + repr(field_info['saveas']) + "." + self.idebug(data))
                                         field_info['saveas'] = re.sub(r'\.text$', '', field_info['saveas'])
                                         if self.scan_for_variables:
                                             self.fields_used.add(field_info['saveas'])
@@ -2032,13 +2084,13 @@ class Question:
                     elif key == 'show if':
                         field_info['saveas_code'] = compile(field[key], '', 'eval')
                         if invalid_variable_name(field[key]):
-                            raise DAError("Missing or invalid variable name." + self.idebug(data))
+                            raise DAError("Missing or invalid variable name " + repr(field[key]) + "." + self.idebug(data))
                         field_info['saveas'] = field[key]
                     elif key == 'field':
                         if 'label' not in field:
                             raise DAError("If you use 'field' to indicate a variable in a 'review' section, you must also include a 'label.'" + self.idebug(data))
                         if invalid_variable_name(field[key]):
-                            raise DAError("Missing or invalid variable name." + self.idebug(data))
+                            raise DAError("Missing or invalid variable name " + repr(field[key]) + " ." + self.idebug(data))
                         field_info['saveas'] = field[key]
                     elif key == 'label':
                         if 'field' not in field:
@@ -2047,7 +2099,7 @@ class Question:
                     else:
                         field_info['label'] = TextObject(definitions + interpret_label(key), names_used=self.mako_names)
                         if invalid_variable_name(field[key]):
-                            raise DAError("Missing or invalid variable name." + self.idebug(data))
+                            raise DAError("Missing or invalid variable name " + repr(field[key]) + "." + self.idebug(data))
                         field_info['saveas'] = field[key]
                         if 'action' in field:
                             field_info['action'] = field['action']
@@ -3235,10 +3287,8 @@ class Interview:
         return ml_store
     def get_bootstrap_theme(self):
         if self.bootstrap_theme is None:
-            logmessage("bootstrap theme is None")
             return None
         result = docassemble.base.functions.server.url_finder(self.bootstrap_theme, _package=self.source.package)
-        logmessage("bootstrap theme from interview is " + result)
         return result
     def get_title(self):
         if self.title is not None:
@@ -3502,6 +3552,10 @@ class Interview:
                                     exec(command, user_dict)
                             question.mark_as_answered(user_dict)
                         if (question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict))):
+                            if question.question_type == "data":
+                                string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
+                                exec(string, user_dict)
+                                question.mark_as_answered(user_dict)
                             if question.question_type == "objects":
                                 #logmessage("Going into objects")
                                 for keyvalue in question.objects:
@@ -3849,6 +3903,18 @@ class Interview:
                             continue
                     if debug:
                         seeking.append({'question': question, 'reason': 'asking'})
+                    if question.question_type == "data":
+                        if is_generic:
+                            if the_x != 'None':
+                                exec("x = " + the_x, user_dict)
+                        if len(iterators):
+                            for indexno in range(len(iterators)):
+                                #logmessage("code: running " + list_of_indices[indexno] + " = " + iterators[indexno])
+                                exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
+                        string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
+                        exec(string, user_dict)
+                        docassemble.base.functions.pop_current_variable()
+                        return({'type': 'continue', 'var': missing_var})
                     if question.question_type == "objects":
                         success = False
                         for keyvalue in question.objects:
