@@ -248,6 +248,30 @@ is equivalent to running the following Python code:
 from datetime import *
 {% endhighlight %}
 
+# <a name="data"></a>Storing structured `data` in a variable
+
+The `data` block allows you to specify a data structure in [YAML] in a
+block and have it available as a [Python] data structure.
+
+For example, in this interview we create a [Python] list and then
+re-use it in two questions to offer a multiple-choice list.
+
+{% include side-by-side.html demo="data-simple" %}
+
+In [Python], the variable `fruits` is this:
+
+{% highlight python %}
+[u'Apple', u'Orange', u'Peach', u'Pear']
+{% endhighlight %}
+
+You can also use the `data` block to create more complex data
+structures.  You can also use [Mako] in the data structure.
+
+{% include side-by-side.html demo="data" %}
+
+You can also import data from [YAML] files using the
+[`objects_from_file()` function].
+
 # <a name="reset"></a>Keeping variables fresh: `reset`
 
 The `reset` block will cause variables to be undefined every time a
@@ -933,3 +957,5 @@ features:
 [inverted navbar]: https://getbootstrap.com/docs/3.3/components/#navbar-inverted
 [`inverse navbar` configuration directive]: {{ site.baseurl }}/docs/config.html#inverse navbar
 [`bootstrap theme` configuration directive]: {{ site.baseurl }}/docs/config.html#bootstrap theme
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[`objects_from_file()` function]: {{ site.baseurl}}/docs/functions.html#objects_from_file
