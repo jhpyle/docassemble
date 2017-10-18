@@ -286,6 +286,9 @@ def install_package(package):
         sys.stderr.write(logfilecontents + "\n")
     except:
         pass
+    sys.stderr.flush()
+    sys.stdout.flush()
+    time.sleep(1)
     sys.stderr.write('returnval is: ' + str(returnval) + "\n")
     sys.stderr.write('install_package: done' + "\n")
     shutil.rmtree(temp_dir)
@@ -319,6 +322,9 @@ def uninstall_package(package):
         sys.stderr.write(logfilecontents + "\n")
     except:
         pass
+    sys.stderr.flush()
+    sys.stdout.flush()
+    time.sleep(1)
     sys.stderr.write('uninstall_package: done' + "\n")
     return returnval, logfilecontents
 

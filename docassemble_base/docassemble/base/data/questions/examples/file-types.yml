@@ -45,7 +45,7 @@ code: |
   (the_path, the_mimetype) = path_and_mimetype(the_file)
 ---
 code: |
-  button_list = [{'Exit': 'exit', 'image': the_file}]
+  button_list = [{'exit': 'Exit', 'image': the_file}]
 ---
 mandatory: True
 need:

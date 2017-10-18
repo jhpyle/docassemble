@@ -1600,6 +1600,7 @@ def obtain_lock(user_code, filename):
     pipe = r.pipeline()
     pipe.set(key, 1)
     pipe.expire(key, 4)
+    pipe.execute()
     
 def release_lock(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
