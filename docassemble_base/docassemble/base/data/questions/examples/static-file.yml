@@ -1,0 +1,34 @@
+metadata:
+  title: Static file
+  documentation: "https://docassemble.org/docs/objects.html#DAStaticFile"
+  example start: 4
+  example end: 6
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+---
+question: |
+  What is your gender?
+field: user.gender
+choices:
+  - Male
+  - Female
+---
+objects:
+  - the_icon: DAStaticFile
+---
+code: |
+  if user.gender == 'Female':
+    the_icon.filename = 'female243.png'
+  else:
+    the_icon.filename = 'male244.png'
+---
+mandatory: True
+question: |
+  The image
+  ${ the_icon.show(width='1em') }
+subquestion: |
+  ${ the_icon }

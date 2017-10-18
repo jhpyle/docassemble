@@ -1,0 +1,95 @@
+metadata:
+  title: File types
+  documentation: "https://docassemble.org/docs/objects.html#DAStaticFile"
+  example start: 2
+  example end: 8
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - static_file: DAStaticFile.using(filename='cow.jpg')
+---
+attachment:
+  variable name: assembled_file
+  filename: assembled_file
+  content: |
+    Hello world!
+---
+question: |
+  Upload a file
+fields:
+  - File: uploaded_file
+    datatype: file
+---
+question: |
+  What type of file do you want?
+choices:
+  Static:
+    code: |
+      the_file = static_file
+  Assembled:
+    code: |
+      the_file = assembled_file
+  Upload:
+    code: |
+      the_file = uploaded_file
+---
+code: |
+  email_sent = send_email(to=email_address,
+    body="Here is your document",
+    subject="Your document",
+    attachments=the_file)
+---
+code: |
+  (the_path, the_mimetype) = path_and_mimetype(the_file)
+---
+code: |
+  button_list = [{'Exit': 'exit', 'image': the_file}]
+---
+mandatory: True
+need:
+  - menu_selection
+question: |
+  All done
+---
+need:
+  - email_sent
+field: menu_selection
+question: |
+  Your document
+subquestion: |
+  ### As image
+  ${ the_file.show(width='1em') }
+
+  ${ the_file }
+
+  ### As path
+  
+  `${ the_file.path() }`
+
+  ### As url
+  
+  `${ the_file.url_for() }`
+
+  ### As external url
+  
+  `${ the_file.url_for(_external=True) }`
+
+  ### From url_of()
+
+  `${ url_of(the_file) }`
+
+  ### From path_and_mimetype()
+
+  `${ the_path }`
+
+  `${ the_mimetype }`
+buttons:
+  code: button_list
+---
+question: |
+  What is your e-mail address?
+fields:
+  - E-mail: email_address
+    datatype: email

@@ -975,7 +975,8 @@ input.input-embedded {
     border-style: solid;
     line-height: inherit;
     border-color: #888888;
-    min-width: 12em;
+    min-width: 8em;
+    max-width: 100%;
     border-radius: 2px;
     width: auto;
     background-color: #f0f0ff;
@@ -992,6 +993,10 @@ input.input-embedded:focus {
     height: 30px;
     color: #222222;
     margin: 4px 0px 4px 0px;
+}
+
+input.date-embedded {
+    min-width: 10em;
 }
 
 textarea.input-embedded {
@@ -1020,17 +1025,14 @@ textarea.input-embedded:hover {
 }
 
 span.input-embedded {
-    display: inline;
+    display: inline-block;
     padding: 0px 8px;
     border-style: solid;
     border-width: 0px 0px 0px 0px;
     border-radius: 0;
     line-height: inherit;
-    background-color: #e0e0ff;
     height: 30px;
-    min-width: 12em;
     margin: 4px 0px 4px 0px;
-    border-radius: 2px;
 }
 
 select.input-embedded {
@@ -1038,7 +1040,7 @@ select.input-embedded {
     padding: 0px 4px;
     line-height: inherit;
     border-style: solid;
-    min-width: 12em;
+    min-width: 8em;
     background-color: #f0f0ff;
     -moz-appearance: none;
     -webkit-appearance: none;
@@ -1076,7 +1078,7 @@ input.file-embedded {
     display: inline;
     padding: 0px 4px 0px 0px;
     line-height: inherit;
-    min-width: 12em;
+    min-width: 8em;
     background-color: #f0f0ff;
     -moz-appearance: none;
     -webkit-appearance: none;

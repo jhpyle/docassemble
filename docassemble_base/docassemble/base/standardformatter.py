@@ -1537,8 +1537,18 @@ def input_for(status, field, wide=False, embedded=False):
         saveas_string = safeid('_field_' + str(field.number))
     else:
         saveas_string = field.saveas
+    if 'inline width' in status.extras and field.number in status.extras['inline width']:
+        inline_width = status.extras['inline width'][field.number]
+    else:
+        inline_width = None
     if embedded:
         extra_class = ' input-embedded'
+        if hasattr(field, 'datatype') and field.datatype == 'date':
+            extra_class += ' date-embedded'
+        if inline_width is not None:
+            extra_style = ' style="min-width: ' + unicode(inline_width) + '"'
+        else:
+            extra_style = ''
         extra_checkbox = ' checkbox-embedded'
         extra_radio = 'radio-embedded'
         label_text = strip_quote(to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), dict(), list(), status).strip())
@@ -1547,6 +1557,7 @@ def input_for(status, field, wide=False, embedded=False):
         else:
             title_text = ''
     else:
+        extra_style = ''
         extra_class = ''
         extra_checkbox = ''
         extra_radio = ''
@@ -1664,6 +1675,8 @@ def input_for(status, field, wide=False, embedded=False):
         else:
             if embedded:
                 emb_text = 'class="input-embedded" '
+                if inline_width is not None:
+                    emb_text += 'style="min-width: ' + unicode(inline_width) + '" '
                 label_text = strip_quote(to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), dict(), list(), status).strip())
                 if label_text != 'no label':
                     emb_text += 'title="' + label_text + '" '
@@ -1894,7 +1907,7 @@ def input_for(status, field, wide=False, embedded=False):
             if embedded:
                 output += '<span class="inline-error-wrapper">'
                 # output += '<span class="inline-error-wrapper"><label for="' + escape_id(saveas_string) + '" class="da-has-error inline-error-position inline-error" style="display: none" id="' + escape_id(saveas_string) + '-error"></label>'
-            output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + title_text + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+            output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + extra_style + title_text + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
             if not embedded and field.datatype in ('currency', 'file', 'files', 'camera', 'camcorder', 'microphone'):
                 output += ' aria-describedby="addon-' + do_escape_id(saveas_string) + '"/></div><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
             else:

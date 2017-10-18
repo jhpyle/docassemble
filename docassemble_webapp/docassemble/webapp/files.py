@@ -195,6 +195,7 @@ class SavedFile(object):
         else:
             extn = None
         filename = kwargs.get('filename', self.filename)
+        use_external = kwargs.get('_external', False)
         if cloud is not None:
             keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
             page = kwargs.get('page', None)
@@ -241,6 +242,8 @@ class SavedFile(object):
                         url = fileroot + 'uploadedfile/' + str(self.file_number)
             else:
                 url = 'about:blank'
+            if use_external and url.startswith('/'):
+                url = docassemble.base.functions.get_url_root() + url
             return(url)
     def finalize(self):
         if cloud is None:

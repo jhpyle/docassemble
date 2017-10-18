@@ -420,7 +420,7 @@ class InterviewStatus(object):
                 the_field['disable_others'] = True
             if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                 the_field['uncheck_others'] = True
-            for key in ['minlength', 'maxlength', 'min', 'max', 'step']:
+            for key in ['minlength', 'maxlength', 'min', 'max', 'step', 'inline width']:
                 if hasattr(field, 'extras') and key in field.extras and key in self.extras:
                     the_field[key] = self.extras[key][field.number]
             if hasattr(field, 'saveas') and field.saveas in self.embedded:
@@ -808,10 +808,12 @@ class FileInPackage:
         if self.area == 'template':
             if self.is_code:
                 the_file_ref = eval(self.code, user_dict)
-                if str(type(the_file_ref)) == "<class 'docassemble.base.core.DAFile'>":
+                if the_file_ref.__class__.__name__ == 'DAFile':
                     the_file_ref = the_file_ref.path()
-                elif str(type(the_file_ref)) == "<class 'docassemble.base.core.DAFileList'>" and len(the_file_ref.elements) > 0:
+                elif the_file_ref.__class__.__name__ == 'DAFileList' and len(the_file_ref.elements) > 0:
                     the_file_ref = the_file_ref.elements[0].path()
+                elif the_file_ref.__class__.__name__ == 'DAStaticFile':
+                    the_file_ref = the_file_ref.path()
                 elif re.search(r'^https?://', str(the_file_ref)):
                     temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
                     try:
@@ -1458,7 +1460,7 @@ class Question:
             self.content = TextObject('all_variables')
         elif 'response filename' in data:
             self.question_type = 'sendfile'
-            if str(type(data['response filename'])) == "<class 'docassemble.base.core.DAFile'>":
+            if data['response filename'].__class__.__name__ == 'DAFile':
                 self.response_file = data['response filename']
                 if hasattr(data['response filename'], 'mimetype') and data['response filename'].mimetype:
                     self.content_type = TextObject(data['response filename'].mimetype)
@@ -1812,6 +1814,7 @@ class Question:
                 field_number = 0
                 for field in data['fields']:
                     if type(field) is dict:
+                        manual_keys = set()
                         field_info = {'type': 'text', 'number': field_number}
                         if 'datatype' in field and field['datatype'] in ['radio', 'object', 'object_radio', 'combobox', 'checkboxes', 'object_checkboxes'] and not ('choices' in field or 'code' in field):
                             raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
@@ -1920,6 +1923,9 @@ class Question:
                                     field_info['selections'] = dict(values=process_selections_manual(field[key]))
                                     if 'datatype' not in field:
                                         auto_determine_type(field_info)
+                                    for item in field_info['selections']['values']:
+                                        if not item['key'].uses_mako:
+                                            manual_keys.add(item['key'].original_text)
                                 if 'exclude' in field:
                                     if type(field['exclude']) is dict:
                                         raise DAError("An exclude entry cannot be a dictionary." + self.idebug(data))
@@ -1934,7 +1940,7 @@ class Question:
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras']['note'] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
-                            elif key in ['min', 'max', 'minlength', 'maxlength', 'step']:
+                            elif key in ['min', 'max', 'minlength', 'maxlength', 'step', 'inline width']:
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
@@ -2014,6 +2020,9 @@ class Question:
                                     if self.scan_for_variables:
                                         self.fields_used.add(field_info['saveas'])
                                         self.fields_used.add(field_info['saveas'] + '.gathered')
+                                        if field_info['type'] == 'checkboxes':
+                                            for the_key in manual_keys:
+                                                self.fields_used.add(field_info['saveas'] + '[' + repr(the_key) + ']')
                                 elif field_info['type'] in ['ml', 'mlarea']:
                                     if self.scan_for_variables:
                                         self.fields_used.add(field_info['saveas'])
@@ -2491,7 +2500,7 @@ class Question:
                     except:
                         continue
                 if hasattr(field, 'extras'):
-                    for key in ['note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step']: # 'script', 'css', 
+                    for key in ['note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'inline width']: # 'script', 'css', 
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
@@ -2697,7 +2706,7 @@ class Question:
                 if hasattr(field, 'label'):
                     labels[field.number] = field.label.text(user_dict)
                 if hasattr(field, 'extras'):
-                    for key in ['note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'ml_group']: # , 'textresponse', 'content_type' #'script', 'css', 
+                    for key in ['note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'inline width', 'ml_group']: # , 'textresponse', 'content_type' #'script', 'css', 
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
@@ -2774,7 +2783,7 @@ class Question:
             if type(computed_attachment_list) is not list:
                 computed_attachment_list = [computed_attachment_list]
             for x in computed_attachment_list:
-                if str(type(x)) == "<class 'docassemble.base.core.DAFileCollection'>" and 'attachment' in x.info:
+                if x.__class__.__name__ == 'DAFileCollection' and 'attachment' in x.info:
                     attachment = self.interview.questions_by_name[x.info['attachment']['name']].attachments[x.info['attachment']['number']]
                     items.append([attachment, self.prepare_attachment(attachment, user_dict, **kwargs)])
         for item in items:
@@ -3005,7 +3014,7 @@ class Question:
         result['mimetype'] = dict();
         result['file'] = dict();
         if '*' in attachment['valid_formats']:
-            result['formats_to_use'] = ['html', 'rtf', 'pdf', 'tex']
+            result['formats_to_use'] = ['pdf', 'rtf', 'html', 'tex']
         else:
             result['formats_to_use'] = attachment['valid_formats']
         result['metadata'] = dict()
@@ -4343,6 +4352,8 @@ def process_selections(data, manual=False, exclude=None):
                                 entry['image'][0].retrieve()
                                 if entry['image'][0].mimetype is not None and entry['image'][0].mimetype.startswith('image'):
                                     the_item['image'] = dict(type='url', value=entry['image'][0].url_for())
+                            elif entry['image'].__class__.__name__ == 'DAStaticFile':
+                                the_item['image'] = dict(type='url', value=entry['image'].url_for())
                             else:
                                 the_item['image'] = dict(type='decoration', value=entry['image'])
                     the_item['key'] = key
@@ -4390,6 +4401,8 @@ def process_selections_manual(data):
                     if len(entry) > 1:
                         if key in ['default', 'help', 'image']:
                             continue
+                        if 'key' in entry and 'label' in entry and key != 'key':
+                            continue
                         if 'default' in entry:
                             the_item['default'] = entry['default']
                         if 'help' in entry:
@@ -4403,8 +4416,15 @@ def process_selections_manual(data):
                                 entry['image'][0].retrieve()
                                 if entry['image'][0].mimetype is not None and entry['image'][0].mimetype.startswith('image'):
                                     the_item['image'] = dict(type='url', value=entry['image'][0].url_for())
+                            elif entry['image'].__class__.__name__ == 'DAStaticFile':
+                                the_item['image'] = dict(type='url', value=entry['image'].url_for())
                             else:
                                 the_item['image'] = dict(type='decoration', value=entry['image'])
+                        if 'key' in entry and 'label' in entry:
+                            the_item['key'] = TextObject(entry['key'])
+                            the_item['label'] = TextObject(entry['label'])
+                            result.append(the_item)
+                            continue
                     the_item['key'] = TextObject(entry[key])
                     the_item['label'] = TextObject(key)
                     result.append(the_item)

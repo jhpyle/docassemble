@@ -512,7 +512,7 @@ from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_packa
 from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
 import docassemble.webapp.backend
 import docassemble.base.util
-from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile, DAObject
+from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile, DAObject, DAFileCollection, DAStaticFile
 from user_agents import parse as ua_parse
 import docassemble.base.ocr
 
@@ -694,6 +694,12 @@ def get_url_from_file_reference(file_reference, **kwargs):
         privileged = kwargs['privileged']
     else:
         privileged = False
+    if isinstance(file_reference, DAFileList) and len(file_reference.elements) > 0:
+        file_reference = file_reference.elements[0]
+    elif isinstance(file_reference, DAFileCollection):
+        file_reference = file_reference._first_file()
+    elif isinstance(file_reference, DAStaticFile):
+        return file_reference.url_for()
     if isinstance(file_reference, DAFile) and hasattr(file_reference, 'number'):
         file_number = file_reference.number
         if privileged or can_access_file_number(file_number):
@@ -778,6 +784,8 @@ def get_url_from_file_reference(file_reference, **kwargs):
             url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
         else:
             url = None
+        if kwargs.get('_external', False) and url is not None and url.startswith('/'):
+            url = docassemble.base.functions.get_url_root() + url
     return(url)
 
 def user_id_dict():
@@ -4432,12 +4440,12 @@ def index():
                                 elements = list()
                                 indexno = 0
                                 for (filename, file_number, mimetype, extension) in files_to_process:
-                                    elements.append("docassemble.base.core.DAFile('" + file_field + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", make_pngs=True, mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
+                                    elements.append("docassemble.base.core.DAFile(" + repr(file_field + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
-                                the_string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
+                                the_string = file_field + " = docassemble.base.core.DAFileList(" + repr(file_field) + ", elements=[" + ", ".join(elements) + "])"
                             else:
                                 the_string = file_field + " = None"
-                            #logmessage("Doing " + the_string)
+                            #logmessage("0Doing " + the_string)
                             try:
                                 exec(the_string, user_dict)
                                 if not changed:
@@ -4511,12 +4519,12 @@ def index():
                                 elements = list()
                                 indexno = 0
                                 for (filename, file_number, mimetype, extension) in files_to_process:
-                                    elements.append("docassemble.base.core.DAFile('" + file_field + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", make_pngs=True, mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
+                                    elements.append("docassemble.base.core.DAFile(" + repr(file_field + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
-                                the_string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
+                                the_string = file_field + " = docassemble.base.core.DAFileList(" + repr(file_field) + ", elements=[" + ", ".join(elements) + "])"
                             else:
                                 the_string = file_field + " = None"
-                            #logmessage("Doing " + the_string)
+                            #logmessage("1Doing " + the_string)
                             try:
                                 exec(the_string, user_dict)
                                 if not changed:
@@ -5917,9 +5925,14 @@ def index():
       function adjustInputWidth(e){
         var contents = $(this).val();
         contents = contents.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/ /g, '&nbsp;');
-        $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('body');
+        $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('#question');
+        $("#dawidth").css('min-width', $(this).css('min-width'));
+        $("#dawidth").css('background-color', $("body").css('background-color'));
+        $("#dawidth").css('color', $("body").css('background-color'));
         $(this).width($('#dawidth').width() + 16);
-        $('#dawidth').remove();
+        setTimeout(function(){
+          $("#dawidth").remove();
+        }, 0);
       }
       function daInitialize(){
         daResetCheckinCode();
@@ -7063,9 +7076,14 @@ def observer():
       function adjustInputWidth(e){
         var contents = $(this).val();
         contents = contents.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/ /g, '&nbsp;');
-        $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('body');
+        $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('#question');
+        $("#dawidth").css('min-width', $(this).css('min-width'));
+        $("#dawidth").css('background-color', $("body").css('background-color'));
+        $("#dawidth").css('color', $("body").css('background-color'));
         $(this).width($('#dawidth').width() + 16);
-        $('#dawidth').remove();
+        setTimeout(function(){
+          $("#dawidth").remove();
+        }, 0);
       }
       function show_help_tab(){
           $('#helptoggle').tab('show');
@@ -13131,9 +13149,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         elements = list()
                         indexno = 0
                         for (filename, file_number, mimetype, extension) in files_to_process:
-                            elements.append("docassemble.base.core.DAFile('" + saveas + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
+                            elements.append("docassemble.base.core.DAFile(" + repr(saveas + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                             indexno += 1
-                        the_string = saveas + " = docassemble.base.core.DAFileList('" + saveas + "', elements=[" + ", ".join(elements) + "])"
+                        the_string = saveas + " = docassemble.base.core.DAFileList(" + repr(saveas) + ", elements=[" + ", ".join(elements) + "])"
                         logmessage("do_sms: doing import docassemble.base.core")
                         logmessage("do_sms: doing file: " + the_string)
                         try:

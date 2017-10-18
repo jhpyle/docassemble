@@ -14,7 +14,7 @@ from docassemble.base.functions import possessify, possessify_long, a_prepositio
 import docassemble.base.functions
 import docassemble.base.file_docx
 
-__all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate']
+__all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate']
 
 unique_names = set()
 
@@ -1719,6 +1719,20 @@ class DAFile(DAObject):
     def initialize(self, **kwargs):
         """Creates the file on the system if it does not already exist, and ensures that the file is ready to be used."""
         #logmessage("initialize")
+        if 'filename' in kwargs and kwargs['filename']:
+            self.filename = kwargs['filename']
+            self.has_specific_filename = True
+        if 'mimetype' in kwargs:
+            self.mimetype = kwargs['mimetype']
+        if 'extension' in kwargs:
+            self.extension = kwargs['extension']
+        if 'content' in kwargs:
+            self.content = kwargs['content']
+        if 'markdown' in kwargs:
+            self.markdown = kwargs['markdown']
+        if 'number' in kwargs and kwargs['number'] is not None:
+            self.number = kwargs['number']
+            self.ok = True
         if not hasattr(self, 'filename'):
             if hasattr(self, 'extension'):
                 self.filename = kwargs.get('filename', 'file.' + self.extension)
@@ -1863,9 +1877,9 @@ class DAFile(DAObject):
                 return('[FILE ' + str(self.number) + ', ' + str(width) + ']')
             else:
                 return('[FILE ' + str(self.number) + ']')
-    def url_for(self):
+    def url_for(self, **kwargs):
         """Returns a URL to the file."""
-        return server.url_finder(self)
+        return server.url_finder(self, **kwargs)
     def set_attributes(self, **kwargs):
         """Sets attributes of the file stored on the server.  Takes optional keyword arguments private and persistent, which must be boolean values."""
         if 'private' in kwargs and kwargs['private'] in [True, False]:
@@ -1885,13 +1899,28 @@ class DAFileCollection(DAObject):
         self.info = dict()
     def _extension_list(self):
         if hasattr(self, 'info') and 'formats' in self.info:
+            logmessage("Returning formats")
             return self.info['formats']
         return ['pdf', 'docx', 'rtf']
-    def url_for(self):
+    def _first_file(self):
+        for ext in self._extension_list():
+            if hasattr(self, ext):
+                return getattr(self, ext)
+        return None
+    def path(self):
+        """Returns a path and filename at which one of the attachments in the
+        collection can be accessed.
+
+        """
+        the_file = self._first_file()
+        if the_file is None:
+            return None
+        return the_file.path()
+    def url_for(self, **kwargs):
         """Returns a URL to one of the attachments in the collection."""
         for ext in self._extension_list():
             if hasattr(self, ext):
-                return getattr(self, ext).url_for()
+                return getattr(self, ext).url_for(**kwargs)
         raise Exception("Could not find a file within a DACollection.")
     def show(self, **kwargs):
         """Inserts markup that displays each part of the file collection as an
@@ -1922,17 +1951,56 @@ class DAFileList(DAList):
             if element.ok:
                 output += element.show(width=width)
         return output
-    def url_for(self):
+    def path(self):
+        """Returns a path and filename at which the first file in the
+        list can be accessed.
+
+        """
+        if len(self.elements) == 0:
+            return None
+        return self.elements[0].path()
+    def url_for(self, **kwargs):
         """Returns a URL to the first file in the list."""
         if len(self.elements) == 0:
             return None
-        return self.elements[0].url_for()
+        return self.elements[0].url_for(**kwargs)
     def set_attributes(self, **kwargs):
         """Sets attributes of the file(s) stored on the server.  Takes optional keyword arguments private and persistent, which must be boolean values."""
         for element in sorted(self.elements):
             if element.ok:
                 element.set_attributes(**kwargs)
 
+class DAStaticFile(DAObject):
+    def show(self, width=None):
+        """Inserts markup that displays the file.  Takes an optional keyword
+        argument width.
+
+        """
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+            return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.docx_template, width=width)
+        else:
+            if width is not None:
+                return('[FILE ' + str(self.filename) + ', ' + str(width) + ']')
+            else:
+                return('[FILE ' + str(self.filename) + ']')
+    def path(self):
+        """Returns a path and filename at which the file can be accessed.
+
+        """
+        file_info = server.file_finder(self.filename)
+        return file_info.get('fullpath', None)
+    def url_for(self, **kwargs):
+        """Returns a URL to the static file."""
+        the_args = dict()
+        for key, val in kwargs.iteritems():
+            the_args[key] = val
+        the_args['_question'] = docassemble.base.functions.this_thread.current_question
+        return server.url_finder(self.filename, **the_args)
+    def __str__(self):
+        return self.show()
+    def __unicode__(self):
+        return unicode(self.__str__())
+                
 class DAEmailRecipientList(DAList):
     """Represents a list of DAEmailRecipient objects."""
     def init(self, *pargs, **kwargs):

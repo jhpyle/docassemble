@@ -154,6 +154,30 @@ def get_uid():
     except:
         return None
 
+def get_url_start():
+    if this_thread.current_info.get('url_root', None) is not None:
+        url_start = re.sub(r'/$', r'', this_thread.current_info['url_root'])
+    else:
+        url_start = get_config('url root')
+        if url_start is None:
+            url_start = 'http://localhost'
+        url_start = re.sub(r'/$', r'', url_start)
+        root = get_config('root')
+        if root is None:
+            root = '/'
+        url_start += root
+    return url_start
+
+def get_url_root():
+    if this_thread.current_info.get('url_root', None) is not None:
+        url_root = re.sub(r'/$', r'', this_thread.current_info['url_root'])
+    else:
+        url_root = get_config('url root')
+        if url_root is None:
+            url_root = 'http://localhost'
+        url_root = re.sub(r'/$', r'', url_root)
+    return url_root
+
 def get_current_package():
     if this_thread.current_package is not None:
         return this_thread.current_package
