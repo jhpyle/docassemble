@@ -45,7 +45,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.demo',
-      version='0.1.74',
+      version='0.1.75',
       description=('A demonstration package for docassemble.'),
       author='Jonathan Pyle',
       author_email='jhpyle@gmail.com',
