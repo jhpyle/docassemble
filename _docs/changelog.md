@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.75](https://github.com/jhpyle/docassemble/releases/tag/v0.1.75) - 2017-10-18
+
+### Added
+- `inline width` field modifier for embedded fields.
+- `DAStaticFile` object.
+- `set_data()` and `get_data()` methods for `DARedis`.
+
+### Fixed
+- `DAFile` initialize function now handles keyword arguments as 
+  advertised.
+
 ## [0.1.74](https://github.com/jhpyle/docassemble/releases/tag/v0.1.74) - 2017-10-15
 
 ### Added

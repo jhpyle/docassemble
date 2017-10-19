@@ -3601,7 +3601,7 @@ interview, keeping usage statistics, or other purposes.
 {% include side-by-side.html demo="redis" %}
 
 To use the [Redis] server, use an [`objects`] section to create an
-object of type `DARedis`.  This object can now be used to
+object of type [`DARedis`].  This object can now be used to
 communicate with the redis server, much as though it had been created
 by calling `redis.StrictRedis()`.
 
@@ -4235,3 +4235,4 @@ $(document).on('daPageLoad', function(){
 [PDF templates]: {{ site.baseurl }}/docs/documents.html#pdf template file
 [`yesno()`]: #yesno
 [Unicode Technical Standard #35]: https://unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns
+[`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis

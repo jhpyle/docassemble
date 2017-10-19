@@ -1357,7 +1357,11 @@ a URL to the first document type in the collection.  By default, this
 is the PDF version, but this can be changed with the [valid formats]
 modifier.
 
-<a name="DAFileCollection.url_for"></a>The `.show()` method inserts
+<a name="DAFileCollection.path"></a>The `.path()` method returns a
+complete file path that you can use to access the first document type
+in the collection.
+
+<a name="DAFileCollection.show"></a>The `.show()` method inserts
 markup that displays each file in the collection as an image, or as a
 link if the file cannot be displayed as an image.  This
 method takes an optional keyword argument, `width`.
@@ -1386,6 +1390,9 @@ when working with `DAFileList` objects returned from
 [`datatype: file`], when you know that the list will only have one
 element in it.
 
+<a name="DAFileList.path"></a>The `.path()` method returns a complete
+file path that you can use to access the first file in the collection.
+
 <a name="DAFileList.set_attributes"></a>The `.set_attributes()` method
 calls [`.set_attributes()`] on each of the [`DAFile`]s in the list,
 applying the same attributes to each file.  For an explanation of how
@@ -1404,6 +1411,51 @@ mandatory: True
 code: |
   the_upload.set_attributes(private=False)
 {% endhighlight %}
+
+## <a name="DAStaticFile"></a>DAStaticFile
+
+A `DAStaticFile` represents a file in the "static folder" of a
+package.  It has some of the same characteristics and methods of a
+[`DAFile`].
+
+It depends on one attribute, `filename`, which should be a reference
+to a static file, such as:
+
+* `coins.png` - a file in the static folder of the current package
+* `docassemble.base:data/static/cow.jpg` - a file in the static folder
+  of another package.
+
+The `DAStaticFile` object can be used like this:
+
+{% include side-by-side.html demo="static-file" %}
+
+It can also be initialized like this:
+
+{% highlight yaml %}
+---
+objects:
+  - the_icon: DAStaticFile.using(filename='coins.png')
+---
+{% endhighlight %}
+
+<a name="DAStaticFile.show"></a>The `.show()` method inserts markup that
+displays the file as an image.  This method takes an optional keyword
+argument, `width`.
+
+When included in a [Mako] template, a `DAStaticFile` object will effectively
+call `show()` on itself.
+
+<a name="DAStaticFile.url_for"></a>The `.url_for()` method returns a
+URL at which the file can be accessed.
+
+<a name="DAFileList.path"></a>The `.path()` method returns a complete
+file path that you can use to access the file on the server.
+
+Here is an example that shows how [`DAStaticFile`],
+[`DAFileCollection`], [`DAFileList`], and [`DAFile`] objects can be
+used interchangeably.
+
+{% include side-by-side.html demo="file-types" %}
 
 ## <a name="DAEmail"></a>DAEmail
 
@@ -1512,6 +1564,39 @@ the resulting text.  Note that the text may have
 For more information about using [`DATemplate`]s, see the
 documentation for [templates].  Also, see the documentation for
 [`send_email()`] and [`send_sms()`].
+
+## <a name="DARedis"></a>DARedis
+
+The `DARedis` class facilitates the use of [Redis] for in-memory
+storage.
+
+{% include side-by-side.html demo="redis" %}
+
+For the most part, an object of type `DARedis` functions just like an
+object created through `redis.StrictRedis()` using the standard
+[Python] package called [`redis`].  You can use methods like `.set()`,
+`.get()`, `.delete()`, `.incr()`, etc.
+
+However, there are three additional methods that facilitate the use of
+[Redis] in the context of **docassemble** interviews.
+
+The `key()` method is a convenience function for obtaining keys that
+you can use as [Redis] keys in order to avoid name collisions across
+interviews.  Given a key like `'favorite_fruit'`, it returns the key
+with a prefix based on the interview, like
+`docassemble.food:data/questions/fruit.yml:favorite_fruit`.  You could
+use `favorite_fruit` as a key, but if another interview on the system
+used the same key, the interviews would interfere with one another.
+
+The `set_data()` and `get_data()` methods act just like the standard
+methods `set()` and `get()`, except that they perform [pickling] and
+unpickling.  This allows you to store and retrieve **docassemble**
+objects or any type of data structure that is able to be [pickled].
+The `set_data()` method takes an optional keyword argument `expire`,
+which you can set to an integer representing the number of seconds
+after which the data should be removed from [Redis].
+
+{% include side-by-side.html demo="redis-data" %}
 
 # <a name="person classes"></a>Classes for information about people and things
 
@@ -2721,3 +2806,8 @@ and not an instance of the `Attorney` class.
 [`getattr()`]: https://docs.python.org/2/library/functions.html#getattr
 [`Thing`]: #Thing
 [`using()`]: #DAObject.using
+[Redis]: https://redis.io/
+[in-memory database]: https://en.wikipedia.org/wiki/In-memory_database
+[`redis`]: https://github.com/andymccurdy/redis-py
+[pickling]: https://docs.python.org/2/library/pickle.html
+[pickled]: https://docs.python.org/2/library/pickle.html

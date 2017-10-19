@@ -1161,6 +1161,12 @@ will appear on the screen in the normal fashion.
 
 The label of an embedded field is used as the [tooltip] of the field.
 
+<a name="inline width"></a>When you are using embedded fields, you can
+add the field modifier `inline width` to change the initial width of
+the field.  For example, if you include `inline width: 15em`, the
+[CSS] will be altered so that the field is 15em wide.  This modifier
+has no effect when embedded fields are not being used.
+
 # <a name="general"></a>Generalizing questions
 
 **docassemble** lets you write a single question that can be re-used
@@ -1441,3 +1447,4 @@ why this needs to be done manually as opposed to automatically:
 [`images`]: {{ site.baseurl }}/docs/initial.html#images
 [`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
 [`sets`]: {{ site.baseurl }}/docs/modifiers.html#sets
+[CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets

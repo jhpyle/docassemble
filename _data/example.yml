@@ -3000,6 +3000,24 @@
   fields:
     - File: the_file
       datatype: file
+"file-types": "objects:\n  - static_file: DAStaticFile.using(filename='cow.jpg')\n\
+  ---\nattachment:\n  variable name: assembled_file\n  filename: assembled_file\n\
+  \  content: |\n    Hello world!\n---\nquestion: |\n  Upload a file\nfields:\n  -\
+  \ File: uploaded_file\n    datatype: file\n---\nquestion: |\n  What type of file\
+  \ do you want?\nchoices:\n  Static:\n    code: |\n      the_file = static_file\n\
+  \  Assembled:\n    code: |\n      the_file = assembled_file\n  Upload:\n    code:\
+  \ |\n      the_file = uploaded_file\n  Single:\n    code: |\n      the_file = uploaded_file[0]\n\
+  ---\ncode: |\n  email_sent = send_email(to=email_address,\n    body=\"Here is your\
+  \ document\",\n    subject=\"Your document\",\n    attachments=the_file)\n---\n\
+  code: |\n  (the_path, the_mimetype) = path_and_mimetype(the_file)\n---\ncode: |\n\
+  \  button_list = [{True: 'Next', 'image': the_file}]\n---\nneed:\n  - email_sent\n\
+  field: menu_selection\nquestion: |\n  Your document\nsubquestion: |\n  ### As image\n\
+  \  ${ the_file.show(width='1em') }\n\n  ${ the_file }\n\n  ### As path\n  \n  `${\
+  \ the_file.path() }`\n\n  ### As url\n  \n  `${ the_file.url_for() }`\n\n  ### As\
+  \ external url\n  \n  `${ the_file.url_for(_external=True) }`\n\n  ### From url_of()\n\
+  \n  `${ url_of(the_file) }`\n\n  ### From path_and_mimetype()\n\n  `${ the_path\
+  \ }`\n\n  `${ the_mimetype }`\nbuttons:\n  code: button_list\n---\nmandatory: True\n\
+  need:\n  - menu_selection\nquestion: |\n  All done\nbuttons:\n  - Restart: restart"
 "fix-punctuation": |-
   mandatory: true
   question: |
@@ -6213,6 +6231,48 @@
   \  r.set(key, 'hello world')\n---\nmandatory: True\nquestion: |\n  Value has been\
   \ retrieved from\n  the redis server.\nsubquestion: |\n  The key is `${ key }`.\n\
   \  \n  The value is \"${ r.get(key) }\"."
+"redis-data": |-
+  objects:
+    - r: DARedis
+  ---
+  question: |
+    Upload a file.
+  subquestion: |
+    Note: if someone else uses this
+    interview in the 30 seconds
+    after you upload the file,
+    your file will be shown to
+    that user.
+  fields:
+    - File: uploaded_file
+      datatype: file
+  ---
+  code: |
+    mykey = r.key('upload')
+  ---
+  code: |
+    file_from_redis = r.get_data(mykey)
+  ---
+  mandatory: True
+  code: |
+    if file_from_redis is None:
+      uploaded_file.set_attributes(private=False)
+      r.set_data(mykey, uploaded_file, expire=30)
+      del file_from_redis
+  comment: |
+    If there is no file in Redis, we
+    get the user to upload a file.
+    Then we undefine file_from_redis
+    (which is None) so that in the
+    next question, the interview will
+    try to fetch the file from Redis
+    again.
+  ---
+  mandatory: True
+  question: |
+    The file
+  subquestion: |
+    ${ file_from_redis }
 "refresh": |-
   question: |
     The current date is
@@ -6938,6 +6998,22 @@
     ${ state_name(user_state) },
     which is abbreviated
     ${ user_state }.
+"static-file": |-
+  objects:
+    - the_icon: DAStaticFile
+  ---
+  code: |
+    if user.gender == 'Female':
+      the_icon.filename = 'female243.png'
+    else:
+      the_icon.filename = 'male244.png'
+  ---
+  mandatory: True
+  question: |
+    The image
+    ${ the_icon.show(width='1em') }
+  subquestion: |
+    ${ the_icon }
 "static_image": |-
   code: |
     image_name = 'court'
