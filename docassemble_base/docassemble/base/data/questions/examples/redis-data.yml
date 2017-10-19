@@ -1,0 +1,50 @@
+metadata:
+  title: Redis with objects
+  example start: 2
+  example end: 7
+  documentation: "https://docassemble.org/docs/objects.html#DARedis"
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - r: DARedis
+---
+question: |
+  Upload a file.
+subquestion: |
+  Note: if someone else uses this
+  interview in the 30 seconds
+  after you upload the file,
+  your file will be shown to
+  that user.
+fields:
+  - File: uploaded_file
+    datatype: file
+---
+code: |
+  mykey = r.key('upload')
+---
+code: |
+  file_from_redis = r.get_data(mykey)
+---
+mandatory: True
+code: |
+  if file_from_redis is None:
+    uploaded_file.set_attributes(private=False)
+    r.set_data(mykey, uploaded_file, expire=30)
+    del file_from_redis
+comment: |
+  If there is no file in Redis, we
+  get the user to upload a file.
+  Then we undefine file_from_redis
+  (which is None) so that in the
+  next question, the interview will
+  try to fetch the file from Redis
+  again.
+---
+mandatory: True
+question: |
+  The file
+subquestion: |
+  ${ file_from_redis }

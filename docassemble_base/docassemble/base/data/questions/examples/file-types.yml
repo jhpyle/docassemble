@@ -2,7 +2,7 @@ metadata:
   title: File types
   documentation: "https://docassemble.org/docs/objects.html#DAStaticFile"
   example start: 2
-  example end: 8
+  example end: 10
 ---
 modules:
   - docassemble.base.util
@@ -34,6 +34,9 @@ choices:
   Upload:
     code: |
       the_file = uploaded_file
+  Single:
+    code: |
+      the_file = uploaded_file[0]
 ---
 code: |
   email_sent = send_email(to=email_address,
@@ -45,13 +48,7 @@ code: |
   (the_path, the_mimetype) = path_and_mimetype(the_file)
 ---
 code: |
-  button_list = [{'exit': 'Exit', 'image': the_file}]
----
-mandatory: True
-need:
-  - menu_selection
-question: |
-  All done
+  button_list = [{True: 'Next', 'image': the_file}]
 ---
 need:
   - email_sent
@@ -87,6 +84,14 @@ subquestion: |
   `${ the_mimetype }`
 buttons:
   code: button_list
+---
+mandatory: True
+need:
+  - menu_selection
+question: |
+  All done
+buttons:
+  - Restart: restart
 ---
 question: |
   What is your e-mail address?

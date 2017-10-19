@@ -1,8 +1,10 @@
 # Change Log
 
-## [0.1.75]
+## [0.1.75] - 2017-10-18
 ### Added
 - `inline width` field modifier for embedded fields.
+- `DAStaticFile` object.
+- `set_data()` and `get_data()` methods for `DARedis`.
 ### Fixed
 - `DAFile` initialize function now handles keyword arguments as 
   advertised.
