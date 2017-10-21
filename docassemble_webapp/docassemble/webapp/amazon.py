@@ -2,6 +2,7 @@ import boto3
 import time
 import os
 from botocore.errorfactory import ClientError
+import mimetypes
 
 class s3object(object):
     def __init__(self, s3_config):
@@ -51,14 +52,10 @@ class s3key(object):
         secs = time.mktime(self.key_obj.last_modified.timetuple())
         os.utime(filename, (secs, secs))
     def set_contents_from_filename(self, filename):
-        self.key_obj.upload_file(filename)
-        self.update_metadata()
+        mimetype, encoding = mimetypes.guess_type(filename)
+        self.key_obj.upload_file(filename, extra_args={'ContentType': mimetype})
     def set_contents_from_string(self, text):
-        self.key_obj.put(Body=bytes(text))
-        self.update_metadata()
-    def update_metadata(self):
-        if self.content_type is not None and self.content_type != self.key_obj.content_type:
-            self.key_obj.put(Metadata={'Content-Type': self.content_type})
+        self.key_obj.put(Body=bytes(text), ContentType=self.content_type)
     def generate_url(self, expires, content_type=None, display_filename=None):
         params = dict(Bucket=self.s3_object.bucket_name, Key=self.key_obj.key)
         if content_type is not None:
