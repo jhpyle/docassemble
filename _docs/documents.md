@@ -244,6 +244,10 @@ documents.
   be explicit, `[EMDASH]` will do the same thing.
 * <a name="hyphen"></a>`[HYPHEN]` - Insert a hyphen.  Normally, `---` produces an em-dash, but if you want to
   be explicit, `[HYPHEN]` will do the same thing.
+* <a name="blank"></a>`[BLANK]` - Insert `___________________`.
+* <a name="blank"></a>`[BLANKFILL]` - Insert a wider version of 
+  `__________________`.  In some output formats, this will fill the
+  width of the area.
 * <a name="pagebreak"></a>`[PAGEBREAK]` - Insert a manual page break.
 * <a name="pagenum"></a>`[PAGENUM]` - Insert the current page number.
 * <a name="sectionnum"></a>`[SECTIONNUM]` - Insert the current section number.

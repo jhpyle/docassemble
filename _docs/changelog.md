@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.76](https://github.com/jhpyle/docassemble/releases/tag/v0.1.76) - 2017-10-20
+
+### Added
+- `RandomForestMachineLearner` for machine learning with numeric and
+  categorical values.
+- Context for `SyntaxError`s.
+
+### Fixed
+- `code` to specify fields in docx template.
+- S3 problems.
+
 ## [0.1.75](https://github.com/jhpyle/docassemble/releases/tag/v0.1.75) - 2017-10-18
 
 ### Added

@@ -1797,7 +1797,7 @@
   attachment:
     name: Your letter
     filename: letter
-    docx template file: letter_template.docx
+    docx template file: letter_template_code.docx
     fields:
       "letter_date": ${ format_date(today()) }
       "phone_number": 202-555-1234
@@ -1806,6 +1806,21 @@
       "signature": ${ user.signature }
     code: |
       dict(full_name=user.name.full())
+"docx-template-code-2": |-
+  mandatory: True
+  question: |
+    Here is your document.
+  attachment:
+    name: Your letter
+    filename: letter
+    docx template file: letter_template_code.docx
+    code: |
+      dict(full_name=user.name.full(),
+           letter_date=format_date(today()),
+           phone_number='202-555-1234',
+           subject_matter=subject_matter,
+           address_block=adverse_party.address_block(),
+           signature=user.signature)
 "docx-template-field-variables": |-
   mandatory: true
   code: |
@@ -8011,24 +8026,11 @@
   fields:
     - no label: x.instructions
       datatype: area
-"testgeolocate": |-
-  objects:
-    - user: Individual
-    - enemy: Individual
-  ---
-  initial: True
-  code: |
-    set_info(user=user, role='user')
-    track_location = user.location.status()
-  ---
-  mandatory: True
-  code: |
-    need(welcome_screen, map_shown)
-  ---
-  sets: map_shown
-  question: Map of you and your enemy
-  subquestion: |
-    ${ map_of(user, enemy) }
+"testgeolocate": "objects:\n  - user: Individual\n  - enemy: Individual\n---\ninitial:\
+  \ True\ncode: |\n  set_info(user=user, role='user')\n  track_location = user.location.status()\n\
+  ---\nmandatory: True\ncode: |\n  need(welcome_screen, map_shown)\n---\nsets: map_shown\n\
+  question: Map of you and your enemy\nfield: foobar\nunder: |\n  Foo bar\n  \n  ${\
+  \ map_of(user, enemy) }"
 "validation-code": |-
   question: |
     There are 10 fruit in all.

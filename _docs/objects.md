@@ -101,7 +101,7 @@ the `is` operator:
 Object methods allow you to have a standard way of expressing
 information even though the methods used to gather the information may
 vary depending on the circumstances.  For example, the
-[`age_in_years()`] function, discussed above, first looks to see if the
+[`age_in_years()`] method, discussed above, first looks to see if the
 attribute `age` is defined, and if so will return that instead of
 asking for the `birthdate` attribute:
 
@@ -807,7 +807,10 @@ Other methods available on a `DAList` are:
   `case.plaintiff`, returns `plaintiffs` or `plaintiff` depending on
   the number of items in the list; if the variable name is
   `applicant`, returns `applicants` or `applicant` depending on the
-  number of items in the list.
+  number of items in the list.  If you can also give this function any
+  arbitrary noun and it will pluralize it or not depending on whether
+  the number of items in the list is more than one.  E.g.,
+  `client.child.as_noun('kid')` will return `'kid'` or `'kids'`.
 * <a name="DAList.number"></a><a name="DADict.number"></a><a
   name="DASet.number"></a>`number()` - returns the total number of
   items in the list.  If necessary it will trigger questions that
@@ -1814,8 +1817,15 @@ In addition, the following attributes will be defined by virtue of an
 
 The following attributes are also used, but undefined by default:
 
-* `birthdate`
-* `gender`
+* <a name="Individual.age"></a>`age` - this can be set to a number.
+  It is used by the [`age_in_years()`] method.
+* <a name="Individual.birthdate"></a>`birthdate` - this can be the
+  result of a [date field], or a [`datetime`] object.  It is used by
+  the [`age_in_years()`] method if the [`age`] attribute has not been
+  defined.
+* <a name="Individual.gender"></a>`gender` - this should be set to
+  `'male'`, `'female'`, or something else.  It is used by a variety of
+  methods such as [`pronoun()`].
 
 A number of useful methods can be applied to objects of class
 `Individual`.  Many of them will respond differently depending on
@@ -1848,6 +1858,17 @@ There are two optional arguments that modify the method's behavior:
   with the fractional part included.
 * `user.age_in_years(as_of="5/1/2015")` returns the user's age as of a
   particular date.
+
+To determine the user's age, this method first looks to see if there
+is an attribute [`age`].  If there is, the value of this attribute is
+returned.  However, the `age_in_years()` method will not cause the
+interview to seek out this attribute.
+
+If the [`age`] attribute is not defined, this method will calculate
+the individual's age based on the [`birthdate`] attribute, which will
+be interpreted as a date.  The [`birthdate`] attribute can be a date
+expressed in text, as it would be if it was defined by a [date field],
+or it can be a [`datetime`] object.
 
 ### <a name="Individual.first_name_hint"></a><a name="Individual.last_name_hint"></a>`.first_name_hint()` and `.last_name_hint()`
 
@@ -2811,3 +2832,8 @@ and not an instance of the `Attorney` class.
 [`redis`]: https://github.com/andymccurdy/redis-py
 [pickling]: https://docs.python.org/2/library/pickle.html
 [pickled]: https://docs.python.org/2/library/pickle.html
+[date field]: {{ site.baseurl }}/docs/fields.html#date
+[`pronoun()`]: #Individual.pronoun
+[`birthdate`]: #Individual.birthdate
+[`gender`]: #Individual.gender
+[`age`]: #Individual.age

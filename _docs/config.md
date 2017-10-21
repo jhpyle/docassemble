@@ -975,7 +975,7 @@ not be allowed to register to become users of the site unless they are
 [invited by an administrator].
 
 {% highlight yaml %}
-allow_registration: False
+allow registration: False
 {% endhighlight %}
 
 The default behavior is to allow any user to register.
