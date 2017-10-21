@@ -15,8 +15,29 @@ from flask import session, has_request_context
 from flask_login import current_user
 from sqlalchemy import or_, and_
 
+import docassemble.webapp.cloud
+cloud = docassemble.webapp.cloud.get_cloud()
+
 def reference_exists(file_reference):
     #logmessage("Got req for " + file_reference)
+    if cloud:
+        parts = the_file.split(":")
+        if len(parts) == 2:
+            m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
+            if m:
+                user_id = parts[0]
+                if re.search(r'^data/sources/', parts[1]):
+                    section = 'playgroundsources'
+                    filename = re.sub(r'^data/sources/', '', parts[1])
+                else:
+                    section = 'playgroundstatic'
+                    filename = re.sub(r'^data/static/', '', parts[1])
+                filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+                key = str(section) + '/' + str(user_id) + '/' + filename
+                cloud_key = cloud.get_key(key)
+                if cloud_key.exists():
+                    return True
+                return False
     the_path = docassemble.base.functions.static_filename_path(file_reference)
     if the_path is None or not os.path.isfile(the_path):
         #logmessage("Returning false")

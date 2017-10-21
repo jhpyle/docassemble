@@ -1052,6 +1052,7 @@ class ThreadVariables(threading.local):
     open_files = set()
     markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables'], output_format='html5')
     #temporary_resources = set()
+    saved_files = dict()
     prevent_going_back = False
     def __init__(self, **kw):
         if self.initialized:
@@ -1318,6 +1319,9 @@ def get_default_timezone():
 # def reset_thread_local():
 #     this_thread.open_files = set()
 #     this_thread.temporary_resources = set()
+
+def reset_thread_variables():
+    this_thread.saved_files = dict()
 
 def reset_local_variables():
     this_thread.language = server.default_language

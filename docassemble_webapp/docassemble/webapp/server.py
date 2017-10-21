@@ -2338,7 +2338,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             if the_ref is None:
                 content += '<a title="' + word("This image file does not exist") + '" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + noquote(var) + '</a>'
             else:
-                content += '<img class="daimageicon" src="' + get_url_from_file_reference(interview.images[var].get_reference()) + '">&nbsp;<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
+                content += '<img class="daimageicon" src="' + the_ref + '">&nbsp;<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     content += "\n                  <tr><td><br><em>" + word("Type Ctrl-space to autocomplete.") + "</em></td><tr>"
     return content, sorted(vocab_set)
@@ -3610,8 +3610,10 @@ def checkin():
 def setup_celery():
     docassemble.webapp.worker.workerapp.set_current()
 
-# @app.before_request
-# def before_request():
+@app.before_request
+def before_request():
+    docassemble.base.functions.reset_thread_variables()
+#     docassemble.base.functions.reset_local_variables()
 #     g.request_start_time = time.time()
 #     g.request_time = lambda: "%.5fs" % (time.time() - g.request_start_time)
 

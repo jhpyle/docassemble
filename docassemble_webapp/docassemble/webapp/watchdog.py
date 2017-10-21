@@ -9,7 +9,7 @@ while True:
     for pid in psutil.pids():
         try:
             p = psutil.Process(pid)
-            if p.name() == 'apache2' and p.cpu_times().user > 30.0 and p.cpu_percent(interval=1.0) > 90.0:
+            if p.name() == 'apache2' and p.cpu_times().user > 30.0 and p.cpu_percent(interval=1.0) > 19.0:
                 busy_now.add(pid)
         except:
             continue

@@ -23,18 +23,27 @@ UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
 
 class SavedFile(object):
     def __init__(self, file_number, extension=None, fix=False, section='files', filename='file'):
-        self.file_number = file_number
-        self.extension = extension
-        self.fixed = False
-        self.section = section
-        self.filename = filename
-        if cloud is None:
-            if self.section == 'files':
-                parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
-                self.directory = os.path.join(UPLOAD_DIRECTORY, *parts)
-            else:
-                self.directory = os.path.join(UPLOAD_DIRECTORY, str(self.section), str(file_number))
-            self.path = os.path.join(self.directory, self.filename)
+        if section not in docassemble.base.functions.this_thread.saved_files:
+            docassemble.base.functions.this_thread.saved_files[section] = dict()
+        if file_number in docassemble.base.functions.this_thread.saved_files[section]:
+            sf = docassemble.base.functions.this_thread.saved_files[section][file_number]
+            for attribute in ['file_number', 'extension', 'fixed', 'section', 'filename', 'directory', 'path', 'modtimes', 'keydict']:
+                if hasattr(sf, attribute):
+                    setattr(self, attribute, getattr(sf, attribute))
+        else:
+            docassemble.base.functions.this_thread.saved_files[section][file_number] = self
+            self.file_number = file_number
+            self.extension = extension
+            self.fixed = False
+            self.section = section
+            self.filename = filename
+            if cloud is None:
+                if self.section == 'files':
+                    parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
+                    self.directory = os.path.join(UPLOAD_DIRECTORY, *parts)
+                else:
+                    self.directory = os.path.join(UPLOAD_DIRECTORY, str(self.section), str(file_number))
+                self.path = os.path.join(self.directory, self.filename)
         if fix:
             self.fix()
     # def __del__(self):
