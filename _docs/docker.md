@@ -15,7 +15,7 @@ install **docassemble** in a multi-server arrangement on
 # Installing Docker
 
 First, make sure you are running [Docker] on a computer or virtual
-computer with at least 1GB of memory and 20GB of hard drive space.
+computer with at least 2GB of memory and 20GB of hard drive space.
 
 If you have a Windows PC, follow the
 [Docker installation instructions for Windows]{:target="_blank"}.  You

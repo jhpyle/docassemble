@@ -38,6 +38,14 @@ on a machine is if you want it to run on a server for which the HTTP
 and HTTPS ports are serving other applications.  ([Docker] can only
 use the HTTP and HTTPS ports if it has exclusive use of them.)
 
+# <a name="minimum"></a>Minimum system requirements
+
+A machine running **docassemble** uses about 800-900GB of RAM during
+normal operation.  During software updates (running [pip]), the memory
+usage can momentarily be much higher.  Therefore, it is recommended
+that you only run **docassemble** on a machine with at least 2GB of
+RAM.
+
 # <a name="platforms"></a>Supported platforms
 
 The installation instructions in this section assume you are
@@ -1472,3 +1480,4 @@ All of these system administration headaches can be avoided by
 [Debian stretch]: https://wiki.debian.org/DebianStretch
 [npm]: https://www.npmjs.com
 [`googledrive`]: {{ site.baseurl }}/docs/config.html#googledrive
+[pip]: https://pip.pypa.io/en/stable/

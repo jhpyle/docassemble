@@ -229,7 +229,13 @@ the keyword "ecs-optimized" and pick the most recent [AMI] that comes
 up.  The [AMI]s will not be listed in any useful order, so you have to
 look carefully at the names, which contain the dates the [AMI]s were
 created.  As of this writing, the most recent ECS-optimzed [AMI] is
-"amzn-ami-2016.09.f-amazon-ecs-optimized."
+"amzn-ami-2017.03.g-amazon-ecs-optimized."  If you use a different
+AMI, make sure that you give the machine at least 20GB of storage.
+The ECS-optimized [AMI]s provide 30GB of storage in total, which
+should be sufficient.
+
+In the "Choose Instance Type" section, select an instance type that
+has at least 2GB of RAM (e.g., t2.small).
 
 In the "Configure details" section, set the "IAM role" of the
 [Launch Configuration] to `docassembleInstanceRole`, the [IAM] role
@@ -1014,7 +1020,7 @@ Instructions on how to set this up are available [above](#s3).
 # Performance
 
 With one central server and two application servers, all three of
-which are [t2.micro] instances running on [Amazon Web Services],
+which are [t2.small] instances running on [Amazon Web Services],
 **docassemble** can handle 100 concurrent requests without errors or
 significant slowdown:
 
@@ -1070,7 +1076,7 @@ This assumes that the server has one CPU.  The [Celery] server will
 start one process per CPU.  So if the server has two CPUs, the total
 number of PostgreSQL connections will be 12.
 
-[t2.micro]: https://aws.amazon.com/ec2/instance-types/t2/
+[t2.small]: https://aws.amazon.com/ec2/instance-types/t2/
 [IAM role]: http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html
 [SMTP Authentication]: https://en.wikipedia.org/wiki/SMTP_Authentication
 [Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
