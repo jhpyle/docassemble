@@ -22,7 +22,13 @@ class s3object(object):
     def list_keys(self, prefix):
         output = list()
         for obj in self.bucket.objects.filter(Prefix=prefix, Delimiter='/'):
-            output.append(s3key(self, self.conn.Object(self.bucket_name, obj.key), load=True))
+            new_key = s3key(self, obj)
+            new_key.size = obj.size
+            new_key.last_modified = obj.last_modified
+            output.append(new_key)
+        # else:
+        #     for obj in self.bucket.objects.filter(Prefix=prefix, Delimiter='/'):
+        #         output.append(s3key(self, self.conn.Object(self.bucket_name, obj.key), load=True))
         return output
 
 class s3key(object):
@@ -30,15 +36,24 @@ class s3key(object):
         self.s3_object = s3_object
         self.key_obj = key_obj
         self.name = key_obj.key
-        if load and self.exists():
+        if self.key_obj.__class__.__name__ == 'ObjectSummary':
+            self.size = self.key_obj.size
+        else:
             self.size = self.key_obj.content_length
-            self.last_modified = self.key_obj.last_modified
             self.content_type = self.key_obj.content_type
+        self.last_modified = self.key_obj.last_modified
+        #self.content_type = self.key_obj.content_type
+    # def get_full_metadata(self):
+    #     if self.key_obj.__class__.__name__ == 'ObjectSummary':
+    #         self.key_obj = self.conn.Object(self.s3_object.bucket_name, self.name)
+    #         self.size = self.key_obj.content_length
+    #         self.last_modified = self.key_obj.last_modified
+    #         #self.content_type = self.key_obj.content_type            
     def get_contents_as_string(self):
         return self.key_obj.get()['Body'].read()
     def exists(self):
         try:
-            self.s3_object.client.head_object(Bucket=self.s3_object.bucket_name, Key=self.key_obj.key)
+            self.s3_object.client.head_object(Bucket=self.s3_object.bucket_name, Key=self.name)
         except ClientError as e:
             return False
         return True
@@ -46,19 +61,22 @@ class s3key(object):
         self.key_obj.delete()
     def get_contents_to_filename(self, filename):
         #try:
-        self.s3_object.conn.Bucket(self.s3_object.bucket_name).download_file(self.key_obj.key, filename)
+        self.s3_object.conn.Bucket(self.s3_object.bucket_name).download_file(self.name, filename)
         #except ClientError as e:
         #    raise    
-        secs = time.mktime(self.key_obj.last_modified.timetuple())
+        secs = time.mktime(self.last_modified.timetuple())
         os.utime(filename, (secs, secs))
     def set_contents_from_filename(self, filename):
-        mimetype, encoding = mimetypes.guess_type(filename)
+        if hasattr(self, 'content_type') and self.content_type is not None:
+            mimetype = self.content_type
+        else:
+            mimetype, encoding = mimetypes.guess_type(filename)
         if mimetype is not None:
             self.key_obj.upload_file(filename, ExtraArgs={'ContentType': mimetype})
         else:
             self.key_obj.upload_file(filename)
     def set_contents_from_string(self, text):
-        if self.content_type is not None:
+        if hasattr(self, 'content_type') and self.content_type is not None:
             self.key_obj.put(Body=bytes(text), ContentType=self.content_type)
         else:
             self.key_obj.put(Body=bytes(text))

@@ -59,19 +59,29 @@ class SavedFile(object):
         if cloud is not None:
             self.modtimes = dict()
             self.keydict = dict()
-            self.directory = tempfile.mkdtemp(prefix='SavedFile')
+            self.directory = os.path.join(tempfile.gettempdir(), str(self.section), str(self.file_number))
+            if not os.path.isdir(self.directory):
+                os.makedirs(self.directory)        
+            #self.directory = tempfile.mkdtemp(prefix='SavedFile')
             #docassemble.base.functions.this_thread.temporary_resources.add(self.directory)
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
             #logmessage("fix: prefix is " + prefix)
             for key in cloud.list_keys(prefix):
                 filename = re.sub(r'.*/', '', key.name)
                 fullpath = os.path.join(self.directory, filename)
-                #logmessage("fix: saving to " + fullpath)
-                key.get_contents_to_filename(fullpath)
-                self.modtimes[filename] = os.path.getmtime(fullpath)
+                server_time = time.mktime(self.last_modified.timetuple())
+                if not (os.path.isfile(fullpath) and os.path.getmtime(fullpath) == server_time):
+                    key.get_contents_to_filename(fullpath)
+                self.modtimes[filename] = server_time
                 #logmessage("cloud modtime for file " + filename + " is " + str(key.last_modified))
                 self.keydict[filename] = key
             self.path = os.path.join(self.directory, self.filename)
+            to_delete = list()
+            for filename in os.listdir(self.directory):
+                if filename not in self.modtimes:
+                    to_delete.append(filename)
+            for filename in to_delete:
+                os.remove(os.path.join(self.directory, filename))
         else:
             if not os.path.isdir(self.directory):
                 os.makedirs(self.directory)        
@@ -80,8 +90,14 @@ class SavedFile(object):
     def delete_file(self, filename):
         if cloud is not None:
             prefix = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
+            to_delete = list()
             for key in cloud.list_keys(prefix):
-                key.delete()
+                to_delete.append(key)
+            for key in to_delete:
+                try:
+                    key.delete()
+                except:
+                    pass
         the_path = os.path.join(self.directory, filename)
         if hasattr(self, 'directory') and os.path.isdir(self.directory) and os.path.isfile(the_path):
             os.remove(the_path)
@@ -276,18 +292,21 @@ class SavedFile(object):
                         save = False
                 else:
                     key = cloud.get_key(str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
+                if save:
                     if self.extension is not None and filename == self.filename:
                         extension, mimetype = get_ext_and_mimetype(filename + '.' + self.extension)
                     else:
                         extension, mimetype = get_ext_and_mimetype(filename)
                     key.content_type = mimetype
-                if save:
                     sys.stderr.write("finalize: saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
                     key.set_contents_from_filename(fullpath)
         for filename, key in self.keydict.iteritems():
             if filename not in existing_files:
                 sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
-                key.delete()
+                try:
+                    key.delete()
+                except:
+                    pass
         sys.stderr.write("finalize: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
         return
         
