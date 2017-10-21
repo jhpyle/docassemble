@@ -9,6 +9,9 @@ short_title: Change Log
 ### Added
 - The `pdf_concatenate()` function.
 
+### Fixed
+- Missing dependencies for `RandomForestMachineLearner`.
+
 ## [0.1.76](https://github.com/jhpyle/docassemble/releases/tag/v0.1.76) - 2017-10-20
 
 ### Added
