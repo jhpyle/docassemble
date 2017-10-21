@@ -20,7 +20,7 @@ def main():
     cloud = docassemble.webapp.cloud.get_cloud()
     if cloud is not None:
         key = cloud.get_key('config.yml')
-        if key.exists():
+        if key.does_exist:
             key.get_contents_to_filename(daconfig['config file'])
             sys.stderr.write("Wrote config file based on copy on cloud\n")
     wsgi_file = webapp_path

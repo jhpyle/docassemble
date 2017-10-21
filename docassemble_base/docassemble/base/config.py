@@ -154,7 +154,7 @@ def load(**kwargs):
     if cloud is not None:
         if 'host' not in daconfig['db'] or daconfig['db']['host'] is None:
             key = cloud.get_key('hostname-sql')
-            if key.exists():
+            if key.does_exist:
                 the_host = key.get_contents_as_string()
                 if the_host == hostname:
                     daconfig['db']['host'] = 'localhost'
@@ -162,7 +162,7 @@ def load(**kwargs):
                     daconfig['db']['host'] = the_host
         if 'log server' not in daconfig or daconfig['log server'] is None:
             key = cloud.get_key('hostname-log')
-            if key.exists():
+            if key.does_exist:
                 the_host = key.get_contents_as_string()
                 if the_host == hostname:
                     daconfig['log server'] = 'localhost'
@@ -170,14 +170,14 @@ def load(**kwargs):
                     daconfig['log server'] = the_host
         if 'redis' not in daconfig or daconfig['redis'] is None:
             key = cloud.get_key('hostname-redis')
-            if key.exists():
+            if key.does_exist:
                 the_host = key.get_contents_as_string()
                 if the_host == hostname:
                     the_host = 'localhost'
                 daconfig['redis'] = 'redis://' + the_host
         if 'rabbitmq' not in daconfig or daconfig['rabbitmq'] is None:
             key = cloud.get_key('hostname-rabbitmq')
-            if key.exists():
+            if key.does_exist:
                 the_host = key.get_contents_as_string()
                 daconfig['rabbitmq'] = 'pyamqp://guest@' + str(the_host) + '//'
     if daconfig['db'].get('prefix', None) is None or daconfig['db'].get('prefix', '') == '':

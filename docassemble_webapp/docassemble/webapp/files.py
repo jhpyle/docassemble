@@ -237,11 +237,11 @@ class SavedFile(object):
             elif extn:
                 keyname += '.' + extn
             key = cloud.get_key(keyname)
-            if key.exists():
+            if key.does_exist:
                 if 'display_filename' in kwargs:
-                    return(key.generate_url(3600, display_filename=kwargs['display_filename']))
+                    return key.generate_url(3600, display_filename=kwargs['display_filename'])
                 else:
-                    return(key.generate_url(3600))
+                    return key.generate_url(3600)
             else:
                 return('about:blank')
         else:

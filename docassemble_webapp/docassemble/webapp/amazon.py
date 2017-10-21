@@ -32,11 +32,11 @@ class s3object(object):
         return output
 
 class s3key(object):
-    def __init__(self, s3_object, key_obj, load=True):
+    def __init__(self, s3_object, key_obj):
         self.s3_object = s3_object
         self.key_obj = key_obj
         self.name = key_obj.key
-        if self.key_obj.__class__.__name__ == 'ObjectSummary':
+        if self.key_obj.__class__.__name__ == 's3.ObjectSummary':
             self.size = self.key_obj.size
         else:
             self.size = self.key_obj.content_length

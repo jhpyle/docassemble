@@ -12,25 +12,34 @@ class azureobject(object):
         else:
             raise Exception("Cannot connect to Azure without account name, account key, and container specified")
     def get_key(self, key_name):
-        return azurekey(self, key_name)
+        new_key = azurekey(self, key_name, load=False)
+        if new_key.exists():
+            new_key.get_properties()
+            new_key.does_exist = True
+        else:
+            new_key.does_exist = False
+        return new_key
     def search_key(self, key_name):
         for blob in self.conn.list_blobs(self.container, prefix=key_name, delimiter='/'):
             return azurekey(self, blob.name)
     def list_keys(self, prefix):
         output = list()
         for blob in self.conn.list_blobs(self.container, prefix=prefix, delimiter='/'):
-            output.append(azurekey(self, blob.name, load=True))
+            output.append(azurekey(self, blob.name))
         return output
     
 class azurekey(object):
     def __init__(self, azure_object, key_name, load=True):
         self.azure_object = azure_object
         self.name = key_name
-        if load and self.exists():
-            properties = self.azure_object.conn.get_blob_properties(self.azure_object.container, self.name).properties
-            self.size = properties.content_length
-            self.last_modified = properties.last_modified
-            self.content_type = properties.content_settings.content_type
+        if load:
+            self.get_properties()
+            self.does_exist = True
+    def get_properties(self):
+        properties = self.azure_object.conn.get_blob_properties(self.azure_object.container, self.name).properties
+        self.size = properties.content_length
+        self.last_modified = properties.last_modified
+        self.content_type = properties.content_settings.content_type
     def get_contents_as_string(self):
         return self.azure_object.conn.get_blob_to_text(self.azure_object.container, self.name).content
     def exists(self):

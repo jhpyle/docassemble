@@ -34,7 +34,7 @@ def url_if_exists(file_reference):
                 filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
                 key = str(section) + '/' + str(user_id) + '/' + filename
                 cloud_key = cloud.get_key(key)
-                if cloud_key.exists():
+                if cloud_key.does_exist:
                     return cloud_key.generate_url(3600, display_filename=filename)
                 return None
         the_path = docassemble.base.functions.static_filename_path(file_reference)
@@ -59,7 +59,7 @@ def reference_exists(file_reference):
                 filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
                 key = str(section) + '/' + str(user_id) + '/' + filename
                 cloud_key = cloud.get_key(key)
-                if cloud_key.exists():
+                if cloud_key.does_exist:
                     return True
                 return False
     the_path = docassemble.base.functions.static_filename_path(file_reference)

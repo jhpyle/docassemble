@@ -20,11 +20,11 @@ def main():
         for role in role_list:
             if role in ['sql', 'log', 'redis', 'rabbitmq']:
                 key = cloud.get_key('hostname-' + role)
-                if key.exists():
+                if key.does_exist:
                     key.delete()
                 if role == 'rabbitmq':
                     key_two = cloud.get_key('ip-rabbitmq')
-                    if key_two.exists():
+                    if key_two.does_exist:
                         key_two.delete()
 
 if __name__ == "__main__":
