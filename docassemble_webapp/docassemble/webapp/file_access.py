@@ -21,7 +21,7 @@ cloud = docassemble.webapp.cloud.get_cloud()
 def reference_exists(file_reference):
     #logmessage("Got req for " + file_reference)
     if cloud:
-        parts = the_file.split(":")
+        parts = file_reference.split(":")
         if len(parts) == 2:
             m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
             if m:
