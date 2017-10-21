@@ -38,10 +38,15 @@ class s3key(object):
         self.name = key_obj.key
         if self.key_obj.__class__.__name__ == 's3.ObjectSummary':
             self.size = self.key_obj.size
-        else:
+            self.last_modified = self.key_obj.last_modified
+            self.does_exist = True
+        elif self.exists():
             self.size = self.key_obj.content_length
             self.content_type = self.key_obj.content_type
-        self.last_modified = self.key_obj.last_modified
+            self.last_modified = self.key_obj.last_modified
+            self.does_exist = True
+        else:
+            self.does_exist = False
         #self.content_type = self.key_obj.content_type
     # def get_full_metadata(self):
     #     if self.key_obj.__class__.__name__ == 'ObjectSummary':
