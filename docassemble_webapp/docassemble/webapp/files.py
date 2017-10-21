@@ -11,6 +11,7 @@ import mimetypes
 import zipfile
 import datetime
 import subprocess
+import time
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
 from docassemble.base.config import daconfig
@@ -69,7 +70,7 @@ class SavedFile(object):
             for key in cloud.list_keys(prefix):
                 filename = re.sub(r'.*/', '', key.name)
                 fullpath = os.path.join(self.directory, filename)
-                server_time = time.mktime(self.last_modified.timetuple())
+                server_time = time.mktime(key.last_modified.timetuple())
                 if not (os.path.isfile(fullpath) and os.path.getmtime(fullpath) == server_time):
                     key.get_contents_to_filename(fullpath)
                 self.modtimes[filename] = server_time

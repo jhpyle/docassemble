@@ -47,13 +47,6 @@ class s3key(object):
             self.does_exist = True
         else:
             self.does_exist = False
-        #self.content_type = self.key_obj.content_type
-    # def get_full_metadata(self):
-    #     if self.key_obj.__class__.__name__ == 'ObjectSummary':
-    #         self.key_obj = self.conn.Object(self.s3_object.bucket_name, self.name)
-    #         self.size = self.key_obj.content_length
-    #         self.last_modified = self.key_obj.last_modified
-    #         #self.content_type = self.key_obj.content_type            
     def get_contents_as_string(self):
         return self.key_obj.get()['Body'].read()
     def exists(self):
@@ -76,6 +69,8 @@ class s3key(object):
             mimetype = self.content_type
         else:
             mimetype, encoding = mimetypes.guess_type(filename)
+        if self.key_obj.__class__.__name__ == 's3.ObjectSummary':
+            self.key_obj = self.s3_object.conn.Object(self.s3_object.bucket_name, self.name)
         if mimetype is not None:
             self.key_obj.upload_file(filename, ExtraArgs={'ContentType': mimetype})
         else:
