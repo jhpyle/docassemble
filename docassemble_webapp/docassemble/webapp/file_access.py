@@ -11,15 +11,41 @@ import xml.etree.ElementTree as ET
 import docassemble.base.functions
 from docassemble.webapp.core.models import Uploads
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
-from flask import session, has_request_context
+from flask import session, has_request_context, url_for
 from flask_login import current_user
 from sqlalchemy import or_, and_
 
 import docassemble.webapp.cloud
 cloud = docassemble.webapp.cloud.get_cloud()
 
+def url_if_exists(file_reference):
+    logmessage('url_if_exists: file reference is ' + str(file_reference))
+    parts = file_reference.split(":")
+    if len(parts) == 2:
+        if cloud:
+            m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
+            if m:
+                user_id = m.group(1)
+                if re.search(r'^data/sources/', parts[1]):
+                    section = 'playgroundsources'
+                    filename = re.sub(r'^data/sources/', '', parts[1])
+                else:
+                    section = 'playgroundstatic'
+                    filename = re.sub(r'^data/static/', '', parts[1])
+                filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+                key = str(section) + '/' + str(user_id) + '/' + filename
+                cloud_key = cloud.get_key(key)
+                if cloud_key.exists():
+                    return cloud_key.generate_url(3600, display_filename=filename)
+                return None
+        the_path = docassemble.base.functions.static_filename_path(file_reference)
+        if the_path is None or not os.path.isfile(the_path):
+            return None
+        return url_for('package_static', package=parts[0], filename=parts[1])
+    return None
+
 def reference_exists(file_reference):
-    logmessage("Got req for " + file_reference)
+    logmessage('reference_exists: file reference is ' + str(file_reference))
     if cloud:
         parts = file_reference.split(":")
         if len(parts) == 2:
@@ -34,7 +60,6 @@ def reference_exists(file_reference):
                     filename = re.sub(r'^data/static/', '', parts[1])
                 filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
                 key = str(section) + '/' + str(user_id) + '/' + filename
-                logmessage("key is " + key)
                 cloud_key = cloud.get_key(key)
                 if cloud_key.exists():
                     return True
