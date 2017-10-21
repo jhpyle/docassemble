@@ -26,6 +26,7 @@ class SavedFile(object):
         if section not in docassemble.base.functions.this_thread.saved_files:
             docassemble.base.functions.this_thread.saved_files[section] = dict()
         if file_number in docassemble.base.functions.this_thread.saved_files[section]:
+            logmessage("SavedFile: using cache")
             sf = docassemble.base.functions.this_thread.saved_files[section][file_number]
             for attribute in ['file_number', 'extension', 'fixed', 'section', 'filename', 'directory', 'path', 'modtimes', 'keydict']:
                 if hasattr(sf, attribute):
@@ -54,6 +55,7 @@ class SavedFile(object):
     def fix(self):
         if self.fixed:
             return
+        logmessage("fix: starting " + str(self.section) + '/' + str(self.file_number))
         if cloud is not None:
             self.modtimes = dict()
             self.keydict = dict()
@@ -74,6 +76,7 @@ class SavedFile(object):
             if not os.path.isdir(self.directory):
                 os.makedirs(self.directory)        
         self.fixed = True
+        logmessage("fix: ending " + str(self.section) + '/' + str(self.file_number))
     def delete_file(self, filename):
         if cloud is not None:
             prefix = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
@@ -255,6 +258,7 @@ class SavedFile(object):
                 url = docassemble.base.functions.get_url_root() + url
             return(url)
     def finalize(self):
+        logmessage("finalize: starting " + str(self.section) + '/' + str(self.file_number))
         if cloud is None:
             return
         if not self.fixed:
@@ -278,11 +282,13 @@ class SavedFile(object):
                         extension, mimetype = get_ext_and_mimetype(filename)
                     key.content_type = mimetype
                 if save:
+                    logmessage("finalize: saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
                     key.set_contents_from_filename(fullpath)
         for filename, key in self.keydict.iteritems():
             if filename not in existing_files:
-                #logmessage("Deleting filename " + str(filename) + " from cloud")
+                logmessage("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
                 key.delete()
+        logmessage("finalize: ending " + str(self.section) + '/' + str(self.file_number))
         return
         
 def get_ext_and_mimetype(filename):
