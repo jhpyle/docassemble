@@ -27,17 +27,21 @@ class SavedFile(object):
         if section not in docassemble.base.functions.this_thread.saved_files:
             docassemble.base.functions.this_thread.saved_files[section] = dict()
         if file_number in docassemble.base.functions.this_thread.saved_files[section]:
-            sys.stderr.write("SavedFile: using cache\n")
+            sys.stderr.write("SavedFile: using cache for " + section + '/' + str(file_number) + "\n")
             sf = docassemble.base.functions.this_thread.saved_files[section][file_number]
-            for attribute in ['file_number', 'extension', 'fixed', 'section', 'filename', 'directory', 'path', 'modtimes', 'keydict']:
+            for attribute in ['file_number', 'fixed', 'section', 'filename', 'extension', 'directory', 'path', 'modtimes', 'keydict']:
                 if hasattr(sf, attribute):
                     setattr(self, attribute, getattr(sf, attribute))
-        else:
-            docassemble.base.functions.this_thread.saved_files[section][file_number] = self
-            self.file_number = file_number
             self.extension = extension
+            self.filename = filename
+            self.path = os.path.join(self.directory, self.filename)
+        else:
+            sys.stderr.write("SavedFile: not using cache for " + section + '/' + str(file_number) + "\n")
+            docassemble.base.functions.this_thread.saved_files[section][file_number] = self
             self.fixed = False
+            self.file_number = file_number
             self.section = section
+            self.extension = extension
             self.filename = filename
             if cloud is None:
                 if self.section == 'files':
@@ -57,6 +61,7 @@ class SavedFile(object):
         if self.fixed:
             return
         sys.stderr.write("fix: starting " + str(self.section) + '/' + str(self.file_number) + "\n")
+        sys.stderr.write(repr(traceback.extract_stack()) + "\n")
         if cloud is not None:
             self.modtimes = dict()
             self.keydict = dict()
@@ -66,7 +71,7 @@ class SavedFile(object):
             #self.directory = tempfile.mkdtemp(prefix='SavedFile')
             #docassemble.base.functions.this_thread.temporary_resources.add(self.directory)
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
-            #logmessage("fix: prefix is " + prefix)
+            logmessage("fix: prefix is " + prefix)
             for key in cloud.list_keys(prefix):
                 filename = re.sub(r'.*/', '', key.name)
                 fullpath = os.path.join(self.directory, filename)
@@ -112,9 +117,9 @@ class SavedFile(object):
                     pass
         if hasattr(self, 'directory') and os.path.isdir(self.directory):
             shutil.rmtree(self.directory)
+        del docassemble.base.functions.this_thread.saved_files[section][file_number]
     def save(self, finalize=False):
-        if not self.fixed:
-            self.fix()
+        self.fix()
         if self.extension is not None:
             if os.path.isfile(self.path + '.' + self.extension):
                 os.remove(self.path + '.' + self.extension)
@@ -127,8 +132,7 @@ class SavedFile(object):
         return
     def fetch_url(self, url, **kwargs):
         filename = kwargs.get('filename', self.filename)
-        if not self.fixed:
-            self.fix()
+        self.fix()
         cookiefile = tempfile.NamedTemporaryFile(suffix='.txt')
         f = open(os.path.join(self.directory, filename), 'wb')
         c = pycurl.Curl()
@@ -157,8 +161,7 @@ class SavedFile(object):
         return
     def fetch_url_post(self, url, post_args, **kwargs):
         filename = kwargs.get('filename', self.filename)
-        if not self.fixed:
-            self.fix()
+        self.fix()
         urllib.urlretrieve(url, os.path.join(self.directory, filename), None, urllib.urlencode(post_args))
         self.save()
         return
@@ -166,6 +169,8 @@ class SavedFile(object):
         filename = kwargs.get('filename', self.filename)
         if cloud is not None and not self.fixed:
             key = cloud.search_key(str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
+            if not key.does_exist:
+                raise DAError("size_in_bytes: file " + filename + " in " + self.section + " did not exist")
             return key.size
         else:
             return os.path.getsize(os.path.join(self.directory, filename))
@@ -182,8 +187,7 @@ class SavedFile(object):
         return sorted(output)
     def copy_from(self, orig_path, **kwargs):
         filename = kwargs.get('filename', self.filename)
-        if not self.fixed:
-            self.fix()
+        self.fix()
         #logmessage("Saving to " + os.path.join(self.directory, filename))
         shutil.copyfile(orig_path, os.path.join(self.directory, filename))
         if 'filename' not in kwargs:
@@ -191,17 +195,21 @@ class SavedFile(object):
     def get_modtime(self, **kwargs):
         filename = kwargs.get('filename', self.filename)
         #logmessage("Get modtime called with filename " + str(filename))
-        if cloud is not None:
+        if cloud is not None and not self.fixed:
             key_name = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
             key = cloud.search_key(key_name)
+            if not key.does_exist:
+                raise DAError("get_modtime: file " + filename + " in " + self.section + " did not exist")
             #logmessage("Modtime for key " + key_name + " is now " + str(key.last_modified))
             return key.last_modified
         else:
-            return os.path.getmtime(os.path.join(self.directory, filename))
+            the_path = os.path.join(self.directory, filename)
+            if not os.path.isfile(the_path):
+                raise DAError("get_modtime: file " + filename + " in " + self.section + " did not exist")
+            return os.path.getmtime(the_path)
     def write_content(self, content, **kwargs):
         filename = kwargs.get('filename', self.filename)
-        if not self.fixed:
-            self.fix()
+        self.fix()
         with open(os.path.join(self.directory, filename), 'wb') as ifile:
             ifile.write(content)
         if kwargs.get('save', True):
@@ -209,8 +217,7 @@ class SavedFile(object):
         return
     def write_as_json(self, obj, **kwargs):
         filename = kwargs.get('filename', self.filename)
-        if not self.fixed:
-            self.fix()
+        self.fix()
         #logmessage("write_as_json: writing to " + os.path.join(self.directory, filename))
         with open(os.path.join(self.directory, filename), 'wb') as ifile:
             json.dump(obj, ifile, sort_keys=True, indent=2)
@@ -275,7 +282,7 @@ class SavedFile(object):
                 url = docassemble.base.functions.get_url_root() + url
             return(url)
     def finalize(self):
-        sys.stderr.write("finalize: starting " + str(self.section) + '/' + str(self.file_number) + "\n")
+        #sys.stderr.write("finalize: starting " + str(self.section) + '/' + str(self.file_number) + "\n")
         if cloud is None:
             return
         if not self.fixed:
@@ -299,16 +306,16 @@ class SavedFile(object):
                     else:
                         extension, mimetype = get_ext_and_mimetype(filename)
                     key.content_type = mimetype
-                    sys.stderr.write("finalize: saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
+                    #sys.stderr.write("finalize: saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
                     key.set_contents_from_filename(fullpath)
         for filename, key in self.keydict.iteritems():
             if filename not in existing_files:
-                sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
+                #sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
                 try:
                     key.delete()
                 except:
                     pass
-        sys.stderr.write("finalize: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
+        #sys.stderr.write("finalize: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
         return
         
 def get_ext_and_mimetype(filename):
