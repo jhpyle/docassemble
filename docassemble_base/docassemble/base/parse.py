@@ -3043,8 +3043,8 @@ class Question:
                             result['field_data'] = user_dict
                         else:
                             the_field_data = recursive_eval_textobject(attachment['options']['fields'], user_dict, self, result['template'])
+                            new_field_data = dict()
                             if type(the_field_data) is list:
-                                new_field_data = dict()
                                 for item in the_field_data:
                                     if type(item) is dict:
                                         new_field_data.update(item)
@@ -3369,7 +3369,10 @@ class Interview:
                         self.names_used.update(question.fields_used)
                     except SyntaxException as qError:
                         self.success = False
-                        raise Exception("SyntaxException: " + str(qError) + "\n\nIn file " + str(source.path) + " from package " + str(source_package) + ":\n" + source_code)
+                        raise Exception("Syntax Exception: " + str(qError) + "\n\nIn file " + str(source.path) + " from package " + str(source_package) + ":\n" + source_code)
+                    except SyntaxError as qError:
+                        self.success = False
+                        raise Exception("Syntax Error: " + str(qError) + "\n\nIn file " + str(source.path) + " from package " + str(source_package) + ":\n" + source_code)
         for ordering in self.id_orderings:
             if ordering['type'] == 'supersedes':
                 new_list = [ordering['question'].number]

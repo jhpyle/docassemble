@@ -22,7 +22,10 @@ code: |
 ---
 sets: map_shown
 question: Map of you and your enemy
-subquestion: |
+field: foobar
+under: |
+  Foo bar
+  
   ${ map_of(user, enemy) }
 ---
 field: welcome_screen

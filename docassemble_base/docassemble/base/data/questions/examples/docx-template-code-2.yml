@@ -15,8 +15,7 @@ objects:
 question: |
   Assembling a document from a .docx
   template
-subquestion: |
-  
+subquestion: |  
   This interview will fill fields in
   a .docx template.  You can
   [download the template] to see what
@@ -82,11 +81,10 @@ attachment:
   name: Your letter
   filename: letter
   docx template file: letter_template_code.docx
-  fields:
-    "letter_date": ${ format_date(today()) }
-    "phone_number": 202-555-1234
-    "subject_matter": ${ subject_matter }
-    "address_block": ${ adverse_party.address_block() }
-    "signature": ${ user.signature }
   code: |
-    dict(full_name=user.name.full())
+    dict(full_name=user.name.full(),
+         letter_date=format_date(today()),
+         phone_number='202-555-1234',
+         subject_matter=subject_matter,
+         address_block=adverse_party.address_block(),
+         signature=user.signature)

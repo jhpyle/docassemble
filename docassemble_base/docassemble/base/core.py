@@ -340,6 +340,19 @@ class DAObject(object):
     def pronoun(self, **kwargs):
         """Returns it."""
         return word('it', **kwargs)
+    def alternative(self, *pargs, **kwargs):
+        """Returns a particular value depending on the value of a given attribute"""
+        if len(pargs) == 0:
+            raise Exception("alternative: attribute must be provided")
+        attribute = pargs[0]
+        value = self.getattr(self, attribute)
+        if value in kwargs:
+            return kwargs[value]
+        if '_default' in kwargs:
+            return kwargs['_default']
+        if 'default' in kwargs:
+            return kwargs['default']
+        return None
     def pronoun_objective(self, **kwargs):
         """Same as pronoun()."""
         return self.pronoun(**kwargs)

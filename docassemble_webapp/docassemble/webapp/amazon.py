@@ -17,11 +17,11 @@ class s3object(object):
         return s3key(self, self.conn.Object(self.bucket_name, key_name))
     def search_key(self, key_name):
         for key in self.bucket.objects.filter(Prefix=key_name, Delimiter='/'):
-            return s3key(self, key)
+            return s3key(self, self.conn.Object(self.bucket_name, key.key))
     def list_keys(self, prefix):
         output = list()
         for obj in self.bucket.objects.filter(Prefix=prefix, Delimiter='/'):
-            output.append(s3key(self, obj, load=True))
+            output.append(s3key(self, self.conn.Object(self.bucket_name, obj.key), load=True))
         return output
 
 class s3key(object):
@@ -44,11 +44,11 @@ class s3key(object):
     def delete(self):
         self.key_obj.delete()
     def get_contents_to_filename(self, filename):
-        try:
-            self.s3_object.conn.Bucket(self.s3_object.bucket_name).download_file(self.key_obj.key, filename)
-        except ClientError as e:
-            raise    
-        secs = time.mktime(self.key_object.last_modified.timetuple())
+        #try:
+        self.s3_object.conn.Bucket(self.s3_object.bucket_name).download_file(self.key_obj.key, filename)
+        #except ClientError as e:
+        #    raise    
+        secs = time.mktime(self.key_obj.last_modified.timetuple())
         os.utime(filename, (secs, secs))
     def set_contents_from_filename(self, filename):
         self.key_obj.upload_file(filename)

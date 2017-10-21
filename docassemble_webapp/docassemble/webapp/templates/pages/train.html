@@ -198,7 +198,11 @@
           </label>
         </div>
         <label>{{ word("Input") }}</label>
+        {%- if entry.type == 'text' %}
         <blockquote class="limheight">{{ entry.independent }}</blockquote>
+        {%- else %}
+        {{ entry.independent_display|safe }}
+        {%- endif %}
         {%- if entry.image_files %}
         {%- if entry|length == 1 %}
         <label>{{ word("File") }}</label>

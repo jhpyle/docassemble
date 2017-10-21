@@ -1,7 +1,11 @@
 from docassemble.webapp.core.models import MachineLearning
-from docassemble.base.core import DAObject, DAList
+from docassemble.base.core import DAObject, DAList, DADict
 from docassemble.webapp.db_object import db
 from sqlalchemy import or_, and_
+from sklearn.datasets import load_iris
+from sklearn.ensemble import RandomForestClassifier
+import pandas as pd
+import numpy as np
 import re
 import random
 import codecs
@@ -94,7 +98,7 @@ class MachineLearner(object):
         return sorted(in_use)
     def is_empty(self):
         existing_entry = MachineLearning.query.filter_by(group_id=self.group_id).first()
-        if existing_entry is not None:
+        if existing_entry is None:
             return True
         return False
     def start_from_file(self, fileref):
@@ -125,16 +129,16 @@ class MachineLearner(object):
         db.session.add(new_entry)
         db.session.commit()
         return new_entry.id
-    def save_for_classification(self, text, key=None, info=None):
+    def save_for_classification(self, indep, key=None, info=None):
         self._initialize()
         if key is None:
-            existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, dependent=None, independent=codecs.encode(pickle.dumps(text), 'base64').decode()).first()
+            existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, dependent=None, independent=codecs.encode(pickle.dumps(indep), 'base64').decode()).first()
         else:
-            existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, key=key, independent=codecs.encode(pickle.dumps(text), 'base64').decode()).first()
+            existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, key=key, independent=codecs.encode(pickle.dumps(indep), 'base64').decode()).first()
         if existing_entry is not None:
             logmessage("entry is already there")
             return existing_entry.id
-        new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(text), 'base64').decode(), create_time=datetime.datetime.utcnow(), active=False, key=key, info=codecs.encode(pickle.dumps(info), 'base64').decode() if info is not None else None)
+        new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(indep), 'base64').decode(), create_time=datetime.datetime.utcnow(), active=False, key=key, info=codecs.encode(pickle.dumps(info), 'base64').decode() if info is not None else None)
         db.session.add(new_entry)
         db.session.commit()
         return new_entry.id
@@ -251,7 +255,7 @@ class MachineLearner(object):
         db.session.commit()
     def _train(self, indep, depend):
         pass
-    def _predict(self, text):
+    def _predict(self, indep):
         pass
 
 class SimpleTextMachineLearner(MachineLearner):
@@ -398,6 +402,163 @@ class SVMMachineLearner(SimpleTextMachineLearner):
     def _learner(self):
         return SVM(extension='libsvm')
 
+class RandomForestMachineLearner(MachineLearner):
+    def _learner(self):
+        return RandomForestClassifier(n_jobs=2)
+    def _initialize(self):
+        """Initializes a fresh machine learner."""
+        if self.group_id not in reset_counter or self.reset_counter != reset_counter[self.group_id]:
+            need_to_reset = True
+        if hasattr(self, 'group_id') and (self.group_id not in learners or need_to_reset):
+            learners[self.group_id] = dict(learner=self._learner(), dep_type=None, indep_type=dict(), indep_categories=dict(), dep_categories=None)
+        return super(RandomForestMachineLearner, self)._initialize(reset=need_to_reset)
+    def _train_from_db(self):
+        #logmessage("Doing train_from_db")
+        self._initialize()
+        nowtime = datetime.datetime.utcnow()
+        success = False
+        data = list()
+        depend_data = list()
+        for record in MachineLearning.query.filter(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > lastmodtime[self.group_id])).all():
+            indep_var = pickle.loads(codecs.decode(record.independent, 'base64'))
+            depend_var = pickle.loads(codecs.decode(record.dependent, 'base64'))
+            if type(depend_var) is str:
+                depend_var = unicode(depend_var)
+            if learners[self.group_id]['dep_type'] is not None:
+                if type(depend_var) is not learners[self.group_id]['dep_type']:
+                    if type(depend_var) is int and learners[self.group_id]['dep_type'] is float:
+                        depend_var = float(depend_var)
+                    elif type(depend_var) is float and learners[self.group_id]['dep_type'] is int:
+                        learners[self.group_id]['dep_type'] = float
+                    else:
+                        raise Exception("RandomForestMachineLearner: dependent variable type was not consistent")
+            else:
+                if type(depend_var) not in [unicode, int, bool, float]:
+                    raise Exception("RandomForestMachineLearner: dependent variable type for key " + repr(key) + " was not a standard variable type")
+                learners[self.group_id]['dep_type'] = type(depend_var)
+            depend_data.append(depend_var)
+            if isinstance(indep_var, DADict):
+                indep_var = indep_var.elements
+            if type(indep_var) is not dict:
+                raise Exception("RandomForestMachineLearner: independent variable was not a dictionary")
+            for key, val in indep_var.iteritems():
+                if type(val) is str:
+                    val = unicode(val)
+                if key in learners[self.group_id]['indep_type']:
+                    if type(val) is not learners[self.group_id]['indep_type'][key]:
+                        if type(val) is int and learners[self.group_id]['indep_type'][key] is float:
+                            val = float(val)
+                        elif type(val) is float and learners[self.group_id]['indep_type'][key] is int:
+                            learners[self.group_id]['indep_type'][key] = float
+                        else:
+                            raise Exception("RandomForestMachineLearner: independent variable type for key " + repr(key) + " was not consistent")
+                else:
+                    if type(val) not in [unicode, int, bool, float]:
+                        raise Exception("RandomForestMachineLearner: independent variable type for key " + repr(key) + " was not a standard variable type")
+                    learners[self.group_id]['indep_type'][key] = type(val)
+            data.append(indep_var)
+            success = True
+        if success:
+            df = pd.DataFrame(data)
+            for key, val in learners[self.group_id]['indep_type'].iteritems():
+                if val is unicode:
+                    df[key] = pd.Series(df[key], dtype="category")
+                    learners[self.group_id]['indep_categories'][key] = df[key].cat.categories
+            df = pd.get_dummies(df, dummy_na=True)
+            if learners[self.group_id]['dep_type'] is unicode:
+                y = pd.Series(depend_data, dtype="category")
+                learners[self.group_id]['dep_categories'] = y.cat.categories
+            else:
+                y = pd.Series(depend_data)
+            learners[self.group_id]['learner'].fit(df, list(y))
+            lastmodtime[self.group_id] = nowtime
+        return success
+    def predict(self, indep, probabilities=False):
+        """Returns a list of predicted dependent variables for a given independent variable."""
+        if not self._train_from_db():
+            return list()
+        if isinstance(indep, DADict):
+            indep = indep.elements
+        if type(indep) is not dict:
+            raise Exception("RandomForestMachineLearner: independent variable was not a dictionary")
+        indep_to_use = dict()
+        for key, val in indep.iteritems():
+            if key in learners[self.group_id]['indep_type']:
+                if type(val) is str:
+                    val = unicode(val)
+                if type(val) is not learners[self.group_id]['indep_type'][key]:
+                    if type(val) is int and learners[self.group_id]['indep_type'][key] is float:
+                        val = float(val)
+                    else:
+                        raise Exception("RandomForestMachineLearner: independent variable type for key " + repr(key) + " was not consistent")
+            else:
+                raise Exception("RandomForestMachineLearner: independent variable key " + repr(key) + " was not recognized")
+            if type(val) is unicode:
+                if val not in learners[self.group_id]['indep_categories'][key]:
+                    val = np.nan
+            indep_to_use[key] = val
+        df = pd.DataFrame([indep_to_use])
+        for key, val in indep_to_use.iteritems():
+            if learners[self.group_id]['indep_type'][key] is unicode:
+                df[key] = pd.Series(df[key]).astype('category', categories=learners[self.group_id]['indep_categories'][key])
+        df = pd.get_dummies(df, dummy_na=True)
+        pred = learners[self.group_id]['learner'].predict_proba(df)
+        indexno = 0
+        result = list()
+        for x in pred[0]:
+            result.append((learners[self.group_id]['dep_categories'][indexno], x))
+            indexno += 1
+        result = sorted(result, key=lambda x: x[1], reverse=True)
+        if probabilities:
+            return result
+        return [x[0] for x in result]
+    def reset(self):
+        """Clears the cache of the machine learner"""
+        return super(RandomForestMachineLearner, self).reset()
+    def delete_training_set(self):
+        """Deletes all of the training data in the database"""
+        return super(RandomForestMachineLearner, self).delete_training_set()
+    def delete_by_key(self, key):
+        """Deletes all of the training data in the database that was added with a given key"""
+        return super(RandomForestMachineLearner, self).delete_training_set(key)
+    def delete_by_id(self, the_id):
+        """Deletes the entry in the training data with the given ID"""
+        return super(RandomForestMachineLearner, self).delete_by_id(the_id)
+    def set_dependent_by_id(self, the_id, depend):
+        """Sets the dependent variable for the entry in the training data with the given ID"""
+        return super(RandomForestMachineLearner, self).set_dependent_by_id(the_id, depend)
+    def classified_entries(self, key=None):
+        """Returns a list of entries in the data that have been classified."""
+        return super(RandomForestMachineLearner, self).classified_entries(key=key)
+    def unclassified_entries(self, key=None):
+        """Returns a list of entries in the data that have not yet been classified."""
+        return super(RandomForestMachineLearner, self).unclassified_entries(key=key)
+    def one_unclassified_entry(self, key=None):
+        """Returns the first entry in the data that has not yet been classified, or None if all entries have been classified."""
+        return super(RandomForestMachineLearner, self).one_unclassified_entry(key=key)
+    def retrieve_by_id(self, the_id):
+        """Returns the entry in the data that has the given ID."""
+        return super(RandomForestMachineLearner, self).retrieve_by_id(the_id)
+    def save_for_classification(self, indep, key=None, info=None):
+        """Creates a not-yet-classified entry in the data for the given independent variable and returns the ID of the entry."""
+        return super(RandomForestMachineLearner, self).save_for_classification(indep, key=key, info=info)
+    def add_to_training_set(self, indep, depend, key=None, info=None):
+        """Creates an entry in the data for the given independent and dependent variable and returns the ID of the entry."""
+        return super(RandomForestMachineLearner, self).add_to_training_set(indep, depend, key=key, info=info)
+    def is_empty(self):
+        """Returns True if no data have been defined, otherwise returns False."""
+        return super(RandomForestMachineLearner, self).is_empty()
+    def dependent_in_use(self, key=None):
+        """Returns a sorted list of unique dependent variables in the data."""
+        return super(RandomForestMachineLearner, self).dependent_in_use(key=key)
+    def export_training_set(self, output_format='json'):
+        """Returns the classified entries in the data as JSON or YAML."""
+        return super(RandomForestMachineLearner, self).export_training_set(output_format=output_format)
+    def new_entry(self, **kwargs):
+        """Creates a new entry in the data."""
+        return super(RandomForestMachineLearner, self).new_entry(**kwargs)
+    
+    
 # def export_training_sets(prefix, output_format='json'):
 #     output = dict()
 #     re_prefix = re.compile(r'^' + prefix + ':')

@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.1.76] - 2017-10-20
+### Added
+- `RandomForestMachineLearner` for machine learning with numeric and
+  categorical values.
+- Context for `SyntaxError`s.
+### Fixed
+- `code` to specify fields in docx template.
+- S3 problems.
+
 ## [0.1.75] - 2017-10-18
 ### Added
 - `inline width` field modifier for embedded fields.
