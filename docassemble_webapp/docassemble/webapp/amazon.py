@@ -53,9 +53,15 @@ class s3key(object):
         os.utime(filename, (secs, secs))
     def set_contents_from_filename(self, filename):
         mimetype, encoding = mimetypes.guess_type(filename)
-        self.key_obj.upload_file(filename, ExtraArgs={'ContentType': mimetype})
+        if mimetype is None:
+            self.key_obj.upload_file(filename, ExtraArgs={'ContentType': mimetype})
+        else:
+            self.key_obj.upload_file(filename)
     def set_contents_from_string(self, text):
-        self.key_obj.put(Body=bytes(text), ContentType=self.content_type)
+        if self.content_type is not None:
+            self.key_obj.put(Body=bytes(text), ContentType=self.content_type)
+        else:
+            self.key_obj.put(Body=bytes(text))
     def generate_url(self, expires, content_type=None, display_filename=None):
         params = dict(Bucket=self.s3_object.bucket_name, Key=self.key_obj.key)
         if content_type is not None:
