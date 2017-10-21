@@ -24,10 +24,12 @@ UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
 
 class SavedFile(object):
     def __init__(self, file_number, extension=None, fix=False, section='files', filename='file'):
+        file_number = int(file_number)
+        section = str(section)
         if section not in docassemble.base.functions.this_thread.saved_files:
             docassemble.base.functions.this_thread.saved_files[section] = dict()
         if file_number in docassemble.base.functions.this_thread.saved_files[section]:
-            sys.stderr.write("SavedFile: using cache for " + section + '/' + str(file_number) + "\n")
+            # sys.stderr.write("SavedFile: using cache for " + section + '/' + str(file_number) + "\n")
             sf = docassemble.base.functions.this_thread.saved_files[section][file_number]
             for attribute in ['file_number', 'fixed', 'section', 'filename', 'extension', 'directory', 'path', 'modtimes', 'keydict']:
                 if hasattr(sf, attribute):
@@ -36,7 +38,7 @@ class SavedFile(object):
             self.filename = filename
             self.path = os.path.join(self.directory, self.filename)
         else:
-            sys.stderr.write("SavedFile: not using cache for " + section + '/' + str(file_number) + "\n")
+            # sys.stderr.write("SavedFile: not using cache for " + section + '/' + str(file_number) + "\n")
             docassemble.base.functions.this_thread.saved_files[section][file_number] = self
             self.fixed = False
             self.file_number = file_number
@@ -52,16 +54,10 @@ class SavedFile(object):
                 self.path = os.path.join(self.directory, self.filename)
         if fix:
             self.fix()
-    # def __del__(self):
-    #     logmessage("Deleting a file")
-    #     if cloud is not None and hasattr(self, 'directory') and os.path.isdir(self.directory):
-    #         pass
-            #shutil.rmtree(self.directory)
     def fix(self):
         if self.fixed:
             return
-        sys.stderr.write("fix: starting " + str(self.section) + '/' + str(self.file_number) + "\n")
-        sys.stderr.write(repr(traceback.extract_stack()) + "\n")
+        # sys.stderr.write("fix: starting " + str(self.section) + '/' + str(self.file_number) + "\n")
         if cloud is not None:
             self.modtimes = dict()
             self.keydict = dict()
@@ -71,7 +67,7 @@ class SavedFile(object):
             #self.directory = tempfile.mkdtemp(prefix='SavedFile')
             #docassemble.base.functions.this_thread.temporary_resources.add(self.directory)
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
-            logmessage("fix: prefix is " + prefix)
+            #sys.stderr.write("fix: prefix is " + prefix + "\n")
             for key in cloud.list_keys(prefix):
                 filename = re.sub(r'.*/', '', key.name)
                 fullpath = os.path.join(self.directory, filename)
@@ -92,7 +88,7 @@ class SavedFile(object):
             if not os.path.isdir(self.directory):
                 os.makedirs(self.directory)        
         self.fixed = True
-        sys.stderr.write("fix: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
+        # sys.stderr.write("fix: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
     def delete_file(self, filename):
         if cloud is not None:
             prefix = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
@@ -117,7 +113,7 @@ class SavedFile(object):
                     pass
         if hasattr(self, 'directory') and os.path.isdir(self.directory):
             shutil.rmtree(self.directory)
-        del docassemble.base.functions.this_thread.saved_files[section][file_number]
+        del docassemble.base.functions.this_thread.saved_files[str(self.section)][int(self.file_number)]
     def save(self, finalize=False):
         self.fix()
         if self.extension is not None:
