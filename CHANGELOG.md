@@ -3,6 +3,8 @@
 ## [0.1.77] - 2017-10-20
 ### Added
 - The `pdf_concatenate()` function.
+### Fixed
+- Missing dependencies for `RandomForestMachineLearner`.
 
 ## [0.1.76] - 2017-10-20
 ### Added
