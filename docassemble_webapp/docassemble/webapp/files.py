@@ -26,7 +26,7 @@ class SavedFile(object):
         if section not in docassemble.base.functions.this_thread.saved_files:
             docassemble.base.functions.this_thread.saved_files[section] = dict()
         if file_number in docassemble.base.functions.this_thread.saved_files[section]:
-            logmessage("SavedFile: using cache")
+            sys.stderr.write("SavedFile: using cache\n")
             sf = docassemble.base.functions.this_thread.saved_files[section][file_number]
             for attribute in ['file_number', 'extension', 'fixed', 'section', 'filename', 'directory', 'path', 'modtimes', 'keydict']:
                 if hasattr(sf, attribute):
@@ -55,7 +55,7 @@ class SavedFile(object):
     def fix(self):
         if self.fixed:
             return
-        logmessage("fix: starting " + str(self.section) + '/' + str(self.file_number))
+        sys.stderr.write("fix: starting " + str(self.section) + '/' + str(self.file_number) + "\n")
         if cloud is not None:
             self.modtimes = dict()
             self.keydict = dict()
@@ -76,7 +76,7 @@ class SavedFile(object):
             if not os.path.isdir(self.directory):
                 os.makedirs(self.directory)        
         self.fixed = True
-        logmessage("fix: ending " + str(self.section) + '/' + str(self.file_number))
+        sys.stderr.write("fix: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
     def delete_file(self, filename):
         if cloud is not None:
             prefix = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
@@ -258,7 +258,7 @@ class SavedFile(object):
                 url = docassemble.base.functions.get_url_root() + url
             return(url)
     def finalize(self):
-        logmessage("finalize: starting " + str(self.section) + '/' + str(self.file_number))
+        sys.stderr.write("finalize: starting " + str(self.section) + '/' + str(self.file_number) + "\n")
         if cloud is None:
             return
         if not self.fixed:
@@ -282,13 +282,13 @@ class SavedFile(object):
                         extension, mimetype = get_ext_and_mimetype(filename)
                     key.content_type = mimetype
                 if save:
-                    logmessage("finalize: saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
+                    sys.stderr.write("finalize: saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
                     key.set_contents_from_filename(fullpath)
         for filename, key in self.keydict.iteritems():
             if filename not in existing_files:
-                logmessage("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
+                sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
                 key.delete()
-        logmessage("finalize: ending " + str(self.section) + '/' + str(self.file_number))
+        sys.stderr.write("finalize: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
         return
         
 def get_ext_and_mimetype(filename):
