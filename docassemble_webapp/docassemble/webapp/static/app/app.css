@@ -1492,3 +1492,14 @@ div.danavbar {
 .embed-checkbox-wrapper > span.da-has-error::before {
     content: " ";
 }
+
+span.mldatakey {
+    font-weight: bold;
+}
+
+span.mldatavalue {
+}
+
+div.mldatacontainer {
+    padding-left: 20px;
+}
