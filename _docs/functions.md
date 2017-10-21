@@ -3368,6 +3368,15 @@ The [`indent()`] function is used here because it indents each line in
 the output by four spaces.  In [Markdown], this causes the text to be
 displayed in a monospace font.
 
+## <a name="pdf_concatenate"></a>pdf_concatenate()
+
+The `pdf_concatenate()` function accepts one or more file objects
+([`DAFile`], [`DAStaticFile`], [`DAFileList`], or [`DAFileCollection`]) as
+input and returns a [`DAFile`] containing the files concatenated into
+a single PDF file.  Image files will be converted to PDF.
+
+{% include side-by-side.html demo="pdf-concatenate" %}
+
 # <a name="sms"></a>Functions for working with SMS messages
 
 ## <a name="send_sms"></a>send_sms()
@@ -3979,6 +3988,7 @@ $(document).on('daPageLoad', function(){
 [`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
 [`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
 [`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
+[`DAStaticFile`]: {{ site.baseurl }}/docs/objects.html#DAStaticFile
 [`.path()`]: {{ site.baseurl }}/docs/objects.html#DAFile.path
 [`.set_mimetype()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_mimetype
 [`.copy_into()`]: {{ site.baseurl }}/docs/objects.html#DAFile.copy_into

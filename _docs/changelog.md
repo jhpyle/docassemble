@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.77](https://github.com/jhpyle/docassemble/releases/tag/v0.1.77) - 2017-10-20
+
+### Added
+- The `pdf_concatenate()` function.
+
 ## [0.1.76](https://github.com/jhpyle/docassemble/releases/tag/v0.1.76) - 2017-10-20
 
 ### Added
