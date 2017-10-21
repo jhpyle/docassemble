@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.77] - 2017-10-20
+### Added
+- The `pdf_concatenate()` function.
+
 ## [0.1.76] - 2017-10-20
 ### Added
 - `RandomForestMachineLearner` for machine learning with numeric and

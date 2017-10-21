@@ -749,7 +749,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'create_playground_package':
         remove_question_package(kwargs)
         return(url_for('create_playground_package', **kwargs))
-    if re.match('[0-9]+', file_reference):
+    if re.search('^[0-9]+$', file_reference):
         remove_question_package(kwargs)
         file_number = file_reference
         if can_access_file_number(file_number):
@@ -8722,6 +8722,7 @@ def update_package():
                 if user_can_edit_package(pkgname=pkgname):
                     file_number = get_new_file_number(session.get('uid', None), filename)
                     saved_file = SavedFile(file_number, extension='zip', fix=True)
+                    file_set_attributes(file_number, private=False, persistent=True)
                     zippath = saved_file.path
                     the_file.save(zippath)
                     saved_file.save()
@@ -9033,6 +9034,7 @@ def create_playground_package():
                 return redirect(url_for('playground_packages', file=current_package))
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(session.get('uid', None), nice_name)
+            file_set_attributes(file_number, private=False, persistent=True)
             saved_file = SavedFile(file_number, extension='zip', fix=True)
             if current_user.timezone:
                 the_timezone = current_user.timezone
@@ -9300,6 +9302,7 @@ class Fruit(DAObject):
                 the_file.write(questionfiletext)
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(session.get('uid', None), nice_name)
+            file_set_attributes(file_number, private=False, persistent=True)
             saved_file = SavedFile(file_number, extension='zip', fix=True)
             zf = zipfile.ZipFile(saved_file.path, mode='w')
             trimlength = len(directory) + 1

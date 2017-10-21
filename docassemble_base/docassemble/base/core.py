@@ -196,6 +196,14 @@ class DAObject(object):
         self.instanceName = str(thename)
         self.attrList = list()
         self.init(*pargs, **kwargs)
+    def _set_instance_name_for_function(self):
+        try:
+            self.instanceName = inspect.stack()[2][0].f_code.co_names[3]
+            self.has_nonrandom_instance_name = True
+        except:
+            self.instanceName = get_unique_name()
+            self.has_nonrandom_instance_name = False
+        return self
     def _set_instance_name_for_method(self):
         method_name = inspect.stack()[1][3]
         #sys.stderr.write("_set_instance_name_for_method: method_name is " + str(method_name) + "\n");

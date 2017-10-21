@@ -1,6 +1,7 @@
 import os
 import os.path
 import subprocess
+import mimetypes
 import docassemble.base.filter
 import tempfile
 import shutil
@@ -167,4 +168,31 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
             shutil.copyfile(new_pdf_file.name, pdf_file.name)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
+    return pdf_file.name
+
+def concatenate_files(path_list):
+    pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+    subprocess_arguments = [PDFTK_PATH]
+    new_path_list = list()
+    for path in path_list:
+        mimetype, encoding = mimetypes.guess_type(path)
+        if mimetype.startswith('image'):
+            new_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+            args = ["convert", path, new_pdf_file.name]
+            result = call(args)
+            if result != 0:
+                logmessage("failed to convert image to PDF: " + " ".join(args))
+                continue
+            new_path_list.append(new_pdf_file.name)
+        elif mimetype == 'application/pdf':
+            new_path_list.append(path)
+    if len(new_path_list) == 0:
+        raise DAError("concatenate_files: no valid files to concatenate")
+    subprocess_arguments.extend(new_path_list)
+    subprocess_arguments.extend(['cat', 'output', pdf_file.name])
+    logmessage("Arguments are " + str(subprocess_arguments))
+    result = call(subprocess_arguments)
+    if result != 0:
+        logmessage("Failed to concatenate PDF files")
+        raise DAError("Call to pdftk failed for concatenation where arguments were " + " ".join(subprocess_arguments))
     return pdf_file.name

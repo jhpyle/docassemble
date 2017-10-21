@@ -1,0 +1,34 @@
+metadata:
+  title: PDF Concatenation
+  documentation: "https://docassemble.org/docs/functions.html#pdf_concatenate"
+  example start: 2
+  example end: 6
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - static_file: DAStaticFile.using(filename='star.pdf')
+  - output_file: DAFileCollection
+---
+attachment:
+  variable name: assembled_file
+  filename: assembled_file
+  content: |
+    Hello world!
+---
+question: |
+  Upload a file
+fields:
+  - File: uploaded_file
+    datatype: file
+---
+mandatory: True
+code: |
+  output_file = pdf_concatenate(uploaded_file, assembled_file, static_file, filename="result.pdf")
+---
+mandatory: True
+question: |
+  Here is your concatenated file.
+subquestion: |
+  ${ output_file }
