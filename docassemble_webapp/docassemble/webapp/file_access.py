@@ -41,7 +41,7 @@ def url_if_exists(file_reference):
         the_path = docassemble.base.functions.static_filename_path(file_reference)
         if the_path is None or not os.path.isfile(the_path):
             return None
-        return url_for('package_static', package=parts[0], filename=parts[1])
+        return url_for('package_static', package=parts[0], filename=re.sub(r'^data/static/', '', parts[1]))
     return None
 
 def reference_exists(file_reference):
