@@ -53,7 +53,7 @@ class s3key(object):
         os.utime(filename, (secs, secs))
     def set_contents_from_filename(self, filename):
         mimetype, encoding = mimetypes.guess_type(filename)
-        if mimetype is None:
+        if mimetype is not None:
             self.key_obj.upload_file(filename, ExtraArgs={'ContentType': mimetype})
         else:
             self.key_obj.upload_file(filename)
