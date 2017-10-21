@@ -2333,13 +2333,19 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             content += '</td></tr>'
     if len(interview.images):
         content += '\n                  <tr><td><h4>' + word('Decorations') + infobutton('decorations') + '</h4></td></tr>'
+        if len(interview.images) > 10:
+            show_images = False
+        else:
+            show_images = True
         for var in sorted(interview.images):
             content += '\n                  <tr><td>'
             the_ref = get_url_from_file_reference(interview.images[var].get_reference())
             if the_ref is None:
                 content += '<a title="' + word("This image file does not exist") + '" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + noquote(var) + '</a>'
             else:
-                content += '<img class="daimageicon" src="' + the_ref + '">&nbsp;<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
+                if show_images:
+                    content += '<img class="daimageicon" src="' + the_ref + '">&nbsp;'
+                content += '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     content += "\n                  <tr><td><br><em>" + word("Type Ctrl-space to autocomplete.") + "</em></td><tr>"
     return content, sorted(vocab_set)

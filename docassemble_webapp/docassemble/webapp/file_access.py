@@ -19,7 +19,6 @@ import docassemble.webapp.cloud
 cloud = docassemble.webapp.cloud.get_cloud()
 
 def url_if_exists(file_reference):
-    logmessage('url_if_exists: file reference is ' + str(file_reference))
     parts = file_reference.split(":")
     if len(parts) == 2:
         if cloud:
@@ -45,7 +44,6 @@ def url_if_exists(file_reference):
     return None
 
 def reference_exists(file_reference):
-    logmessage('reference_exists: file reference is ' + str(file_reference))
     if cloud:
         parts = file_reference.split(":")
         if len(parts) == 2:
