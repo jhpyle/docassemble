@@ -56,7 +56,7 @@ class s3key(object):
     def set_contents_from_string(self, text):
         self.key_obj.put(Body=bytes(text))
         self.update_metadata()
-    def update_metadata():
+    def update_metadata(self):
         if self.content_type is not None and self.content_type != self.key_obj.content_type:
             self.key_obj.put(Metadata={'Content-Type': self.content_type})
     def generate_url(self, expires, content_type=None, display_filename=None):
