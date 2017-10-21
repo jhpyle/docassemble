@@ -19,13 +19,13 @@ import docassemble.webapp.cloud
 cloud = docassemble.webapp.cloud.get_cloud()
 
 def reference_exists(file_reference):
-    #logmessage("Got req for " + file_reference)
+    logmessage("Got req for " + file_reference)
     if cloud:
         parts = file_reference.split(":")
         if len(parts) == 2:
             m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
             if m:
-                user_id = parts[0]
+                user_id = m.group(1)
                 if re.search(r'^data/sources/', parts[1]):
                     section = 'playgroundsources'
                     filename = re.sub(r'^data/sources/', '', parts[1])
@@ -34,6 +34,7 @@ def reference_exists(file_reference):
                     filename = re.sub(r'^data/static/', '', parts[1])
                 filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
                 key = str(section) + '/' + str(user_id) + '/' + filename
+                logmessage("key is " + key)
                 cloud_key = cloud.get_key(key)
                 if cloud_key.exists():
                     return True
