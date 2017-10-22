@@ -9,7 +9,7 @@ modules:
   - docassemble.base.util
 ---
 code: |
-  ml = SVMMachineLearner('demo')
+  ml = SVMMachineLearner(group_id='demo')
 ---
 code: |
   entry = ml.new_entry()

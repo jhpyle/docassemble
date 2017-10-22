@@ -8,7 +8,7 @@ modules:
   - docassemble.base.util
 ---
 code: |
-  ml = SimpleTextMachineLearner('ocr_ai')
+  ml = SimpleTextMachineLearner(group_id='ocr_ai')
 ---
 initial: True
 code: |

@@ -72,6 +72,7 @@ def ocr_page(**kwargs):
     if worker_controller is None:
         initialize_db()
     worker_controller.functions.set_uid(kwargs['user_code'])
+    worker_controller.functions.reset_thread_variables()
     with worker_controller.flaskapp.app_context():
         return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.ocr.ocr_page(**kwargs))
 
@@ -97,6 +98,7 @@ def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png):
     if worker_controller is None:
         initialize_db()
     worker_controller.functions.set_uid(user_code)
+    worker_controller.functions.reset_thread_variables()
     with worker_controller.flaskapp.app_context():
         worker_controller.ocr.make_png_for_pdf(doc, prefix, resolution, pdf_to_png)
     return
@@ -131,6 +133,7 @@ def email_attachments(user_code, email_address, attachment_info):
     if worker_controller is None:
         initialize_db()
     worker_controller.functions.set_uid(user_code)
+    worker_controller.functions.reset_thread_variables()
     with worker_controller.flaskapp.app_context():
         worker_controller.set_request_active(False)
         doc_names = list()
@@ -238,6 +241,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
     if worker_controller is None:
         initialize_db()
     worker_controller.functions.set_uid(session_code)
+    worker_controller.functions.reset_thread_variables()
     with worker_controller.flaskapp.app_context():
         sys.stderr.write("background_action: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
         worker_controller.set_request_active(False)

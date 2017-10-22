@@ -9,6 +9,6 @@ modules:
 ---
 initial: True
 code: |
-  ml = SimpleTextMachineLearner('demo')
+  ml = SimpleTextMachineLearner(group_id='demo')
   the_data = ml.export_training_set(output_format='yaml')
   response(response=the_data, content_type='text/plain')

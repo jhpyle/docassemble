@@ -12,7 +12,7 @@ code: |
   menu_items = [ action_menu_item('Confusion Matrix', 'confusion') ]
 ---
 code: |
-  ml = SVMMachineLearner('demo')
+  ml = SimpleTextMachineLearner(group_id='demo')
 ---
 code: |
   entry = ml.one_unclassified_entry()

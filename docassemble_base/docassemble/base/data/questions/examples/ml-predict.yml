@@ -14,7 +14,7 @@ fields:
 ---
 mandatory: True
 code: |
-  ml = SimpleTextMachineLearner('demo')
+  ml = SimpleTextMachineLearner(group_id='demo')
   predictions = ml.predict(phrase)
 ---
 mandatory: True

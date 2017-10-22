@@ -89,18 +89,20 @@ class DAInterview(DAObject):
         for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
             if field not in info:
                 info[field] = list()
-        for package in ['docassemble']:
-            if package not in info['dependencies']:
-                info['dependencies'].append(package)
         info['readme'] = ""
         info['description'] = self.title
         info['version'] = "1.0"
         info['license'] = "The MIT License"
         info['url'] = "https://docassemble.org"
         for block in self.all_blocks():
-            for template in block.templates_used:
-                if not re.search(r'^docassemble\.', template):
-                    info['template_files'].append(template)
+            if hasattr(block, 'templates_used'):
+                for template in block.templates_used:
+                    if not re.search(r'^docassemble\.', template):
+                        info['template_files'].append(template)
+            if hasattr(block, 'static_files_used'):
+                for static_file in block.static_files_used:
+                    if not re.search(r'^docassemble\.', static_file):
+                        info['static_files'].append(static_file)
         info['interview_files'].append(self.yaml_file_name())
         return info
     def yaml_file_name(self):
@@ -150,6 +152,7 @@ class DAQuestion(DAObject):
     def init(self, **kwargs):
         self.field_list = DAFieldList()
         self.templates_used = set()
+        self.static_files_used = set()
         return super(DAQuestion, self).init(**kwargs)
     def names_reduced(self):
         varsinuse = Playground().variables_from(self.interview.known_source(skip=self))
@@ -195,11 +198,13 @@ class DAQuestion(DAObject):
                             content += "    content: " + oneline(attachment.content) + "\n"
                         elif attachment.type == 'pdf':
                             content += "    pdf template file: " + oneline(attachment.pdf_filename) + "\n"
+                            self.templates_used.add(attachment.pdf_filename)
                             content += "    fields: " + "\n"
                             for field, default, pageno, rect, field_type in attachment.fields:
                                 content += '      "' + field + '": ${ ' + varname(field).lower() + " }\n"
                         elif attachment.type == 'docx':
                             content += "    docx template file: " + oneline(attachment.docx_filename) + "\n"
+                            self.templates_used.add(attachment.docx_filename)
                 done_with_content = True
             if not done_with_content:
                 content += "fields:\n"
@@ -263,6 +268,7 @@ class DAQuestion(DAObject):
             content += "images:\n"
             for key, value in self.interview.decorations.iteritems():
                 content += "  " + repr_str(key) + ": " + oneline(value.filename) + "\n"
+                self.static_files_used.add(value.filename)
         sys.stderr.write(content)
         return content
 
@@ -281,10 +287,12 @@ class PlaygroundSection(object):
         self.user_id = docassemble.base.functions.this_thread.current_info['user']['theid']
         self.current_info = docassemble.base.functions.this_thread.current_info
         self.section = section
-        self.area = SavedFile(self.user_id, fix=True, section='playground' + self.section)
         self._update_file_list()
+    def get_area(self):
+        return SavedFile(self.user_id, fix=True, section='playground' + self.section)
     def _update_file_list(self):
-        self.file_list = sorted([f for f in os.listdir(self.area.directory) if os.path.isfile(os.path.join(self.area.directory, f))])
+        area = self.get_area()
+        self.file_list = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
     def image_file_list(self):
         out_list = list()
         for the_file in self.file_list:
@@ -297,7 +305,7 @@ class PlaygroundSection(object):
         out_list = [f for f in self.file_list if os.path.splitext(f)[1].lower() in ['.md', '.pdf', '.docx'] or os.path.splitext(f)[0].lower() + '.md' not in lower_list]
         return out_list            
     def get_file(self, filename):
-        return os.path.join(self.area.directory, filename)
+        return os.path.join(self.get_area().directory, filename)
     def file_exists(self, filename):
         path = self.get_file(filename)
         if os.path.isfile(path):
@@ -312,18 +320,19 @@ class PlaygroundSection(object):
             return content
         return None
     def write_file(self, filename, content):
-        path = os.path.join(self.area.directory, filename)
+        area = self.get_area()
+        path = os.path.join(area.directory, filename)
         with open(path, 'w') as fp:
             fp.write(content.encode('utf8'))
-        self.area.finalize()
+        area.finalize()
     def commit(self):
-        self.area.finalize()
+        self.get_area().finalize()
     def copy_from(self, from_file, filename=None):
         if filename is None:
             filename = os.path.basename(from_file)
         to_path = self.get_file(filename)
         shutil.copy2(from_file, to_path)
-        self.area.finalize()
+        self.get_area().finalize()
         return filename
     def is_fillable_docx(self, filename):
         extension, mimetype = get_ext_and_mimetype(filename)
@@ -414,7 +423,7 @@ class Playground(PlaygroundSection):
         file_number, extension, mimetype = docassemble.base.parse.save_numbered_file('docassemble-' + str(pkgname) + '.zip', zip_file.name)
         return file_number
     def variables_from(self, content):
-        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=self.area.directory, path="docassemble.playground" + str(self.user_id) + ":_temp.yml", package='docassemble.playground' + str(self.user_id), testing=True)
+        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=self.get_area().directory, path="docassemble.playground" + str(self.user_id) + ":_temp.yml", package='docassemble.playground' + str(self.user_id), testing=True)
         interview = interview_source.get_interview()
         temp_current_info = copy.deepcopy(self.current_info)
         temp_current_info['yaml_filename'] = "docassemble.playground" + str(self.user_id) + ":_temp.yml"

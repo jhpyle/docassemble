@@ -8,7 +8,7 @@ modules:
   - docassemble.base.util
 ---
 code: |
-  ml = SimpleTextMachineLearner('demo')
+  ml = SimpleTextMachineLearner(group_id='demo')
 ---
 initial: True
 code: |

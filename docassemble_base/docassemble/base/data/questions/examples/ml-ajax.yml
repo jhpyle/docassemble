@@ -22,7 +22,7 @@ fields:
 ---
 mandatory: True
 code: |
-  ml = SimpleTextMachineLearner('sug')
+  ml = SimpleTextMachineLearner(group_id='sug')
 ---
 code: |
   ml.save_for_classification(phrase)
@@ -42,7 +42,7 @@ buttons:
 ---
 event: predict
 code: |
-  ml = SimpleTextMachineLearner('sug')
+  ml = SimpleTextMachineLearner(group_id='sug')
   if len(action_argument('inputstring')) > 3:
     predictions = ' '.join(map(lambda x: '<a class="btn btn-info btn-md">' + str(x) + '</a>', ml.predict(action_argument('inputstring'))))
     if predictions:

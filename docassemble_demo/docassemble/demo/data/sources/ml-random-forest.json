@@ -1,0 +1,94 @@
+{
+  "fruit": [
+    {
+      "dependent": "apple", 
+      "independent": {
+        "a": 0.9, 
+        "b": 2, 
+        "c": 3.0, 
+        "d": "A"
+      }
+    }, 
+    {
+      "dependent": "apple", 
+      "independent": {
+        "a": 1.0, 
+        "b": 2.1, 
+        "c": 3, 
+        "d": "B"
+      }
+    }, 
+    {
+      "dependent": "orange", 
+      "independent": {
+        "a": 1.0, 
+        "b": 7.0, 
+        "c": 3.0, 
+        "d": "B"
+      }
+    }, 
+    {
+      "dependent": "orange", 
+      "independent": {
+        "a": 0.8, 
+        "b": 6.7, 
+        "c": 2.9, 
+        "d": "B"
+      }
+    }, 
+    {
+      "dependent": "orange", 
+      "independent": {
+        "a": 1.05, 
+        "b": 6.8, 
+        "c": 3.1, 
+        "d": "B"
+      }
+    }, 
+    {
+      "dependent": "apple", 
+      "independent": {
+        "a": 1, 
+        "b": 2.0, 
+        "c": 3.0, 
+        "d": "A"
+      }
+    }, 
+    {
+      "dependent": "apple", 
+      "independent": {
+        "a": 0.8, 
+        "b": 2.0, 
+        "c": 3.0, 
+        "d": "A"
+      }
+    }, 
+    {
+      "dependent": "apple", 
+      "independent": {
+        "a": 1.2, 
+        "b": 2.0, 
+        "c": 3.1, 
+        "d": "A"
+      }
+    }, 
+    {
+      "dependent": "orange", 
+      "independent": {
+        "a": 0.9, 
+        "b": 6.9, 
+        "c": 3.0, 
+        "d": "A"
+      }
+    }, 
+    {
+      "dependent": "orange", 
+      "independent": {
+        "a": 1.0, 
+        "b": 7.1, 
+        "c": 2.95, 
+        "d": "B"
+      }
+    }
+  ]
+}

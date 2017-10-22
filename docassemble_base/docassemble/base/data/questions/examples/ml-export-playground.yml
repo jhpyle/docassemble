@@ -10,7 +10,7 @@ modules:
 ---
 initial: True
 code: |
-  ml = SimpleTextMachineLearner('demo')
+  ml = SimpleTextMachineLearner(group_id='demo')
   the_data = ml.export_training_set(output_format='json')
   sources = PlaygroundSection('sources')
   sources.write_file('my_training_data.json', the_data)

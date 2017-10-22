@@ -11,7 +11,7 @@ modules:
   - docassemble.base.util
 ---
 code: |
-  ml = SimpleTextMachineLearner('sug')
+  ml = SimpleTextMachineLearner(group_id='sug')
 ---
 initial: True
 code: |

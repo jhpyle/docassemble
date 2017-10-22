@@ -151,6 +151,7 @@
   <input id="the_file" name="the_file" type="hidden" value="{{ the_file }}">
   <input id="the_group_id" name="the_group_id" type="hidden" value="{{ the_group_id }}">
   <input id="show_all" name="show_all" type="hidden" value="{{ show_all }}">
+  {%- if not is_data %}
   <div class="panel panel-default">
     <div class="panel-heading">
       {{ word("Manually add a training item") }}
@@ -182,6 +183,7 @@
     {{ render_submit_field(form.submit, tabindex=200, class="btn btn-primary btn-lg") }}
     {{ render_submit_field(form.cancel, tabindex=210, class="btn btn-default btn-lg") }}
   </div>
+  {%- endif %}
   {%- if entry_list|length > 0 %}
   {%- if show_all %}
   <h4>{{ word('Items in the training set') }}</h4>

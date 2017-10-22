@@ -1609,7 +1609,7 @@ class DAModel(DAObject):
             self.group_id = self.store + ':' + self.group_id
         self.key = kwargs.get('key', None)
         self.use_for_training = kwargs.get('use_for_training', True)
-        self.learner = SimpleTextMachineLearner(self.group_id)
+        self.learner = SimpleTextMachineLearner(group_id=self.group_id)
         if 'text' in kwargs:
             self.text = kwargs['text']
             self.predict()

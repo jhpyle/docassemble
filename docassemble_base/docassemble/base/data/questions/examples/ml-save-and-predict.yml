@@ -14,7 +14,7 @@ fields:
   - no label: phrase
 ---
 code: |
-  ml = SimpleTextMachineLearner('demo')
+  ml = SimpleTextMachineLearner(group_id='demo')
 ---
 code: |
   ml.save_for_classification(phrase)

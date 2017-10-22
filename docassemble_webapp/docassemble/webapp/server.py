@@ -2333,7 +2333,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             content += '</td></tr>'
     if len(interview.images):
         content += '\n                  <tr><td><h4>' + word('Decorations') + infobutton('decorations') + '</h4></td></tr>'
-        if len(interview.images) > 10:
+        if cloud and len(interview.images) > 10:
             show_images = False
         else:
             show_images = True
@@ -8915,9 +8915,7 @@ def create_playground_package():
             for field in ['dependencies', 'dependency_links', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
                 if field not in info:
                     info[field] = list()
-            for package in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
-                if package in info['dependencies']:
-                    del info['dependencies'][package]
+            info['dependencies'] = [x for x in info['dependencies'] if x not in ['docassemble', 'docassemble.base', 'docassemble.webapp']]
             for package in info['dependencies']:
                 logmessage("create_playground_package: considering " + str(package))
                 existing_package = Package.query.filter_by(name=package, active=True).first()
@@ -10496,9 +10494,7 @@ def playground_packages():
                                     the_list.append(inner_item)
                                 extracted[m.group(1)] = the_list
                         info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
-                        for pitem in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
-                            if pitem in info_dict['dependencies']:
-                                del info_dict['dependencies'][pitem]
+                        info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ['docassemble', 'docassemble.base', 'docassemble.webapp']]
                         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
                         with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w') as fp:
                             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
@@ -10615,9 +10611,7 @@ def playground_packages():
                     the_list.append(inner_item)
                 extracted[m.group(1)] = the_list
         info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
-        for pitem in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
-            if pitem in info_dict['dependencies']:
-                del info_dict['dependencies'][pitem]
+        info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ['docassemble', 'docassemble.base', 'docassemble.webapp']]
         #output += "info_dict is set\n"
         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
         if not user_can_edit_package(pkgname='docassemble.' + package_name):
@@ -12171,7 +12165,7 @@ def train():
                 if not m:
                     continue
                 entry_id = int(m.group(1))
-                model = docassemble.base.util.SimpleTextMachineLearner(group_id_to_use)
+                model = docassemble.base.util.SimpleTextMachineLearner(group_id=group_id_to_use)
                 model.delete_by_id(entry_id)
                 deleted.add('dependent' + m.group(1))
             for key in deleted:
@@ -12185,11 +12179,14 @@ def train():
                 delete_key = 'delete' + m.group(1)
                 if orig_key in post_data and post_data[orig_key] != val and val != '':
                     entry_id = int(m.group(1))
-                    model = docassemble.base.util.SimpleTextMachineLearner(group_id_to_use)
+                    model = docassemble.base.util.SimpleTextMachineLearner(group_id=group_id_to_use)
                     model.set_dependent_by_id(entry_id, val)
-            if post_data.get('newdependent', '') != '' and post_data.get('newindependent', '') != '':
-                model = docassemble.base.util.SimpleTextMachineLearner(group_id_to_use)
-                model.add_to_training_set(post_data['newindependent'], post_data['newdependent'])
+            if post_data.get('newindependent', '') != '':
+                model = docassemble.base.util.SimpleTextMachineLearner(group_id=group_id_to_use)
+                if post_data.get('newdependent', '') != '':
+                    model.add_to_training_set(post_data['newindependent'], post_data['newdependent'])
+                else:
+                    model.save_for_classification(post_data['newindependent'])
             return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
     if show_all:
         show_all = 1
@@ -12255,7 +12252,7 @@ def train():
                     parts[1] = re.sub(r'^data/sources/ml-|\.json$', '', parts[1])
                 if parts[1] not in file_list:
                     file_list[parts[1]] = 0
-        if playground_package:
+        if playground_package and the_package == playground_package:
             area = SavedFile(current_user.id, fix=False, section='playgroundsources')
             for filename in area.list_of_files():
                 #logmessage("hey file is " + str(filename))
@@ -12382,10 +12379,10 @@ def train():
         return render_template('pages/train.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_group_id_list=True, package_file_available=package_file_available, the_package_location=the_prefix, uploadform=uploadform)
     else:
         group_id_to_use = fix_group_id(the_package, the_file, the_group_id)
-        model = docassemble.base.util.SimpleTextMachineLearner(group_id_to_use)
+        model = docassemble.base.util.SimpleTextMachineLearner(group_id=group_id_to_use)
         for record in db.session.query(MachineLearning.id, MachineLearning.group_id, MachineLearning.key, MachineLearning.info, MachineLearning.independent, MachineLearning.dependent, MachineLearning.create_time, MachineLearning.modtime, MachineLearning.active).filter(and_(MachineLearning.group_id == group_id_to_use, show_cond)):
             new_entry = dict(id=record.id, group_id=record.group_id, key=record.key, independent=pickle.loads(codecs.decode(record.independent, 'base64')) if record.independent is not None else None, dependent=pickle.loads(codecs.decode(record.dependent, 'base64')) if record.dependent is not None else None, info=pickle.loads(codecs.decode(record.info, 'base64')) if record.info is not None else None, create_type=record.create_time, modtime=record.modtime, active=MachineLearning.active)
-            if isinstance(new_entry['independent'], DADict) or type(new_entry['independent']):
+            if isinstance(new_entry['independent'], DADict) or type(new_entry['independent']) is dict:
                 new_entry['independent_display'] = '<div class="mldatacontainer">' + '<br>'.join(['<span class="mldatakey">' + unicode(key) + '</span>: <span class="mldatavalue">' + unicode(val) + '</span>' for key, val in new_entry['independent'].iteritems()]) + '</div>'
                 new_entry['type'] = 'data'
             else:
@@ -12426,6 +12423,18 @@ def train():
                         image_url = doc_url
                     new_entry['image_files'].append(dict(doc_url=doc_url, image_url=image_url))
             entry_list.append(new_entry)
+        if len(entry_list) == 0:
+            record = db.session.query(MachineLearning.independent).filter(and_(MachineLearning.group_id == group_id_to_use, MachineLearning.independent != None)).first()
+            if record is not None:
+                sample_indep = pickle.loads(codecs.decode(record.independent, 'base64'))
+            else:
+                sample_indep = None
+        else:
+            sample_indep = entry_list[0]['independent']
+        if isinstance(sample_indep, DADict) or type(sample_indep) is dict:
+            is_data = True
+        else:
+            is_data = False
         choices = dict()
         for record in db.session.query(MachineLearning.dependent, db.func.count(MachineLearning.id).label('count')).filter(and_(MachineLearning.group_id == group_id_to_use)).group_by(MachineLearning.dependent):
             #logmessage("There is a choice")
@@ -12469,7 +12478,7 @@ def train():
         });
       });
     </script>"""
-        return render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True)
+        return render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True, is_data=is_data)
 
 @app.route('/interviews', methods=['GET', 'POST'])
 @login_required

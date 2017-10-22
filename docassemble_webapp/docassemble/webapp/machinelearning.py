@@ -18,6 +18,7 @@ import sys
 from pattern.vector import count, KNN, SVM, stem, PORTER, words, Document
 from docassemble.base.logger import logmessage
 from docassemble.webapp.backend import get_info_from_file_reference
+import docassemble.base.functions
 
 learners = dict()
 svms = dict()
@@ -54,15 +55,19 @@ class MachineLearner(object):
     """Base class for machine learning objects"""
     def __init__(self, *pargs, **kwargs):
         if len(pargs) > 0:
-            self.group_id = pargs[0]
+            if ':' in pargs[0]:
+                raise Exception("MachineLearner: you cannot use a colon in a machine learning name")
+            question = docassemble.base.functions.get_current_question()
+            if question is not None:
+                self.group_id = question.interview.get_ml_store() + ':' + pargs[0]
+            else:
+                self.group_id = pargs[0]
         if len(pargs) > 1:
             self.initial_file = pargs[1]
         if 'group_id' in kwargs:
             self.group_id = kwargs['group_id']
-            del kwargs['group_id']
         if 'initial_file' in kwargs:
             self.initial_file = kwargs['initial_file']
-            del kwargs['initial_file']
         self.reset_counter = 0
     def reset(self):
         self.reset_counter += 1
@@ -115,6 +120,10 @@ class MachineLearner(object):
             aref = json.loads(content)
         elif 'extension' in file_info and file_info['extension'].lower() in ['yaml', 'yml']:
             aref = yaml.load(content)
+        if type(aref) is dict and hasattr(self, 'group_id'):
+            the_group_id = re.sub(r'.*:', '', self.group_id)
+            if the_group_id in aref:
+                aref = aref[the_group_id]
         if type(aref) is list:
             nowtime = datetime.datetime.utcnow()
             for entry in aref:
