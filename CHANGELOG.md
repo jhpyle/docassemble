@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.1.78] - 2017-10-21
+## [0.1.78] - 2017-10-22
 ### Changed
 - When using S3 or Azure Blob Storage, the files will now be cached
   on the server file system and updated when they change.
@@ -26,6 +26,7 @@
 - Playground wizard not including pdf and docx template files in package.
 - Playground wizard not including static files in package.
 - Playground wizard pickle error when using S3 or Azure blob storage.
+- Bug where key 'sought' not found.
 
 ## [0.1.77] - 2017-10-20
 ### Added

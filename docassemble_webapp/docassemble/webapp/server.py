@@ -9835,7 +9835,7 @@ def view_source():
 
 @app.route('/playgroundstatic/<userid>/<filename>', methods=['GET'])
 def playground_static(userid, filename):
-    filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
+    filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundstatic')
     filename = os.path.join(area.directory, filename)
     if os.path.isfile(filename):
@@ -9848,7 +9848,7 @@ def playground_static(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_sources(userid, filename):
-    filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
+    filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundsources')
     reslt = write_ml_source(area, userid, filename)
     # if reslt:
@@ -9865,7 +9865,7 @@ def playground_sources(userid, filename):
 
 @app.route('/playgroundtemplate/<userid>/<filename>', methods=['GET'])
 def playground_template(userid, filename):
-    filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
+    filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundtemplate')
     filename = os.path.join(area.directory, filename)
     if os.path.isfile(filename):
@@ -9879,7 +9879,7 @@ def playground_template(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_download(userid, filename):
-    filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
+    filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playground')
     filename = os.path.join(area.directory, filename)
     if os.path.isfile(filename):
@@ -9920,7 +9920,7 @@ def playground_files():
             section = form.section.data
         if (formtwo.file_name.data):
             the_file = formtwo.file_name.data
-            the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', the_file)
+            the_file = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', the_file)
     if section not in ["template", "static", "sources", "modules", "packages"]:
         section = "template"
     pgarea = SavedFile(current_user.id, fix=True, section='playground')
@@ -9992,7 +9992,7 @@ def playground_files():
                 for up_file in the_files:
                     try:
                         filename = secure_filename(up_file.filename)
-                        filename = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', filename)
+                        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', filename)
                         the_file = filename
                         filename = os.path.join(area.directory, filename)
                         up_file.save(filename)
@@ -11243,7 +11243,7 @@ def playground_page():
                     if extension not in ['yml', 'yaml']:
                         flash(word("Sorry, only YAML files can be uploaded here.  To upload other types of files, use the Folders."), 'error')
                         return redirect(url_for('playground_page'))
-                    filename = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', filename)
+                    filename = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', filename)
                     new_file = filename
                     filename = os.path.join(playground.directory, filename)
                     up_file.save(filename)
@@ -11263,7 +11263,7 @@ def playground_page():
     if request.method == 'POST' and (form.submit.data or form.run.data or form.delete.data):
         if (form.playground_name.data):
             the_file = form.playground_name.data
-            the_file = re.sub(r'[^A-Za-z0-9\_\-\.]', '', the_file)
+            the_file = re.sub(r'[^A-Za-z0-9\_\-\. ]', '', the_file)
             if the_file != '':
                 if not re.search(r'\.ya?ml$', the_file):
                     the_file = re.sub(r'\..*', '', the_file) + '.yml'
@@ -11277,7 +11277,7 @@ def playground_page():
         else:
             flash(word('You need to type in a name for the interview'), 'error')
             is_new = True
-    the_file = re.sub(r'[^A-Za-z0-9\_\-\.]', '', the_file)
+    the_file = re.sub(r'[^A-Za-z0-9\_\-\. ]', '', the_file)
     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
     content = ''
     if the_file and not is_new and the_file not in files:
@@ -11947,7 +11947,7 @@ def utilities():
                 if fields is None:
                     fields_output = word("Error: no fields could be found in the file")
                 else:
-                    fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', the_file.filename) + "\n    fields:\n"
+                    fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', the_file.filename) + "\n    fields:\n"
                     for field, default, pageno, rect, field_type in fields:
                         if field not in fields_seen:
                             fields_output += '      - "' + unicode(field) + '": ' + unicode(default) + "\n"

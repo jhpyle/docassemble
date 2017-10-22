@@ -506,6 +506,7 @@ def oneline(text):
 def to_yaml_file(text):
     text = varname(text)
     text = re.sub(r'\..*', r'', text)
+    text = re.sub(r'[^A-Za-z0-9]+', r'_', text)
     return text + '.yml'
 
 def base_name(filename):
@@ -514,7 +515,7 @@ def base_name(filename):
 def to_package_name(text):
     text = varname(text)
     text = re.sub(r'\..*', r'', text)
-    text = re.sub(r'_', r'-', text)
+    text = re.sub(r'[^A-Za-z0-9]', r'', text)
     return text
     
 def repr_str(text):

@@ -1920,7 +1920,7 @@ def force_gather(*pargs):
 def static_filename_path(filereference):
     result = package_data_filename(static_filename(filereference))
     #if result is None or not os.path.isfile(result):
-    #    result = server.absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', filereference)).path
+    #    result = server.absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filereference)).path
     return(result)
 
 def static_filename(filereference):
@@ -1982,7 +1982,7 @@ def package_template_filename(the_file, **kwargs):
         m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
         if m:
             parts[1] = re.sub(r'^data/templates/', '', parts[1])
-            return(server.absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
+            return(server.absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1])).path)
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/templates/' + parts[1]
         try:
@@ -2010,9 +2010,9 @@ def package_data_filename(the_file):
         if m:
             if re.search(r'^data/sources/', parts[1]):
                 parts[1] = re.sub(r'^data/sources/', '', parts[1])
-                return(server.absolute_filename("/playgroundsources/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
+                return(server.absolute_filename("/playgroundsources/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1])).path)
             parts[1] = re.sub(r'^data/static/', '', parts[1])
-            return(server.absolute_filename("/playgroundstatic/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
+            return(server.absolute_filename("/playgroundstatic/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1])).path)
         try:
             result = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
         except:

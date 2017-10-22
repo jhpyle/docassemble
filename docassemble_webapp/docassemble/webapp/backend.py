@@ -116,23 +116,23 @@ def absolute_filename(the_file):
     match = re.match(r'^docassemble.playground([0-9]+):(.*)', the_file)
     #logmessage("absolute_filename call: " + the_file)
     if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
+        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(2))
         #logmessage("absolute_filename: filename is " + filename)
         playground = SavedFile(match.group(1), section='playground', fix=True, filename=filename)
         return playground
     match = re.match(r'^/playgroundtemplate/([0-9]+)/(.*)', the_file)
     if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
+        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(2))
         playground = SavedFile(match.group(1), section='playgroundtemplate', fix=True, filename=filename)
         return playground
     match = re.match(r'^/playgroundstatic/([0-9]+)/(.*)', the_file)
     if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
+        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(2))
         playground = SavedFile(match.group(1), section='playgroundstatic', fix=True, filename=filename)
         return playground
     match = re.match(r'^/playgroundsources/([0-9]+)/(.*)', the_file)
     if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
+        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(2))
         playground = SavedFile(match.group(1), section='playgroundsources', fix=True, filename=filename)
         write_ml_source(playground, match.group(1), filename)
         return playground

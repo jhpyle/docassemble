@@ -467,7 +467,7 @@ subquestion: |
   
   The **File name** is the name of the interview within the
   [Playground].  If you set this to `petition to open`, your interview
-  file name will be `petition to open.yml`.
+  file name will be `petition_to_open.yml`.
 
   The **Title** is the name that the user will see in the upper-left
   corner of the screen during the interview.  The user will also see

@@ -139,7 +139,7 @@ def save_attachment(uid, yaml_filename, filename, email_id, index, content_type,
     saved_file_attachment.finalize()
     
 def secure_filename(filename):
-    filename = re.sub(r'[^A-Za-z0-9\.]+', r'_', filename)
+    filename = re.sub(r'[^A-Za-z0-9\_\-\. ]+', r'_', filename)
     return filename.strip('_')
 
 main()
