@@ -3926,7 +3926,7 @@ class Interview:
                         string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
-                        return({'type': 'continue', 'var': missing_var})
+                        return({'type': 'continue', 'sought': missing_var})
                     if question.question_type == "objects":
                         success = False
                         for keyvalue in question.objects:
@@ -3994,10 +3994,10 @@ class Interview:
                         # logmessage("pop current variable")
                         docassemble.base.functions.pop_current_variable()
                         # logmessage("Returning")
-                        return({'type': 'continue', 'var': missing_var})
+                        return({'type': 'continue', 'sought': missing_var})
                     if question.question_type == "template":
                         if question.target is not None:
-                            return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'under_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict(), 'var': missing_var})
+                            return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'under_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict(), 'sought': missing_var})
                         string = "import docassemble.base.core"
                         exec(string, user_dict)
                         if question.decorations is None:
@@ -4009,7 +4009,7 @@ class Interview:
                         exec(string, user_dict)
                         #question.mark_as_answered(user_dict)
                         docassemble.base.functions.pop_current_variable()
-                        return({'type': 'continue', 'var': missing_var})
+                        return({'type': 'continue', 'sought': missing_var})
                     if question.question_type == "table":
                         string = "import docassemble.base.core"
                         exec(string, user_dict)
@@ -4075,7 +4075,7 @@ class Interview:
                         string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + repr(from_safeid(question.fields[0].saveas)) + ", content=" + repr(table_content) + ")"
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
-                        return({'type': 'continue', 'var': missing_var})
+                        return({'type': 'continue', 'sought': missing_var})
                     if question.question_type == 'attachments':
                         attachment_text = question.processed_attachments(user_dict)
                         if missing_var in variable_stack:
@@ -4084,7 +4084,7 @@ class Interview:
                             eval(missing_var, user_dict)
                             question.mark_as_answered(user_dict)
                             docassemble.base.functions.pop_current_variable()
-                            return({'type': 'continue', 'var': missing_var})
+                            return({'type': 'continue', 'sought': missing_var})
                         except:
                             continue
                     if question.question_type in ["code", "event_code"]:
@@ -4108,12 +4108,12 @@ class Interview:
                             variable_stack.remove(missing_var)
                         if question.question_type == 'event_code':
                             docassemble.base.functions.pop_current_variable()
-                            return({'type': 'continue', 'var': missing_var})
+                            return({'type': 'continue', 'sought': missing_var})
                         try:
                             eval(missing_var, user_dict)
                             question.mark_as_answered(user_dict)
                             docassemble.base.functions.pop_current_variable()
-                            return({'type': 'continue', 'var': missing_var})
+                            return({'type': 'continue', 'sought': missing_var})
                         except:
                             if was_defined:
                                 try:
@@ -4285,7 +4285,7 @@ class Interview:
                     #logmessage("returning from running code")
                     docassemble.base.functions.pop_current_variable()
                     #logmessage("Got here 2")
-                    return({'type': 'continue', 'var': missing_var})
+                    return({'type': 'continue', 'sought': missing_var})
                 except:
                     #raise DAError("Problem setting that variable")
                     continue
