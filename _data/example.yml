@@ -4950,7 +4950,7 @@
     - docassemble.base.util
   ---
   code: |
-    ml = SimpleTextMachineLearner('sug')
+    ml = SimpleTextMachineLearner(group_id='sug')
   ---
   initial: True
   code: |
@@ -4966,7 +4966,7 @@
     current_keys = " ".join(map(lambda x: '<a class="mysug label label-primary">' + str(x) + '</a>', ml.dependent_in_use()))
 "ml-classify": |-
   code: |
-    ml = SimpleTextMachineLearner('demo')
+    ml = SimpleTextMachineLearner(group_id='demo')
   ---
   initial: True
   code: |
@@ -5018,18 +5018,18 @@
   ---
   initial: True
   code: |
-    ml = SimpleTextMachineLearner('demo')
+    ml = SimpleTextMachineLearner(group_id='demo')
     the_data = ml.export_training_set(output_format='json')
     sources = PlaygroundSection('sources')
     sources.write_file('my_training_data.json', the_data)
 "ml-export-yaml": |-
   initial: True
   code: |
-    ml = SimpleTextMachineLearner('demo')
+    ml = SimpleTextMachineLearner(group_id='demo')
     the_data = ml.export_training_set(output_format='yaml')
     response(response=the_data, content_type='text/plain')
 "ml-predict": "question: |\n  Enter some text.\nfields:\n  - no label: phrase\n---\n\
-  mandatory: True\ncode: |\n  ml = SimpleTextMachineLearner('demo')\n  predictions\
+  mandatory: True\ncode: |\n  ml = SimpleTextMachineLearner(group_id='demo')\n  predictions\
   \ = ml.predict(phrase)\n---\nmandatory: True\nquestion: |\n  The prediction\nsubquestion:\
   \ |\n  The text provided was:\n  > ${ phrase }\n  \n  % if len(predictions):\n \
   \ The prediction was:\n\n  > ${ predictions[0] }\n  % else:\n  There is not enough\
@@ -5040,8 +5040,8 @@
   \ The prediction was:\n\n  % for prediction in predictions:\n  * ${ '%s (%f)' %\
   \ prediction }\n  % endfor\n  % else:\n  There is not enough training data\n  to\
   \ make a prediction yet.\n  % endif\nbuttons:\n  - Restart: restart"
-"ml-save-and-predict": "code: |\n  ml = SimpleTextMachineLearner('demo')\n---\ncode:\
-  \ |\n  ml.save_for_classification(phrase)\n  predictions = ml.predict(phrase)\n\
+"ml-save-and-predict": "code: |\n  ml = SimpleTextMachineLearner(group_id='demo')\n\
+  ---\ncode: |\n  ml.save_for_classification(phrase)\n  predictions = ml.predict(phrase)\n\
   ---\nmandatory: True\nquestion: |\n  The prediction\nsubquestion: |\n  The text\
   \ provided was:\n  > ${ phrase }\n  \n  % if len(predictions):\n  The prediction\
   \ was:\n\n  > ${ predictions[0] }\n  % else:\n  There is not enough training data\n\
@@ -5619,13 +5619,14 @@
 "ocr-chord-refresh": |-
   mandatory: true
   code: |
+    the_files
     if the_task.ready():
       final_screen
     else:
       waiting_screen
   ---
   code: |
-    the_task = ocr_file_in_background(the_file, 'refresh')
+    the_task = ocr_file_in_background(the_files, 'refresh')
   ---
   event: waiting_screen
   question: |
@@ -5644,9 +5645,15 @@
     file.
   subquestion: |
     ${ the_task.get() }
+  ---
+  question: |
+    Please upload one or more files.
+  fields:
+    - File: the_files
+      datatype: files
 "ocr-classify": |-
   code: |
-    ml = SimpleTextMachineLearner('ocr_ai')
+    ml = SimpleTextMachineLearner(group_id='ocr_ai')
   ---
   initial: True
   code: |
@@ -5672,11 +5679,14 @@
 "ocr-save-and-predict": |-
   mandatory: True
   code: |
-    the_file
+    the_file.set_attributes(persistent=True)
+  ---
+  mandatory: True
+  code: |
     the_task
     if not the_task.ready():
       waiting_screen
-    ml = SimpleTextMachineLearner('ocr_ai')
+    ml = SimpleTextMachineLearner(group_id='ocr_ai')
     ml.save_for_classification(phrase, info=the_file)
     predictions = ml.predict(phrase)
   ---
@@ -5698,6 +5708,24 @@
   code: |
     phrase = action_argument('text')
     background_response()
+  ---
+  event: waiting_screen
+  reload: 5
+  question: |
+    Please wait.
+  ---
+  mandatory: True
+  question: |
+    Your document
+  subquestion: |
+    % if len(predictions):
+    Your document is a ${ predictions[0] }.
+    % else:
+    There is not enough training data
+    to make a prediction yet.
+    % endif
+  buttons:
+    - Restart: restart
 "optional-field": |-
   question: |
     What are your favorite things to eat?
@@ -7956,6 +7984,34 @@
   mandatory: True
   question: |
     You sound ${ mood }.
+"random-forest": |-
+  mandatory: True
+  code: |
+    rf = RandomForestMachineLearner('fruit', 'ml-random-forest.json')
+    if False and rf.is_empty():
+      rf.add_to_training_set(dict(a=1, b=2.0, c=3.0, d='A'), 'apple')
+      rf.add_to_training_set(dict(a=0.9, b=2, c=3.0, d='A'), 'apple')
+      rf.add_to_training_set(dict(a=0.8, b=2.0, c=3.0, d='A'), 'apple')
+      rf.add_to_training_set(dict(a=1.0, b=2.1, c=3, d='B'), 'apple')
+      rf.add_to_training_set(dict(a=1.2, b=2.0, c=3.1, d='A'), 'apple')
+      rf.add_to_training_set(dict(a=1.0, b=7.0, c=3.0, d='B'), 'orange')
+      rf.add_to_training_set(dict(a=0.9, b=6.9, c=3.0, d='A'), 'orange')
+      rf.add_to_training_set(dict(a=0.8, b=6.7, c=2.9, d='B'), 'orange')
+      rf.add_to_training_set(dict(a=1.0, b=7.1, c=2.95, d='B'), 'orange')
+      rf.add_to_training_set(dict(a=1.05, b=6.8, c=3.1, d='B'), 'orange')
+  ---
+  code: |
+    sample_data = dict(a=1, b=3.8, c=3.1, d='B')
+    predictions = rf.predict(sample_data, probabilities=True)
+  ---
+  mandatory: True
+  question: |
+    The prediction
+  subquestion: |
+    With
+    ${ '{0:.1f}%'.format(predictions[0][1]*100) }
+    certainty, I think it is an
+    ${ predictions[0][0] }.
 "raw-data-example": "code: |\n  raw_data = objects_from_file(\"raw_data.yml\", recursive=False)\n\
   ---\nmandatory: true\nquestion: |\n  The imported data\nsubquestion: |\n  % for\
   \ item in raw_data:\n  The `inventory` of\n  \"${ item.title }\" is:\n  \n  > `${\

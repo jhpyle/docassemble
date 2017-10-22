@@ -4,6 +4,36 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.78](https://github.com/jhpyle/docassemble/releases/tag/v0.1.78) - 2017-10-22
+
+### Changed
+- When using S3 or Azure Blob Storage, the files will now be cached
+  on the server file system and updated when they change.
+- When using the Playground and S3 or Azure Blob Storage is in use,
+  and there are more than ten decorations, no preview images will be
+  shown in "Variables, etc."
+- The values of `SavedFile` objects will be cached in memory for the
+  duration of a web request, so that when you create a new
+  `SavedFile`, attributes will be set from memory.
+- The first argument to a `MachineLearner` object will no longer be
+  used as a literal `group_id`.  Rather, an argument `'fruit'` it will
+  be converted into a group_id of the form
+  `docassemble.packagename:data/sources/ml-interviewname.json:fruit`.
+  You can still set a literal `group_id` using the keyword parameter 
+  `group_id`.
+- When an `initial_file` is given to a `MachineLearner` object, two
+  different formats can be used: an array, or a dictionary of arrays.
+  If a dictionary of arrays, the keys will be checked and if the key
+  matches the `group_id` (with the part before the final
+  colon, if any, removed), the array corresponding to that key will be
+  used.
+
+### Fixed
+- Playground wizard not including pdf and docx template files in package.
+- Playground wizard not including static files in package.
+- Playground wizard pickle error when using S3 or Azure blob storage.
+- Bug where key 'sought' not found.
+
 ## [0.1.77](https://github.com/jhpyle/docassemble/releases/tag/v0.1.77) - 2017-10-20
 
 ### Added
