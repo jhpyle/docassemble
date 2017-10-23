@@ -705,7 +705,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
         if privileged or can_access_file_number(file_number):
             url_properties = dict()
             if hasattr(file_reference, 'filename'):
-                url_properties['filename'] = file_reference.filename
+                url_properties['display_filename'] = file_reference.filename
             if hasattr(file_reference, 'extension'):
                 url_properties['ext'] = file_reference.extension
             for key, val in kwargs.iteritems():
