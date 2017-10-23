@@ -1879,9 +1879,9 @@ class DAFile(DAObject):
 
         """
         #logmessage("commit")
-        if hasattr(self, 'number') and hasattr(self, 'file_info') and 'extension' in self.file_info:
+        if hasattr(self, 'number'):
             #logmessage("Committed " + str(self.number))
-            sf = SavedFile(self.number, extension=self.file_info['extension'], fix=True)
+            sf = SavedFile(self.number, fix=True)
             sf.finalize()
     def show(self, width=None):
         """Inserts markup that displays the file as an image.  Takes an

@@ -63,6 +63,7 @@ question: |
 fields:
   - no label: template_choices
     datatype: checkboxes
+    none of the above: False
     code: |
       PlaygroundSection('template').reduced_file_list()
 ---
@@ -134,6 +135,7 @@ question: |
 fields:
   - no label: decoration_choices
     datatype: checkboxes
+    none of the above: False
     code: |
       PlaygroundSection('static').image_file_list()
 ---
