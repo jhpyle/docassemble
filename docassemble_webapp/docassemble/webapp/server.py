@@ -9573,6 +9573,7 @@ def do_sync_with_google_drive():
                     continue
                 gd_ids[section][the_file['name']] = the_file['id']
                 gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])
+                logmessage("Google says modtime on " + unicode(the_file) + " is " + the_file['modifiedTime'])
                 if the_file['trashed']:
                     gd_deleted[section].add(the_file['name'])
                     continue
@@ -9582,9 +9583,9 @@ def do_sync_with_google_drive():
                 break
         gd_deleted[section] = gd_deleted[section] - gd_files[section]
         for f in gd_files[section]:
-            #logmessage("Considering " + f + " on GD")
+            logmessage("Considering " + f + " on GD")
             if f not in local_files[section] or gd_modtimes[section][f] - local_modtimes[section][f] > 3:
-                #logmessage("Considering " + f + " to copy to local")
+                logmessage("Considering " + f + " to copy to local")
                 sections_modified.add(section)
                 commentary += "Copied " + f + " from Google Drive.  "
                 the_path = os.path.join(area.directory, f)
@@ -9597,11 +9598,11 @@ def do_sync_with_google_drive():
                         #logmessage("Download %d%%." % int(status.progress() * 100))
                 os.utime(the_path, (gd_modtimes[section][f], gd_modtimes[section][f]))
         for f in local_files[section]:
-            #logmessage("Considering " + f + ", which is a local file")
+            logmessage("Considering " + f + ", which is a local file")
             if f not in gd_deleted[section]:
-                #logmessage("Considering " + f + " is not in Google Drive deleted")
+                logmessage("Considering " + f + " is not in Google Drive deleted")
                 if f not in gd_files[section]:
-                    #logmessage("Considering " + f + " is not in Google Drive")
+                    logmessage("Considering " + f + " is not in Google Drive")
                     the_path = os.path.join(area.directory, f)
                     if os.path.getsize(the_path) == 0:
                         logmessage("Found zero byte file: " + the_path)
@@ -9609,6 +9610,7 @@ def do_sync_with_google_drive():
                     commentary += "Copied " + f + " to Google Drive.  "
                     extension, mimetype = get_ext_and_mimetype(the_path)
                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                    logmessage("Setting GD modtime on new file " + unicode(f) + " to " + unicode(the_modtime))
                     file_metadata = { 'name' : f, 'parents': [subdir], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
                     media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
                     the_new_file = service.files().create(body=file_metadata,
@@ -9616,7 +9618,7 @@ def do_sync_with_google_drive():
                                                           fields='id').execute()
                     new_id = the_new_file.get('id')
                 elif local_modtimes[section][f] - gd_modtimes[section][f] > 3:
-                    #logmessage("Considering " + f + " is in Google Drive but local is more recent")
+                    logmessage("Considering " + f + " is in Google Drive but local is more recent")
                     the_path = os.path.join(area.directory, f)
                     if os.path.getsize(the_path) == 0:
                         logmessage("Found zero byte file during update: " + the_path)
@@ -9624,28 +9626,30 @@ def do_sync_with_google_drive():
                     commentary += "Updated " + f + " on Google Drive.  "
                     extension, mimetype = get_ext_and_mimetype(the_path)
                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                    logmessage("Setting GD modtime on modified " + unicode(f) + " to " + unicode(the_modtime))
                     file_metadata = { 'modifiedTime': the_modtime }
                     media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
                     service.files().update(fileId=gd_ids[section][f],
                                            body=file_metadata,
                                            media_body=media).execute()
         for f in gd_deleted[section]:
-            #logmessage("Considering " + f + " is deleted on Google Drive")
+            logmessage("Considering " + f + " is deleted on Google Drive")
             if f in local_files[section]:
-                #logmessage("Considering " + f + " is deleted on Google Drive but exists locally")
+                logmessage("Considering " + f + " is deleted on Google Drive but exists locally")
                 if local_modtimes[section][f] - gd_modtimes[section][f] > 3:
-                    #logmessage("Considering " + f + " is deleted on Google Drive but exists locally and needs to be undeleted on GD")
+                    logmessage("Considering " + f + " is deleted on Google Drive but exists locally and needs to be undeleted on GD")
                     commentary += "Undeleted and updated " + f + " on Google Drive.  "
                     the_path = os.path.join(area.directory, f)
                     extension, mimetype = get_ext_and_mimetype(the_path)
                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                    logmessage("Setting GD modtime on undeleted file " + unicode(f) + " to " + unicode(the_modtime))
                     file_metadata = { 'modifiedTime': the_modtime, 'trashed': False }
                     media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
                     service.files().update(fileId=gd_ids[section][f],
                                            body=file_metadata,
                                            media_body=media).execute()
                 else:
-                    #logmessage("Considering " + f + " is deleted on Google Drive but exists locally and needs to deleted locally")
+                    logmessage("Considering " + f + " is deleted on Google Drive but exists locally and needs to deleted locally")
                     sections_modified.add(section)
                     commentary += "Deleted " + f + " from Playground.  "
                     the_path = os.path.join(area.directory, f)
@@ -9655,7 +9659,7 @@ def do_sync_with_google_drive():
     for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
         r.incr(key)
     if commentary != '':
-        flash(commentary, 'success')
+        flash(commentary, 'info')
         logmessage(commentary)
     next = request.args.get('next', url_for('playground_page'))
     if 'modules' in sections_modified:
@@ -9708,10 +9712,12 @@ def google_drive_page():
                 items.append(active_folder)
                 item_ids.append(new_folder)
         elif form.folder.data in item_ids:
+            flash(word("Google Drive folder was set."), 'success')
             set_gd_folder(form.folder.data)
         else:
-            flash(word("The supplied folder could not be found."), 'error')
+            flash(word("The supplied folder " + unicode(form.folder.data) + "could not be found."), 'error')
             set_gd_folder(None)
+        return redirect(url_for('user.profile'))
     the_folder = get_gd_folder()
     active_folder = None
     if the_folder is not None:
