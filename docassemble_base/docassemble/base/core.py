@@ -13,6 +13,7 @@ import mimetypes
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article, force_gather
 import docassemble.base.functions
 import docassemble.base.file_docx
+from docassemble.webapp.files import SavedFile
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate']
 
