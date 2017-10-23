@@ -247,7 +247,7 @@ class SavedFile(object):
                 else:
                     return key.generate_url(3600)
             else:
-                logmessage()
+                #logmessage("Key " + str(keyname) + " did not exist")
                 return('about:blank')
         else:
             if extn is None:
