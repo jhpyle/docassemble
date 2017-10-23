@@ -1202,6 +1202,53 @@
     The ${ user_favorite_fruit } has
     ${ nice_number(fruits[user_favorite_fruit]['seeds']) }
     seeds.
+"data-code": |-
+  variable name: fruits
+  data from code:
+    Apple:
+      description: |
+        ', '.join(['red', 'shiny', 'for teachers'])
+      seeds: 10/2
+    Orange:
+      description: |
+        capitalize('round') + " and orange"
+      seeds: seeds_in_orange
+    Peach:
+      description: peach_description
+      seeds: 10**6
+    Pear:
+      description: |
+        "Like an apple, but not like an apple."
+      seeds: 0
+  ---
+  question: |
+    How many seeds in an orange?
+  fields:
+    - no label: seeds_in_orange
+      datatype: range
+      min: 0
+      max: 100
+  ---
+  question: |
+    How would you describe a peach?
+  fields:
+    - no label: peach_description
+  ---
+  question: |
+    What is your favorite fruit?
+  field: user_favorite_fruit
+  choices:
+    code: fruits.keys()
+  ---
+  mandatory: True
+  question: |
+    Summary of ${ user_favorite_fruit }
+  subquestion: |
+    ${ fruits[user_favorite_fruit]['description'] }
+
+    The ${ user_favorite_fruit } has
+    ${ nice_number(fruits[user_favorite_fruit]['seeds']) }
+    seeds.
 "data-simple": |-
   variable name: fruits
   data:
@@ -6926,7 +6973,7 @@
     - Favorite vegetable: vegetable
     - Favorite fungus: mushroom
       show if:
-        code:
+        code: |
           2 + 2 == 3
 "showif-boolean": |-
   question: |
@@ -7987,8 +8034,8 @@
 "random-forest": |-
   mandatory: True
   code: |
-    rf = RandomForestMachineLearner('fruit', 'ml-random-forest.json')
-    if False and rf.is_empty():
+    rf = RandomForestMachineLearner('fruit', use_initial_file=True)
+    if rf.is_empty():
       rf.add_to_training_set(dict(a=1, b=2.0, c=3.0, d='A'), 'apple')
       rf.add_to_training_set(dict(a=0.9, b=2, c=3.0, d='A'), 'apple')
       rf.add_to_training_set(dict(a=0.8, b=2.0, c=3.0, d='A'), 'apple')
@@ -8012,6 +8059,100 @@
     ${ '{0:.1f}%'.format(predictions[0][1]*100) }
     certainty, I think it is an
     ${ predictions[0][0] }.
+"random-forest-interview": |-
+  objects:
+    - characteristics: DADict
+  ---
+  mandatory: True
+  question: |
+    Think of a fruit.
+  subquestion: |
+    When you have thought of a fruit,
+    press Continue.
+  field: thought_of_fruit
+  ---
+  mandatory: True
+  question: |
+    Is it round?
+  yesno: characteristics['round']
+  ---
+  mandatory: True
+  question: |
+    What color is it when ripe?
+  field: characteristics['color']
+  choices:
+    - Red
+    - Yellow
+    - Purple
+    - Blue
+    - Green
+    - Orange
+  ---
+  mandatory: True
+  question: |
+    Where are its seeds?
+  field: characteristics['seed location']
+  choices:
+    - Inside
+    - Outside
+    - Throughout
+  ---
+  mandatory: True
+  question: |
+    How many inches wide is a
+    typical specimen?
+  fields:
+    - no label: characteristics['width']
+      datatype: range
+      min: 0.1
+      max: 12
+      step: 0.1
+      default: 6
+  ---
+  mandatory: True
+  question: |
+    How sweet is it, on a scale from
+    1 to 5?
+  fields:
+    - no label: characteristics['sweetness']
+      datatype: range
+      min: 1
+      max: 5
+      default: 3
+  ---
+  code: |
+    rf = RandomForestMachineLearner('fruit', use_initial_file=True)
+  ---
+  code: |
+    predictions = rf.predict(characteristics, probabilities=True)
+  ---
+  mandatory: True
+  code: |
+    if len(predictions) > 0 and prediction_correct:
+      rf.add_to_training_set(characteristics, predictions[0][0])
+    else:
+      fruit_name = fruit_name.lower()
+      fruit_name = noun_singular(fruit_name)
+      rf.add_to_training_set(characteristics, fruit_name)
+  ---
+  mandatory: True
+  question: |
+    Thank you!
+  buttons:
+    Try another one: restart
+  ---
+  question: |
+    With
+    ${ '{0:.1f}%'.format(predictions[0][1]*100) }
+    certainty, I think it is
+    ${ indefinite_article(predictions[0][0]) }.
+    Am I right?
+  yesno: prediction_correct
+  ---
+  question: |
+    What fruit were you thinking of?
+  fields:
+    - Fruit: fruit_name
 "raw-data-example": "code: |\n  raw_data = objects_from_file(\"raw_data.yml\", recursive=False)\n\
   ---\nmandatory: true\nquestion: |\n  The imported data\nsubquestion: |\n  % for\
   \ item in raw_data:\n  The `inventory` of\n  \"${ item.title }\" is:\n  \n  > `${\

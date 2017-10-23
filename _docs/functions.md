@@ -2180,9 +2180,15 @@ through to the `article()` function of [pattern.en].
 * `nice_number(10)` returns `ten`
 * `nice_number(11)` returns `11`
 * `nice_number(-1)` returns `-1`
+* `nice_number(5.0)` returns `five`
+* `nice_number(5.1)` returns `5.1`
+* `nice_number(23423)` returns `23,423` (this depends on the [locale])
+* `nice_number(12873818.27774)` returns `12,873,818.28` (this depends on the [locale])
 
 This function can be customized by calling
-`docassemble.base.util.update_nice_numbers()`.
+`docassemble.base.functions.update_nice_numbers()` with a [language] as
+the first parameter and a [dictionary] as the second parameter, where
+the dictionary maps numbers to their textual representation.
 
 ## <a name="noun_plural"></a>noun_plural()
 
@@ -4061,6 +4067,7 @@ $(document).on('daPageLoad', function(){
 [keyword argument]: https://docs.python.org/2/glossary.html#term-argument
 [keyword arguments]: https://docs.python.org/2/glossary.html#term-argument
 [language support]: {{ site.baseurl }}/docs/language.html
+[language]: {{ site.baseurl }}/docs/language.html
 [list]: https://docs.python.org/2/tutorial/datastructures.html
 [locale module]: https://docs.python.org/2/library/locale.html
 [markup]: {{ site.baseurl }}/docs/markup.html
@@ -4246,3 +4253,4 @@ $(document).on('daPageLoad', function(){
 [`yesno()`]: #yesno
 [Unicode Technical Standard #35]: https://unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns
 [`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
+[locale]: #langlocale

@@ -521,8 +521,10 @@ are objects of type [`DAObject`] with attributes `.name` (e.g.,
 `'Mittens'`, `'Spot'`) and `.feet` (e.g., `4`).  We need to start by
 telling **docassemble** that the [`DADict`] is a dictionary of
 objects.  We do this by setting the `.object_type` attribute of the
-[`DADict`] to [`DAObject`], using some [`mandatory`] code.  Then we
-provide a question that sets the `.new_item_name` attribute.
+[`DADict`] to [`DAObject`], using some [`mandatory`] code.
+(Alternatively, the [`objects`] block could have included the line
+`pet: DADict.using(object_type=DAObject)`) Then we provide a question 
+that sets the `.new_item_name` attribute.
 
 When a `.object_type` is provided, **docassemble** will take care of
 initializing the value of each entry as an object of this type.  It
@@ -840,3 +842,4 @@ for the functions and block types that this example uses.
 [`.current_index()` method]: "https://docassemble.org/docs/objects.html#DAList.current_index"
 [embedding a code block within a multiple choice question]: http://docassemble.org/docs/fields.html#code%20button
 [expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[`objects`]: {{ site.baseurl }}/docs/initial.html#objects

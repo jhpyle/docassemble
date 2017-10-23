@@ -272,6 +272,13 @@ structures.  You can also use [Mako] in the data structure.
 You can also import data from [YAML] files using the
 [`objects_from_file()` function].
 
+# <a name="data from code"></a>Storing structured `data` in a variable using code
+
+The `data from code` block works just like the [`data`] block, except
+that [Python] code is used instead of text or [Mako] markup.
+
+{% include side-by-side.html demo="data-code" %}
+
 # <a name="reset"></a>Keeping variables fresh: `reset`
 
 The `reset` block will cause variables to be undefined every time a
@@ -959,3 +966,4 @@ features:
 [`bootstrap theme` configuration directive]: {{ site.baseurl }}/docs/config.html#bootstrap theme
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [`objects_from_file()` function]: {{ site.baseurl}}/docs/functions.html#objects_from_file
+[`data`]: #data

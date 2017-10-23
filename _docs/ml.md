@@ -13,9 +13,9 @@ Machine learning is like "fuzzy logic."  A computer can be trained to
 recognize patterns.
 
 A common application of machine learning is "sentiment analysis" of
-Twitter messages.  The goal is for the computer to be able to guess
-the emotional state of the author of a message based on the words that
-the author used.  Consider the following examples:
+phrases, such as Twitter messages.  The goal is for the computer to be
+able to guess the emotional state of the author of a message based on
+the words that the author used.  Consider the following examples:
 
 * I'm having a great day.
 * The weather is just lovely!
@@ -113,6 +113,21 @@ nevertheless numerous customers have developed applications that use
 IBM Watson to classify text.  You do not need to know how a model
 works in order to evaluate whether it is any good; all you need to do
 is thoroughly train and test it.
+
+This section has discussed "natural language classifiers" as an
+example of machine learning.  There are other types of classifiers as
+well.  For example, when you shop on Amazon.com, the site gives you
+suggestions about what other products you might like.  In that case,
+the dependent variable is product that is purchased, and the
+independent variables include various types of data such as other
+products that a purchaser has purchased.
+
+The [next section](#howtouse) will explain a simple way that you can
+use natural language classifiers in your interviews.  There is also a
+[lower-level way] to use **docassemble**'s machine learning
+capabilities, which you can access by including [Python] code in your
+interview.  This includes an option for doing
+[machine learning on data](#RandomForestMachineLearner).
 
 # <a name="howtouse"></a>How to use machine learning
 
@@ -468,7 +483,7 @@ In this example, however, the name of the model will simply be
 `feelings`.  In the [training interface](#train), the model can be
 located under the "Global" category.
 
-# Lower-level interface
+# <a name="lowerlevel"></a>Lower-level interface
 
 If you are an advanced interview author and you want to be able to
 control **docassemble**'s machine learning system more directly, you
@@ -688,8 +703,8 @@ the `SimpleTextMachineLearner` object.
 ml.add_to_training_set("I am feeling blue", "unhappy")
 {% endhighlight %}
 
-The first argument is the independent variable, and the second
-argument is the dependent variable.
+The first parameter is the independent variable, and the second
+parameter is the dependent variable.
 
 The [`.add_to_training_set()`] method is explained in more detail in
 the next section, which explains all of the methods available.
@@ -702,18 +717,60 @@ neighbor (kNN) algorithm from the [`pattern.vector`] package.
 
 {% highlight python %}
 ml = SimpleTextMachineLearner('abc')
-ml = SimpleTextMachineLearner('abc', 'initial-training-set.json')
 {% endhighlight %}
 
 The first parameter sets the attribute `group_id`, which is the name
-of the data set to be used for training and/or prediction.  The second
-parameter sets the attribute `initial_file`, which is the name of a
-file (assumed to be in the [sources folder] unless otherwise
-specified) containing initial training data.
+of the data set to be used for training and/or prediction.  Assuming
+that the above code exists in the interview `alphabet.yml` in the
+`docassemble.demo` package, the `group_id` will be set to
+`docassemble.demo:data/sources/ml-alphabet.json:abc`.  See the
+[`machine learning storage`] directive for information about modifying
+this value.
+
+It is also possible to set the `group_id` to an explicit value.  You
+can do:
+
+{% highlight python %}
+ml = SimpleTextMachineLearner(group_id='abcdefg')
+{% endhighlight %}
+
+or:
 
 {% highlight python %}
 ml = SimpleTextMachineLearner()
-ml.group_id = 'abc'
+ml.group_id = 'abcdefg'
+{% endhighlight %}
+
+Another parameter of the [`SimpleTextMachineLearner`] is
+`initial_file`, which is a reference to a file (assumed to be in the
+[sources folder] unless otherwise specified) that contains initial
+training data.  If you want to use the conventional initial file, you
+can do:
+
+{% highlight python %}
+ml = SimpleTextMachineLearner('abc', use_initial_file=True)
+{% endhighlight %}
+
+This will set the `initial_file` attribute to, for example,
+`docassemble.demo:data/sources/ml-alphabet.json`.
+
+You can also set `initial_file` to a specific value by passing an
+optional second parameter:
+
+{% highlight python %}
+ml = SimpleTextMachineLearner('abc', 'initial-training-set.json')
+{% endhighlight %}
+
+Or, you can give it as an optional keyword parameter:
+
+{% highlight python %}
+ml = SimpleTextMachineLearner('abc', initial_file='initial-training-set.json')
+{% endhighlight %}
+
+Or, you can set it with code:
+
+{% highlight python %}
+ml = SimpleTextMachineLearner('abc')
 ml.initial_file = 'initial-training-set.json'
 {% endhighlight %}
 
@@ -728,6 +785,24 @@ The `initial_file` will only be used to populate the data set if the
 data set is completely empty.  If you want to update a data set that
 already has entries, you can use other methods, such as
 [`.add_to_training_set()`].
+
+A workflow for developing and distributing an interview that uses
+machine learning is as follows:
+
+* Create an interview file in the [Playground] called `triage.yml`.
+* Initialize the model with `ml = SimpleTextMachineLearner('legal_issue',
+  use_initial_file=True)`.
+* Develop a training set.  You can do this using the
+  [`.save_for_classification()`] method in your interview.
+* Train your data set.  You can do this by going to [Train] from the
+  main menu.  Or, you could use [`.one_unclassified_entry()`] in
+  combination with [`.classify()`] and [`.save()`] to train from
+  within an interview.  Or, you could use [`.add_to_training_set()`]
+  in your interview to store complete observations.
+* Package your interview in the [Playground].  Under "Sources,"
+  include the file `ml-triage.json`.
+* Now, if someone installs your package on their server, then your
+  training data will initialize the model.
 
 ## <a name="SimpleTextMachineLearner.add_to_training_set"></a>.add_to_training_set()
 
@@ -892,7 +967,7 @@ to extract it, you can export it.  The [`.export_training_set()`]
 method returns [YAML] or [JSON] text containing the values of the data
 set.
 
-The [`.export_training_set()`] method takes an optional keyword argument
+The [`.export_training_set()`] method takes an optional keyword parameter
 `output_format`, which defaults to `'json'`.  The available output
 formats are `'json'` and `'yaml'`.  The [`.export_training_set()`] method
 returns a string containing the data in the `output_format` format.
@@ -1069,6 +1144,75 @@ except that is uses the Support Vector Machines algorithm from the
 [`pattern.vector`] package.  The prediction list always has a length
 of one.
 
+# <a name="RandomForestMachineLearner"></a>The `RandomForestMachineLearner` object
+
+The `RandomForestMachineLearner` object works just like
+[`SimpleTextMachineLearner`], except that its independent variable is
+a [Python dictionary] rather than a piece of text.  Instead of
+processing natural language, it uses the [random forest] algorithm
+from the [sklearn] package to build a predictive model.
+
+Here is a simple example that shows how a model can be constructed
+from raw data expressed as [Python dictionaries].
+
+{% include demo-side-by-side.html demo="random-forest" %}
+
+Some things to note about this interview:
+
+* It is important to use the [`.is_empty()`] method to see if the
+  data set is empty before using [`.add_to_training_set()`] to
+  populate the data set.  Otherwise, this interview would add
+  duplicative data points to the data set every time it ran.
+* `predictions[0]` is the most likely prediction.  If it exists,
+  `predictions[1]` is the second most likely prediction, and so on.
+* Because [`.predict()`] was called with `probabilities=True`, each
+  item in `predictions` is a [tuple], the first element of which is
+  the predicted value (`'apple'` or `'orange'`), and the second
+  element of which is a probability, a number between 0 and 1.  Thus,
+  the predicted dependent variables is `predictions[0][0]` and its
+  probability is `predictions[0][1]`.
+* The [`.format()` method], which is used to format the probability,
+  is a standard [Python] method.  The code `{0:.1f}%` means "format
+  the first number as a [floating point] number using one decimal
+  place, and put a percent sign after it."
+
+You can also train the model and make predictions using data gathered
+during interviews.
+
+Here is an example of an interview that uses a [random forest] model
+to try to identify fruit based on a set of characteristics, many of
+which are vague and subjective.  The independent variable is a
+[`DADict`] called `characteristics`.  The dependent variables is the
+name of a fruit (e.g., `'apple'`).
+
+{% include demo-side-by-side.html demo="random-forest-interview" %}
+
+Some things to note about this interview:
+
+* The previous interview used a plain [Python dictionary] as the
+  independent variable; this interview uses a [`DADict`].  Both will
+  work.  Note that the [`.predict()`] and [`.add_to_training_set()`]
+  methods do not trigger a [gathering] process on the [`DADict`].
+* The interview uses a lot of [`mandatory`] questions to make sure
+  that each item in `characteristics` gets defined before it is used
+  in the machine learning methods.  Note that there are other ways to
+  accomplish this without [`mandatory`] blocks.  One way would be to
+  refer to the expression `[characteristics[c] for c in ('round',
+  'color', 'seed location', 'width', 'sweetness')]`.
+* This is an example of a self-learning interview.  It asks the user
+  if the prediction is correct, and if the prediction is correct, the
+  user's answers are added to the data set to make it even more
+  robust.  If the prediction is not correct, the user is asked the
+  name of the actual fruit, and this is added to the data set.
+* In order to avoid adding duplicative dependent variables to the data
+  set, when the interview asks the user for the name of the fruit, the
+  interview transforms the name into lowercase using the
+  [built-in method `.lower()`], and then uses the function
+  [`noun_singular()`] to ensure that the name is in singular form.
+  Otherwise, the data set would be littered with dependent variables
+  like "Apples," "apples," "apple," and "Apple," as though they
+  referred to different things.
+
 # <a name="MachineLearningEntry"></a>The `MachineLearningEntry` object
 
 The attributes of a `MachineLearningEntry` object are:
@@ -1129,8 +1273,8 @@ from the training set arranged in order from most likely to least
 likely.  If there is no training data, an empty [list] will be returned.
 
 If you call `.predict()` with the keyword parameter
-`probabilities=True`, the return value will be a list of tuples, where
-the first element of the tuple is the dependent variable and the
+`probabilities=True`, the return value will be a list of [tuple]s, where
+the first element of the [tuple] is the dependent variable and the
 second value is the probability, expressed as a number between zero
 and one.
 
@@ -1223,10 +1367,12 @@ object.)
 [`.export_training_set()`]: #SimpleTextMachineLearner.export_training_set
 [`.confusion_matrix()`]: #SimpleTextMachineLearner.confusion_matrix
 [`SimpleTextMachineLearner`]: #SimpleTextMachineLearner
+[`SVNMachineLearner`]: #SVNMachineLearner
 [`MachineLearningEntry`]: #MachineLearningEntry
 [`.classify()`]: #MachineLearningEntry.classify
 [`.save()`]: #MachineLearningEntry.classify
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
+[`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [`datetime`]: https://docs.python.org/2/library/datetime.html#datetime-objects
 [list]: https://docs.python.org/2/tutorial/datastructures.html
 [HTML]: https://en.wikipedia.org/wiki/HTML
@@ -1239,6 +1385,7 @@ object.)
 [`DAModel`]: {{ site.baseurl }}/docs/objects.html#DAModel
 [Mako]: {{ site.baseurl }}/docs/markup.html#mako
 [2-tuples]: https://docs.python.org/2/tutorial/datastructures.html#tuples-and-sequences
+[tuple]: https://docs.python.org/2/tutorial/datastructures.html#tuples-and-sequences
 [privileges]: {{ site.baseurl }}/docs/users.html
 [package]: {{ site.baseurl }}/docs/packages.html
 [Sources folder]: {{ site.baseurl }}/docs/playground.html#sources
@@ -1246,3 +1393,14 @@ object.)
 [`machine learning storage`]: {{ site.baseurl }}/docs/initial.html#machine learning storage
 [`datatype`]: {{ site.baseurl }}/docs/fields.html#datatype
 [initial block]: {{ site.baseurl }}/docs/initial.html
+[sklearn]: http://scikit-learn.org/stable/
+[Python dictionaries]: https://docs.python.org/2/library/stdtypes.html#dict
+[Train]: #train
+[`.format()` method]: https://docs.python.org/2/library/stdtypes.html#str.format
+[floating point]: https://en.wikipedia.org/wiki/Floating-point_arithmetic
+[lower-level way]: #lowerlevel
+[random forest]: https://en.wikipedia.org/wiki/Random_forest
+[`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
+[built-in method `.lower()`]: https://docs.python.org/2/library/stdtypes.html#str.lower
+[`noun_singular()`]: https://docassemble.org/docs/functions.html#noun_singular
+[gathering]: {{ site.baseurl }}/docs/groups.html#gathering
