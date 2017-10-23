@@ -1,0 +1,56 @@
+metadata:
+  title: Data structure from code
+  short title: Data code
+  documentation: "https://docassemble.org/docs/initial.html#data from code"
+  example start: 2
+  example end: 6
+---
+modules:
+  - docassemble.base.util
+---
+variable name: fruits
+data from code:
+  Apple:
+    description: |
+      ', '.join(['red', 'shiny', 'for teachers'])
+    seeds: 10/2
+  Orange:
+    description: |
+      capitalize('round') + " and orange"
+    seeds: seeds_in_orange
+  Peach:
+    description: peach_description
+    seeds: 10**6
+  Pear:
+    description: |
+      "Like an apple, but not like an apple."
+    seeds: 0
+---
+question: |
+  How many seeds in an orange?
+fields:
+  - no label: seeds_in_orange
+    datatype: range
+    min: 0
+    max: 100
+---
+question: |
+  How would you describe a peach?
+fields:
+  - no label: peach_description
+---
+question: |
+  What is your favorite fruit?
+field: user_favorite_fruit
+choices:
+  code: fruits.keys()
+---
+mandatory: True
+question: |
+  Summary of ${ user_favorite_fruit }
+subquestion: |
+  ${ fruits[user_favorite_fruit]['description'] }
+
+  The ${ user_favorite_fruit } has
+  ${ nice_number(fruits[user_favorite_fruit]['seeds']) }
+  seeds.

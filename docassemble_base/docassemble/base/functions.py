@@ -1166,7 +1166,7 @@ def item_label(num, level=None, punctuation=True):
     """Given an index and an outline level, returns I., II., A., etc."""
     if level is None:
         level = 0
-    level = int(level) % 7
+    level = int(float(level)) % 7
     if level == 0:
         string = roman(num)
     elif level == 1:
@@ -1496,7 +1496,7 @@ def ordinal_default(j):
     """Returns the "first," "second," "third," etc. for a given number, which is expected to
     be an index starting with zero.  ordinal(0) returns "first."  For a more literal ordinal 
     number function, see ordinal_number()."""
-    return ordinal_number(int(j) + 1)
+    return ordinal_number(int(float(j)) + 1)
 
 def nice_number_default(num):
     """Returns the number as a word in the current language."""
@@ -1506,9 +1506,14 @@ def nice_number_default(num):
         language_to_use = '*'
     else:
         language_to_use = 'en'
+    if int(float(num)) == float(num):
+        num = int(float(num))
     if unicode(num) in nice_numbers[language_to_use]:
         return nice_numbers[language_to_use][unicode(num)]
-    return unicode(num)
+    if type(num) is int:
+        return unicode(locale.format("%d", num, grouping=True))
+    else:
+        return unicode(locale.format("%.2f", float(num), grouping=True)).rstrip('0')
 
 def quantity_noun_default(num, noun, as_integer=True):
     if as_integer:
@@ -1544,7 +1549,7 @@ def currency_default(value, decimals=True):
     if decimals:
         return locale.currency(float(value), symbol=True, grouping=True).decode('utf8')
     else:
-        return currency_symbol() + locale.format("%d", int(value), grouping=True)
+        return currency_symbol() + locale.format("%d", int(float(value)), grouping=True)
 
 def prefix_constructor(prefix):
     def func(word, **kwargs):
@@ -2628,8 +2633,8 @@ def split(text, breaks, index):
     parts.append(text[last_break:].strip())
     if index == 'all':
         return parts
-    if int(index) < len(parts):
-        return parts[int(index)]
+    if int(float(index)) < len(parts):
+        return parts[int(float(index))]
     return ''
 
 def showif(var, condition):

@@ -9,8 +9,8 @@ modules:
 ---
 mandatory: True
 code: |
-  rf = RandomForestMachineLearner('fruit', 'ml-random-forest.json')
-  if False and rf.is_empty():
+  rf = RandomForestMachineLearner('fruit', use_initial_file=True)
+  if rf.is_empty():
     rf.add_to_training_set(dict(a=1, b=2.0, c=3.0, d='A'), 'apple')
     rf.add_to_training_set(dict(a=0.9, b=2, c=3.0, d='A'), 'apple')
     rf.add_to_training_set(dict(a=0.8, b=2.0, c=3.0, d='A'), 'apple')

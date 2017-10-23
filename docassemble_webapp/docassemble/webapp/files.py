@@ -233,7 +233,7 @@ class SavedFile(object):
             page = kwargs.get('page', None)
             if page:
                 size = kwargs.get('size', 'page')
-                page = re.sub(r'[^0-9]', '', page)
+                page = re.sub(r'[^0-9]', '', str(page))
                 if size == 'screen':
                     keyname += 'screen-' + str(page) + '.png'
                 else:

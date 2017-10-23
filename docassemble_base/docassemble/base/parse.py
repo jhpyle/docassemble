@@ -700,26 +700,6 @@ class Field:
         else:
             self.required = True
 
-def recursive_dataobject(target, names_used):
-    if type(target) is dict or (hasattr(target, 'elements') and type(target.elements) is dict):
-        new_dict = dict()
-        for key, val in target.iteritems():
-            new_dict[key] = recursive_dataobject(val, names_used)
-        return new_dict
-    if type(target) is list or (hasattr(target, 'elements') and type(target.elements) is list):
-        new_list = list()
-        for val in target.__iter__():
-            new_list.append(recursive_dataobject(val, names_used))
-        return new_list
-    if type(target) is set or (hasattr(target, 'elements') and type(target.elements) is set):
-        new_set = set()
-        for val in target.__iter__():
-            new_set.add(recursive_dataobject(val, names_used))
-        return new_set
-    if type(target) in [bool, float, int, NoneType]:
-        return target
-    return TextObject(unicode(target), names_used=names_used)
-
 def recursive_eval_dataobject(target, user_dict):
     if type(target) is dict or (hasattr(target, 'elements') and type(target.elements) is dict):
         new_dict = dict()
@@ -743,6 +723,27 @@ def recursive_eval_dataobject(target, user_dict):
     else:
         raise DAError("recursive_eval_dataobject: expected a TextObject, but found a " + str(type(target)))
 
+def recursive_eval_data_from_code(target, user_dict):
+    if type(target) is dict:
+        new_dict = dict()
+        for key, val in target.iteritems():
+            new_dict[key] = recursive_eval_data_from_code(val, user_dict)
+        return new_dict
+    if type(target) is list:
+        new_list = list()
+        for val in target:
+            new_list.append(recursive_eval_data_from_code(val, user_dict))
+        return new_list
+    if type(target) is set:
+        new_set = set()
+        for val in target:
+            new_set.add(recursive_eval_data_from_code(val, user_dict))
+        return new_set
+    if type(target) is CodeType:
+        return eval(target, user_dict)
+    else:
+        return target
+    
 def recursive_textobject(target, names_used):
     if type(target) is dict or (hasattr(target, 'elements') and type(target.elements) is dict):
         new_dict = dict()
@@ -1111,11 +1112,18 @@ class Question:
                     raise DAError("An objects section cannot contain a nested list." + self.idebug(data))
         if 'data' in data and 'variable name' in data:
             if type(data['variable name']) not in [str, unicode]:
-                raise DAError("A data section variable name must be plain text." + self.idebug(data))
+                raise DAError("A data block variable name must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['variable name'])
             self.question_type = 'data'
-            self.fields.append(Field({'saveas': data['variable name'], 'type': 'data', 'data': recursive_dataobject(data['data'], self.mako_names)}))
+            self.fields.append(Field({'saveas': data['variable name'], 'type': 'data', 'data': self.recursive_dataobject(data['data'])}))
+        if 'data from code' in data and 'variable name' in data:
+            if type(data['variable name']) not in [str, unicode]:
+                raise DAError("A data from code block variable name must be plain text." + self.idebug(data))
+            if self.scan_for_variables:
+                self.fields_used.add(data['variable name'])
+            self.question_type = 'data_from_code'
+            self.fields.append(Field({'saveas': data['variable name'], 'type': 'data_from_code', 'data': self.recursive_data_from_code(data['data from code'])}))
         if 'objects' in data:
             if type(data['objects']) is not list:
                 data['objects'] = [data['objects']]
@@ -2161,6 +2169,46 @@ class Question:
                 att['indexno'] = indexno
                 indexno += 1
         self.data_for_debug = data
+    def recursive_data_from_code(self, target):
+        if type(target) is dict or (hasattr(target, 'elements') and type(target.elements) is dict):
+            new_dict = dict()
+            for key, val in target.iteritems():
+                new_dict[key] = self.recursive_data_from_code(val)
+            return new_dict
+        if type(target) is list or (hasattr(target, 'elements') and type(target.elements) is list):
+            new_list = list()
+            for val in target.__iter__():
+                new_list.append(self.recursive_data_from_code(val))
+            return new_list
+        if type(target) is set or (hasattr(target, 'elements') and type(target.elements) is set):
+            new_set = set()
+            for val in target.__iter__():
+                new_set.add(self.recursive_data_from_code(val))
+            return new_set
+        if type(target) in [bool, float, int, NoneType]:
+            return target
+        self.find_fields_in(target)
+        return compile(target, '', 'eval')
+    def recursive_dataobject(self, target):
+        if type(target) is dict or (hasattr(target, 'elements') and type(target.elements) is dict):
+            new_dict = dict()
+            for key, val in target.iteritems():
+                new_dict[key] = self.recursive_dataobject(val)
+            return new_dict
+        if type(target) is list or (hasattr(target, 'elements') and type(target.elements) is list):
+            new_list = list()
+            for val in target.__iter__():
+                new_list.append(self.recursive_dataobject(val))
+            return new_list
+        if type(target) is set or (hasattr(target, 'elements') and type(target.elements) is set):
+            new_set = set()
+            for val in target.__iter__():
+                new_set.add(self.recursive_dataobject(val, self.mako_names))
+            return new_set
+        if type(target) in [bool, float, int, NoneType]:
+            return target
+        return TextObject(unicode(target), names_used=self.mako_names)
+        
     def find_fields_in(self, code):
         myvisitor = myvisitnode()
         t = ast.parse(code)
@@ -3568,6 +3616,10 @@ class Interview:
                                 string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
                                 exec(string, user_dict)
                                 question.mark_as_answered(user_dict)
+                            if question.question_type == "data_from_code":
+                                string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict))
+                                exec(string, user_dict)
+                                question.mark_as_answered(user_dict)
                             if question.question_type == "objects":
                                 #logmessage("Going into objects")
                                 for keyvalue in question.objects:
@@ -3921,9 +3973,19 @@ class Interview:
                                 exec("x = " + the_x, user_dict)
                         if len(iterators):
                             for indexno in range(len(iterators)):
-                                #logmessage("code: running " + list_of_indices[indexno] + " = " + iterators[indexno])
                                 exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
+                        exec(string, user_dict)
+                        docassemble.base.functions.pop_current_variable()
+                        return({'type': 'continue', 'sought': missing_var})
+                    if question.question_type == "data_from_code":
+                        if is_generic:
+                            if the_x != 'None':
+                                exec("x = " + the_x, user_dict)
+                        if len(iterators):
+                            for indexno in range(len(iterators)):
+                                exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
+                        string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict))
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var})

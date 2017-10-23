@@ -1,0 +1,134 @@
+{
+  "fruit": [
+    {
+      "dependent": "apple", 
+      "independent": {
+        "color": "Red", 
+        "round": "True", 
+        "seed location": "Inside", 
+        "sweetness": "2", 
+        "width": "4.1"
+      }
+    }, 
+    {
+      "dependent": "strawberry", 
+      "independent": {
+        "color": "Red", 
+        "round": "False", 
+        "seed location": "Outside", 
+        "sweetness": "4", 
+        "width": "1.5"
+      }
+    }, 
+    {
+      "dependent": "banana", 
+      "independent": {
+        "color": "Yellow", 
+        "round": "False", 
+        "seed location": "Inside", 
+        "sweetness": "1", 
+        "width": "1.2"
+      }
+    }, 
+    {
+      "dependent": "pear", 
+      "independent": {
+        "color": "Yellow", 
+        "round": "False", 
+        "seed location": "Inside", 
+        "sweetness": "3", 
+        "width": "2.9"
+      }
+    }, 
+    {
+      "dependent": "peach", 
+      "independent": {
+        "color": "Yellow", 
+        "round": "True", 
+        "seed location": "Inside", 
+        "sweetness": "4", 
+        "width": "4"
+      }
+    }, 
+    {
+      "dependent": "grape", 
+      "independent": {
+        "color": "Purple", 
+        "round": "True", 
+        "seed location": "Inside", 
+        "sweetness": "3", 
+        "width": "0.5"
+      }
+    }, 
+    {
+      "dependent": "banana", 
+      "independent": {
+        "color": "Yellow", 
+        "round": "False", 
+        "seed location": "Inside", 
+        "sweetness": "3", 
+        "width": "1"
+      }
+    }, 
+    {
+      "dependent": "cantaloupe", 
+      "independent": {
+        "color": "Yellow", 
+        "round": "True", 
+        "seed location": "Inside", 
+        "sweetness": "4", 
+        "width": "6"
+      }
+    }, 
+    {
+      "dependent": "orange", 
+      "independent": {
+        "color": "Orange", 
+        "round": "True", 
+        "seed location": "Inside", 
+        "sweetness": "4", 
+        "width": "4"
+      }
+    }, 
+    {
+      "dependent": "grapefruit", 
+      "independent": {
+        "color": "Yellow", 
+        "round": "True", 
+        "seed location": "Inside", 
+        "sweetness": "2", 
+        "width": "6.6"
+      }
+    }, 
+    {
+      "dependent": "banana", 
+      "independent": {
+        "color": "Yellow", 
+        "round": "False", 
+        "seed location": "Inside", 
+        "sweetness": "2", 
+        "width": "1.5"
+      }
+    }, 
+    {
+      "dependent": "apple", 
+      "independent": {
+        "color": "Green", 
+        "round": "False", 
+        "seed location": "Inside", 
+        "sweetness": "3", 
+        "width": "4"
+      }
+    }, 
+    {
+      "dependent": "apple", 
+      "independent": {
+        "color": "Red", 
+        "round": "False", 
+        "seed location": "Inside", 
+        "sweetness": "2", 
+        "width": "4"
+      }
+    }
+  ]
+}

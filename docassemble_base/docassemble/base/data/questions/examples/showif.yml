@@ -10,7 +10,7 @@ fields:
   - Favorite vegetable: vegetable
   - Favorite fungus: mushroom
     show if:
-      code:
+      code: |
         2 + 2 == 3
 ---
 question: |
@@ -23,7 +23,7 @@ fields:
       - Belgian food
   - Favorite TV show: tv_show
     show if:
-      code:
+      code: |
         2 + 2 == 4
 ---
 question: |

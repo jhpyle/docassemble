@@ -209,8 +209,8 @@ def get_info_from_file_number(file_number, privileged=False, filename=None):
         else:
             result['filename'] = filename
         result['extension'], result['mimetype'] = get_ext_and_mimetype(result['filename'])
-        result['savedfile'] = SavedFile(file_number, extension=result['extension'], fix=True)
-        result['path'] = result['savedfile'].path
+        sf = SavedFile(file_number, extension=result['extension'], fix=True)
+        result['path'] = sf.path
         result['fullpath'] = result['path'] + '.' + result['extension']
         result['private'] = upload.private
         result['persistent'] = upload.persistent

@@ -68,6 +68,10 @@ class MachineLearner(object):
             self.group_id = kwargs['group_id']
         if 'initial_file' in kwargs:
             self.initial_file = kwargs['initial_file']
+        if kwargs.get('use_initial_file', False):
+            question = docassemble.base.functions.get_current_question()
+            if question is not None:
+                self.initial_file = question.interview.get_ml_store()
         self.reset_counter = 0
     def reset(self):
         self.reset_counter += 1
@@ -113,7 +117,8 @@ class MachineLearner(object):
             return
         file_info = get_info_from_file_reference(fileref, folder='sources')
         if 'fullpath' not in file_info or file_info['fullpath'] is None or not os.path.exists(file_info['fullpath']):
-            raise Exception("File reference " + str(fileref) + " is invalid")
+            return
+            #raise Exception("File reference " + str(fileref) + " is invalid")
         with open(file_info['fullpath'], 'rU') as fp:
             content = fp.read().decode('utf8')
         if 'mimetype' in file_info and file_info['mimetype'] == 'application/json':
@@ -414,6 +419,11 @@ class SVMMachineLearner(SimpleTextMachineLearner):
 class RandomForestMachineLearner(MachineLearner):
     def _learner(self):
         return RandomForestClassifier(n_jobs=2)
+    def feature_importances(self):
+        """Returns the importances of each of the features"""
+        if not self._train_from_db():
+            return list()
+        return learners[self.group_id]['learner'].feature_importances_
     def _initialize(self):
         """Initializes a fresh machine learner."""
         if self.group_id not in reset_counter or self.reset_counter != reset_counter[self.group_id]:
@@ -490,6 +500,7 @@ class RandomForestMachineLearner(MachineLearner):
             indep = indep.elements
         if type(indep) is not dict:
             raise Exception("RandomForestMachineLearner: independent variable was not a dictionary")
+        indep = process_independent_data(indep)
         indep_to_use = dict()
         for key, val in indep.iteritems():
             if key in learners[self.group_id]['indep_type']:
@@ -550,9 +561,11 @@ class RandomForestMachineLearner(MachineLearner):
         return super(RandomForestMachineLearner, self).retrieve_by_id(the_id)
     def save_for_classification(self, indep, key=None, info=None):
         """Creates a not-yet-classified entry in the data for the given independent variable and returns the ID of the entry."""
+        indep = process_independent_data(indep)
         return super(RandomForestMachineLearner, self).save_for_classification(indep, key=key, info=info)
     def add_to_training_set(self, indep, depend, key=None, info=None):
         """Creates an entry in the data for the given independent and dependent variable and returns the ID of the entry."""
+        indep = process_independent_data(indep)
         return super(RandomForestMachineLearner, self).add_to_training_set(indep, depend, key=key, info=info)
     def is_empty(self):
         """Returns True if no data have been defined, otherwise returns False."""
@@ -581,5 +594,16 @@ class RandomForestMachineLearner(MachineLearner):
 #     else:
 #         raise Exception("Unknown output format " + str(output_format))
 
-                
-        
+def process_independent_data(data):
+    result = dict()
+    for key, val in data.iteritems():
+        if isinstance(val, DADict) or type(val) is dict:
+            for subkey, subval in val.iteritems():
+                if type(subval) not in (unicode, str, bool, int, float):
+                    raise Exception('RandomForestMachineLearner: invalid data type ' + subval.__class__.__name__ + ' in data')
+                result[key + '_' + subkey] = subval
+        else:
+            if type(val) not in (unicode, str, bool, int, float):
+                raise Exception('RandomForestMachineLearner: invalid data type ' + subval.__class__.__name__ + ' in data')
+            result[key] = val
+    return result

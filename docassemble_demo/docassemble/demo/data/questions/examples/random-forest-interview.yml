@@ -1,0 +1,102 @@
+metadata:
+  title: Predictive analytics
+  documentation: "https://docassemble.org/docs/ml.html#RandomForestMachineLearner"
+  example start: 2
+  example end: 14
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - characteristics: DADict
+---
+mandatory: True
+question: |
+  Think of a fruit.
+subquestion: |
+  When you have thought of a fruit,
+  press Continue.
+field: thought_of_fruit
+---
+mandatory: True
+question: |
+  Is it round?
+yesno: characteristics['round']
+---
+mandatory: True
+question: |
+  What color is it when ripe?
+field: characteristics['color']
+choices:
+  - Red
+  - Yellow
+  - Purple
+  - Blue
+  - Green
+  - Orange
+---
+mandatory: True
+question: |
+  Where are its seeds?
+field: characteristics['seed location']
+choices:
+  - Inside
+  - Outside
+  - Throughout
+---
+mandatory: True
+question: |
+  How many inches wide is a
+  typical specimen?
+fields:
+  - no label: characteristics['width']
+    datatype: range
+    min: 0.1
+    max: 12
+    step: 0.1
+    default: 6
+---
+mandatory: True
+question: |
+  How sweet is it, on a scale from
+  1 to 5?
+fields:
+  - no label: characteristics['sweetness']
+    datatype: range
+    min: 1
+    max: 5
+    default: 3
+---
+code: |
+  rf = RandomForestMachineLearner('fruit', use_initial_file=True)
+---
+code: |
+  predictions = rf.predict(characteristics, probabilities=True)
+---
+mandatory: True
+code: |
+  if len(predictions) > 0 and prediction_correct:
+    rf.add_to_training_set(characteristics, predictions[0][0])
+  else:
+    fruit_name = fruit_name.lower()
+    fruit_name = noun_singular(fruit_name)
+    rf.add_to_training_set(characteristics, fruit_name)
+---
+mandatory: True
+question: |
+  Thank you!
+buttons:
+  Try another one: restart
+---
+question: |
+  With
+  ${ '{0:.1f}%'.format(predictions[0][1]*100) }
+  certainty, I think it is
+  ${ indefinite_article(predictions[0][0]) }.
+  Am I right?
+yesno: prediction_correct
+---
+question: |
+  What fruit were you thinking of?
+fields:
+  - Fruit: fruit_name

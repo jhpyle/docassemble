@@ -282,8 +282,8 @@ def as_sms(status, links=None, menu_items=None):
                 qoutput += "\n__________________________\n" + to_text(markdown_to_html(status.underText, trim=False, status=status, strip_newlines=True), terms, links, status)
             qoutput += "\n" + word('Type x to sign your name electronically')
         elif hasattr(field, 'datatype') and field.datatype == 'range':
-            max_string = str(int(status.extras['max'][field.number]))
-            min_string = str(int(status.extras['min'][field.number]))
+            max_string = str(float(status.extras['max'][field.number]))
+            min_string = str(float(status.extras['min'][field.number]))
             if label:
                 qoutput += "\n" + label + ":" + next_label
             qoutput += "\n" + word('Type a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string
@@ -1862,13 +1862,13 @@ def input_for(status, field, wide=False, embedded=False):
                 if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
                     the_default = ' data-slider-value="' + str(defaultvalue) + '"'
                 else:
-                    the_default = ''
+                    the_default = ' data-slider-value="' + str(int((float(status.extras['max'][field.number]) + float(status.extras['min'][field.number]))/2)) + '"'
                 if 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step']:
                     the_step = ' data-slider-step="' + str(status.extras['step'][field.number]) + '"'
                 else:
                     the_step = ''
-                max_string = str(int(status.extras['max'][field.number]))
-                min_string = str(int(status.extras['min'][field.number]))
+                max_string = str(float(status.extras['max'][field.number]))
+                min_string = str(float(status.extras['min'][field.number]))
                 if embedded:
                     output += '<span class="form-group slider-embedded"' + title_text + '><input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + '></span><br>'
                 else:

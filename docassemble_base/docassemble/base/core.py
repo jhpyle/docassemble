@@ -1772,7 +1772,8 @@ class DAFile(DAObject):
         self.retrieve()
         the_path = self.path()
         if not (os.path.isfile(the_path) or os.path.islink(the_path)):
-            self.file_info['savedfile'].save()
+            sf = SavedFile(self.number, extension=self.extension, fix=True)
+            sf.save()
     def retrieve(self):
         """Ensures that the file is ready to be used."""
         if not self.ok:
@@ -1878,9 +1879,10 @@ class DAFile(DAObject):
 
         """
         #logmessage("commit")
-        if hasattr(self, 'file_info') and 'savedfile' in self.file_info:
+        if hasattr(self, 'number') and hasattr(self, 'file_info') and 'extension' in self.file_info:
             #logmessage("Committed " + str(self.number))
-            self.file_info['savedfile'].finalize()
+            sf = SavedFile(self.number, extension=self.file_info['extension'], fix=True)
+            sf.finalize()
     def show(self, width=None):
         """Inserts markup that displays the file as an image.  Takes an
         optional keyword argument width.
