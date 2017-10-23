@@ -248,7 +248,7 @@ class SavedFile(object):
                     return key.generate_url(3600)
             else:
                 #logmessage("Key " + str(keyname) + " did not exist")
-                sys.stderr.write("key " + str(keyname) + " did not exist")
+                sys.stderr.write("key " + str(keyname) + " did not exist\n")
                 return('about:blank')
         else:
             if extn is None:
@@ -275,6 +275,7 @@ class SavedFile(object):
                     else:
                         url = fileroot + 'uploadedfile/' + str(self.file_number)
             else:
+                sys.stderr.write("section " + section + " was wrong\n")
                 url = 'about:blank'
             if use_external and url.startswith('/'):
                 url = docassemble.base.functions.get_url_root() + url
