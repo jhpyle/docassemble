@@ -4,6 +4,7 @@ import os
 from botocore.errorfactory import ClientError
 import mimetypes
 import sys
+import datetime
 import pytz
 epoch = pytz.utc.localize(datetime.datetime.utcfromtimestamp(0))
 
