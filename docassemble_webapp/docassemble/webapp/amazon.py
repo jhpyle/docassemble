@@ -22,7 +22,9 @@ class s3object(object):
         return s3key(self, self.conn.Object(self.bucket_name, key_name))
     def search_key(self, key_name):
         for key in self.bucket.objects.filter(Prefix=key_name, Delimiter='/'):
-            return s3key(self, self.conn.Object(self.bucket_name, key.key))
+            if key.key == key_name:
+                return s3key(self, self.conn.Object(self.bucket_name, key.key))
+        return None
     def list_keys(self, prefix):
         output = list()
         for obj in self.bucket.objects.filter(Prefix=prefix, Delimiter='/'):

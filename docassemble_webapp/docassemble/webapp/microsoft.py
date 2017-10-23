@@ -24,7 +24,9 @@ class azureobject(object):
         return new_key
     def search_key(self, key_name):
         for blob in self.conn.list_blobs(self.container, prefix=key_name, delimiter='/'):
-            return azurekey(self, blob.name)
+            if blob.name == key_name:
+                return azurekey(self, blob.name)
+        return None
     def list_keys(self, prefix):
         output = list()
         for blob in self.conn.list_blobs(self.container, prefix=prefix, delimiter='/'):

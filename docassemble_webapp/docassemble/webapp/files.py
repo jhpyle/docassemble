@@ -165,7 +165,7 @@ class SavedFile(object):
         filename = kwargs.get('filename', self.filename)
         if cloud is not None and not self.fixed:
             key = cloud.search_key(str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
-            if not key.does_exist:
+            if key is None or not key.does_exist:
                 raise DAError("size_in_bytes: file " + filename + " in " + self.section + " did not exist")
             return key.size
         else:
@@ -194,7 +194,7 @@ class SavedFile(object):
         if cloud is not None and not self.fixed:
             key_name = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
             key = cloud.search_key(key_name)
-            if not key.does_exist:
+            if key is None or not key.does_exist:
                 raise DAError("get_modtime: file " + filename + " in " + self.section + " did not exist")
             #logmessage("Modtime for key " + key_name + " is now " + str(key.last_modified))
             return key.last_modified
@@ -247,6 +247,7 @@ class SavedFile(object):
                 else:
                     return key.generate_url(3600)
             else:
+                logmessage()
                 return('about:blank')
         else:
             if extn is None:

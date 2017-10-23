@@ -756,6 +756,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
             the_file = SavedFile(file_number)
             url = the_file.url_for(**kwargs)
         else:
+            logmessage("Problem accessing " + str(file_number))
             url = 'about:blank'
     else:
         question = kwargs.get('_question', None)
