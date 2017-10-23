@@ -9607,11 +9607,12 @@ def do_sync_with_google_drive():
                     if os.path.getsize(the_path) == 0:
                         logmessage("Found zero byte file: " + the_path)
                         continue
+                    logmessage("Copying " + f + " to Google Drive.")
                     commentary += "Copied " + f + " to Google Drive.  "
                     extension, mimetype = get_ext_and_mimetype(the_path)
                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
                     logmessage("Setting GD modtime on new file " + unicode(f) + " to " + unicode(the_modtime))
-                    file_metadata = { 'name' : f, 'parents': [subdir], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
+                    file_metadata = { 'name': f, 'parents': [subdir], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
                     media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
                     the_new_file = service.files().create(body=file_metadata,
                                                           media_body=media,
