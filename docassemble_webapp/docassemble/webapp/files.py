@@ -71,7 +71,7 @@ class SavedFile(object):
             for key in cloud.list_keys(prefix):
                 filename = re.sub(r'.*/', '', key.name)
                 fullpath = os.path.join(self.directory, filename)
-                server_time = time.mktime(key.last_modified.timetuple())
+                server_time = key.get_epoch_modtime()
                 if not (os.path.isfile(fullpath) and os.path.getmtime(fullpath) == server_time):
                     key.get_contents_to_filename(fullpath)
                 self.modtimes[filename] = server_time
@@ -304,6 +304,7 @@ class SavedFile(object):
                     key.content_type = mimetype
                     #sys.stderr.write("finalize: saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
                     key.set_contents_from_filename(fullpath)
+                    self.modtimes[filename] = key.get_epoch_modtime()
         for filename, key in self.keydict.iteritems():
             if filename not in existing_files:
                 #sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")

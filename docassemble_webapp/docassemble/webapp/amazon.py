@@ -61,6 +61,8 @@ class s3key(object):
         return True
     def delete(self):
         self.key_obj.delete()
+    def get_epoch_modtime(self):
+        return (self.key_obj.last_modified - epoch).total_seconds()
     def get_contents_to_filename(self, filename):
         #try:
         self.s3_object.conn.Bucket(self.s3_object.bucket_name).download_file(self.name, filename)

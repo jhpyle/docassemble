@@ -1,8 +1,11 @@
 import datetime
 import os
 import time
+import pytz
 from azure.storage.blob import BlockBlobService
 from azure.storage.blob import BlobPermissions
+
+epoch = pytz.utc.localize(datetime.datetime.utcfromtimestamp(0))
 
 class azureobject(object):
     def __init__(self, azure_config):
@@ -48,12 +51,18 @@ class azurekey(object):
         self.azure_object.conn.delete_blob(self.azure_object.container, self.name)
     def get_contents_to_filename(self, filename):
         self.azure_object.conn.get_blob_to_path(self.azure_object.container, self.name, filename)
-        secs = time.mktime(self.last_modified.timetuple())
+        #secs = time.mktime(self.last_modified.timetuple())
+        secs = (self.last_modified - epoch).total_seconds()
         os.utime(filename, (secs, secs))
     def set_contents_from_filename(self, filename):
         self.azure_object.conn.create_blob_from_path(self.azure_object.container, self.name, filename)
+        properties = self.azure_object.conn.get_blob_properties(self.azure_object.container, self.name).properties
+        secs = (properties.last_modified - epoch).total_seconds()
+        os.utime(filename, (secs, secs))
     def set_contents_from_string(self, text):
         self.azure_object.conn.create_blob_from_text(self.azure_object.container, self.name, text)
+    def get_epoch_modtime(self):
+        return (self.last_modified - epoch).total_seconds()
     def generate_url(self, seconds, display_filename=None, content_type=None):
         if content_type is None:
             content_type = self.content_type
