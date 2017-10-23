@@ -3,6 +3,9 @@ import time
 import os
 from botocore.errorfactory import ClientError
 import mimetypes
+import sys
+import pytz
+epoch = pytz.utc.localize(datetime.datetime.utcfromtimestamp(0))
 
 class s3object(object):
     def __init__(self, s3_config):
@@ -61,8 +64,9 @@ class s3key(object):
         #try:
         self.s3_object.conn.Bucket(self.s3_object.bucket_name).download_file(self.name, filename)
         #except ClientError as e:
-        #    raise    
-        secs = time.mktime(self.last_modified.timetuple())
+        #    raise
+        secs = (self.key_obj.last_modified - epoch).total_seconds()
+        #secs = time.mktime(self.last_modified.timetuple())
         os.utime(filename, (secs, secs))
     def set_contents_from_filename(self, filename):
         if hasattr(self, 'content_type') and self.content_type is not None:
@@ -75,6 +79,8 @@ class s3key(object):
             self.key_obj.upload_file(filename, ExtraArgs={'ContentType': mimetype})
         else:
             self.key_obj.upload_file(filename)
+        secs = (self.key_obj.last_modified - epoch).total_seconds()
+        os.utime(filename, (secs, secs))        
     def set_contents_from_string(self, text):
         if hasattr(self, 'content_type') and self.content_type is not None:
             self.key_obj.put(Body=bytes(text), ContentType=self.content_type)

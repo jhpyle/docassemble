@@ -132,6 +132,7 @@
 "GitHub URL": Null
 "Go back to the previous question": Null
 "Go": Null
+"Google Drive folder was set.": Null
 "Google Drive is not configured": Null
 "Google Drive": Null
 "Google Drive Test": Null
@@ -380,7 +381,6 @@
 "There was a problem sending the text message.": Null
 "There was a problem sending you a text message.  Please log in another way.": Null
 "The role could not be deleted.": Null
-"The supplied folder could not be found.": Null
 "The version on PyPI is": Null
 "Third subdivision": Null
 "This account uses two-factor authentication.": Null

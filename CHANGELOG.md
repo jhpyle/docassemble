@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.1.79] - 2017-10-23
+### Fixed
+- PDF page retrieval index error.
+- File permissions issue in S3 that prevents server restart.  S3 users 
+  must upgrade the Docker image.
+- Incorrect timestamps when downloading from S3
+
 ## [0.1.78] - 2017-10-22
 ### Changed
 - When using S3 or Azure Blob Storage, the files will now be cached
