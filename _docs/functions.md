@@ -1539,6 +1539,29 @@ yesno: email_is_best
 ---
 {% endhighlight %}
 
+## <a name="set_title"></a>set_title()
+
+The `set_title()` function allows you to configure the title of the
+interview session, which is displayed in the "Interviews" list and in
+the navigation bar.
+
+It accepts any of four optional keyword arguments:
+
+* `title` - for the main title of the interview, which is displayed in
+  the navigation bar.
+* `short` - for the mobile-friendly version of the interview title,
+  which is displayed in the navigation bar when the screen is small.
+* `subtitle` - for the subtitle of the interview, which is displayed
+  in the "Interviews" list.  The subtitle is not visible on the screen
+  of the interview itself.
+* `tab` - for the [HTML] title of the web page.  This is typically
+  displayed in the browser tab.
+
+{% include side-by-side.html demo="set-title" %}
+
+For more information about titles, see the documentation for the
+[`metadata` initial block].
+
 # <a name="browser"></a>Functions for determining information about the browser
 
 ## <a name="language_from_browser"></a>language_from_browser()
@@ -2202,7 +2225,7 @@ through to the `pluralize()` function of [pattern.en].
 * `noun_plural('moose')` returns `mooses`
 
 You can also pass a number as a second argument to the function.  If
-the number is 1, the first argument will be returned, untouched;
+the number is 1, the first argument will be returned as a singular noun;
 otherwise, the pluralized version of the first argument will be returned.
 
 * `noun_plural('friend', number_friends)` returns `friend` if
@@ -4254,3 +4277,4 @@ $(document).on('daPageLoad', function(){
 [Unicode Technical Standard #35]: https://unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns
 [`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
 [locale]: #langlocale
+[`metadata` initial block]: {{ site.baseurl }}/docs/initial.html#metadata

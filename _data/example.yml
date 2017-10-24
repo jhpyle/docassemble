@@ -6965,6 +6965,9 @@
 "set-language": "initial: True\ncode: |\n  set_language(language)\n---\nquestion:\
   \ |\n  What language do you speak?\nfield: language\nchoices:\n  - English: en\n\
   \  - Espa\xF1ol: es"
+"set-title": |-
+  modules:
+    - docassemble.base.util
 "showif": |-
   question: |
     Please fill in the following information.

@@ -30,6 +30,15 @@ If a `title` is defined, it will be displayed in the navigation bar in
 the web app.  If a `short title` is provided, it will be displayed
 in place of the `title` when the size of the screen is small.
 
+If a `tab title` is provided, it will be displayed as the title
+of the browser tab.  Otherwise, the `title` will be used.
+
+If a `subtitle` is provided, it will be displayed as the subtitle of
+the interview in the "Interviews" list available to a logged-in user
+at `/interviews`.
+
+These titles can be overridden using the [`set_title()` function].
+
 If you set `unlisted: True` for an interview that has an entry in the
 [`dispatch`] list in your [configuration], the interview will be
 exempted from display in the interview list available at `/list`.  For
@@ -967,3 +976,4 @@ features:
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [`objects_from_file()` function]: {{ site.baseurl}}/docs/functions.html#objects_from_file
 [`data`]: #data
+[`set_title()` function]: {{ site.baseurl}}/docs/functions.html#set_title
