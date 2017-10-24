@@ -1923,7 +1923,7 @@ class DAFileCollection(DAObject):
         self.info = dict()
     def _extension_list(self):
         if hasattr(self, 'info') and 'formats' in self.info:
-            logmessage("Returning formats")
+            # logmessage("Returning formats")
             return self.info['formats']
         return ['pdf', 'docx', 'rtf']
     def _first_file(self):

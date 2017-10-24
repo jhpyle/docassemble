@@ -5,6 +5,8 @@
 - The `set_title()` function.
 ### Changed
 - Interview title functionality in the `metadata` initial block.
+### Fixed
+- Image URLs to PDF page images with S3/Azure Blob Storage.
 
 ## [0.1.79] - 2017-10-23
 ### Fixed
