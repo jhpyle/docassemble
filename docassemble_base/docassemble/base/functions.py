@@ -492,6 +492,16 @@ def interview_url(**kwargs):
     url += '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
     return url
 
+def set_title(title=None, short=None, subtitle=None, tab=None):
+    """Sets the title of the interview that is displayed in the navigation
+    bar and other places.
+
+    """
+    this_thread.internal['title'] = title
+    this_thread.internal['short title'] = short
+    this_thread.internal['subtitle'] = subtitle
+    this_thread.internal['tab title'] = tab
+
 def interview_url_action(action, **kwargs):
     """Like interview_url, except it additionally specifies an action.
     The keyword arguments are arguments to the action."""
@@ -1622,9 +1632,10 @@ def verb_past_en(*pargs, **kwargs):
     return pattern.en.conjugate(*new_args, **kwargs)
 
 def noun_plural_en(*pargs, **kwargs):
+    noun = noun_singular_en(pargs[0])
     if len(pargs) >= 2 and pargs[1] == 1:
-        return unicode(pargs[0])
-    return pattern.en.pluralize(unicode(pargs[0]))
+        return unicode(noun)
+    return pattern.en.pluralize(unicode(noun))
 
 def noun_singular_en(*pargs, **kwargs):
     if len(pargs) >= 2 and pargs[1] != 1:

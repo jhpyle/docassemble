@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.1.80] - 2017-10-23
+### Added
+- The `set_title()` function.
+### Changed
+- Interview title functionality in the `metadata` initial block.
+
 ## [0.1.79] - 2017-10-23
 ### Fixed
 - PDF page retrieval index error.

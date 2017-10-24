@@ -1608,7 +1608,7 @@ def release_lock(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
     r.delete(key)
 
-def make_navbar(status, page_title, page_short_title, steps, show_login, chat_info, debug_mode):
+def make_navbar(status, steps, show_login, chat_info, debug_mode):
     if 'inverse navbar' in status.question.interview.options:
         if status.question.interview.options['inverse navbar']:
             inverse = 'navbar-inverse '
@@ -1655,7 +1655,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
             navbar += '<li><a role="tab" class="pointer no-outline" data-target="#help" id="helptoggle" title="' + extra_help_message + '"><span class="daactivetext">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></span></a></li>'
     navbar += '<li class="invisible" id="daPhoneAvailable"><a data-target="#help" title="' + phone_message + '" class="pointer navbar-icon"><i class="glyphicon glyphicon-earphone chat-active"></i></a></li><li class="invisible" id="daChatAvailable"><a data-target="#help" title="' + chat_message + '" class="pointer navbar-icon" ><i class="glyphicon glyphicon-comment"></i></a></li></ul>'
     navbar += """
-          <a id="pagetitle" class="navbar-brand pointer"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
+          <a id="pagetitle" class="navbar-brand pointer"><span class="hidden-xs">""" + status.title + """</span><span class="visible-xs-block">""" + status.short_title + """</span></a>
       
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
@@ -6371,7 +6371,9 @@ def index():
     #     reload_after = '\n    <meta http-equiv="refresh" content="' + str(interview_status.extras['reload_after']) + '">'
     # else:
     #     reload_after = ''
-    browser_title = interview_status.question.interview.get_title().get('full', default_title)
+    interview_status.title = interview_status.question.interview.get_title(user_dict).get('full', default_title)
+    interview_status.tabtitle = interview_status.question.interview.get_title(user_dict).get('tab', interview_status.title)
+    interview_status.short_title = interview_status.question.interview.get_title(user_dict).get('short', default_short_title)
     bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
     if not is_ajax:
         standard_header_start = standard_html_start(interview_language=interview_language, debug=debug_mode, bootstrap_theme=bootstrap_theme)
@@ -6491,8 +6493,8 @@ def index():
         start_output += global_css
         if len(interview_status.extra_css):
             start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
-        start_output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n'
-    output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">' + "\n"
+        start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n'
+    output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">' + "\n"
     if interview_status.question.interview.use_navigation:
         output += navigation_bar(user_dict['nav'], interview_status.question.interview)
     output += '        <div class="tab-content">\n'
@@ -6541,7 +6543,7 @@ def index():
         key = 'da:html:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
         #logmessage("Setting html key " + key)
         pipe = r.pipeline()
-        pipe.set(key, json.dumps(dict(body=output, extra_scripts=interview_status.extra_scripts, global_css=global_css, extra_css=interview_status.extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, bootstrap_theme=bootstrap_theme)))
+        pipe.set(key, json.dumps(dict(body=output, extra_scripts=interview_status.extra_scripts, global_css=global_css, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, bootstrap_theme=bootstrap_theme)))
         pipe.expire(key, 60)
         pipe.execute()
         #sys.stderr.write("10\n")
@@ -6552,7 +6554,7 @@ def index():
             r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_json:
         #logmessage(pprint.pformat(interview_status.as_data(), indent=4))
-        data = dict(browser_title=browser_title, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back)
+        data = dict(browser_title=interview_status.tabtitle, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back)
         data.update(interview_status.as_data())
         if next_action_review:
             data['next_action'] = next_action_review
@@ -6567,7 +6569,7 @@ def index():
             do_action = interview_status.question.checkin
         else:
             do_action = None
-        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back)
+        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back)
     else:
         output = start_output + output + end_output
         response = make_response(output.encode('utf8'), '200 OK')
@@ -6729,23 +6731,24 @@ def interview_start():
     for key, yaml_filename in sorted(daconfig['dispatch'].iteritems()):
         try:
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-            if len(interview.metadata):
-                metadata = interview.metadata[0]
-                if 'unlisted' in metadata and metadata['unlisted'] is True:
-                    continue
-                interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
-            else:
-                interview_title = word('Untitled')
+            if interview.is_unlisted():
+                continue
+            titles = interview.get_title(dict(_internal=dict()))
+            interview_title = titles.get('full', titles.get('short', word('Untitled')))
+            subtitle = titles.get('sub', None)
             status_class = None
+            subtitle_class = None
         except:
             interview_title = yaml_filename
+            subtitle = None
             status_class = 'dainterviewhaserror'
+            subtitle_class = 'invisible'
             logmessage("interview_dispatch: unable to load interview file " + yaml_filename)
         if embed:
             url = url_for('index', i=yaml_filename, _external=True)
         else:
             url = url_for('index', i=yaml_filename)
-        interview_info.append(dict(link=url, display=interview_title, status_class=status_class))
+        interview_info.append(dict(link=url, display=interview_title, status_class=status_class, subtitle=subtitle, subtitle_class=subtitle_class))
     argu = dict(extra_css=Markup(global_css), extra_js=Markup(global_js), version_warning=None, interview_info=interview_info, tab_title=daconfig.get('start page title', word('Interviews')), title=daconfig.get('start page heading', word('Available interviews')))
     if embed:
         the_page = 'pages/start-embedded.html'
@@ -12536,19 +12539,15 @@ def interview_list():
     #logmessage(str(interview_query))
     interviews = list()
     for interview_info in interview_query:
+        interview_title = dict()
         is_valid = True
+        interview_valid = True
         try:
             interview = docassemble.base.interview_cache.get_interview(interview_info.filename)
-            if len(interview.metadata):
-                metadata = interview.metadata[0]
-                interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
-            else:
-                interview_title = word('Untitled')
         except:
             logmessage("interview_list: unable to load interview file " + interview_info.filename)
-            metadata = dict()
-            metadata['title'] = word('Error: interview not found')
-            interview_title = metadata['title']
+            interview_title['full'] = word('Error: interview not found')
+            interview_valid = False
             is_valid = False
         #logmessage("Found old interview with title " + interview_title)
         if interview_info.encrypted:
@@ -12557,17 +12556,21 @@ def interview_list():
             except:
                 logmessage("interview_list: unable to decrypt dictionary with secret " + str(secret))
                 dictionary = fresh_dictionary()
-                metadata = dict()
-                if is_valid:
-                    metadata['title'] = word('Error: interview answers cannot be decrypted')
-                else:
-                    metadata['title'] = word('Error: interview not found and answers could not be decrypted')
                 dictionary['_internal']['starttime'] = None
                 dictionary['_internal']['modtime'] = None
-                interview_title = metadata.get('title', word('Error: interview answers cannot be decrypted')).rstrip()
                 is_valid = False
         else:
             dictionary = unpack_dictionary(interview_info.dictionary)
+        if is_valid:
+            interview_title = interview.get_title(dictionary)
+        elif interview_valid:
+            interview_title = interview.get_title(dict(_internal=dict()))
+            if 'full' not in interview_title:
+                interview_title['full'] = word("Interview answers cannot be decrypted")
+            else:
+                interview_title['full'] += ' - ' + word('interview answers cannot be decrypted')
+        else:
+            interview_title['full'] = word('Error: interview not found and answers could not be decrypted')
         if dictionary['_internal']['starttime']:
             starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
         else:
@@ -12576,7 +12579,8 @@ def interview_list():
             modtime = nice_date_from_utc(dictionary['_internal']['modtime'], timezone=the_timezone)
         else:
             modtime = ''
-        interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title, 'valid': is_valid})
+        
+        interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid})
     script = """
     <script>
       $("#deleteall").on('click', function(event){

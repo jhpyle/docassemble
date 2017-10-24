@@ -51,7 +51,9 @@ class SavedFile(object):
                     self.directory = os.path.join(UPLOAD_DIRECTORY, *parts)
                 else:
                     self.directory = os.path.join(UPLOAD_DIRECTORY, str(self.section), str(file_number))
-                self.path = os.path.join(self.directory, self.filename)
+            else:
+                self.directory = os.path.join(tempfile.gettempdir(), str(self.section), str(self.file_number))
+            self.path = os.path.join(self.directory, self.filename)
         if fix:
             self.fix()
     def fix(self):
@@ -61,7 +63,6 @@ class SavedFile(object):
         if cloud is not None:
             self.modtimes = dict()
             self.keydict = dict()
-            self.directory = os.path.join(tempfile.gettempdir(), str(self.section), str(self.file_number))
             if not os.path.isdir(self.directory):
                 os.makedirs(self.directory)        
             #self.directory = tempfile.mkdtemp(prefix='SavedFile')
@@ -228,7 +229,7 @@ class SavedFile(object):
             extn = None
         filename = kwargs.get('filename', self.filename)
         use_external = kwargs.get('_external', False)
-        if cloud is not None:
+        if cloud is not None and not (self.section == 'files' and 'page' in kwargs and kwargs['page']):
             keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
             page = kwargs.get('page', None)
             if page:

@@ -16,7 +16,7 @@
   <tbody>
   {% for interview in interviews %}
     <tr>
-      <td>{% if interview['valid'] %}<a href="{{ url_for('index', i=interview['interview_info'].filename, session=interview['interview_info'].key, from_list=1) }}">{{ interview['title'] }}</a>{% else %}{{ interview['title'] }}{% endif %}</td>
+      <td>{% if interview['valid'] %}<a href="{{ url_for('index', i=interview['interview_info'].filename, session=interview['interview_info'].key, from_list=1) }}">{{ interview['title'] }}</a>{% else %}{{ interview['title'] }}{% endif %}{% if interview['subtitle'] %}<br><span class="text-muted dainterviewsubtitle">{{ interview['subtitle'] }}</span>{% endif %}</td>
       <td>{{ interview['starttime'] }}</td>
       <td><a class="label label-warning" href="{{ url_for('interview_list', action='delete', filename=interview['interview_info'].filename, session=interview['interview_info'].key) }}">{{ word('Delete') }}</a></td>
     </tr>

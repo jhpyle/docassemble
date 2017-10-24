@@ -3347,23 +3347,28 @@ class Interview:
             return None
         result = docassemble.base.functions.server.url_finder(self.bootstrap_theme, _package=self.source.package)
         return result
-    def get_title(self):
-        if self.title is not None:
-            return self.title
+    def get_title(self, user_dict):
+        mapping = (('title', 'full'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'))
+        if not hasattr(self, 'default_title'):
+            self.default_title = dict()
+            for metadata in self.metadata:
+                for title_name, title_abb in mapping:
+                    if metadata.get(title_name, None) is not None:
+                        self.default_title[title_abb] = metadata[title_name].strip()
         title = dict()
+        for title_name, title_abb in mapping:
+            if title_name in user_dict['_internal'] and user_dict['_internal'][title_name] is not None:
+                title[title_abb] = user_dict['_internal'][title_name].strip()
+        for key, val in self.default_title.iteritems():
+            if key not in title:
+                title[key] = val
+        return title
+    def is_unlisted(self):
+        unlisted = False
         for metadata in self.metadata:
-            if 'title' in metadata:
-                title['full'] = metadata['title'].rstrip()
-                if 'short title' in metadata:
-                    title['short'] = metadata['short title'].rstrip()
-                else:
-                    title['short'] = metadata['title'].rstrip()
-                break
-            elif 'short title' in metadata:
-                title['full'] = metadata['short title'].rstrip()
-                title['short'] = metadata['short title'].rstrip()
-        self.title = title
-        return self.title
+            if 'unlisted' in metadata:
+                unlisted = metadata['unlisted']
+        return unlisted
     def next_attachment_number(self):
         self.attachment_index += 1
         return(self.attachment_index - 1)

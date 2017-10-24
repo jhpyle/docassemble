@@ -1,0 +1,41 @@
+metadata:
+  title: Set the interview title
+  short title: Title
+  tab title: The Title
+  subtitle: The subtitle
+  documentation: "https://docassemble.org/docs/functions.html#set_title"
+  example start: 2
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+metadata:
+  title: Set the interview title
+  short title: Title
+  tab title: The Title
+  subtitle: The subtitle
+---
+question: |
+  What is your favorite fruit?
+subquestion: |
+  Note the interview titles.
+fields:
+  Fruit: favorite_fruit
+---
+mandatory: True
+code: |
+  favorite_fruit = noun_plural(favorite_fruit)
+  favorite_fruit = capitalize(favorite_fruit)
+  set_title(
+    title=favorite_fruit + " rule",
+    short="I'm Tiny!",
+    tab="TabTab",
+    subtitle="a fruit interview")
+---
+mandatory: True
+question: |
+  The interview titles have been
+  changed.
+buttons:
+  - Restart: restart
