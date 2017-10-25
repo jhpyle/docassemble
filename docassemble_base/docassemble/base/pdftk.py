@@ -194,8 +194,8 @@ def concatenate_files(path_list, pdfa=False):
                 ext = 'doc'
             elif mimetype == 'application/vnd.oasis.opendocument.text':
                 ext = 'odt'
-            docassemble.base.pandoc.word_to_pdf(path, in_format, new_pdf_file, pdfa=False)
-            new_path_list.append(new_pdf_file)
+            docassemble.base.pandoc.word_to_pdf(path, ext, new_pdf_file.name, pdfa=False)
+            new_path_list.append(new_pdf_file.name)
         elif mimetype == 'application/pdf':
             new_path_list.append(path)
     if len(new_path_list) == 0:

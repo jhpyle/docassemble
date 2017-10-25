@@ -1,9 +1,10 @@
 # Change Log
 
-## [0.1.81] - 2017-10-25
+## [0.1.82] - forthcoming
 ### Added
-- The `pdf_concatenate()` function will now convert word processing
-  files.
+- The `pdf_concatenate()` function converts word processing files.
+
+## [0.1.81] - 2017-10-25
 ### Changed
 - Google Drive synchronization is now handled as a background task so
   that it will not be interrupted by a web browser timeout.
