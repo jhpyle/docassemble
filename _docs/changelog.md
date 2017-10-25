@@ -4,6 +4,20 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.82](https://github.com/jhpyle/docassemble/releases/tag/v0.1.82) - forthcoming
+
+### Added
+- The `pdf_concatenate()` function converts word processing files.
+
+## [0.1.81](https://github.com/jhpyle/docassemble/releases/tag/v0.1.81) - 2017-10-25
+
+### Changed
+- Google Drive synchronization is now handled as a background task so
+  that it will not be interrupted by a web browser timeout.
+
+### Fixed
+- Uploads embedded in docx template files.
+
 ## [0.1.80](https://github.com/jhpyle/docassemble/releases/tag/v0.1.80) - 2017-10-23
 
 ### Added

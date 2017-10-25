@@ -3402,9 +3402,18 @@ displayed in a monospace font.
 The `pdf_concatenate()` function accepts one or more file objects
 ([`DAFile`], [`DAStaticFile`], [`DAFileList`], or [`DAFileCollection`]) as
 input and returns a [`DAFile`] containing the files concatenated into
-a single PDF file.  Image files will be converted to PDF.
+a single [PDF] file.  Image files and word processing files (.doc,
+.docx, .rtf, and .odt) will be converted to [PDF].  If any of the
+arguments is a list, it will be unpacked.
 
 {% include side-by-side.html demo="pdf-concatenate" %}
+
+`pdf_concatenate()` has two optional keyword parameters:
+
+* `filename`: if provided, this will be the name of the resulting
+  file.  If not provided, the file will be named `file.pdf`.
+* `pdfa`: if `True`, the [PDF] file will be converted to [PDF/A]
+  format.  The default is `False`.
 
 # <a name="sms"></a>Functions for working with SMS messages
 
@@ -4278,3 +4287,5 @@ $(document).on('daPageLoad', function(){
 [`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
 [locale]: #langlocale
 [`metadata` initial block]: {{ site.baseurl }}/docs/initial.html#metadata
+[PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
+[PDF/A]: https://en.wikipedia.org/wiki/PDF/A
