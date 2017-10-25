@@ -7,6 +7,12 @@ from celery.result import result_from_tuple, AsyncResult
 import sys
 import socket
 import importlib
+import os
+import re
+import httplib2
+import strict_rfc3339
+import oauth2client.client
+from docassemble.webapp.files import SavedFile
 
 class WorkerController(object):
     pass
@@ -28,7 +34,7 @@ worker_controller = None
 def initialize_db():
     global worker_controller
     worker_controller = WorkerController()
-    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update
+    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype
     from docassemble.webapp.server import app as flaskapp
     import docassemble.base.functions
     import docassemble.base.interview_cache
@@ -50,6 +56,10 @@ def initialize_db():
     worker_controller.get_info_from_file_number = get_info_from_file_number
     worker_controller.trigger_update = trigger_update
     worker_controller.ocr = docassemble.base.ocr
+    worker_controller.r = r
+    worker_controller.apiclient = apiclient
+    worker_controller.get_ext_and_mimetype = get_ext_and_mimetype
+
 
 def convert(obj):
     return result_from_tuple(obj.as_tuple(), app=workerapp)
@@ -65,6 +75,198 @@ def convert(obj):
 #     the_chord = chord(todo)(collector)
 #     sys.stderr.write("async_ocr finished in worker\n")
 #     return the_chord
+
+class RedisCredStorage(oauth2client.client.Storage):
+    def __init__(self, r, user_id, app='googledrive'):
+        self.r = r
+        self.key = 'da:' + app + ':userid:' + str(user_id)
+        self.lockkey = 'da:' + app + ':lock:userid:' + str(user_id)        
+    def acquire_lock(self):
+        pipe = self.r.pipeline()
+        pipe.set(self.lockkey, 1)
+        pipe.expire(self.lockkey, 5)
+        pipe.execute()
+    def release_lock(self):
+        self.r.delete(self.lockkey)
+    def locked_get(self):
+        json_creds = self.r.get(self.key)
+        creds = None
+        if json_creds is not None:
+            try:
+                creds = oauth2client.client.Credentials.new_from_json(json_creds)
+            except:
+                sys.stderr.write("RedisCredStorage: could not read credentials from " + str(json_creds) + "\n")
+        return creds
+    def locked_put(self, credentials):
+        self.r.set(self.key, credentials.to_json())
+    def locked_delete(self):
+        self.r.delete(self.key)
+
+@workerapp.task
+def sync_with_google_drive(user_id):
+    sys.stderr.write("sync_with_google_drive: starting\n")
+    if worker_controller is None:
+        initialize_db()
+    sys.stderr.write("sync_with_google_drive: continuing\n")
+    storage = RedisCredStorage(worker_controller.r, user_id, app='googledrive')
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        sys.stderr.write("sync_with_google_drive: credentials failed\n")
+        return worker_controller.functions.ReturnValue(ok=False, error="credentials expired", restart=False)
+    try:
+        with worker_controller.flaskapp.app_context():
+            http = credentials.authorize(httplib2.Http())
+            service = worker_controller.apiclient.discovery.build('drive', 'v3', http=http)
+            key = 'da:googledrive:mapping:userid:' + str(user_id)
+            the_folder = worker_controller.r.get(key)
+            response = service.files().get(fileId=the_folder, fields="mimeType, id, name, trashed").execute()
+            the_mime_type = response.get('mimeType', None)
+            trashed = response.get('trashed', False)
+            if trashed is True or the_mime_type != "application/vnd.google-apps.folder":
+                return worker_controller.functions.ReturnValue(ok=False, error="error accessing Google Drive", restart=False)
+            local_files = dict()
+            local_modtimes = dict()
+            gd_files = dict()
+            gd_ids = dict()
+            gd_modtimes = dict()
+            gd_deleted = dict()
+            sections_modified = set()
+            commentary = ''
+            for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+                local_files[section] = set()
+                local_modtimes[section] = dict()
+                if section == 'questions':
+                    the_section = 'playground'
+                elif section == 'templates':
+                    the_section = 'playgroundtemplate'
+                else:
+                    the_section = 'playground' + section
+                area = SavedFile(user_id, fix=True, section=the_section)
+                for f in os.listdir(area.directory):
+                    local_files[section].add(f)
+                    local_modtimes[section][f] = os.path.getmtime(os.path.join(area.directory, f))
+                subdirs = list()
+                page_token = None
+                while True:
+                    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + section + "' and '" + str(the_folder) + "' in parents").execute()
+                    for the_file in response.get('files', []):
+                        if 'id' in the_file:
+                            subdirs.append(the_file['id'])
+                    page_token = response.get('nextPageToken', None)
+                    if page_token is None:
+                        break
+                if len(subdirs) == 0:
+                    return worker_controller.functions.ReturnValue(ok=False, error="error accessing " + section + " in Google Drive", restart=False)
+                subdir = subdirs[0]
+                gd_files[section] = set()
+                gd_ids[section] = dict()
+                gd_modtimes[section] = dict()
+                gd_deleted[section] = set()
+                page_token = None
+                while True:
+                    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name, modifiedTime, trashed)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(subdir) + "' in parents").execute()
+                    for the_file in response.get('files', []):
+                        if re.search(r'(\.tmp|\.gdoc)$', the_file['name']):
+                            continue
+                        if re.search(r'^\~', the_file['name']):
+                            continue
+                        gd_ids[section][the_file['name']] = the_file['id']
+                        gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])
+                        sys.stderr.write("Google says modtime on " + unicode(the_file) + " is " + the_file['modifiedTime'] + "\n")
+                        if the_file['trashed']:
+                            gd_deleted[section].add(the_file['name'])
+                            continue
+                        gd_files[section].add(the_file['name'])
+                    page_token = response.get('nextPageToken', None)
+                    if page_token is None:
+                        break
+                gd_deleted[section] = gd_deleted[section] - gd_files[section]
+                for f in gd_files[section]:
+                    sys.stderr.write("Considering " + f + " on GD\n")
+                    if f not in local_files[section] or gd_modtimes[section][f] - local_modtimes[section][f] > 3:
+                        sys.stderr.write("Considering " + f + " to copy to local\n")
+                        sections_modified.add(section)
+                        commentary += "Copied " + f + " from Google Drive.\n"
+                        the_path = os.path.join(area.directory, f)
+                        with open(the_path, 'wb') as fh:
+                            response = service.files().get_media(fileId=gd_ids[section][f])
+                            downloader = worker_controller.apiclient.http.MediaIoBaseDownload(fh, response)
+                            done = False
+                            while done is False:
+                                status, done = downloader.next_chunk()
+                                #sys.stderr.write("Download %d%%." % int(status.progress() * 100) + "\n")
+                        os.utime(the_path, (gd_modtimes[section][f], gd_modtimes[section][f]))
+                for f in local_files[section]:
+                    sys.stderr.write("Considering " + f + ", which is a local file\n")
+                    if f not in gd_deleted[section]:
+                        sys.stderr.write("Considering " + f + " is not in Google Drive deleted\n")
+                        if f not in gd_files[section]:
+                            sys.stderr.write("Considering " + f + " is not in Google Drive\n")
+                            the_path = os.path.join(area.directory, f)
+                            if os.path.getsize(the_path) == 0:
+                                sys.stderr.write("Found zero byte file: " + the_path + "\n")
+                                continue
+                            sys.stderr.write("Copying " + f + " to Google Drive.\n")
+                            commentary += "Copied " + f + " to Google Drive.\n"
+                            extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
+                            the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                            sys.stderr.write("Setting GD modtime on new file " + unicode(f) + " to " + unicode(the_modtime) + "\n")
+                            file_metadata = { 'name': f, 'parents': [subdir], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
+                            media = worker_controller.apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
+                            the_new_file = service.files().create(body=file_metadata,
+                                                                  media_body=media,
+                                                                  fields='id').execute()
+                            new_id = the_new_file.get('id')
+                        elif local_modtimes[section][f] - gd_modtimes[section][f] > 3:
+                            sys.stderr.write("Considering " + f + " is in Google Drive but local is more recent\n")
+                            the_path = os.path.join(area.directory, f)
+                            if os.path.getsize(the_path) == 0:
+                                sys.stderr.write("Found zero byte file during update: " + the_path + "\n")
+                                continue
+                            commentary += "Updated " + f + " on Google Drive.\n"
+                            extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
+                            the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                            sys.stderr.write("Setting GD modtime on modified " + unicode(f) + " to " + unicode(the_modtime) + "\n")
+                            file_metadata = { 'modifiedTime': the_modtime }
+                            media = worker_controller.apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
+                            service.files().update(fileId=gd_ids[section][f],
+                                                   body=file_metadata,
+                                                   media_body=media).execute()
+                for f in gd_deleted[section]:
+                    sys.stderr.write("Considering " + f + " is deleted on Google Drive\n")
+                    if f in local_files[section]:
+                        sys.stderr.write("Considering " + f + " is deleted on Google Drive but exists locally\n")
+                        if local_modtimes[section][f] - gd_modtimes[section][f] > 3:
+                            sys.stderr.write("Considering " + f + " is deleted on Google Drive but exists locally and needs to be undeleted on GD\n")
+                            commentary += "Undeleted and updated " + f + " on Google Drive.\n"
+                            the_path = os.path.join(area.directory, f)
+                            extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
+                            the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                            sys.stderr.write("Setting GD modtime on undeleted file " + unicode(f) + " to " + unicode(the_modtime) + "\n")
+                            file_metadata = { 'modifiedTime': the_modtime, 'trashed': False }
+                            media = worker_controller.apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
+                            service.files().update(fileId=gd_ids[section][f],
+                                                   body=file_metadata,
+                                                   media_body=media).execute()
+                        else:
+                            sys.stderr.write("Considering " + f + " is deleted on Google Drive but exists locally and needs to deleted locally\n")
+                            sections_modified.add(section)
+                            commentary += "Deleted " + f + " from Playground.\n"
+                            the_path = os.path.join(area.directory, f)
+                            if os.path.isfile(the_path):
+                                area.delete_file(f)
+                area.finalize()
+            for key in worker_controller.r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
+                worker_controller.r.incr(key)
+            if commentary != '':
+                sys.stderr.write(commentary + "\n")
+        if 'modules' in sections_modified:
+            do_restart = True
+        else:
+            do_restart = False
+        return worker_controller.functions.ReturnValue(ok=True, summary=commentary, restart=do_restart)
+    except Exception as e:
+        return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with Google Drive: " + str(e), restart=False)
 
 @workerapp.task
 def ocr_page(**kwargs):

@@ -378,10 +378,13 @@
 "There is already a username and password on this system with the e-mail address": Null
 "There was an error.": Null
 "There was an error updating the packages.": Null
+"There was an error with the synchronization.": Null
 "There was a problem reading the YAML file you uploaded.  Are you sure it is a YAML file?  File was not saved.": Null
 "There was a problem sending the text message.": Null
 "There was a problem sending you a text message.  Please log in another way.": Null
 "The role could not be deleted.": Null
+"The synchronization was not successful.": Null
+"The synchronization was successful.": Null
 "The version on PyPI is": Null
 "Third subdivision": Null
 "This account uses two-factor authentication.": Null

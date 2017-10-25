@@ -489,7 +489,7 @@ import flask_user.views
 import werkzeug
 from rauth import OAuth2Service
 import apiclient
-import oauth2client
+import oauth2client.client
 import strict_rfc3339
 import io
 from flask_kvsession import KVSessionExtension
@@ -1726,20 +1726,20 @@ def delete_session_for_interview():
     return
 
 def delete_session():
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next']:
         if key in session:
             del session[key]
     return
 
 def backup_session():
     backup = dict()
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next']:
         if key in session:
             backup[key] = session[key]
     return backup
 
 def restore_session(backup):
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next']:
         if key in backup:
             session[key] = backup[key]
 
@@ -3615,12 +3615,17 @@ def checkin():
     return jsonify(success=False)
 
 @app.before_request
-def setup_celery():
+def setup_celery_and_variables():
     docassemble.webapp.worker.workerapp.set_current()
-
-@app.before_request
-def before_request():
     docassemble.base.functions.reset_thread_variables()
+
+# @app.before_request
+# def setup_celery():
+#     docassemble.webapp.worker.workerapp.set_current()
+
+# @app.before_request
+# def before_request():
+#     docassemble.base.functions.reset_thread_variables()
 #     docassemble.base.functions.reset_local_variables()
 #     g.request_start_time = time.time()
 #     g.request_time = lambda: "%.5fs" % (time.time() - g.request_start_time)
@@ -4788,7 +4793,6 @@ def index():
         else:
             debug_readability_help = ''
             debug_readability_question = ''
-        #PPP
         if interview_status.question.interview.force_fullscreen is True or (re.search(r'mobile', str(interview_status.question.interview.force_fullscreen).lower()) and is_mobile_or_tablet()):
             forceFullScreen = """
           if (data.steps > 1 && window != top) {
@@ -8668,12 +8672,12 @@ def update_package_wait():
 @login_required
 @roles_required(['admin', 'developer'])
 def update_package_ajax():
-    if 'update' not in session:
+    if 'taskwait' not in session:
         return jsonify(success=False)
-    result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['update'])
+    result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['taskwait'])
     if result.ready():
-        if 'update' in session:
-            del session['update']
+        if 'taskwait' in session:
+            del session['taskwait']
         the_result = result.get()
         if type(the_result) is ReturnValue:
             if the_result.ok:
@@ -8697,8 +8701,8 @@ def update_package_ajax():
 @login_required
 @roles_required(['admin', 'developer'])
 def update_package():
-    if 'update' in session:
-        del session['update']
+    if 'taskwait' in session:
+        del session['taskwait']
     pip.utils.logging._log_state = threading.local()
     pip.utils.logging._log_state.indentation = 0
     form = UpdatePackageForm(request.form)
@@ -8723,7 +8727,7 @@ def update_package():
                     elif existing_package.type == 'pip':
                         install_pip_package(existing_package.name, existing_package.limitation)
         result = docassemble.webapp.worker.update_packages.delay()
-        session['update'] = result.id
+        session['taskwait'] = result.id
         return redirect(url_for('update_package_wait'))
     if request.method == 'POST' and form.validate_on_submit():
         if 'zipfile' in request.files and request.files['zipfile'].filename:
@@ -8744,7 +8748,7 @@ def update_package():
                     #commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user"]
                     install_zip_package(pkgname, file_number)
                     result = docassemble.webapp.worker.update_packages.delay()
-                    session['update'] = result.id
+                    session['taskwait'] = result.id
                     return redirect(url_for('update_package_wait'))
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
@@ -8762,7 +8766,7 @@ def update_package():
                     #commands = ['install', '--egg', '--src=' + temp_directory, '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user", 'git+' + giturl + '.git#egg=' + packagename]
                     install_git_package(packagename, giturl)
                     result = docassemble.webapp.worker.update_packages.delay()
-                    session['update'] = result.id
+                    session['taskwait'] = result.id
                     return redirect(url_for('update_package_wait'))
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
@@ -8778,7 +8782,7 @@ def update_package():
                 if user_can_edit_package(pkgname=packagename):
                     install_pip_package(packagename, limitation)
                     result = docassemble.webapp.worker.update_packages.delay()
-                    session['update'] = result.id
+                    session['taskwait'] = result.id
                     return redirect(url_for('update_package_wait'))
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
@@ -9072,7 +9076,7 @@ def create_playground_package():
             if do_install:
                 install_zip_package('docassemble.' + pkgname, file_number)
                 result = docassemble.webapp.worker.update_packages.delay()
-                session['update'] = result.id
+                session['taskwait'] = result.id
                 return redirect(url_for('update_package_wait', next=url_for('playground_packages', file=current_package)))
                 #return redirect(url_for('playground_packages', file=current_package))
             else:
@@ -9498,13 +9502,160 @@ def trash_gd_file(section, filename):
     logmessage('trash_gd_file: file ' + str(filename) + ' trashed from '  + str(section))
     return True
 
-@app.route('/sync_with_google_drive', methods=['GET', 'POST'])
+@app.route('/sync_with_google_drive', methods=['GET'])
 @login_required
 @roles_required(['admin', 'developer'])
 def sync_with_google_drive():
     next = request.args.get('next', url_for('playground_page'))
+    if app.config['USE_GOOGLE_DRIVE'] is False:
+        flash(word("Google Drive is not configured"), "error")
+        return redirect(url_for('interview_list'))
+    storage = RedisCredStorage(app='googledrive')
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        flow = get_gd_flow()
+        uri = flow.step1_get_authorize_url()
+        return redirect(uri)
+    task = docassemble.webapp.worker.sync_with_google_drive.delay(current_user.id)
+    session['taskwait'] = task.id
+    #PPP
+    return redirect(url_for('gd_sync_wait', next=next))
+
+@app.route('/gdsyncing', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def gd_sync_wait():
+    next_url = request.args.get('next', url_for('playground_page'))
+    my_csrf = generate_csrf()
+    script = """
+    <script>
+      var checkinInterval = null;
+      var resultsAreIn = false;
+      function daRestartCallback(data){
+        //console.log("Restart result: " + data.success);
+      }
+      function daRestart(){
+        $.ajax({
+          type: 'POST',
+          url: """ + repr(str(url_for('restart_ajax'))) + """,
+          data: 'csrf_token=""" + my_csrf + """&action=restart',
+          success: daRestartCallback,
+          dataType: 'json'
+        });
+        return true;
+      }
+      function daSyncCallback(data){
+        if (data.success){
+          if (data.status == 'finished'){
+            resultsAreIn = true;
+            if (data.ok){
+              $("#notification").html('""" + word("The synchronization was successful.") + """');
+              $("#notification").removeClass("alert-info");
+              $("#notification").removeClass("alert-danger");
+              $("#notification").addClass("alert-success");
+            }
+            else{
+              $("#notification").html('""" + word("The synchronization was not successful.") + """');
+              $("#notification").removeClass("alert-info");
+              $("#notification").removeClass("alert-success");
+              $("#notification").addClass("alert-danger");
+            }
+            $("#resultsContainer").show();
+            $("#resultsArea").html(data.summary);
+            if (checkinInterval != null){
+              clearInterval(checkinInterval);
+            }
+            if (data.restart){
+              daRestart();
+            }
+          }
+          else if (data.status == 'failed' && !resultsAreIn){
+            resultsAreIn = true;
+            $("#notification").html('""" + word("There was an error with the synchronization.") + """');
+            $("#notification").removeClass("alert-info");
+            $("#notification").removeClass("alert-success");
+            $("#notification").addClass("alert-danger");
+            $("#resultsContainer").show();
+            if (data.error_message){
+              $("#resultsArea").html(data.error_message);
+            }
+            else if (data.summary){
+              $("#resultsArea").html(data.summary);
+            }
+            if (checkinInterval != null){
+              clearInterval(checkinInterval);
+            }
+          }
+        }
+        else if (!resultsAreIn){
+          $("#notification").html('""" + word("There was an error.") + """');
+          $("#notification").removeClass("alert-info");
+          $("#notification").removeClass("alert-success");
+          $("#notification").addClass("alert-danger");
+          if (checkinInterval != null){
+            clearInterval(checkinInterval);
+          }
+        }
+      }
+      function daSync(){
+        if (resultsAreIn){
+          return;
+        }
+        $.ajax({
+          type: 'POST',
+          url: """ + repr(str(url_for('checkin_sync_with_google_drive'))) + """,
+          data: 'csrf_token=""" + my_csrf + """',
+          success: daSyncCallback,
+          dataType: 'json'
+        });
+        return true;
+      }
+      $( document ).ready(function() {
+        //console.log("page loaded");
+        checkinInterval = setInterval(daSync, 2000);
+      });
+    </script>"""
+    return render_template('pages/gd_sync_wait.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Synchronizing'), page_title=word('Synchronizing'), next_page=next_url)
+    
+@app.route('/old_sync_with_google_drive', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def old_sync_with_google_drive():
+    next = request.args.get('next', url_for('playground_page'))
     extra_meta = """\n    <meta http-equiv="refresh" content="1; url='""" + url_for('do_sync_with_google_drive', next=next) + """'">"""
     return render_template('pages/google_sync.html', version_warning=None, bodyclass='adminbody', extra_meta=Markup(extra_meta), tab_title=word('Synchronizing'), page_title=word('Synchronizing'))
+
+def add_br(text):
+    return re.sub(r'[\n\r]+', "<br>", text)
+
+@app.route('/checkin_sync_with_google_drive', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def checkin_sync_with_google_drive():
+    if 'taskwait' not in session:
+        return jsonify(success=False)
+    result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['taskwait'])
+    if result.ready():
+        if 'taskwait' in session:
+            del session['taskwait']
+        the_result = result.get()
+        if type(the_result) is ReturnValue:
+            if the_result.ok:
+                logmessage("checkin_sync_with_google_drive: success")
+                return jsonify(success=True, status='finished', ok=the_result.ok, summary=add_br(the_result.summary), restart=the_result.restart)
+            elif hasattr(the_result, 'error'):
+                logmessage("checkin_sync_with_google_drive: failed return value is " + str(the_result.error))
+                return jsonify(success=True, status='failed', error_message=str(the_result.error), restart=False)
+            elif hasattr(the_result, 'summary'):
+                return jsonify(success=True, status='failed', summary=add_br(the_result.summary), restart=False)
+            else:
+                return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(the_result)), restart=False)
+        else:
+            logmessage("checkin_sync_with_google_drive: failed return value is a " + str(type(the_result)))
+            logmessage("checkin_sync_with_google_drive: failed return value is " + str(the_result))
+            return jsonify(success=True, status='failed', error_message=str(the_result), restart=False)
+    else:
+        return jsonify(success=True, status='waiting', restart=False)
     
 @app.route('/do_sync_with_google_drive', methods=['GET', 'POST'])
 @login_required
@@ -9855,6 +10006,19 @@ def playground_static(userid, filename):
         return(response)
     abort(404)
 
+@app.route('/playgroundmodules/<userid>/<filename>', methods=['GET'])
+@login_required
+@roles_required(['developer', 'admin'])
+def playground_modules(userid, filename):
+    filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+    area = SavedFile(userid, fix=True, section='playgroundmodules')
+    filename = os.path.join(area.directory, filename)
+    if os.path.isfile(filename):
+        extension, mimetype = get_ext_and_mimetype(filename)
+        response = send_file(filename, mimetype=str(mimetype))
+        return(response)
+    abort(404)
+
 @app.route('/playgroundsources/<userid>/<filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -9875,6 +10039,8 @@ def playground_sources(userid, filename):
     abort(404)
 
 @app.route('/playgroundtemplate/<userid>/<filename>', methods=['GET'])
+@login_required
+@roles_required(['developer', 'admin'])
 def playground_template(userid, filename):
     filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundtemplate')
@@ -10139,6 +10305,7 @@ def playground_files():
         header = word("Modules")
         upload_header = word("Upload a Python module")
         edit_header = word('Edit module files')
+        description = 'You can use this page to add Python module files (.py files) that you want to include in your interviews using "modules" or "imports."'
         lowerdescription = Markup("""<p>To use this in an interview, write a <code>modules</code> block that refers to this module using Python's syntax for specifying a "relative import" of a module (i.e., prefix the module name with a period).</p>""" + highlight('---\nmodules:\n  - .' + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter()))
         after_text = None
     if scroll:

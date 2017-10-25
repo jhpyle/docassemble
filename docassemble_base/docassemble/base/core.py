@@ -14,6 +14,7 @@ from docassemble.base.functions import possessify, possessify_long, a_prepositio
 import docassemble.base.functions
 import docassemble.base.file_docx
 from docassemble.webapp.files import SavedFile
+from docxtpl import InlineImage
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate']
 
@@ -1950,7 +1951,11 @@ class DAFileCollection(DAObject):
         """Inserts markup that displays each part of the file collection as an
         image or link.
         """
-        return " ".join([getattr(self, ext).show(**kwargs) for ext in self._extension_list() if hasattr(self, ext)])
+        the_files = [getattr(self, ext).show(**kwargs) for ext in self._extension_list() if hasattr(self, ext)]
+        for the_file in the_files:
+            if isinstance(the_file, InlineImage):
+                return the_file
+        return " ".join(the_files)
     def __str__(self):
         return " ".join([str(getattr(self, ext)) for ext in self._extension_list() if hasattr(self, ext)])
     def __unicode__(self):
@@ -1973,7 +1978,10 @@ class DAFileList(DAList):
         output = ''
         for element in sorted(self.elements):
             if element.ok:
-                output += element.show(width=width)
+                new_image = element.show(width=width)
+                if isinstance(new_image, InlineImage):
+                    return new_image
+                output += new_image
         return output
     def path(self):
         """Returns a path and filename at which the first file in the
@@ -2115,14 +2123,6 @@ class DATemplate(DAObject):
         return(self.content)
     def __unicode__(self):
         return unicode(self.__str__())
-
-# class DATable(DAObject):
-#     """The class used for tables.  A table block saves to
-#     an object of this type."""
-#     def render(self):
-#         return(self.content)
-#     def __str__(self):
-#         return(self.render())
 
 def selections(*pargs, **kwargs):
     """Packs a list of objects in the appropriate format for including

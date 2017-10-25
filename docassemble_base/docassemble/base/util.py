@@ -1637,7 +1637,7 @@ def pdf_concatenate(*pargs, **kwargs):
     get_pdf_paths([x for x in pargs], paths)
     if len(paths) == 0:
         raise DAError("pdf_concatenate: no valid files to concatenate")
-    pdf_path = docassemble.base.pdftk.concatenate_files(paths)
+    pdf_path = docassemble.base.pdftk.concatenate_files(paths, pdfa=kwargs.get('pdfa', False))
     filename = kwargs.get('filename', 'file.pdf')
     pdf_file.initialize(filename=filename)
     shutil.move(pdf_path, pdf_file.path())

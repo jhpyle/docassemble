@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.1.81] - 2017-10-25
+### Added
+- The `pdf_concatenate()` function will now convert word processing
+  files.
+### Changed
+- Google Drive synchronization is now handled as a background task so
+  that it will not be interrupted by a web browser timeout.
+### Fixed
+- Uploads embedded in docx template files.
+
 ## [0.1.80] - 2017-10-23
 ### Added
 - The `set_title()` function.

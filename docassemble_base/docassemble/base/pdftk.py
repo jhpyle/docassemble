@@ -170,7 +170,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
         pdf_to_pdfa(pdf_file.name)
     return pdf_file.name
 
-def concatenate_files(path_list):
+def concatenate_files(path_list, pdfa=False):
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     subprocess_arguments = [PDFTK_PATH]
     new_path_list = list()
@@ -184,6 +184,18 @@ def concatenate_files(path_list):
                 logmessage("failed to convert image to PDF: " + " ".join(args))
                 continue
             new_path_list.append(new_pdf_file.name)
+        elif mimetype in ('application/rtf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword', 'application/vnd.oasis.opendocument.text'):
+            new_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+            if mimetype == 'application/rtf':
+                ext = 'rtf'
+            elif mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+                ext = 'docx'
+            elif mimetype == 'application/msword':
+                ext = 'doc'
+            elif mimetype == 'application/vnd.oasis.opendocument.text':
+                ext = 'odt'
+            docassemble.base.pandoc.word_to_pdf(path, in_format, new_pdf_file, pdfa=False)
+            new_path_list.append(new_pdf_file)
         elif mimetype == 'application/pdf':
             new_path_list.append(path)
     if len(new_path_list) == 0:
@@ -195,4 +207,6 @@ def concatenate_files(path_list):
     if result != 0:
         logmessage("Failed to concatenate PDF files")
         raise DAError("Call to pdftk failed for concatenation where arguments were " + " ".join(subprocess_arguments))
+    if pdfa:
+        pdf_to_pdfa(pdf_file.name)
     return pdf_file.name
