@@ -3901,6 +3901,11 @@ your [Javascript] code.
 The `flash()` function displays a notification at the top of the
 screen, using the standard [Bootstrap] notification style.
 
+{% include side-by-side.html demo="flash" %}
+
+The first parameter is the message itself, and the second parameter is
+the optional priority.
+
 The available priorities are:
 
 <div class="panel panel-default">
