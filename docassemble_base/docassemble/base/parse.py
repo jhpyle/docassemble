@@ -52,6 +52,7 @@ match_brackets = re.compile(r'(\[.+?\])')
 match_brackets_or_dot = re.compile(r'(\[.+?\]|\.[a-zA-Z_][a-zA-Z0-9_]*)')
 complications = re.compile(r'[\.\[]')
 list_of_indices = ['i', 'j', 'k', 'l', 'm', 'n']
+extension_of_doc_format = {'pdf':'pdf', 'docx': 'docx', 'rtf': 'rtf', 'rtf to docx': 'docx', 'tex': 'tex', 'html': 'html'}
 
 def process_audio_video_list(the_list, user_dict):
     output = list()
@@ -403,7 +404,7 @@ class InterviewStatus(object):
                         if attachment[key]:
                             the_attachment[key] = attachment[key]
                 for the_format in attachment['file']:
-                    the_attachment['url'][the_format] = docassemble.base.functions.server.url_finder(attachment['file'][the_format], filename=attachment['filename'] + '.' + the_format)
+                    the_attachment['url'][the_format] = docassemble.base.functions.server.url_finder(attachment['file'][the_format], filename=attachment['filename'] + '.' + extension_of_doc_format[the_format])
                 result['attachments'].append(the_attachment)
         for field in self.question.fields:
             the_field = dict()
@@ -2367,6 +2368,8 @@ class Question:
                             target['valid formats'] = [target['valid formats']]
                         elif type(target['valid formats']) is not list:
                             raise DAError('Unknown data type in attachment valid formats.' + self.idebug(target))
+                        if 'rtf to docx' in target['valid formats']:
+                            raise DAError('Valid formats cannot include "rtf to docx" when "docx template file" is used' + self.idebug(target))
                     else:
                         target['valid formats'] = ['docx', 'pdf']
                 if type(target[template_type + ' template file']) not in [str, unicode, dict]:
@@ -2424,6 +2427,8 @@ class Question:
                     target['valid formats'] = [target['valid formats']]
                 elif type(target['valid formats']) is not list:
                     raise DAError('Unknown data type in attachment valid formats.' + self.idebug(target))
+                if 'rtf to docx' in target['valid formats'] and 'docx' in target['valid formats']:
+                    raise DAError('Valid formats cannot include both "rtf to docx" and "docx."' + self.idebug(target))
             else:
                 target['valid formats'] = ['*']
             if 'pdf/a' in target:
@@ -2933,7 +2938,7 @@ class Question:
         if self.interview.cache_documents and attachment['variable_name']:
             try:
                 existing_object = eval(attachment['variable_name'], user_dict)
-                for doc_format in ['pdf', 'rtf', 'docx', 'tex', 'html']:
+                for doc_format in ['pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html']:
                     if hasattr(existing_object, doc_format):
                         the_file = getattr(existing_object, doc_format)
                         for key in ['extension', 'mimetype', 'content', 'markdown']:
@@ -2950,11 +2955,11 @@ class Question:
                 pass
             #logmessage("finalize_attachment: " + attachment['variable_name'] + " was not in cache")
         for doc_format in result['formats_to_use']:
-            if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
+            if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx']:
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
                         the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'])
-                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + doc_format, the_pdf_file, yaml_file_name=self.interview.source.path)
+                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
                         for key in ['images', 'data_strings', 'convert_to_pdf_a']:
                             if key in result:
                                 del result[key]
@@ -2986,7 +2991,7 @@ class Question:
                         converter.additional_yaml = [x.path(user_dict=user_dict) for x in attachment['options']['additional_yaml']]
                     elif 'additional_yaml' in self.interview.attachment_options:
                         converter.additional_yaml = [x.path(user_dict=user_dict) for x in self.interview.attachment_options['additional_yaml']]
-                    if doc_format == 'rtf':
+                    if doc_format in ('rtf', 'rtf to docx'):
                         if 'rtf_template_file' in attachment['options']:
                             converter.template_file = attachment['options']['rtf_template_file'].path(user_dict=user_dict)
                         elif 'rtf_template_file' in self.interview.attachment_options:
@@ -3003,7 +3008,7 @@ class Question:
                             converter.template_file = self.interview.attachment_options['template_file'].path(user_dict=user_dict)
                     converter.metadata = result['metadata']
                     converter.convert(self)
-                    result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + doc_format, converter.output_filename, yaml_file_name=self.interview.source.path)
+                    result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], converter.output_filename, yaml_file_name=self.interview.source.path)
                     result['content'][doc_format] = result['markdown'][doc_format]
             elif doc_format in ['html']:
                 result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
@@ -3021,7 +3026,7 @@ class Question:
             exec(attachment['variable_name'] + '.info = _attachment_info', user_dict)
             del user_dict['_attachment_info']
             for doc_format in result['file']:
-                variable_string = attachment['variable_name'] + '.' + doc_format
+                variable_string = attachment['variable_name'] + '.' + extension_of_doc_format[doc_format]
                 # filename = result['filename'] + '.' + doc_format
                 # file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
                 if result['file'][doc_format] is None:
@@ -3034,13 +3039,13 @@ class Question:
                     markdown_string = ', markdown=' + repr(result['markdown'][doc_format])
                 else:
                     markdown_string = ''
-                string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + '.' + doc_format) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + ")"
+                string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + '.' + extension_of_doc_format[doc_format]) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + ")"
                 #logmessage("Executing " + string + "\n")
                 exec(string, user_dict)
             for doc_format in result['content']:
                 # logmessage("Considering " + doc_format)
                 if doc_format not in result['file']:
-                    variable_string = attachment['variable_name'] + '.' + doc_format
+                    variable_string = attachment['variable_name'] + '.' + extension_of_doc_format[doc_format]
                     # logmessage("Setting " + variable_string)
                     string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ', markdown=' + repr(result['markdown'][doc_format]) + ', content=' + repr(result['content'][doc_format]) + ")"
                     exec(string, user_dict)
@@ -3083,7 +3088,7 @@ class Question:
         else:
             result['convert_to_pdf_a'] = self.interview.use_pdf_a
         for doc_format in result['formats_to_use']:
-            if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
+            if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx']:
                 if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
                     if doc_format == 'docx' or ('docx' not in result['formats_to_use'] and doc_format == 'pdf'):
                         result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'].path(user_dict=user_dict))

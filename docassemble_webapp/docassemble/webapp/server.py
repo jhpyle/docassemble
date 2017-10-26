@@ -4022,8 +4022,10 @@ def index():
                         file_formats.append('rtf')
                     if 'docx' in the_attachment['valid_formats']:
                         file_formats.append('docx')
+                    if 'rtf to docx' in the_attachment['valid_formats']:
+                        file_formats.append('rtf to docx')
                 for the_format in file_formats:
-                    attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(the_format), 'number': the_attachment['file'][the_format], 'mimetype': the_attachment['mimetype'][the_format], 'attachment': the_attachment})
+                    attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(docassemble.base.parse.extension_of_doc_format[the_format]), 'number': the_attachment['file'][the_format], 'mimetype': the_attachment['mimetype'][the_format], 'attachment': the_attachment})
                     attached_file_count += 1
             worker_key = 'da:worker:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
             for email_address in re.split(r' *[,;] *', attachment_email_address.strip()):
@@ -4848,6 +4850,15 @@ def index():
       preloadImage('""" + str(url_for('static', filename='bootstrap-fileinput/img/loading.gif')) + """');
       function show_help_tab(){
           $('#helptoggle').tab('show');
+      }
+      function flash(message, priority){
+        if (priority == null){
+          priority = 'info'
+        }
+        if (!$("#flash").length){
+          $("body").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+        }
+        $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>');
       }
       function url_action(action, args){
           if (args == null){
@@ -7105,6 +7116,15 @@ def observer():
       }
       function show_help_tab(){
           $('#helptoggle').tab('show');
+      }
+      function flash(message, priority){
+        if (priority == null){
+          priority = 'info'
+        }
+        if (!$("#flash").length){
+          $("body").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+        }
+        $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>');
       }
       function url_action(action, args){
           //console.log("Got to a url_action");
@@ -13716,9 +13736,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                             break
                         if doc_format not in ['pdf', 'rtf']:
                             continue
-                        filename = attachment['filename'] + '.' + doc_format
+                        filename = attachment['filename'] + '.' + extension_of_doc_format[doc_format]
                         saved_file = save_numbered_file(filename, attachment['file'][doc_format], yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
-                        url = re.sub(r'/$', r'', url_root) + url_for('serve_stored_file', uid=sess_info['uid'], number=saved_file.file_number, filename=attachment['filename'], extension=doc_format)
+                        url = re.sub(r'/$', r'', url_root) + url_for('serve_stored_file', uid=sess_info['uid'], number=saved_file.file_number, filename=attachment['filename'], extension=extension_of_doc_format[doc_format])
                         #logmessage('sms: url is ' + str(url))
                         m.media(url)
                         media_count += 1

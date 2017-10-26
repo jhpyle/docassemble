@@ -722,13 +722,13 @@ def image_as_rtf(match, question=None):
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'width' in file_info:
-        return rtf_image(file_info, width, not width_supplied)
+        return rtf_image(file_info, width, False)
     elif file_info['extension'] == 'pdf':
         output = ''
         if not width_supplied:
             #logmessage("Adding page break\n")
             width = DEFAULT_PAGE_WIDTH
-            output += '\\page '
+            #output += '\\page '
         #logmessage("maxpage is " + str(int(file_info['pages'])) + "\n")
         max_pages = 1 + int(file_info['pages'])
         formatter = '%0' + str(len(str(max_pages))) + 'd'
@@ -741,11 +741,11 @@ def image_as_rtf(match, question=None):
             im = PIL.Image.open(page_file['fullpath'])
             page_file['width'], page_file['height'] = im.size
             output += rtf_image(page_file, width, False)
-            if not width_supplied:
-                #logmessage("Adding page break\n")
-                output += '\\page '
-            else:
-                output += ' '
+            # if not width_supplied:
+            #     #logmessage("Adding page break\n")
+            #     output += '\\page '
+            # else:
+            output += ' '
         #logmessage("Returning output\n")
         return(output)
     else:
@@ -808,6 +808,7 @@ def rtf_image(file_info, width, insert_page_breaks):
         content = '\\page '
     else:
         content = ''
+    logmessage(content + image.Data)
     return(content + image.Data)
     
 unit_multipliers = {'twips': 0.0500, 'hp': 0.5, 'in': 72, 'pt': 1, 'px': 1, 'em': 12, 'cm': 28.346472}

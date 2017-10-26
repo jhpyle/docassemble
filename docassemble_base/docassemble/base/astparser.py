@@ -2,6 +2,7 @@ import ast
 import re
 
 fix_assign = re.compile(r'\.(\[[^\]]*\])')
+valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
 class myextract(ast.NodeVisitor):
     def __init__(self):
@@ -43,7 +44,7 @@ class myvisitnode(ast.NodeVisitor):
         self.depth -= 1
     def visit_Call(self, node):
         self.calls.add(node.func)
-        if hasattr(node.func, 'id') and node.func.id in ['showif', 'showifdef', 'value', 'defined'] and len(node.args) and node.args[0].__class__.__name__ == 'Str' and hasattr(node.args[0], 's'):
+        if hasattr(node.func, 'id') and node.func.id in ['showif', 'showifdef', 'value', 'defined'] and len(node.args) and node.args[0].__class__.__name__ == 'Str' and hasattr(node.args[0], 's') and re.search(r'^[^\d]', node.args[0].s):
             self.names[node.args[0].s] = 1
         ast.NodeVisitor.generic_visit(self, node)
     def visit_Attribute(self, node):

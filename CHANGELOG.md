@@ -1,8 +1,17 @@
 # Change Log
 
-## [0.1.82] - forthcoming
+## [0.1.82] - 2017-10-26
 ### Added
 - The `pdf_concatenate()` function converts word processing files.
+- The `flash()` JavaScript function.
+### Changed
+- When using `complete_attribute`, list gathering will not
+  first seek a textual representation of the object.
+### Fixed
+- Inclusion of images in RTF when a width not specified.
+- `value()`, `defined()`, and `undefine()` no longer raise exceptions
+  when passed constants or internal Python names.
+- Errors in list gathering.
 
 ## [0.1.81] - 2017-10-25
 ### Changed

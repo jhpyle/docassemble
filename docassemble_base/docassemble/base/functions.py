@@ -2170,10 +2170,15 @@ def undefine(var):
     """Deletes the variable"""
     if type(var) not in [str, unicode]:
         raise Exception("undefine() must be given a string, not " + str(var) + ", a " + str(var.__class__.__name__))
-    if var == 'None':
-        return
+    try:
+        eval(var, dict())
+        return False
+    except:
+        pass
     frame = inspect.stack()[1][0]
     components = components_of(var)
+    if len(components) == 0 or len(components[0]) < 2:
+        raise Exception("undefine: variable " + str(var) + " is not a valid variable name")
     variable = components[0][1]
     the_user_dict = frame.f_locals
     while variable not in the_user_dict:
@@ -2208,8 +2213,15 @@ def defined(var):
     """Returns true if the variable has already been defined.  Otherwise, returns false."""
     if type(var) not in [str, unicode]:
         raise Exception("defined() must be given a string")
+    try:
+        eval(var, dict())
+        return True
+    except:
+        pass
     frame = inspect.stack()[1][0]
     components = components_of(var)
+    if len(components) == 0 or len(components[0]) < 2:
+        raise Exception("defined: variable " + str(var) + " is not a valid variable name")
     variable = components[0][1]
     the_user_dict = frame.f_locals
     while variable not in the_user_dict:
@@ -2259,16 +2271,16 @@ def value(var):
     """Returns the value of the variable given by the string 'var'."""
     if type(var) not in [str, unicode]:
         raise Exception("value() must be given a string")
-    if var == 'None':
-        return None
-    if var == 'True':
-        return True
-    if var == 'False':
-        return False
+    try:
+        return eval(var, dict())
+    except:
+        pass
     if re.search(r'[\(\)\n\r]|lambda', var):
         raise Exception("value() is invalid")
     frame = inspect.stack()[1][0]
     components = components_of(var)
+    if len(components) == 0 or len(components[0]) < 2:
+        raise Exception("value: variable " + str(var) + " is not a valid variable name")
     variable = components[0][1]
     the_user_dict = frame.f_locals
     while variable not in the_user_dict:

@@ -1130,15 +1130,15 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             file_word = 'file'
         editable_name = ''
         for attachment in status.attachments:
-            if 'rtf' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
+            if 'rtf' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                 if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                     editable_included = True
                     if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                        if 'docx' in attachment['valid_formats']:
+                        if 'docx' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats']:
                             editable_name = 'RTF and DOCX files'
                         else:
                             editable_name = 'RTF ' + file_word
-                    elif 'docx' in attachment['valid_formats']:
+                    elif 'docx' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats']:
                         editable_name = 'DOCX ' + file_word
             if debug and len(attachment['markdown']):
                 if 'html' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
@@ -1154,7 +1154,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             else:
                 show_markdown = False
             #logmessage("markdown is " + str(attachment['markdown']))
-            if 'pdf' in attachment['valid_formats'] or 'rtf' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or (debug and 'tex' in attachment['valid_formats']) or '*' in attachment['valid_formats']:
+            if 'pdf' in attachment['valid_formats'] or 'rtf' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or (debug and 'tex' in attachment['valid_formats']) or '*' in attachment['valid_formats']:
                 show_download = True
             else:
                 show_download = False                
@@ -1192,17 +1192,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     output += '                  <p><a href="' + server.url_finder(attachment['file']['rtf'], display_filename=attachment['filename'] + '.rtf') + '" target="_blank"><i class="glyphicon glyphicon-pencil"></i> RTF</a> (' + word('rtf_message') + ')</p>\n'
                 if 'docx' in attachment['valid_formats']:
                     output += '                  <p><a href="' + server.url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="glyphicon glyphicon-pencil"></i> DOCX</a> (' + word('docx_message') + ')</p>\n'
+                if 'rtf to docx' in attachment['valid_formats']:
+                    output += '                  <p><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="glyphicon glyphicon-pencil"></i> DOCX</a> (' + word('docx_message') + ')</p>\n'
                 if debug and ('tex' in attachment['valid_formats'] or '*' in attachment['valid_formats']):
                     output += '                  <p><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="glyphicon glyphicon-pencil"></i> LaTeX</a> (' + word('tex_message') + ')</p>\n'
-
-                # if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                #     output += '                  <p><a href="?filename=1&i=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=pdf"><i class="glyphicon glyphicon-print"></i> PDF</a> (' + word('pdf_message') + ')</p>\n'
-                # if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                #     output += '                  <p><a href="?filename=1&i=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=rtf"><i class="glyphicon glyphicon-pencil"></i> RTF</a> (' + word('rtf_message') + ')</p>\n'
-                # if 'docx' in attachment['valid_formats']:
-                #     output += '                  <p><a href="?filename=1&i=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=docx"><i class="glyphicon glyphicon-pencil"></i> DOCX</a> (' + word('docx_message') + ')</p>\n'
-                # if debug and ('tex' in attachment['valid_formats'] or '*' in attachment['valid_formats']):
-                #     output += '                  <p><a href="?filename=1&i=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=tex"><i class="glyphicon glyphicon-pencil"></i> LaTeX</a> (' + word('tex_message') + ')</p>\n'
                 output += '                </div>\n'
             if show_preview:
                 output += '                <div class="tab-pane" id="preview' + str(attachment_index) + '">\n'

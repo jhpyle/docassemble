@@ -1,0 +1,17 @@
+metadata:
+  title: Flash messages
+  documentation: "https://docassemble.org/docs/functions.html#flash"
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+question: |
+  The interview is complete.
+script: |
+  <script>
+    flash("Hello, user!")
+    flash("Lookout, user!", "danger")
+  </script>

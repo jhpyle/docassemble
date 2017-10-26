@@ -71,6 +71,9 @@ menu_items:
 Exception:
   doc: |
     This is a built-in Python class that represents an exception.
+loop:
+  doc: |
+    This is a variable that can be used inside of Mako for loops.
 x:
   doc: |
     This is a special variable that is used in generic object questions.

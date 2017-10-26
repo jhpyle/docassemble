@@ -635,12 +635,17 @@ class DAList(DAObject):
                     else:
                         raise Exception("new_object_type must be an object type")
                     self.elements[indexno] = object_type_to_use(self.instanceName + '[' + str(indexno) + ']', **parameters_to_use)
+                if complete_attribute is not None:
+                    getattr(self.elements[indexno], complete_attribute)
+                else:
+                    str(self.elements[indexno])
             if hasattr(self, 'new_object_type'):
                 delattr(self, 'new_object_type')
         for elem in self.elements:
-            str(elem)
             if item_object_type is not None and complete_attribute is not None:
                 getattr(elem, complete_attribute)
+            else:
+                str(elem)
     def gather(self, number=None, item_object_type=None, minimum=None, complete_attribute=None):
         """Causes the elements of the list to be gathered and named.  Returns True."""
         #sys.stderr.write("Gather\n")
@@ -667,15 +672,16 @@ class DAList(DAObject):
                     minimum = 1
                 else:
                     minimum = 0
+        self._validate(item_object_type, complete_attribute)
         while len(self.elements) < minimum:
             the_length = len(self.elements)
             if item_object_type is not None:
                 self.appendObject(item_object_type, **item_object_parameters)
-            str(self.__getitem__(the_length))
+            self.__getitem__(the_length)
             self._validate(item_object_type, complete_attribute)
+            #str(self.__getitem__(the_length))
             # if item_object_type is not None and complete_attribute is not None:
             #     getattr(self.__getitem__(the_length), complete_attribute)
-        self._validate(item_object_type, complete_attribute)
         # for elem in self.elements:
         #     str(elem)
         #     if item_object_type is not None and complete_attribute is not None:
@@ -685,8 +691,9 @@ class DAList(DAObject):
             while the_length < int(number):
                 if item_object_type is not None:
                     self.appendObject(item_object_type, **item_object_parameters)
-                str(self.__getitem__(the_length))
+                self.__getitem__(the_length)
                 self._validate(item_object_type, complete_attribute)
+                #str(self.__getitem__(the_length))
                 # if item_object_type is not None and complete_attribute is not None:
                 #     getattr(self.__getitem__(the_length), complete_attribute)
         elif minimum != 0:
@@ -694,8 +701,9 @@ class DAList(DAObject):
                 del self.there_is_another
                 if item_object_type is not None:
                     self.appendObject(item_object_type, **item_object_parameters)
-                str(self.__getitem__(the_length))
+                self.__getitem__(the_length)
                 self._validate(item_object_type, complete_attribute)
+                #str(self.__getitem__(the_length))
                 # if item_object_type is not None and complete_attribute is not None:
                 #     getattr(self.__getitem__(the_length), complete_attribute)
         if self.auto_gather:
@@ -753,7 +761,7 @@ class DAList(DAObject):
         try:
             return self.elements[index]
         except:
-            if hasattr(self, 'gathered'):
+            if self.auto_gather and hasattr(self, 'gathered'):
                 raise IndexError("list index out of range")
             elif self.object_type is None and not self.ask_object_type:
                 var_name = object.__getattribute__(self, 'instanceName') + '[' + str(index) + ']'
@@ -1155,9 +1163,10 @@ class DADict(DAObject):
             if hasattr(self, 'new_object_type'):
                 delattr(self, 'new_object_type')
         for elem in sorted(self.elements.values()):
-            str(elem)
             if item_object_type is not None and complete_attribute is not None:
                 getattr(elem, complete_attribute)
+            else:
+                str(elem)
     def gather(self, item_object_type=None, number=None, minimum=None, complete_attribute=None):
         """Causes the dictionary items to be gathered and named.  Returns True."""
         if hasattr(self, 'gathered') and self.gathered:
@@ -1196,7 +1205,8 @@ class DADict(DAObject):
                 if hasattr(self, 'there_is_another'):
                     delattr(self, 'there_is_another')
                 self._new_item_init_callback()
-                delattr(self, 'new_item_name')
+                if hasattr(self, 'new_item_name'):
+                    delattr(self, 'new_item_name')
             else:
                 self.new_item_name
                 if hasattr(self, 'new_item_value'):
@@ -1207,7 +1217,8 @@ class DADict(DAObject):
                         delattr(self, 'there_is_another')
                 else:
                     the_name = self.new_item_name
-                    delattr(self, 'new_item_name')
+                    if hasattr(self, 'new_item_name'):
+                        delattr(self, 'new_item_name')
                     if hasattr(self, 'there_is_another'):
                         delattr(self, 'there_is_another')
                     self.__getitem__(the_name)
@@ -1224,9 +1235,10 @@ class DADict(DAObject):
         if hasattr(self, 'new_item_value'):
             delattr(self, 'new_item_value')
         for elem in sorted(self.elements.values()):
-            str(elem)
             if self.object_type is not None and self.complete_attribute is not None:
                 getattr(elem, self.complete_attribute)
+            else:
+                str(elem)
         return
     def comma_and_list(self, **kwargs):
         """Returns the keys of the list, separated by commas, with 

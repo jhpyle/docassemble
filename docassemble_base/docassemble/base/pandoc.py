@@ -45,6 +45,7 @@ class MyPandoc(object):
         self.output_content = None
         self.input_format = 'markdown'
         self.output_format = 'rtf'
+        self.output_extension = 'rtf'
         self.output_filename = None
         self.template_file = None
         self.reference_file = None
@@ -61,14 +62,18 @@ class MyPandoc(object):
                 if type(data) is dict:
                     for key in data:
                         metadata_as_dict[key] = data[key]
-        if self.output_format == 'rtf' and self.template_file is None:
+        if self.output_format == 'rtf to docx':
+            self.output_extension = 'rtf'
+        else:
+            self.output_extension = self.output_format
+        if self.output_format in ('rtf', 'rtf to docx') and self.template_file is None:
             self.template_file = docassemble.base.functions.standard_template_filename('Legal-Template.rtf')
         if self.output_format == 'docx' and self.reference_file is None:
             self.reference_file = docassemble.base.functions.standard_template_filename('Legal-Template.docx')
         if (self.output_format == 'pdf' or self.output_format == 'tex') and self.template_file is None:
             self.template_file = docassemble.base.functions.standard_template_filename('Legal-Template.tex')
         yaml_to_use = list()
-        if self.output_format == 'rtf':
+        if self.output_format in ('rtf', 'rtf to docx'):
             #logmessage("pre input content is " + str(self.input_content))
             self.input_content = docassemble.base.filter.rtf_prefilter(self.input_content, metadata=metadata_as_dict)
             #logmessage("post input content is " + str(self.input_content))
@@ -91,7 +96,7 @@ class MyPandoc(object):
         temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".md", delete=False)
         temp_file.write(self.input_content.encode('utf8'))
         temp_file.close()
-        temp_outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix="." + str(self.output_format), delete=False)
+        temp_outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix="." + str(self.output_extension), delete=False)
         temp_outfile.close()
         current_temp_dir = 'epsconv'
         latex_conversion_directory = os.path.join(tempfile.gettempdir(), 'latex_convert')
@@ -122,12 +127,20 @@ class MyPandoc(object):
             self.pandoc_message = msg
         os.remove(temp_file.name)
         if os.path.exists(temp_outfile.name):
-            if self.output_format == 'rtf':
-                with open(temp_outfile.name) as the_file: file_contents = the_file.read()
+            if self.output_format in ('rtf', 'rtf to docx'):
+                with open(temp_outfile.name) as the_file:
+                    file_contents = the_file.read()
                 # with open('/tmp/asdf.rtf', 'w') as deb_file:
                 #     deb_file.write(file_contents)
                 file_contents = docassemble.base.filter.rtf_filter(file_contents, metadata=metadata_as_dict, styles=get_rtf_styles(self.template_file), question=question)
-                with open(temp_outfile.name, "wb") as the_file: the_file.write(file_contents)
+                with open(temp_outfile.name, "wb") as the_file:
+                    the_file.write(file_contents)
+                if self.output_format == 'rtf to docx':
+                    docx_outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+                    success = rtf_to_docx(temp_outfile.name, docx_outfile.name)
+                    if not success:
+                        raise Exception("Could not convert RTF to DOCX.")
+                    temp_outfile = docx_outfile
             if self.output_filename is not None:
                 shutil.copyfile(temp_outfile.name, self.output_filename)
             else:
@@ -142,7 +155,7 @@ class MyPandoc(object):
             os.makedirs(latex_conversion_directory)
         if not os.path.isdir(latex_conversion_directory):
             raise Exception("Could not create latex conversion directory")
-        if (self.output_format == "pdf" or self.output_format == "tex" or self.output_format == "rtf" or self.output_format == "epub" or self.output_format == "docx"):
+        if self.output_format in ("pdf", "tex", "rtf", "rtf to docx", "epub", "docx"):
             self.convert_to_file(question)
         else:
             subprocess_arguments = [PANDOC_PATH, '--smart', '-M', 'latextmpdir=' + os.path.join('latex_convert', ''), '--from=%s' % self.input_format, '--to=%s' % self.output_format]
@@ -155,12 +168,10 @@ class MyPandoc(object):
                 cwd=tempfile.gettempdir()
             )
             self.output_filename = None
-            
             self.output_content = p.communicate(self.input_content.encode('utf8'))[0]
         return
 
 def word_to_pdf(in_file, in_format, out_file, pdfa=False):
-    temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
     tempdir = tempfile.mkdtemp()
     from_file = os.path.join(tempdir, "file." + in_format)
     to_file = os.path.join(tempdir, "file.pdf")
@@ -168,9 +179,29 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False):
     subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'pdf', from_file]
     p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
     result = p.wait()
+    if not os.path.isfile(to_file):
+        result = 1
     if result == 0:
         if pdfa:
             pdf_to_pdfa(to_file)
+        shutil.copyfile(to_file, out_file)
+    if tempdir is not None:
+        shutil.rmtree(tempdir)
+    if result != 0:
+        return False
+    return True
+
+def rtf_to_docx(in_file, out_file):
+    tempdir = tempfile.mkdtemp()
+    from_file = os.path.join(tempdir, "file.rtf")
+    to_file = os.path.join(tempdir, "file.docx")
+    shutil.copyfile(in_file, from_file)
+    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'docx', from_file]
+    p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
+    result = p.wait()
+    if not os.path.isfile(to_file):
+        result = 1
+    if result == 0:
         shutil.copyfile(to_file, out_file)
     if tempdir is not None:
         shutil.rmtree(tempdir)
