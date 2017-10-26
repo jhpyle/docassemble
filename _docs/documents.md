@@ -148,12 +148,25 @@ files, specify `docx` as one of the [`valid formats`]:
 
 {% include side-by-side.html demo="document-docx" %}
 
+To customize document styles, headers, and footers in your .docx file,
+see the [`docx reference file`] setting, discussed below.
+
+There are some formatting features that [Pandoc] supports when
+converting to .rtf that are not available when converting to .docx, so
+you might want to use .rtf conversion for that reason.  However, the
+.rtf format can be user-unfriendly, and in some circumstances it would
+be better to have a .docx version.  Luckily, [LibreOffice] can convert
+.rtf files to .docx format.  If you include `rtf to docx` as one of
+the [`valid formats`], **docassemble** will convert [Markdown] to RTF
+format and then use [LibreOffice] to convert the RTF file to .docx
+format.  The result is that you get a .docx file instead of an .rtf
+file.
+
+{% include side-by-side.html demo="document-docx-from-rtf" %}
+
 Note that you can also assemble .docx files from templates that you
 compose in Mirosoft Word.  See the [`docx template file`] feature,
 which is described [below](#docx template file).
-
-To customize document styles, headers, and footers in your .docx file,
-see the [`docx reference file`] setting, discussed below.
 
 ## <a name="content file"></a>Reading Markdown content from separate files
 

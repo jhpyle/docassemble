@@ -3896,6 +3896,25 @@ and bring them into your interview using the [`javascript`] and
 The following [Javascript] functions are available for your use in
 your [Javascript] code.
 
+## <a name="flash"></a>flash()
+
+The `flash()` function displays a notification at the top of the
+screen, using the standard [Bootstrap] notification style.
+
+The available priorities are:
+
+<div class="panel panel-default">
+<div class="panel-body">
+<div class="alert alert-info">info</div>
+<div class="alert alert-success">success</div>
+<div class="alert alert-warning">warning</div>
+<div class="alert alert-danger">danger</div>
+<div class="alert alert-default">default</div>
+</div>
+</div>
+
+If no priority is supplied, `'info'` is used.
+
 ## <a name="js_url_action"></a>url_action()
 
 The `url_action()` function, like its [Python namesake](#url_action),

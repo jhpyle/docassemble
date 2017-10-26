@@ -557,12 +557,14 @@ will be hidden.
 
 Under the third method, the field is either shown or not shown on the
 screen when it loads, and it stays that way.  You can use [Python]
-code to control whether the field is shown or not.  Unlike the first
-method, you are not limited to using variables that are part of the
-`fields` list; you can use any [Python] code.  Under this method,
-`show if` must refer to a [YAML] dictionary with one key, `code`,
-where `code` contains [Python] code.  The code will be evaluated and
-if it evaluates to a positive value, the field will be shown.
+code to control whether the field is shown or not.  Unlike
+the first method, you are not limited to using variables that are part
+of the `fields` list; you can use any [Python] code; however, you
+cannot refer to any of the variables that are defined by the current
+question.  Under this method, `show if` must refer to a [YAML]
+dictionary with one key, `code`, where `code` contains [Python] code.
+The code will be evaluated and if it evaluates to a positive value,
+the field will be shown.
 
 {% include side-by-side.html demo="showif" %}
 
