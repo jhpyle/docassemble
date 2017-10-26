@@ -1630,6 +1630,11 @@
   \ of Benefits\n    filename: benefits_summary\n    valid formats:\n      - docx\n\
   \      - pdf    \n    content: |\n      [BOLDCENTER] Summary of Benefits\n\n   \
   \   ${ client } is entitled to\n      benefits plan ${ benefits }.\nmandatory: True"
+"document-docx-from-rtf": "question: Here is your document.\nattachments:\n  - name:\
+  \ Summary of Benefits\n    filename: benefits_summary\n    valid formats:\n    \
+  \  - rtf to docx\n      - pdf    \n    content: |\n      [BOLDCENTER] Summary of\
+  \ Benefits\n\n      ${ client } is entitled to\n      benefits plan ${ benefits\
+  \ }.\nmandatory: True"
 "document-file": |-
   question: Your document is ready.
   attachment:
@@ -3100,6 +3105,15 @@
         The teapot was not broken
         and it was broken before he
         gave it to me.
+"flash": |-
+  mandatory: True
+  question: |
+    The interview is complete.
+  script: |
+    <script>
+      flash("Hello, user!")
+      flash("Lookout, user!", "danger")
+    </script>
 "flushleft": "mandatory: True\nquestion: |\n  Here is your document.\nsubquestion:\
   \ |\n  It demonstrates the flush left environment.\nattachments:\n  - name: A test\
   \ document\n    filename: test_document\n    content: |\n      This line is indented.\n\
