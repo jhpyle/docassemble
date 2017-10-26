@@ -3106,8 +3106,15 @@
         and it was broken before he
         gave it to me.
 "flash": |-
-  modules:
-    - docassemble.base.util
+  mandatory: True
+  decoration: coins
+  question: |
+    The interview is complete.
+  script: |
+    <script>
+      flash("Hello, user!")
+      flash("Lookout, user!", "danger")
+    </script>
 "flushleft": "mandatory: True\nquestion: |\n  Here is your document.\nsubquestion:\
   \ |\n  It demonstrates the flush left environment.\nattachments:\n  - name: A test\
   \ document\n    filename: test_document\n    content: |\n      This line is indented.\n\
