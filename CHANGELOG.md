@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.1.83] - 2017-10-26
+### Added
+- The `log()` function.
+- The `fields` option for `background_response()`.
+### Changed
+- Responses from `check in` events can use the `javascript` option of
+  `background_response()` to communicate results to the browser.
+
 ## [0.1.82] - 2017-10-26
 ### Added
 - The `pdf_concatenate()` function converts word processing files.

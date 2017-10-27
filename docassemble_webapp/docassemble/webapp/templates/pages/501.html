@@ -11,6 +11,7 @@
 
 {{ historytext | safe }}
 
+<p><a target="_blank" href="{{ url_for('get_variables') }}">{{ word('Show variables and values') }}</a></p>
 {% endif %}
 
 {% if logtext != 'None' %}

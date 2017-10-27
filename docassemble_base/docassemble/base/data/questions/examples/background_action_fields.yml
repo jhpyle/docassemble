@@ -1,0 +1,41 @@
+metadata:
+  title: Return a value and populate fields
+  example start: 2
+  example end: 4
+  documentation: "https://docassemble.org/docs/background.html#ui_notification"
+---
+mandatory: True
+code: |
+  if the_task.ready():
+    final_screen
+  else:
+    the_number
+---
+code: |
+  the_task = background_action('bg_task', 'fields', additional=value_to_add)
+---
+question: |
+  How much shall I add to 553?
+fields:
+  - Number: value_to_add
+    datatype: integer
+---
+event: bg_task
+code: |
+  the_answer = 553 + action_argument('additional')
+  background_response({'the_number': the_answer})  
+---
+question: |
+  Your answer will appear shortly.
+subquestion: |
+  Wait for it!
+fields:
+  - Number: the_number
+---
+event: final_screen
+question: |
+  All done.
+subquestion: |
+  The response was:
+
+  > ${ the_task.get() }

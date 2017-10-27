@@ -322,6 +322,7 @@
 "Send confirmation email": Null
 "Send": Null
 "Show attributes": Null
+"Show variables and values": Null
 "Sign in": Null
 "Sign In": Null
 "Sign in or sign up to save answers": Null
@@ -466,6 +467,7 @@
 "Utilities": Null
 "Valid characters are: A-Z, a-z, 0-9, hyphen": Null
 "Valid characters are: A-Z, a-z, 0-9": Null
+"Variables and values": Null
 "Variables as JSON": Null
 "Variables defined": Null
 "Variables": Null

@@ -3409,7 +3409,12 @@ def checkin():
             interview.assemble(user_dict, interview_status)
             if interview_status.question.question_type == "backgroundresponse":
                 the_response = interview_status.question.backgroundresponse
-                commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response), extra='backgroundresponse'))
+                if type(the_response) is dict and 'pargs' in the_response and type(the_response['pargs']) is list and len(the_response['pargs']) == 2 and the_response['pargs'][1] in ('javascript', 'flash', 'refresh', 'fields'):
+                    commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response['pargs'][0]), extra=the_response['pargs'][1]))
+                elif type(the_response) is list and len(the_response) == 2 and the_response[1] in ('javascript', 'flash', 'refresh', 'fields'):
+                    commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response[0]), extra=the_response[1]))
+                else:
+                    commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response), extra='backgroundresponse'))
             elif interview_status.question.question_type == "template" and interview_status.question.target is not None:
                 commands.append(dict(action=do_action, value=dict(target=interview_status.question.target, content=docassemble.base.util.markdown_to_html(interview_status.questionText, trim=True)), extra='backgroundresponse'))
             save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
@@ -4792,6 +4797,13 @@ def index():
             $("#readability-help").hide();
             $("#readability-question").show();
 """
+        #     debug_init = """
+        # $("#showvariables").on('click', function(e){
+        #   $(this).parent().parent().append($("<h4>").html(""" + json.dumps(word("Variables and values")) + """));
+        #   $(this).parent().parent().append($('<iframe class="jsonvars" src=""" + '"' + url_for('get_variables') + '"' + """>'));
+        #   $(this).remove();
+        #   e.preventDefault();
+        # });"""
         else:
             debug_readability_help = ''
             debug_readability_question = ''
@@ -4834,6 +4846,7 @@ def index():
       var daDoAction = """ + do_action + """;
       var daNextAction = """ + json.dumps(next_action_review) + """;
       var daCsrf = """ + repr(str(generate_csrf())) + """;
+      var daMessageLog = """ + json.dumps(docassemble.base.functions.get_message_log()) + """;
       function preloadImage(url){
         var img = new Image();
         img.src = url;
@@ -4859,6 +4872,13 @@ def index():
           $("body").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
         }
         $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>');
+        if (priority == 'success'){
+          setTimeout(function(){
+            $("#flash .alert-success").hide(300, function(){
+              $(self).remove();
+            });
+          }, 3000);
+        }
       }
       function url_action(action, args){
           if (args == null){
@@ -5537,6 +5557,7 @@ def index():
           daChatPartnerRoles = data.livehelp.partner_roles;
           daSteps = data.steps;
           daAllowGoingBack = data.allow_going_back;
+          daMessageLog = data.message_log;
           //console.log("daProcessAjax: pushing " + daSteps);
           history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, "#page" + daSteps);
           daInitialize();
@@ -5767,7 +5788,21 @@ def index():
                 daRefreshSubmit();
               }
               else if (command.extra == 'javascript'){
+                //console.log("I should eval" + command.value);
                 eval(command.value);
+              }
+              else if (command.extra == 'fields'){
+                for (var key in command.value){
+                  if (command.value.hasOwnProperty(key)){
+                    var elem = document.getElementById(btoa(key));
+                    if (elem == null){
+                      console.log("Could not find element with the id " + key);
+                    }
+                    else{
+                      document.getElementById(btoa(key)).value = command.value[key];
+                    }
+                  }
+                }
               }
               else if (command.extra == 'backgroundresponse'){
                 var assignments = Array();
@@ -5959,6 +5994,21 @@ def index():
         setTimeout(function(){
           $("#dawidth").remove();
         }, 0);
+      }
+      function showNotifications(){
+        var n = daMessageLog.length;
+        for (var i = 0; i < n; i++){
+          var message = daMessageLog[i];
+          if (message.priority == 'console'){
+            console.log(message.message);
+          }
+          else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'default' || message.priority == 'info'){
+            flash(message.message, message.priority);
+          }
+          else{
+            flash(message.message, 'info');
+          }
+        }
       }
       function daInitialize(){
         daResetCheckinCode();
@@ -6278,6 +6328,7 @@ def index():
         }
         setTimeout(daCheckin, 100);
         checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
+        showNotifications();
         $(document).trigger('daPageLoad');
       }
       $(document).ready(function(){
@@ -6545,7 +6596,8 @@ def index():
             #     output += "<li>" + str(foo) + "</li>"
             # output += '</ul>\n'
             output += get_history(interview, interview_status)
-        output += '          <h4>' + word('Names defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
+        #output += '          <h4>' + word('Names defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
+        output += '          <p><a target="_blank" href="' + url_for('get_variables') + '">' + word('Show variables and values') + '</a></p>' + "\n"
             # output += '          <h4>' + word('Variables as JSON') + '</h4>' + "\n        <pre>" + docassemble.base.functions.dict_as_json(user_dict) + '</pre>' + "\n"
         output += '        </div>' + "\n"
         output += '      </div>' + "\n"
@@ -6569,7 +6621,7 @@ def index():
             r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_json:
         #logmessage(pprint.pformat(interview_status.as_data(), indent=4))
-        data = dict(browser_title=interview_status.tabtitle, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back)
+        data = dict(browser_title=interview_status.tabtitle, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log())
         data.update(interview_status.as_data())
         if next_action_review:
             data['next_action'] = next_action_review
@@ -6584,7 +6636,7 @@ def index():
             do_action = interview_status.question.checkin
         else:
             do_action = None
-        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back)
+        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log())
     else:
         output = start_output + output + end_output
         response = make_response(output.encode('utf8'), '200 OK')
@@ -7125,6 +7177,13 @@ def observer():
           $("body").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
         }
         $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>');
+        if (priority == 'success'){
+          setTimeout(function(){
+            $("#flash .alert-success").hide(300, function(){
+              $(self).remove();
+            });
+          }, 3000);
+        }
       }
       function url_action(action, args){
           //console.log("Got to a url_action");
@@ -9538,7 +9597,6 @@ def sync_with_google_drive():
         return redirect(uri)
     task = docassemble.webapp.worker.sync_with_google_drive.delay(current_user.id)
     session['taskwait'] = task.id
-    #PPP
     return redirect(url_for('gd_sync_wait', next=next))
 
 @app.route('/gdsyncing', methods=['GET', 'POST'])

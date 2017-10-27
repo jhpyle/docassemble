@@ -1,0 +1,36 @@
+metadata:
+  title: Alter fields with Javascript
+  short title: Alter fields
+  documentation: "https://docassemble.org/docs/background.html"
+  example start: 2
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Let's calculate some stuff.
+fields:
+  - A: var_a
+    datatype: number
+  - B: var_b
+    datatype: number
+  - C: var_c
+    datatype: number
+check in: add_numbers
+---
+mandatory: true
+question: |
+  % if var_c == var_a * var_b:
+  The correct answer is ${ var_c }.
+  % else:
+  That answer is not right!
+  % endif
+---
+event: add_numbers
+code: |
+  if action_argument('var_a') != '' and action_argument('var_b') != '':
+    answer = float(action_argument('var_a')) * float(action_argument('var_b'))
+    background_response('flash("Hint: C should be " + ' + str(answer) + ', "success")', 'javascript')
+  background_response()
+  

@@ -1,8 +1,9 @@
 metadata:
-  title: Flash messages
-  documentation: "https://docassemble.org/docs/functions.html#flash"
+  title: Message log
+  short title: Log
+  documentation: "https://docassemble.org/docs/functions.html#log"
   example start: 3
-  example end: 3
+  example end: 4
 ---
 image sets:
   freepik:
@@ -15,11 +16,11 @@ modules:
   - docassemble.base.util
 ---
 mandatory: True
+code: |
+  log("Hello, user!", "info")
+  log("Lookout, user!", "danger")
+---
+mandatory: True
 decoration: coins
 question: |
   The interview is complete.
-script: |
-  <script>
-    flash("Hello, user!")
-    flash("Lookout, user!", "danger")
-  </script>
