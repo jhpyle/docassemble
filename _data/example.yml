@@ -43,6 +43,58 @@
     You are ${ user.age_in_years() }
     years old.
   mandatory: True
+"ajax-calc": |-
+  question: |
+    Let's calculate some stuff.
+  fields:
+    - A: var_a
+      datatype: number
+    - B: var_b
+      datatype: number
+    - C: var_c
+      datatype: number
+  check in: add_numbers
+  ---
+  mandatory: true
+  question: |
+    % if var_c == var_a * var_b:
+    The correct answer is ${ var_c }.
+    % else:
+    That answer is not right!
+    % endif
+  ---
+  event: add_numbers
+  code: |
+    if action_argument('var_a') != '' and action_argument('var_b') != '':
+      answer = float(action_argument('var_a')) * float(action_argument('var_b'))
+      background_response({'var_c': answer}, 'fields')
+    background_response()
+"ajax-calc-javascript": |-
+  question: |
+    Let's calculate some stuff.
+  fields:
+    - A: var_a
+      datatype: number
+    - B: var_b
+      datatype: number
+    - C: var_c
+      datatype: number
+  check in: add_numbers
+  ---
+  mandatory: true
+  question: |
+    % if var_c == var_a * var_b:
+    The correct answer is ${ var_c }.
+    % else:
+    That answer is not right!
+    % endif
+  ---
+  event: add_numbers
+  code: |
+    if action_argument('var_a') != '' and action_argument('var_b') != '':
+      answer = float(action_argument('var_a')) * float(action_argument('var_b'))
+      background_response('flash("Hint: C should be " + ' + str(answer) + ', "success")', 'javascript')
+    background_response()
 "alarm-clock": |-
   modules:
     - docassemble.base.util
@@ -393,6 +445,20 @@
   event: final_screen
   question: |
     The answer is ${ the_task.get() }.
+"background_action_fields": |-
+  code: |
+    the_task = background_action('bg_task', 'fields', additional=value_to_add)
+  ---
+  question: |
+    How much shall I add to 553?
+  fields:
+    - Number: value_to_add
+      datatype: integer
+  ---
+  event: bg_task
+  code: |
+    the_answer = 553 + action_argument('additional')
+    background_response({'the_number': the_answer})
 "background_action_flash": |-
   code: |
     the_task = background_action('bg_task', 'flash', additional=value_to_add)
@@ -4646,6 +4712,16 @@
 "loading-util": |-
   modules:
     - docassemble.base.util
+"log": |-
+  mandatory: True
+  code: |
+    log("Hello, user!", "info")
+    log("Lookout, user!", "danger")
+  ---
+  mandatory: True
+  decoration: coins
+  question: |
+    The interview is complete.
 "lucky-number": |-
   field: lucky_information_confirmed
   question: |

@@ -3415,6 +3415,48 @@ arguments is a list, it will be unpacked.
 * `pdfa`: if `True`, the [PDF] file will be converted to [PDF/A]
   format.  The default is `False`.
 
+## <a name="log"></a>log()
+
+The `log()` function allows you to log a message to the server log, to
+the browser console, or to the user's screen.
+
+The first parameter is the message you want to send.  The second
+parameter, which is optional, is the "priority" of the message.  The
+default priority is `'log'`, which means that the message is 
+
+{% include side-by-side.html demo="log" %}
+
+The options for the `priority` are:
+
+* `'log'` - a message is immediately logged to the server logs.
+* `'console'` - when the next screen loads in the user's browser, the
+  message will appear in the browser log.  (This uses the
+  [`console.log` JavaScript function].)
+* `'success'` - when the next screen loads in the user's browser, a
+  popup message (a [Bootstrap alert]) will appear at the top of the
+  page, using the [Bootstrap] color associated with "success"
+  (typically green).  The message will disappear after a few seconds.
+* `'info'` - like `'success'`, except it uses the "info" [Bootstrap]
+  color.  The message will not disappear.
+* `'warning'` - like `'info'`, but uses the "warning" [Bootstrap] color.
+* `'error'` - like `'info'`, but uses the "error" [Bootstrap] color.
+* `'default'` - like `'info'`, but uses the "default" [Bootstrap] color.
+
+You can also use the [Javascript] function [`flash()`] to display
+notifications like this.
+
+The colors look like this:
+
+<div class="panel panel-default">
+<div class="panel-body">
+<div class="alert alert-info">info</div>
+<div class="alert alert-success">success</div>
+<div class="alert alert-warning">warning</div>
+<div class="alert alert-danger">danger</div>
+<div class="alert alert-default">default</div>
+</div>
+</div>
+
 # <a name="sms"></a>Functions for working with SMS messages
 
 ## <a name="send_sms"></a>send_sms()
@@ -4313,3 +4355,6 @@ $(document).on('daPageLoad', function(){
 [`metadata` initial block]: {{ site.baseurl }}/docs/initial.html#metadata
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
+[`console.log` JavaScript function]: https://developer.mozilla.org/en-US/docs/Web/API/Console/log
+[Bootstrap alert]: https://getbootstrap.com/docs/3.3/components/#alerts
+[`flash()`]: #flash

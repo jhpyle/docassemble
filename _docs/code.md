@@ -354,9 +354,9 @@ functional interface, you should do so.
 [variable name]: {{ site.baseurl }}/docs/fields.html#variable names
 [object]: {{ site.baseurl }}/docs/objects.html
 [group]: {{ site.baseurl }}/docs/groups.html
-[list]: {{ site.baseurl }}/docs/groups.html#
-[dictionary]: {{ site.baseurl }}/docs/groups.html#
-[set]: {{ site.baseurl }}/docs/groups.html#
+[list]: {{ site.baseurl }}/docs/groups.html#list
+[dictionary]: {{ site.baseurl }}/docs/groups.html#dictionary
+[set]: {{ site.baseurl }}/docs/groups.html#set
 [Mako]: http://www.makotemplates.org/
 [questions]: {{ site.baseurl }}/docs/questions.html
 [documents]: {{ site.baseurl }}/docs/documents.html

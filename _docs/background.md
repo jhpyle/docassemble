@@ -346,10 +346,13 @@ of entering information.
 The third way is to cause the user's browser to run [Javascript] code
 produced by your background process.
 
+The fourth way, if the screen has input fields in it, is to populate
+those fields with values.
+
 You can cause these responses by setting the second argument to
-[`background_action()`] to `'flash'`, `'refresh'`, or `'javascript'`.
-Setting the second argument to `None` means that no notification of
-any kind will be sent to the user's browser.
+[`background_action()`] to `'flash'`, `'refresh'`, `'javascript'`, or
+`'fields'`.  Setting the second argument to `None` means that no
+notification of any kind will be sent to the user's browser.
 
 In the following example, the value provided to
 [`background_response()`] (e.g., "The answer is 555."), is
@@ -384,6 +387,11 @@ background task finishes.  The user's browser polls the server every
 six seconds (edit [`checkin interval`] to adjust this).  Therefore,
 users may experience up to a six-second delay after the background
 process finishes before they receive notification.
+
+The next example is like the previous, except that it populates fields
+on the screen.
+
+{% include side-by-side.html demo="background_action_fields" %}
 
 ## Comparison with scheduled tasks
 
@@ -490,9 +498,29 @@ can do so by calling [`background_response()`] with a [list] of
 
 {% include side-by-side.html demo="target-code-multiple" %}
 
-If you know [Javascript], there are a variety of other ways you can
-change the user's screen through communicating with the server.  See
-the [Javascript functions] section for more information.
+Another way to communicate results to the user's screen is to populate
+input elements.  If you call `background_response()` with a
+[dictionary] as the first parameter and `'fields'` as the second
+parameter, the fields on the screen will be populated with the values
+indicated in the dictionary.  The keys of the dictionary should be
+variable names currently displaying on the screen (e.g., as they are
+defined in the [`fields`] directive).  The values of the dictionary
+should be the values that you want the fields to have.  For example:
+
+{% include side-by-side.html demo="ajax-calc" %}
+
+Another way to communicate results to the user's screen is to use
+[Javascript].  If you call `background_response()` with some
+[Javascript] code (as text) as the first parameter and `'javascript'`
+as the second parameter, the [Javascript] code will be run in the browser.
+
+{% include side-by-side.html demo="ajax-calc-javascript" %}
+
+This example uses the [`flash()`] function in [Javascript] to display
+a message for the user.
+
+See the [Javascript functions] section for more information about
+things you can do with [Javascript].
 
 # <a name="scheduled"></a>Scheduled tasks
 
@@ -1033,3 +1061,6 @@ privileges and user identity of the [cron user].
 [e-mail messages]: #email
 [e-mail setup]: {{ site.baseurl }}/docs/installation.html#setup_email
 [`last_access_days()`]: {{ site.baseurl }}/docs/functions.html#last_access_days
+[`fields`]: {{ site.baseurl }}/docs/fields.html#fields
+[dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[`flash()`]: {{ site.baseurl }}/docs/functions.html#flash
