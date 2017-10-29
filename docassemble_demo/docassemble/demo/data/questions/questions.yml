@@ -163,6 +163,11 @@ comment: |
 ---
 mandatory: True
 code: |
+  multi_user = True
+  set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])
+---
+mandatory: True
+code: |
   need(user_saw_initial_screen)
   if user_understands_no_attorney_client_relationship == "understands":
     need(client_done)
@@ -200,11 +205,6 @@ comment: |
   requirement of "user_saw_initial_screen."  This causes a "welcome" screen
   to be shown.  We always want this screen to be displayed first (at
   least as soon as we determine the user's language).
----
-mandatory: True
-code: |
-  multi_user = True
-  set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])
 ---
 code: |
   if client not in case.plaintiff.elements and client.is_plaintiff:
