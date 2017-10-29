@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.1.84] - 2017-10-29
+### Fixed
+- UI issues when switching between help and questions tabs.
+- Added `pop()` method to `DAList`.
+- Machine learning errors when entries are blank.
+
 ## [0.1.83] - 2017-10-26
 ### Added
 - The `log()` function.

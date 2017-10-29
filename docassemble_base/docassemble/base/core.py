@@ -432,6 +432,12 @@ class DAList(DAObject):
         if hasattr(self, 'gathered'):
             return True
         return False
+    def pop(self, *pargs):
+        """Remove an item the list and return it."""
+        self._trigger_gather()
+        result = self.elements.pop(*pargs)
+        self._reset_instance_names()
+        return result
     def item(self, index):
         """Returns the value for the given index, or a blank value if the index does not exist."""
         self._trigger_gather()
@@ -731,7 +737,8 @@ class DAList(DAObject):
         self._trigger_gather()
         return self.elements.__len__()
     def __delitem__(self, index):
-        return self.elements.__delitem__(index)
+        self.elements.__delitem__(index)
+        self._reset_instance_names()
     def __reversed__(self):
         self._trigger_gather()
         return self.elements.__reversed__()

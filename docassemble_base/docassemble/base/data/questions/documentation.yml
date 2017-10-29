@@ -171,6 +171,7 @@ DAList.as_singular_noun: "https://docassemble.org/docs/objects.html#DAList.as_si
 DAList.as_noun: "https://docassemble.org/docs/objects.html#DAList.as_noun"
 DAList.number: "https://docassemble.org/docs/objects.html#DAList.number"
 DAList.number_as_word: "https://docassemble.org/docs/objects.html#DAList.number_as_word"
+DADict.pop: "https://docassemble.org/docs/objects.html#DAList.pop"
 DAList.current_index: "https://docassemble.org/docs/objects.html#DAList.current_index"
 DAList.remove: "https://docassemble.org/docs/objects.html#DAList.remove"
 DAList.clear: "https://docassemble.org/docs/objects.html#DAList.clear"
