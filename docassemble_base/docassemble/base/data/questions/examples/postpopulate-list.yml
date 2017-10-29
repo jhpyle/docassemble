@@ -1,0 +1,64 @@
+metadata:
+  title: Postpopulate lists
+  documentation: "https://docassemble.org/docs/groups.html#postpopulate"
+  example start: 2
+  example end: 10
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+  - user.mom: Individual
+  - user.favorite_things: |
+      DAList.using(object_type=Thing)
+---
+code: |
+  if user.likes_something:
+    user.favorite_things.there_are_any = True
+  else:
+    default_things_appended
+    user.favorite_things.there_are_any = False
+    user.favorite_things.there_is_another = False
+---
+code: |
+  if user.likes_another_thing:
+    del user.likes_another_thing
+    user.favorite_things.there_is_another = True
+  else:
+    default_things_appended
+    user.favorite_things.there_is_another = False
+---
+code: |
+  user.favorite_things.append(user.mom)
+  user.favorite_things.appendObject(
+    name='apple pie'
+  )
+  default_things_appended = True
+---
+question: |
+  What is your mother's name?
+fields:
+  - First name: user.mom.name.first
+  - Last name: user.mom.name.last
+---
+question: |
+  What is your ${ ordinal(i) }
+  favorite thing?
+fields:
+  - Thing: user.favorite_things[i].name.text
+---
+question: |
+  Do you have any favorite things?
+yesno: user.likes_something
+---
+question: |
+  Besides ${ user.favorite_things },
+  do you have any other favorite
+  things?
+yesno: user.likes_another_thing
+---
+mandatory: True
+question: |
+  Your favorite things are
+  ${ user.favorite_things }.

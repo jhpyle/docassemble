@@ -12529,12 +12529,23 @@ def train():
             output = dict()
             if the_package == '_global':
                 json_filename = 'ml-global.json'
-                for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key):
+                for record in db.session.query(MachineLearning.id, MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key):
                     if is_package_ml(record.group_id.split(':')):
                         continue
                     if record.group_id not in output:
                         output[record.group_id] = list()
-                    the_entry = dict(independent=pickle.loads(codecs.decode(record.independent, 'base64')), dependent=pickle.loads(codecs.decode(record.dependent, 'base64')))
+                    if record.dependent is None:
+                        the_dependent = None
+                    else:
+                        the_dependent = pickle.loads(codecs.decode(record.dependent, 'base64'))
+                    the_independent = pickle.loads(codecs.decode(record.independent, 'base64'))
+                    try:
+                        unicode(the_independent) + ""
+                        unicode(the_dependent) + ""
+                    except Exception as e:
+                        logmessage("Bad record: id " + str(record.id) + " where error was " + str(e))
+                        continue
+                    the_entry = dict(independent=pickle.loads(codecs.decode(record.independent, 'base64')), dependent=the_dependent)
                     if record.key is not None:
                         the_entry['key'] = record.key
                     output[record.group_id].append(the_entry)
@@ -12547,7 +12558,11 @@ def train():
                         continue
                     if parts[2] not in output:
                         output[parts[2]] = list()
-                    the_entry = dict(independent=pickle.loads(codecs.decode(record.independent, 'base64')), dependent=pickle.loads(codecs.decode(record.dependent, 'base64')))
+                    if record.dependent is None:
+                        the_dependent = None
+                    else:
+                        the_dependent = pickle.loads(codecs.decode(record.dependent, 'base64'))
+                    the_entry = dict(independent=pickle.loads(codecs.decode(record.independent, 'base64')), dependent=the_dependent)
                     if record.key is not None:
                         the_entry['key'] = record.key
                     output[parts[2]].append(the_entry)

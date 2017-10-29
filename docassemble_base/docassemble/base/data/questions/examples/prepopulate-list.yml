@@ -1,0 +1,45 @@
+metadata:
+  title: Prepopulate lists
+  documentation: "https://docassemble.org/docs/groups.html#prepopulate"
+  example start: 2
+  example end: 8
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+  - user.mom: Individual
+  - user.favorite_things: |
+      DAList.using(object_type=Thing)
+---
+code: |
+  user.favorite_things.clear()
+  user.favorite_things.append(user.mom)
+  user.favorite_things.appendObject(
+    name='apple pie'
+  )
+  user.favorite_things.there_are_any = True
+---
+question: |
+  What is your mother's name?
+fields:
+  - First name: user.mom.name.first
+  - Last name: user.mom.name.last
+---
+question: |
+  What is your ${ ordinal(i) }
+  favorite thing?
+fields:
+  - Thing: user.favorite_things[i].name.text
+---
+question: |
+  Besides ${ user.favorite_things },
+  do you have any other favorite
+  things?
+yesno: user.favorite_things.there_is_another
+---
+mandatory: True
+question: |
+  Your favorite things are
+  ${ user.favorite_things }.

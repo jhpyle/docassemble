@@ -1,0 +1,80 @@
+metadata:
+  title: Nested groups
+  documentation: "https://docassemble.org/docs/groups.html#nested objects"
+  example start: 2
+  example end: 12
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+  - user.sibling: DAList.using(object_type=Individual)
+  - user.sibling[i].company_hired: |
+      DADict.using(object_type=Organization,
+                   auto_gather=False,
+                   complete_attribute='complete')
+  - user.sibling[i].company_hired[j].place_of_business: City
+---
+code: |
+  user.sibling[i].company_hired.new(user.sibling[i].types_of_companies.true_values())
+  user.sibling[i].company_hired.gathered = True
+---
+code: |
+  user.sibling[i].company_hired[j].name.text
+  user.sibling[i].company_hired[j].place_of_business.city
+  user.sibling[i].company_hired[j].complete = True
+---
+question: |
+  Do you have any siblings?
+yesno: user.sibling.there_are_any
+---
+question: |
+  What is the name of your ${ ordinal(i) } sibling?
+fields:
+  - First Name: user.sibling[i].name.first
+---
+question: |
+  Do you have any other siblings besides ${ user.sibling }?
+yesno: user.sibling.there_is_another
+---
+question: |
+  Which of the following types of companies has ${ user.sibling[i] }
+  hired?
+fields:
+  - no label: user.sibling[i].types_of_companies
+    datatype: checkboxes
+    choices:
+      - Bank
+      - Law Firm
+      - Exterminator
+      - Financial Advisor
+---
+question: |
+  What is the name of ${ user.sibling[i].possessive(j) }?
+fields:
+  - Company name: user.sibling[i].company_hired[j].name.text
+---
+question: |
+  In what city does ${ user.sibling[i].company_hired[j] }
+  do business?
+fields:
+  - City: user.sibling[i].company_hired[j].place_of_business.city
+  - State: user.sibling[i].company_hired[j].place_of_business.state
+    code: states_list()
+---
+mandatory: True
+question: All done
+subquestion: |
+  % for sibling in user.sibling:
+  You have a sibling named ${ sibling }.
+ 
+  % for company_type in sibling.company_hired:
+  ${ sibling } has hired a ${ company_type }
+  called ${ sibling.company_hired[company_type] },
+  which has a principal place of business in
+  ${ sibling.company_hired[company_type].place_of_business }.
+ 
+  % endfor
+ 
+  % endfor
