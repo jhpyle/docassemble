@@ -6051,15 +6051,15 @@ def index():
           }
           $("#readability").slideDown();
         });
-        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-          if ($(e.target).data("target") == '#help'){
+        $('a[data-target="#help"], a[data-target="#question"]').on('shown.bs.tab', function (e) {
+          if ($(this).data("target") == '#help'){
             daShowingHelp = 1;
             if (notYetScrolled){
               scrollChatFast();
               notYetScrolled = false;
             }""" + debug_readability_help + """
           }
-          else if ($(e.target).data("target") == '#question'){
+          else if ($(this).data("target") == '#question'){
             daShowingHelp = 0;""" + debug_readability_question + """
           }
         });
@@ -6194,7 +6194,7 @@ def index():
             navMain.collapse('hide');
           }
         });
-        $("#help").on("shown.bs.tab", function(){
+        $("a[data-target='#help']").on("shown.bs.tab", function(){
           window.scrollTo(0, 1);
           $("#helptoggle span").removeClass('daactivetext')
           $("#helptoggle").blur();
