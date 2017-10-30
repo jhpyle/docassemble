@@ -22,7 +22,14 @@ code: |
 ---
 sets: map_shown
 question: Map of you and your enemy
-field: foobar
+subquestion: |
+  Your enemy's favorite food is [FIELD enemy.favorite_food].
+fields:
+  - Food: enemy.favorite_food
+  - No field: enemy.favorite_potato
+    show if:
+      code: |
+        False
 under: |
   ${ map_of(user, enemy) }
 ---
