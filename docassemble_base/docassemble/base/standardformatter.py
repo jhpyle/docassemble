@@ -1414,9 +1414,13 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
 """
         status.extra_scripts.append(map_js)
         google_config = get_config('google', dict())
-        if 'api key' not in google_config:
+        if 'google maps api key' in google_config:
+            api_key = google_config.get('google maps api key')
+        elif 'api key' in google_config:
+            api_key = google_config.get('api key')
+        else:
             raise Exception('google API key not provided')
-        status.extra_scripts.append('<script async defer src="https://maps.googleapis.com/maps/api/js?key=' + urllib.quote(google_config.get('api key')) + '&callback=daInitMap"></script>')
+        status.extra_scripts.append('<script async defer src="https://maps.googleapis.com/maps/api/js?key=' + urllib.quote(api_key) + '&callback=daInitMap"></script>')
     return master_output
 
 def add_validation(extra_scripts, validation_rules, field_error):
