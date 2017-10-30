@@ -57,6 +57,14 @@ machinelearning|modtime|timestamp without time zone||now()
 machinelearning|active|boolean||false
 machinelearning|key|text||
 machinelearning|info|text||
+myml|group_id|text||
+myml|independent|text||
+myml|dependent|text||
+myml|create_time|timestamp without time zone||
+myml|modtime|timestamp without time zone||
+myml|active|boolean||
+myml|key|text||
+myml|info|text||
 objectstorage|id|integer||nextval('objectstorage_id_seq'::regclass)
 objectstorage|key|text||
 objectstorage|value|text||
@@ -157,11 +165,3 @@ userdictkeys|user_id|integer||
 userdictlock|filename|text||
 userdictlock|key|character varying|250|
 userdictlock|indexno|integer||nextval('userdictlock_indexno_seq'::regclass)
-myml|group_id|text||
-myml|independent|text||
-myml|dependent|text||
-myml|create_time|timestamp without time zone||
-myml|modtime|timestamp without time zone||
-myml|active|boolean||
-myml|key|text||
-myml|info|text||
