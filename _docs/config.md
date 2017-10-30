@@ -1181,9 +1181,24 @@ google:
   api key: UIJGeyD-23aSdgSE34gEGRg3GDRGdrge9z-YUia
 {% endhighlight %}
 
-This will enable you to use the [Google Maps Geocoding API] without
-limits (see the [`.geolocate()`] method), and will also enable the
-[Google Cloud Translation API].
+This is required for the use of the [`map_of()`] feature.
+
+This will also enable you to use the [Google Maps Geocoding API]
+without limits (see the [`.geolocate()`] method), and will also enable
+the [Google Cloud Translation API].
+
+If you specify a specific `google maps api key`, this key will be used
+for the [`map_of()`] feature instead of the `api key`.
+
+If you use both geocoding and Google Maps, you will probably want to
+use a separate `google maps api key` because you can secure it
+differently.  Note that the [`map_of()`] feature puts its API key in
+the [Javascript] source, and the contact with Google's server will
+come from the user's computer.  By contrast, when you use the
+[`.geolocate()`] method, the contact with Google's server comes from
+your server.  Thus, you may wish to secure the `api key` using IP
+addresses, and secure the `google maps api key` using "Referer"
+headers.
 
 ## <a name="voicerss"></a>VoiceRSS API key
 
@@ -2045,3 +2060,4 @@ and Facebook API keys.
 [live help]: {{ site.baseurl }}/docs/livehelp.html
 [`bootstrap theme` feature]: {{ site.baseurl }}/docs/initial.html#bootstrap theme
 [`inverse navbar` feature]: {{ site.baseurl }}/docs/initial.html#inverse navbar
+[`map_of()`]: {{ site.baseurl }}/docs/functions.html#map_of

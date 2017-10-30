@@ -4,6 +4,22 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.85](https://github.com/jhpyle/docassemble/releases/tag/v0.1.85) - 2017-10-29
+
+### Added
+- Option for `google maps api key` in the `google` section of the 
+  configuration.
+
+### Changed
+- A Google API key is now required for using `map_of()`.
+
+## [0.1.84](https://github.com/jhpyle/docassemble/releases/tag/v0.1.84) - 2017-10-29
+
+### Fixed
+- UI issues when switching between help and questions tabs.
+- Added `pop()` method to `DAList`.
+- Machine learning errors when entries are blank.
+
 ## [0.1.83](https://github.com/jhpyle/docassemble/releases/tag/v0.1.83) - 2017-10-26
 
 ### Added

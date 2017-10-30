@@ -5314,6 +5314,29 @@
     ${ x } likes, besides
     ${ x.favorite_food }?
   yesno: x.favorite_food.there_is_another
+"nested-objects": "objects:\n  - user: Individual\n  - user.sibling: DAList.using(object_type=Individual)\n\
+  \  - user.sibling[i].company_hired: |\n      DADict.using(object_type=Organization,\n\
+  \                   auto_gather=False,\n                   complete_attribute='complete')\n\
+  \  - user.sibling[i].company_hired[j].place_of_business: City\n---\ncode: |\n  user.sibling[i].company_hired.new(user.sibling[i].types_of_companies.true_values())\n\
+  \  user.sibling[i].company_hired.gathered = True\n---\ncode: |\n  user.sibling[i].company_hired[j].name.text\n\
+  \  user.sibling[i].company_hired[j].place_of_business.city\n  user.sibling[i].company_hired[j].complete\
+  \ = True\n---\nquestion: |\n  Do you have any siblings?\nyesno: user.sibling.there_are_any\n\
+  ---\nquestion: |\n  What is the name of your ${ ordinal(i) } sibling?\nfields:\n\
+  \  - First Name: user.sibling[i].name.first\n---\nquestion: |\n  Do you have any\
+  \ other siblings besides ${ user.sibling }?\nyesno: user.sibling.there_is_another\n\
+  ---\nquestion: |\n  Which of the following types of companies has ${ user.sibling[i]\
+  \ }\n  hired?\nfields:\n  - no label: user.sibling[i].types_of_companies\n    datatype:\
+  \ checkboxes\n    choices:\n      - Bank\n      - Law Firm\n      - Exterminator\n\
+  \      - Financial Advisor\n---\nquestion: |\n  What is the name of ${ user.sibling[i].possessive(j)\
+  \ }?\nfields:\n  - Company name: user.sibling[i].company_hired[j].name.text\n---\n\
+  question: |\n  In what city does ${ user.sibling[i].company_hired[j] }\n  do business?\n\
+  fields:\n  - City: user.sibling[i].company_hired[j].place_of_business.city\n  -\
+  \ State: user.sibling[i].company_hired[j].place_of_business.state\n    code: states_list()\n\
+  ---\nmandatory: True\nquestion: All done\nsubquestion: |\n  % for sibling in user.sibling:\n\
+  \  You have a sibling named ${ sibling }.\n \n  % for company_type in sibling.company_hired:\n\
+  \  ${ sibling } has hired a ${ company_type }\n  called ${ sibling.company_hired[company_type]\
+  \ },\n  which has a principal place of business in\n  ${ sibling.company_hired[company_type].place_of_business\
+  \ }.\n \n  % endfor\n \n  % endfor"
 "nested-veggies": |-
   mandatory: True
   code: |
@@ -6212,6 +6235,99 @@
     % else:
     Get a job!
     % endif
+"postpopulate-list": |-
+  objects:
+    - user: Individual
+    - user.mom: Individual
+    - user.favorite_things: |
+        DAList.using(object_type=Thing)
+  ---
+  code: |
+    if user.likes_something:
+      user.favorite_things.there_are_any = True
+    else:
+      default_things_appended
+      user.favorite_things.there_are_any = False
+      user.favorite_things.there_is_another = False
+  ---
+  code: |
+    if user.likes_another_thing:
+      del user.likes_another_thing
+      user.favorite_things.there_is_another = True
+    else:
+      default_things_appended
+      user.favorite_things.there_is_another = False
+  ---
+  code: |
+    user.favorite_things.append(user.mom)
+    user.favorite_things.appendObject(
+      name='apple pie'
+    )
+    default_things_appended = True
+  ---
+  question: |
+    What is your mother's name?
+  fields:
+    - First name: user.mom.name.first
+    - Last name: user.mom.name.last
+  ---
+  question: |
+    What is your ${ ordinal(i) }
+    favorite thing?
+  fields:
+    - Thing: user.favorite_things[i].name.text
+  ---
+  question: |
+    Do you have any favorite things?
+  yesno: user.likes_something
+  ---
+  question: |
+    Besides ${ user.favorite_things },
+    do you have any other favorite
+    things?
+  yesno: user.likes_another_thing
+  ---
+  mandatory: True
+  question: |
+    Your favorite things are
+    ${ user.favorite_things }.
+"prepopulate-list": |-
+  objects:
+    - user: Individual
+    - user.mom: Individual
+    - user.favorite_things: |
+        DAList.using(object_type=Thing)
+  ---
+  code: |
+    user.favorite_things.clear()
+    user.favorite_things.append(user.mom)
+    user.favorite_things.appendObject(
+      name='apple pie'
+    )
+    user.favorite_things.there_are_any = True
+  ---
+  question: |
+    What is your mother's name?
+  fields:
+    - First name: user.mom.name.first
+    - Last name: user.mom.name.last
+  ---
+  question: |
+    What is your ${ ordinal(i) }
+    favorite thing?
+  fields:
+    - Thing: user.favorite_things[i].name.text
+  ---
+  question: |
+    Besides ${ user.favorite_things },
+    do you have any other favorite
+    things?
+  yesno: user.favorite_things.there_is_another
+  ---
+  mandatory: True
+  question: |
+    Your favorite things are
+    ${ user.favorite_things }.
 "prevent-back": |-
   code: |
     app_submitted = True

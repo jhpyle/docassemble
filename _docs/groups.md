@@ -114,7 +114,7 @@ set(['blue', 'green'])
 In **docassemble**, sets are objects of type [`DASet`], which behave
 much like [Python set]s.
 
-# Lists, dictionaries, and sets in **docassemble**
+# <a name="gathering"></a>Lists, dictionaries, and sets in **docassemble**
 
 In **docassemble**, you can track groups of things using objects of
 types [`DAList`], [`DADict`], or [`DASet`].  These are defined in the
@@ -135,8 +135,6 @@ respectively.  Both of these objects are objects of type
 is `case.plaintiff[0]` and the second plaintiff, if there is one, will
 be `case.plaintiff[1]`.
 
-## <a name="gathering"></a>Gathering information from the user
-
 When you want to gather information from the user into a list,
 dictionary, or set, you should use the objects [`DAList`], [`DADict`],
 and [`DASet`] (or subtypes thereof) instead of [Python]'s basic
@@ -147,7 +145,7 @@ you can use [Python]'s basic [list], [dict], and [set] data types in
 your interviews; nothing will stop you -- but there are no special
 features to help you populate these objects with user input.)
 
-### <a name="gather list"></a>Lists
+# <a name="gather list"></a>Gathering information into lists
 
 The following interview populates a list of fruits.
 
@@ -257,7 +255,7 @@ find one, it will take a more general approach and look for a question
 that offers to define `fruit[i]`.  The question that offers to define
 `fruit[i]` will be reused as many times as necessary.
 
-#### Customizing the way information is gathered
+## Customizing the way information is gathered
 
 The way that **docassemble** asks questions to populate the list can
 be customized by setting attributes of `fruit`.  For example, perhaps
@@ -282,7 +280,7 @@ You can avoid the `.there_are_any` question by setting the
 
 {% include side-by-side.html demo="gather-fruit-at-least-two" %}
 
-#### <a name="list of objects"></a>Gathering a list of objects
+## <a name="list of objects"></a>Gathering a list of objects
 
 The examples above have gathered simple variables (e.g., `'apple'`,
 `'orange'`) into a list.  You can also gather [objects] into a list.
@@ -363,7 +361,7 @@ only other element we wanted to define during the gathering process,
 we could have written `friend.complete_attribute = 'birthdate'` and
 skipped the [`code` block] entirely.
 
-#### <a name="mixed object types"></a>Mixed object types
+## <a name="mixed object types"></a>Mixed object types
 
 If you want to gather a list of objects that are not all the same
 object type, you can do so by setting the `.ask_object_type` attribute
@@ -478,7 +476,7 @@ attribute **docassemble** needs is `.address`, only the "What is the
 address" question is capable of defining that, so only that question
 will be asked.
 
-### <a name="gather dictionary"></a>Dictionaries
+# <a name="gather dictionary"></a>Gathering information into dictionaries
 
 The process of gathering the items in a [`DADict`] dictionary is
 slightly different from the process of gathering the items of a
@@ -508,7 +506,7 @@ the gathering process; only the value of the
 `.new_item_value`, you need to set it using a question that
 simultaneously sets `.new_item_name`, as in the example above.
 
-#### <a name="dict of objects"></a>Gathering a dictionary of objects
+## <a name="dict of objects"></a>Gathering a dictionary of objects
 
 You can also populate the contents of a [`DADict`] in which each value
 is itself an object.
@@ -548,7 +546,7 @@ interview, which contains a "for" loop that describes the number of
 feet of each pet, causes the asking of questions to obtain the `.feet`
 and `.name` attributes.
 
-### <a name="gather set"></a>Sets
+# <a name="gather set"></a>Gathering information into sets
 
 The gathering of items into a [`DASet`] is much like the gathering of
 items into a [`DADict`].  The difference is that instead of using the
@@ -573,7 +571,7 @@ questions.)
 
 {% include side-by-side.html demo="gather-set-object" %}
 
-## <a name="manual"></a>Manually triggering the gathering process
+# <a name="manual"></a>Manually triggering the gathering process
 
 In the examples above, the process of asking questions that populate
 the list is triggered implicitly by code like `${ fruit.number() }`,
@@ -613,7 +611,7 @@ that nothing more needs to be done to populate the items in the group.
 You can still add more items to the list if you want to, using
 [`code` block]s.
 
-## Detailed explanation of gathering process
+# Detailed explanation of gathering process
 
 At a very basic level, it is not complicated to gather a list of
 things from a user.  For example, you can do this:
@@ -712,6 +710,87 @@ Here is a complete example:
 
 {% include side-by-side.html demo="gather-fruit" %}
 
+# <a name="examples"></a>Examples
+
+## <a name="nested objects"></a>List of dictionaries from checkbox
+
+Here is an example of an interview that uses a checkbox to determine
+which items to use in a dictionary.
+
+{% include side-by-side.html demo="nested-objects" %}
+
+## <a name="prepopulate"></a>Prepopulate a list
+
+Here is an example of an interview that populates a list with two
+entries before allowing the user to add other entries.
+
+{% include side-by-side.html demo="prepopulate-list" %}
+
+This interview takes advantage of the fact that the automatic
+gathering process will seek a definition of the `.there_are_any`
+attribute.  It uses the code block that defines `.there_are_any` to
+populate the list of objects.
+
+Note that `user.favorite_things.clear()` is called.  This line happens
+to be unnecessary in this interview, but it illustrates a good
+practice.  Code blocks in **docassemble** often need to be
+[idempotent]; they should be able to be run from the beginning more
+than once without causing unwanted side effects.  Code blocks often
+restart because when an undefined variable is encountered and the
+definition is retrieved from the user or from another code block, the
+original code block does not pick up where it left off, but rather
+starts at the beginning again.
+
+Alternatively, you could prepopulate a list by using [`mandatory`]
+code at the beginning of an interview to append items to the list.
+Then the interview will never even seek a definition of the
+`.there_are_any` attribute.  The method described above is helpful,
+however, in cases where the list being initialized does not exist at
+the start of the interview, as would be the case if the list was
+`user.sibling[i].favorite_things`.
+
+## <a name="postpopulate"></a>Postpopulate a list
+
+Here is an example of an interview that populates a list with two
+entries after the user is done adding entries.
+
+{% include side-by-side.html demo="postpopulate-list" %}
+
+This interview uses code blocks to determine
+`user.favorite_things.there_are_any` and
+`user.favorite_things.there_is_another`.  Instead of asking the user
+questions that define these variables directly, the interview asks
+questions that set the variables `user.likes_something` and
+`user.likes_another_thing`.  It can then use code to do things
+depending on what the answers are.
+
+If the user says he has no favorite things, the interview adds Mom and
+apple pie to `user.favorite_things`.  If the user does describe some
+favorite things, and then says that he has no other favorite things,
+the interview will then add Mom and apple pie to the list.
+
+Note that if the user says he has no favorite things, the interview
+sets `.there_is_another` to `False`.  This is necessary to persuade the
+automatic gathering feature that the list is fully gathered.
+
+Note the use of [`del`] to undefine `user.likes_another_thing` as soon
+as it is set to `True`.  This is because the automatic gathering
+system will need to ask the question again, and if
+`user.likes_another_thing` is already set to `True`, the list of the
+user's favorite things will be infinite!  Similarly, behind the
+scenes, the automatic gathering process undefines `.there_is_another`
+after it is defined.
+
+## <a name="editing"></a>Edit an already-gathered list
+
+It is possible to allow your users to edit a list that has already
+been gathered.  Here is an example.
+
+{% include side-by-side.html demo="edit-list" %}
+
+For more information about how this works, consult the documentation
+for the functions and block types that this example uses.
+
 # For loop
 
 In computer programming, a "for loop" allows you to do something
@@ -789,16 +868,6 @@ question: |
 For more information about "for loops" in [Mako], see the
 [markup section].
 
-# <a name="editing"></a>Editing an already-gathered list
-
-It is possible to allow your users to edit a list that has already
-been gathered.  Here is an example.
-
-{% include side-by-side.html demo="edit-list" %}
-
-For more information about how this works, consult the documentation
-for the functions and block types that this example uses.
-
 [markup section]: {{ site.baseurl }}/docs/markup.html#for
 [legal applications]: {{ site.baseurl }}/docs/legal.html
 [Mako]: http://www.makotemplates.org/
@@ -843,3 +912,5 @@ for the functions and block types that this example uses.
 [embedding a code block within a multiple choice question]: http://docassemble.org/docs/fields.html#code%20button
 [expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [`objects`]: {{ site.baseurl }}/docs/initial.html#objects
+[idempotent]: https://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning
+[`del`]: https://docs.python.org/2/tutorial/datastructures.html#the-del-statement

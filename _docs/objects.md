@@ -773,6 +773,8 @@ Other methods available on a `DAList` are:
 * <a name="DAList.extend"></a>`extend(extension_list)` - adds the
   items in the `extension_list` to the end of the list.  Just like the
   [Python list] method of the same name.
+* <a name="DAList.pop"></a>`pop()` - removes an item from the list.
+  Just like the [Python list] method of the same name.
 * <a name="DAList.first"></a>`first()` - returns the first item of
   the list; error triggered if list is empty.
 * <a name="DAList.last"></a>`last()` - returns the last item of the

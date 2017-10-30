@@ -1191,6 +1191,11 @@ does not work within documents.)  The arguments are expected to be
 
 {% include demo-side-by-side.html demo="testgeolocate" %}
 
+In order for maps to appear, you will need to configure a
+[Google API key].  From the [`google`] section of the [configuration],
+the `google maps api key` will be used if it exists.  If a
+`google maps api key` is not present, the `api key` will be used.
+
 ## <a name="location_known"></a>location_known()
 
 Returns `True` or `False` depending on whether **docassemble** was
@@ -4358,3 +4363,6 @@ $(document).on('daPageLoad', function(){
 [`console.log` JavaScript function]: https://developer.mozilla.org/en-US/docs/Web/API/Console/log
 [Bootstrap alert]: https://getbootstrap.com/docs/3.3/components/#alerts
 [`flash()`]: #flash
+[Google API key]: {{ site.baseurl }}/docs/config.html#google
+[`google`]: {{ site.baseurl }}/docs/config.html#google
+[configuration]: {{ site.baseurl }}/docs/config.html
