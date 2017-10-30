@@ -1,4 +1,4 @@
-from docassemble.base.functions import word, currency_symbol, url_action, comma_and_list, server
+from docassemble.base.functions import word, currency_symbol, url_action, comma_and_list, server, get_config
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape
 from docassemble.base.parse import Question, debug
 from docassemble.base.logger import logmessage
@@ -1413,7 +1413,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     </script>
 """
         status.extra_scripts.append(map_js)
-        status.extra_scripts.append('<script async defer src="https://maps.googleapis.com/maps/api/js?signed_in=true&callback=daInitMap"></script>')
+        status.extra_scripts.append('<script async defer src="https://maps.googleapis.com/maps/api/js?api=' + urllib.quote(get_config('google maps api key')) + '&callback=daInitMap"></script>')
     return master_output
 
 def add_validation(extra_scripts, validation_rules, field_error):
