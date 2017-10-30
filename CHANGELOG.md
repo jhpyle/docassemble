@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.85] - 2017-10-29
+### Changed
+- A Google API key is now required for using `map_of()`.
+
 ## [0.1.84] - 2017-10-29
 ### Fixed
 - UI issues when switching between help and questions tabs.
