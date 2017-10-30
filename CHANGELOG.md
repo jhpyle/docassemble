@@ -1,6 +1,9 @@
 # Change Log
 
 ## [0.1.85] - 2017-10-29
+### Added
+- Option for `google maps api key` in the `google` section of the 
+  configuration.
 ### Changed
 - A Google API key is now required for using `map_of()`.
 
