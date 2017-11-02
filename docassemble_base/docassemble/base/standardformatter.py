@@ -1,7 +1,8 @@
-from docassemble.base.functions import word, currency_symbol, url_action, comma_and_list, server, get_config
+from docassemble.base.functions import word, currency_symbol, url_action, comma_and_list, server
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape
 from docassemble.base.parse import Question, debug
 from docassemble.base.logger import logmessage
+from docassemble.base.config import daconfig
 import urllib
 import sys
 import os
@@ -10,6 +11,15 @@ import json
 import random
 import sys
 import codecs
+
+DECORATION_SIZE = daconfig.get('decoration size', 2.0)
+DECORATION_UNITS = daconfig.get('decoration units', 'em')
+BUTTON_ICON_SIZE = daconfig.get('button icon size', 4.0)
+BUTTON_ICON_UNITS = daconfig.get('button icon units', 'em')
+if daconfig.get('button size', 'large') == 'large':
+    BUTTON_CLASS = 'btn-lg btn-da'
+else:
+    BUTTON_CLASS = 'btn-da'
 
 def tracker_tag(status):
     output = ''
@@ -509,8 +519,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if the_image is not None:
                     #sys.stderr.write("yoo4\n")
                     url = server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
-                    width_value = 2.0
-                    width_units = 'em'
+                    width_value = DECORATION_SIZE
+                    width_units = DECORATION_UNITS
                     sizing = 'width:' + str(width_value) + str(width_units) + ';'
                     filename = server.file_finder(str(the_image.package) + ':' + str(the_image.filename))
                     if 'extension' in filename and filename['extension'] == 'svg' and 'width' in filename:
@@ -553,8 +563,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += "\n              </div>"
         output += """
               <div class="form-actions sighidesmall sigbuttons">
-                <a class="btn btn-primary btn-lg sigsave">""" + continue_label + """</a>
-                <a class="btn btn-warning btn-lg sigclear">""" + word('Clear') + """</a>
+                <a class="btn btn-primary """ + BUTTON_CLASS + """ sigsave">""" + continue_label + """</a>
+                <a class="btn btn-warning """ + BUTTON_CLASS + """ sigclear">""" + word('Clear') + """</a>
               </div>
 """
         output += '            </div>\n            <form action="' + root + '" id="dasigform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
@@ -571,9 +581,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if video_text:
             output += indent_by(video_text, 12)
         output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
-        output += '                <div class="btn-toolbar">\n                  <button class="btn btn-primary btn-lg " name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.yes() + '</button>\n                  <button class="btn btn-lg btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.no() + '</button>'
+        output += '                <div class="btn-toolbar">\n                  <button class="btn btn-primary ' + BUTTON_CLASS + ' " name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_CLASS + ' btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.no() + '</button>'
         if status.question.question_type == 'yesnomaybe':
-            output += '\n                  <button class="btn btn-lg btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + status.question.maybe() + '</button>'
+            output += '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + status.question.maybe() + '</button>'
         output += '\n                </div>\n'
         #output += question_name_tag(status.question)
         if (status.underText):
@@ -594,9 +604,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if video_text:
             output += indent_by(video_text, 12)
         output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
-        output += '                <div class="btn-toolbar">\n                  <button class="btn btn-primary btn-lg" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.yes() + '</button>\n                  <button class="btn btn-lg btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.no() + '</button>'
+        output += '                <div class="btn-toolbar">\n                  <button class="btn btn-primary ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_CLASS + ' btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.no() + '</button>'
         if status.question.question_type == 'noyesmaybe':
-            output += '\n                  <button class="btn btn-lg btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + status.question.maybe() + '</button>'
+            output += '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + status.question.maybe() + '</button>'
         output += '\n                </div>\n'
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
@@ -644,7 +654,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             resume_button_label = markdown_to_html(status.continueLabel, trim=True, do_terms=False)
         else:
             resume_button_label = word('Resume')
-        output += '                <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + resume_button_label + '</button></div>\n'
+        output += '                <div class="form-actions"><button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + resume_button_label + '</button></div>\n'
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
@@ -879,7 +889,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             #status.extra_scripts.append(init_string)
             #status.extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '                <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button></div>\n'
+        output += '                <div class="form-actions"><button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button></div>\n'
         #output += question_name_tag(status.question)
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
@@ -899,7 +909,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if video_text:
             output += indent_by(video_text, 12)
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '                <div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True">' + continue_label + '</button></div>\n'
+        output += '                <div class="form-actions"><button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True">' + continue_label + '</button></div>\n'
         #output += question_name_tag(status.question)
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
@@ -1019,7 +1029,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
             output += '                <div id="errorcontainer" style="display:none"></div>\n'
             output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-            output += '                <button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button>\n'
+            output += '                <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>\n'
         else:
             #output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
             output += '                <div class="btn-toolbar">\n'
@@ -1031,12 +1041,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if 'image' in pair:
-                            the_icon = '<div>' + icon_html(status, pair['image'], width_value=4.0) + '</div>';
+                            the_icon = '<div>' + icon_html(status, pair['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</div>';
                             btn_class = ' btn-default btn-da-custom'
                         else:
                             the_icon = ''
                         if True or pair['key'] is not None:
-                            output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(pair['key']) + '">' + the_icon + markdown_to_html(pair['label'], status=status, trim=True, do_terms=False) + '</button>\n'
+                            output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(pair['key']) + '">' + the_icon + markdown_to_html(pair['label'], status=status, trim=True, do_terms=False) + '</button>\n'
                         else:
                             output += markdown_to_html(pair['label'], status=status)
                 else:
@@ -1046,7 +1056,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         random.shuffle(choicelist)
                     for choice in choicelist:
                         if 'image' in choice:
-                            the_icon = '<div>' + icon_html(status, choice['image'], width_value=4.0) + '</div>';
+                            the_icon = '<div>' + icon_html(status, choice['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</div>';
                             btn_class = ' btn-default btn-da-custom'
                         else:
                             the_icon = ''
@@ -1054,14 +1064,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                             the_help = choice['help']
                         else:
                             the_help = ''
-                        output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(choice['key']) + '">' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False) + '</button>\n'
+                        output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(choice['key']) + '">' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False) + '</button>\n'
             else:
                 indexno = 0
                 for choice in status.selectcompute[status.question.fields[0].number]:
                 #for choice in status.question.fields[0].choices:
                     btn_class = ' btn-primary'
                     if 'image' in choice:
-                        the_icon = '<div>' + icon_html(status, choice['image'], width_value=4.0) + '</div>'
+                        the_icon = '<div>' + icon_html(status, choice['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</div>'
                         btn_class = ' btn-default btn-da-custom'
                     else:
                         the_icon = ''
@@ -1084,7 +1094,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                             btn_class = ' btn-info'
                         elif choice['key'].question_type == "exit":
                             btn_class = ' btn-danger'
-                    output += '                  <button type="submit" class="btn btn-lg' + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ==" value="' + str(indexno) + '">' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False, strip_newlines=True) + '</button>\n'
+                    output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ==" value="' + str(indexno) + '">' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False, strip_newlines=True) + '</button>\n'
                     indexno += 1
             output += '                </div>\n'
         #output += question_name_tag(status.question)
@@ -1110,7 +1120,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if video_text:
             output += indent_by(video_text, 12)
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '                <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button></div>\n'
+        output += '                <div class="form-actions"><button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button></div>\n'
         #output += question_name_tag(status.question)
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
@@ -1413,7 +1423,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     </script>
 """
         status.extra_scripts.append(map_js)
-        google_config = get_config('google', dict())
+        google_config = daconfig.get('google', dict())
         if 'google maps api key' in google_config:
             api_key = google_config.get('google maps api key')
         elif 'api key' in google_config:

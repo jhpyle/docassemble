@@ -95,11 +95,9 @@
     </div>
   </div>
   <div class="form-actions">
-    {# <a id="daSave" href="#" class="btn btn-primary btn-lg">Save</a> #}
-    {{ render_submit_field(form.submit, class="btn btn-primary btn-lg", tabindex="90") }}
-    {# {{ render_submit_field(form.run, id='daRun', class="btn btn-warning btn-lg") }} #}
-    {% if is_new == 'False' %}<a tabindex="100" id="daRun" target="_blank" href="{{ url_for('playground_redirect') }}" class="btn btn-warning btn-lg">{{ word("Save and Run") }}</a>
-    {{ render_submit_field(form.delete, id='daDelete', class="btn btn-default btn-lg", tabindex="110") }}
+    {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS'], tabindex="90") }}
+    {% if is_new == 'False' %}<a tabindex="100" id="daRun" target="_blank" href="{{ url_for('playground_redirect') }}" class="btn btn-warning {{ config['BUTTON_CLASS'] }}" >{{ word("Save and Run") }}</a>
+    {{ render_submit_field(form.delete, id='daDelete', class="btn btn-default " + config['BUTTON_CLASS'], tabindex="110") }}
     {% if interview_path %}
     <a tabindex="120" title="Right-click to copy link" class="label label-default example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="glyphicon glyphicon-link"></i> {{ word('Share') }}</a>
     {% endif %}

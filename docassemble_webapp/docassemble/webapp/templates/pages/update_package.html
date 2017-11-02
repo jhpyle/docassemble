@@ -6,7 +6,7 @@
 <h2>{{ word('Upgrade docassemble') }}</h2>
 
 <div class="form-actions">
-  <a class="btn btn-default btn-lg" href="{{ url_for('update_package', package='docassemble.webapp', action='update', base='1') }}">{{ word('Upgrade') }}</a>
+  <a class="btn btn-default {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', action='update', base='1') }}">{{ word('Upgrade') }}</a>
 </div>
 
 <h2>{{ word('Install or update a package') }}</h2>

@@ -515,6 +515,7 @@ import docassemble.base.util
 from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile, DAObject, DAFileCollection, DAStaticFile, DADict
 from user_agents import parse as ua_parse
 import docassemble.base.ocr
+from jinja2.exceptions import TemplateError
 
 mimetypes.add_type('application/x-yaml', '.yml')
 mimetypes.add_type('application/x-yaml', '.yaml')
@@ -592,6 +593,11 @@ if 'oauth' in daconfig:
         app.config['USE_GITHUB'] = False
 else:
     app.config['OAUTH_CREDENTIALS'] = dict()
+    
+if daconfig.get('button size', 'large') == 'large':
+    app.config['BUTTON_CLASS'] = 'btn-lg btn-da'
+else:
+    app.config['BUTTON_CLASS'] = 'btn-da'
 
 def get_sms_session(phone_number, config='default'):
     sess_info = None
@@ -5302,7 +5308,7 @@ def index():
           $(form).find('button[type="submit"]').prop("disabled", true);
         }, 1);
         if (whichButton != null){
-          $(".btn-lg").each(function(){
+          $(".btn-da").each(function(){
             if (this != whichButton){
               $(this).removeClass("btn-primary btn-info btn-warning btn-error");
               $(this).addClass("btn-default");
@@ -6088,6 +6094,11 @@ def index():
           $("#daPhoneAvailable").removeClass("invisible");
         }
         $("#backbutton").on('submit', function(event){
+          if (daShowingHelp){
+            event.preventDefault();
+            $('#questionlabel').tab('show');
+            return false;
+          }
           $("#backbutton").addClass("dabackiconpressed");
           var informed = '';
           if (daInformedChanged){
@@ -8919,7 +8930,7 @@ def create_playground_package():
         if current_package is None:
             logmessage('create_playground_package: package not specified')
             abort(404)
-    if app.config['USE_GITHUB']:
+    if app.config['USE_GITHUB'] and current_package is not None:
         github_package_name = 'docassemble-' + re.sub(r'^docassemble-', r'', current_package)
         #github_package_name = re.sub(r'[^A-Za-z\_\-]', '', github_package_name)
         if github_package_name in ['docassemble-base', 'docassemble-webapp', 'docassemble-demo']:
@@ -10967,7 +10978,7 @@ def playground_packages():
         $("#daCancel").click(function(event){
           var whichButton = this;
           $("#commit_message_div").hide();
-          $(".btn-lg").each(function(){
+          $(".btn-da").each(function(){
             if (this != whichButton && $(this).is(":hidden")){
               $(this).show();
             }
@@ -10985,7 +10996,7 @@ def playground_packages():
             }
             else{
               $("#commit_message_div").show();
-              $(".btn-lg").each(function(){
+              $(".btn-da").each(function(){
                 if (this != whichButton && $(this).is(":visible")){
                   $(this).hide();
                 }
@@ -11977,6 +11988,18 @@ def server_error(the_error):
         errmess = unicode(the_error)
         the_trace = None
         logmessage(errmess)
+    elif isinstance(the_error, TemplateError):
+        errmess = unicode(the_error)
+        # if hasattr(the_error, 'lineno') and the_error.lineno is not None:
+        #     errmess += "; lineno: " + unicode(the_error.lineno)
+        if hasattr(the_error, 'name') and the_error.name is not None:
+            errmess += "; name: " + unicode(the_error.name)
+        if hasattr(the_error, 'filename') and the_error.filename is not None:
+            errmess += "; filename: " + unicode(the_error.filename)
+        # if hasattr(the_error, 'source') and the_error.source is not None:
+        #     errmess += "; source: " + unicode(the_error.source)
+        the_trace = traceback.format_exc()
+        logmessage(errmess)
     else:
         errmess = unicode(type(the_error).__name__) + ": " + unicode(the_error)
         if hasattr(the_error, 'traceback'):
@@ -11999,7 +12022,45 @@ def server_error(the_error):
         errmess = '<pre>' + errmess + '</pre>'
     else:
         errmess = '<blockquote>' + errmess + '</blockquote>'
-    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=unicode(the_history), logtext=unicode(the_trace)), error_code
+    script = """
+    <script>
+      var daMessageLog = """ + json.dumps(docassemble.base.functions.get_message_log()) + """;
+      function flash(message, priority){
+        if (priority == null){
+          priority = 'info'
+        }
+        if (!$("#flash").length){
+          $("body").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+        }
+        $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>');
+        if (priority == 'success'){
+          setTimeout(function(){
+            $("#flash .alert-success").hide(300, function(){
+              $(self).remove();
+            });
+          }, 3000);
+        }
+      }
+      function showNotifications(){
+        var n = daMessageLog.length;
+        for (var i = 0; i < n; i++){
+          var message = daMessageLog[i];
+          if (message.priority == 'console'){
+            console.log(message.message);
+          }
+          else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'default' || message.priority == 'info'){
+            flash(message.message, message.priority);
+          }
+          else{
+            flash(message.message, 'info');
+          }
+        }
+      }
+      $( document ).ready(function() {
+        showNotifications();
+      });
+    </script>"""
+    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=unicode(the_history), logtext=unicode(the_trace), extra_js=Markup(script)), error_code
     #return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=None, logtext=str(the_trace)), error_code
 
 # @app.route('/testpost', methods=['GET', 'POST'])

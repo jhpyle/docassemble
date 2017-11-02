@@ -10,8 +10,8 @@
     <textarea rows="24" cols="80" id="config_content" name="config_content" tabindex="70"></textarea>
   </div>
   <div class="form-actions">
-    {{ render_submit_field(form.submit, tabindex=100, class="btn btn-primary btn-lg") }}
-    {{ render_submit_field(form.cancel, tabindex=110, class="btn btn-warning btn-lg") }}
+    {{ render_submit_field(form.submit, tabindex=100, class="btn btn-primary " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.cancel, tabindex=110, class="btn btn-warning " + config['BUTTON_CLASS']) }}
   </div>
 </form>
 {% endblock %}

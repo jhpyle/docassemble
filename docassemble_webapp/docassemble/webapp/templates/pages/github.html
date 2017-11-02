@@ -10,11 +10,11 @@
   {{ form.hidden_tag() }}
   <div class="form-actions">
     {% if uses_github %}
-    {{ render_submit_field(form.unconfigure, tabindex=100, class="btn btn-danger btn-lg") }}
+    {{ render_submit_field(form.unconfigure, tabindex=100, class="btn btn-danger " + config['BUTTON_CLASS']) }}
     {% else %}
-    {{ render_submit_field(form.configure, tabindex=100, class="btn btn-success btn-lg") }}
+    {{ render_submit_field(form.configure, tabindex=100, class="btn btn-success " + config['BUTTON_CLASS']) }}
     {% endif %}
-    {{ render_submit_field(form.cancel, tabindex=110, class="btn btn-warning btn-lg") }}
+    {{ render_submit_field(form.cancel, tabindex=110, class="btn btn-warning " + config['BUTTON_CLASS']) }}
   </div>
 </form>
 

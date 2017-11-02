@@ -154,6 +154,7 @@ class DAObjectPlusParameters(object):
 
 class DAObject(object):
     """The base class for all docassemble objects."""
+    connector_function = a_in_the_b
     def init(self, *pargs, **kwargs):
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
@@ -271,10 +272,13 @@ class DAObject(object):
         else:
             var_name = object.__getattribute__(self, 'instanceName') + "." + thename
             raise NameError("name '" + var_name + "' is not defined")
-    def object_name(self):
+    def object_name(self, capitalize=False):
         """Returns the instanceName attribute, or, if the instanceName contains attributes, returns a
         phrase.  E.g., case.plaintiff becomes "plaintiff in the case." """
-        return (reduce(a_in_the_b, map(object_name_convert, reversed(self.instanceName.split(".")))))
+        the_name = reduce(self.__class__.connector_function, map(object_name_convert, reversed(self.instanceName.split("."))))
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize(the_name)
+        return the_name
     def object_possessive(self, target):
         """Returns a possessive phrase based on the instanceName.  E.g., client.object_possessive('fish') returns
         "client's fish." """
@@ -377,6 +381,7 @@ class DAObject(object):
 
 class DAList(DAObject):
     """The base class for lists of things."""
+    connector_function = a_preposition_b
     def init(self, *pargs, **kwargs):
         self.elements = list()
         self.auto_gather = True

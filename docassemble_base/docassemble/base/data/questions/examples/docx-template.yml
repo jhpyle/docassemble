@@ -93,3 +93,9 @@ attachment:
 ---
 features:
   pdf/a: True
+---
+question: |
+  Give me a file
+fields:
+  - File: the_file
+    datatype: file

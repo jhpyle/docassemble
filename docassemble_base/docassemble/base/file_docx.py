@@ -4,15 +4,16 @@ from docx.shared import Mm, Inches, Pt
 from docassemble.base.functions import server
 import docassemble.base.filter
 from types import NoneType
+from docassemble.base.logger import logmessage
 
 def image_for_docx(number, question, tpl, width=None):
     file_info = server.file_finder(number, convert={'svg': 'png'}, question=question)
     if 'fullpath' not in file_info:
         return '[FILE NOT FOUND]'
     if width is not None:
-        m = re.search(r'$([0-9\.]) *([A-Za-z]+) *\]', width)
+        m = re.search(r'^([0-9\.]+) *([A-Za-z]*)', str(width))
         if m:
-            amount = m.group(1)
+            amount = float(m.group(1))
             units = m.group(2).lower()
             if units in ['in', 'inches', 'inch']:
                 the_width = Inches(amount)
@@ -25,6 +26,7 @@ def image_for_docx(number, question, tpl, width=None):
         else:
             the_width = Inches(2)
     else:
+        logmessage("err 2")
         the_width = Inches(2)
     return InlineImage(tpl, file_info['fullpath'], the_width)
 

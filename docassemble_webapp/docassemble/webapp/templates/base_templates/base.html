@@ -107,11 +107,11 @@
             $(self).remove();
           });
         }, 3000);
-        $(".btn-lg").click(function(){
+        $(".btn-da").click(function(){
           whichButton = this;
         });
         $(".form").on('submit', function(){
-          $(".btn-lg").each(function(){
+          $(".btn-da").each(function(){
             var the_button = this;
             setTimeout(function(){
               $(the_button).prop("disabled", true);

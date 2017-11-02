@@ -140,19 +140,19 @@
               </div>
               {%- endif %}
               <div class="form-actions">
-                {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }}
+                {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS']) }}
                 {%- if current_file != '' %}
-                {{ render_submit_field(form.install, class="btn btn-success btn-lg") }}
+                {{ render_submit_field(form.install, class="btn btn-success " + config['BUTTON_CLASS']) }}
                 {%- if can_publish_to_pypi %}
-                {{ render_submit_field(form.pypi, id="daPyPI", class="btn btn-warning btn-lg", title=word('Publish on PyPI')) }}
+                {{ render_submit_field(form.pypi, id="daPyPI", class="btn btn-warning " + config['BUTTON_CLASS'], title=word('Publish on PyPI')) }}
                 {%- endif %}
                 {%- if can_publish_to_github %}
-                {{ render_submit_field(form.github, id="daGitHub", class="btn btn-warning btn-lg", title=word('Push a commit to GitHub')) }}
-                {{ render_submit_field(form.cancel, id="daCancel", class="btn btn-default btn-lg", style="display:none") }}
+                {{ render_submit_field(form.github, id="daGitHub", class="btn btn-warning " + config['BUTTON_CLASS'], title=word('Push a commit to GitHub')) }}
+                {{ render_submit_field(form.cancel, id="daCancel", class="btn btn-default " + config['BUTTON_CLASS'], style="display:none") }}
                 {%- endif %}
-                {{ render_submit_field(form.delete, id="daDelete", class="btn btn-default btn-lg") }}
+                {{ render_submit_field(form.delete, id="daDelete", class="btn btn-default " + config['BUTTON_CLASS']) }}
                 {%- else %}
-                <a class="btn btn-default btn-lg" href="{{ url_for('playground_packages') }}">{{ word('Cancel') }}</a>
+                <a class="btn btn-default {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_packages') }}">{{ word('Cancel') }}</a>
                 {%- endif %}
               </div>
             </div>

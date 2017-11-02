@@ -2,6 +2,7 @@ import mimetypes
 import traceback
 import re
 from jinja2.runtime import StrictUndefined, UndefinedError
+from jinja2.exceptions import TemplateError
 from jinja2.environment import Environment
 from jinja2.environment import Template as JinjaTemplate
 from jinja2 import meta as jinja2meta
@@ -2381,11 +2382,16 @@ class Question:
                 target['content'] = ''
                 options[template_type + '_template_file'] = FileInPackage(target[template_type + ' template file'], 'template', package=self.package)
                 if template_type == 'docx' and type(target[template_type + ' template file']) in [str, unicode]:
-                    docx_template = docassemble.base.file_docx.DocxTemplate(options['docx_template_file'].path())
-                    the_env = Environment()
-                    the_xml = docx_template.get_xml()
-                    the_xml = docx_template.patch_xml(the_xml)
-                    parsed_content = the_env.parse(the_xml)
+                    try:
+                        docx_template = docassemble.base.file_docx.DocxTemplate(options['docx_template_file'].path())
+                        the_env = Environment()
+                        the_xml = docx_template.get_xml()
+                        the_xml = docx_template.patch_xml(the_xml)
+                        parsed_content = the_env.parse(the_xml)
+                    except TemplateError as the_error:
+                        if the_error.filename is None:
+                            the_error.filename = os.path.basename(options['docx_template_file'].path())
+                        raise the_error
                     for key in jinja2meta.find_undeclared_variables(parsed_content):
                         if not key.startswith('_'):
                             self.mako_names.add(key)
@@ -2966,7 +2972,12 @@ class Question:
                     elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
                         #logmessage("field_data is " + str(result['field_data']))
                         docassemble.base.functions.set_context('docx', template=result['template'])
-                        result['template'].render(result['field_data'], jinja_env=Environment(undefined=StrictUndefined))
+                        try:
+                            result['template'].render(result['field_data'], jinja_env=Environment(undefined=StrictUndefined))
+                        except TemplateError as the_error:
+                            if (not hasattr(the_error, 'filename')) or the_error.filename is None:
+                                the_error.filename = os.path.basename(attachment['options']['docx_template_file'].path())
+                            raise the_error
                         docassemble.base.functions.reset_context()
                         docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                         result['template'].save(docx_file.name)
@@ -4514,13 +4525,13 @@ def process_selections_manual(data):
         raise DAError("Unknown data type in manual choices selection: " + re.sub(r'[<>]', '', repr(data)))
     return(result)
 
-def extract_missing_name(string):
+def extract_missing_name(the_error):
     #logmessage("extract_missing_name: string was " + str(string))
-    m = nameerror_match.search(str(string))
+    m = nameerror_match.search(unicode(the_error))
     if m:
         return m.group(1)
     else:
-        return None
+        raise DAError("Unable to extract variable name from '" + unicode(the_error) + "'")
 
 def auto_determine_type(field_info, the_value=None):
     types = dict()

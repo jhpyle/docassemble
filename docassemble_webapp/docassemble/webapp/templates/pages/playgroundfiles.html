@@ -113,9 +113,8 @@
                 <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="580">{{ content }}</textarea>
               </div>
               <div class="form-actions">
-                {{ render_submit_field(formtwo.submit, tabindex=600, class="btn btn-primary btn-lg") }}
-                {% if is_new == 'False' %}<a tabindex="610" class="btn btn-default btn-lg" href="?section={{ section }}&delete={{ current_file }}">{{ word('Delete') }}</a>{% endif %}
-                {# {{ render_submit_field(formtwo.delete, tabindex=610, id="daDelete", class="btn btn-default btn-lg") }} #}
+                {{ render_submit_field(formtwo.submit, tabindex=600, class="btn btn-primary " + config['BUTTON_CLASS']) }}
+                {% if is_new == 'False' %}<a tabindex="610" class="btn btn-default {{ config['BUTTON_CLASS'] }}" href="?section={{ section }}&delete={{ current_file }}">{{ word('Delete') }}</a>{% endif %}
               </div>
             </form>
             {%- if after_text %}
@@ -137,5 +136,5 @@
 {%- endblock %}
 {%- block bottom %}
       <div class="daspacer-large"></div>
-      <div class="container"><p><a tabindex="620" href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
+      <div class="container"><p><a tabindex="620" href="{{ url_for('playground_page') }}" class="btn btn-info"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
 {%- endblock %}
