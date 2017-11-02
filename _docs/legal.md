@@ -162,6 +162,50 @@ including `pleading.caption()` will require the following:
     * `pleading.case.court.name`
     * `pleading.title`
 
+# Adjusting for jurisdictional variation
+
+**docassemble** is an ideal platform for legal interviews that are
+applicable in multiple jurisdictions.  The features of object-oriented
+programming are well-adapted to representing general rules that can be
+overridden by special cases, state rules that can be overriden by
+local rules, old law that is partially overridden by new law.
+
+The features of software packaging and the nested importation of
+software libraries enable collaboration among legal experts.  For
+example, suppose Lawyer A is an expert in the general family law of
+California.  Lawyer B is an expert in how that law is applied in Los
+Angeles.  Lawyer C is an expert in how that law is applied in San
+Francisco.  Lawyer A can develop the package `docassemble.family-ca`
+containing classes and methods for applying California Family Law to
+the facts of cases.  Lawyer B can develop the package
+`docassemble.family-ca-la`, which imports `docassemble.family-ca` and
+makes modifications to the classes as necessary to express the local
+variations in Los Angeles.  Lawyer C can develop the package
+`docassemble.family-ca-sf`, which does the same for San Francisco.
+All three lawyers will take responsibility for maintaining their code.
+
+Then, Lawyer D could develop a statewide interview for a family law
+pleading, using the packages `docassemble.family-ca` and
+`docassemble.family-ca-sf`.  Lawyer D would not need to research the
+special variations of law in San Francisco and Los Angeles because
+Lawyers B and C will do all that work; Lawyer D would just need to put
+the pieces together.
+
+Lawyers A, B and C will not need to become experts in each others'
+areas of law, or understand each others' code, but they will need to
+cooperate around using a "common language."  For example, if Lawyer B
+thinks about using an attribute `.driver_license_number`, but Lawyer C
+has already used `.drivers_license_id` to represent the same concept,
+Lawyer B should notice that Lawyer C has started to use
+`.drivers_license_id` and should use the same naming convention.  In
+order to facilitate collaboration, Lawyers B and C will need to
+document their work clearly and concisely.  They may also need to
+communicate with one another.  This communication could take place
+formally, for example through a committee that has meetings or
+conference calls, or it could take place informally, through an e-mail
+distribution list or a [Slack] channel.
+
+[Slack]: https://slack.com
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [`legal.py`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py

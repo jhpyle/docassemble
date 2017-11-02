@@ -3427,7 +3427,7 @@ the browser console, or to the user's screen.
 
 The first parameter is the message you want to send.  The second
 parameter, which is optional, is the "priority" of the message.  The
-default priority is `'log'`, which means that the message is 
+default priority is `'log'`.
 
 {% include side-by-side.html demo="log" %}
 
@@ -3461,6 +3461,34 @@ The colors look like this:
 <div class="alert alert-default">default</div>
 </div>
 </div>
+
+## <a name="encode_name"></a>encode_name()
+
+In the [HTML] of the web interface, input elements for
+**docassemble** variables are base64-encoded versions of the [Python]
+variable names.
+
+The `encode_name()` function converts a variable name to base64
+encoding.
+
+{% highlight python %}
+>>> encode_name('favorite_fruit')
+u'ZmF2b3JpdGVfZnJ1aXQ='
+{% endhighlight %}
+
+For more information about the relationship between [HTML] and the
+setting of variables, see the discussion in the
+[section on custom front ends].
+
+## <a name="decode_name"></a>decode_name()
+
+The `decode_name()` function does the opposite of [`encode_name()`]:
+it converts a variable name from base64 encoding to plain text.
+
+{% highlight python %}
+>>> decode_name('ZmF2b3JpdGVfZnJ1aXQ=')
+u'favorite_fruit'
+{% endhighlight %}
 
 # <a name="sms"></a>Functions for working with SMS messages
 
@@ -4366,3 +4394,6 @@ $(document).on('daPageLoad', function(){
 [Google API key]: {{ site.baseurl }}/docs/config.html#google
 [`google`]: {{ site.baseurl }}/docs/config.html#google
 [configuration]: {{ site.baseurl }}/docs/config.html
+[`encode_name()`]: #encode_name
+[`decode_name()`]: #decode_name
+[section on custom front ends]: {{ site.baseurl }}/docs/frontend.html

@@ -17,21 +17,19 @@ set to `True`.
 If your interview is showing a screen that it shouldn't, try opening
 the "Source" tab.  This will provide you with a report about how
 **docassemble** reached the screen it is showing.  (You may need to
-scroll down to see the report.)
-
-At the bottom of the page is a link called "Show variables and
-values."  If you click this, a browser tab will open and you will see
-a [JSON] representation of the variables that had been defined before
-the error occurred.  (If your interview generated an error on the very
-first screen, however, the variables will not be available.)  The
-location of this screen is simply `/vars`.
+scroll down to see the report.)  At the bottom of the page is a link
+called "Show variables and values."  If you click this, a browser tab
+will open and you will see a [JSON] representation of the variables
+that had been defined before the error occurred.  (If your interview
+generated an error on the very first screen, however, the variables
+will not be available.)  The location of this screen is simply
+`/vars`.
 
 A common debugging technique is to print messages at various points in
 your code.  You can use the [`log()`] function to do this.  The
 messages will be available in the file called `docassemble.log` in the
-"Logs" interface from the main menu.  If your interview is not
-generating [Python] exceptions, you can log the messages to the
-browser console or to the screen.
+"Logs" interface from the main menu.  You can also use [`log()`] to
+log the messages to the browser console or to the screen.
 
 # Errors in docx templates
 

@@ -8459,11 +8459,25 @@
   fields:
     - no label: x.instructions
       datatype: area
-"testgeolocate": "objects:\n  - user: Individual\n  - enemy: Individual\n---\ninitial:\
-  \ True\ncode: |\n  set_info(user=user, role='user')\n  track_location = user.location.status()\n\
-  ---\nmandatory: True\ncode: |\n  need(welcome_screen, map_shown)\n---\nsets: map_shown\n\
-  question: Map of you and your enemy\nfield: foobar\nunder: |\n  Foo bar\n  \n  ${\
-  \ map_of(user, enemy) }"
+"testgeolocate": |-
+  objects:
+    - user: Individual
+    - enemy: Individual
+  ---
+  initial: True
+  code: |
+    set_info(user=user, role='user')
+    track_location = user.location.status()
+  ---
+  mandatory: True
+  code: |
+    need(welcome_screen, map_shown)
+  ---
+  sets: map_shown
+  question: Map of you and your enemy
+  field: foobar
+  under: |
+    ${ map_of(user, enemy) }
 "validation-code": |-
   question: |
     There are 10 fruit in all.

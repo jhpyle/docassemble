@@ -4,6 +4,20 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.86](https://github.com/jhpyle/docassemble/releases/tag/v0.1.86) - 2017-11-01
+
+### Added
+- `decoration size`, `decoration units`, `button icon size`, 
+  `button icon units`, and `button size` configuration options.
+- `encode_name()` and `decode_name()`.
+
+### Changed
+- Clicking the back button when looking at question help will return
+  the user to the question.
+
+### Fixed
+- Width of images in .docx files.
+
 ## [0.1.85](https://github.com/jhpyle/docassemble/releases/tag/v0.1.85) - 2017-10-29
 
 ### Added

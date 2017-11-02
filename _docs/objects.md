@@ -516,14 +516,54 @@ have special features that allow their attributes to be set by
 and you refer to `fruit.seeds` when `seeds` is not an existing
 attribute of `fruit`, [Python] will generate an [AttributeError].  But
 if `fruit` is a `DAObject`, **docassemble** will intercept that error
-and ask a question that offers to define `fruit.seeds`, or ask a
-[`generic object`] question for object `DAObject` that offers to
-define `x.seeds`.
+and look for a [`question`] or [`code`] block that offers to define
+`fruit.seeds`.  Or, if that does not work, it will look for a
+[`generic object`] block that offers to define `x.seeds` for a `DAObject`.
 
 From the interview author's perspective, `DAObject`s can be treated
 like ordinary [Python objects] in most ways, but there are exceptions.
 
-Suppose you try the following:
+An important characteristic of all [`DAObject`]s is that they have
+intrinsic names.  If you do:
+
+{% highlight yaml %}
+objects:
+  - foo: DAObject
+{% endhighlight %}
+
+or you do:
+
+{% highlight yaml %}
+code: |
+  foo = DAObject()
+{% endhighlight %}
+
+then `foo.instanceName` will be `'foo'`.  The object knows its own
+name.  This is not a standard feature of [Python] objects, but a
+feature added by **docassemble**.
+
+Since `foo` is a [Python] object, you can create other names
+for the same object, but the `instanceName` attribute will not change.
+
+{% highlight python %}
+>>> from docassemble.base.core import DAObject
+>>> foo = DAObject()
+>>> foo.instanceName
+'foo'
+>>> foo.seeds = 4
+>>> foo.seeds
+4
+>>> bar = foo
+>>> bar.instanceName
+'foo'
+>>> bar.seeds += 1
+>>> foo.seeds
+5
+{% endhighlight %}
+
+The fact that each [`DAObject`] has only one intrinsic name can lead
+to confusion in interviews if you are not careful.  For example,
+suppose you try the following:
 
 {% include side-by-side.html demo="branch-error" %}
 
@@ -534,13 +574,21 @@ This will result in the following error:
 > incorporated by reference into the question file, despite reaching
 > the very end of the file.
 
-If you had a question that defined `long_branch.length` or a 
-[`generic object`] question for the `x.length` where `x` is a `DAObject`, then
-**docassemble** would use that question, but it is not able to ask for
-the length of the branch with `tree.branch.length` since the intrinsic
-name of the branch is `long_branch`, not `tree.branch`.
+You might think, "hey, why doesn't my interview ask the question that
+sets `tree.branch.length`?"  The reason is that `tree.branch` is just
+an alias for `long_branch`, and the object knows itself only as
+`long_branch`.  Thus, when the interview needs a definition for the
+`.length` attribute of this object, it will look for
+`long_branch.length`.
 
-However, this will work as intended:
+If you had a question that defined `long_branch.length` or a
+[`generic object`] question for the `x.length` where `x` is a
+[`DAObject`], then the interview would use that question.  However,
+the interview is not able to search for the length of the branch using
+`tree.branch.length` since the intrinsic name of the object is
+`long_branch`, not `tree.branch`.
+
+This will work as intended:
 
 {% include side-by-side.html demo="branch-no-error" %}
 
@@ -550,7 +598,7 @@ circumstances because the questions can use the variable name itself
 when forming the text of the question to ask the user.
 
 <a name="DAObject.object_name"></a>If you refer to a `DAObject` in a
-[Mako] template (or reduce it to text with Python's [str function]),
+[Mako] template (or reduce it to text with Python's [str() function]),
 this will have the effect of calling the [`object_name()`] method,
 which attempts to return a human-friendly name for the object.
 
@@ -596,7 +644,7 @@ will not return `friend.object_name()`; rather, it will return
 attributes you want to give it.  When those attributes are objects
 themselves, you need to use the `initializeAttribute()` method.
 
-You might be tempted to initialize an attribute this way:
+One way to initialize attributes of an object is to use [Python] code:
 
 {% highlight yaml %}
 objects:
@@ -606,8 +654,13 @@ code: |
   fish.best_friend = DAObject()
 {% endhighlight %}
 
-However, **this will not work**.  The reason has to do with the
-internals of how **docassemble** works.  Instead, you need to do:
+Under many circumstances, this works, and the variable on the left
+will be assigned a correct `instanceName`.
+
+However, **docassemble**'s system for setting the `instanceName`
+in circumstances like this relies on hacking the internals of
+[Python].  It is not guaranteed to work in all circumstances.  A safe
+way to define attributes is as follows:
 
 {% highlight yaml %}
 objects:
@@ -632,6 +685,26 @@ is already defined.  If you want to force the setting of an attribute
 in situations when the attribute is already defined, use
 `reInitializeAttribute()` instead of [`initializeAttribute()`], and it
 will overwrite the attribute.
+
+Another way to define object attributes is to use the [`objects`]
+block.
+
+{% highlight yaml %}
+objects:
+  - fish: DAObject
+  - fish.best_friend: DAObject
+{% endhighlight %}
+
+You can even use [`objects`] with the [`generic object`] modifier:
+
+{% highlight yaml %}
+generic object: Person
+objects: |
+  - x.principal_place_of_business: City
+{% endhighlight %}
+
+This will ensure that the `principal_place_of_business` of an
+[`Individual`] or [`Organization`] is always a [`City`].
 
 The [`DAObject`] provides some convenience functions for working with
 object attributes.
@@ -897,7 +970,7 @@ Other methods available on a `DAList` are:
 
 If you refer to a list in a [Mako] template (e.g., `The applicants
 include: ${ applicant }`) or convert it to text with the
-[str function] (e.g. (`str(applicant)`) in [Python] code, the result
+[str() function] (e.g. (`str(applicant)`) in [Python] code, the result
 will be the output of the `comma_and_list()` method.
 
 The `DAList` uses the following attributes:
@@ -2770,7 +2843,7 @@ and not an instance of the `Attorney` class.
 [roles]: {{ site.baseurl }}/docs/roles.html
 [source code]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [special variable]: {{ site.baseurl }}/docs/special.html
-[str function]: https://docs.python.org/2/library/functions.html#str
+[str() function]: https://docs.python.org/2/library/functions.html#str
 [template]: {{ site.baseurl }}/docs/template.html
 [templates]: {{ site.baseurl }}/docs/template.html
 [thread-safe]: https://en.wikipedia.org/wiki/Thread_safety
