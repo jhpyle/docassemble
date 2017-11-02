@@ -45,7 +45,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.base',
-      version='0.1.85',
+      version='0.1.86',
       description=('The base components of the docassemble system.'),
       author='Jonathan Pyle',
       author_email='jhpyle@gmail.com',
