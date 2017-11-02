@@ -152,6 +152,15 @@ of `force_ask()` is temporary.  If the user refreshes the screen while
 looking at the `user_is_communist` question a second time, it will be
 as though `force_ask` never happened.
 
+Since the effect of `force_ask()` is temporary, it cannot be used with
+all types of questions.  Questions that use the [`generic object`]
+modifier, for example, can fail if they are asked through
+`force_ask()`, unless you carefully arrange for the asking of the
+question.
+
+Because of these complications, the use of `force_ask()` is
+discouraged, unless you are an expert and you know what you are doing.
+
 Note that variable names given to force_ask must be in quotes.  If
 your variable is `favorite_fruit`, you need to write
 `force_ask('favorite_fruit')`.  If you write

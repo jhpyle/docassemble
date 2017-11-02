@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.87](https://github.com/jhpyle/docassemble/releases/tag/v0.1.87) - 2017-11-02
+
+### Fixed
+- `docx template file` combined with `code` resulted in error
+  due to recent change that attempted to provide better error
+  messages.
+
 ## [0.1.86](https://github.com/jhpyle/docassemble/releases/tag/v0.1.86) - 2017-11-01
 
 ### Added
