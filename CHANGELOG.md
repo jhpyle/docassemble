@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.1.87] - 2017-11-02
+### Fixed
+- `docx template file` combined with `code` resulted in error
+  due to recent change that attempted to provide better error
+  messages.
+
 ## [0.1.86] - 2017-11-01
 ### Added
 - `decoration size`, `decoration units`, `button icon size`, 
