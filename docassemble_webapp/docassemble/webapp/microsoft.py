@@ -38,8 +38,9 @@ class azurekey(object):
         self.azure_object = azure_object
         self.name = key_name
         if load:
-            self.get_properties()
-            self.does_exist = True
+            if not key_name.endswith('/'):
+                self.get_properties()
+                self.does_exist = True
     def get_properties(self):
         properties = self.azure_object.conn.get_blob_properties(self.azure_object.container, self.name).properties
         self.size = properties.content_length

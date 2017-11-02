@@ -810,6 +810,8 @@ class FileInPackage:
     def path(self, user_dict=dict()):
         if self.area == 'template':
             if self.is_code:
+                if len(user_dict) == 0:
+                    raise Exception("FileInPackage.path: called with empty dict")
                 the_file_ref = eval(self.code, user_dict)
                 if the_file_ref.__class__.__name__ == 'DAFile':
                     the_file_ref = the_file_ref.path()
@@ -2390,7 +2392,10 @@ class Question:
                         parsed_content = the_env.parse(the_xml)
                     except TemplateError as the_error:
                         if the_error.filename is None:
-                            the_error.filename = os.path.basename(options['docx_template_file'].path())
+                            try:
+                                the_error.filename = os.path.basename(options['docx_template_file'].path())
+                            except:
+                                pass
                         raise the_error
                     for key in jinja2meta.find_undeclared_variables(parsed_content):
                         if not key.startswith('_'):
@@ -2976,7 +2981,7 @@ class Question:
                             result['template'].render(result['field_data'], jinja_env=Environment(undefined=StrictUndefined))
                         except TemplateError as the_error:
                             if (not hasattr(the_error, 'filename')) or the_error.filename is None:
-                                the_error.filename = os.path.basename(attachment['options']['docx_template_file'].path())
+                                the_error.filename = os.path.basename(attachment['options']['docx_template_file'].path(user_dict=user_dict))
                             raise the_error
                         docassemble.base.functions.reset_context()
                         docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)

@@ -27,6 +27,7 @@ def main():
     if os.path.isfile(wsgi_file):
         with open(wsgi_file, 'a'):
             os.utime(wsgi_file, None)
+            sys.stderr.write("Restarted.\n")
     sys.exit(0)
 
 if __name__ == "__main__":
