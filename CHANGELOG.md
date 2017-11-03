@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.1.88] - 2017-11-02
+### Fixed
+- `object_name()` raised an exception.
+- Including MP4 videos did not work when OGG not provided.
+
 ## [0.1.87] - 2017-11-02
 ### Fixed
 - `docx template file` combined with `code` resulted in error

@@ -1170,6 +1170,8 @@ def video_control(files):
     output = '<video width="320" height="240" controls="controls">' + "\n"
     for d in files:
         if type(d) is list:
+            if d[0] is None:
+                continue
             output += '  <source src="' + d[0] + '"'
             if d[1] is not None:
                 output += ' type="' + d[1] + '"/>'
@@ -1290,7 +1292,7 @@ def get_video_urls(the_video, question=None):
         to_try[mimetype].append({'basename': basename, 'filename': video_item['text'], 'ext': ext, 'package': video_item['package']})
     if 'video/mp4' in to_try and 'video/ogg' not in to_try:
         to_try['video/ogg'] = list()
-        for attempt in to_try['audio/mp4']:
+        for attempt in to_try['video/mp4']:
             if attempt['ext'] == '.MP4':
                 to_try['video/ogg'].append({'basename': attempt['basename'], 'filename': attempt['basename'] + '.OGV', 'ext': '.OGV', 'package': attempt['package']})
             else:
