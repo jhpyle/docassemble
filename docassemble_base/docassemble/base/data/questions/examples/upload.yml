@@ -15,6 +15,6 @@ question: |
 subquestion: |
   ${ user_picture }
 mandatory: True
----
-features:
-  maximum image size: None
+# ---
+# features:
+#   maximum image size: None

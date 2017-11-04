@@ -4,7 +4,7 @@
             <h1 class="dastartpage">{{ title }}</h1>
             <ul class="dastartpage">
               {%- for interview in interview_info %}
-              <li><a href="{{ interview['link'] }}"{% if interview['status_class'] %} class="{{ interview['status_class'] }}"{% endif %}>{{ interview['display'] }}</a>{% if interview['subtitle'] %} <span class="{% if interview['subtitle_class'] %}{{ interview['subtitle_class'] }}{% else %}text-muted dasubtitle{% endif %}">{{ interview['subtitle'] }}</span>{% endif %}</li>
+              <li><a href="{{ interview['link'] }}"{% if interview['status_class'] %} class="{{ interview['status_class'] }}"{% endif %}>{{ interview['title'] }}</a>{% if interview['subtitle'] %} <span class="{% if interview['subtitle_class'] %}{{ interview['subtitle_class'] }}{% else %}text-muted dasubtitle{% endif %}">{{ interview['subtitle'] }}</span>{% endif %}</li>
               {%- endfor %}
             </ul>
 {%- endblock %}

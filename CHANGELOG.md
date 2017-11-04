@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.1.89] - 2017-11-04
+### Added
+- Ability to use `json=1` with `/user/sign-in`, `/list`, and
+  `/interviews` pages.
+- `interview_list()` and `interview_menu()` functions.
+- Twitter login.
+### Fixed
+- Thread unsafe language setting.
+
 ## [0.1.88] - 2017-11-02
 ### Fixed
 - `object_name()` raised an exception.

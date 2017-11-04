@@ -91,7 +91,7 @@ def run_cron(cron_type):
             else:
                 try:
                     #sys.stderr.write("  " + str(cron_type_to_use) + " status\n")
-                    docassemble.base.functions.reset_thread_variables()
+                    docassemble.base.functions.reset_local_variables()
                     obtain_lock(item['key'], item['filename'])
                     steps, user_dict, is_encrypted = fetch_user_dict(item['key'], item['filename'])
                     interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, the_user_id=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None), session=item['key'], yaml_filename=item['filename'], url=None, url_root=None, encrypted=is_encrypted, action=cron_type_to_use, interface='cron', arguments=dict()))

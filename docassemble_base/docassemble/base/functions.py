@@ -33,7 +33,7 @@ from user_agents import parse as ua_parse
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu']
 
 # debug = False
 # default_dialect = 'us'
@@ -927,7 +927,7 @@ def url_of(file_reference, **kwargs):
 
 def server_capabilities():
     """Returns a dictionary with true or false values indicating various capabilities of the server."""
-    result = dict(sms=False, google_login=False, facebook_login=False, voicerss=False, s3=False, azure=False)
+    result = dict(sms=False, google_login=False, facebook_login=False, azure_login=False, phone_login=False, voicerss=False, s3=False, azure=False)
     if 'twilio' in server.daconfig and type(server.daconfig['twilio']) in [list, dict]:
         if type(server.daconfig['twilio']) is list:
             tconfigs = server.daconfig['twilio']
@@ -937,6 +937,8 @@ def server_capabilities():
             if 'enabled' in tconfig and not tconfig['enabled']:
                 continue
             result['sms'] = True
+            if 'phone login' in server.daconfig:
+                result['phone_login'] = True
             break
     if 'oauth' in server.daconfig and type(server.daconfig['oauth']) is dict:
         if 'google' in server.daconfig['oauth'] and type(server.daconfig['oauth']['google']) is dict:
@@ -945,11 +947,16 @@ def server_capabilities():
         if 'facebook' in server.daconfig['oauth'] and type(server.daconfig['oauth']['facebook']) is dict:
             if not ('enabled' in server.daconfig['oauth']['facebook'] and not server.daconfig['oauth']['facebook']['enabled']):
                 result['facebook_login'] = True
+        if 'azure' in server.daconfig['oauth'] and type(server.daconfig['oauth']['azure']) is dict:
+            if not ('enabled' in server.daconfig['oauth']['azure'] and not server.daconfig['oauth']['azure']['enabled']):
+                result['azure_login'] = True
+        if 'twitter' in server.daconfig['oauth'] and type(server.daconfig['oauth']['twitter']) is dict:
+            if not ('enabled' in server.daconfig['oauth']['twitter'] and not server.daconfig['oauth']['twitter']['enabled']):
+                result['twitter_login'] = True
     for key in ['voicerss', 's3', 'azure']:
         if key in server.daconfig and type(server.daconfig[key]) is dict:
             if not ('enabled' in server.daconfig[key] and not server.daconfig[key]['enabled']):
                 result[key] = True
-    
     return result
 
 # def generate_csrf(*pargs, **kwargs):
@@ -1331,9 +1338,9 @@ def get_default_timezone():
 #     this_thread.open_files = set()
 #     this_thread.temporary_resources = set()
 
-def reset_thread_variables():
-    this_thread.saved_files = dict()
-    this_thread.message_log = list()
+# def reset_thread_variables():
+#     this_thread.saved_files = dict()
+#     this_thread.message_log = list()
 
 def reset_local_variables():
     this_thread.language = server.default_language
@@ -1342,6 +1349,8 @@ def reset_local_variables():
     this_thread.gathering_mode = dict()
     this_thread.current_variable = list()
     this_thread.open_files = set()
+    this_thread.saved_files = dict()
+    this_thread.message_log = list()
 
 def prevent_going_back():
     """Instructs docassemble to disable the user's back button, so that the user cannot
@@ -2697,3 +2706,16 @@ def encode_name(var):
 def decode_name(var):
     """Convert a base64-encoded variable name to plain text."""
     return(codecs.decode(var, 'base64').decode('utf8'))
+
+def interview_list(exclude_invalid=True):
+    """Returns a list of interviews that the user has started, or None if
+    the user is not logged in.
+
+    """
+    if this_thread.current_info['user']['is_authenticated']:
+        return server.user_interviews(user_id=this_thread.current_info['user']['the_user_id'], secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid)
+    return None
+
+def interview_menu():
+    """Returns the list of interviews that is offered at /list."""
+    return server.interview_menu()

@@ -232,7 +232,7 @@ def _get_safe_next_param(param_name, default_endpoint):
 #     return redirect(safe_next)
 
 def custom_resend_confirm_email():
-    user_manager =  current_app.user_manager
+    user_manager = current_app.user_manager
     db_adapter = user_manager.db_adapter
     form = user_manager.resend_confirm_email_form(request.form)
     if request.method=='GET' and 'email' in request.args:
@@ -247,6 +247,10 @@ def custom_resend_confirm_email():
 
 def custom_login():
     """ Prompt for username/email and password and sign the user in."""
+    if 'json' in request.form or 'json' in request.args:
+        is_json = True
+    else:
+        is_json = False
     user_manager =  current_app.user_manager
     db_adapter = user_manager.db_adapter
 
@@ -305,7 +309,8 @@ def custom_login():
                 flash(word('You cannot log in until your e-mail address has been confirmed.') + '<br><a href="' + url + '">' + word('Click here to confirm your e-mail') + '</a>.', 'error')
                 return redirect(url_for('user.login'))
             return flask_user.views._do_login_user(user, safe_next, login_form.remember_me.data)
-
+    if is_json:
+        return jsonify(action='login', csrf_token=generate_csrf())
     return user_manager.render_function(user_manager.login_template,
             form=login_form,
             login_form=login_form,
@@ -487,7 +492,7 @@ import flask_user.signals
 import flask_user.translations
 import flask_user.views
 import werkzeug
-from rauth import OAuth2Service
+from rauth import OAuth1Service, OAuth2Service
 import apiclient
 import oauth2client.client
 import strict_rfc3339
@@ -505,7 +510,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person
 from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning #Attachments
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -559,6 +564,7 @@ app.debug = False
 app.handle_url_build_error = my_default_url
 app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
+app.config['USE_TWITTER_LOGIN'] = False
 app.config['USE_AZURE_LOGIN'] = False
 app.config['USE_GOOGLE_DRIVE'] = False
 app.config['USE_PHONE_LOGIN'] = False
@@ -579,6 +585,10 @@ if 'oauth' in daconfig:
         app.config['USE_FACEBOOK_LOGIN'] = True
     else:
         app.config['USE_FACEBOOK_LOGIN'] = False
+    if 'twitter' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['twitter'] and daconfig['oauth']['twitter']['enable'] is False):
+        app.config['USE_TWITTER_LOGIN'] = True
+    else:
+        app.config['USE_TWITTER_LOGIN'] = False
     if 'azure' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['azure'] and daconfig['oauth']['azure']['enable'] is False):
         app.config['USE_AZURE_LOGIN'] = True
     else:
@@ -2719,10 +2729,11 @@ class TwitterSignIn(OAuthSignIn):
             request_token[1],
             data={'oauth_verifier': request.args['oauth_verifier']}
         )
-        me = oauth_session.get('account/verify_credentials.json').json()
-        social_id = 'twitter$' + str(me.get('id'))
+        me = oauth_session.get('account/verify_credentials.json', params={'skip_status': 'true', 'include_email': 'true', 'include_entites': 'false'}).json()
+        social_id = 'twitter$' + str(me.get('id_str'))
         username = me.get('screen_name')
-        return social_id, username, None   # Twitter does not provide email
+        email = me.get('email')
+        return social_id, username, email
 
 @flaskbabel.localeselector
 def get_locale():
@@ -3628,7 +3639,8 @@ def checkin():
 @app.before_request
 def setup_celery_and_variables():
     docassemble.webapp.worker.workerapp.set_current()
-    docassemble.base.functions.reset_thread_variables()
+    #docassemble.base.functions.reset_thread_variables()
+    docassemble.base.functions.reset_local_variables()
 
 # @app.before_request
 # def setup_celery():
@@ -4660,7 +4672,7 @@ def index():
                 response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
             else:
                 response_to_send = make_response(interview_status.questionText.encode('utf8'), '200 OK')
-            response_to_send.headers['Content-type'] = interview_status.extras['content_type']
+            response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
         if set_cookie:
             response_to_send.set_cookie('secret', secret)
         if expire_visitor_secret:
@@ -6440,10 +6452,6 @@ def index():
     else:
         interview_language = DEFAULT_LANGUAGE
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error', 'debug': False}
-    if interview_status.question.language != '*':
-        interview_language = interview_status.question.language
-    else:
-        interview_language = DEFAULT_LANGUAGE
     # if 'reload_after' in interview_status.extras:
     #     reload_after = '\n    <meta http-equiv="refresh" content="' + str(interview_status.extras['reload_after']) + '">'
     # else:
@@ -6796,21 +6804,17 @@ def speak_file():
     response = send_file(the_path, mimetype=audio_mimetype_table[file_format])
     return(response)
 
-@app.route('/list', methods=['GET'])
-def interview_start():
+def interview_menu(absolute_urls=False, start_new=False):
     interview_info = list()
-    if len(daconfig['dispatch']) == 0:
-        return redirect(url_for('index', reset=1, i=final_default_yaml_filename))
-    if 'embedded' in request.args and int(request.args['embedded']):
-        the_page = 'pages/start-embedded.html'
-        embed = True
-    else:
-        embed = False
     for key, yaml_filename in sorted(daconfig['dispatch'].iteritems()):
         try:
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             if interview.is_unlisted():
                 continue
+            if interview.source is None:
+                package = None
+            else:
+                package = interview.source.get_package()
             titles = interview.get_title(dict(_internal=dict()))
             interview_title = titles.get('full', titles.get('short', word('Untitled')))
             subtitle = titles.get('sub', None)
@@ -6818,15 +6822,36 @@ def interview_start():
             subtitle_class = None
         except:
             interview_title = yaml_filename
+            package = None
             subtitle = None
             status_class = 'dainterviewhaserror'
             subtitle_class = 'invisible'
             logmessage("interview_dispatch: unable to load interview file " + yaml_filename)
-        if embed:
-            url = url_for('index', i=yaml_filename, _external=True)
+        if absolute_urls:
+            if start_new:
+                url = url_for('index', i=yaml_filename, _external=True, reset='1')
+            else:
+                url = url_for('index', i=yaml_filename, _external=True)
         else:
-            url = url_for('index', i=yaml_filename)
-        interview_info.append(dict(link=url, display=interview_title, status_class=status_class, subtitle=subtitle, subtitle_class=subtitle_class))
+            if start_new:
+                url = url_for('index', i=yaml_filename, reset='1')
+            else:
+                url = url_for('index', i=yaml_filename)
+        interview_info.append(dict(link=url, title=interview_title, status_class=status_class, subtitle=subtitle, subtitle_class=subtitle_class, filename=yaml_filename, package=package))
+    return interview_info
+
+@app.route('/list', methods=['GET'])
+def interview_start():
+    if len(daconfig['dispatch']) == 0:
+        return redirect(url_for('index', reset=1, i=final_default_yaml_filename))
+    if 'embedded' in request.args and int(request.args['embedded']):
+        the_page = 'pages/start-embedded.html'
+        embed = True
+    else:
+        embed = False
+    interview_info = interview_menu(absolute_urls=embed)
+    if 'json' in request.form or 'json' in request.args:
+        return jsonify(action='menu', interviews=interview_info)
     argu = dict(extra_css=Markup(global_css), extra_js=Markup(global_js), version_warning=None, interview_info=interview_info, tab_title=daconfig.get('start page title', word('Interviews')), title=daconfig.get('start page heading', word('Available interviews')))
     if embed:
         the_page = 'pages/start-embedded.html'
@@ -12812,13 +12837,75 @@ def train():
     </script>"""
         return render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True, is_data=is_data)
 
+def user_interviews(user_id=None, secret=None, exclude_invalid=True):
+    if user_id is None:
+        raise Exception("user_interviews: no user_id provided")
+    the_user = get_person(int(user_id), dict())
+    if the_user is None:
+        raise Exception("user_interviews: user_id " + str(user_id) + " not valid")
+    if the_user.timezone:
+        the_timezone = pytz.timezone(the_user.timezone)
+    else:
+        the_timezone = pytz.timezone(get_default_timezone())
+    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
+    interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted).filter(UserDictKeys.user_id == the_user.id).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).group_by(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
+    #logmessage(str(interview_query))
+    interviews = list()
+    for interview_info in interview_query:
+        interview_title = dict()
+        is_valid = True
+        interview_valid = True
+        try:
+            interview = docassemble.base.interview_cache.get_interview(interview_info.filename)
+        except:
+            if exclude_invalid:
+                continue
+            logmessage("interview_list: unable to load interview file " + interview_info.filename)
+            interview_title['full'] = word('Error: interview not found')
+            interview_valid = False
+            is_valid = False
+        #logmessage("Found old interview with title " + interview_title)
+        if interview_info.encrypted:
+            try:
+                dictionary = decrypt_dictionary(interview_info.dictionary, secret)
+            except:
+                if exclude_invalid:
+                    continue
+                logmessage("interview_list: unable to decrypt dictionary with secret " + str(secret))
+                dictionary = fresh_dictionary()
+                dictionary['_internal']['starttime'] = None
+                dictionary['_internal']['modtime'] = None
+                is_valid = False
+        else:
+            dictionary = unpack_dictionary(interview_info.dictionary)
+        if is_valid:
+            interview_title = interview.get_title(dictionary)
+        elif interview_valid:
+            interview_title = interview.get_title(dict(_internal=dict()))
+            if 'full' not in interview_title:
+                interview_title['full'] = word("Interview answers cannot be decrypted")
+            else:
+                interview_title['full'] += ' - ' + word('interview answers cannot be decrypted')
+        else:
+            interview_title['full'] = word('Error: interview not found and answers could not be decrypted')
+        if dictionary['_internal']['starttime']:
+            utc_starttime = dictionary['_internal']['starttime']
+            starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
+        else:
+            utc_starttime = None
+            starttime = ''
+        if dictionary['_internal']['modtime']:
+            utc_modtime = dictionary['_internal']['starttime']
+            modtime = nice_date_from_utc(dictionary['_internal']['modtime'], timezone=the_timezone)
+        else:
+            utc_modtime = None
+            modtime = ''
+        interviews.append({'filename': interview_info.filename, 'session': interview_info.key, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid})
+    return interviews
+    
 @app.route('/interviews', methods=['GET', 'POST'])
 @login_required
 def interview_list():
-    if current_user.timezone:
-        the_timezone = pytz.timezone(current_user.timezone)
-    else:
-        the_timezone = pytz.timezone(get_default_timezone())
     if 'newsecret' in session:
         #logmessage("interview_list: fixing cookie")
         response = redirect(url_for('interview_list'))
@@ -12855,53 +12942,18 @@ def interview_list():
             release_lock(session_id, yaml_file)
             flash(word("Deleted interview"), 'success')
             return redirect(url_for('interview_list'))
-    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
-    interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted).filter(UserDictKeys.user_id == current_user.id).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).group_by(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
-    #logmessage(str(interview_query))
-    interviews = list()
-    for interview_info in interview_query:
-        interview_title = dict()
-        is_valid = True
-        interview_valid = True
-        try:
-            interview = docassemble.base.interview_cache.get_interview(interview_info.filename)
-        except:
-            logmessage("interview_list: unable to load interview file " + interview_info.filename)
-            interview_title['full'] = word('Error: interview not found')
-            interview_valid = False
-            is_valid = False
-        #logmessage("Found old interview with title " + interview_title)
-        if interview_info.encrypted:
-            try:
-                dictionary = decrypt_dictionary(interview_info.dictionary, secret)
-            except:
-                logmessage("interview_list: unable to decrypt dictionary with secret " + str(secret))
-                dictionary = fresh_dictionary()
-                dictionary['_internal']['starttime'] = None
-                dictionary['_internal']['modtime'] = None
-                is_valid = False
-        else:
-            dictionary = unpack_dictionary(interview_info.dictionary)
-        if is_valid:
-            interview_title = interview.get_title(dictionary)
-        elif interview_valid:
-            interview_title = interview.get_title(dict(_internal=dict()))
-            if 'full' not in interview_title:
-                interview_title['full'] = word("Interview answers cannot be decrypted")
-            else:
-                interview_title['full'] += ' - ' + word('interview answers cannot be decrypted')
-        else:
-            interview_title['full'] = word('Error: interview not found and answers could not be decrypted')
-        if dictionary['_internal']['starttime']:
-            starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
-        else:
-            starttime = ''
-        if dictionary['_internal']['modtime']:
-            modtime = nice_date_from_utc(dictionary['_internal']['modtime'], timezone=the_timezone)
-        else:
-            modtime = ''
-        
-        interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid})
+    if current_user.has_role('admin', 'developer'):
+        exclude_invalid = False
+    else:
+        exclude_invalid = True
+    interviews = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=exclude_invalid)
+    if interviews is None:
+        raise Exception("interview_list: could not obtain list of interviews")
+    if 'json' in request.form or 'json' in request.args:
+        for interview in interviews:
+            if 'dict' in interview:
+                del interview['dict']
+        return jsonify(action="interviews", interviews=interviews)
     script = """
     <script>
       $("#deleteall").on('click', function(event){
@@ -12914,7 +12966,7 @@ def interview_list():
     </script>"""
     script += global_js
     if re.search(r'user/register', str(request.referrer)) and len(interviews) == 1:
-        return redirect(url_for('index', i=interviews[0]['interview_info'].filename, session=interviews[0]['interview_info'].key, from_list=1))
+        return redirect(url_for('index', i=interviews[0]['filename'], session=interviews[0]['session'], from_list=1))
     interview_page_title = word(daconfig.get('interview page title', 'Interviews'))
     title = word(daconfig.get('interview page heading', 'Resume an interview'))
     argu = dict(version_warning=version_warning, extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title, numinterviews=len(interviews), interviews=sorted(interviews, key=valid_date_key))
@@ -14130,6 +14182,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          get_short_code=get_short_code,
                                          make_png_for_pdf=make_png_for_pdf,
                                          wait_for_task=wait_for_task,
+                                         user_interviews=user_interviews,
+                                         interview_menu=interview_menu,
                                          file_set_attributes=file_set_attributes)
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)

@@ -3556,7 +3556,7 @@ class Interview:
         if interview_status.current_info['url'] is not None:
             user_dict['_internal']['url'] = interview_status.current_info['url']
         interview_status.set_tracker(user_dict['_internal']['tracker'])
-        docassemble.base.functions.reset_local_variables()
+        #docassemble.base.functions.reset_local_variables()
         interview_status.current_info.update({'default_role': self.default_role})
         docassemble.base.functions.this_thread.current_package = self.source.package
         docassemble.base.functions.this_thread.current_info = interview_status.current_info

@@ -17,6 +17,10 @@ oauth:
     enable: False
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
     secret: DGE34gdgerg3GDG545tgdfRf
+  twitter:
+    enable: False
+    id: Iweh63ReKfOCttaUBE3t27TET
+    secret: hfieegGgrht5re3hfhsRGStYUbDDAgerergrggSDGHtrErE7rf
   azure:
     enable: False
     id: e378beb1-0bfb-45bc-9b4b-604dcf640c87
