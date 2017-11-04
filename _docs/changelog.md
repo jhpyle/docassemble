@@ -4,6 +4,20 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.89](https://github.com/jhpyle/docassemble/releases/tag/v0.1.89) - 2017-11-03
+
+### Added
+- Ability to use `&json=1` with `/user/sign-in` page.
+
+### Fixed
+- Thread unsafe language setting.
+
+## [0.1.88](https://github.com/jhpyle/docassemble/releases/tag/v0.1.88) - 2017-11-02
+
+### Fixed
+- `object_name()` raised an exception.
+- Including MP4 videos did not work when OGG not provided.
+
 ## [0.1.87](https://github.com/jhpyle/docassemble/releases/tag/v0.1.87) - 2017-11-02
 
 ### Fixed

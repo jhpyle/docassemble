@@ -2548,6 +2548,66 @@ of the variable is only returned if the variable is defined.
 
 # <a name="functions"></a>Miscellaneous functions
 
+## <a name="interview_list"></a>interview_list()
+
+If the current user is logged in, `interview_list()` returns a list of
+dictionaries indicating information about the user's interview
+sessions.  This function provides a programmatic version of the screen
+available at `/interviews`.
+
+The keys in each dictionary are:
+
+* `dict`: the interview dictionary for the session.
+* `filename`: the filename of the interview, e.g., `docassemble.demo:data/questions/questions.yml`
+* `modtime`: the modification time of the interview, in text format,
+  formatted to the user's time zone.
+* `session`: the session ID of the session.
+* `starttime`: the start time of the interview, in text format,
+  formatted to the user's time zone.
+* `title`: the [title](#get_title) of the interview.
+* `subtitle`: the [subtitle](#get_title) of the interview.
+* `utc_modtime`: the modification time of the interview, in [UTC].
+* `utc_starttime`: the start time of the interview, in [UTC].
+* `valid`: whether the interview session can be resumed.
+
+The `interview_list()` function takes an optional keyword argument
+`exclude_invalid`.  If this is set to `False`, a session will be
+included even if there is an error that would prevent the session from
+being resumed.  By default, sessions will only be included if they can
+be resumed.  You can check whether as session can be resumed by
+checking the value of the `valid` key.
+
+## <a name="interview_menu"></a>interview_menu()
+
+The `interview_menu()` function returns a list of dictionaries
+indicating information about interviews available on the web site.
+See the [`dispatch`] configuration directive for information about
+setting up this menu.  This function provides a programmatic version
+of the screen available at `/list`.
+
+The keys in each dictionary are: 
+
+* `title`: the [title](#set_title) of the interview
+* `subtitle`: the [subtitle](#set_title) of the interview
+* `filename`: e.g., `docassemble.demo:data/questions/questions.yml`
+* `link`: a hyperlink to the interview on your server
+* `package`: the package in which the interview is located, e.g., `docassemble.demo`
+* `status_class`: this is set to `dainterviewhaserror` if there is a
+  problem with the interview.
+* `subtitle_class`: this is set to `invisible` if there is a problem
+  with the interview.
+
+The `interview_menu()` function takes two optional keyword arguments,
+`absolute_urls` and `start_new`.
+
+If `absolute_urls` is set to `True`, then the URLs will be absolute
+rather than relative, so that the HTML can be used from a web site on
+another server.
+
+If `start_new` is set to `True`, then the URLs will have `&reset=1` at
+the end.  Thus, even if the user has already started an interview,
+clicking the link will start the interview at the beginning again.
+
 ## <a name="server_capabilities"></a>server_capabilities()
 
 The `server_capabilities()` function returns a dictionary indicating
@@ -4406,3 +4466,5 @@ $(document).on('daPageLoad', function(){
 [`encode_name()`]: #encode_name
 [`decode_name()`]: #decode_name
 [section on custom front ends]: {{ site.baseurl }}/docs/frontend.html
+[`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
+[UTC]: https://en.wikipedia.org/wiki/Coordinated_Universal_Time

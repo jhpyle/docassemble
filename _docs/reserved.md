@@ -605,3 +605,4 @@ All others are available for you to use and to retrieve with
 [`row_index`]: https://docassemble.org/docs/template.html#table
 [`row_item`]: https://docassemble.org/docs/template.html#table
 [tables]: https://docassemble.org/docs/template.html#table
+[`self`]: https://docs.python.org/2.7/tutorial/classes.html
