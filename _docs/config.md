@@ -937,9 +937,9 @@ value.
 
 The `password secretkey` is used in the process of encrypting
 interview answers for users who log in using
-[Facebook, Google, or Azure].  It defaults to the same value as
+[Facebook, Twitter, Google, or Azure].  It defaults to the same value as
 `secretkey`.  If this value changes, users who log in through
-Facebook, Google or Azure will not be able to resume stored
+Facebook, Twitter, Google or Azure will not be able to resume stored
 interviews.
 
 ## <a name="require referer"></a>Allowing referer blocking
@@ -1646,9 +1646,9 @@ The `pypirc path` directive refers to the file where the repository
 URL will be stored.  You may need to edit this if you run
 **docassemble** on a non-standard operating system.
 
-## <a name="oauth"></a>Facebook, Google, and Azure login
+## <a name="oauth"></a>Facebook, Twitter, Google, and Azure login
 
-If you want to enable logging in with Facebook, Google, or Microsoft
+If you want to enable logging in with Facebook, Twitter, Google, or Microsoft
 Azure, you will need to tell **docassemble** your [OAuth2] keys for
 these services:
 
@@ -1662,6 +1662,10 @@ oauth:
     enable: True
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
     secret: DGE34gdgerg3GDG545tgdfRf
+  twitter:
+    enable: True
+    id: Iweh63ReKfOCttaUBE3t27TET
+    secret: hfieegGgrht5re3hfhsRGStYUbDDAgerergrggSDGHtrErE7rf
   azure:
     enable: True
     id: e378beb1-0bfb-45bc-9b4b-604dcf640c87
@@ -1672,7 +1676,8 @@ You can disable these login methods by setting `enable` to `False` or
 by removing the configuration entirely.
 
 For more information about how to obtain these keys, see the
-[installation] page's sections on [Google], [Facebook], and [Azure].
+[installation] page's sections on [Facebook], [Twitter], [Google], and
+[Azure].
 
 ## <a name="googledrive"></a>Google Drive configuration
 
@@ -1991,8 +1996,9 @@ and Facebook API keys.
 [Packages]: {{ site.baseurl }}/docs/packages.html
 [fork]: https://en.wikipedia.org/wiki/Fork_(software_development)
 [initial database setup]: {{ site.baseurl }}/docs/installation.html#setup
-[Google]: {{ site.baseurl }}/docs/installation.html#google
 [Facebook]: {{ site.baseurl }}/docs/installation.html#facebook
+[Twitter]: {{ site.baseurl }}/docs/installation.html#twitter
+[Google]: {{ site.baseurl }}/docs/installation.html#google
 [Azure]: {{ site.baseurl }}/docs/installation.html#azure
 [invited by an administrator]: {{ site.baseurl }}/docs/users.html#invite
 [`root`]: #root
@@ -2009,7 +2015,7 @@ and Facebook API keys.
 [`azure`]: #azure
 [`s3`]: #s3
 [`s3cmd`]: http://s3tools.org/s3cmd
-[Facebook, Google, or Azure]: #oauth
+[Facebook, Twitter, Google, or Azure]: #oauth
 [`certs`]: #certs
 [`log`]: #log
 [locale]: https://docs.python.org/2/library/locale.html

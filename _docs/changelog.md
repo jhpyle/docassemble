@@ -4,10 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.1.89](https://github.com/jhpyle/docassemble/releases/tag/v0.1.89) - 2017-11-03
+## [0.1.89](https://github.com/jhpyle/docassemble/releases/tag/v0.1.89) - 2017-11-04
 
 ### Added
-- Ability to use `&json=1` with `/user/sign-in` page.
+- Ability to use `json=1` with `/user/sign-in`, `/list`, and
+  `/interviews` pages.
+- `interview_list()` and `interview_menu()` functions.
+- Twitter login.
 
 ### Fixed
 - Thread unsafe language setting.

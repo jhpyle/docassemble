@@ -683,10 +683,10 @@ deploy them both for the web server and for [Exim].
 To obtain the full benefit of **docassemble**, you will need to obtain
 IDs and secrets for the web services that **docassemble** uses, which
 you supply to **docassemble** by editing the [configuration] file.  In
-order for the "Sign in with Google," "Sign in with Facebook," and
-"Sign in with Azure" buttons to work, you will need to register your
-site on [Google Developers Console], [Facebook Developers], and/or
-[Azure Portal].
+order for the "Sign in with Google," "Sign in with Facebook," "Sign in
+with Twitter," and "Sign in with Azure" buttons to work, you will need
+to register your site on [Google Developers Console],
+[Facebook Developers], [Twitter Developers] and/or [Azure Portal].
 
 You may also wish to obtain developer keys for the
 [Google Maps Geocoding API] and for [VoiceRSS] text-to-speech
@@ -716,7 +716,7 @@ obtain an `id` and `secret` for use with Google's [OAuth2] interface.
 To enable users to log in with their Facebook accounts, you need to
 obtain an `id` and `secret` for use with Facebook's [OAuth2] interface.
 
-* Log in to [Facebook Developers]
+* Log in to [Facebook Developers].
 * Add an app.
 * Give the app a name.  Users will see this name when they are asked
   to consent to sharing of information between Facebook and your site,
@@ -728,6 +728,38 @@ obtain an `id` and `secret` for use with Facebook's [OAuth2] interface.
   the [`oauth`] configuration.
 * Under App Domains, put in the domain of your site.  E.g.,
   `docassemble.example.com`.
+* Edit your **docassemble** [configuration] and update the values
+  under the `facebook` part of the [`oauth`] directive so that it
+  includes the `id` and the `secret` you obtained in the steps above.
+  Make sure that `enable` is not set to `False`.
+
+## <a name="twitter"></a>Setting up Twitter logins
+
+To enable users to log in with their Twitter accounts, you need to
+obtain an `id` and `secret` for use with Twitter's [OAuth] interface.
+
+* Log in to [Twitter Developers].
+* Create an app.
+* Give the app a name.  Users will see this name when they are asked
+  to consent to sharing of information between Twitter and your site,
+  so be sure to pick a name that your users will recognize.
+* Set the callback URL to the URL of your site with
+  `/callback/twitter` at the end.  E.g.,
+  `https://docassemble.example.com/callback/twitter`.
+* Enter a Privacy Policy URL and a Terms of Service URL.  Twitter
+  requires these in order to give your app access to users' e-mail
+  addresses.
+* Set up your app so that it requests read-only access and requests
+  access to the user's e-mail address.  Without access to the user's
+  e-mail, the login will generate an error.
+* Note the Consumer Key and Consumer Secret.  You need to set this
+  value as the `id` in the [`oauth`] configuration, under `twitter`.
+* Note also the "Consumer Secret."  You need to set this as the
+  `secret` in the [`oauth`] configuration.
+* Edit your **docassemble** [configuration] and update the values
+  under the `twitter` part of the [`oauth`] directive so that it
+  includes the `id` and the `secret` you obtained in the steps above.
+  Make sure that `enable` is not set to `False`.
 
 ## <a name="azure"></a>Setting up Microsoft Azure logins
 
@@ -1446,6 +1478,7 @@ All of these system administration headaches can be avoided by
 [Azure Portal]: https://portal.azure.com
 [Google Developers Console]: https://console.developers.google.com/
 [Facebook Developers]: https://developers.facebook.com/
+[Twitter Developers]: https://apps.twitter.com/
 [OAuth2]: https://oauth.net/2/
 [`oauth`]: {{ site.baseurl }}/docs/config.html#oauth
 [LibreOffice]: https://www.libreoffice.org/
@@ -1481,3 +1514,4 @@ All of these system administration headaches can be avoided by
 [npm]: https://www.npmjs.com
 [`googledrive`]: {{ site.baseurl }}/docs/config.html#googledrive
 [pip]: https://pip.pypa.io/en/stable/
+[OAuth]: https://oauth.net/1/
