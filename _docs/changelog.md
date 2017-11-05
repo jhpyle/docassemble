@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.90](https://github.com/jhpyle/docassemble/releases/tag/v0.1.90) - 2017-11-05
+
+### Changed
+- New features in the `Address.geolocate()` method.
+
+### Added
+- The `Address.normalize()` method.
+- The `session list interview` and `dispatch interview` configuration
+  directives.
+
 ## [0.1.89](https://github.com/jhpyle/docassemble/releases/tag/v0.1.89) - 2017-11-04
 
 ### Added

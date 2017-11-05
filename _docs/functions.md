@@ -2577,6 +2577,10 @@ being resumed.  By default, sessions will only be included if they can
 be resumed.  You can check whether as session can be resumed by
 checking the value of the `valid` key.
 
+This function can be useful in interviews that replace the standard
+list of user sessions.  See the [`session list interview`]
+configuration directive for more information.
+
 ## <a name="interview_menu"></a>interview_menu()
 
 The `interview_menu()` function returns a list of dictionaries
@@ -2607,6 +2611,10 @@ another server.
 If `start_new` is set to `True`, then the URLs will have `&reset=1` at
 the end.  Thus, even if the user has already started an interview,
 clicking the link will start the interview at the beginning again.
+
+This function can be useful in interviews that replace the standard
+list of available interviews.  See the [`dispatch interview`]
+configuration directive for more information.
 
 ## <a name="server_capabilities"></a>server_capabilities()
 
@@ -4468,3 +4476,5 @@ $(document).on('daPageLoad', function(){
 [section on custom front ends]: {{ site.baseurl }}/docs/frontend.html
 [`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
 [UTC]: https://en.wikipedia.org/wiki/Coordinated_Universal_Time
+[`dispatch interview`]: {{ site.baseurl }}/docs/config.html#dispatch interview
+[`session list interview`]: {{ site.baseurl }}/docs/config.html#session list interview

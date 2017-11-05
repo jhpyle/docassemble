@@ -328,6 +328,32 @@ table.dainterviewpage td {
 }
 {% endhighlight %}
 
+## <a name="session list interview"></a><a name="dispatch interview"></a>Replacing built-in pages with interviews
+
+Instead of [customizing] the start page and the interview page, you
+can replace them with interviews.
+
+{% highlight yaml %}
+session list interview: docassemble.base:data/questions/examples/session-interview.yml
+dispatch interview: docassemble.base:data/questions/examples/list-interview.yml
+{% endhighlight %}
+
+The [`interview_list()`] function allows you write an interview that
+accesses information about the interview sessions of a logged-in user.
+Here is an example interview,
+`docassemble.base:data/questions/examples/session-interview.yml`,
+which mimics the style of the standard list of interview sessions.
+
+{% include side-by-side.html demo="session-interview" %}
+
+The [`interview_menu()`] function allows you write an interview that
+accesses information about the interviews available on the start page.
+Here is an example interview,
+`docassemble.base:data/questions/examples/list-interview.yml`, which
+mimics the style of the standard start page:
+
+{% include side-by-side.html demo="list-interview" %}
+
 ## <a name="global css"></a><a name="global javascript"></a>CSS and Javascript customization
 
 You can use the [`javascript` features setting] and the
@@ -2096,3 +2122,6 @@ and Facebook API keys.
 [image buttons]: {{ site.baseurl }}/docs/fields.html#image button
 [MySQL]: https://en.wikipedia.org/wiki/MySQL
 [PNG]: https://en.wikipedia.org/wiki/Portable_Network_Graphics
+[customizing]: #start page template
+[`interview_list()`]: {{ site.baseurl }}/docs/functions.html#interview_list
+[`interview_menu()`]: {{ site.baseurl }}/docs/functions.html#interview_menu
