@@ -245,6 +245,7 @@ IndividualName.defined: "https://docassemble.org/docs/objects.html#IndividualNam
 Address: "https://docassemble.org/docs/objects.html#Address"
 Address.block: "https://docassemble.org/docs/objects.html#Address.block"
 Address.geolocate: "https://docassemble.org/docs/objects.html#Address.geolocate"
+Address.normalize: "https://docassemble.org/docs/objects.html#Address.normalize"
 Address.on_one_line: "https://docassemble.org/docs/objects.html#Address.on_one_line"
 Address.line_one: "https://docassemble.org/docs/objects.html#Address.line_one"
 Address.line_two: "https://docassemble.org/docs/objects.html#Address.line_two"

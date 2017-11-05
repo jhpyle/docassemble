@@ -381,6 +381,8 @@ def user_info():
     else:
         user.first_name = word("Anonymous")
         user.last_name = word("User")
+    user.session = get_uid()
+    user.filename = this_thread.current_info.get('yaml_filename', None)
     return user
 
 def action_arguments():
@@ -2108,7 +2110,7 @@ def process_action():
 
 def url_action(action, **kwargs):
     """Returns a URL to run an action in the interview."""
-    return '?action=' + urllib.quote(myb64quote(json.dumps({'action': action, 'arguments': kwargs})))
+    return '?action=' + urllib.quote(myb64quote(json.dumps({'action': action, 'arguments': kwargs}))) + '&i=' + this_thread.current_info['yaml_filename']
 
 def myb64quote(text):
     return codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '')
@@ -2707,13 +2709,13 @@ def decode_name(var):
     """Convert a base64-encoded variable name to plain text."""
     return(codecs.decode(var, 'base64').decode('utf8'))
 
-def interview_list(exclude_invalid=True):
+def interview_list(exclude_invalid=True, action=None, filename=None, session=None):
     """Returns a list of interviews that the user has started, or None if
     the user is not logged in.
 
     """
     if this_thread.current_info['user']['is_authenticated']:
-        return server.user_interviews(user_id=this_thread.current_info['user']['the_user_id'], secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid)
+        return server.user_interviews(user_id=this_thread.current_info['user']['the_user_id'], secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session)
     return None
 
 def interview_menu():

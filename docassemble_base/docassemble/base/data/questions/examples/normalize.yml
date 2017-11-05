@@ -1,0 +1,33 @@
+metadata:
+  title: Normalize address
+  short title: Normalize
+  documentation: "https://docassemble.org/docs/objects.html#Address.normalize"
+  example start: 2
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - the_address: Address
+---
+question: |
+  Enter an address
+fields:
+  - Address: the_address.address
+  - Unit: the_address.unit
+    required: False
+  - City: the_address.city
+  - State: the_address.state
+  - Zip: the_address.zip
+    required: False
+---
+mandatory: True
+code: |
+  the_address.normalize()
+---
+mandatory: True
+question: |
+  The normalized address
+subquestion: |
+  ${ the_address }

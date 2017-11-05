@@ -6844,6 +6844,11 @@ def interview_menu(absolute_urls=False, start_new=False):
 def interview_start():
     if len(daconfig['dispatch']) == 0:
         return redirect(url_for('index', reset=1, i=final_default_yaml_filename))
+    if daconfig.get('dispatch interview', None) is not None:
+        if 'json' in request.form or 'json' in request.args:
+            return redirect(url_for('index', i=daconfig.get('dispatch interview'), from_list='1', json='1'))
+        else:
+            return redirect(url_for('index', i=daconfig.get('dispatch interview'), from_list='1'))
     if 'embedded' in request.args and int(request.args['embedded']):
         the_page = 'pages/start-embedded.html'
         embed = True
@@ -12837,12 +12842,32 @@ def train():
     </script>"""
         return render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True, is_data=is_data)
 
-def user_interviews(user_id=None, secret=None, exclude_invalid=True):
+def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None):
     if user_id is None:
         raise Exception("user_interviews: no user_id provided")
     the_user = get_person(int(user_id), dict())
     if the_user is None:
         raise Exception("user_interviews: user_id " + str(user_id) + " not valid")
+    if action == 'delete_all':
+        interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.user_id == user_id).group_by(UserDictKeys.filename, UserDictKeys.key)
+        sessions_to_delete = list()
+        for interview_info in interview_query:
+            sessions_to_delete.append((interview_info.key, interview_info.filename))
+        if len(sessions_to_delete):
+            for session_id, yaml_filename in sessions_to_delete:
+                manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename)
+                obtain_lock(session_id, yaml_filename)
+                reset_user_dict(session_id, yaml_filename)
+                release_lock(session_id, yaml_filename)
+        return len(sessions_to_delete)
+    if action == 'delete':
+        if filename is None or session is None:
+            raise Exception("user_interviews: filename and session must be provided in order to delete interview")
+        manual_checkout(manual_session_id=session, manual_filename=filename)
+        obtain_lock(session, filename)
+        reset_user_dict(session, filename)
+        release_lock(session, filename)
+        return True
     if the_user.timezone:
         the_timezone = pytz.timezone(the_user.timezone)
     else:
@@ -12906,6 +12931,10 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True):
 @app.route('/interviews', methods=['GET', 'POST'])
 @login_required
 def interview_list():
+    if 'json' in request.form or 'json' in request.args:
+        is_json = True
+    else:
+        is_json = False
     if 'newsecret' in session:
         #logmessage("interview_list: fixing cookie")
         response = redirect(url_for('interview_list'))
@@ -12918,30 +12947,29 @@ def interview_list():
     if secret is not None:
         secret = str(secret)
     #logmessage("interview_list: secret is " + str(secret))
-    if 'action' in request.args and request.args.get('action') == 'deleteall':
-        subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
-        interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted).filter(UserDictKeys.user_id == current_user.id).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).group_by(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
-        sessions_to_delete = list()
-        for interview_info in interview_query:
-            sessions_to_delete.append((interview_info.key, interview_info.filename))
-        if len(sessions_to_delete):
-            for session_id, yaml_filename in sessions_to_delete:
-                manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename)
-                obtain_lock(session_id, yaml_filename)
-                reset_user_dict(session_id, yaml_filename)
-                release_lock(session_id, yaml_filename)
+    if 'action' in request.args and request.args.get('action') == 'delete_all':
+        num_deleted = user_interviews(user_id=current_user.id, secret=secret, action='delete_all')
+        if num_deleted > 0:
             flash(word("Deleted interviews"), 'success')
-        return redirect(url_for('interview_list'))
+        if is_json:
+            return redirect(url_for('interview_list', json='1'))
+        else:
+            return redirect(url_for('interview_list'))
     elif 'action' in request.args and request.args.get('action') == 'delete':
         yaml_file = request.args.get('filename', None)
         session_id = request.args.get('session', None)
         if yaml_file is not None and session_id is not None:
-            manual_checkout(manual_session_id=session_id, manual_filename=yaml_file)
-            obtain_lock(session_id, yaml_file)
-            reset_user_dict(session_id, yaml_file)
-            release_lock(session_id, yaml_file)
+            user_interviews(user_id=current_user.id, secret=secret, action='delete', session=session_id, filename=yaml_file)
             flash(word("Deleted interview"), 'success')
+        if is_json:
+            return redirect(url_for('interview_list', json='1'))
+        else:
             return redirect(url_for('interview_list'))
+    if daconfig.get('session list interview', None) is not None:
+        if 'json' in request.form or 'json' in request.args:
+            return redirect(url_for('index', i=daconfig.get('session list interview'), from_list='1', json='1'))
+        else:
+            return redirect(url_for('index', i=daconfig.get('session list interview'), from_list='1'))
     if current_user.has_role('admin', 'developer'):
         exclude_invalid = False
     else:
@@ -12949,7 +12977,7 @@ def interview_list():
     interviews = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=exclude_invalid)
     if interviews is None:
         raise Exception("interview_list: could not obtain list of interviews")
-    if 'json' in request.form or 'json' in request.args:
+    if is_json:
         for interview in interviews:
             if 'dict' in interview:
                 del interview['dict']

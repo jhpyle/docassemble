@@ -1,6 +1,7 @@
 
 # -*- coding: utf-8 -*-
 import datetime
+import copy
 import time
 import pytz
 import yaml
@@ -201,11 +202,11 @@ def format_time(the_time, format='short'):
             time = dateutil.parser.parse(the_time)
         return babel.dates.format_time(time, format=format, locale=get_language())
     except Exception as errmess:
-        return word("Bad date: " + str(errmess))
+        return word("Bad date: " + unicode(errmess))
 
 class DateTimeDelta(object):
     def __str__(self):
-        return quantity_noun(output.days, word('day'))
+        return str(quantity_noun(output.days, word('day')))
 
 def current_datetime(timezone=None):
     """Returns the current time as a datetime.datetime object with a timezone.
@@ -294,7 +295,7 @@ def email_string(persons, include_name=None, first=False):
         if isinstance(person, Person) or isinstance(person, DAEmailRecipient):
             result.append(person.email_address(include_name=include_name))
         else:
-            result.append(str(person))
+            result.append(unicode(person))
     result = [x for x in result if x is not None and x != '']
     if len(result) and first:
         return [result[0]]
@@ -419,7 +420,7 @@ class LatitudeLongitude(DAObject):
                 self.known = False
                 #logmessage("known is false")
             self.gathered = True
-            self.description = str(self)
+            self.description = unicode(self)
         return
     def __str__(self):
         if hasattr(self, 'latitude') and hasattr(self, 'longitude'):
@@ -489,7 +490,7 @@ class Name(DAObject):
         """Returns True if the name has been defined.  Otherwise, returns False."""
         return hasattr(self, 'text')
     def __str__(self):
-        return(self.full())
+        return(str(self.full()))
 #    def __repr__(self):
 #        return(repr(self.full()))
 
@@ -551,24 +552,29 @@ class Address(DAObject):
             self.city_only = False
         return super(Address, self).init(*pargs, **kwargs)
     def __str__(self):
-        return(self.block())
+        return(str(self.block()))
     def on_one_line(self, include_unit=False, omit_default_country=True):
         """Returns a one-line address.  Primarily used internally for geolocation."""
         output = ""
         if self.city_only is False:
-            output += str(self.address)
+            if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
+                output += unicode(self.street_number) + " " + unicode(self.street)
+            else:
+                output += unicode(self.address)
             if include_unit and hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-                output += ", " + str(self.unit)
+                output += ", " + unicode(self.unit)
             output += ", "
-        output += str(self.city) + ", " + str(self.state)
+        output += unicode(self.city) + ", " + unicode(self.state)
         if hasattr(self, 'zip') and self.zip:
-            output += " " + str(self.zip)
+            output += " " + unicode(self.zip)
         if hasattr(self, 'country') and self.country:
             if (not omit_default_country) or get_country() != self.country:
                 output += ", " + country_name(self.country)
+        elif omit_default_country is False:
+            output += ", " + country_name(get_country())
         return output
     def _map_info(self):
-        if (self.location.gathered and self.location.known) or self.address.geolocate():
+        if (self.location.gathered and self.location.known) or self.geolocate():
             the_info = self.location.description
             result = {'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}
             if hasattr(self, 'icon'):
@@ -579,9 +585,9 @@ class Address(DAObject):
         """Determines the latitude and longitude of the location."""
         if self.geolocated:
             return self.geolocate_success    
-        the_address = self.on_one_line(omit_default_country=False)
+        the_address = self.on_one_line(include_unit=True, omit_default_country=False)
         #logmessage("geolocate: trying to geolocate " + str(the_address))
-        from geopy.geocoders import GoogleV3        
+        from geopy.geocoders import GoogleV3
         if 'google' in server.daconfig and 'api key' in server.daconfig['google'] and server.daconfig['google']['api key']:
             my_geocoder = GoogleV3(api_key=server.daconfig['google']['api key'])
         else:
@@ -605,19 +611,94 @@ class Address(DAObject):
             self.location.longitude = results.longitude
             self.location.description = self.block()
             self.geolocate_response = results.raw
+            if hasattr(self, 'norm'):
+                delattr(self, 'norm')
+            if hasattr(self, 'norm_long'):
+                delattr(self, 'norm_long')
+            self.initializeAttribute('norm', self.__class__)
+            self.initializeAttribute('norm_long', self.__class__)
+            if 'formatted_address' in results.raw:
+                self.one_line = results.raw['formatted_address']
+                self.norm.one_line = results.raw['formatted_address']
+                self.norm_long.one_line = results.raw['formatted_address']
             if 'address_components' in results.raw:
-                geo_types = {'administrative_area_level_2': 'county', 'neighborhood': 'neighborhood', 'postal_code': 'zip', 'country': 'country'}
+                geo_types = {
+                    'street_number': ('street_number', 'short_name'),
+                    'route': ('street', 'short_name'),
+                    'neighborhood': ('neighborhood', 'long_name'),
+                    'locality': ('city', 'long_name'),
+                    'administrative_area_level_2': ('county', 'long_name'),
+                    'administrative_area_level_1': ('state', 'short_name'),
+                    'postal_code': ('zip', 'long_name'),
+                    'country': ('country', 'short_name')
+                }
                 for component in results.raw['address_components']:
                     if 'types' in component and 'long_name' in component:
                         for geo_type, addr_type in geo_types.iteritems():
-                            if geo_type in component['types'] and ((not hasattr(self, addr_type)) or getattr(self, addr_type) == '' or getattr(self, addr_type) is None):
-                                #logmessage("Setting " + str(addr_type) + " to " + str(getattr(results[0], geo_type)) + " from " + str(geo_type))
-                                setattr(self, addr_type, component['long_name'])
+                            if geo_type in component['types'] and ((not hasattr(self, addr_type[0])) or getattr(self, addr_type[0]) == '' or getattr(self, addr_type[0]) is None):
+                                setattr(self, addr_type[0], component[addr_type[1]])
+                geo_types = {
+                    'street_number': 'street_number',
+                    'route': 'street',
+                    'subpremise': 'unit',
+                    'locality': 'city',
+                    'administrative_area_level_1': 'state',
+                    'administrative_area_level_2': 'county',
+                    'neighborhood': 'neighborhood',
+                    'postal_code': 'zip',
+                    'country': 'country'
+                }
+                for component in results.raw['address_components']:
+                    if 'types' in component:
+                        for geo_type, addr_type in geo_types.iteritems():
+                            if geo_type in component['types']:
+                                if 'short_name' in component:
+                                    setattr(self.norm, addr_type, component['short_name'])
+                                if 'long_name' in component:
+                                    setattr(self.norm_long, addr_type, component['long_name'])
+                if hasattr(self.norm, 'unit'):
+                    self.norm.unit = '#' + unicode(self.norm.unit)
+                if hasattr(self.norm_long, 'unit'):
+                    self.norm_long.unit = '#' + unicode(self.norm_long.unit)
+                if hasattr(self.norm, 'street_number') and hasattr(self.norm, 'street'):
+                    self.norm.address = self.norm.street_number + " " + self.norm.street
+                if hasattr(self.norm_long, 'street_number') and hasattr(self.norm_long, 'street'):
+                    self.norm_long.address = self.norm_long.street_number + " " + self.norm_long.street
+            self.norm.geolocated = True
+            self.norm.location.gathered = True
+            self.norm.location.known = True
+            self.norm.location.latitude = results.latitude
+            self.norm.location.longitude = results.longitude
+            self.norm.location.description = self.norm.block()
+            self.norm.geolocate_response = results.raw
+            self.norm_long.geolocated = True
+            self.norm_long.location.gathered = True
+            self.norm_long.location.known = True
+            self.norm_long.location.latitude = results.latitude
+            self.norm_long.location.longitude = results.longitude
+            self.norm_long.location.description = self.norm_long.block()
+            self.norm_long.geolocate_response = results.raw
         else:
             logmessage("geolocate: Valid not ok.")
             self.geolocate_success = False
         #logmessage(str(self.__dict__))
         return self.geolocate_success
+    def normalize(self, long_format=False):
+        if not self.geolocate():
+            return False
+        the_instance_name = self.instanceName
+        the_norm = self.norm
+        the_norm_long = self.norm_long
+        if long_format:
+            target = copy.deepcopy(the_norm_long)
+        else:
+            target = copy.deepcopy(the_norm)
+        for name in target.__dict__:
+            setattr(self, name, getattr(target, name))
+        self._set_instance_name_recursively(the_instance_name)
+        self.norm = the_norm
+        self.norm_long = the_norm_long
+        return True
     def block(self):
         """Returns the address formatted as a block, as in a mailing."""
         output = ""
@@ -626,26 +707,32 @@ class Address(DAObject):
         else:
             line_breaker = " [NEWLINE] "
         if self.city_only is False:
-            output += str(self.address) + line_breaker
+            if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
+                output += unicode(self.street_number) + " " + unicode(self.street) + line_breaker
+            else:
+                output += unicode(self.address) + line_breaker
             if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-                output += str(self.unit) + line_breaker
-        output += str(self.city) + ", " + str(self.state)
+                output += unicode(self.unit) + line_breaker
+        output += unicode(self.city) + ", " + unicode(self.state)
         if hasattr(self, 'zip'):
-            output += " " + str(self.zip)
+            output += " " + unicode(self.zip)
         return(output)
     def line_one(self):
         """Returns the first line of the address, including the unit 
         number if there is one."""
         if self.city_only:
             return ''
-        output = str(self.address)
+        if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
+            output += unicode(self.street_number) + " " + unicode(self.street)
+        else:
+            output = unicode(self.address)
         if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-            output += ", " + str(self.unit)
+            output += ", " + unicode(self.unit)
         return(output)
     def line_two(self):
         """Returns the second line of the address, including the city,
         state and zip code."""
-        output = str(self.city) + ", " + str(self.state) + " " + str(self.zip)
+        output = unicode(self.city) + ", " + unicode(self.state) + " " + unicode(self.zip)
         return(output)
 
 class City(Address):
@@ -666,7 +753,7 @@ class Thing(DAObject):
             del kwargs['name']
         return super(Thing, self).init(*pargs, **kwargs)
     def __str__(self):
-        return self.name.full()
+        return str(self.name.full())
 
 class Event(DAObject):
     """A DAObject with pre-set attributes address, which is a City, and
@@ -727,7 +814,7 @@ class Person(DAObject):
         else:
             return super(Person, self).__setattr__(attrname, value)
     def __str__(self):
-        return self.name.full()
+        return str(self.name.full())
     def pronoun_objective(self, **kwargs):
         """Returns "it" or "It" depending on the value of the optional
         keyword argument "capitalize." """
@@ -853,7 +940,7 @@ class Person(DAObject):
         if self == this_thread.user:
             output = 'you'
         else:
-            output = str(self)
+            output = unicode(self)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
@@ -1313,7 +1400,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
             server.send_mail(msg)
             logmessage("send_email: finished sending")
         except Exception as errmess:
-            logmessage("send_email: sending mail failed: " + str(errmess))
+            logmessage("send_email: sending mail failed: " + unicode(errmess))
             success = False
     if success and task is not None:
         mark_task_as_performed(task)

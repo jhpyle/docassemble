@@ -1,0 +1,59 @@
+metadata:
+  title: Interviews
+  documentation: "https://docassemble.org/docs/config.html#session list interview"
+  example start: 2
+  example end: 7
+---
+modules:
+  - docassemble.base.util
+---
+initial: True
+code: |
+  if not user_logged_in():
+    response(url=url_of('login'))
+---
+reconsider: True
+code: |
+  current_info = user_info()
+  list_of_interviews = [info for info in interview_list() if info['filename'] != current_info.filename]
+  if len(list_of_interviews) > 0:
+    list_of_interviews += [dict()]
+---
+table: session_table
+rows: |
+  list_of_interviews
+columns:
+  - Title: |
+      '<a href="' + interview_url(i=row_item['filename'], session=row_item['session']) + '">' + row_item['title'] + '</a>' if 'title' in row_item else ''
+  - Started: |
+      row_item['modtime'] if 'modtime' in row_item else ''
+  - Delete: |
+      '<a href="' + url_action('delete', filename=row_item['filename'], session=row_item['session']) + '" class="label label-warning">Delete</a>' if 'title' in row_item else '<a href="' + url_action('delete_all') + '" class="label label-danger">Delete All</a>'
+---
+prevent going back: True
+mandatory: True
+question: |
+  Resume an interview
+subquestion: |
+  % if len(list_of_interviews) > 0:
+  Click the interview title
+  to resume an interview
+  you already started.
+
+  ${ session_table }
+  % else:
+  You do not have any sessions.
+  % endif
+---
+event: delete
+code: |
+  if interview_list(
+      action='delete',
+      filename=action_argument('filename'),
+      session=action_argument('session')):
+    log("Deleted interview", "success")
+---
+event: delete_all
+code: |
+  interview_list(action='delete_all')
+  log("Deleted interviews", "success")

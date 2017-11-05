@@ -844,7 +844,10 @@ class FileOnServer:
 
 class Question:
     def idebug(self, data):
-        return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n\n" + ruamel.yaml.dump(data)
+        if hasattr(self, 'from_source') and hasattr(self, 'package'):
+            return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n\n" + ruamel.yaml.dump(data)
+        else:
+            return ruamel.yaml.dump(data)
     def __init__(self, orig_data, caller, **kwargs):
         if type(orig_data) is not dict:
             raise DAError("A block must be in the form of a dictionary." + self.idebug(orig_data))

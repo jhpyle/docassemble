@@ -1,0 +1,24 @@
+metadata:
+  title: Available interviews
+  documentation: "https://docassemble.org/docs/config.html#dispatch interview"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+code: |
+  available_interviews = interview_menu()
+---
+prevent going back: True
+mandatory: True
+question: |
+  Available interviews
+subquestion: |
+  % if len(available_interviews) > 0:
+  % for interview in available_interviews:
+  * [${ interview['title'] }](${ interview['link'] })
+  % endfor
+  % else:
+  There are no available interviews.
+  % endif

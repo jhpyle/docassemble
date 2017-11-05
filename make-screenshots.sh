@@ -13,7 +13,7 @@ do
     # sleep 1
     # continue
     
-    if [ "$file" = "audio" -o "$file" = "video" -o "$file" = "vimeo" -o "$file" = "video-static" -o "$file" = "immediate-file" -o "$file" = "table" -o "$file" = "table-alt" -o "$file" = "table-python" -o "$file" = "table-if-then" -o "$file" = "table-mako" -o "$file" = "no-mandatory" -o "$file" = "exit-url-referer-fullscreen" -o "$file" = "exit-url-referer-fullscreen-mobile" -o "$file" = "fields-choices-dropdown" ] || [[ $file == sections* ]]
+    if [ "$file" = "audio" -o "$file" = "video" -o "$file" = "vimeo" -o "$file" = "video-static" -o "$file" = "immediate-file" -o "$file" = "table" -o "$file" = "table-alt" -o "$file" = "table-python" -o "$file" = "table-if-then" -o "$file" = "table-mako" -o "$file" = "no-mandatory" -o "$file" = "exit-url-referer-fullscreen" -o "$file" = "exit-url-referer-fullscreen-mobile" -o "$file" = "fields-choices-dropdown" -o "$file" = "session-interview" ] || [[ $file == sections* ]]
     then
 	continue
     fi

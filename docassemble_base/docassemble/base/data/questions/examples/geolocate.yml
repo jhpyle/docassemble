@@ -1,0 +1,68 @@
+metadata:
+  title: Geolocate address
+  short title: Geolocate
+  documentation: "https://docassemble.org/docs/objects.html#Address.geolocate"
+  example start: 2
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - the_address: Address
+---
+question: |
+  Enter an address
+fields:
+  - Address: the_address.address
+  - Unit: the_address.unit
+    required: False
+  - City: the_address.city
+  - State: the_address.state
+  - Zip: the_address.zip
+    required: False
+---
+mandatory: True
+code: |
+  the_address.geolocate()
+---
+mandatory: True
+question: |
+  Information about your address
+subquestion: |
+  The address you provided is:
+    
+  ${ the_address }
+
+  % if the_address.geolocate_success:
+  The normalized version is:
+
+  ${ the_address.norm }
+
+  The long-form normalized
+  version is:
+
+  ${ the_address.norm_long }
+
+  The latitude and longitude are
+  ${ the_address.location.latitude }
+  and
+  ${ the_address.location.longitude }.
+
+  % if the_address.attr('neighborhood'):
+  The address is located in the
+  ${ the_address.neighborhood }
+  neighborhood.
+  % endif
+
+  % if the_address.attr('county'):
+  The address is located in
+  ${ the_address.county }.
+  % endif
+
+  ${ map_of(the_address) }
+
+  % else:
+  The address could not be
+  geolocated.
+  % endif
