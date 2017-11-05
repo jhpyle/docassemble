@@ -2175,7 +2175,87 @@ address.  The attributes `address`, `city`, and `state` are needed.
 <a name="Address.geolocate"></a>
 The `.geolocate()` method determines the latitude and longitude of the
 address and stores it in the attribute `location`, which is a
-[`LatitudeLongitude`] object.
+[`LatitudeLongitude`] object.  It uses the
+[`geopy.geocoders.GoogleV3`] class.  If you have an API key for the
+[Google Maps Geocoding API], you can set it using the [`google`]
+directive in the [configuration], and then your server will not be
+bound by Google's standard quotas.
+
+If you call `.geolocate()` on an [`Address`] object called
+`myaddress`, the following attributes will be set:
+
+* `myaddress.geolocated`: this will be set to `True`.  Since the
+  `.geolocate()` method uses an API, it is important not to call the
+  API repeatedly.  The `.geolocated` attribute keeps track of whether
+  the `.geolocate()` method has been called before.  If it has been
+  called before, and `.geolocated` is `True`, then calling
+  `.geolocate()` again will not call the API again; rather, it will
+  immediately return with whatever result was obtained the first time
+  `.geolocate()` was called.
+* `myaddress.geolocate_success`: if `.geolocate()` was able to
+  successfully call the API and get a result, this will be set to
+  `True`; otherwise, this will be set to `False`.
+* `myaddress.location.gathered`: if `.geolocate()` was able to
+  successfully call the API and get a result, this will be set to `True`.
+* `myaddress.location.known`: if `.geolocate()` was able to
+  successfully call the API and get a result, this will be set to
+  `True`.
+* `myaddress.location.latitude`: if `.geolocate()` was able to
+  successfully call the API and get a result, this will be set to the
+  latitude of the address.
+* `myaddress.location.longitude`: if `.geolocate()` was able to
+  successfully call the API and get a result, this will be set to the
+  latitude of the address.
+* `myaddress.location.description`: if `.geolocate()` was able to
+  successfully call the API and get a result, this will be set to the
+  value of `myaddress.block()`.
+* `myaddress.geolocate_response`: if `.geolocate()` was able to
+  successfully call the API and get a result, this will be set to the
+  raw results returned from the [Google Maps Geocoding API].
+* `myaddress.one_line`: if `.geolocate()` was able to
+  successfully call the API and get a result, this will be set to the
+  address as the geocoder would format it to be expressed on one
+  line.
+* `myaddress.norm`: if `.geolocate()` was able to successfully call
+  the API and get a result, this will be set to an [`Address`] object
+  containing normalized names of the address components.
+* `myaddress.norm_long`: if `.geolocate()` was able to successfully
+  call the API and get a result, this will be set to an [`Address`]
+  object containing long-form normalized names of the address
+  components.  (E.g., "1234 Main Street" instead of "1234 Main St" and
+  "California" instead of "CA.")
+  
+In addition, the following attributes will be set if the attribute was
+not already set, and if `.geolocate()` was able to successfully
+determine the value by calling the API:
+
+* `myaddress.street_number` - the street number (e.g., `123`).
+* `myaddress.street` - the street name (e.g., `Main St`).
+* `myaddress.neighborhood` - the neighborhood.
+* `myaddress.city` - the city (known as (`locality`).
+* `myaddress.county` - the county (known as `administrative_area_level_2`).
+* `myaddress.state` - the state (known as `administrative_area_level_1`).
+* `myaddress.zip` - the Zip code.
+* `myaddress.country` - the country (e.g., `US`).
+
+{% include side-by-side.html demo="geolocate" %}
+
+<a name="Address.normalize"></a>
+The `.normalize()` method uses the results of `.geolocate()` to
+standardize the formatting of the parts of the address.  This will
+overwrite the attributes of the object.  This method takes an optional
+keyword parameter `long_format`, which defaults to `False`.  If this
+parameter is `True`, the address will be normalized using the long
+form of the normalization.  (E.g., "California" instead of "CA.")
+
+{% include side-by-side.html demo="normalize" %}
+
+Note that if you want to access a normalized version of the address,
+but you don't want to overwrite the original attributes of the object,
+you can simply run `.geolocate()` and then, if it is successful,
+access the `.norm` attribute or the `.norm_long` attribute, both of
+which will be fully populated [`Address`] objects, with normalized
+attributes.
 
 <a name="Address.line_one"></a>
 The `.line_one()` method returns the first line of the address,
@@ -2912,3 +2992,6 @@ and not an instance of the `Attorney` class.
 [`birthdate`]: #Individual.birthdate
 [`gender`]: #Individual.gender
 [`age`]: #Individual.age
+[`geopy.geocoders.GoogleV3`]: https://geopy.readthedocs.io/en/1.11.0/#geopy.geocoders.GoogleV3
+[`google`]: {{ site.baseurl }}/docs/config.html#google
+[Google Maps Geocoding API]: https://developers.google.com/maps/documentation/geocoding/intro

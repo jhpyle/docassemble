@@ -4156,6 +4156,19 @@
       required: False
       code: |
         name_suffix()
+"geolocate": "objects:\n  - the_address: Address\n---\nquestion: |\n  Enter an address\n\
+  fields:\n  - Address: the_address.address\n  - Unit: the_address.unit\n    required:\
+  \ False\n  - City: the_address.city\n  - State: the_address.state\n  - Zip: the_address.zip\n\
+  \    required: False\n---\nmandatory: True\ncode: |\n  the_address.geolocate()\n\
+  ---\nmandatory: True\nquestion: |\n  Information about your address\nsubquestion:\
+  \ |\n  The address you provided is:\n    \n  ${ the_address }\n\n  % if the_address.geolocate_success:\n\
+  \  The normalized version is:\n\n  ${ the_address.norm }\n\n  The long-form normalized\n\
+  \  version is:\n\n  ${ the_address.norm_long }\n\n  The latitude and longitude are\n\
+  \  ${ the_address.location.latitude }\n  and\n  ${ the_address.location.longitude\
+  \ }.\n\n  % if the_address.attr('neighborhood'):\n  The address is located in the\n\
+  \  ${ the_address.neighborhood }\n  neighborhood.\n  % endif\n\n  % if the_address.attr('county'):\n\
+  \  The address is located in\n  ${ the_address.county }.\n  % endif\n\n  ${ map_of(the_address)\
+  \ }\n\n  % else:\n  The address could not be\n  geolocated.\n  % endif"
 "get-default-timezone": |-
   question: |
     The default time zone is
@@ -4302,7 +4315,7 @@
     - docassemble.base.util
 "imports": |-
   imports:
-    - pygeocoder
+    - re
 "include": |-
   include:
     - docassemble.demo:data/questions/some-questions.yml
@@ -4691,6 +4704,22 @@
   buttons:
     - Stanford: "http://stanford.edu/"
     - Harvard: "http://www.harvard.edu/"
+"list-interview": |-
+  code: |
+    available_interviews = interview_menu()
+  ---
+  prevent going back: True
+  mandatory: True
+  question: |
+    Available interviews
+  subquestion: |
+    % if len(available_interviews) > 0:
+    % for interview in available_interviews:
+    * [${ interview['title'] }](${ interview['link'] })
+    % endfor
+    % else:
+    There are no available interviews.
+    % endif
 "lists": |-
   mandatory: True
   code: |
@@ -5408,6 +5437,30 @@
     % else:
     I am sorry you aren't feeling 100%.
     % endif
+"normalize": |-
+  objects:
+    - the_address: Address
+  ---
+  question: |
+    Enter an address
+  fields:
+    - Address: the_address.address
+    - Unit: the_address.unit
+      required: False
+    - City: the_address.city
+    - State: the_address.state
+    - Zip: the_address.zip
+      required: False
+  ---
+  mandatory: True
+  code: |
+    the_address.normalize()
+  ---
+  mandatory: True
+  question: |
+    The normalized address
+  subquestion: |
+    ${ the_address }
 "note": "question: |\n  Please fill in the following information.\nfields:\n  - Favorite\
   \ fruit: fruit\n  - Favorite vegetable: vegetable\n  - note: |\n      In case you\
   \ did not know, a \n      mushroom is a fungus, not a\n      vegetable.\n  - Favorite\
@@ -7169,6 +7222,18 @@
 "send-sms": |-
   modules:
     - docassemble.base.util
+"session-interview": |-
+  initial: True
+  code: |
+    if not user_logged_in():
+      response(url=url_of('login'))
+  ---
+  reconsider: True
+  code: |
+    current_info = user_info()
+    list_of_interviews = [info for info in interview_list() if info['filename'] != current_info.filename]
+    if len(list_of_interviews) > 0:
+      list_of_interviews += [dict()]
 "set-language": "initial: True\ncode: |\n  set_language(language)\n---\nquestion:\
   \ |\n  What language do you speak?\nfield: language\nchoices:\n  - English: en\n\
   \  - Espa\xF1ol: es"
@@ -7842,6 +7907,9 @@
   subquestion: |
     ${ user_picture }
   mandatory: True
+  # ---
+  # features:
+  #   maximum image size: None
 "upload-max-image-size": |-
   question: |
     Please upload a picture of yourself.

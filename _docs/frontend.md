@@ -139,3 +139,4 @@ screen to the [JSON] representation.
 [base64]: https://en.wikipedia.org/wiki/Base64
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [MIME type]: https://en.wikipedia.org/wiki/Media_type
+[data URL]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs

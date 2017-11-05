@@ -363,3 +363,4 @@ functional interface, you should do so.
 [groups]: {{ site.baseurl }}/docs/groups.html
 [custom classes]: {{ site.baseurl }}/docs/objects.html#writing
 [module]: {{ site.baseurl }}/docs/packages.html
+[`objects`]: {{ site.baseurl }}/docs/initial.html#objects
