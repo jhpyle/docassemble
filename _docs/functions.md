@@ -4478,3 +4478,4 @@ $(document).on('daPageLoad', function(){
 [UTC]: https://en.wikipedia.org/wiki/Coordinated_Universal_Time
 [`dispatch interview`]: {{ site.baseurl }}/docs/config.html#dispatch interview
 [`session list interview`]: {{ site.baseurl }}/docs/config.html#session list interview
+[`generic object`]: {{ site.baseurl}}/docs/modifiers.html#generic object

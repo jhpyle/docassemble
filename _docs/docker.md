@@ -1506,3 +1506,4 @@ containers depend on the images.
 [Security Group]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html
 [HTTP]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
 [region]: http://docs.aws.amazon.com/general/latest/gr/rande.html
+[`secret key`]: {{ site.baseurl }}/docs/config.html#secret key

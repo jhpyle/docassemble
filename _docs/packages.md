@@ -168,12 +168,10 @@ If you maintain your package off-line, you will need to edit the
 example:
 
 {% highlight python %}
-      install_requires=['docassemble', 'docassemble.base', 'docassemble.helloworld', 'kombu'],
+install_requires=['docassemble.helloworld', 'kombu'],
 {% endhighlight %}
 
-This line indicates that the package relies on `docassemble` and
-`docassemble.base` (as all **docassemble** packages do), and also
-relies on the **docassemble** extension package
+This line indicates that the package relies on the **docassemble** extension package
 `docassemble.helloworld`, as well as the [Python] package `kombu`.
 When someone tries to install `docassemble.baseball` on their system,
 `docassemble.helloworld` and `kombu` will be installed first, and any
@@ -186,8 +184,8 @@ system knows where to find the package.  For example, if
 include:
 
 {% highlight python %}
-      install_requires=['docassemble', 'docassemble.base', 'docassemble.helloworld', 'kombu'],
-      dependency_links=['git+https://github.com/jhpyle/docassemble-helloworld#egg=docassemble.helloworld-0.1'],
+install_requires=['docassemble.helloworld', 'kombu'],
+dependency_links=['git+https://github.com/jhpyle/docassemble-helloworld#egg=docassemble.helloworld-0.1'],
 {% endhighlight %}
 
 If you use the [Packages area] of the [Playground] to maintain your

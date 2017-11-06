@@ -135,377 +135,23 @@ trustee's name (so it can say "Remember that John Smith's phone number
 is ..."), and then ask for the trustee's `phone_number` if it is not
 already defined.
 
-# <a name="writing"></a>Writing your own classes
 
-If you know how to write your own [Python] code, it is pretty easy
-to write your own classes.
-
-For example, you could create your own [package] for interviews
-related to cooking.
-
-You would start by using the [package system] to create a
-**docassemble** package called `cooking`, the full name of which would
-be `docassemble.cooking` (interview packages are subpackages of the
-`docassemble` namespace package).
-
-You would create a module file within this package called
-`objects.py`.  If you are using the [Playground], you would create
-this file in the [Modules folder] of the [Playground].  Otherwise, you
-would create this file in the `docassemble/cooking` directory in your
-package.  You would set the contents of `objects.py` to the following:
-
-{% highlight python %}
-from docassemble.base.core import DAObject
-
-class Recipe(DAObject):
-    def summary(self):
-        return "#### Ingredients\n\n" + self.ingredients + "\n\n#### Instructions\n\n" + self.instructions
-{% endhighlight %}
-
-Your class `Recipe` needs to "inherit" from the basic **docassemble**
-object called [`DAObject`].  If you did not do this, **docassemble**
-would not be able to ask questions to define attributes of `Recipe`
-objects.
-
-The purpose of the `summary()` method is to summarize the contents of
-the recipe.  It makes use of the attributes `ingredients` and
-`instructions`.
-
-If you are not familiar with [Python], `\n` inside quotation marks
-indicates a line break and `+` in the context of text indicates that
-the text should be strung together.  In [Markdown], `####` at the
-start of a line indicates that the line is a section name.
-
-You can use your class in an interview like this:
-
-{% include demo-side-by-side.html demo="testcooking" %}
-
-Note that the [`modules`] block refers to `.objects`, which is a
-[relative module name].  The `.` at the beginning means "in the
-current package."  You could also have written
-`docassemble.cooking.objects`.  The [relative module name] works so
-long as the interview file is in the same package as the module.
-
-By the way, there is way to write the `summary()` method that is more
-friendly to other interview authors:
-
-{% highlight python %}
-from docassemble.base.core import DAObject
-from docassemble.base.functions import word
-
-class Recipe(DAObject):
-    def summary(self):
-        return "#### " + word('Ingredients') + "\n\n" + self.ingredients + "\n\n#### " + word('Instructions') + "\n\n" + self.instructions
-{% endhighlight %}
-
-If you use the [`word()`] function in this way, interview authors will
-be able to translate the "cooking" interview from English to another
-language without having to edit your code.  All they would need to do
-is include the words `Ingredients` and `Instructions` in a translation
-[YAML] file referenced in a [`words`] directive in the **docassemble**
-[configuration].
-
-## <a name="ownclassattributes"></a>Initializing object attributes
-
-In the example above, all the attributes of the `Recipe` object were
-plain text values.  What if you want attributes of your objects to be
-objects themselves?
-
-Suppose you want the `ingredients` attribute to be a [`DAList`].
-
-There are several ways that `ingredients` can be initialized.  In the
-interview itself, you can do:
-
-{% highlight yaml %}
-modules:
-  - docassemble.cooking
-  - docassemble.base.util
----
-objects:
-  - dinner: Recipe
-  - dinner.ingredients: DAList
-{% endhighlight %}
-
-Or, you could use [`sets`] in combination with [`initializeAttribute()`]:
-
-{% highlight yaml %}
-modules:
-  - docassemble.cooking
-  - docassemble.base.util
----
-objects:
-  - dinner: Recipe
----
-generic object: Recipe
-sets: x.ingredients
-code: |
-  x.initializeAttribute('ingredients', DAList)
----
-{% endhighlight %}
-
-However, it is often cleaner to put the object initialization into the
-class definition itself:
-
-{% highlight python %}
-class Recipe(DAObject):
-    def init(self, *pargs, **kwargs):
-        self.initializeAttribute('ingredients', DAList)
-        return super(Recipe, self).init(*pargs, **kwargs)
-{% endhighlight %}
-
-Then, you would only need to write this in your interview file:
-
-{% highlight yaml %}
----
-objects:
-  - dinner: Recipe
----
-{% endhighlight %}
-
-The `init()` function is a special function that is called on all
-[`DAObject`] objects at the time they are initialized.  This is not to
-be confused with the `__init__()` function, which is built in to
-[Python]; you should use `init()`, not `__init__()`.
-
-When you write your own `init()` function for a class, you should (but
-are not required to) include the 
-`return super(Recipe, self).init(*pargs, **kwargs)` line at the end.
-This will ensure that `Recipe` objects can initialized properly.  For
-example, if you wrote:
-
-{% highlight python %}
-dinner.initializeAttribute('recipe', Recipe, oven_temperature=300)
-{% endhighlight %}
-
-then `dinner.recipe` would be a `Recipe` object and
-`dinner.recipe.oven_temperature` would be `300`.  However, if you
-included an `init()` function and failed to conclude it with 
-`return super(Recipe, self).init(*pargs, **kwargs)`, then the
-`oven_temperature` variable would not be set.  Therefore, it is a good
-practice to always write your `init()` methods in this way.
-
-## <a name="usingglob"></a>Using global variables in your classes
-
-Normally in [Python] you can use global variables to keep track of
-information that your methods need to know but that is not passed in
-arguments to the methods.  For example, if you wanted to keep track of
-whether to use Celsius or Fahrenheit when talking about temperatures,
-you might be tempted to write:
-
-{% highlight python %}
-from docassemble.base.core import DAObject
-
-temperature_type = 'Celsius'
-
-class Recipe(DAObject):
-    def summary(self):
-        return "#### Ingredients\n\n" + self.ingredients + "\n\n#### Instructions\n\n" + self.instructions
-    def get_oven_temperature(self):
-        if temperature_type == 'Celsius':
-            return str(self.oven_temperature) + ' °C'
-        elif temperature_type == 'Fahrenheit':
-            return str(self.oven_temperature) + ' °F'
-        elif temperature_type == 'Kelvin': 
-            return str(self.oven_temperature) + ' K'
-{% endhighlight %}
-
-(The `str()` function is a Python function that converts something to
-text.  Here, it is necessary because `self.oven_temperature` may be a
-number, and [Python] will complain if you ask it to "add" text to a
-number.)
-
-Then to change the `temperature_type` from an interview, you might
-write:
-
-{% highlight yaml %}
----
-modules:
-  - docassemble.cooking.objects
----
-initial: True
-code: |
-  if user_is_scientist:
-    temperature_type = 'Kelvin'
-  elif user_country in ['United States', 'Great Britain']:
-    temperature_type = 'Fahrenheit'
-...
-{% endhighlight %}
-
-This would be effective at changing the `temperature_type` variable
-because the `modules` block loads all the names from
-`docassemble.cooking.objects` into the variable store of the
-interview, including `temperature_type`.
-
-However, this is not [thread-safe] and it will not work correctly 100%
-of the time.  If your server is under heavy load, users might randomly
-be advised to turn their ovens to 350 degrees Celsius, which would
-scorch the food.  This is because the variable `temperature_type`
-exists at the level of the web server process, and the process might
-be supporting several users simultaneously (in different "threads" of
-the process).  Between the time one user sets `temperature_type` to
-`Fahrenheit` and tries to use it, another user inside the same process
-might set `temperature_type` to `Celsius`.
-
-Therefore, it is important that you do not use global variables when
-you write your own classes.  The simplest way to get around this
-problem is to use the [`set_info()`] and [`get_info()`] functions from
-[`docassemble.base.util`]:
-
-{% highlight python %}
-from docassemble.base.core import DAObject
-from docassemble.base.util import get_info
-
-class Recipe(DAObject):
-    def summary(self):
-        return "#### Ingredients\n\n" + self.ingredients + "\n\n#### Instructions\n\n" + self.instructions
-    def get_oven_temperature(self):
-        if get_info('temperature_type') == 'Celsius':
-            return str(self.oven_temperature) + ' °C'
-        elif get_info('temperature_type') == 'Fahrenheit':
-            return str(self.oven_temperature) + ' °F'
-        elif get_info('temperature_type') == 'Kelvin': 
-            return str(self.oven_temperature) + ' K'
-{% endhighlight %}
-
-Then from your interview you can include [`docassemble.base.util`] as
-one of the [`modules`] and then run [`set_info()`] in [`initial`]
-code:
-
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.util
-  - docassemble.cooking.objects
----
-initial: True
-code: |
-  if user_is_scientist:
-    set_info(temperature_type='Kelvin')
-  elif user_country in ['United States', 'Great Britain']:
-    set_info(temperature_type='Fahrenheit')
-  else:
-    set_info(temperature_type='Celsius')
-...
-{% endhighlight %}
-
-The values set by [`set_info()`] are forgotten after the user's screen
-is prepared.  Therefore, it is necessary to run [`set_info()`] in an
-[`initial`] code block so that values like `temperature_type` are put
-in place before they are needed.
-
-If you are an advanced programmer, you can do what
-[`docassemble.base.util`] does and use Python's [threading module] to
-store global variables.
-
-{% highlight python %}
-from docassemble.base.core import DAObject
-import threading
-
-__all__ = ['set_temperature_type', 'get_temperature_type', 'Recipe']
-
-this_thread = threading.local
-
-def set_temperature_type(type):
-    this_thread.temperature_type = type
-
-def get_temperature_type():
-    return this_thread.temperature_type
-
-class Recipe(DAObject):
-    def summary(self):
-        return "#### Ingredients\n\n" + self.ingredients + "\n\n#### Instructions\n\n" + self.instructions
-    def get_oven_temperature(self):
-        if this_thread.temperature_type == 'Celsius':
-            return str(self.oven_temperature) + ' °C'
-        elif this_thread.temperature_type == 'Fahrenheit':
-            return str(self.oven_temperature) + ' °F'
-        elif this_thread.temperature_type == 'Kelvin': 
-            return str(self.oven_temperature) + ' K'
-{% endhighlight %}
-
-We added an `__all__` statement so that interviews can a `module`
-block including `docassemble.cooking.objects` does not clutter the
-variable store with extraneous names like `threading`.  We also added
-functions for setting and retrieving the value of the "temperature
-type."
-
-The temperature type is now an attribute of the object `this_thread`,
-which is an instance of `threading.local`.  This attribute needs to be
-set in `initial` code that will run every time a screen refreshes.
-
-Now in your interview you can do:
-
-{% highlight yaml %}
----
-modules:
-  - docassemble.cooking.objects
----
-initial: True
-code: |
-  if user_is_scientist:
-    set_temperature_type('Kelvin')
-  elif user_country in ['United States', 'Great Britain']:
-    set_temperature_type('Fahrenheit')
-  else:
-    set_temperature_type('Celsius')
-...
-{% endhighlight %}
-
-Note that you do not need to worry about whether your global variables
-are [thread-safe] if they do not change from interview to interview.
-
-For example, if you only wanted to allow people to change the
-temperature type from the **docassemble** [configuration], you could
-do the following in your [Python module]:
-
-{% highlight python %}
-from docassemble.base.core import DAObject
-
-from docassemble.webapp.config import daconfig
-temperature_type = daconfig.get('temperature type', 'Celsius')
-{% endhighlight %}
-
-Then your interviews would not have to do anything with `temperature_type`.
-
-Also, you could avoid the complication of global variables entirely if
-you are willing to pass the temperature type as an argument to
-`get_oven_temperature`:
-
-{% highlight python %}
-from docassemble.base.core import DAObject
-
-class Recipe(DAObject):
-    def get_oven_temperature(self, type):
-        if type == 'Celsius':
-            return str(self.oven_temperature) + ' °C'
-        elif type == 'Fahrenheit':
-            return str(self.oven_temperature) + ' °F'
-        elif type == 'Kelvin': 
-            return str(self.oven_temperature) + ' K'
-{% endhighlight %}
-
-Then you could have this in your interview:
-
-{% highlight yaml %}
----
-question: |
-  What kind of temperature system do you use?
-choices:
-  - Celsius
-  - Fahrenheit
-  - Kelvin
-field: temperature_type
----
-{% endhighlight %}
-
-and then in your question text you could write:
-
-{% highlight text %}
-Set your oven to ${ apple_pie.get_oven_temperature(temperature_type) }
-and let it warm up.
-{% endhighlight %}
-    
 # <a name="stdclasses"></a>Standard docassemble classes
+
+To use the classes described in this section in your interviews, you
+need to include them from the [`docassemble.base.util`] module by
+writing the following somewhere in your interview:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.util
+---
+{% endhighlight %}
+
+Unless otherwise instructed, you can assume that all of the classes
+discussed in this section are available in interviews when you include
+this [`modules`] block.
 
 ## <a name="DAObject"></a>DAObject
 
@@ -2772,6 +2418,376 @@ The `.instanceName` is not simply an internal attribute; it is used by
 the [`.object_possessive()`] method to refer to the object in
 human-readable format.
 
+# <a name="writing"></a>Writing your own classes
+
+If you know how to write your own [Python] code, it is pretty easy
+to write your own classes.
+
+For example, you could create your own [package] for interviews
+related to cooking.
+
+You would start by using the [package system] to create a
+**docassemble** package called `cooking`, the full name of which would
+be `docassemble.cooking` (interview packages are subpackages of the
+`docassemble` namespace package).
+
+You would create a module file within this package called
+`objects.py`.  If you are using the [Playground], you would create
+this file in the [Modules folder] of the [Playground].  Otherwise, you
+would create this file in the `docassemble/cooking` directory in your
+package.  You would set the contents of `objects.py` to the following:
+
+{% highlight python %}
+from docassemble.base.core import DAObject
+
+class Recipe(DAObject):
+    def summary(self):
+        return "#### Ingredients\n\n" + self.ingredients + "\n\n#### Instructions\n\n" + self.instructions
+{% endhighlight %}
+
+Your class `Recipe` needs to "inherit" from the basic **docassemble**
+object called [`DAObject`].  If you did not do this, **docassemble**
+would not be able to ask questions to define attributes of `Recipe`
+objects.
+
+The purpose of the `summary()` method is to summarize the contents of
+the recipe.  It makes use of the attributes `ingredients` and
+`instructions`.
+
+If you are not familiar with [Python], `\n` inside quotation marks
+indicates a line break and `+` in the context of text indicates that
+the text should be strung together.  In [Markdown], `####` at the
+start of a line indicates that the line is a section name.
+
+You can use your class in an interview like this:
+
+{% include demo-side-by-side.html demo="testcooking" %}
+
+Note that the [`modules`] block refers to `.objects`, which is a
+[relative module name].  The `.` at the beginning means "in the
+current package."  You could also have written
+`docassemble.cooking.objects`.  The [relative module name] works so
+long as the interview file is in the same package as the module.
+
+By the way, there is way to write the `summary()` method that is more
+friendly to other interview authors:
+
+{% highlight python %}
+from docassemble.base.core import DAObject
+from docassemble.base.functions import word
+
+class Recipe(DAObject):
+    def summary(self):
+        return "#### " + word('Ingredients') + "\n\n" + self.ingredients + "\n\n#### " + word('Instructions') + "\n\n" + self.instructions
+{% endhighlight %}
+
+If you use the [`word()`] function in this way, interview authors will
+be able to translate the "cooking" interview from English to another
+language without having to edit your code.  All they would need to do
+is include the words `Ingredients` and `Instructions` in a translation
+[YAML] file referenced in a [`words`] directive in the **docassemble**
+[configuration].
+
+## <a name="ownclassattributes"></a>Initializing object attributes
+
+In the example above, all the attributes of the `Recipe` object were
+plain text values.  What if you want attributes of your objects to be
+objects themselves?
+
+Suppose you want the `ingredients` attribute to be a [`DAList`].
+
+There are several ways that `ingredients` can be initialized.  In the
+interview itself, you can do:
+
+{% highlight yaml %}
+modules:
+  - docassemble.cooking
+  - docassemble.base.util
+---
+objects:
+  - dinner: Recipe
+  - dinner.ingredients: DAList
+{% endhighlight %}
+
+Or, you could use [`sets`] in combination with [`initializeAttribute()`]:
+
+{% highlight yaml %}
+modules:
+  - docassemble.cooking
+  - docassemble.base.util
+---
+objects:
+  - dinner: Recipe
+---
+generic object: Recipe
+sets: x.ingredients
+code: |
+  x.initializeAttribute('ingredients', DAList)
+---
+{% endhighlight %}
+
+However, it is often cleaner to put the object initialization into the
+class definition itself:
+
+{% highlight python %}
+class Recipe(DAObject):
+    def init(self, *pargs, **kwargs):
+        self.initializeAttribute('ingredients', DAList)
+        return super(Recipe, self).init(*pargs, **kwargs)
+{% endhighlight %}
+
+Then, you would only need to write this in your interview file:
+
+{% highlight yaml %}
+---
+objects:
+  - dinner: Recipe
+---
+{% endhighlight %}
+
+The `init()` function is a special function that is called on all
+[`DAObject`] objects at the time they are initialized.  This is not to
+be confused with the `__init__()` function, which is built in to
+[Python]; you should use `init()`, not `__init__()`.
+
+When you write your own `init()` function for a class, you should (but
+are not required to) include the 
+`return super(Recipe, self).init(*pargs, **kwargs)` line at the end.
+This will ensure that `Recipe` objects can initialized properly.  For
+example, if you wrote:
+
+{% highlight python %}
+dinner.initializeAttribute('recipe', Recipe, oven_temperature=300)
+{% endhighlight %}
+
+then `dinner.recipe` would be a `Recipe` object and
+`dinner.recipe.oven_temperature` would be `300`.  However, if you
+included an `init()` function and failed to conclude it with 
+`return super(Recipe, self).init(*pargs, **kwargs)`, then the
+`oven_temperature` variable would not be set.  Therefore, it is a good
+practice to always write your `init()` methods in this way.
+
+## <a name="usingglob"></a>Using global variables in your classes
+
+Normally in [Python] you can use global variables to keep track of
+information that your methods need to know but that is not passed in
+arguments to the methods.  For example, if you wanted to keep track of
+whether to use Celsius or Fahrenheit when talking about temperatures,
+you might be tempted to write:
+
+{% highlight python %}
+from docassemble.base.core import DAObject
+
+temperature_type = 'Celsius'
+
+class Recipe(DAObject):
+    def summary(self):
+        return "#### Ingredients\n\n" + self.ingredients + "\n\n#### Instructions\n\n" + self.instructions
+    def get_oven_temperature(self):
+        if temperature_type == 'Celsius':
+            return str(self.oven_temperature) + ' °C'
+        elif temperature_type == 'Fahrenheit':
+            return str(self.oven_temperature) + ' °F'
+        elif temperature_type == 'Kelvin': 
+            return str(self.oven_temperature) + ' K'
+{% endhighlight %}
+
+(The `str()` function is a Python function that converts something to
+text.  Here, it is necessary because `self.oven_temperature` may be a
+number, and [Python] will complain if you ask it to "add" text to a
+number.)
+
+Then to change the `temperature_type` from an interview, you might
+write:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.cooking.objects
+---
+initial: True
+code: |
+  if user_is_scientist:
+    temperature_type = 'Kelvin'
+  elif user_country in ['United States', 'Great Britain']:
+    temperature_type = 'Fahrenheit'
+...
+{% endhighlight %}
+
+This would be effective at changing the `temperature_type` variable
+because the `modules` block loads all the names from
+`docassemble.cooking.objects` into the variable store of the
+interview, including `temperature_type`.
+
+However, this is not [thread-safe] and it will not work correctly 100%
+of the time.  If your server is under heavy load, users might randomly
+be advised to turn their ovens to 350 degrees Celsius, which would
+scorch the food.  This is because the variable `temperature_type`
+exists at the level of the web server process, and the process might
+be supporting several users simultaneously (in different "threads" of
+the process).  Between the time one user sets `temperature_type` to
+`Fahrenheit` and tries to use it, another user inside the same process
+might set `temperature_type` to `Celsius`.
+
+Therefore, it is important that you do not use global variables when
+you write your own classes.  The simplest way to get around this
+problem is to use the [`set_info()`] and [`get_info()`] functions from
+[`docassemble.base.util`]:
+
+{% highlight python %}
+from docassemble.base.core import DAObject
+from docassemble.base.util import get_info
+
+class Recipe(DAObject):
+    def summary(self):
+        return "#### Ingredients\n\n" + self.ingredients + "\n\n#### Instructions\n\n" + self.instructions
+    def get_oven_temperature(self):
+        if get_info('temperature_type') == 'Celsius':
+            return str(self.oven_temperature) + ' °C'
+        elif get_info('temperature_type') == 'Fahrenheit':
+            return str(self.oven_temperature) + ' °F'
+        elif get_info('temperature_type') == 'Kelvin': 
+            return str(self.oven_temperature) + ' K'
+{% endhighlight %}
+
+Then from your interview you can include [`docassemble.base.util`] as
+one of the [`modules`] and then run [`set_info()`] in [`initial`]
+code:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.util
+  - docassemble.cooking.objects
+---
+initial: True
+code: |
+  if user_is_scientist:
+    set_info(temperature_type='Kelvin')
+  elif user_country in ['United States', 'Great Britain']:
+    set_info(temperature_type='Fahrenheit')
+  else:
+    set_info(temperature_type='Celsius')
+...
+{% endhighlight %}
+
+The values set by [`set_info()`] are forgotten after the user's screen
+is prepared.  Therefore, it is necessary to run [`set_info()`] in an
+[`initial`] code block so that values like `temperature_type` are put
+in place before they are needed.
+
+If you are an advanced programmer, you can do what
+[`docassemble.base.util`] does and use Python's [threading module] to
+store global variables.
+
+{% highlight python %}
+from docassemble.base.core import DAObject
+import threading
+
+__all__ = ['set_temperature_type', 'get_temperature_type', 'Recipe']
+
+this_thread = threading.local
+
+def set_temperature_type(type):
+    this_thread.temperature_type = type
+
+def get_temperature_type():
+    return this_thread.temperature_type
+
+class Recipe(DAObject):
+    def summary(self):
+        return "#### Ingredients\n\n" + self.ingredients + "\n\n#### Instructions\n\n" + self.instructions
+    def get_oven_temperature(self):
+        if this_thread.temperature_type == 'Celsius':
+            return str(self.oven_temperature) + ' °C'
+        elif this_thread.temperature_type == 'Fahrenheit':
+            return str(self.oven_temperature) + ' °F'
+        elif this_thread.temperature_type == 'Kelvin': 
+            return str(self.oven_temperature) + ' K'
+{% endhighlight %}
+
+We added an `__all__` statement so that interviews can a `module`
+block including `docassemble.cooking.objects` does not clutter the
+variable store with extraneous names like `threading`.  We also added
+functions for setting and retrieving the value of the "temperature
+type."
+
+The temperature type is now an attribute of the object `this_thread`,
+which is an instance of `threading.local`.  This attribute needs to be
+set in `initial` code that will run every time a screen refreshes.
+
+Now in your interview you can do:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.cooking.objects
+---
+initial: True
+code: |
+  if user_is_scientist:
+    set_temperature_type('Kelvin')
+  elif user_country in ['United States', 'Great Britain']:
+    set_temperature_type('Fahrenheit')
+  else:
+    set_temperature_type('Celsius')
+...
+{% endhighlight %}
+
+Note that you do not need to worry about whether your global variables
+are [thread-safe] if they do not change from interview to interview.
+
+For example, if you only wanted to allow people to change the
+temperature type from the **docassemble** [configuration], you could
+do the following in your [Python module]:
+
+{% highlight python %}
+from docassemble.base.core import DAObject
+
+from docassemble.webapp.config import daconfig
+temperature_type = daconfig.get('temperature type', 'Celsius')
+{% endhighlight %}
+
+Then your interviews would not have to do anything with `temperature_type`.
+
+Also, you could avoid the complication of global variables entirely if
+you are willing to pass the temperature type as an argument to
+`get_oven_temperature`:
+
+{% highlight python %}
+from docassemble.base.core import DAObject
+
+class Recipe(DAObject):
+    def get_oven_temperature(self, type):
+        if type == 'Celsius':
+            return str(self.oven_temperature) + ' °C'
+        elif type == 'Fahrenheit':
+            return str(self.oven_temperature) + ' °F'
+        elif type == 'Kelvin': 
+            return str(self.oven_temperature) + ' K'
+{% endhighlight %}
+
+Then you could have this in your interview:
+
+{% highlight yaml %}
+---
+question: |
+  What kind of temperature system do you use?
+choices:
+  - Celsius
+  - Fahrenheit
+  - Kelvin
+field: temperature_type
+---
+{% endhighlight %}
+
+and then in your question text you could write:
+
+{% highlight text %}
+Set your oven to ${ apple_pie.get_oven_temperature(temperature_type) }
+and let it warm up.
+{% endhighlight %}
+
 # <a name="extending"></a>Extending existing classes
 
 If you want to add a method to an existing **docassemble** class, such
@@ -2852,16 +2868,17 @@ and not an instance of the `Attorney` class.
 [`Address`]: #Address
 [`Asset`]: #Asset
 [`ChildList`]: #ChildList
+[`DADict`]: #DADict
+[`DAEmailRecipientList`]: #DAEmailRecipientList
+[`DAEmailRecipient`]: #DAEmailRecipient
+[`DAEmail`]: #DAEmail
 [`DAFileCollection`]: DAFileCollection
 [`DAFileList`]: #DAFileList
 [`DAFile`]: #DAFile
-[`DAEmail`]: #DAEmail
-[`DAEmailRecipient`]: #DAEmailRecipient
-[`DAEmailRecipientList`]: #DAEmailRecipientList
-[`DADict`]: #DAFile
 [`DAList`]: #DAList
-[`DASet`]: #DAList
 [`DAObject`]: #DAObject
+[`DASet`]: #DASet
+[`DAStaticFile`]: #DAStaticFile
 [`DATemplate`]: #DATemplate
 [`Expense`]: #Expense
 [`FinancialList`]: #FinancialList
@@ -2995,3 +3012,6 @@ and not an instance of the `Attorney` class.
 [`geopy.geocoders.GoogleV3`]: https://geopy.readthedocs.io/en/1.11.0/#geopy.geocoders.GoogleV3
 [`google`]: {{ site.baseurl }}/docs/config.html#google
 [Google Maps Geocoding API]: https://developers.google.com/maps/documentation/geocoding/intro
+[`PeriodicValue`]: #PeriodicValue
+[Modules folder]: {{ site.baseurl }}/docs/playground.html#modules
+[Playground]: {{ site.baseurl }}/docs/playground.html

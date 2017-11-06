@@ -914,3 +914,4 @@ For more information about "for loops" in [Mako], see the
 [`objects`]: {{ site.baseurl }}/docs/initial.html#objects
 [idempotent]: https://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning
 [`del`]: https://docs.python.org/2/tutorial/datastructures.html#the-del-statement
+[YAML]: https://en.wikipedia.org/wiki/YAML

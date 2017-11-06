@@ -1450,3 +1450,4 @@ why this needs to be done manually as opposed to automatically:
 [`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
 [`sets`]: {{ site.baseurl }}/docs/modifiers.html#sets
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
+[PNG]: https://en.wikipedia.org/wiki/Portable_Network_Graphics

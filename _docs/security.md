@@ -30,7 +30,7 @@ access key in the cookie.
 When a user clicks an "Exit" button, **docassemble** will delete all of
 the information related to the interview from the server, including
 the database, uploaded documents, and assembled documents.  However,
-temporary files in /tmp will persist until cleaned out by [tmpreaper].
+temporary files in /tmp will persist until cleaned out by a cron job.
 
 ## Sign-in security
 

@@ -74,7 +74,7 @@ fields:
 You might expect that if the interview needs to know the birthday of
 one of the user's friends, it will ask the last question.  However,
 the list `user.friends` was initialized as `user.coworkers`.  This
-means that if you refer to user.friends[1].birthdate, your interview
+means that if you refer to `user.friends[1].birthdate`, your interview
 will actually look for `user.coworkers[1].birthdate`.
 
 For more information about this issue, see the documentation for the

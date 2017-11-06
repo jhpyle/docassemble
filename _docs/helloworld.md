@@ -605,3 +605,4 @@ the [GitHub subsection] of the [packages] section.
 [decorating]: {{ site.baseurl }}/docs/modifiers.html#decoration
 [create one]: https://github.com/join
 [GitHub integration]: {{ site.baseurl }}/docs/packages.html#github
+[privileges]: {{ site.baseurl }}/docs/users.html

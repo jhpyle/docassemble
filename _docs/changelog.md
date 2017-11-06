@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.91](https://github.com/jhpyle/docassemble/releases/tag/v0.1.91)
+
+### Fixed
+- Azure blob storage fixes.
+
 ## [0.1.90](https://github.com/jhpyle/docassemble/releases/tag/v0.1.90) - 2017-11-05
 
 ### Changed

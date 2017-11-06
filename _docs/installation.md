@@ -1515,3 +1515,4 @@ All of these system administration headaches can be avoided by
 [`googledrive`]: {{ site.baseurl }}/docs/config.html#googledrive
 [pip]: https://pip.pypa.io/en/stable/
 [OAuth]: https://oauth.net/1/
+[alembic]: http://alembic.zzzcomputing.com/en/latest/
