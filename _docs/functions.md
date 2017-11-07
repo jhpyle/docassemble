@@ -100,6 +100,9 @@ This effectively does the same thing as the [del statement] in
 del favorite_fruit
 {% endhighlight %}
 
+The difference is that when using `del`, the variable must first
+exist.
+
 ## <a name="need"></a>need()
 
 The `need()` function takes one or more variables as arguments and
@@ -609,6 +612,18 @@ If `user_name` is `John Wilkes Booth`,
 This is useful if you do not want spaces in the filenames of your
 [attachments].
 
+{% highlight yaml %}
+---
+sets: user_done
+question: Thanks!
+subquestion: Here is your letter.
+attachment:
+  - name: A letter for ${ user_name }
+    filename: Letter_for_${ space_to_underscore(user_name) }
+    content file: letter.md
+---
+{% endhighlight %}
+
 ## <a name="single_paragraph"></a>single_paragraph()
 
 `single_paragraph(user_supplied_text)` will replace any linebreaks in
@@ -629,18 +644,6 @@ field: ok_to_proceed
 If you did not remove line breaks from the text, then if the
 `meaning_of_life` contained two consecutive line breaks, only the
 first paragraph of the answer would be indented.
-
-{% highlight yaml %}
----
-sets: user_done
-question: Thanks!
-subquestion: Here is your letter.
-attachment:
-  - name: A letter for ${ user_name }
-    filename: Letter_for_${ space_to_underscore(user_name) }
-    content file: letter.md
----
-{% endhighlight %}
 
 ## <a name="quote_paragraphs"></a>quote_paragraphs()
 
@@ -2619,7 +2622,11 @@ configuration directive for more information.
 ## <a name="server_capabilities"></a>server_capabilities()
 
 The `server_capabilities()` function returns a dictionary indicating
-whether the server has particular features enabled.  The keys are:
+whether the server has particular features enabled.
+
+{% include side-by-side.html demo="server-capabilities" %}
+
+The keys are:
 
 * `sms` - whether SMS messaging is available.  See the [`twilio`]
   configuration.
@@ -2627,12 +2634,22 @@ whether the server has particular features enabled.  The keys are:
   the [`oauth`] configuration.
 * `facebook_login` - whether logging in with Facebook is available.
   See the [`oauth`] configuration.
+* `twitter_login` - whether logging in with Twitter is available.
+  See the [`oauth`] configuration.
+* `phone_login` - whether logging in with an [SMS] security code is
+  available.  See the [`phone login`] configuration.
 * `voicerss` - whether the text-to-speech feature is available.  See
   the [`voicerss`] configuration.
 * `s3` - whether [Amazon S3] is enabled.  See the [`s3`]
   configuration.
 * `azure` - whether [Azure blob storage] is enabled.  See the [`azure`]
   configuration.
+* `googledrive` - whether [Google Drive Synchronization] is
+  available.  See the [`googledrive`] configuration.
+* `github` - whether developers have the option of integrating their
+  [Playground]s with [GitHub].  See the [`github`] configuration.
+* `pypi` - whether developers have the option of integrating their
+  [Playground]s with [PyPI].  See the [`pypi`] configuration.
 
 ## <a name="referring_url"></a>referring_url()
 
@@ -4479,3 +4496,9 @@ $(document).on('daPageLoad', function(){
 [`dispatch interview`]: {{ site.baseurl }}/docs/config.html#dispatch interview
 [`session list interview`]: {{ site.baseurl }}/docs/config.html#session list interview
 [`generic object`]: {{ site.baseurl}}/docs/modifiers.html#generic object
+[`googledrive`]: {{ site.baseurl }}/docs/config.html#googledrive
+[`phone login`]: {{ site.baseurl }}/docs/config.html#phone login
+[PyPI]: https://pypi.python.org/pypi
+[GitHub]: https://github.com/
+[`github`]: {{ site.baseurl }}/docs/config.html#github
+[`pypi`]: {{ site.baseurl }}/docs/config.html#pypi

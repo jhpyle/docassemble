@@ -2888,6 +2888,32 @@
 "fields-choices-dropdown": "question: | \n  What type of shoes do you wear?\nfields:\n\
   \  - Shoe Type: target_variable\n    choices: \n      - Sneakers\n      - Sandals\n\
   \      - Clogs\n      - Other"
+"fields-code": "objects:\n  - people: DAList.using(object_type=Individual, ask_number=True)\n\
+  ---\nquestion: |\n  How many people are there?\nfields:\n  - Number: people.target_number\n\
+  \    datatype: integer\n    min: 1\n    max: 10\n---\nsets:\n  - people[i].name.first\n\
+  question: |\n  What are the peoples' names?\nfields:\n  code: name_list\n---\ncode:\
+  \ |\n  name_list = list()\n  for index in range(people.number()):\n    name_list.append(\n\
+  \      {\"label\": ordinal(index, capitalize=True) + \" person's given name\",\n\
+  \       \"field\": \"people[\" + str(index) + \"].name.first\"\n      })\n    name_list.append(\n\
+  \      {\"label\": ordinal(index, capitalize=True) + \" person's surname\",\n  \
+  \     \"field\": \"people[\" + str(index) + \"].name.last\"\n      })\n---\nmandatory:\
+  \ True\nquestion: |\n  List of people\nsubquestion: |\n  The people include:\n \
+  \ \n  % for person in people:\n  * ${ person }\n  % endfor"
+"fields-code-embed": "objects:\n  - people: DAList.using(object_type=Individual, ask_number=True)\n\
+  ---\nquestion: |\n  How many people are there?\nfields:\n  - Number: people.target_number\n\
+  \    datatype: integer\n    min: 1\n    max: 10\n---\nsets:\n  - people[i].name.first\n\
+  question: |\n  What are the peoples' names?\nsubquestion: |\n  ${ name_display }\n\
+  fields:\n  code: name_list\n---\ncode: |\n  name_list = list()\n  name_display =\
+  \ \"\"\n  for index in range(people.number()):\n    name_list.append(\n      {\"\
+  label\": ordinal(index, capitalize=True) + \" person's given name\",\n       \"\
+  field\": \"people[\" + str(index) + \"].name.first\"\n      })\n    name_list.append(\n\
+  \      {\"label\": ordinal(index, capitalize=True) + \" person's surname\",\n  \
+  \     \"field\": \"people[\" + str(index) + \"].name.last\"\n      })\n    name_display\
+  \ += \"The \" + ordinal(index) + \" person's name is \"\\\n                  + \"\
+  [FIELD people[\" + str(index) + \"].name.first] \"\\\n                  + \"[FIELD\
+  \ people[\" + str(index) + \"].name.last].\\n\\n\"\n---\nmandatory: True\nquestion:\
+  \ |\n  List of people\nsubquestion: |\n  The people include:\n  \n  % for person\
+  \ in people:\n  * ${ person }\n  % endfor"
 "fields-mc": |-
   question: |
     What is your favorite fruit?
@@ -7222,6 +7248,14 @@
 "send-sms": |-
   modules:
     - docassemble.base.util
+"server-capabilities": |-
+  mandatory: True
+  question: |
+    Server capabilities
+  subquestion: |
+    % for feature, enabled in server_capabilities().iteritems():
+    * **${ feature }**: ${ 'enabled' if enabled else 'disabled' }
+    % endfor
 "session-interview": |-
   initial: True
   code: |
@@ -7793,11 +7827,58 @@
     have almost certainly met a creeper.
   yesno: met_a_creeper
 "testage2": |-
-  modules:
-    - docassemble.base.util
+  objects:
+    - user: Individual
+  ---
+  question: >-
+    How old are you?
+  fields:
+    - Age in years: user.age
+      datatype: number
+  ---
+  mandatory: True
+  code: |
+    need(user.age)
+  ---
+  mandatory: True
+  question: |
+    You are ${ user.age_in_years() } years old.
 "testdalist": |-
-  modules:
-    - docassemble.base.util
+  objects:
+    - recipient: DAList
+    - trustee: Individual
+    - beneficiary: Individual
+    - grantor: Individual
+  ---
+  mandatory: True
+  code: |
+    recipient.append(trustee)
+    recipient.append(beneficiary)
+    recipient.append(grantor)
+    recipient.append(Individual())
+    recipient.append(Individual())
+    recipient.gathered = True
+  ---
+  mandatory: True
+  question: The recipients
+  subquestion: |
+    % for person in recipient:
+    ${ person } is a recipient.
+    % endfor
+  ---
+  generic object: Individual
+  question: |
+    What is the name of the ${ x.object_name() }?
+  fields:
+    - First Name: x.name.first
+    - Last Name: x.name.last
+  ---
+  generic object: Individual
+  question: |
+    The ${ ordinal(i) } ${ x.object_name() } must have a name.  What is it?
+  fields:
+    - First Name: x[i].name.first
+    - Last Name: x[i].name.last
 "testmessage": |-
   modules:
     - docassemble.base.util

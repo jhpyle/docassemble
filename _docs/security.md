@@ -62,18 +62,20 @@ process information supplied by the user.  There are protections in
 place to prevent code injection, but more work could be done to harden
 **docassemble** against such threats.
 
-The option of logging in with Google and Facebook is provided for
-convenience, but you may wish to turn it off because the encryption of
-interview answers on the server is less effective when users log in
-without a password.  This is because the password is typically used as
-the encryption key, which is advantageous because it is not stored
+The options for allowing users to log in with Google, Facebook,
+Twitter, Azure, and mobile phone numbers are provided for convenience,
+but you may wish not to enable these features because the encryption
+of interview answers on the server is less effective when users log in
+without a password.  This is because the password is used as the
+encryption key, which is advantageous because it is not stored
 anywhere on the server; the user remembers it and it is stored in a
-cookie in the user's browser.  When users log in with Google or
-Facebook, however, there is no such key available.  As a result, the
-key for encrypting user answers on the server is constructed based on
-information that is stored on the server.  As a result, an intruder
-with access to the server could reverse-engineer the encrpytion key
-for an interview belonging to a user who logs in with Google or Facebook.
+cookie in the user's browser.  When users log in with something other
+than a password, however, there is no such key available.  As a
+result, the key for encrypting user answers on the server is
+constructed based on information that is stored on the server.  As a
+result, an intruder with access to the server could reverse-engineer
+the encrpytion key for an interview belonging to a user who logs in
+with something other than a password.
 
 On [Docker], **docassemble** installs [npm] from a [different source]
 because [npm] is missing from [Debian stretch] due to unresolved

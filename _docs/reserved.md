@@ -602,7 +602,7 @@ All others are available for you to use and to retrieve with
 [sections]: {{ site.baseurl }}/docs/initial.html#navigation bar
 [`nav`]: {{ site.baseurl }}/docs/initial.html#navigation bar
 [`incoming_email`]: {{ site.baseurl }}/docs/background.html#email
-[`row_index`]: https://docassemble.org/docs/template.html#table
-[`row_item`]: https://docassemble.org/docs/template.html#table
-[tables]: https://docassemble.org/docs/template.html#table
+[`row_index`]: {{ site.baseurl }}/docs/template.html#table
+[`row_item`]: {{ site.baseurl }}/docs/template.html#table
+[tables]: {{ site.baseurl }}/docs/template.html#table
 [`self`]: https://docs.python.org/2.7/tutorial/classes.html

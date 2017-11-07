@@ -1402,5 +1402,5 @@ object.)
 [random forest]: https://en.wikipedia.org/wiki/Random_forest
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [built-in method `.lower()`]: https://docs.python.org/2/library/stdtypes.html#str.lower
-[`noun_singular()`]: https://docassemble.org/docs/functions.html#noun_singular
+[`noun_singular()`]: {{ site.baseurl }}/docs/functions.html#noun_singular
 [gathering]: {{ site.baseurl }}/docs/groups.html#gathering

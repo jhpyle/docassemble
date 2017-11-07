@@ -2872,7 +2872,7 @@ and not an instance of the `Attorney` class.
 [`DAEmailRecipientList`]: #DAEmailRecipientList
 [`DAEmailRecipient`]: #DAEmailRecipient
 [`DAEmail`]: #DAEmail
-[`DAFileCollection`]: DAFileCollection
+[`DAFileCollection`]: #DAFileCollection
 [`DAFileList`]: #DAFileList
 [`DAFile`]: #DAFile
 [`DAList`]: #DAList

@@ -908,8 +908,8 @@ For more information about "for loops" in [Mako], see the
 [`Address`]: {{ site.baseurl }}/docs/objects.html#Address
 [`DAEmailRecipientList`]: {{ site.baseurl }}/docs/objects.html#DAEmailRecipientList
 [`DAEmailRecipient`]: {{ site.baseurl }}/docs/objects.html#DAEmailRecipient
-[`.current_index()` method]: "https://docassemble.org/docs/objects.html#DAList.current_index"
-[embedding a code block within a multiple choice question]: http://docassemble.org/docs/fields.html#code%20button
+[`.current_index()` method]: {{ site.baseurl }}/docs/objects.html#DAList.current_index
+[embedding a code block within a multiple choice question]: {{ site.baseurl }}/docs/fields.html#code%20button
 [expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [`objects`]: {{ site.baseurl }}/docs/initial.html#objects
 [idempotent]: https://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning

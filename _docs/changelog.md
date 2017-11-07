@@ -4,7 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.1.91](https://github.com/jhpyle/docassemble/releases/tag/v0.1.91)
+## [0.1.91](https://github.com/jhpyle/docassemble/releases/tag/v0.1.91) - 2017-11-06
+
+### Changed
+- Exceptions triggered during code block execution will now show the
+  line, not just indicate the line number.
+- The `server_capabilities()` function is now imported by default and
+  it reports additional features.
+
+### Added
+- Dynamically-generated `fields` items.
 
 ### Fixed
 - Azure blob storage fixes.

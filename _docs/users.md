@@ -47,8 +47,8 @@ You can also change these defaults during [installation] by editing the
 [configuration] before running the [`create_tables.py`] script from the
 [`docassemble.webapp`] package.
 
-Users can log in with Facebook, Google, or Microsoft Azure.  This
-requires obtaining API keys with those companies.  See the
+Users can log in with Facebook, Google, Twitter, or Microsoft Azure.
+This requires obtaining API keys with those companies.  See the
 documentation for the [`oauth`] configuration directive for details.
 Users can also log in with their mobile phone by receiving a
 verification code via [SMS].  See the documentation for the

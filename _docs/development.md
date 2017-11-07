@@ -381,7 +381,7 @@ special-purpose interview files.
 [Docker volume]: {{ site.baseurl }}/docs/docker.html#persistent
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [.docx templates]: {{ site.baseurl }}/docs/documents.html#docx template file
-[Google Drive integration]: {{ site.baseurl }}/docs/googledrive.html
+[Google Drive integration]: {{ site.baseurl }}/docs/playground.html#google drive
 [Markdown]: https://daringfireball.net/projects/markdown/
 [PyPI page]: https://pypi.python.org/pypi/docassemble.webapp/
 [GitHub page]: https://github.com/jhpyle/docassemble/releases

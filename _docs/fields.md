@@ -1169,6 +1169,122 @@ the field.  For example, if you include `inline width: 15em`, the
 [CSS] will be altered so that the field is 15em wide.  This modifier
 has no effect when embedded fields are not being used.
 
+## <a name="fields code"></a>Generating fields with code
+
+You can use [Python] code to generate items inside a `fields`.  To do
+so, simply add an entry under `fields` that contains `code` (and
+nothing more).  The contents of `code` will be evaluated as a [Python]
+expression.
+
+The expression must evaluate to a list of dictionaries, and the format
+must be the Python equivalent of a regular `fields` item, which you
+would normally express in [YAML].
+
+For example, if you want the fields to be like this:
+
+{% highlight yaml %}
+question: |
+  How many of each fruit?
+fields:
+  - Apples: num_apples
+    datatype: integer
+  - Oranges: num_oranges
+    datatype: integer
+{% endhighlight %}
+
+you would write this:
+
+{% highlight yaml %}
+question: |
+  How many of each fruit?
+fields:
+  - code: |
+      [{'Apples': 'num_apples', 'datatype': 'integer'},
+       {'Oranges': 'num_oranges', 'datatype': 'integer'}']
+{% endhighlight %}
+
+Here is an example that asks for the names of a number of people
+on a single screen:
+
+{% include side-by-side.html demo="fields-code" %}
+
+Note that it is necessary to use the [`sets`] modifier on the question
+to manually indicate that the question will define
+`people[i].name.first`.  Normally, **docassemble** automatically
+detects what variables a question is capable of defining, but when the
+`fields` are dynamically generated with code, it is not able to do so.
+
+Note also that this example uses the [`label` and `field`] method for
+indicating the label and the variable name for each field.  This is
+not required, but it may make field-generating code more readable.
+
+Dynamically-created lists of fields can be paired with
+dynamically-created `subquestion` text that [embeds] the fields.
+
+{% include side-by-side.html demo="fields-code-embed" %}
+
+It is also possible to mix dynamic fields with non-dynamic fields:
+
+{% highlight yaml %}
+question: |
+  Tell me about your food preferences.
+fields:
+  - Favorite fruit: favorite_fruit
+  - code: food_list
+  - Favorite vegetable: favorite_vegetable
+---
+reconsider: True
+code: |
+  food_list = [{'Favorite candy: 'favorite_candy'}]
+  if likes_legumes:
+    food_list.append({'Favorite legume': 'favorite_legume'})
+{% endhighlight %}
+
+Writing [Python] code that generates a list of fields can be pretty
+complex.  This should be considered an advanced feature.  Note that
+the code above uses the [Python] function [`str()`] to reduce the
+index of a list (which is an integer) into a string, for purposes of
+constructing variable names like `people[0].name.first` and
+`people[1].name.first`.
+
+If you work with dictionaries ([`DADict`] objects) instead of lists
+([`DAList`] objects), a useful function is the [Python] function
+[`repr()`], which returns a string containing a string with quotation
+marks around it.
+
+For example, suppose you want to replicate this:
+
+{% highlight yaml %}
+question: |
+  Tell me about the seeds.
+fields:
+  - label: Seeds of a kiwi
+    field: fruit['kiwi'].seeds
+  - label: Seeds of a tomato
+    field: fruit['tomato'].seeds
+{% endhighlight %}
+
+You could do something like the following:
+
+{% highlight yaml %}
+question: |
+  Tell me about the seeds.
+fields:
+  - code: field_list
+---
+code: |
+  field_list = list()
+  for key in fruit:
+    field_list.append({"label": "Seeds of a " + key, 
+                       "field": "fruit[" + repr(key) + "].seeds"})
+{% endhighlight %}
+
+The alternative is to try to provide the quotation marks manually,
+which can look messier, and then you have to worry about what to do if
+the `key` string contains an apostrophe; will that cause a syntax
+error?  The [`repr()`] function takes care of this problem by
+producing a robust [Python] representation of the string.
+
 # <a name="general"></a>Generalizing questions
 
 **docassemble** lets you write a single question that can be re-used
@@ -1451,3 +1567,7 @@ why this needs to be done manually as opposed to automatically:
 [`sets`]: {{ site.baseurl }}/docs/modifiers.html#sets
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [PNG]: https://en.wikipedia.org/wiki/Portable_Network_Graphics
+[embeds]: #embed
+[`label` and `field`]: #label
+[`str()`]: https://docs.python.org/2/library/functions.html#str
+[`repr()`]: https://docs.python.org/2/library/functions.html#repr

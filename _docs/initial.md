@@ -897,7 +897,7 @@ features:
 [exit button]: {{ site.baseurl }}/docs/questions.html#special buttons
 [`referring_url()`]: {{ site.baseurl }}/docs/functions.html#referring_url
 [iframe]: https://www.w3schools.com/TAgs/tag_iframe.asp
-[`pdf/a` attachment setting]: {{ site.baseurl }}/docs/document.html#pdfa
+[`pdf/a` attachment setting]: {{ site.baseurl }}/docs/documents.html#pdfa
 [`pdf/a` configuration directive]: {{ site.baseurl }}/docs/config.html#pdfa
 [`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
 [table]: {{ site.baseurl }}/docs/template.html#table
