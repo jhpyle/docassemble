@@ -1626,7 +1626,7 @@ def input_for(status, field, wide=False, embedded=False):
                 else:
                     inner_fieldlist.append(help_wrap('<div>' + markdown_to_html(pair['label'], status=status) + '</div>', helptext))
                 id_index += 1
-            if hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
+            if hasattr(field, 'nota') and 'nota' in status.extras and status.extras['nota'][field.number] is not False:
                 if defaultvalue_set and defaultvalue is None:
                     ischecked = ' checked'
                 else:

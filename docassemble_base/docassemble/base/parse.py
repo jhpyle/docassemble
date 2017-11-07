@@ -2799,7 +2799,6 @@ class Question:
                     labels[field.number] = field.label.text(user_dict)
                 if hasattr(field, 'extras'):
                     if 'fields_code' in field.extras:
-                        #PPP
                         field_list = eval(field.extras['fields_code'], user_dict)
                         if type(field_list) is not list:
                             raise DAError("A code directive that defines items in fields must return a list")
