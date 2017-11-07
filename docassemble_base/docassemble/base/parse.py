@@ -316,6 +316,16 @@ class InterviewStatus(object):
         self.extras = dict()
         self.followed_mc = False
         self.tentatively_answered = set()
+    def get_field_list(self):
+        if 'sub_fields' in self.extras:
+            field_list = list()
+            for field in self.question.fields:
+                if field.number in self.extras['sub_fields']:
+                    field_list.extend(self.extras['sub_fields'][field.number])
+                else:
+                    field_list.append(field)
+            return field_list
+        return self.question.fields
     def mark_tentative_as_answered(self, user_dict):
         for question in self.tentatively_answered:
             question.mark_as_answered(user_dict)
@@ -1831,6 +1841,11 @@ class Question:
                     if type(field) is dict:
                         manual_keys = set()
                         field_info = {'type': 'text', 'number': field_number}
+                        if len(field) == 1 and 'code' in field:
+                            field_info['type'] = 'fields_code'
+                            field_info['extras'] = dict(fields_code=compile(field['code'], '', 'eval'))
+                            self.fields.append(Field(field_info))
+                            continue
                         if 'datatype' in field and field['datatype'] in ['radio', 'object', 'object_radio', 'combobox', 'checkboxes', 'object_checkboxes'] and not ('choices' in field or 'code' in field):
                             raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
                         for key in field:
@@ -2176,6 +2191,16 @@ class Question:
                 att['indexno'] = indexno
                 indexno += 1
         self.data_for_debug = data
+    def exec_setup(self, is_generic, the_x, iterators, user_dict):
+        if is_generic:
+            if the_x != 'None':
+                exec("x = " + the_x, user_dict)
+        if len(iterators):
+            for indexno in range(len(iterators)):
+                exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
+        if self.need is not None:
+            for need_code in self.need:
+                exec(need_code, user_dict)
     def recursive_data_from_code(self, target):
         if type(target) is dict or (hasattr(target, 'elements') and type(target.elements) is dict):
             new_dict = dict()
@@ -2773,6 +2798,42 @@ class Question:
                 if hasattr(field, 'label'):
                     labels[field.number] = field.label.text(user_dict)
                 if hasattr(field, 'extras'):
+                    if 'fields_code' in field.extras:
+                        #PPP
+                        field_list = eval(field.extras['fields_code'], user_dict)
+                        if type(field_list) is not list:
+                            raise DAError("A code directive that defines items in fields must return a list")
+                        new_interview_source = InterviewSourceString(content='')
+                        new_interview = new_interview_source.get_interview()
+                        reproduce_basics(self.interview, new_interview)
+                        the_question = Question(dict(question='n/a', fields=field_list), new_interview, source=new_interview_source, package=self.package)
+                        ask_result = the_question.ask(user_dict, old_user_dict, the_x, iterators, sought)
+                        for key in ['selectcompute', 'defaults', 'hints', 'helptexts', 'labels']:
+                            for field_num, val in ask_result[key].iteritems():
+                                if key == 'selectcompute':
+                                    selectcompute[str(field.number) + '_' + str(field_num)] = val
+                                elif key == 'defaults':
+                                    defaults[str(field.number) + '_' + str(field_num)] = val
+                                elif key == 'hints':
+                                    hints[str(field.number) + '_' + str(field_num)] = val
+                                elif key == 'helptexts':
+                                    helptexts[str(field.number) + '_' + str(field_num)] = val
+                                elif key == 'labels':
+                                    labels[str(field.number) + '_' + str(field_num)] = val
+                        for key, possible_dict in ask_result['extras'].iteritems():
+                            logmessage(repr("key is " + str(key) + " and possible dict is " + repr(possible_dict)))
+                            if type(possible_dict) is dict:
+                                logmessage("key points to a dict")
+                                if key not in extras:
+                                    extras[key] = dict()
+                                for field_num, val in possible_dict.iteritems():
+                                    logmessage("Setting " + str(field.number) + '_' + str(field_num))
+                                    extras[key][str(field.number) + '_' + str(field_num)] = val
+                        for sub_field in the_question.fields:
+                            sub_field.number = str(field.number) + '_' + str(sub_field.number)
+                        if 'sub_fields' not in extras:
+                            extras['sub_fields'] = dict()
+                        extras['sub_fields'][field.number] = the_question.fields
                     for key in ['note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'inline width', 'ml_group']: # , 'textresponse', 'content_type' #'script', 'css', 
                         if key in field.extras:
                             if key not in extras:
@@ -3627,7 +3688,7 @@ class Interview:
                             if debug:
                                 interview_status.seeking.append({'question': question, 'reason': 'initial'})
                             docassemble.base.functions.this_thread.current_question = question
-                            exec(question.compute, user_dict)
+                            exec_with_trap(question, user_dict)
                             continue
                         if question.name and question.name in user_dict['_internal']['answered']:
                             #logmessage("Skipping " + question.name + " because answered")
@@ -3680,7 +3741,7 @@ class Interview:
                                 #logmessage("Running some code:\n\n" + question.sourcecode)
                                 #logmessage("Question name is " + question.name)
                                 docassemble.base.functions.this_thread.current_question = question
-                                exec(question.compute, user_dict)
+                                exec_with_trap(question, user_dict)
                                 #logmessage("Code completed")
                                 if question.name:
                                     user_dict['_internal']['answered'].add(question.name)
@@ -3695,7 +3756,7 @@ class Interview:
                                     the_question = question.follow_multiple_choice(user_dict, interview_status)
                                     if the_question.question_type in ["code", "event_code"]:
                                         docassemble.base.functions.this_thread.current_question = the_question
-                                        exec(the_question.compute, user_dict)
+                                        exec_with_trap(the_question, user_dict)
                                         interview_status.mark_tentative_as_answered(user_dict)
                                         continue
                                     elif hasattr(the_question, 'content'):
@@ -3889,7 +3950,8 @@ class Interview:
             if debug:
                 the_error.interview = self
                 the_error.interview_status = interview_status
-                the_error.traceback = traceback.format_exc()
+                if not hasattr(the_error, 'traceback'):
+                    the_error.traceback = traceback.format_exc()
             raise the_error
         if docassemble.base.functions.get_info('prevent_going_back'):
             interview_status.can_go_back = False
@@ -3997,41 +4059,25 @@ class Interview:
                     if debug:
                         seeking.append({'question': question, 'reason': 'asking'})
                     if question.question_type == "data":
-                        if is_generic:
-                            if the_x != 'None':
-                                exec("x = " + the_x, user_dict)
-                        if len(iterators):
-                            for indexno in range(len(iterators)):
-                                exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
+                        question.exec_setup(is_generic, the_x, iterators, user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var})
                     if question.question_type == "data_from_code":
-                        if is_generic:
-                            if the_x != 'None':
-                                exec("x = " + the_x, user_dict)
-                        if len(iterators):
-                            for indexno in range(len(iterators)):
-                                exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
+                        question.exec_setup(is_generic, the_x, iterators, user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict))
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var})
                     if question.question_type == "objects":
+                        question.exec_setup(is_generic, the_x, iterators, user_dict)
                         success = False
                         for keyvalue in question.objects:
                             # logmessage("In a for loop for keyvalue")
                             for variable, object_type_name in keyvalue.iteritems():
                                 if variable != missing_var:
                                     continue
-                                if is_generic:
-                                    if the_x != 'None':
-                                        exec("x = " + the_x, user_dict)
-                                if len(iterators):
-                                    for indexno in range(len(iterators)):
-                                        #logmessage("code: running " + list_of_indices[indexno] + " = " + iterators[indexno])
-                                        exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
                                 was_defined = False
                                 try:
                                     exec("__oldvariable__ = " + str(missing_var), user_dict)
@@ -4087,6 +4133,7 @@ class Interview:
                         # logmessage("Returning")
                         return({'type': 'continue', 'sought': missing_var})
                     if question.question_type == "template":
+                        question.exec_setup(is_generic, the_x, iterators, user_dict)
                         if question.target is not None:
                             return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'under_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict(), 'sought': missing_var})
                         string = "import docassemble.base.core"
@@ -4102,6 +4149,7 @@ class Interview:
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var})
                     if question.question_type == "table":
+                        question.exec_setup(is_generic, the_x, iterators, user_dict)
                         string = "import docassemble.base.core"
                         exec(string, user_dict)
                         table_content = "\n"
@@ -4168,6 +4216,7 @@ class Interview:
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var})
                     if question.question_type == 'attachments':
+                        question.exec_setup(is_generic, the_x, iterators, user_dict)
                         attachment_text = question.processed_attachments(user_dict)
                         if missing_var in variable_stack:
                             variable_stack.remove(missing_var)
@@ -4179,13 +4228,7 @@ class Interview:
                         except:
                             continue
                     if question.question_type in ["code", "event_code"]:
-                        if is_generic:
-                            if the_x != 'None':
-                                exec("x = " + the_x, user_dict)
-                        if len(iterators):
-                            for indexno in range(len(iterators)):
-                                #logmessage("code: running " + list_of_indices[indexno] + " = " + iterators[indexno])
-                                exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
+                        question.exec_setup(is_generic, the_x, iterators, user_dict)
                         was_defined = False
                         try:
                             exec("__oldvariable__ = " + str(missing_var), user_dict)
@@ -4193,7 +4236,7 @@ class Interview:
                             was_defined = True
                         except:
                             pass
-                        exec(question.compute, user_dict)
+                        exec_with_trap(question, user_dict)
                         interview_status.mark_tentative_as_answered(user_dict)
                         if missing_var in variable_stack:
                             variable_stack.remove(missing_var)
@@ -4539,7 +4582,8 @@ def extract_missing_name(the_error):
     if m:
         return m.group(1)
     else:
-        raise DAError("Unable to extract variable name from '" + unicode(the_error) + "'")
+        raise the_error
+        #raise DAError("Unable to extract variable name from '" + unicode(the_error) + "'")
 
 def auto_determine_type(field_info, the_value=None):
     types = dict()
@@ -4655,7 +4699,6 @@ def ensure_object_exists(saveas, datatype, user_dict, commands=None):
     if execute:
         for command in commands:
             exec(command, user_dict)
-
     
 def invalid_variable_name(varname):
     if type(varname) not in [str, unicode]:
@@ -4666,3 +4709,16 @@ def invalid_variable_name(varname):
     if not valid_variable_match.match(varname):
         return True 
     return False
+
+def exec_with_trap(the_question, the_dict):
+    try:
+        exec(the_question.compute, the_dict)
+    except (NameError, UndefinedError, CommandError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, QuestionError, AttributeError, MandatoryQuestion, CodeExecute, SyntaxException):
+        raise
+    except Exception as e:
+        cl, exc, tb = sys.exc_info()
+        line_with_error = traceback.extract_tb(tb)[-1][1]
+        if type(line_with_error) is int and line_with_error > 0:
+            e.da_line_with_error = the_question.sourcecode.splitlines()[line_with_error - 1]
+        e.traceback = traceback.format_exc()
+        raise e

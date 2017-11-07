@@ -1,0 +1,49 @@
+metadata:
+  title: Code-generated fields
+  short title: Fields with code
+  documentation: "https://docassemble.org/docs/fields.html#fields code"
+  example start: 2
+  example end: 6
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - people: DAList.using(object_type=Individual, ask_number=True)
+---
+question: |
+  How many people are there?
+fields:
+  - Number: people.target_number
+    datatype: integer
+    min: 1
+    max: 10
+---
+sets:
+  - people[i].name.first
+question: |
+  What are the peoples' names?
+fields:
+  code: name_list
+---
+code: |
+  name_list = list()
+  for index in range(people.number()):
+    name_list.append(
+      {"label": ordinal(index, capitalize=True) + " person's given name",
+       "field": "people[" + str(index) + "].name.first"
+      })
+    name_list.append(
+      {"label": ordinal(index, capitalize=True) + " person's surname",
+       "field": "people[" + str(index) + "].name.last"
+      })
+---
+mandatory: True
+question: |
+  List of people
+subquestion: |
+  The people include:
+  
+  % for person in people:
+  * ${ person }
+  % endfor

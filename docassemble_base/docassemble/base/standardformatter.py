@@ -189,7 +189,8 @@ def as_sms(status, links=None, menu_items=None):
         field = None
         next_field = None
         info_message = None
-        for the_field in status.question.fields:
+        field_list = status.get_field_list()
+        for the_field in field_list:
             if is_empty_mc(status, the_field):
                 logmessage("as_sms: skipping field because choice list is empty.")
                 continue
@@ -226,7 +227,7 @@ def as_sms(status, links=None, menu_items=None):
             #return dict(question=qoutput, help=None, next=next_variable)
         else:
             reached_field = False
-            for the_field in status.question.fields:
+            for the_field in field_list:
                 if the_field is field:
                     reached_field = True
                     continue
@@ -453,7 +454,7 @@ def as_sms(status, links=None, menu_items=None):
 
 def embed_input(status, variable):
     variable = re.sub(r'^\[FIELD +(.*?) *\]$', r'\1', variable)
-    for field in status.question.fields:
+    for field in status.get_field_list():
         if hasattr(field, 'saveas') and variable == from_safeid(field.saveas):
             status.embedded.add(field.saveas)
             return input_for(status, field, embedded=True)
@@ -618,7 +619,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '              </fieldset>\n            </form>\n'
     elif status.question.question_type == "review":
         fieldlist = list()
-        for field in status.question.fields:
+        for field in status.get_field_list():
             if not status.extras['ok'][field.number]:
                 continue
             if hasattr(field, 'extras'):
@@ -670,10 +671,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         checkbox_validation = False
         if status.subquestionText:
             sub_question_text = markdown_to_html(status.subquestionText, status=status, indent=18, embedder=embed_input)
-        for field in status.question.fields:
+        field_list = status.get_field_list()
+        for field in field_list:
             if hasattr(field, 'datatype') and field.datatype == 'note':
                 note_fields[field.number] = '                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, embedder=embed_input) + '</div></div>\n'
-        for field in status.question.fields:
+        for field in field_list:
             if is_empty_mc(status, field):
                 if hasattr(field, 'datatype'):
                     hiddens[field.saveas] = field.datatype
@@ -748,7 +750,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide'] and hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                     if field.uncheckothers is True:
                         the_query = '.uncheckable:checked, .uncheckothers:checked'
-                        uncheck_list = [y.saveas for y in status.question.fields if y is not field and hasattr(y, 'saveas') and hasattr(y, 'inputtype') and y.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide']]
+                        uncheck_list = [y.saveas for y in field_list if y is not field and hasattr(y, 'saveas') and hasattr(y, 'inputtype') and y.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide']]
                     else:
                         uncheck_list = [safeid(y) for y in field.uncheckothers]
                         the_query = ', '.join(['#' + do_escape_id(x) + ':checked' for x in uncheck_list + [field.saveas]])

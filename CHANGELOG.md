@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.1.91] - 2017-11-06
+### Changed
+- Exceptions triggered during code block execution will now show the
+  line, not just indicate the line number.
+- The `server_capabilities()` function is now imported by default and
+  it reports additional features.
+### Added
+- Dynamically-generated `fields` items.
+### Fixed
+- Azure blob storage fixes.
+
 ## [0.1.90] - 2017-11-05
 ### Changed
 - New features in the `Address.geolocate()` method.

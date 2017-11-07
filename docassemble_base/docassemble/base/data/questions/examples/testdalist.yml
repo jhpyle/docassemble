@@ -1,6 +1,8 @@
 metadata:
   title: DAList
   documentation: "https://docassemble.org/docs/objects.html"
+  example start: 2
+  example end: 6
 ---
 modules:
   - docassemble.base.util

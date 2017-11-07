@@ -12036,6 +12036,8 @@ def server_error(the_error):
             the_trace = the_error.traceback
         else:
             the_trace = traceback.format_exc()
+        if hasattr(the_error, 'da_line_with_error'):
+            errmess += "\nIn line: " + unicode(the_error.da_line_with_error)
         logmessage(the_trace)
     if isinstance(the_error, DAError):
         error_code = the_error.error_code
@@ -13479,7 +13481,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             if question.question_type == "fields":
                 field = None
                 next_field = None
-                for the_field in interview_status.question.fields:
+                for the_field in interview_status.get_field_list():
                     if hasattr(the_field, 'datatype') and the_field.datatype in ['html', 'note', 'script', 'css']:
                         continue
                     if is_empty_mc(interview_status, the_field):
@@ -13811,7 +13813,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         user_dict['_internal']['command_cache'][field.number].append(the_string)
                         logmessage("do_sms: storing in command cache: " + str(the_string))
                     else:
-                        for the_field in interview_status.question.fields:
+                        for the_field in interview_status.get_field_list():
                             if is_empty_mc(interview_status, the_field):
                                 logmessage("do_sms: a field is empty")
                                 the_saveas = myb64unquote(the_field.saveas)

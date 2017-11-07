@@ -43,7 +43,8 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     fi
     if [ "${AZUREENABLE:-false}" == "true" ]; then
 	for the_file in $( find "$PGBACKUPDIR/" -type f ); do
-	    blob-cmd -f cp "$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}"/postgres/$the_file"
+	    target_file=`basename $the_file`	    
+	    blob-cmd -f cp "$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}"/postgres/$target_file"
 	done
     fi
     rm -rf "$PGBACKUPDIR"
@@ -69,7 +70,9 @@ if [ "${AZUREENABLE:-false}" == "true" ]; then
 	blob-cmd -f cp "/usr/share/docassemble/backup/$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/backup/'${LOCAL_HOSTNAME}'/'${the_file}
     done
     for the_dir in $( find /usr/share/docassemble/backup -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +14 -print | cut -c 31- ); do
-	blob-cmd -f rm 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/backup/'${LOCAL_HOSTNAME}'/'$( $the_dir )
+	for the_file in $( find "/usr/share/docassemble/backup/${the_dir}" -type f | cut -c 31- ); do
+            blob-cmd -f rm 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/backup/'${LOCAL_HOSTNAME}'/'$( $the_file )
+	done
 	rm -rf /usr/share/docassemble/backup/$the_dir
     done
 fi

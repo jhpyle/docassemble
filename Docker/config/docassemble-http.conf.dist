@@ -12,6 +12,9 @@
     RewriteRule {{POSTURLROOT}}ws/(.*)           ws://127.0.0.1:5000/$1 [P,L]
     ProxyPass {{POSTURLROOT}}ws/ http://127.0.0.1:5000/
     ProxyPassReverse {{POSTURLROOT}}ws/ http://127.0.0.1:5000/
+    <IfDefine DAAllowCrossSite>
+        Header set Access-Control-Allow-Origin "{{CROSSSITEDOMAIN}}"
+    </IfDefine>
     <IfModule !mod_ssl.c>
         XSendFile on
         XSendFilePath /usr

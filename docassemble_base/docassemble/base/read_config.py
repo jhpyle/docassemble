@@ -116,4 +116,6 @@ if __name__ == "__main__":
     else:
         print('export POSTURLROOT="/"')
         print('export WSGIROOT="/"')
+    if 'cross site domain' in daconfig and daconfig['cross site domain'] is not None:
+        print('export CROSSSITEDOMAIN="' + str(daconfig['cross site domain']) + '"')
     sys.exit(0)

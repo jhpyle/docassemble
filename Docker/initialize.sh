@@ -190,7 +190,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	    echo "Found $the_file on Azure" >&2
 	    if ! [[ $the_file =~ /$ ]]; then
 	        target_file=`basename $the_file`
-  		echo "Copying log" >&2
+  		echo "Copying log file $the_file" >&2
 	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${the_file}" "${LOGDIRECTORY:-/usr/share/docassemble/log}/${target_file}"
 	    fi
 	done
@@ -198,7 +198,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
     fi
     if [[ $(python -m docassemble.webapp.list-cloud config.yml) ]]; then
 	rm -f $DA_CONFIG_FILE
-  	echo "Copying config" >&2
+  	echo "Copying config.yml" >&2
 	blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml" $DA_CONFIG_FILE
 	chown www-data.www-data $DA_CONFIG_FILE
     fi
@@ -381,6 +381,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
 	if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ] || [ "${USELETSENCRYPT:-none}" == "none" ] || [ "${USEHTTPS:-false}" == "false" ]; then
 	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
 		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@' \
+		-e 's@{{CROSSSITEDOMAIN}}@'"${CROSSSITEDOMAIN}"'@' \
 		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@' \
 		/usr/share/docassemble/config/docassemble-ssl.conf.dist > /etc/apache2/sites-available/docassemble-ssl.conf || exit 1
 	    rm -f /etc/letsencrypt/da_using_lets_encrypt
@@ -388,6 +389,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
 	if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ] || [ "${USELETSENCRYPT:-none}" == "none" ] || [ "${USEHTTPS:-false}" == "false" ]; then
 	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
 		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@' \
+		-e 's@{{CROSSSITEDOMAIN}}@'"${CROSSSITEDOMAIN}"'@' \
 		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@' \
 		/usr/share/docassemble/config/docassemble-http.conf.dist > /etc/apache2/sites-available/docassemble-http.conf || exit 1
 	    rm -f /etc/letsencrypt/da_using_lets_encrypt
@@ -479,7 +481,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
 	    echo "Found $the_file on Azure" >&2
 	    if ! [[ $the_file =~ /$ ]]; then
   	        target_file=`basename $the_file`
-		echo "Copying postgres" >&2
+		echo "Copying $the_file to $target_file" >&2
 	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${the_file}" "$PGBACKUPDIR/${target_file}"
 	    fi
 	done
@@ -786,10 +788,9 @@ function deregister {
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_deregister" www-data 
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
-	    for the_file in $(find /usr/share/docassemble/log -type f); do
-		target_file=`basename $the_file`
-		echo "Saving log" >&2
-		blob-cmd -f cp $the_file "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/$target_file" 
+	    for the_file in $(find /usr/share/docassemble/log -type f | cut -c 28-); do
+		echo "Saving log file $the_file" >&2
+		blob-cmd -f cp "/usr/share/docassemble/log/$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/$target_file" 
 	    done
 	fi
     else

@@ -1,6 +1,8 @@
 metadata:
   title: Age
   documentation: "https://docassemble.org/docs/objects.html"
+  example start: 2
+  example end: 5
 ---
 modules:
   - docassemble.base.util
