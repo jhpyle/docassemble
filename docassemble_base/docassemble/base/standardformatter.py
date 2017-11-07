@@ -1563,7 +1563,10 @@ def input_for(status, field, wide=False, embedded=False):
             extra_style = ''
         extra_checkbox = ' checkbox-embedded'
         extra_radio = 'radio-embedded'
-        label_text = strip_quote(to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), dict(), list(), status).strip())
+        if field.number in status.labels:
+            label_text = strip_quote(to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), dict(), list(), status).strip())
+        else:
+            label_text = 'no label'
         if label_text != 'no label':
             title_text = ' title="' + label_text + '"'
         else:
