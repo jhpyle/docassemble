@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.1.91] - 2017-11-06
+## [0.1.91] - 2017-11-07
 ### Changed
 - Exceptions triggered during code block execution will now show the
   line, not just indicate the line number.
@@ -9,6 +9,9 @@
 - The `interview_list()` function now returns interview metadata.
 ### Added
 - Dynamically-generated `fields` items.
+- The `cross site domain` configuration directive and
+  `CROSSSITEDOMAIN` environment variable, for enabling APIs to be
+  used.
 ### Fixed
 - Azure blob storage fixes.
 
