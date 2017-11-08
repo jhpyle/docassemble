@@ -2561,7 +2561,9 @@ available at `/interviews`.
 The keys in each dictionary are:
 
 * `dict`: the interview dictionary for the session.
-* `filename`: the filename of the interview, e.g., `docassemble.demo:data/questions/questions.yml`
+* `filename`: the filename of the interview, e.g.,
+  `docassemble.demo:data/questions/questions.yml`
+* `metadata`: the metadata of the interview as a dictionary.
 * `modtime`: the modification time of the interview, in text format,
   formatted to the user's time zone.
 * `session`: the session ID of the session.
@@ -2579,6 +2581,14 @@ included even if there is an error that would prevent the session from
 being resumed.  By default, sessions will only be included if they can
 be resumed.  You can check whether as session can be resumed by
 checking the value of the `valid` key.
+
+You can also use `interview_list()` to delete interview sessions.  If
+you set the optional keyword parameter `action` to `delete_all`, all
+of the user's interview sessions will be deleted.  You can delete a
+particular session by setting `action` to `delete`, with optional
+keyword parameter `filename` set to the filename of the session's
+interview, and optional keyword parameter `session` set to the session
+ID of the session.
 
 This function can be useful in interviews that replace the standard
 list of user sessions.  See the [`session list interview`]

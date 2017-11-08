@@ -412,6 +412,13 @@ in `env.list`.
   should use the `https` scheme even though requests appear to be
   coming in as HTTP requests.  See the [`behind https load balancer`]
   configuration directive.
+* <a name="CROSSSITEDOMAIN"></a>`CROSSSITEDOMAIN`: If this is set, the
+  [Apache] server will be configured to send a
+  `Access-Control-Allow-Origin` header, which enables
+  [Cross-Origin Resource Sharing].  Set this to `*` to allow sharing
+  to any domain, or, e.g., `*.example.com` to limit sharing to a
+  particular domain or subdomain.  See the [`cross site domain`]
+  configuration directive.
 * <a name="TIMEZONE"></a>`TIMEZONE`: You can use this to set the time
   zone of the server.  The value of the variable is stored in
   `/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` is
@@ -1507,3 +1514,5 @@ containers depend on the images.
 [HTTP]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
 [region]: http://docs.aws.amazon.com/general/latest/gr/rande.html
 [`secret key`]: {{ site.baseurl }}/docs/config.html#secret key
+[Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+[`cross site domain`]: {{ site.baseurl }}/docs/config.html#cross site domain

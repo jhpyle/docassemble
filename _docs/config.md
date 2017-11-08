@@ -250,6 +250,9 @@ to note about this example:
   [`.html()`] takes place before the `<div id="interviews"></div>`
   [HTML] even exists on the screen.
 
+You can also call `/list?json=1` to obtain a [JSON] version of the
+available interviews.
+
 ## <a name="start page template"></a><a name="interview page template"></a><a name="start page title"></a><a name="interview page title"></a><a name="start page heading"></a><a name="interview page heading"></a>Customization of pages
 
 There are two pages that you can customize:
@@ -1460,6 +1463,16 @@ server running HTTPS.  This might be your configuration if you are
 using a [load balancer] or you are running [Docker] on machine that
 [forwards] HTTPS requests to [Docker] on a non-standard HTTP port.
 
+## <a name="cross site domain"></a>Cross-Origin Resource Sharing (CORS)
+
+Set the `cross site domain` directive if you want your [Apache] server
+to be configured to send `Access-Control-Allow-Origin` headers in
+order to permit [Cross-Origin Resource Sharing].  If you set it to
+`*`, resource sharing will be allowed to any origin.  Or, you could
+set it to, e.g., `api.example.com` to limit sharing to a particular
+domain.  This variable is only used if **docassemble** is running on
+[Docker].
+
 ## <a name="incoming mail domain"></a>E-mail domain of the site
 
 If you use the [e-mail receiving] feature, set the `incoming mail
@@ -2125,3 +2138,4 @@ and Facebook API keys.
 [customizing]: #start page template
 [`interview_list()`]: {{ site.baseurl }}/docs/functions.html#interview_list
 [`interview_menu()`]: {{ site.baseurl }}/docs/functions.html#interview_menu
+[Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
