@@ -3431,6 +3431,12 @@ class Interview:
             return None
         result = docassemble.base.functions.server.url_finder(self.bootstrap_theme, _package=self.source.package)
         return result
+    def get_metadata(self):
+        result = dict()
+        for metadata in self.metadata:
+            for key, val in metadata.iteritems():
+                result[key] = val
+        return result
     def get_title(self, user_dict):
         mapping = (('title', 'full'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'))
         if not hasattr(self, 'default_title'):

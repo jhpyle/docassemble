@@ -10,6 +10,9 @@
     <Directory "/usr/lib/cgi-bin/">
         Options +ExecCGI
     </Directory>
+    <IfDefine DAAllowCrossSite>
+        Header set Access-Control-Allow-Origin "{{CROSSSITEDOMAIN}}"
+    </IfDefine>
     ErrorLog /var/log/apache2/error.log
     CustomLog /var/log/apache2/access.log combined
 </VirtualHost>

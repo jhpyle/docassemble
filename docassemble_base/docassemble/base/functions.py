@@ -2726,6 +2726,10 @@ def interview_list(exclude_invalid=True, action=None, filename=None, session=Non
 
     """
     if this_thread.current_info['user']['is_authenticated']:
+        if action not in (None, 'delete_all', 'delete'):
+            raise DAError("interview_list: invalid action")
+        if action == 'delete' and (filename is None or session is None):
+            raise DAError("interview_list: a filename and session must be provided when delete is the action.")
         return server.user_interviews(user_id=this_thread.current_info['user']['the_user_id'], secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session)
     return None
 

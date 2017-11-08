@@ -4,6 +4,9 @@
     DocumentRoot /var/www/html
     RewriteEngine On
     RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+    <IfDefine DAAllowCrossSite>
+        Header set Access-Control-Allow-Origin "{{CROSSSITEDOMAIN}}"
+    </IfDefine>
     ErrorLog /var/log/apache2/error.log
     CustomLog /var/log/apache2/access.log combined
 </VirtualHost>

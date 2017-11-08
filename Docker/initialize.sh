@@ -375,13 +375,18 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
 	a2dismod remoteip
 	a2disconf docassemble-behindlb
     fi
+    if [ -z ${CROSSSITEDOMAIN+x} ]; then
+	a2disconf docassemble-cors
+    else
+	a2enconf docassemble-cors
+    fi
     a2dissite -q 000-default &> /dev/null
     a2dissite -q default-ssl &> /dev/null
     if [ "${DAHOSTNAME:-none}" != "none" ]; then
 	if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ] || [ "${USELETSENCRYPT:-none}" == "none" ] || [ "${USEHTTPS:-false}" == "false" ]; then
 	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
 		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@' \
-		-e 's@{{CROSSSITEDOMAIN}}@'"${CROSSSITEDOMAIN}"'@' \
+		-e 's@{{CROSSSITEDOMAIN}}@'"${CROSSSITEDOMAIN:-*}"'@' \
 		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@' \
 		/usr/share/docassemble/config/docassemble-ssl.conf.dist > /etc/apache2/sites-available/docassemble-ssl.conf || exit 1
 	    rm -f /etc/letsencrypt/da_using_lets_encrypt
@@ -389,7 +394,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
 	if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ] || [ "${USELETSENCRYPT:-none}" == "none" ] || [ "${USEHTTPS:-false}" == "false" ]; then
 	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
 		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@' \
-		-e 's@{{CROSSSITEDOMAIN}}@'"${CROSSSITEDOMAIN}"'@' \
+		-e 's@{{CROSSSITEDOMAIN}}@'"${CROSSSITEDOMAIN:-*}"'@' \
 		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@' \
 		/usr/share/docassemble/config/docassemble-http.conf.dist > /etc/apache2/sites-available/docassemble-http.conf || exit 1
 	    rm -f /etc/letsencrypt/da_using_lets_encrypt
@@ -397,12 +402,14 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
 	if [ ! -f /etc/apache2/sites-available/docassemble-log.conf ]; then
 	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
 		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@' \
+		-e 's@{{CROSSSITEDOMAIN}}@'"${CROSSSITEDOMAIN:-*}"'@' \
 		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@' \
 		/usr/share/docassemble/config/docassemble-log.conf.dist > /etc/apache2/sites-available/docassemble-log.conf || exit 1
 	fi
 	if [ ! -f /etc/apache2/sites-available/docassemble-redirect.conf ]; then
 	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
 		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@' \
+		-e 's@{{CROSSSITEDOMAIN}}@'"${CROSSSITEDOMAIN:-*}"'@' \
 		-e 's@{{WSGIROOT}}@'"${WSGIROOT}"'@' \
 		/usr/share/docassemble/config/docassemble-redirect.conf.dist > /etc/apache2/sites-available/docassemble-redirect.conf || exit 1
 	fi

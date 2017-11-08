@@ -19,6 +19,7 @@ code: |
   if len(list_of_interviews) > 0:
     list_of_interviews += [dict()]
 ---
+reconsider: True
 table: session_table
 rows: |
   list_of_interviews

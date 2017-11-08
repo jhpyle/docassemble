@@ -6,6 +6,7 @@
   line, not just indicate the line number.
 - The `server_capabilities()` function is now imported by default and
   it reports additional features.
+- The `interview_list()` function now returns interview metadata.
 ### Added
 - Dynamically-generated `fields` items.
 ### Fixed

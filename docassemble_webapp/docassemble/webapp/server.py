@@ -12907,14 +12907,17 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             dictionary = unpack_dictionary(interview_info.dictionary)
         if is_valid:
             interview_title = interview.get_title(dictionary)
+            metadata = interview.get_metadata()
         elif interview_valid:
             interview_title = interview.get_title(dict(_internal=dict()))
+            metadata = interview.get_metadata()
             if 'full' not in interview_title:
                 interview_title['full'] = word("Interview answers cannot be decrypted")
             else:
                 interview_title['full'] += ' - ' + word('interview answers cannot be decrypted')
         else:
             interview_title['full'] = word('Error: interview not found and answers could not be decrypted')
+            metadata = dict()
         if dictionary['_internal']['starttime']:
             utc_starttime = dictionary['_internal']['starttime']
             starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
@@ -12927,7 +12930,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         else:
             utc_modtime = None
             modtime = ''
-        interviews.append({'filename': interview_info.filename, 'session': interview_info.key, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid})
+        interviews.append({'filename': interview_info.filename, 'session': interview_info.key, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid, 'metadata': metadata})
     return interviews
     
 @app.route('/interviews', methods=['GET', 'POST'])
