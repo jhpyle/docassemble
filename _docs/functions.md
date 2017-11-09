@@ -2660,6 +2660,9 @@ The keys are:
   [Playground]s with [GitHub].  See the [`github`] configuration.
 * `pypi` - whether developers have the option of integrating their
   [Playground]s with [PyPI].  See the [`pypi`] configuration.
+* `google_maps` - whether the Google Maps API (used in the [`map_of()`]
+  function and the [`geolocate()`] method) is available.  See the
+  [`google`] configuration.
 
 ## <a name="referring_url"></a>referring_url()
 
@@ -4339,7 +4342,7 @@ $(document).on('daPageLoad', function(){
 [QR code]: https://en.wikipedia.org/wiki/QR_code
 [Profile page]: {{ site.baseurl }}/docs/users.html#profile
 [country code]: http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
-[`task_performed()`]: {{ site.baseurl }}/docs/functions.html#task_performed
+[`task_performed()`]: #task_performed
 [`task_not_yet_performed()`]: #task_not_yet_performed
 [`mark_task_as_performed()`]: #mark_task_as_performed
 [`times_task_performed()`]: #times_task_performed
@@ -4512,3 +4515,6 @@ $(document).on('daPageLoad', function(){
 [GitHub]: https://github.com/
 [`github`]: {{ site.baseurl }}/docs/config.html#github
 [`pypi`]: {{ site.baseurl }}/docs/config.html#pypi
+[`map_of()`]: #map_of
+[`geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate
+[`google`]: {{ site.baseurl }}/docs/config.html#google

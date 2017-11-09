@@ -5,14 +5,45 @@ short_title: Docker
 ---
 
 [Docker] is a good platform for trying out **docassemble** for the
-first time.  It is also ideal in a production environment.  Amazon's
-[EC2 Container Service] can be used to maintain a cluster of
+first time.  It is also ideal in a production environment.
+
+Amazon's [EC2 Container Service] can be used to maintain a cluster of
 **docassemble** web server instances, created from [Docker] images,
 that communicate with a central server.  For information about how to
 install **docassemble** in a multi-server arrangement on
 [EC2 Container Service] ("[ECS]"), see the [scalability] section.
 
-# Installing Docker
+# Choosing where to run Docker
+
+[Docker] can be run on a Windows PC, a Mac, an on-site Linux machinne,
+or a Linux-based virtual machine in the cloud.  Since **docassemble**
+is a web application, the ideal platform is a Linux virtual machine in
+the cloud.  You can test out **docassemble** on a PC or a Mac, but for
+serious, long-term deployment, it is probably worthwhile to run it in
+the cloud.
+
+If you have never deployed a Linux-based virtual machine in the cloud
+before, this might be a good opportunity to learn.  The ability to use
+virtual machines on a cloud provider like [Amazon Web Services] or
+[Microsoft Azure] is a valuable and transferable skill.  Learning how
+to do cloud computing is beyond the scope of this documentation, but
+there are many guides on the internet.  The basic steps of running
+Docker in the cloud are:
+
+1. Create an account with a cloud computing provider.
+2. Start a [sufficiently powerful](#install) virtual machine that runs
+   some flavor of Linux.
+3. Connect to the virtual machine using [SSH] in order to control it
+   using a command line.  This can be a complicated step because most
+   providers use certificates rather than passwords for authentication.
+4. [Install Docker](#install) on the virtual machine.
+
+There are also methods of controlling cloud computing resources from a
+local command line, where you type special commands to deploy [Docker]
+containers.  These can be very useful, but they tend to be more
+complicated to use than the basic [Docker] command line.
+
+# <a name="install"></a>Installing Docker
 
 First, make sure you are running [Docker] on a computer or virtual
 computer with at least 2GB of memory and 20GB of hard drive space.
@@ -55,6 +86,9 @@ Once [Docker] is installed, you can install and run **docassemble** from the com
 To get a command line on Windows, run [Windows PowerShell].
 
 To get a command line on a Mac, launch the [Terminal] application.
+
+To get a command line on a virtual machine in the cloud, follow your
+provider's instructions for using [SSH] to connect to your machine.
 
 ## Starting
 

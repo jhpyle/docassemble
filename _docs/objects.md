@@ -1334,6 +1334,9 @@ If you include `${ pet_rock }` in text, the name of the `Thing` will
 be inserted.  **docassemble** will look for a definition of
 `pet_rock.name.text`.
 
+If you set the `name` attribute of a `Thing` to text, the
+`.name.text` attribute will be set to the text you provided.
+
 ## <a name="Event"></a>Event
 
 An `Event` is a type of [`DAObject`] with the following attributes
@@ -1366,6 +1369,9 @@ then you will create an object with the following built-in attributes:
 
 Referring to a `Person` in the context of a [Mako] template will
 return the output of `.name.full()`.
+
+If you set the `name` attribute of a `Person` to text, the
+`.name.text` attribute will be set to the text you provided.
 
 The following attributes are also used, but undefined by default:
 
@@ -1795,6 +1801,10 @@ The `IndividualName` also uses the attribute `.uses_parts`, which is
 `True` by default.  If `.uses_parts` is set to `False`, then the
 methods of the object fall back on the methods of [`Name`], and the
 individual's name is stored in the attribute `.text`.
+
+If you set the `name` attribute of an `Individual` to text, the
+`.uses_parts` attribute will be set to `False` and `.name.text` will
+be set to the text you provided.
 
 ## <a name="Address"></a>Address
 

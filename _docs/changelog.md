@@ -4,6 +4,24 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.92](https://github.com/jhpyle/docassemble/releases/tag/v0.1.92) - 2017-11-09
+
+### Added
+- The `checkbox export value` option when using `pdf template file`.
+
+### Changed
+- The Markdown to HTML converter now uses the Attribute Lists extension.
+- The `server_capabilities()` function now has a `google_maps` item.
+- When the server is not in `debug` mode, users must be logged in as
+  with administrator or developer privileges to run interviews in
+  `docassemble.base` and `docassemble.demo`.  In the SMS interface,
+  interviews in these packages are always inoperable unless the server
+  is in `debug` mode.
+
+### Fixed
+- The `server_capabilities()` was not recognizing the `enable`
+  settings.
+
 ## [0.1.91](https://github.com/jhpyle/docassemble/releases/tag/v0.1.91) - 2017-11-07
 
 ### Changed

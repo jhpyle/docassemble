@@ -532,6 +532,10 @@ fields, but this tool often assigns incorrect names.  You should go
 through this process _before_ you [generate] the `attachment`
 statement for filling fields in the PDF file.
 
+While it is legal for a PDF file to contain more than one field with
+the same name, please note that **docassemble** is unable to populate
+such fields.  You must give each field in your PDF file a unique name.
+
 When writing the values of the fields, you can use [Mako], but not
 [Markdown].  If you use [Markdown], it will be interpreted literally.
 Checkbox fields will be checked if and only if the value evaluates to
@@ -547,7 +551,9 @@ is usually preferable because it provides an order in which the fields
 should be evaluated; if you only provide a single dictionary, the
 items will be evaluated in a random order.
 
-<a name="editable"></a>By default, the PDF files created by filling in
+### <a name="editable"></a>Making PDF files non-editable
+
+By default, the PDF files created by filling in
 forms in a `pdf template file` can be edited by the user; the fill-in
 form boxes will still exist in the resulting document.
 
@@ -588,6 +594,30 @@ name.  For example:
       - second signature: ${ user.signature }
       - third signature: ${ user.signature }
 {% endhighlight %}
+
+### <a name="checkbox export value"></a>Changing the "export value" of checkbox fields
+
+By default, when populating checkboxes, **docassemble** sets the
+checkbox value to `'Yes'` if the checkbox should be checked.  This is
+the default "Export Value" of a checked checkbox in Adobe Acrobat.
+
+If your PDF file uses a different "Export Value," you can set it
+manually by using an expression like 
+`${ 'affirmative' if likes_toast else 'negative }`.
+
+You can also set the `checkbox export value` option to the value you
+want to use.  This example uses `'yes'` instead of `'Yes'`.
+
+{% include side-by-side.html demo="checkbox-export-value" %}
+
+When `checkbox export value` is set, then if the value of a PDF field
+evaluates to `True`, the `checkbox export value` will be substituted.
+In addition, [`yesno()`] and [`noyes()`] will return the `checkbox
+export value` instead of `'Yes'`.
+
+The `checkbox export value` can contain [Mako].  If the value you want
+to use has special meaning in [YAML], as `yes` does, make sure to
+quote the value.
 
 ## <a name="docx template file"></a>Filling DOCX templates
 
@@ -1234,3 +1264,5 @@ interview, see the [`cache documents` feature].
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [`variable name`]: #variable name
 [`.url_for()`]: {{ site.baseurl }}/docs/objects.html#DAFile.url_for
+[`yesno()`]: {{ site.baseurl }}/docs/functions.html#yesno
+[`noyes()`]: {{ site.baseurl }}/docs/functions.html#noyes
