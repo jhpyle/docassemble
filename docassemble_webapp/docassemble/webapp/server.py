@@ -3744,6 +3744,8 @@ def index():
         #logmessage("index: old_yaml_filename is " + str(old_yaml_filename))
         if old_yaml_filename != yaml_filename or reset_interview:
             #logmessage("index: change in yaml filename detected")
+            if (not DEBUG) and (yaml_filename.startswith('docassemble.base') or yaml_filename.startswith('docassemble.demo')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
+                raise DAError("Not authorized")
             show_flash = False
             session['i'] = yaml_filename
             if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo"):
@@ -13316,6 +13318,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if yaml_filename is None:
             #logmessage("do_sms: request to sms ignored because no interview could be determined")
             return resp
+        if (not DEBUG) and (yaml_filename.startswith('docassemble.base') or yaml_filename.startswith('docassemble.demo')):
+            raise Exception("do_sms: not authorized to run interviews in docassemble.base or docassemble.demo")
         secret = random_string(16)
         uid = get_unique_name(yaml_filename, secret)
         new_temp_user = TempUser()

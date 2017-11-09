@@ -752,6 +752,11 @@ class Thing(DAObject):
             self.name.text = kwargs['name']
             del kwargs['name']
         return super(Thing, self).init(*pargs, **kwargs)
+    def __setattr__(self, attrname, value):
+        if attrname == 'name' and type(value) in [str, unicode]:
+            self.name.text = value
+        else:
+            return super(Thing, self).__setattr__(attrname, value)
     def __str__(self):
         return str(self.name.full())
 
@@ -959,6 +964,10 @@ class Individual(Person):
             self.asset = Asset()
         if 'expense' not in kwargs and not hasattr(self, 'expense'):
             self.expense = Expense()
+        if (not hasattr(self, 'name')) and 'name' in kwargs and type(kwargs['name']) in (str, unicode):
+            self.name = IndividualName()
+            self.name.uses_parts = False
+            self.name.text = kwargs['name']
         return super(Individual, self).init(*pargs, **kwargs)
     def identified(self):
         """Returns True if the individual's name has been set.  Otherwise, returns False."""
@@ -1055,6 +1064,13 @@ class Individual(Person):
             return(capitalize(output))
         else:
             return(output)
+    def __setattr__(self, attrname, value):
+        if attrname == 'name' and type(value) in [str, unicode]:
+            if isinstance(self.name, IndividualName):
+                self.name.uses_parts = False
+            self.name.text = value
+        else:
+            return super(Individual, self).__setattr__(attrname, value)
 
 class ChildList(DAList):
     """Represents a list of children."""

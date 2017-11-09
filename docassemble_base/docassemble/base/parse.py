@@ -2291,6 +2291,10 @@ class Question:
                 target['filename'] = ''
             if 'description' not in target:
                 target['description'] = ''
+            if 'checkbox export value' in target and 'pdf template file' in target:
+                if type(target['checkbox export value']) not in (str, unicode):
+                    raise DAError("A checkbox export value must be a string." + self.idebug(target))
+                options['checkbox_export_value'] = TextObject(target['checkbox export value'])
             if 'initial yaml' in target:
                 if type(target['initial yaml']) is not list:
                     target['initial yaml'] = [target['initial yaml']]
@@ -3209,11 +3213,16 @@ class Question:
                         the_fields = [attachment['options']['fields']]
                     else:
                         the_fields = attachment['options']['fields']
+                    if 'checkbox_export_value' in attachment['options']:
+                        yes_value = attachment['options']['checkbox_export_value'].text(user_dict).strip()
+                    else:
+                        yes_value = 'Yes'
+                    docassemble.base.functions.this_thread.misc['checkbox_export_value'] = yes_value
                     for item in the_fields:
                         for key, val in item.iteritems():
                             answer = val.text(user_dict).rstrip()
                             if answer == 'True':
-                                answer = 'Yes'
+                                answer = yes_value
                             elif answer == 'False':
                                 answer = 'No'
                             elif answer == 'None':

@@ -929,14 +929,14 @@ def url_of(file_reference, **kwargs):
 
 def server_capabilities():
     """Returns a dictionary with true or false values indicating various capabilities of the server."""
-    result = dict(sms=False, google_login=False, facebook_login=False, twitter_login=False, azure_login=False, phone_login=False, voicerss=False, s3=False, azure=False, github=False, pypi=False, googledrive=False)
+    result = dict(sms=False, google_login=False, facebook_login=False, twitter_login=False, azure_login=False, phone_login=False, voicerss=False, s3=False, azure=False, github=False, pypi=False, googledrive=False, google_maps=False)
     if 'twilio' in server.daconfig and type(server.daconfig['twilio']) in [list, dict]:
         if type(server.daconfig['twilio']) is list:
             tconfigs = server.daconfig['twilio']
         else:
             tconfigs = [server.daconfig['twilio']]
         for tconfig in tconfigs:
-            if 'enabled' in tconfig and not tconfig['enabled']:
+            if 'enable' in tconfig and not tconfig['enable']:
                 continue
             result['sms'] = True
             if 'phone login' in server.daconfig:
@@ -944,28 +944,30 @@ def server_capabilities():
             break
     if 'oauth' in server.daconfig and type(server.daconfig['oauth']) is dict:
         if 'google' in server.daconfig['oauth'] and type(server.daconfig['oauth']['google']) is dict:
-            if not ('enabled' in server.daconfig['oauth']['google'] and not server.daconfig['oauth']['google']['enabled']):
+            if not ('enable' in server.daconfig['oauth']['google'] and not server.daconfig['oauth']['google']['enable']):
                 result['google_login'] = True
         if 'facebook' in server.daconfig['oauth'] and type(server.daconfig['oauth']['facebook']) is dict:
-            if not ('enabled' in server.daconfig['oauth']['facebook'] and not server.daconfig['oauth']['facebook']['enabled']):
+            if not ('enable' in server.daconfig['oauth']['facebook'] and not server.daconfig['oauth']['facebook']['enable']):
                 result['facebook_login'] = True
         if 'azure' in server.daconfig['oauth'] and type(server.daconfig['oauth']['azure']) is dict:
-            if not ('enabled' in server.daconfig['oauth']['azure'] and not server.daconfig['oauth']['azure']['enabled']):
+            if not ('enable' in server.daconfig['oauth']['azure'] and not server.daconfig['oauth']['azure']['enable']):
                 result['azure_login'] = True
         if 'twitter' in server.daconfig['oauth'] and type(server.daconfig['oauth']['twitter']) is dict:
-            if not ('enabled' in server.daconfig['oauth']['twitter'] and not server.daconfig['oauth']['twitter']['enabled']):
+            if not ('enable' in server.daconfig['oauth']['twitter'] and not server.daconfig['oauth']['twitter']['enable']):
                 result['twitter_login'] = True
         if 'googledrive' in server.daconfig['oauth'] and type(server.daconfig['oauth']['googledrive']) is dict:
-            if not ('enabled' in server.daconfig['oauth']['googledrive'] and not server.daconfig['oauth']['googledrive']['enabled']):
+            if not ('enable' in server.daconfig['oauth']['googledrive'] and not server.daconfig['oauth']['googledrive']['enable']):
                 result['googledrive'] = True
         if 'github' in server.daconfig['oauth'] and type(server.daconfig['oauth']['github']) is dict:
-            if not ('enabled' in server.daconfig['oauth']['github'] and not server.daconfig['oauth']['github']['enabled']):
+            if not ('enable' in server.daconfig['oauth']['github'] and not server.daconfig['oauth']['github']['enable']):
                 result['github'] = True
     if 'pypi' in server.daconfig and server.daconfig['pypi'] is True:
         result['pypi'] = True
+    if 'google' in server.daconfig and type(server.daconfig['google']) is dict and ('google maps api key' in server.daconfig['google'] or 'api key' in server.daconfig['google']):
+        result['google_maps'] = True
     for key in ['voicerss', 's3', 'azure']:
         if key in server.daconfig and type(server.daconfig[key]) is dict:
-            if not ('enabled' in server.daconfig[key] and not server.daconfig[key]['enabled']):
+            if not ('enable' in server.daconfig[key] and not server.daconfig[key]['enable']):
                 result[key] = True
     return result
 
@@ -1077,10 +1079,11 @@ class ThreadVariables(threading.local):
     gathering_mode = dict()
     current_variable = list()
     open_files = set()
-    markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables'], output_format='html5')
+    markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
     #temporary_resources = set()
     saved_files = dict()
     message_log = list()
+    misc = dict()
     prevent_going_back = False
     def __init__(self, **kw):
         if self.initialized:
@@ -2615,9 +2618,9 @@ def yesno(value, invert=False):
     if value:
         if invert:
             return "No"
-        return "Yes"
+        return this_thread.misc.get('checkbox_export_value', 'Yes')
     if invert:
-        return "Yes"
+        return this_thread.misc.get('checkbox_export_value', 'Yes')
     return "No"
 
 def noyes(value, invert=False):
@@ -2628,11 +2631,11 @@ def noyes(value, invert=False):
     """
     if value:
         if invert:
-            return "Yes"
+            return this_thread.misc.get('checkbox_export_value', 'Yes')
         return "No"
     if invert:
         return "No"
-    return "Yes"
+    return this_thread.misc.get('checkbox_export_value', 'Yes')
 
 def split(text, breaks, index):
     """Splits text at particular breakpoints and returns the given piece."""
