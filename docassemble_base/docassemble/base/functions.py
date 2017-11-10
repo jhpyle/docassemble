@@ -33,7 +33,7 @@ from user_agents import parse as ua_parse
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags']
 
 # debug = False
 # default_dialect = 'us'
@@ -504,6 +504,103 @@ def set_title(title=None, short=None, subtitle=None, tab=None):
     this_thread.internal['subtitle'] = subtitle
     this_thread.internal['tab title'] = tab
 
+class DATagsSet():
+    def add(self, item):
+        """Adds the item to the set"""
+        this_thread.internal['tags'].add(item)
+    def copy(self):
+        """Returns a copy of the set."""
+        return this_thread.internal['tags'].copy()
+    def clear(self):
+        """Removes all the items from the set."""
+        this_thread.internal['tags'] = set()
+    def remove(self, elem):
+        """Removes an element from the set."""
+        this_thread.internal['tags'].remove(elem)
+    def discard(self, elem):
+        """Removes an element from the set if it exists."""
+        this_thread.internal['tags'].discard(elem)
+    def pop(self, *pargs):
+        """Remove and return an arbitrary element from the set"""
+        return this_thread.internal['tags'].pop(*pargs)
+    def __contains__(self, item):
+        return this_thread.internal['tags'].__contains__(item)
+    def __iter__(self):
+        return this_thread.internal['tags'].__iter__()
+    def __len__(self):
+        return this_thread.internal['tags'].__len__()
+    def __reversed__(self):
+        return this_thread.internal['tags'].__reversed__()
+    def __and__(self, operand):
+        return this_thread.internal['tags'].__and__(operand)
+    def __or__(self, operand):
+        return this_thread.internal['tags'].__or__(operand)
+    def __iand__(self, operand):
+        return this_thread.internal['tags'].__iand__(operand)
+    def __ior__(self, operand):
+        return this_thread.internal['tags'].__ior__(operand)
+    def __isub__(self, operand):
+        return this_thread.internal['tags'].__isub__(operand)
+    def __ixor__(self, operand):
+        return this_thread.internal['tags'].__ixor__(operand)
+    def __rand__(self, operand):
+        return this_thread.internal['tags'].__rand__(operand)
+    def __ror__(self, operand):
+        return this_thread.internal['tags'].__ror__(operand)
+    def __hash__(self, the_object):
+        return this_thread.internal['tags'].__hash__(the_object)
+    def __str__(self):
+        return str(this_thread.internal['tags'])
+    def __unicode__(self):
+        return unicode(this_thread.internal['tags'])
+    def union(self, other_set):
+        """Returns a Python set consisting of the elements of current set
+        combined with the elements of the other_set.
+
+        """
+        return this_thread.internal['tags'].union(other_set)
+    def intersection(self, other_set):
+        """Returns a Python set consisting of the elements of the current set
+        that also exist in the other_set.
+
+        """
+        return this_thread.internal['tags'].intersection(other_set)
+    def difference(self, other_set):
+        """Returns a Python set consisting of the elements of the current set
+        that do not exist in the other_set.
+
+        """
+        return this_thread.internal['tags'].difference(other_set)
+    def isdisjoint(self, other_set):
+        """Returns True if no elements overlap between the current set and the
+        other_set.  Otherwise, returns False."""
+        return this_thread.internal['tags'].isdisjoint(other_set)
+    def issubset(self, other_set):
+        """Returns True if the current set is a subset of the other_set.
+        Otherwise, returns False.
+
+        """
+        return this_thread.internal['tags'].issubset(other_set)
+    def issuperset(self, other_set):
+        """Returns True if the other_set is a subset of the current set.
+        Otherwise, returns False.
+
+        """
+        return this_thread.internal['tags'].issuperset(other_set)
+    
+def session_tags():
+    """Returns the set of tags with which the interview and session have
+    been tagged.
+
+    """
+    if 'tags' not in this_thread.internal:
+        this_thread.internal['tags'] = set()
+        for metadata in this_thread.interview.metadata:
+            if 'tags' in metadata and type(metadata['tags']) is list:
+                for tag in metadata['tags']:
+                    this_thread.internal['tags'].add(tag)
+    return DATagsSet()
+    
 def interview_url_action(action, **kwargs):
     """Like interview_url, except it additionally specifies an action.
     The keyword arguments are arguments to the action."""

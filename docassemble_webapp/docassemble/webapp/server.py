@@ -6677,7 +6677,11 @@ def get_history(interview, interview_status):
         has_question = True
     else:
         has_question = False
+    index = 0
     for stage in interview_status.seeking:
+        index += 1
+        if index < len(interview_status.seeking) and 'reason' in interview_status.seeking[index] and interview_status.seeking[index]['reason'] == 'asking' and interview_status.seeking[index]['question'] is stage['question']:
+            continue
         if 'question' in stage and 'reason' in stage and (has_question is False or stage['question'] is not interview_status.question):
             if stage['reason'] == 'initial':
                 output += "          <h5>" + word('Ran initial code') + "</h5>\n"
@@ -6687,6 +6691,8 @@ def get_history(interview, interview_status):
                 output += "          <h5>" + word('Tried to run mandatory code') + "</h5>\n"
             elif stage['reason'] == 'asking':
                 output += "          <h5>" + word('Tried to ask question') + "</h5>\n"
+            elif stage['reason'] == 'considering':
+                output += "          <h5>" + word('Considered asking question') + "</h5>\n"
             if stage['question'].from_source.path != interview.source.path:
                 output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_source.path +")</small></p>\n"
             if stage['question'].source_code is None:
@@ -6818,12 +6824,14 @@ def interview_menu(absolute_urls=False, start_new=False):
             else:
                 package = interview.source.get_package()
             titles = interview.get_title(dict(_internal=dict()))
+            tags = interview.get_tags(dict(_internal=dict()))
             interview_title = titles.get('full', titles.get('short', word('Untitled')))
             subtitle = titles.get('sub', None)
             status_class = None
             subtitle_class = None
         except:
             interview_title = yaml_filename
+            tags = set()
             package = None
             subtitle = None
             status_class = 'dainterviewhaserror'
@@ -6839,7 +6847,7 @@ def interview_menu(absolute_urls=False, start_new=False):
                 url = url_for('index', i=yaml_filename, reset='1')
             else:
                 url = url_for('index', i=yaml_filename)
-        interview_info.append(dict(link=url, title=interview_title, status_class=status_class, subtitle=subtitle, subtitle_class=subtitle_class, filename=yaml_filename, package=package))
+        interview_info.append(dict(link=url, title=interview_title, status_class=status_class, subtitle=subtitle, subtitle_class=subtitle_class, filename=yaml_filename, package=package, tags=sorted(tags)))
     return interview_info
 
 @app.route('/list', methods=['GET'])
@@ -12846,17 +12854,21 @@ def train():
     </script>"""
         return render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True, is_data=is_data)
 
-def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None):
+def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None):
     if user_id is None:
         raise Exception("user_interviews: no user_id provided")
     the_user = get_person(int(user_id), dict())
     if the_user is None:
         raise Exception("user_interviews: user_id " + str(user_id) + " not valid")
     if action == 'delete_all':
-        interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.user_id == user_id).group_by(UserDictKeys.filename, UserDictKeys.key)
         sessions_to_delete = list()
-        for interview_info in interview_query:
-            sessions_to_delete.append((interview_info.key, interview_info.filename))
+        if tag:
+            for interview_info in user_interviews(user_id=user_id, secret=secret, tag=tag):
+                sessions_to_delete.append((interview_info['session'], interview_info['filename']))
+        else:
+            interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.user_id == user_id).group_by(UserDictKeys.filename, UserDictKeys.key)
+            for interview_info in interview_query:
+                sessions_to_delete.append((interview_info.key, interview_info.filename))
         if len(sessions_to_delete):
             for session_id, yaml_filename in sessions_to_delete:
                 manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename)
@@ -12910,9 +12922,11 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         if is_valid:
             interview_title = interview.get_title(dictionary)
             metadata = interview.get_metadata()
+            tags = interview.get_tags(dictionary)
         elif interview_valid:
             interview_title = interview.get_title(dict(_internal=dict()))
             metadata = interview.get_metadata()
+            tags = interview.get_tags(dictionary)
             if 'full' not in interview_title:
                 interview_title['full'] = word("Interview answers cannot be decrypted")
             else:
@@ -12920,6 +12934,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         else:
             interview_title['full'] = word('Error: interview not found and answers could not be decrypted')
             metadata = dict()
+            tags = set()
         if dictionary['_internal']['starttime']:
             utc_starttime = dictionary['_internal']['starttime']
             starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
@@ -12932,7 +12947,9 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         else:
             utc_modtime = None
             modtime = ''
-        interviews.append({'filename': interview_info.filename, 'session': interview_info.key, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid, 'metadata': metadata})
+        if tag is not None and tag not in tags:
+            continue
+        interviews.append({'filename': interview_info.filename, 'session': interview_info.key, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid, 'metadata': metadata, 'tags': tags})
     return interviews
     
 @app.route('/interviews', methods=['GET', 'POST'])
@@ -12942,6 +12959,7 @@ def interview_list():
         is_json = True
     else:
         is_json = False
+    tag = request.args.get('tag', None)
     if 'newsecret' in session:
         #logmessage("interview_list: fixing cookie")
         response = redirect(url_for('interview_list'))
@@ -12955,7 +12973,7 @@ def interview_list():
         secret = str(secret)
     #logmessage("interview_list: secret is " + str(secret))
     if 'action' in request.args and request.args.get('action') == 'delete_all':
-        num_deleted = user_interviews(user_id=current_user.id, secret=secret, action='delete_all')
+        num_deleted = user_interviews(user_id=current_user.id, secret=secret, action='delete_all', tag=tag)
         if num_deleted > 0:
             flash(word("Deleted interviews"), 'success')
         if is_json:
@@ -12981,7 +12999,7 @@ def interview_list():
         exclude_invalid = False
     else:
         exclude_invalid = True
-    interviews = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=exclude_invalid)
+    interviews = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=exclude_invalid, tag=tag)
     if interviews is None:
         raise Exception("interview_list: could not obtain list of interviews")
     if is_json:
@@ -13002,9 +13020,14 @@ def interview_list():
     script += global_js
     if re.search(r'user/register', str(request.referrer)) and len(interviews) == 1:
         return redirect(url_for('index', i=interviews[0]['filename'], session=interviews[0]['session'], from_list=1))
+    tags_used = set()
+    for interview in interviews:
+        for the_tag in interview['tags']:
+            if the_tag != tag:
+                tags_used.add(the_tag)
     interview_page_title = word(daconfig.get('interview page title', 'Interviews'))
     title = word(daconfig.get('interview page heading', 'Resume an interview'))
-    argu = dict(version_warning=version_warning, extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title, numinterviews=len(interviews), interviews=sorted(interviews, key=valid_date_key))
+    argu = dict(version_warning=version_warning, extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title, tags_used=sorted(tags_used) if len(tags_used) else None, numinterviews=len(interviews), interviews=sorted(interviews, key=valid_date_key), tag=tag)
     if 'interview page template' in daconfig and daconfig['interview page template']:
         the_page = docassemble.base.functions.package_template_filename(daconfig['interview page template'])
         if the_page is None:

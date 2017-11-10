@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.93]
+### Added
+- Interview tags system and the `session_tags()` function.
+
 ## [0.1.92] - 2017-11-09
 ### Added
 - The `checkbox export value` option when using `pdf template file`.

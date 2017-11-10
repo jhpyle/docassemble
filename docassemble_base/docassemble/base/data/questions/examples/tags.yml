@@ -1,0 +1,24 @@
+metadata:
+  title: Tags
+  documentation: "https://docassemble.org/docs/functions.html#session_tags"
+  example start: 2
+  example end: 4
+  tags:
+    - foo
+    - bar
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  session_tags().add('grapes')
+---
+mandatory: True
+question: Go on
+field: go_on
+---
+mandatory: True
+question: Tags
+subquestion: |
+  `${ session_tags() }`

@@ -9,6 +9,9 @@ metadata:
     - name: Jonathan Pyle
       organization: none
   revision_date: 2017-05-26
+  tags:
+    - demo
+    - legal
 comment: |
   A "metadata" block contains information about the interview, such as
   the title of the interview as displayed in the navigation bar.

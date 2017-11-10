@@ -1514,3 +1514,7 @@ span.dainterviewsubtitle {
 /*     width: 100%; */
 /*     height: 80vh; */
 /* } */
+
+.da-label {
+    line-height: 2.1;
+}

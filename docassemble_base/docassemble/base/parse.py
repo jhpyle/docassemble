@@ -1885,9 +1885,11 @@ class Question:
                                         raise DAError("The keys of '" + key + "' must be 'variable' and 'is.'" + self.idebug(data))
                                 elif type(field[key]) is list:
                                     raise DAError("The keys of '" + key + "' cannot be a list" + self.idebug(data))
-                                else:
+                                elif type(field[key]) in (str, unicode):
                                     field_info['extras']['show_if_var'] = safeid(field[key])
                                     field_info['extras']['show_if_val'] = TextObject('True')
+                                else:
+                                    raise DAError("Invalid variable name in show if/hide if")
                                 if key == 'show if':
                                     field_info['extras']['show_if_sign'] = 1
                                 else:
@@ -2044,6 +2046,8 @@ class Question:
                             #logmessage("source_code is " + source_code)
                             field_info['selections'] = {'compute': compile(source_code, '', 'eval'), 'sourcecode': source_code}
                         if 'saveas' in field_info:
+                            if type(field_info['saveas']) not in (str, unicode):
+                                raise DAError("Invalid variable name " + repr(field_info['saveas']) + "." + self.idebug(data))
                             self.fields.append(Field(field_info))
                             if 'type' in field_info:
                                 if field_info['type'] in ['checkboxes', 'object_checkboxes']:
@@ -3446,6 +3450,16 @@ class Interview:
             for key, val in metadata.iteritems():
                 result[key] = val
         return result
+    def get_tags(self, user_dict):
+        if 'tags' in user_dict['_internal']:
+            return user_dict['_internal']['tags']
+        else:
+            tags = set()
+            for metadata in self.metadata:
+                if 'tags' in metadata and type(metadata['tags']) is list:
+                    for tag in metadata['tags']:
+                        tags.add(tag)
+            return tags
     def get_title(self, user_dict):
         mapping = (('title', 'full'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'))
         if not hasattr(self, 'default_title'):
@@ -4056,6 +4070,8 @@ class Interview:
                         question = the_question.follow_multiple_choice(user_dict, interview_status)
                     else:
                         question = the_question
+                    if debug:
+                        seeking.append({'question': question, 'reason': 'considering'})
                     if len(question.condition) > 0:
                         if is_generic:
                             if the_x != 'None':
@@ -4733,6 +4749,9 @@ def exec_with_trap(the_question, the_dict):
         cl, exc, tb = sys.exc_info()
         line_with_error = traceback.extract_tb(tb)[-1][1]
         if type(line_with_error) is int and line_with_error > 0:
-            e.da_line_with_error = the_question.sourcecode.splitlines()[line_with_error - 1]
+            try:
+                e.da_line_with_error = the_question.sourcecode.splitlines()[line_with_error - 1]
+            except:
+                pass
         e.traceback = traceback.format_exc()
         raise e
