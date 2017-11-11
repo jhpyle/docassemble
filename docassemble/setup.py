@@ -4,7 +4,7 @@ import os
 from setuptools import setup, find_packages
 
 setup(name='docassemble',
-      version='0.1.92',
+      version='0.1.93',
       description=('A system for assembling documents from templates while automatically querying a user for necessary information.'),
       author='Jonathan Pyle',
       author_email='jhpyle@gmail.com',
