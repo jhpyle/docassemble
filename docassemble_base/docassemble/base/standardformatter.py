@@ -825,7 +825,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     for key in ['min', 'max']:
                         if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                             #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
-                            validation_rules['rules'][the_saveas][key] = int(status.extras[key][field.number])
+                            validation_rules['rules'][the_saveas][key] = float(status.extras[key][field.number])
                             if key == 'min':
                                 validation_rules['messages'][the_saveas][key] = word("You need to enter a number that is at least") + " " + str(status.extras[key][field.number])
                             elif key == 'max':

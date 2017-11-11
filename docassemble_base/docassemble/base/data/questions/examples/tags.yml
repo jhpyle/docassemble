@@ -2,23 +2,44 @@ metadata:
   title: Tags
   documentation: "https://docassemble.org/docs/functions.html#session_tags"
   example start: 2
-  example end: 4
-  tags:
-    - foo
-    - bar
+  example end: 5
 ---
 modules:
   - docassemble.base.util
+---
+metadata:
+  tags:
+    - apples
+    - oranges
+---
+mandatory: True
+question: Tags
+subquestion: |
+  The tags are:
+
+  % for tag in session_tags():
+  * ${ tag }
+  % endfor
+
+  Check your
+  [interview list](${ url_of('interviews') })
+  to see these tags.
+field: first_screen_done
 ---
 mandatory: True
 code: |
   session_tags().add('grapes')
 ---
 mandatory: True
-question: Go on
-field: go_on
----
-mandatory: True
 question: Tags
 subquestion: |
-  `${ session_tags() }`
+  The tags are:
+
+  % for tag in session_tags():
+  * ${ tag }
+  % endfor
+
+  Check your
+  [interview list](${ url_of('interviews') })
+  to see how these tags
+  have changed.

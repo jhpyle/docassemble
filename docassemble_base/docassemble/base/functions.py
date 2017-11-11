@@ -1745,7 +1745,11 @@ def verb_present_en(*pargs, **kwargs):
         new_args.append(unicode(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
-    return pattern.en.conjugate(*new_args, **kwargs)
+    output = pattern.en.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
     
 def verb_past_en(*pargs, **kwargs):
     new_args = list()
@@ -1753,21 +1757,37 @@ def verb_past_en(*pargs, **kwargs):
         new_args.append(arg)
     if len(new_args) < 2:
         new_args.append('3sgp')
-    return pattern.en.conjugate(*new_args, **kwargs)
+    output = pattern.en.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
 
 def noun_plural_en(*pargs, **kwargs):
     noun = noun_singular_en(pargs[0])
     if len(pargs) >= 2 and pargs[1] == 1:
         return unicode(noun)
-    return pattern.en.pluralize(unicode(noun))
+    output = pattern.en.pluralize(unicode(noun))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
 
 def noun_singular_en(*pargs, **kwargs):
     if len(pargs) >= 2 and pargs[1] != 1:
         return pargs[0]
-    return pattern.en.singularize(unicode(pargs[0]))
+    output = pattern.en.singularize(unicode(pargs[0]))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
 
 def indefinite_article_en(*pargs, **kwargs):
-    return pattern.en.article(*pargs, **kwargs) + " " + unicode(pargs[0])
+    output = pattern.en.article(*pargs, **kwargs) + " " + unicode(pargs[0])
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
 
 language_functions = {
     'in_the': {
@@ -2490,7 +2510,7 @@ def single_paragraph(text):
 
 def quote_paragraphs(text):
     """Adds Markdown to quote all paragraphs in the text."""
-    return '> ' + single_newline.sub('\n> ', text.strip())
+    return '> ' + single_newline.sub('\n> ', unicode(text).strip())
 
 def task_performed(task):
     """Returns True if the task has been performed at least once, otherwise False."""
@@ -2736,7 +2756,7 @@ def noyes(value, invert=False):
 
 def split(text, breaks, index):
     """Splits text at particular breakpoints and returns the given piece."""
-    text = re.sub(r'[\n\r]+', "\n", unicode(text.strip()))
+    text = re.sub(r'[\n\r]+', "\n", unicode(text).strip())
     if type(breaks) is not list:
         breaks = [breaks]
     lastbreakpoint = 0

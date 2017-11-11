@@ -102,6 +102,26 @@ comment: |
   Court) are imported through the docassemble.base.legal module.
   (See the "modules" block above.)
 ---
+generic object: Individual
+sets: x.child
+code: |
+  x.initializeAttribute('child', ChildList)
+---
+generic object: Individual
+sets: x.income
+code: |
+  x.initializeAttribute('income', Income)
+---
+generic object: Individual
+sets: x.asset
+code: |
+  x.initializeAttribute('asset', Asset)
+---
+generic object: Individual
+sets: x.expense
+code: |
+  x.initializeAttribute('expense', Expense)
+---
 mandatory: true
 code: |
   case.court = court

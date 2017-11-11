@@ -520,6 +520,11 @@ class IndividualName(Name):
                 names.append(self.middle)
         if hasattr(self, 'last') and len(self.last):
             names.append(self.last)
+        else:
+            if hasattr(self, 'paternal_surname'):
+                names.append(self.paternal_surname)
+            if hasattr(self, 'maternal_surname'):
+                names.append(self.maternal_surname)
         if hasattr(self, 'suffix') and use_suffix and len(self.suffix):
             names.append(self.suffix)
         return(" ".join(names))
@@ -901,25 +906,25 @@ class Person(DAObject):
         """Given a verb like "eat," returns "did you eat" or "did John Smith eat,"
         depending on whether the person is the user."""
         if self == this_thread.user:
-            return(did_you(the_verb, **kwargs))
+            return did_you(the_verb, **kwargs)
         else:
-            return(did_a_b(self.name, the_verb, **kwargs))
+            return did_a_b(self.name, the_verb, **kwargs)
     def were_question(self, the_target, **kwargs):
         """Given a target like "married", returns "were you married" or "was
         John Smith married," depending on whether the person is the
         user."""
         if self == this_thread.user:
-            return(were_you(the_target, **kwargs))
+            return were_you(the_target, **kwargs)
         else:
-            return(was_a_b(self.name, the_target, **kwargs))
+            return was_a_b(self.name, the_target, **kwargs)
     def have_question(self, the_target, **kwargs):
         """Given a target like "", returns "have you married" or "has
         John Smith married," depending on whether the person is the
         user."""
         if self == this_thread.user:
-            return(have_you(the_target, **kwargs))
+            return have_you(the_target, **kwargs)
         else:
-            return(has_a_b(self.name, the_target, **kwargs))
+            return has_a_b(self.name, the_target, **kwargs)
     def does_verb(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "eat" or "eats"
         depending on whether the person is the user."""
@@ -928,9 +933,9 @@ class Person(DAObject):
         else:
             tense = '3sg'
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
-            return verb_past(the_verb, tense)
+            return verb_past(the_verb, tense, **kwargs)
         else:
-            return verb_present(the_verb, tense)
+            return verb_present(the_verb, tense, **kwargs)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except uses the past tense of the verb."""
         if self == this_thread.user:
@@ -938,7 +943,7 @@ class Person(DAObject):
         else:
             tense = "3sgp"
         #logmessage(the_verb + " " + tense)
-        return verb_past(the_verb, tense)
+        output = verb_past(the_verb, tense, **kwargs)
     def subject(self, **kwargs):
         """Returns "you" or the person's name, depending on whether the 
         person is the user."""
@@ -956,14 +961,14 @@ class Individual(Person):
     def init(self, *pargs, **kwargs):
         if 'name' not in kwargs and not hasattr(self, 'name'):
             self.name = IndividualName()
-        if 'child' not in kwargs and not hasattr(self, 'child'):
-            self.child = ChildList()
-        if 'income' not in kwargs and not hasattr(self, 'income'):
-            self.income = Income()
-        if 'asset' not in kwargs and not hasattr(self, 'asset'):
-            self.asset = Asset()
-        if 'expense' not in kwargs and not hasattr(self, 'expense'):
-            self.expense = Expense()
+        # if 'child' not in kwargs and not hasattr(self, 'child'):
+        #     self.child = ChildList()
+        # if 'income' not in kwargs and not hasattr(self, 'income'):
+        #     self.income = Income()
+        # if 'asset' not in kwargs and not hasattr(self, 'asset'):
+        #     self.asset = Asset()
+        # if 'expense' not in kwargs and not hasattr(self, 'expense'):
+        #     self.expense = Expense()
         if (not hasattr(self, 'name')) and 'name' in kwargs and type(kwargs['name']) in (str, unicode):
             self.name = IndividualName()
             self.name.uses_parts = False
@@ -1165,8 +1170,8 @@ class OfficeList(DAList):
 class Organization(Person):
     """Represents a company or organization."""
     def init(self, *pargs, **kwargs):
-        self.initializeAttribute('office', OfficeList)
         if 'offices' in kwargs:
+            self.initializeAttribute('office', OfficeList)
             if type(kwargs['offices']) is list:
                 for office in kwargs['offices']:
                     if type(office) is dict:
@@ -1186,19 +1191,20 @@ class Organization(Person):
         return True
     def _map_info(self):
         the_response = list()
-        for office in self.office:
-            if (office.location.gathered and office.location.known) or office.geolocate():
-                if self.name.defined():
-                    the_info = self.name.full()
-                else:
-                    the_info = capitalize(self.object_name())
-                the_info += " [NEWLINE] " + office.location.description
-                this_response = {'latitude': office.location.latitude, 'longitude': office.location.longitude, 'info': the_info}
-                if hasattr(office, 'icon'):
-                    this_response['icon'] = office.icon
-                elif hasattr(self, 'icon'):
-                    this_response['icon'] = self.icon
-                the_response.append(this_response)
+        if hasattr(self.office):
+            for office in self.office:
+                if (office.location.gathered and office.location.known) or office.geolocate():
+                    if self.name.defined():
+                        the_info = self.name.full()
+                    else:
+                        the_info = capitalize(self.object_name())
+                    the_info += " [NEWLINE] " + office.location.description
+                    this_response = {'latitude': office.location.latitude, 'longitude': office.location.longitude, 'info': the_info}
+                    if hasattr(office, 'icon'):
+                        this_response['icon'] = office.icon
+                    elif hasattr(self, 'icon'):
+                        this_response['icon'] = self.icon
+                    the_response.append(this_response)
         if len(the_response):
             return the_response
         return None

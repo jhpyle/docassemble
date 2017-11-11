@@ -1653,6 +1653,7 @@ class Question:
         if 'choices' in data or 'buttons' in data or 'dropdown' in data or 'combobox' in data:
             if 'field' in data:
                 uses_field = True
+                data['field'] = data['field'].strip()
             else:
                 uses_field = False
             if 'shuffle' in data and data['shuffle']:
@@ -1681,6 +1682,7 @@ class Question:
                     field_data['has_code'] = True
                 self.question_variety = 'buttons'
             if uses_field:
+                data['field'] = data['field'].strip()
                 if invalid_variable_name(data['field']):
                     raise DAError("Missing or invalid variable name " + repr(data['field']) + "." + self.idebug(data))
                 if self.scan_for_variables:
@@ -1997,6 +1999,7 @@ class Question:
                             elif key == 'field':
                                 if 'label' not in field:
                                     raise DAError("If you use 'field' to indicate a variable in a 'fields' section, you must also include a 'label.'" + self.idebug(data))
+                                field[key] = field[key].strip()
                                 if invalid_variable_name(field[key]):
                                     raise DAError("Missing or invalid variable name " + repr(field[key]) + "." + self.idebug(data))
                                 field_info['saveas'] = field[key]                                
@@ -2008,6 +2011,7 @@ class Question:
                                 if 'label' in field_info:
                                     raise DAError("Syntax error: field label '" + str(key) + "' overwrites previous label, '" + str(field_info['label'].original_text) + "'" + self.idebug(data))
                                 field_info['label'] = TextObject(definitions + interpret_label(key), names_used=self.mako_names)
+                                field[key] = field[key].strip()
                                 if invalid_variable_name(field[key]):
                                     raise DAError("Missing or invalid variable name " + repr(field[key]) + " for key " + repr(key) + "." + self.idebug(data))
                                 field_info['saveas'] = field[key]
@@ -2064,6 +2068,7 @@ class Question:
                                     if 'extras' in field_info and 'ml_group' in field_info['extras']:
                                         self.interview.mlfields[field_info['saveas']]['ml_group'] = field_info['extras']['ml_group']
                                     if re.search(r'\.text$', field_info['saveas']):
+                                        field_info['saveas'] = field_info['saveas'].strip()
                                         if invalid_variable_name(field_info['saveas']):
                                             raise DAError("Missing or invalid variable name " + repr(field_info['saveas']) + "." + self.idebug(data))
                                         field_info['saveas'] = re.sub(r'\.text$', '', field_info['saveas'])
@@ -2126,12 +2131,14 @@ class Question:
                     #     field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
                     elif key == 'show if':
                         field_info['saveas_code'] = compile(field[key], '', 'eval')
+                        field[key] = field[key].strip()
                         if invalid_variable_name(field[key]):
                             raise DAError("Missing or invalid variable name " + repr(field[key]) + "." + self.idebug(data))
                         field_info['saveas'] = field[key]
                     elif key == 'field':
                         if 'label' not in field:
                             raise DAError("If you use 'field' to indicate a variable in a 'review' section, you must also include a 'label.'" + self.idebug(data))
+                        field[key] = field[key].strip()
                         if invalid_variable_name(field[key]):
                             raise DAError("Missing or invalid variable name " + repr(field[key]) + " ." + self.idebug(data))
                         field_info['saveas'] = field[key]
@@ -2141,6 +2148,7 @@ class Question:
                         field_info['label'] = TextObject(definitions + interpret_label(field[key]), names_used=self.mako_names)
                     else:
                         field_info['label'] = TextObject(definitions + interpret_label(key), names_used=self.mako_names)
+                        field[key] = field[key].strip()
                         if invalid_variable_name(field[key]):
                             raise DAError("Missing or invalid variable name " + repr(field[key]) + "." + self.idebug(data))
                         field_info['saveas'] = field[key]

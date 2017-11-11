@@ -1,14 +1,19 @@
 metadata:
   title: Nested for loops
   documentation: "https://docassemble.org/docs/groups.html"
-  example start: 12
-  example end: 12
+  example start: 13
+  example end: 13
 ---
 modules:
   - docassemble.base.legal
 ---
 objects:
   - person: PartyList
+---
+generic object: Individual
+sets: x.child
+code: |
+  x.initializeAttribute('child', ChildList)
 ---
 generic object: Individual
 sets: x.allergy
