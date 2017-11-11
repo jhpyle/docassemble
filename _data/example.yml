@@ -7693,6 +7693,9 @@
   columns:
     - Fruit Name: row_item.name
     - Seeds: row_item.seeds
+"tags": |-
+  modules:
+    - docassemble.base.util
 "target-code": |-
   question: |
     What is your favorite food?

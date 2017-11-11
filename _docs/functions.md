@@ -1579,6 +1579,23 @@ It accepts any of four optional keyword arguments:
 For more information about titles, see the documentation for the
 [`metadata` initial block].
 
+## <a name="session_tags"></a>session_tags()
+
+Every interview and interview session can be "tagged" with "tags."  If
+you include a `tags` directive in your interview's [`metadata`], and
+the `tags` directive is a [list], then you will define the tags for
+the interview itself.  These tags can be seen on the
+[list of available interviews] that can be started (`/list`) and on
+the list of saved interviews that can be resumed (`/interviews`).
+
+The tags associated with an interview session can be edited using
+[Python] code.  The function `session_tags()` returns a [Python set]
+representing the tags.  It isn't technically a [Python set], but it
+works just like one, and it allows you to use the read and write the
+tags associated with the interview session.
+
+{% include side-by-side.html demo="tags" %}
+
 # <a name="browser"></a>Functions for determining information about the browser
 
 ## <a name="language_from_browser"></a>language_from_browser()
@@ -4493,6 +4510,7 @@ $(document).on('daPageLoad', function(){
 [`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
 [locale]: #langlocale
 [`metadata` initial block]: {{ site.baseurl }}/docs/initial.html#metadata
+[`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
 [`console.log` JavaScript function]: https://developer.mozilla.org/en-US/docs/Web/API/Console/log
@@ -4518,3 +4536,4 @@ $(document).on('daPageLoad', function(){
 [`map_of()`]: #map_of
 [`geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate
 [`google`]: {{ site.baseurl }}/docs/config.html#google
+[list of available interviews]: {{ site.baseurl }}/docs/config.html#dispatch

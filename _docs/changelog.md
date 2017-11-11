@@ -4,6 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.93](https://github.com/jhpyle/docassemble/releases/tag/v0.1.93) - 2017-11-10
+
+### Changed
+- The `Individual` class no longer initializes the `child`, `income`,
+  `asset`, and `expense` attributes, but there are `objects` blocks in
+  basic-questions.yml that will initialize these attributes.
+- The `Organization` class no longer initializes the `office`
+  attribute, unless `offices` is provided as a keyword parameter
+  during object construction.
+
+### Added
+- Interview tags system and the `session_tags()` function.
+
 ## [0.1.92](https://github.com/jhpyle/docassemble/releases/tag/v0.1.92) - 2017-11-09
 
 ### Added
