@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.1.95] - 2017-11-12
+### Fixed
+- Bug in 0.1.94 regarding detection of variable names.
+
+## [0.1.94] - 2017-11-12
+### Fixed
+- Improved detection of variable names in code.
+
 ## [0.1.93] - 2017-11-10
 ### Changed
 - The `Individual` class no longer initializes the `child`, `income`,
