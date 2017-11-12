@@ -393,6 +393,19 @@ on the screen.
 
 {% include side-by-side.html demo="background_action_fields" %}
 
+<a name="assembly"></a>The following example shows how to assemble a
+[document] in the background and then refresh the user's screen when
+the document has been assembled.
+
+{% include side-by-side.html demo="assemble-in-background" %}
+
+Note that the variable `the_document` only comes into existence in the
+background task, not in the interview itself.  The name of the file
+that the interview uses is `the_letter`.  The name `the_document`
+refers to a [`DAFileCollection`] object, which is passed from the
+background task to the user interview, and in the user interview, the
+object is known as `the_letter`.
+
 ## Comparison with scheduled tasks
 
 **docassemble** also has a [scheduled tasks] feature, which is similar
@@ -1064,3 +1077,5 @@ privileges and user identity of the [cron user].
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [`flash()`]: {{ site.baseurl }}/docs/functions.html#flash
+[document]: {{ site.baseurl }}/docs/documents.html
+[`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection

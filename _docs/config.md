@@ -421,13 +421,15 @@ bar might not work well with every theme.  You can override these
 colors with [CSS] like the following:
 
 {% highlight css %}
-button.backbuttoncolor  { color: #539ac7;    }
-span.daactivetext       { color: yellow;     }
-span.daactivetext:hover { color: #ffff99;    }
-i.chat-active           { color: #45bf41;    }
-i.chat-active:hover     { color: #55cf51;    }
-i.chat-inactive         { color: #4f4f4f;    }
-i.chat-inactive:hover   { color: #5f5f5f;    }
+.backbuttoncolor        { color: #539ac7;        }
+.backbuttoncolor:hover  { color: #539ac7;
+                          text-decoration: none; }
+span.daactivetext       { color: yellow;         }
+span.daactivetext:hover { color: #ffff99;        }
+i.chat-active           { color: #45bf41;        }
+i.chat-active:hover     { color: #55cf51;        }
+i.chat-inactive         { color: #4f4f4f;        }
+i.chat-inactive:hover   { color: #5f5f5f;        }
 {% endhighlight %}
 
 These styles refer to the blue back button, the yellow "Help" button
