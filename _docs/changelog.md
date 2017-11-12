@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.94](https://github.com/jhpyle/docassemble/releases/tag/v0.1.94) - 2017-11-12
+
+### Fixed
+- Improved detection of variable names in code.
+
 ## [0.1.93](https://github.com/jhpyle/docassemble/releases/tag/v0.1.93) - 2017-11-10
 
 ### Changed
