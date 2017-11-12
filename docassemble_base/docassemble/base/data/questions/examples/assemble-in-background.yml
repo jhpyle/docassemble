@@ -1,0 +1,51 @@
+metadata:
+  title: Assemble a document in the background
+  example start: 1
+  example end: 8
+  documentation: "https://docassemble.org/docs/background.html#ui_notification"
+---
+mandatory: True
+code: |
+  need(sweetheart)
+  if the_task.ready():
+    final_screen
+  else:
+    waiting_screen
+---
+question: |
+  What is the name of your
+  sweetheart?
+fields:
+  - Name: sweetheart
+---
+code: |
+  the_task = background_action('assembly_task', 'refresh')
+---
+event: assembly_task
+code: |
+  background_response_action('assembly_done', document=the_document)
+---
+attachment:
+  name: A letter
+  filename: letter
+  variable name: the_document
+  content: |
+    ${ sweetheart }, will you
+    marry me?
+---
+event: assembly_done
+code: |
+  the_letter = action_argument('document')
+  background_response()
+---
+event: waiting_screen
+question: |
+  Please wait...
+---
+event: final_screen
+question: |
+  Document created
+subquestion: |
+  Don't read this letter, just send
+  it to ${ sweetheart } immediately.
+attachment code: the_letter

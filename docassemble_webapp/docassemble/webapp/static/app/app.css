@@ -84,6 +84,7 @@ button.btn-da-custom {
     white-space: normal;
     text-align: center;
     vertical-align: middle;
+    margin-bottom: 5px;
 }
 
 .checkbox_count {
@@ -191,8 +192,14 @@ a.sourceactive {
     margin-left: -5px;
 }
 
-button.backbuttoncolor {
+.backbuttoncolor {
     color: #539ac7;
+}
+
+.backbuttoncolor:hover,
+.backbuttoncolor:focus {
+    color: #539ac7;
+    text-decoration: none;
 }
 
 @media (max-width: 768px) {
@@ -1518,3 +1525,11 @@ span.dainterviewsubtitle {
 .da-label {
     line-height: 2.1;
 }
+
+.playground-back {
+    margin: 0;
+    padding: 0;
+    margin-left: -5px;
+}
+
+    

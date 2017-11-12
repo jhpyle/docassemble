@@ -53,7 +53,6 @@
 "Configure": Null
 "Confirmation Date": Null
 "Connected to Google Drive": Null
-"Considered asking question": Null
 "Continue": Null
 "Control": Null
 "could not connect to Google Drive": Null
@@ -90,6 +89,7 @@
 "E-mail these documents": Null
 "E-mail this document": Null
 "E-mail was sent to": Null
+"(embedded question, source code not available)": Null
 "Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.": Null
 "Enter code": Null
 "Error accessing Google Drive": Null
@@ -130,6 +130,7 @@
 "GitHub integration was successfully disconnected.": Null
 "GitHub": Null
 "GitHub URL": Null
+"Go back to the main Playground page": Null
 "Go back to the previous question": Null
 "Go": Null
 "Google Drive folder was set.": Null
@@ -200,7 +201,6 @@
 "Name of new privilege is required": Null
 "Name of new privilege": Null
 "Names defined": Null
-"Needed definition of": Null
 "New chat connection from": Null
 "New conversation above": Null
 "New conversation below": Null
@@ -294,7 +294,6 @@
 "question": Null
 "Question": Null
 "quit": Null
-"Ran initial code": Null
 "README file": Null
 "Reason for needing developer account (optional)": Null
 "Reconfigure": Null
@@ -403,9 +402,6 @@
 "Training data were successfully imported.": Null
 "Train": Null
 "Translate": Null
-"Tried to ask mandatory question": Null
-"Tried to ask question": Null
-"Tried to run mandatory code": Null
 "true": Null
 "Turn off chat": Null
 "Twice Per Month": Null
@@ -470,7 +466,6 @@
 "Valid characters are: A-Z, a-z, 0-9": Null
 "Variables and values": Null
 "Variables as JSON": Null
-"Variables defined": Null
 "Variables": Null
 "Verification code": Null
 "Verify": Null

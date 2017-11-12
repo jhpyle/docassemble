@@ -6678,36 +6678,34 @@ def get_history(interview, interview_status):
     else:
         has_question = False
     index = 0
-    for stage in interview_status.seeking:
-        index += 1
-        if index < len(interview_status.seeking) and 'reason' in interview_status.seeking[index] and interview_status.seeking[index]['reason'] == 'asking' and interview_status.seeking[index]['question'] is stage['question']:
-            continue
-        if 'question' in stage and 'reason' in stage and (has_question is False or stage['question'] is not interview_status.question):
-            if stage['reason'] == 'initial':
-                output += "          <h5>" + word('Ran initial code') + "</h5>\n"
-            elif stage['reason'] == 'mandatory question':
-                output += "          <h5>" + word('Tried to ask mandatory question') + "</h5>\n"
-            elif stage['reason'] == 'mandatory code':
-                output += "          <h5>" + word('Tried to run mandatory code') + "</h5>\n"
-            elif stage['reason'] == 'asking':
-                output += "          <h5>" + word('Tried to ask question') + "</h5>\n"
-            elif stage['reason'] == 'considering':
-                output += "          <h5>" + word('Considered asking question') + "</h5>\n"
-            if stage['question'].from_source.path != interview.source.path:
-                output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_source.path +")</small></p>\n"
-            if stage['question'].source_code is None:
-                output += word('unavailable')
-            else:
-                output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
-            # if len(stage['question'].fields_used):
-            #     output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].fields_used)]) + "</p>"
-            # if len(stage['question'].names_used):
-            #     output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].names_used)]) + "</p>"
-            # if len(stage['question'].mako_names):
-            #     output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].mako_names)]) + "</p>"
-        elif 'variable' in stage:
-            output += "          <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
-#                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.functions.pickleable_objects(user_dict))]) + '</p>' + "\n"
+    if len(interview_status.seeking):
+        starttime = interview_status.seeking[0]['time']
+        for stage in interview_status.seeking:
+            index += 1
+            if index < len(interview_status.seeking) and 'reason' in interview_status.seeking[index] and interview_status.seeking[index]['reason'] == 'asking' and interview_status.seeking[index]['question'] is stage['question']:
+                continue
+            the_time = " at %.5fs" % (stage['time'] - starttime)
+            if 'question' in stage and 'reason' in stage and (has_question is False or stage['question'] is not interview_status.question):
+                if stage['reason'] == 'initial':
+                    output += "          <h5>Ran initial code" + the_time + "</h5>\n"
+                elif stage['reason'] == 'mandatory question':
+                    output += "          <h5>Tried to ask mandatory question" + the_time + "</h5>\n"
+                elif stage['reason'] == 'mandatory code':
+                    output += "          <h5>Tried to run mandatory code" + the_time + "</h5>\n"
+                elif stage['reason'] == 'asking':
+                    output += "          <h5>Tried to ask question" + the_time + "</h5>\n"
+                elif stage['reason'] == 'considering':
+                    output += "          <h5>Considered asking question" + the_time + "</h5>\n"
+                if stage['question'].from_source.path != interview.source.path:
+                    output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_source.path +")</small></p>\n"
+                if stage['question'].source_code is None:
+                    output += word('(embedded question, source code not available)')
+                else:
+                    output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
+            elif 'variable' in stage:
+                output += "          <h5>Needed definition of <code>" + str(stage['variable']) + "</code>" + the_time + "</h5>\n"
+            elif 'done' in stage:
+                output += "          <h5>Completed processing " + the_time + "</h5>\n"
     return output
 
 def is_mobile_or_tablet():
@@ -10559,7 +10557,8 @@ def playground_files():
         any_files = True
     else:
         any_files = False
-    back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
+    #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
+    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="backbuttoncolor navbar-btn playground-back" type="submit" title="' + word("Go back to the main Playground page") + '"><i class="glyphicon glyphicon-chevron-left dalarge"></i><span class="dalargefix">' + word('Back') + '</span></a></span>')
     return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + ('damarkdown' if mode == 'markdown' else mode) + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
 
 @app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
@@ -11059,7 +11058,8 @@ def playground_packages():
         any_files = True
     else:
         any_files = False
-    back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
+    #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
+    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="backbuttoncolor navbar-btn playground-back" type="submit" title="' + word("Go back to the main Playground page") + '"><i class="glyphicon glyphicon-chevron-left dalarge"></i><span class="dalargefix">' + word('Back') + '</span></a></span>')
     if can_publish_to_pypi:
         if pypi_message is not None:
             pypi_message = Markup(pypi_message)

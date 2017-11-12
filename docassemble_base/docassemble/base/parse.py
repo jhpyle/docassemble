@@ -14,6 +14,7 @@ import sys
 import urllib
 import httplib2
 import datetime
+import time
 import operator
 import pprint
 import copy
@@ -36,15 +37,15 @@ from types import CodeType, NoneType
 
 debug = True
 import_core = "import docassemble.base.core"
-import_and_run_process_action = compile('from docassemble.base.util import *\nprocess_action()', '', 'exec')
-run_process_action = compile('process_action()', '', 'exec')
+import_and_run_process_action = compile('from docassemble.base.util import *\nprocess_action()', '<code block>', 'exec')
+run_process_action = compile('process_action()', '<code block>', 'exec')
 match_process_action = re.compile(r'process_action\(')
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
 emoji_match = re.compile(r':([^ ]+):')
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 nameerror_match = re.compile(r'\'(.*)\' (is not defined|referenced before assignment|is undefined)')
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
-remove_trailing_dots = re.compile(r'\.\.\.$')
+remove_trailing_dots = re.compile(r'[\n\r]+\.\.\.$')
 fix_tabs = re.compile(r'\t')
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 match_brackets_at_end = re.compile(r'^(.*)(\[.+?\])')
@@ -812,7 +813,7 @@ class FileInPackage:
             self.is_code = True
             if 'code' not in self.fileref:
                 raise DAError("A docx or pdf template file expressed in the form of a dictionary must have 'code' as the key" + str(self.fileref))
-            self.code = compile(self.fileref['code'], '', 'eval')
+            self.code = compile(self.fileref['code'], '<template file code>', 'eval')
         else:
             self.is_code = False
         self.area = area
@@ -1035,7 +1036,7 @@ class Question:
             else:
                 self.is_mandatory = False
                 if type(data['mandatory']) in (str, unicode):
-                    self.mandatory_code = compile(data['mandatory'], '', 'eval')
+                    self.mandatory_code = compile(data['mandatory'], '<mandatory code>', 'eval')
                 else:
                     self.mandatory_code = None
         else:
@@ -1104,7 +1105,7 @@ class Question:
             else:
                 self.is_initial = False
                 if type(data['initial']) in (str, unicode):
-                    self.initial_code = compile(data['initial'], '', 'eval')
+                    self.initial_code = compile(data['initial'], '<initial code>', 'eval')
                 else:
                     self.initial_code = None
         else:
@@ -1415,20 +1416,20 @@ class Question:
                 raise DAError("An include section must be organized as a list." + self.idebug(data))
         if 'if' in data:
             if type(data['if']) == str:
-                self.condition = [compile(data['if'], '', 'eval')]
+                self.condition = [compile(data['if'], '<if code>', 'eval')]
             elif type(data['if']) == list:
-                self.condition = [compile(x, '', 'eval') for x in data['if']]
+                self.condition = [compile(x, '<if code>', 'eval') for x in data['if']]
             else:
                 raise DAError("An if statement must either be text or a list." + self.idebug(data))
         if 'validation code' in data:
             if type(data['validation code']) not in [str, unicode]:
                 raise DAError("A validation code statement must be text." + self.idebug(data))
-            self.validation_code = compile(data['validation code'], '', 'exec')
+            self.validation_code = compile(data['validation code'], '<code block>', 'exec')
         if 'require' in data:
             if type(data['require']) is list:
                 self.question_type = 'require'
                 try:
-                    self.require_list = list(map((lambda x: compile(x, '', 'eval')), data['require']))
+                    self.require_list = list(map((lambda x: compile(x, '<require code>', 'eval')), data['require']))
                 except:
                     logmessage("Compile error in require:\n" + str(data['require']) + "\n" + str(sys.exc_info()[0]))
                     raise
@@ -1712,7 +1713,7 @@ class Question:
             else:
                 raise DAError("A need phrase must be text or a list." + self.idebug(data))
             try:
-                self.need = list(map((lambda x: compile(x, '', 'exec')), need_list))
+                self.need = list(map((lambda x: compile(x, '<code block>', 'exec')), need_list))
             except:
                 logmessage("Question: compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]))
                 raise
@@ -1738,7 +1739,7 @@ class Question:
             #     header = list(map(lambda x: TextObject(definitions + unicode(x), names_used=self.mako_names), data['header']))
             # else:
             #     header = list(map(lambda x: TextObject('&nbsp;'), data['column']))
-            row = compile(data['rows'], '', 'eval')
+            row = compile(data['rows'], '<row code>', 'eval')
             header = list()
             column = list()
             for col in data['columns']:
@@ -1758,8 +1759,8 @@ class Question:
                     header.append(TextObject('&nbsp;'))
                 else:
                     header.append(TextObject(definitions + unicode(header_text), names_used=self.mako_names))
-                column.append(compile(cell_text, '', 'eval'))
-            #column = list(map(lambda x: compile(x, '', 'eval'), data['column']))
+                column.append(compile(cell_text, '<column code>', 'eval'))
+            #column = list(map(lambda x: compile(x, '<expression>', 'eval'), data['column']))
             if self.scan_for_variables:
                 self.fields_used.add(data['table'])
             empty_message = data.get('show if empty', True)
@@ -1812,7 +1813,7 @@ class Question:
                 if not self.interview.calls_process_action and match_process_action.search(data['code']):
                     self.interview.calls_process_action = True
                 try:
-                    self.compute = compile(data['code'], '', 'exec')
+                    self.compute = compile(data['code'], '<code block>', 'exec')
                     self.sourcecode = data['code']
                 except:
                     logmessage("Question: compile error in code:\n" + unicode(data['code']) + "\n" + str(sys.exc_info()[0]))
@@ -1845,7 +1846,7 @@ class Question:
                         field_info = {'type': 'text', 'number': field_number}
                         if len(field) == 1 and 'code' in field:
                             field_info['type'] = 'fields_code'
-                            field_info['extras'] = dict(fields_code=compile(field['code'], '', 'eval'))
+                            field_info['extras'] = dict(fields_code=compile(field['code'], '<fields code>', 'eval'))
                             self.fields.append(Field(field_info))
                             continue
                         if 'datatype' in field and field['datatype'] in ['radio', 'object', 'object_radio', 'combobox', 'checkboxes', 'object_checkboxes'] and not ('choices' in field or 'code' in field):
@@ -1864,16 +1865,16 @@ class Question:
                                     if type(field[key]) is bool:
                                         field_info['extras']['ml_train'] = field[key]
                                     else:
-                                        field_info['extras']['ml_train'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
+                                        field_info['extras']['ml_train'] = {'compute': compile(field[key], '<keep for training code>', 'eval'), 'sourcecode': field[key]}
                             elif key == 'validate':
-                                field_info['validate'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
+                                field_info['validate'] = {'compute': compile(field[key], '<validate code>', 'eval'), 'sourcecode': field[key]}
                             elif 'datatype' in field and field['datatype'] in ['file', 'files', 'camera'] and key == 'maximum image size':
-                                field_info['max_image_size'] = {'compute': compile(unicode(field[key]), '', 'eval'), 'sourcecode': unicode(field[key])}
+                                field_info['max_image_size'] = {'compute': compile(unicode(field[key]), '<maximum image size code>', 'eval'), 'sourcecode': unicode(field[key])}
                             elif key == 'required':
                                 if type(field[key]) is bool:
                                     field_info['required'] = field[key]
                                 else:
-                                    field_info['required'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
+                                    field_info['required'] = {'compute': compile(field[key], '<required code>', 'eval'), 'sourcecode': field[key]}
                             elif key == 'show if' or key == 'hide if':
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
@@ -1882,7 +1883,7 @@ class Question:
                                         field_info['extras']['show_if_var'] = safeid(field[key]['variable'])
                                         field_info['extras']['show_if_val'] = TextObject(definitions + unicode(field[key]['is']), names_used=self.mako_names)
                                     elif 'code' in field[key]:
-                                        field_info['showif_code'] = compile(field[key]['code'], '', 'eval')
+                                        field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')
                                     else:
                                         raise DAError("The keys of '" + key + "' must be 'variable' and 'is.'" + self.idebug(data))
                                 elif type(field[key]) is list:
@@ -1903,7 +1904,7 @@ class Question:
                                     if type(field[key]) is dict and 'code' in field[key]:
                                         if 'extras' not in field_info:
                                             field_info['extras'] = dict()
-                                        field_info['extras']['default'] = {'compute': compile(field[key]['code'], '', 'eval'), 'sourcecode': field[key]['code']}
+                                        field_info['extras']['default'] = {'compute': compile(field[key]['code'], '<default code>', 'eval'), 'sourcecode': field[key]['code']}
                                     else:
                                         if type(field[key]) in (dict, list):
                                             field_info[key] = field[key]
@@ -1934,16 +1935,16 @@ class Question:
                                     field_info['threestate'] = -1
                             elif key == 'code':
                                 field_info['choicetype'] = 'compute'
-                                field_info['selections'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
+                                field_info['selections'] = {'compute': compile(field[key], '<choices code>', 'eval'), 'sourcecode': field[key]}
                                 if 'exclude' in field:
                                     if type(field['exclude']) is dict:
                                         raise DAError("An exclude entry cannot be a dictionary." + self.idebug(data))
                                     if type(field['exclude']) is not list:
-                                        field_info['selections']['exclude'] = [compile(field['exclude'], '', 'eval')]
+                                        field_info['selections']['exclude'] = [compile(field['exclude'], '<expression>', 'eval')]
                                     else:
                                         field_info['selections']['exclude'] = list()
                                         for x in field['exclude']:
-                                            field_info['selections']['exclude'].append(compile(x, '', 'eval'))
+                                            field_info['selections']['exclude'].append(compile(x, '<expression>', 'eval'))
                             elif key == 'exclude':
                                 pass
                             elif key == 'choices':
@@ -1964,11 +1965,11 @@ class Question:
                                     if type(field['exclude']) is dict:
                                         raise DAError("An exclude entry cannot be a dictionary." + self.idebug(data))
                                     if type(field['exclude']) is not list:
-                                        field_info['selections']['exclude'] = [compile(field['exclude'].strip(), '', 'eval')]
+                                        field_info['selections']['exclude'] = [compile(field['exclude'].strip(), '<expression>', 'eval')]
                                     else:
                                         field_info['selections']['exclude'] = list()
                                         for x in field['exclude']:
-                                            field_info['selections']['exclude'].append(compile(x, '', 'eval'))
+                                            field_info['selections']['exclude'].append(compile(x, '<expression>', 'eval'))
                             elif key == 'note':
                                 field_info['type'] = 'note'
                                 if 'extras' not in field_info:
@@ -2048,7 +2049,7 @@ class Question:
                                 select_list.append('default=[' + ", ".join(default_list) + ']')
                             source_code = "docassemble.base.core.selections(" + ", ".join(select_list) + ")"
                             #logmessage("source_code is " + source_code)
-                            field_info['selections'] = {'compute': compile(source_code, '', 'eval'), 'sourcecode': source_code}
+                            field_info['selections'] = {'compute': compile(source_code, '<expression>', 'eval'), 'sourcecode': source_code}
                         if 'saveas' in field_info:
                             if type(field_info['saveas']) not in (str, unicode):
                                 raise DAError("Invalid variable name " + repr(field_info['saveas']) + "." + self.idebug(data))
@@ -2130,7 +2131,7 @@ class Question:
                     #         field_info['type'] = key
                     #     field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
                     elif key == 'show if':
-                        field_info['saveas_code'] = compile(field[key], '', 'eval')
+                        field_info['saveas_code'] = compile(field[key], '<expression>', 'eval')
                         field[key] = field[key].strip()
                         if invalid_variable_name(field[key]):
                             raise DAError("Missing or invalid variable name " + repr(field[key]) + "." + self.idebug(data))
@@ -2156,7 +2157,7 @@ class Question:
                             field_info['action'] = field['action']
                         else:
                             field_info['action'] = field[key]
-                        field_info['saveas_code'] = compile(field[key], '', 'eval')
+                        field_info['saveas_code'] = compile(field[key], '<expression>', 'eval')
                 if 'saveas' in field_info or ('type' in field_info and field_info['type'] in ['note', 'html']): #, 'script', 'css'
                     self.fields.append(Field(field_info))
                 else:
@@ -2232,7 +2233,7 @@ class Question:
         if type(target) in [bool, float, int, NoneType]:
             return target
         self.find_fields_in(target)
-        return compile(target, '', 'eval')
+        return compile(target, '<expression>', 'eval')
     def recursive_dataobject(self, target):
         if type(target) is dict or (hasattr(target, 'elements') and type(target.elements) is dict):
             new_dict = dict()
@@ -2274,7 +2275,7 @@ class Question:
         return word("I don't know")
     def process_attachment_code(self, sourcecode):
         try:
-            self.compute_attachment = compile(sourcecode, '', 'eval')
+            self.compute_attachment = compile(sourcecode, '<expression>', 'eval')
             self.sourcecode = sourcecode
         except:
             logmessage("Question: compile error in code:\n" + unicode(sourcecode) + "\n" + str(sys.exc_info()[0]))
@@ -2448,7 +2449,7 @@ class Question:
                     options['fields'] = recursive_textobject(target['fields'], self.mako_names)
                     if 'code' in target:
                         if type(target['code']) in [str, unicode]:
-                            options['code'] = compile(target['code'], '', 'eval')
+                            options['code'] = compile(target['code'], '<expression>', 'eval')
                     if 'field variables' in target:
                         if type(target['field variables']) is not list:
                             raise DAError('The field variables must be expressed in the form of a list' + self.idebug(target))
@@ -2457,7 +2458,7 @@ class Question:
                         for varname in target['field variables']:
                             if not valid_variable_match.match(str(varname)):
                                 raise DAError('The variable ' + str(varname) + " cannot be used in a code list" + self.idebug(target))
-                            options['code dict'][varname] = compile(varname, '', 'eval')
+                            options['code dict'][varname] = compile(varname, '<expression>', 'eval')
                     if 'raw field variables' in target:
                         if type(target['raw field variables']) is not list:
                             raise DAError('The raw field variables must be expressed in the form of a list' + self.idebug(target))
@@ -2466,7 +2467,7 @@ class Question:
                         for varname in target['raw field variables']:
                             if not valid_variable_match.match(str(varname)):
                                 raise DAError('The variable ' + str(varname) + " cannot be used in a code list" + self.idebug(target))
-                            options['raw code dict'][varname] = compile(varname, '', 'eval')
+                            options['raw code dict'][varname] = compile(varname, '<expression>', 'eval')
                     if 'field code' in target:
                         if 'code dict' not in options:
                             options['code dict'] = dict()
@@ -2476,7 +2477,7 @@ class Question:
                             if type(item) is not dict:
                                 raise DAError('The field code must be expressed in the form of a dictionary' + self.idebug(target))
                             for key, val in item.iteritems():
-                                options['code dict'][key] = compile(val, '', 'eval')
+                                options['code dict'][key] = compile(val, '<expression>', 'eval')
             if 'valid formats' in target:
                 if type(target['valid formats']) is str:
                     target['valid formats'] = [target['valid formats']]
@@ -2490,7 +2491,7 @@ class Question:
                 if type(target['pdf/a']) is bool:
                     options['pdf_a'] = target['pdf/a']
                 elif type(target['pdf/a']) in [str, unicode]:
-                    options['pdf_a'] = compile(target['pdf/a'], '', 'eval')
+                    options['pdf_a'] = compile(target['pdf/a'], '<expression>', 'eval')
                 else:
                     raise DAError('Unknown data type in attachment pdf/a.' + self.idebug(target))
             if 'content' not in target:
@@ -2969,13 +2970,13 @@ class Question:
                 if uses_field:
                     if key == 'code':
                         has_code = True
-                        result_dict['compute'] = compile(value, '', 'eval')
+                        result_dict['compute'] = compile(value, '<expression>', 'eval')
                     else:
                         result_dict['label'] = TextObject(key)
                         result_dict['key'] = TextObject(value)
                 elif type(value) == dict:
                     result_dict['label'] = TextObject(key)
-                    result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package)
+                    result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=ruamel.yaml.safe_dump(value, default_flow_style=False, default_style = '|'))
                 elif type(value) == str:
                     result_dict['label'] = TextObject(key)
                     if value in ['exit', 'leave'] and 'url' in the_dict:
@@ -3722,7 +3723,7 @@ class Interview:
                         if question.question_type == 'code' and (question.is_initial or (question.initial_code is not None and eval(question.initial_code, user_dict))):
                             #logmessage("Running some code:\n\n" + question.sourcecode)
                             if debug:
-                                interview_status.seeking.append({'question': question, 'reason': 'initial'})
+                                interview_status.seeking.append({'question': question, 'reason': 'initial', 'time': time.time()})
                             docassemble.base.functions.this_thread.current_question = question
                             exec_with_trap(question, user_dict)
                             continue
@@ -3773,7 +3774,7 @@ class Interview:
                                 question.mark_as_answered(user_dict)
                             if question.question_type == 'code':
                                 if debug:
-                                    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
+                                    interview_status.seeking.append({'question': question, 'reason': 'mandatory code', 'time': time.time()})
                                 #logmessage("Running some code:\n\n" + question.sourcecode)
                                 #logmessage("Question name is " + question.name)
                                 docassemble.base.functions.this_thread.current_question = question
@@ -3784,7 +3785,7 @@ class Interview:
                                     #logmessage("Question " + str(question.name) + " marked as answered")
                             elif hasattr(question, 'content') and question.name:
                                 if debug:
-                                    interview_status.seeking.append({'question': question, 'reason': 'mandatory question'})
+                                    interview_status.seeking.append({'question': question, 'reason': 'mandatory question', 'time': time.time()})
                                 if question.name and question.name in user_dict['_internal']['answers']:
                                     #logmessage("in answers")
                                     #question.mark_as_answered(user_dict)
@@ -3992,6 +3993,8 @@ class Interview:
         if docassemble.base.functions.get_info('prevent_going_back'):
             interview_status.can_go_back = False
         docassemble.base.functions.close_files()
+        if debug:
+            interview_status.seeking.append({'done': True, 'time': time.time()})
         return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, old_user_dict, interview_status, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())
@@ -4003,7 +4006,7 @@ class Interview:
         follow_mc = kwargs.get('follow_mc', True)
         seeking = kwargs.get('seeking', list())
         if debug:
-            seeking.append({'variable': missingVariable})
+            seeking.append({'variable': missingVariable, 'time': time.time()})
         if recursion_depth > self.recursion_limit:
             raise DAError("There appears to be an infinite loop.  Variables in stack are " + ", ".join(variable_stack) + ".")
         # logmessage("askfor: I don't have " + str(missingVariable) + " for language " + str(language))
@@ -4079,7 +4082,7 @@ class Interview:
                     else:
                         question = the_question
                     if debug:
-                        seeking.append({'question': question, 'reason': 'considering'})
+                        seeking.append({'question': question, 'reason': 'considering', 'time': time.time()})
                     if len(question.condition) > 0:
                         if is_generic:
                             if the_x != 'None':
@@ -4095,7 +4098,7 @@ class Interview:
                         if not condition_success:
                             continue
                     if debug:
-                        seeking.append({'question': question, 'reason': 'asking'})
+                        seeking.append({'question': question, 'reason': 'asking', 'time': time.time()})
                     if question.question_type == "data":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
@@ -4755,11 +4758,10 @@ def exec_with_trap(the_question, the_dict):
         raise
     except Exception as e:
         cl, exc, tb = sys.exc_info()
-        line_with_error = traceback.extract_tb(tb)[-1][1]
-        if type(line_with_error) is int and line_with_error > 0:
-            try:
-                e.da_line_with_error = the_question.sourcecode.splitlines()[line_with_error - 1]
-            except:
-                pass
-        e.traceback = traceback.format_exc()
-        raise e
+        if len(traceback.extract_tb(tb)) == 2:
+            line_with_error = traceback.extract_tb(tb)[-1][1]
+            if type(line_with_error) is int and line_with_error > 0 and hasattr(the_question, 'sourcecode'):
+                exc.da_line_with_error = the_question.sourcecode.splitlines()[line_with_error - 1]
+                exc.traceback = traceback.format_exc()
+        del tb
+        raise
