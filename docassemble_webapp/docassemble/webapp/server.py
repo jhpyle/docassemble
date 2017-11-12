@@ -2237,6 +2237,8 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     for var in ['_internal', '__object_type']:
         undefined_names.discard(var)
         vocab_set.discard(var)
+    for var in [x for x in undefined_names if x.endswith(']')]:
+        undefined_names.discard(var)
     names_used = names_used.difference( undefined_names )
     if len(undefined_names):
         content += '\n                  <tr><td><h4>' + word('Undefined names') + infobutton('undefined') + '</h4></td></tr>'
@@ -2247,7 +2249,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         has_parent = dict()
         has_children = set()
         for var in names_used:
-            parent = re.sub(r'\..*', '', var)
+            parent = re.sub(r'[\.\[].*', '', var)
             if parent != var:
                 has_parent[var] = parent
                 has_children.add(parent)

@@ -11,7 +11,7 @@
     {{ render_field(form.name, tabindex=50) }}
   </div>
   <div class="form-actions">
-    {{ render_submit_field(form.submit, tabindex=100) }}
+    {{ render_submit_field(form.submit, tabindex=100, data={'disable-button': 0}) }}
   </div>
 
 </form>

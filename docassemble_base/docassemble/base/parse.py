@@ -1286,6 +1286,8 @@ class Question:
             self.generic_object = data['generic list object']
         else:
             self.is_generic = False
+        if 'comment' in data and len(data) == 1:
+            should_append = False
         if 'metadata' in data:
             for key in data:
                 if key not in ['metadata', 'comment']:

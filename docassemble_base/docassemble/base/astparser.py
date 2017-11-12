@@ -1,5 +1,6 @@
 import ast
 import re
+import sys
 
 fix_assign = re.compile(r'\.(\[[^\]]*\])')
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
@@ -8,12 +9,17 @@ class myextract(ast.NodeVisitor):
     def __init__(self):
         self.stack = []
         self.in_subscript = 0
+        self.in_params = 0
         self.seen_name = False
+        self.seen_complexity = False
     def visit_Name(self, node):
         if not (self.in_subscript > 0 and self.seen_name is True):
             self.stack.append(node.id)
             if self.in_subscript > 0:
                 self.seen_name = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Call(self, node):
+        self.seen_complexity = True
         ast.NodeVisitor.generic_visit(self, node)
     def visit_Attribute(self, node):
         self.stack.append(node.attr)
@@ -27,10 +33,11 @@ class myextract(ast.NodeVisitor):
             self.stack.append('[' + str(node.slice.value.n) + ']')
             self.in_subscript += 1
             self.seen_name = False
+        else:
+            self.seen_complexity = 1
         ast.NodeVisitor.generic_visit(self, node)
-        if hasattr(node.slice.value, 'id'):
+        if hasattr(node.slice.value, 'id') or hasattr(node.slice.value, 'n'):
             self.in_subscript -= 1
-
 class myvisitnode(ast.NodeVisitor):
     def __init__(self):
         self.names = {}
@@ -44,14 +51,22 @@ class myvisitnode(ast.NodeVisitor):
         self.depth -= 1
     def visit_Call(self, node):
         self.calls.add(node.func)
-        if hasattr(node.func, 'id') and node.func.id in ['showif', 'showifdef', 'value', 'defined'] and len(node.args) and node.args[0].__class__.__name__ == 'Str' and hasattr(node.args[0], 's') and re.search(r'^[^\d]', node.args[0].s):
+        if hasattr(node.func, 'id') and node.func.id in ['showif', 'showifdef', 'value', 'defined'] and len(node.args) and node.args[0].__class__.__name__ == 'Str' and hasattr(node.args[0], 's') and re.search(r'^[^\d]', node.args[0].s) and not re.search(r'[^A-Za-z0-9\.\"\'\[\] ]', node.args[0].s):
             self.names[node.args[0].s] = 1
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Subscript(self, node):
+        if node not in self.calls:
+            crawler = myextract()
+            crawler.visit(node)
+            if not crawler.seen_complexity:
+                self.names[fix_assign.sub(r'\1', (".".join(reversed(crawler.stack))))] = 1
         ast.NodeVisitor.generic_visit(self, node)
     def visit_Attribute(self, node):
         if node not in self.calls:
             crawler = myextract()
             crawler.visit(node)
-            self.names[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
+            if not crawler.seen_complexity:
+                self.names[fix_assign.sub(r'\1', (".".join(reversed(crawler.stack))))] = 1
         ast.NodeVisitor.generic_visit(self, node)
     def visit_ExceptHandler(self, node):
         if node.name is not None and hasattr(node.name, 'id') and node.name.id is not None:

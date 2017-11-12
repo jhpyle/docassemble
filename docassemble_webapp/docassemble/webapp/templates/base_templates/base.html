@@ -113,6 +113,10 @@
         $(".form").on('submit', function(){
           $(".btn-da").each(function(){
             var the_button = this;
+            var disable_button = the_button.data('disable-button');
+            if (typeof(disable_button) != "undefined" && !disable_button){
+              return;
+            }
             setTimeout(function(){
               $(the_button).prop("disabled", true);
             }, 1);
