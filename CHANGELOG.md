@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.96] - 2017-11-12
+### Fixed
+- JSON conversion problem when using `/interviews?json=1`.
+
 ## [0.1.95] - 2017-11-12
 ### Fixed
 - Bug in 0.1.94 regarding detection of variable names.

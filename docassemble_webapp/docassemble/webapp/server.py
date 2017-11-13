@@ -13008,6 +13008,8 @@ def interview_list():
         for interview in interviews:
             if 'dict' in interview:
                 del interview['dict']
+            if 'tags' in interview:
+                interview['tags'] = sorted(interview['tags'])
         return jsonify(action="interviews", interviews=interviews)
     script = """
     <script>
