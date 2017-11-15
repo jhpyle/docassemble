@@ -284,7 +284,7 @@ def custom_login():
 
         if user:
             #safe_next = user_manager.make_safe_url_function(login_form.next.data)
-            safe_next = login_form.next.data
+            safe_next = url_for('post_login', next=login_form.next.data)
             if daconfig.get('two factor authentication', False) is True and user.otp_secret is not None:
                 session['validated_user'] = user.id
                 if user.otp_secret.startswith(':phone:'):
@@ -950,15 +950,22 @@ def encrypt_session(secret, user_code=None, filename=None):
 
 def substitute_secret(oldsecret, newsecret):
     #logmessage("substitute_secret: " + repr(oldsecret) + " and " + repr(newsecret))
-    if oldsecret == None or oldsecret == newsecret:
+    if oldsecret == 'None' or oldsecret == newsecret:
+        #logmessage("substitute_secret: returning new secret without doing anything")
         return newsecret
+    #logmessage("substitute_secret: continuing")
     user_code = session.get('uid', None)
-    if user_code == None or 'i' not in session:
-        return newsecret
-    filenames = set([session['i']])
-    for the_record in db.session.query(UserDict.filename).filter_by(key=user_code).group_by(UserDict.filename).all():
-        filenames.add(the_record.filename)
-    for filename in filenames:
+    to_do = set()
+    if 'i' in session and user_code is not None:
+        to_do.add((session['i'], user_code))
+    for the_record in db.session.query(UserDict.filename, UserDict.key).filter_by(user_id=current_user.id).group_by(UserDict.filename, UserDict.key).all():
+        to_do.add((the_record.filename, the_record.key))
+    for the_record in db.session.query(UserDictKeys.filename, UserDictKeys.key).filter_by(user_id=current_user.id).group_by(UserDictKeys.filename, UserDictKeys.key).all():
+        to_do.add((the_record.filename, the_record.key))
+    if user_code:
+        for the_record in db.session.query(UserDict.filename).filter_by(key=user_code).group_by(UserDict.filename).all():
+            to_do.add((the_record.filename, user_code))
+    for (filename, user_code) in to_do:
         #logmessage("substitute_secret: filename is " + str(filename) + " and key is " + str(user_code))
         changed = False
         for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
@@ -981,7 +988,7 @@ def substitute_secret(oldsecret, newsecret):
             try:
                 the_dict = decrypt_dictionary(record.dictionary, oldsecret)
             except Exception as e:
-                logmessage("substitute_secret: error decrypting dictionary for filename " + filename + " and uid " + user_code + ": " + str(e))
+                logmessage("substitute_secret: error decrypting dictionary for filename " + filename + " and uid " + user_code)
                 continue
             record.dictionary = encrypt_dictionary(the_dict, newsecret)
             changed = True
@@ -992,7 +999,7 @@ def substitute_secret(oldsecret, newsecret):
             try:
                 phrase = decrypt_phrase(record.message, oldsecret)
             except Exception as e:
-                logmessage("substitute_secret: error decrypting phrase for filename " + filename + " and uid " + user_code + ": " + str(e))
+                logmessage("substitute_secret: error decrypting phrase for filename " + filename + " and uid " + user_code)
                 continue
             record.message = encrypt_phrase(phrase, newsecret)
             changed = True
@@ -2746,6 +2753,18 @@ def get_locale():
 def load_user(id):
     return UserModel.query.get(int(id))
 
+@app.route('/post_login', methods=['GET'])
+def post_login():
+    #logmessage("post_login")
+    response = redirect(request.args.get('next', url_for('interview_list')))
+    if 'newsecret' in session:
+        response.set_cookie('secret', session['newsecret'])
+        #logmessage("post_login: setting the cookie to " + session['newsecret'])
+        del session['newsecret']
+    # else:
+    #     logmessage("post_login: no newsecret")
+    return response
+
 @app.route('/headers', methods=['POST', 'GET'])
 @csrf.exempt
 def show_headers():
@@ -3078,7 +3097,7 @@ def mfa_login():
             elif failed_attempts is not None:
                 r.delete(fail_key)
         #safe_next = user_manager.make_safe_url_function(form.next.data)
-        save_next = form.next.data
+        safe_next = form.next.data
         return flask_user.views._do_login_user(user, safe_next, False)
     description = word("This account uses two-factor authentication.")
     if user.otp_secret.startswith(':phone:'):
@@ -3714,6 +3733,7 @@ def index():
             secret = request.cookies['visitor_secret']
     else:
         secret = request.cookies.get('secret', None)
+    #logmessage("index: secret is " + repr(secret))
     use_cache = int(request.args.get('cache', 1))
     reset_interview = int(request.args.get('reset', 0))
     encrypted = session.get('encrypted', True)
@@ -6234,16 +6254,31 @@ def index():
           event.preventDefault();
           $('#questionlabel').tab('show');
         });
+        //var varlookup = Object();
+        //if ($("input[name='_varnames']").length){
+        //   the_hash = $.parseJSON(atob($("input[name='_varnames']").val()));
+        //   for (var key in the_hash){
+        //     if (the_hash.hasOwnProperty(key)){
+        //       varlookup[the_hash[key]] = key;
+        //     }
+        //   }
+        //}
         $(".showif").each(function(){
           var showIfSign = $(this).data('showif-sign');
           var showIfVar = $(this).data('showif-var');
           var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          //if ($("input[name='" + showIfVarEscaped + "']").length == 0 && typeof varlookup[showIfVar] != "undefined"){
+          //  console.log("Set showIfVarEscaped " + showIfVar + " to alternate, " + varlookup[showIfVar]);
+          //  showIfVar = varlookup[showIfVar];
+          //  showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          //}
           var showIfVal = $(this).data('showif-val');
           var saveAs = $(this).data('saveas');
           var isSame = (saveAs == showIfVar);
           var showIfDiv = this;
           var showHideDiv = function(){
-            if($(this).parents(".showif").length !== 0){
+            if ($(this).parents(".showif").length !== 0){
+              console.log("Returning because inside a showif.");
               return;
             }
             var theVal;
@@ -6253,25 +6288,29 @@ def index():
             else{
               theVal = $(this).val();
             }
-            //console.log("val is " + theVal + " and showIfVal is " + showIfVal)
+            console.log("val is " + theVal + " and showIfVal is " + showIfVal)
             if(theVal == showIfVal){
-              //console.log("They are the same");
+              console.log("They are the same");
               if (showIfSign){
+                console.log("Showing1!");
                 $(showIfDiv).removeClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
               else{
+                console.log("Hiding1!");
                 $(showIfDiv).addClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
             }
             else{
-              //console.log("They are not the same");
+              console.log("They are not the same");
               if (showIfSign){
+                console.log("Hiding2!");
                 $(showIfDiv).addClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
               else{
+                console.log("Showing2!");
                 $(showIfDiv).removeClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
@@ -12863,14 +12902,17 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
     if the_user is None:
         raise Exception("user_interviews: user_id " + str(user_id) + " not valid")
     if action == 'delete_all':
-        sessions_to_delete = list()
+        sessions_to_delete = set()
         if tag:
             for interview_info in user_interviews(user_id=user_id, secret=secret, tag=tag):
-                sessions_to_delete.append((interview_info['session'], interview_info['filename']))
+                sessions_to_delete.add((interview_info['session'], interview_info['filename']))
         else:
             interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.user_id == user_id).group_by(UserDictKeys.filename, UserDictKeys.key)
             for interview_info in interview_query:
-                sessions_to_delete.append((interview_info.key, interview_info.filename))
+                sessions_to_delete.add((interview_info.key, interview_info.filename))
+            interview_query = db.session.query(UserDict.filename, UserDict.key).filter(UserDict.user_id == user_id).group_by(UserDict.filename, UserDict.key)
+            for interview_info in interview_query:
+                sessions_to_delete.add((interview_info.key, interview_info.filename))
         if len(sessions_to_delete):
             for session_id, yaml_filename in sessions_to_delete:
                 manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename)
@@ -12914,7 +12956,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             except:
                 if exclude_invalid:
                     continue
-                logmessage("interview_list: unable to decrypt dictionary with secret " + str(secret))
+                logmessage("interview_list: unable to decrypt dictionary")
                 dictionary = fresh_dictionary()
                 dictionary['_internal']['starttime'] = None
                 dictionary['_internal']['modtime'] = None
@@ -12964,7 +13006,16 @@ def interview_list():
     tag = request.args.get('tag', None)
     if 'newsecret' in session:
         #logmessage("interview_list: fixing cookie")
-        response = redirect(url_for('interview_list'))
+        if is_json:
+            if tag:
+                response = redirect(url_for('interview_list', json='1', tag=tag))
+            else:
+                response = redirect(url_for('interview_list', json='1'))
+        else:
+            if tag:
+                response = redirect(url_for('interview_list', tag=tag))
+            else:
+                response = redirect(url_for('interview_list'))
         response.set_cookie('secret', session['newsecret'])
         del session['newsecret']
         return response
@@ -12973,7 +13024,7 @@ def interview_list():
     secret = request.cookies.get('secret', None)
     if secret is not None:
         secret = str(secret)
-    #logmessage("interview_list: secret is " + str(secret))
+    #logmessage("interview_list: secret is " + repr(secret))
     if 'action' in request.args and request.args.get('action') == 'delete_all':
         num_deleted = user_interviews(user_id=current_user.id, secret=secret, action='delete_all', tag=tag)
         if num_deleted > 0:
@@ -13048,17 +13099,22 @@ def valid_date_key(x):
     return x['dict']['_internal']['starttime']
     
 def fix_secret():
+    #logmessage("fix_secret starting")
     password = request.form.get('password', request.form.get('new_password', None))
     if password is not None:
         secret = str(request.cookies.get('secret', None))
         newsecret = pad_to_16(MD5Hash(data=password).hexdigest())
-        if secret is None or secret != newsecret:
-            #logmessage("fix_secret: calling substitute_secret")
-            session['newsecret'] = substitute_secret(secret, newsecret)
+        if secret == 'None' or secret != newsecret:
+            #logmessage("fix_secret: calling substitute_secret with " + str(secret) + ' and ' + str(newsecret))
+            #logmessage("fix_secret: setting newsecret session")
+            session['newsecret'] = substitute_secret(str(secret), newsecret)
+        # else:
+        #     logmessage("fix_secret: secrets are the same")
     else:
         logmessage("fix_secret: password not in request")
 
 def login_or_register(sender, user, **extra):
+    #logmessage("login or register!")
     fix_secret()
     if 'i' in session and 'uid' in session:
         save_user_dict_key(session['uid'], session['i'], priors=True)

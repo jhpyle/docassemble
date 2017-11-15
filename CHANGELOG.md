@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.1.97] - 2017-11-14
+### Fixed
+- JavaScript issue with buttons.
+- Problem with Playground interviews not being decrypted.
+
 ## [0.1.96] - 2017-11-12
 ### Fixed
 - JSON conversion problem when using `/interviews?json=1`.
