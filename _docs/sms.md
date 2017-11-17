@@ -41,7 +41,7 @@ Then, in your **docassemble** [configuration], add lines like:
 twilio:
   sms: True
   account sid: ACfad8e668d876f5473fb232a311243b58
-  caller id: "+12762410114"
+  number: "+12762410114"
   dispatch:
     color: docassemble.base:data/questions/examples/buttons-code-color.yml
     doors: docassemble.base:data/questions/examples/doors.yml
@@ -55,7 +55,7 @@ section is also used to enable the [call forwarding] feature.)
 The `account sid` is the value you copy and paste from your [Twilio]
 account dashboard.
 
-The `caller id` is the phone number you purchased.  The phone number
+The `number` is the phone number you purchased.  The phone number
 must be written in [E.164] format.  This is the phone number with
 which your users will exchange [SMS] messages.
 

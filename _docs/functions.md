@@ -1464,7 +1464,8 @@ If the item was never set, `get_info()` will return `None`.
 
 The `interface()` function returns `'web'` if the user is accessing
 the interview through a web browser and `'sms'` if the user is using
-[SMS].
+[SMS].  If the web interface is used, but `&json=1` is added to the
+URL, then `interface()` will return `'json'`.
 
 Sometimes interviews are accessed by [background processes].
 `interface()` will return `'cron'` if the interview is being accessed

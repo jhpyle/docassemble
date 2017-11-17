@@ -161,7 +161,11 @@ displays a [list of interviews] available on your server.
 
 You can configure this list using the [`dispatch`] configuration
 directive.  The list of interviews can also be [embedded] into a page
-of another web site.
+of another web site.  You can also replace the default `/list` page
+with an interview using the [`dispatch interview`] configuration
+directive.  Within that interview, you can use the
+[`interview_menu()`] function within that interview to present the
+list of interviews in whatever way you want.
 
 The [`dispatch`] configuration directive also allows your users to
 access specific interviews at human-readable URLs like:
@@ -169,11 +173,21 @@ access specific interviews at human-readable URLs like:
 > https://interview.example.com/start/eviction<br>
 > https://interview.example.com/start/namechange
 
-If you want the simplest possible URL for an interview, you can set
-the [`default interview`] configuration directive, and then the
-interview will be accessible at:
+By default, if the user visits the main URL for the site, e.g.,
+`https://interview.example.com`, the user will be redirected to the
+`/list` page.  You can change this if you want.  If you set set the
+[`default interview`] configuration directive, and then the interview
+will be accessible at:
 
 > https://interview.example.com
+
+However, if the user had previously been using another interview
+during the same browser session, going to
+`https://interview.example.com/` will resume the original session.  If
+you want to provide a way for users to access other interviews, you
+can use the [`menu_items` special variable] within an interview to
+provide options on the pull-down menu for visiting other parts of the
+site.
 
 You can embed an interview into a web page by inserting an [iframe]
 into the [HTML] of the page.
@@ -197,6 +211,11 @@ then if the user clicks on the link after having already visited the
 same interview during the same browser session, then the user will be
 taken back to the "current" screen of the interview.
 
+If the user has started using one interview, and then clicks a link to
+start an interview with a different `i` parameter, this has the same
+effect as if `&reset=1` had been added; a fresh interview will be
+started.
+
 # <a name="howstored"></a>How answers are stored
 
 When a user starts a new interview, a new "variable store" is created.
@@ -217,7 +236,20 @@ If the user is not logged in through **docassemble**'s
 interview will be lost if the web browser is closed.
 
 If the user is logged in, however, then when the user logs in again,
-the user will resume the interview where he left off.
+the user will be able to resume the interview where he left off.
+
+If a new user starts an interview without being logged in, and then
+clicks the link to log in, and then clicks the link to register, the
+user will be logged in and will immediately be directed back to the
+interview they had been using, and they will immediately pick up where
+they left off.
+
+If a user creates an account, and then leaves an interview without
+completing it, and closes their browser, then the next time they start
+the interview, they will start at the beginning again.  Then, if
+they log in, they will be directed to the `/interviews` page, which
+shows a list of interview sessions, including the original session and
+the new session.
 
 # <a name="htauthor"></a>How to author your own interviews
 
@@ -483,3 +515,5 @@ For more information about [YAML], see the [YAML specification].
 [iframe]: https://www.w3schools.com/TAgs/tag_iframe.asp
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [`go full screen`]: {{ site.baseurl }}/docs/initial.html#go full screen
+[`dispatch interview`]: {{ site.baseurl }}/docs/config.html#dispatch interview
+[`interview_menu()`]: {{ site.baseurl }}/docs/functions.html#interview_menu
