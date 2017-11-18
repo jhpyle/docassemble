@@ -490,16 +490,26 @@ sudo vi /etc/apache2/sites-available/docassemble-http.conf
 
 Edit the `ServerAdmin` line and add your e-mail address.
 
-Replace `{% raw %}{{DAHOSTNAME}}{% endraw %}` with the domain of your
+Edit the ServerName line by replacing `{% raw %}{{DAHOSTNAME}}{% endraw %}` with the domain of your
 site (e.g., `assembly.example.com`).
+
+If present, you should also remove the hashmark ("#") at the beginning of the ServerName directive.
 
 Replace `{% raw %}{{POSTURLROOT}}{% endraw %}` with `/` and replace
 `{% raw %}{{WSGIROOT}}{% endraw %}` with `/`.
+
+In ViM you can use the following command: `{% raw %}%s/{{POSTURLROOT}}/\//g{% endraw %} to replace all occurences.
 
 However, if you changed the [`root`] directive to `/docassemble/` in
 the [configuration], replace `{% raw %}{{POSTURLROOT}}{% endraw %}`
 with `/docassemble/` and replace `{% raw %}{{WSGIROOT}}{% endraw %}`
 with `/docassemble`.
+
+If you are using SSL, repeat the same steps for the SSL configuration file. 
+
+{% highlight bash %}
+sudo vi /etc/apache2/sites-available/docassemble-ssl.conf
+{% endhighlight %}
 
 Make any other changes you need to make so that **docassemble** can
 coexist with your other web applications.
