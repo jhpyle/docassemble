@@ -1777,7 +1777,7 @@ twilio:
   sms: True
   voice: True
   account sid: ACfad8e668d876f5473fb232a311243b58
-  auth token: auth token: 87559c7a427c25e34e20c654e8b05234
+  auth token: 87559c7a427c25e34e20c654e8b05234
   number: "+12762410114"
   dispatch:
     color: docassemble.base:data/questions/examples/buttons-code-color.yml
