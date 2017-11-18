@@ -1796,7 +1796,7 @@ account dashboard.
 
 The `auth token` is another value you copy and paste from your
 [Twilio] account dashboard.  This is only necessary if you intend to
-use the [`send_sms()`] function.
+use the [`send_sms()`] function or the [phone login] feature.
 
 The `number` is the phone number you purchased.  The phone number
 must be written in [E.164] format.  This is the phone number with
