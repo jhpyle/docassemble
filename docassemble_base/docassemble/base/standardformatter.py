@@ -1085,16 +1085,16 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         is_default = choice['default']
                     else:
                         is_default = False
-                    if isinstance(choice['key'], Question) and choice['key'].question_type in ["exit", "continue", "restart", "refresh", "signin", "register", "leave", "link"]:
-                        if choice['key'].question_type in ["continue", "register"]:
+                    if isinstance(choice['key'], Question) and choice['key'].question_type in ("exit", "logout", "continue", "restart", "refresh", "signin", "register", "leave", "link"):
+                        if choice['key'].question_type in ("continue", "register"):
                             btn_class = ' btn-primary'
-                        elif choice['key'].question_type in ["leave", "link", "restart"]:
+                        elif choice['key'].question_type in ("leave", "link", "restart"):
                             btn_class = ' btn-warning'
                         elif choice['key'].question_type == "refresh":
                             btn_class = ' btn-success'
                         elif choice['key'].question_type == "signin":
                             btn_class = ' btn-info'
-                        elif choice['key'].question_type == "exit":
+                        elif choice['key'].question_type in ("exit", "logout"):
                             btn_class = ' btn-danger'
                     output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ==" value="' + str(indexno) + '">' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False, strip_newlines=True) + '</button>\n'
                     indexno += 1
@@ -1655,7 +1655,7 @@ def input_for(status, field, wide=False, embedded=False):
                     else:
                         the_icon = ''
                     formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)) or (defaultvalue is not None and type(defaultvalue) not in [str, unicode, int, bool, float] and unicode(pair['label']) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
@@ -1675,7 +1675,7 @@ def input_for(status, field, wide=False, embedded=False):
                     if True or pair['key'] is not None:
                         #sys.stderr.write(str(saveas_string) + "\n")
                         formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
-                        if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
+                        if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)) or (defaultvalue is not None and type(defaultvalue) not in [str, unicode, int, bool, float] and unicode(pair['label']) == unicode(defaultvalue)):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
@@ -1718,7 +1718,7 @@ def input_for(status, field, wide=False, embedded=False):
                 if True or pair['key'] is not None:
                     formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, do_terms=False)
                     output += '<option value="' + unicode(pair['key']) + '"'
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)) or (defaultvalue is not None and type(defaultvalue) not in [str, unicode, int, bool, float] and unicode(pair['label']) == unicode(defaultvalue)):
                         output += ' selected="selected"'
                     output += '>' + formatted_item + '</option>'
             if embedded:

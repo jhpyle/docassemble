@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.1.98] - 2017-11-20
+### Changed
+- Going to "/exit" will now log out the user, if the user is logged
+  in.
+- When using `&json=1` for JSON responses, the `interface()` function
+  will return `'json'`.
+### Added
+- Action for `logout`, which works like `exit` but also logs the user out.
+### Fixed
+- Default values in object choices.
+
 ## [0.1.97] - 2017-11-14
 ### Fixed
 - JavaScript issue with buttons.

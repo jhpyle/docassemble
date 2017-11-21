@@ -1,0 +1,17 @@
+metadata:
+  title: Interviews
+  documentation: "https://docassemble.org/docs/config.html#session list interview"
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+initial: True
+code: |
+  if not user_logged_in():
+    response(url=url_of('login'))
+  for interview in interview_list():
+    if interview['filename'] == 'docassemble.demo:data/questions/questions.yml':
+      response(url=interview_url(i=interview['filename'], session=interview['session'], local=True))
+  response(url=interview_url(i='docassemble.demo:data/questions/questions.yml', local=True))

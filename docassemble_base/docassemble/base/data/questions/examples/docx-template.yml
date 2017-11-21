@@ -71,9 +71,6 @@ signature: user.signature
 under: |
   ${ user.name }
 ---
-# template: phone_number
-# content: |
-#   \_\_\_Blah\_\_\_
 code: |
   phone_number = "202-555-1234"
 ---
@@ -84,15 +81,22 @@ code: |
 mandatory: True
 question: |
   Here is your document.
+attachment code: |
+
+  # qwerqwer
+  [asdf]
+---
 attachment:
   name: Your letter
   filename: letter
+  variable name: asdf
   docx template file: letter_template.docx
   valid formats:
     - pdf
 ---
 features:
   pdf/a: True
+  cache documents: False
 ---
 question: |
   Give me a file

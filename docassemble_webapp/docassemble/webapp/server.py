@@ -203,7 +203,7 @@ def _endpoint_url(endpoint):
 def _get_safe_next_param(param_name, default_endpoint):
     if param_name in request.args:
         #safe_next = current_app.user_manager.make_safe_url_function(unquote(request.args[param_name]))
-        safe_next = unquote(request.args[param_name])
+        safe_next = request.args[param_name]
     else:
         safe_next = _endpoint_url(default_endpoint)
     return safe_next
@@ -258,7 +258,7 @@ def custom_login():
     safe_reg_next = _get_safe_next_param('reg_next', user_manager.after_register_endpoint)
 
     if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
-        return redirect(safe_next)
+        return add_secret_to(redirect(safe_next))
 
     login_form = user_manager.login_form(request.form)
     register_form = user_manager.register_form()
@@ -283,8 +283,9 @@ def custom_login():
             user, user_email = user_manager.find_user_by_email(login_form.email.data)
 
         if user:
-            #safe_next = user_manager.make_safe_url_function(login_form.next.data)
-            safe_next = url_for('post_login', next=login_form.next.data)
+            safe_next = user_manager.make_safe_url_function(login_form.next.data)
+            safe_next = login_form.next.data
+            #safe_next = url_for('post_login', next=login_form.next.data)
             if daconfig.get('two factor authentication', False) is True and user.otp_secret is not None:
                 session['validated_user'] = user.id
                 if user.otp_secret.startswith(':phone:'):
@@ -299,22 +300,31 @@ def custom_login():
                     success = docassemble.base.util.send_sms(to=phone_number, body=message)
                     if not success:
                         flash(word("Unable to send verification code."), 'error')
-                        return redirect(url_for('user.login'))
-                return redirect(url_for('mfa_login', next=safe_next))
+                        return add_secret_to(redirect(url_for('user.login')))
+                return add_secret_to(redirect(url_for('mfa_login', next=safe_next)))
             if user_manager.enable_email and user_manager.enable_confirm_email \
                and len(daconfig['email confirmation privileges']) \
                and user.has_role(*daconfig['email confirmation privileges']) \
                and not user.has_confirmed_email():
                 url = url_for('user.resend_confirm_email', email=user.email)
                 flash(word('You cannot log in until your e-mail address has been confirmed.') + '<br><a href="' + url + '">' + word('Click here to confirm your e-mail') + '</a>.', 'error')
-                return redirect(url_for('user.login'))
-            return flask_user.views._do_login_user(user, safe_next, login_form.remember_me.data)
+                return add_secret_to(redirect(url_for('user.login')))
+            return add_secret_to(flask_user.views._do_login_user(user, safe_next, login_form.remember_me.data))
     if is_json:
         return jsonify(action='login', csrf_token=generate_csrf())
     return user_manager.render_function(user_manager.login_template,
             form=login_form,
             login_form=login_form,
             register_form=register_form)
+
+def add_secret_to(response):
+    if 'newsecret' in session:
+        response.set_cookie('secret', session['newsecret'])
+        #logmessage("post_login: setting the cookie to " + session['newsecret'])
+        del session['newsecret']
+    # else:
+    #     logmessage("post_login: no newsecret")
+    return response
 
 def logout():
     # secret = request.cookies.get('secret', None)
@@ -2478,6 +2488,7 @@ def restart_others():
     return
 
 def current_info(yaml=None, req=None, action=None, location=None, interface='web'):
+    #logmessage("interface is " + str(interface))
     if current_user.is_authenticated and not current_user.is_anonymous:
         ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], the_user_id=current_user.id, theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization, timezone=current_user.timezone)
     else:
@@ -2753,17 +2764,17 @@ def get_locale():
 def load_user(id):
     return UserModel.query.get(int(id))
 
-@app.route('/post_login', methods=['GET'])
-def post_login():
-    #logmessage("post_login")
-    response = redirect(request.args.get('next', url_for('interview_list')))
-    if 'newsecret' in session:
-        response.set_cookie('secret', session['newsecret'])
-        #logmessage("post_login: setting the cookie to " + session['newsecret'])
-        del session['newsecret']
-    # else:
-    #     logmessage("post_login: no newsecret")
-    return response
+# @app.route('/post_login', methods=['GET'])
+# def post_login():
+#     #logmessage("post_login")
+#     response = redirect(request.args.get('next', url_for('interview_list')))
+#     if 'newsecret' in session:
+#         response.set_cookie('secret', session['newsecret'])
+#         #logmessage("post_login: setting the cookie to " + session['newsecret'])
+#         del session['newsecret']
+#     # else:
+#     #     logmessage("post_login: no newsecret")
+#     return response
 
 @app.route('/headers', methods=['POST', 'GET'])
 @csrf.exempt
@@ -3360,7 +3371,15 @@ def exit():
         obtain_lock(session_id, yaml_filename)
         reset_user_dict(session_id, yaml_filename)
         release_lock(session_id, yaml_filename)
-    return redirect(exit_page)
+    if current_user.is_authenticated:
+        flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
+        logout_user()
+        delete_session()
+    response = redirect(exit_page)
+    response.set_cookie('visitor_secret', '', expires=0)
+    response.set_cookie('secret', '', expires=0)
+    response.set_cookie('session', '', expires=0)
+    return response
 
 @app.route("/cleanup_sessions", methods=['GET'])
 def cleanup_sessions():
@@ -3706,8 +3725,10 @@ def index():
         #     del session['newsecret']
         #     return response
     if 'json' in request.form or 'json' in request.args:
+        the_interface = 'json'
         is_json = True
     else:
+        the_interface = 'web'
         is_json = False
     chatstatus = session.get('chatstatus', 'off')
     session_id = session.get('uid', None)
@@ -4035,7 +4056,7 @@ def index():
     debug_mode = DEBUG or yaml_filename.startswith('docassemble.playground')
     # if should_assemble and '_action_context' in post_data:
     #     action = json.loads(myb64unquote(post_data['_action_context']))
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location), tracker=user_dict['_internal']['tracker'])
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface), tracker=user_dict['_internal']['tracker'])
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
         should_assemble = True
     if should_assemble or something_changed:
@@ -4634,7 +4655,7 @@ def index():
         user_dict = fresh_dictionary()
         user_dict['url_args'] = url_args
         user_dict['_internal']['referer'] = referer
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface))
         reset_user_dict(user_code, yaml_filename)
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
         if current_user.is_authenticated and 'visitor_secret' not in request.cookies:
@@ -4667,7 +4688,7 @@ def index():
             #logmessage("Section changed")
             #changed = True
             #steps += 1
-    if interview_status.question.question_type == "exit":
+    if interview_status.question.question_type in ("exit", "logout"):
         manual_checkout()
         # user_dict = fresh_dictionary()
         # logmessage("Calling reset_user_dict on " + user_code + " and " + yaml_filename)
@@ -4680,9 +4701,19 @@ def index():
         #     session['key_logged'] = True
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
-            return do_redirect(interview_status.questionText, is_ajax, is_json)
+            response = do_redirect(interview_status.questionText, is_ajax, is_json)
         else:
-            return do_redirect(exit_page, is_ajax, is_json)
+            response = do_redirect(exit_page, is_ajax, is_json)
+        if interview_status.question.question_type == "logout":
+            if current_user.is_authenticated:
+                flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
+                logout_user()
+                delete_session()
+            response.set_cookie('visitor_secret', '', expires=0)
+            response.set_cookie('secret', '', expires=0)
+            response.set_cookie('session', '', expires=0)
+        return response
+            
     if interview_status.question.question_type == "response":
         if is_ajax:
             # Duplicative to save here?
@@ -6278,7 +6309,7 @@ def index():
           var showIfDiv = this;
           var showHideDiv = function(){
             if ($(this).parents(".showif").length !== 0){
-              console.log("Returning because inside a showif.");
+              //console.log("Returning because inside a showif.");
               return;
             }
             var theVal;
@@ -6288,29 +6319,29 @@ def index():
             else{
               theVal = $(this).val();
             }
-            console.log("val is " + theVal + " and showIfVal is " + showIfVal)
+            //console.log("val is " + theVal + " and showIfVal is " + showIfVal)
             if(theVal == showIfVal){
-              console.log("They are the same");
+              //console.log("They are the same");
               if (showIfSign){
-                console.log("Showing1!");
+                //console.log("Showing1!");
                 $(showIfDiv).removeClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
               else{
-                console.log("Hiding1!");
+                //console.log("Hiding1!");
                 $(showIfDiv).addClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
             }
             else{
-              console.log("They are not the same");
+              //console.log("They are not the same");
               if (showIfSign){
-                console.log("Hiding2!");
+                //console.log("Hiding2!");
                 $(showIfDiv).addClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
               else{
-                console.log("Showing2!");
+                //console.log("Showing2!");
                 $(showIfDiv).removeClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
@@ -13982,7 +14013,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         r.set(key, pickle.dumps(sess_info))
     else:
         logmessage("do_sms: not accepting input.")    
-    if interview_status.question.question_type in ["restart", "exit"]:
+    if interview_status.question.question_type in ["restart", "exit", "logout"]:
         logmessage("do_sms: exiting because of restart or exit")
         if save:
             reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])

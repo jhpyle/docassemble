@@ -318,7 +318,7 @@ def states_list(country_code=None):
     return mapping
 
 def interface():
-    """Returns web, sms, cron, or worker, depending on how the interview is being accessed."""
+    """Returns web, json, sms, cron, or worker, depending on how the interview is being accessed."""
     return this_thread.current_info.get('interface', None)
 
 def user_privileges():
@@ -2049,7 +2049,7 @@ def all_variables():
     return serializable_dict(get_user_dict())
 
 def command(*pargs, **kwargs):
-    """Executes a command, such as exit, restart, or leave."""
+    """Executes a command, such as exit, logout, restart, or leave."""
     raise CommandError(*pargs, **kwargs)
 
 def force_ask(*pargs):
@@ -2825,9 +2825,9 @@ def showifdef(var):
 def log(message, priority='log'):
     """Log a message to the server or the browser."""
     if priority == 'log':
-        logmessage(message)
+        logmessage(unicode(message))
     else:
-        this_thread.message_log.append(dict(message=message, priority=priority))
+        this_thread.message_log.append(dict(message=unicode(message), priority=priority))
 
 def get_message_log():
     return this_thread.message_log

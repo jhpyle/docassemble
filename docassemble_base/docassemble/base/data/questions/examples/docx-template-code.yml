@@ -82,6 +82,8 @@ attachment:
   name: Your letter
   filename: letter
   docx template file: letter_template_code.docx
+  valid types:
+    - pdf
   fields:
     "letter_date": ${ format_date(today()) }
     "phone_number": 202-555-1234

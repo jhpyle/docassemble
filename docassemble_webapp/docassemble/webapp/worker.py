@@ -467,7 +467,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
         if not hasattr(interview_status, 'question'):
             #sys.stderr.write("background_action: status had no question\n")
             return(worker_controller.functions.ReturnValue(extra=extra))
-        if interview_status.question.question_type in ["restart", "exit"]:
+        if interview_status.question.question_type in ["restart", "exit", "logout"]:
             #sys.stderr.write("background_action: status was restart or exit\n")
             worker_controller.reset_user_dict(session_code, yaml_filename)
             worker_controller.release_lock(session_code, yaml_filename)
