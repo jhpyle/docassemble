@@ -1401,7 +1401,7 @@ users to log in with a phone number.  For this system to work, the
 or her phone number, and then a random verification code will be sent
 to that phone number via [SMS].  The user needs to type in that code
 in order to log in.  As with the
-[external authetication methods](#oauth), registration happens
+[external authentication methods](#oauth), registration happens
 automatically upon the first login.  Subsequent logins will also
 require entering a random verification code.
 

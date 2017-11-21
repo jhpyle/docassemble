@@ -136,6 +136,7 @@ There are six special button functions:
 
 * `restart`
 * `exit`
+* `logout`
 * `leave`
 * `continue`
 * `refresh`
@@ -158,6 +159,9 @@ For example:
 {% include side-by-side.html demo="exit-url" %}
 
 [Mako] can be used in the `url` text.
+
+<a name="logout"></a>`logout` does the same thing as `exit`, except
+that it also logs the user out, if the user is logged in.
 
 <a name="leave"></a>`leave` works like `exit` except that the user's
 variable store will be left intact.  This means that if the user comes
