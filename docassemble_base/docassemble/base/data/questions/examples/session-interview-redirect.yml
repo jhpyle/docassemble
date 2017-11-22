@@ -11,7 +11,13 @@ initial: True
 code: |
   if not user_logged_in():
     response(url=url_of('login'))
-  for interview in interview_list():
-    if interview['filename'] == 'docassemble.demo:data/questions/questions.yml':
-      response(url=interview_url(i=interview['filename'], session=interview['session'], local=True))
-  response(url=interview_url(i='docassemble.demo:data/questions/questions.yml', local=True))
+  if interface() == 'json':
+    for interview in interview_list():
+      if interview['filename'] == 'docassemble.demo:data/questions/questions.yml':
+        response(url=interview_url(i=interview['filename'], session=interview['session'], local=True, json=1))
+    response(url=interview_url(i='docassemble.demo:data/questions/questions.yml', local=True, json=1))
+  else:
+    for interview in interview_list():
+      if interview['filename'] == 'docassemble.demo:data/questions/questions.yml':
+        response(url=interview_url(i=interview['filename'], session=interview['session'], local=True))
+    response(url=interview_url(i='docassemble.demo:data/questions/questions.yml', local=True))

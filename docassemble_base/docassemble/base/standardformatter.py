@@ -672,9 +672,21 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if status.subquestionText:
             sub_question_text = markdown_to_html(status.subquestionText, status=status, indent=18, embedder=embed_input)
         field_list = status.get_field_list()
+        saveas_to_use = dict()
         for field in field_list:
             if hasattr(field, 'datatype') and field.datatype == 'note':
                 note_fields[field.number] = '                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, embedder=embed_input) + '</div></div>\n'
+            if hasattr(field, 'saveas'):
+                varnames[safeid('_field_' + str(field.number))] = field.saveas
+                if (hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras) or (hasattr(field, 'disableothers') and field.disableothers):
+                    the_saveas = safeid('_field_' + str(field.number))
+                else:
+                    the_saveas = field.saveas
+                saveas_to_use[field.saveas] = the_saveas
+                if the_saveas not in validation_rules['rules']:
+                    validation_rules['rules'][the_saveas] = dict()
+                if the_saveas not in validation_rules['messages']:
+                    validation_rules['messages'][the_saveas] = dict()
         for field in field_list:
             if is_empty_mc(status, field):
                 if hasattr(field, 'datatype'):
@@ -733,36 +745,37 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 onchange.append(safeid('_field_' + str(field.number)))
             if hasattr(field, 'saveas'):
                 varnames[safeid('_field_' + str(field.number))] = field.saveas
-                if (hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras) or (hasattr(field, 'disableothers') and field.disableothers):
-                    the_saveas = safeid('_field_' + str(field.number))
-                else:
-                    the_saveas = field.saveas                        
+                the_saveas = saveas_to_use[field.saveas]
+                # if (hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras) or (hasattr(field, 'disableothers') and field.disableothers):
+                #     the_saveas = safeid('_field_' + str(field.number))
+                # else:
+                #     the_saveas = field.saveas                        
                 if not (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']):
                 #     validation_rules['messages'][the_saveas] = dict()
                 #     validation_rules['rules'][the_saveas] = dict()
                 # else:
-                    validation_rules['messages'][the_saveas] = {'required': word("This field is required.")}
+                    validation_rules['messages'][the_saveas]['required'] = word("This field is required.")
                     if status.extras['required'][field.number]:
                         #sys.stderr.write(field.datatype + "\n")
-                        validation_rules['rules'][the_saveas] = {'required': True}
+                        validation_rules['rules'][the_saveas]['required'] = True
                     else:
-                        validation_rules['rules'][the_saveas] = {'required': False}
+                        validation_rules['rules'][the_saveas]['required'] = False
                 if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide'] and hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                     if field.uncheckothers is True:
                         the_query = '.uncheckable:checked, .uncheckothers:checked'
-                        uncheck_list = [y.saveas for y in field_list if y is not field and hasattr(y, 'saveas') and hasattr(y, 'inputtype') and y.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide']]
+                        uncheck_list = [saveas_to_use[y.saveas] for y in field_list if y is not field and hasattr(y, 'saveas') and hasattr(y, 'inputtype') and y.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide']]
                     else:
-                        uncheck_list = [safeid(y) for y in field.uncheckothers]
-                        the_query = ', '.join(['#' + do_escape_id(x) + ':checked' for x in uncheck_list + [field.saveas]])
+                        uncheck_list = [saveas_to_use[safeid(y)] for y in field.uncheckothers if safeid(y) in saveas_to_use]
+                        the_query = ', '.join(['#' + do_escape_id(x) + ':checked' for x in uncheck_list + [the_saveas]])
                         the_js = """\
 <script>
   $( document ).ready(function() {
     $(""" + '"' + ', '.join(['#' + escape_for_jquery(x) for x in uncheck_list]) + '"' + """).on("change", function(){
       if ($(this).is(":checked")){
-        $('#""" + escape_for_jquery(field.saveas) + """').prop("checked", false);
+        $('#""" + escape_for_jquery(the_saveas) + """').prop("checked", false);
       }
     });
-    $('#""" + escape_for_jquery(field.saveas) + """').on("change", function(){
+    $('#""" + escape_for_jquery(the_saveas) + """').on("change", function(){
       if ($(this).is(":checked")){
         $(""" + '"' + ', '.join(['#' + escape_for_jquery(x) for x in uncheck_list]) + '"' + """).prop("checked", false);
       }
@@ -776,7 +789,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         validation_rules['messages'][y]['checkone'] = word("Check at least one option, or check") + " " + '"' + status.labels[field.number] + '"'
                     if 'groups' not in validation_rules:
                         validation_rules['groups'] = dict()
-                    validation_rules['groups'][the_saveas + '_group'] = ' '.join(uncheck_list + [field.saveas])
+                    validation_rules['groups'][the_saveas + '_group'] = ' '.join(uncheck_list + [the_saveas])
                     validation_rules['ignore'] = None
                     
                 for key in ['minlength', 'maxlength']:
@@ -833,7 +846,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if (field.datatype in ['files', 'file', 'camera', 'camcorder', 'microphone']):
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(field.saveas)
-                    validation_rules['messages'][field.saveas] = {'required': word("You must provide a file.")}
+                    validation_rules['messages'][field.saveas]['required'] = word("You must provide a file.")
                 if field.datatype == 'combobox':
                     validation_rules['ignore'] = list()
                 if field.datatype in ['boolean', 'threestate']:
@@ -1781,6 +1794,8 @@ def input_for(status, field, wide=False, embedded=False):
                         uncheck = ' uncheckothers'
                 else:
                     uncheck = ' uncheckable'
+                if defaultvalue in ('False', 'false', 'FALSE', 'no', 'No', 'NO', 'Off', 'off', 'OFF', 'Null', 'null', 'NULL'):
+                    defaultvalue = False
                 if defaultvalue:
                     docheck = ' checked'
                 else:

@@ -42,13 +42,14 @@ def read_file(filename):
         if not len(blocks):
             sys.stderr.write("File " + str(filename) + " could not be read\n")
             return None
+        metadata = dict()
         for the_block in blocks:
             if re.search(r'metadata:', the_block):
                 block_info = yaml.load(the_block)
                 if 'metadata' in block_info:
-                    metadata = block_info['metadata']
-                    start_block = int(metadata.get('example start', 1))
-                    end_block = int(metadata.get('example end', start_block)) + 1
+                    metadata.update(block_info['metadata'])
+        start_block = int(metadata.get('example start', 1))
+        end_block = int(metadata.get('example end', start_block)) + 1
         result = "\n---\n".join(blocks[start_block:end_block])
     return(result)
 

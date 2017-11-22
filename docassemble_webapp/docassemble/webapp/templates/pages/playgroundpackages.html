@@ -72,7 +72,7 @@
                 </a>
               </li>
               <li role="presentation">
-                <a tabindex="7" id="daPull" href="{{ url_for('pull_playground_package', file=github_http) if github_http else url_for('pull_playground_package') }}" title="{{ word('Pull a package from GitHub or PyPI into the Playground') }}">
+                <a tabindex="7" id="daPull" href="{{ url_for('pull_playground_package', file=github_url) if github_url else url_for('pull_playground_package') }}" title="{{ word('Pull a package from GitHub or PyPI into the Playground') }}">
                   <span class="glyphicon glyphicon-cloud" aria-hidden="true"></span>
                   {{ word("Pull") }}
                 </a>

@@ -747,11 +747,17 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference in ['register']:
         remove_question_package(kwargs)
         return(url_for('user.register', **kwargs))
+    elif file_reference == 'logout':
+        remove_question_package(kwargs)
+        return(url_for('user.logout', **kwargs))
     elif file_reference == 'help':
         return('javascript:show_help_tab()');
     elif file_reference == 'interviews':
         remove_question_package(kwargs)
         return(url_for('interview_list', **kwargs))
+    elif file_reference == 'exit':
+        remove_question_package(kwargs)
+        return(url_for('exit', **kwargs))
     elif file_reference == 'interview_list':
         remove_question_package(kwargs)
         return(url_for('interview_list', **kwargs))
@@ -3126,7 +3132,7 @@ def get_github_flow():
     flow = oauth2client.client.OAuth2WebServerFlow(
         client_id=client_id,
         client_secret=client_secret,
-        scope='repo admin:public_key',
+        scope='repo admin:public_key read:user user:email read:org',
         redirect_uri=url_for('github_oauth_callback', _external=True),
         auth_uri='http://github.com/login/oauth/authorize',
         token_uri='https://github.com/login/oauth/access_token',
@@ -3198,11 +3204,15 @@ def github_configure():
         return redirect(uri)
     http = credentials.authorize(httplib2.Http())
     found = False
-    resp, content = http.request("https://api.github.com/user", "GET")
+    resp, content = http.request("https://api.github.com/user/emails", "GET")
     if int(resp['status']) == 200:
-        user_info = json.loads(content)
-        if 'email' not in user_info:
-            raise DAError("github_configure: could not get e-mail address of user")
+        user_info_list = json.loads(content)
+        if len(user_info_list):
+            user_info = user_info_list[0]
+            if user_info.get('email', None) is None:
+                raise DAError("github_configure: could not get e-mail address")
+        else:
+            raise DAError("github_configure: could not get list of e-mail addresses")
     else:
         raise DAError("github_configure: could not get information about user")
     resp, content = http.request("https://api.github.com/user/keys", "GET")
@@ -9062,6 +9072,12 @@ def create_playground_package():
             github_email = user_info.get('email', None)
         else:
             raise DAError("create_playground_package: could not get information about GitHub User")
+        if github_email is None:
+            resp, content = http.request("https://api.github.com/user/emails", "GET")
+            if int(resp['status']) == 200:
+                info = json.loads(content)
+                if len(info) and 'email' in info[0]:
+                    github_email = info[0]['email']
         if github_user_name is None or github_email is None:
             raise DAError("create_playground_package: login and/or email not present in user info from GitHub")
         all_repositories = dict()
@@ -10742,6 +10758,8 @@ def playground_packages():
     old_info = dict()
     on_github = False
     github_http = None
+    github_ssh = None
+    github_use_ssh = False
     if the_file != '' and can_publish_to_github and not is_new:
         github_package_name = 'docassemble-' + the_file
         try:
@@ -10765,18 +10783,45 @@ def playground_packages():
                 github_email = info.get('email', None)
             else:
                 raise DAError("create_playground_package: could not get information about GitHub User")
-            if github_user_name is None:
+            if github_email is None:
+                resp, content = http.request("https://api.github.com/user/emails", "GET")
+                if int(resp['status']) == 200:
+                    info = json.loads(content)
+                    if len(info) and 'email' in info[0]:
+                        github_email = info[0]['email']
+            if github_user_name is None or github_email is None:
                 raise DAError("playground_packages: login not present in user info from GitHub")
             resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name, "GET")
             if int(resp['status']) == 200:
                 repo_info = json.loads(content)
                 github_http = repo_info['html_url']
+                github_ssh = repo_info['ssh_url']
+                if repo_info['private']:
+                    github_use_ssh = True
                 github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on GitHub") + '</a>.'
                 if github_author_name:
                     github_message += "  " + word("The author is") + " " + github_author_name + "."
                 on_github = True
             else:
                 github_message = word('This package is not yet published on GitHub.')
+                resp, content = http.request("https://api.github.com/user/orgs", "GET")
+                if int(resp['status']) == 200:
+                    orgs_info = json.loads(content)
+                    for org_info in orgs_info:
+                        resp, content = http.request("https://api.github.com/repos/" + str(org_info['login']) + "/" + github_package_name, "GET")
+                        if int(resp['status']) == 200:
+                            repo_info = json.loads(content)
+                            github_http = repo_info['html_url']
+                            github_ssh = repo_info['ssh_url']
+                            if repo_info['private']:
+                                github_use_ssh = True
+                            github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on GitHub") + '</a>.'
+                            if github_author_name:
+                                github_message += "  " + word("The author is") + " " + github_author_name + "."
+                            on_github = True
+                            break
+                else:
+                    logmessage("Failed to get orgs using " + "https://api.github.com/user/orgs")
         except Exception as e:
             logmessage('playground_packages: GitHub error.  ' + str(e))
             github_message = word('Unable to determine if the package is published on GitHub.')
@@ -10897,14 +10942,29 @@ def playground_packages():
         data_files = dict(templates=list(), static=list(), sources=list(), interviews=list(), modules=list(), questions=list())
         directory = tempfile.mkdtemp()
         output = ''
+        logmessage("Can publish " + repr(can_publish_to_github))
+        logmessage("username " + repr(github_user_name))
+        logmessage("email " + repr(github_email))
+        logmessage("author name " + repr(github_author_name))
         if 'github_url' in request.args:
             github_url = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['github_url'])
-            output += "Doing git clone " + str(github_url) + "\n"
-            try:
-                output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT)
-            except subprocess.CalledProcessError as err:
-                output += err.output
-                raise DAError("playground_packages: error running git clone.  " + output)
+            if github_url.startswith('git@') and can_publish_to_github and github_user_name and github_email:
+                (private_key_file, public_key_file) = get_ssh_keys(github_email)
+                os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
+                os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
+                git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
+                output += "Doing " + git_prefix + "git clone " + github_url + "\n"
+                try:
+                    output += subprocess.check_output(git_prefix + "git clone " + github_url, cwd=directory, stderr=subprocess.STDOUT, shell=True)
+                except subprocess.CalledProcessError as err:
+                    output += err.output
+                    raise DAError("create_playground_package: error running git clone.  " + output)
+            else:
+                try:
+                    output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT)
+                except subprocess.CalledProcessError as err:
+                    output += err.output
+                    raise DAError("playground_packages: error running git clone.  " + output)
         elif 'pypi' in request.args:
             pypi_package = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['pypi'])
             pypi_package = 'docassemble.' + re.sub(r'^docassemble\.', '', pypi_package)
@@ -11188,7 +11248,11 @@ def playground_packages():
         daCodeMirror.setOption("coverGutterNextToScrollbar", true);""" + extra_command + """
       });
     </script>"""
-    return render_template('pages/playgroundpackages.html', version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_http=github_http, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+    if github_use_ssh:
+        the_github_url = github_ssh
+    else:
+        the_github_url = github_http
+    return render_template('pages/playgroundpackages.html', version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, github_ssh=github_ssh, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
 
 def copy_if_different(source, destination):
     if (not os.path.isfile(destination)) or filecmp.cmp(source, destination) is False:

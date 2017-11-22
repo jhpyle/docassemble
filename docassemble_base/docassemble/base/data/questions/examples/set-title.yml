@@ -1,11 +1,11 @@
 metadata:
   title: Set the interview title
   short title: Title
-  tab title: The Title
-  subtitle: The subtitle
-  documentation: "https://docassemble.org/docs/functions.html#set_title"
   example start: 2
   example end: 5
+  documentation: "https://docassemble.org/docs/functions.html#set_title"
+  tab title: The Title
+  subtitle: The subtitle
 ---
 modules:
   - docassemble.base.util

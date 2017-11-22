@@ -383,7 +383,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     a2dissite -q 000-default &> /dev/null
     a2dissite -q default-ssl &> /dev/null
     if [ "${DAHOSTNAME:-none}" != "none" ]; then
-	if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ] || [ "${USELETSENCRYPT:-none}" == "none" ] || [ "${USEHTTPS:-false}" == "false" ]; then
+	if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ] || [ "${USELETSENCRYPT:-false}" == "false" ] || [ "${USEHTTPS:-false}" == "false" ]; then
 	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
 		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@' \
 		-e 's@{{CROSSSITEDOMAIN}}@'"${CROSSSITEDOMAIN:-*}"'@' \
@@ -391,7 +391,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
 		/usr/share/docassemble/config/docassemble-ssl.conf.dist > /etc/apache2/sites-available/docassemble-ssl.conf || exit 1
 	    rm -f /etc/letsencrypt/da_using_lets_encrypt
 	fi
-	if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ] || [ "${USELETSENCRYPT:-none}" == "none" ] || [ "${USEHTTPS:-false}" == "false" ]; then
+	if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ] || [ "${USELETSENCRYPT:-false}" == "false" ] || [ "${USEHTTPS:-false}" == "false" ]; then
 	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
 		-e 's@{{POSTURLROOT}}@'"${POSTURLROOT}"'@' \
 		-e 's@{{CROSSSITEDOMAIN}}@'"${CROSSSITEDOMAIN:-*}"'@' \
@@ -649,22 +649,26 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	a2dissite -q docassemble-ssl &> /dev/null
     fi
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	if [ "${USELETSENCRYPT:-none}" != "none" ]; then
+	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
 	    cd /
 	    rm -f /tmp/letsencrypt.tar.gz
-	    tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-	    s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz
-	    rm -f /tmp/letsencrypt.tar.gz
+	    if [ -d etc/letsencrypt ]; then
+		tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+		s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz
+		rm -f /tmp/letsencrypt.tar.gz
+	    fi
 	fi
 	s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
-	if [ "${USELETSENCRYPT:-none}" != "none" ]; then
+	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
 	    cd /
 	    rm -f /tmp/letsencrypt.tar.gz
-	    tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-	    echo "Saving let's encrypt" >&2
-	    blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
-	    rm -f /tmp/letsencrypt.tar.gz
+	    if [ -d etc/letsencrypt ]; then
+		tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+		echo "Saving let's encrypt" >&2
+		blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
+		rm -f /tmp/letsencrypt.tar.gz
+	    fi
 	fi
 	for the_file in $(find /etc/apache2/sites-available/ -type f); do
 	    target_file=`basename $the_file`
@@ -672,7 +676,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	    blob-cmd -f cp $the_file "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/$target_file" 
 	done
     else
-	if [ "${USELETSENCRYPT:-none}" != "none" ]; then
+	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
 	    cd /
 	    rm -f /usr/share/docassemble/backup/letsencrypt.tar.gz
 	    tar -zcf /usr/share/docassemble/backup/letsencrypt.tar.gz etc/letsencrypt
