@@ -1695,7 +1695,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
             navbar += '<li><a role="tab" class="pointer no-outline" data-target="#help" id="helptoggle" title="' + extra_help_message + '"><span class="daactivetext">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></span></a></li>'
     navbar += '<li class="invisible" id="daPhoneAvailable"><a data-target="#help" title="' + phone_message + '" class="pointer navbar-icon"><i class="glyphicon glyphicon-earphone chat-active"></i></a></li><li class="invisible" id="daChatAvailable"><a data-target="#help" title="' + chat_message + '" class="pointer navbar-icon" ><i class="glyphicon glyphicon-comment"></i></a></li></ul>'
     navbar += """
-          <a id="pagetitle" class="navbar-brand pointer"><span class="hidden-xs">""" + status.display_title + """</span><span class="visible-xs-block">""" + status.short_title + """</span></a>
+          <a id="pagetitle" class="navbar-brand pointer"><span class="hidden-xs">""" + status.display_title + """</span><span class="visible-xs-block">""" + status.display_short_title + """</span></a>
       
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
@@ -6544,7 +6544,8 @@ def index():
     interview_status.title = interview_status.question.interview.get_title(user_dict).get('full', default_title)
     interview_status.display_title = interview_status.question.interview.get_title(user_dict).get('logo', interview_status.title)
     interview_status.tabtitle = interview_status.question.interview.get_title(user_dict).get('tab', interview_status.title)
-    interview_status.short_title = interview_status.question.interview.get_title(user_dict).get('short', default_short_title)
+    interview_status.short_title = interview_status.question.interview.get_title(user_dict).get('short', interview_status.question.interview.get_title(user_dict).get('full', default_short_title))
+    interview_status.display_short_title = interview_status.question.interview.get_title(user_dict).get('logo', interview_status.short_title)
     bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
     if not is_ajax:
         standard_header_start = standard_html_start(interview_language=interview_language, debug=debug_mode, bootstrap_theme=bootstrap_theme)
