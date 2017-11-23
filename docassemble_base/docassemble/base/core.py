@@ -447,6 +447,12 @@ class DAList(DAObject):
         if index < len(self.elements):
             return self[index]
         return DAEmpty()
+    def __add__(self, other):
+        self._trigger_gather()
+        if isinstance(other, DAList):
+            other._trigger_gather()
+            return self.elements + other.elements
+        return self.elements + other
     def clear(self):
         """Removes all the items from the list."""
         self.elements = list()
@@ -1656,6 +1662,14 @@ class DASet(DAObject):
     def __hash__(self, the_object):
         self._trigger_gather()
         return self.elements.__hash__(the_object)
+    def __add__(self, other):
+        if isinstance(other, DASet):
+            return self.elements + other.elements
+        return self.elements + other
+    def __sub__(self, other):
+        if isinstance(other, DASet):
+            return self.elements - other.elements
+        return self.elements - other
     def __str__(self):
         self._trigger_gather()
         return self.comma_and_list()

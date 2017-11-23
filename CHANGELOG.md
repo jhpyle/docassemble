@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.1.99] - 2017-11-22
+### Changed
+- Multiple choice questions in `fields` will set boolean `True` or
+  `False` if those are the only options.
+### Fixed
+- The `uncheck others` feature triggered an error if it was not the
+  last field.
+
 ## [0.1.98] - 2017-11-20
 ### Changed
 - Going to "/exit" will now log out the user, if the user is logged

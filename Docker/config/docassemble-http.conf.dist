@@ -14,12 +14,15 @@
     ProxyPassReverse {{POSTURLROOT}}ws/ http://127.0.0.1:5000/
     <IfDefine DAAllowCrossSite>
         Header set Access-Control-Allow-Origin "{{CROSSSITEDOMAIN}}"
+        Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
+        Header set Access-Control-Allow-Headers "Content-Type, origin"
+        Header set Access-Control-Allow-Credentials "true"
     </IfDefine>
     <IfModule !mod_ssl.c>
         XSendFile on
         XSendFilePath /usr
         XSendFilePath /tmp
-	KeepAliveTimeout 10
+        KeepAliveTimeout 10
         WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
         WSGIScriptAlias {{WSGIROOT}} /usr/share/docassemble/webapp/docassemble.wsgi
         <Directory /usr/share/docassemble/webapp>

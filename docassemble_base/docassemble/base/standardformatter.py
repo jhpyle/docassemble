@@ -732,7 +732,22 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 # elif field.datatype in ['script', 'css']:
                 #     continue
                 else:
-                    datatypes[field.saveas] = field.datatype
+                    if hasattr(field, 'choicetype'):
+                        vals = set([unicode(x['key']) for x in status.selectcompute[field.number]])
+                        if len(vals) == 1 and ('True' in vals or 'False' in vals):
+                            datatypes[field.saveas] = 'yesno'
+                        elif len(vals) == 1 and 'None' in vals:
+                            datatypes[field.saveas] = 'yesnomaybe'
+                        elif len(vals) == 2 and ('True' in vals and 'False' in vals):
+                            datatypes[field.saveas] = 'yesno'
+                        elif len(vals) == 2 and (('True' in vals and 'None' in vals) or ('False' in vals and 'None' in vals)):
+                            datatypes[field.saveas] = 'yesnomaybe'
+                        elif len(vals) == 3 and ('True' in vals and 'False' in vals and 'None' in vals):
+                            datatypes[field.saveas] = 'yesnomaybe'
+                        else:
+                            datatypes[field.saveas] = field.datatype
+                    else:
+                        datatypes[field.saveas] = field.datatype
                     if field.datatype == 'object_checkboxes':
                         datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
             if field.number in status.helptexts:

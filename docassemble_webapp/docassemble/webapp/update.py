@@ -12,6 +12,7 @@ from cStringIO import StringIO
 import sys
 import shutil
 import time
+#import zipfile
 
 from distutils.version import LooseVersion
 if __name__ == "__main__":
@@ -239,6 +240,21 @@ def fix_names():
             else:
                 sys.stderr.write("fix_names: package " + package.name + " does not appear to be installed" + "\n")
 
+def splitall(path):
+    allparts = []
+    while 1:
+        parts = os.path.split(path)
+        if parts[0] == path:
+            allparts.insert(0, parts[0])
+            break
+        elif parts[1] == path:
+            allparts.insert(0, parts[1])
+            break
+        else:
+            path = parts[0]
+            allparts.insert(0, parts[1])
+    return allparts
+
 def install_package(package):
     sys.stderr.write("install_package: " + package.name + "\n")
     if package.type == 'zip' and package.upload is None:
@@ -253,6 +269,10 @@ def install_package(package):
     temp_dir = tempfile.mkdtemp()
     if package.type == 'zip' and package.upload is not None:
         saved_file = SavedFile(package.upload, extension='zip', fix=True)
+        # with zipfile.ZipFile(saved_file.path + '.zip', mode='r') as zf:
+        #     for zinfo in zf.infolist():
+        #         parts = splitall(zinfo.filename)
+        #         if parts[-1] == 'setup.py':
         commands = ['pip', 'install', '--quiet', '--process-dependency-links', '--allow-all-external', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--log-file=' + pip_log.name, '--upgrade', saved_file.path + '.zip']
     elif package.type == 'git' and package.giturl is not None:
         if package.gitsubdir is not None:

@@ -2976,20 +2976,22 @@ class Question:
                     else:
                         result_dict['label'] = TextObject(key)
                         result_dict['key'] = TextObject(value)
-                elif type(value) == dict:
+                elif type(value) is dict:
                     result_dict['label'] = TextObject(key)
                     result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=ruamel.yaml.safe_dump(value, default_flow_style=False, default_style = '|'))
-                elif type(value) == str:
-                    result_dict['label'] = TextObject(key)
-                    if value in ['exit', 'logout', 'leave'] and 'url' in the_dict:
+                elif type(value) in (str, unicode):
+                    if value in ('exit', 'logout', 'leave') and 'url' in the_dict:
+                        result_dict['label'] = TextObject(key)
                         result_dict['key'] = Question({'command': value, 'url': the_dict['url']}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     elif value in ['continue', 'restart', 'refresh', 'signin', 'register', 'exit', 'logout', 'leave']:
+                        result_dict['label'] = TextObject(key)
                         result_dict['key'] = Question({'command': value}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     elif key == 'url':
                         pass
                     else:
+                        result_dict['label'] = TextObject(key)
                         result_dict['key'] = value
-                elif type(value) == bool:
+                elif type(value) is bool:
                     result_dict['label'] = TextObject(key)
                     result_dict['key'] = value
                 else:
