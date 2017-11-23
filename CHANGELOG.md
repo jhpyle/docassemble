@@ -3,13 +3,13 @@
 ## [0.1.99]
 ### Added
 - Option for changing the UID and GID of www-data within the Docker
-  container, so that the Playground files can be accessed from the
-  host using a Docker volume.
+  container, so that `/usr/share/docassemble/files` can be mounted as
+  a Docker volume and the Playground files can be edited.
 ### Changed
 - Multiple choice questions in `fields` will set boolean `True` or
   `False` if those are the only options.
-- Additional headers are set to allow CORS if the CROSSSITEDOMAIN
-  variable is set.
+- Additional headers are set to enable cross-site resource sharing 
+  if the CROSSSITEDOMAIN variable is set.
 ### Fixed
 - The `uncheck others` feature triggered an error if it was not the
   last field.

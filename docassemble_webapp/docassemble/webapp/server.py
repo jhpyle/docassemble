@@ -247,7 +247,7 @@ def custom_resend_confirm_email():
 
 def custom_login():
     """ Prompt for username/email and password and sign the user in."""
-    if 'json' in request.form or 'json' in request.args:
+    if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
         is_json = True
     else:
         is_json = False
@@ -1455,7 +1455,8 @@ def navigation_bar(nav, interview, wrapper=True, inner_ul_class=None, show_links
     if the_language not in nav.sections:
         the_language = '*'
     if the_language not in nav.sections:
-        raise DAError("Could not find a navigation bar to display.  " + str(nav.sections))
+        return ''
+        #raise DAError("Could not find a navigation bar to display.  " + str(nav.sections))
     the_sections = nav.sections[the_language]
     if len(the_sections) == 0:
         return('')
@@ -1694,7 +1695,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
             navbar += '<li><a role="tab" class="pointer no-outline" data-target="#help" id="helptoggle" title="' + extra_help_message + '"><span class="daactivetext">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></span></a></li>'
     navbar += '<li class="invisible" id="daPhoneAvailable"><a data-target="#help" title="' + phone_message + '" class="pointer navbar-icon"><i class="glyphicon glyphicon-earphone chat-active"></i></a></li><li class="invisible" id="daChatAvailable"><a data-target="#help" title="' + chat_message + '" class="pointer navbar-icon" ><i class="glyphicon glyphicon-comment"></i></a></li></ul>'
     navbar += """
-          <a id="pagetitle" class="navbar-brand pointer"><span class="hidden-xs">""" + status.title + """</span><span class="visible-xs-block">""" + status.short_title + """</span></a>
+          <a id="pagetitle" class="navbar-brand pointer"><span class="hidden-xs">""" + status.display_title + """</span><span class="visible-xs-block">""" + status.short_title + """</span></a>
       
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
@@ -3724,7 +3725,7 @@ def get_variables():
 
 @app.route("/", methods=['POST', 'GET'])
 def index():
-    if 'ajax' in request.form:
+    if 'ajax' in request.form and int(request.form['ajax']):
         is_ajax = True
     else:
         is_ajax = False
@@ -3734,7 +3735,7 @@ def index():
         #     response.set_cookie('secret', session['newsecret'])
         #     del session['newsecret']
         #     return response
-    if 'json' in request.form or 'json' in request.args:
+    if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
         the_interface = 'json'
         is_json = True
     else:
@@ -6541,6 +6542,7 @@ def index():
     # else:
     #     reload_after = ''
     interview_status.title = interview_status.question.interview.get_title(user_dict).get('full', default_title)
+    interview_status.display_title = interview_status.question.interview.get_title(user_dict).get('logo', interview_status.title)
     interview_status.tabtitle = interview_status.question.interview.get_title(user_dict).get('tab', interview_status.title)
     interview_status.short_title = interview_status.question.interview.get_title(user_dict).get('short', default_short_title)
     bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
@@ -6934,8 +6936,12 @@ def interview_menu(absolute_urls=False, start_new=False):
 def interview_start():
     if len(daconfig['dispatch']) == 0:
         return redirect(url_for('index', reset=1, i=final_default_yaml_filename))
+    if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
+        is_json = True
+    else:
+        is_json = False
     if daconfig.get('dispatch interview', None) is not None:
-        if 'json' in request.form or 'json' in request.args:
+        if is_json:
             return redirect(url_for('index', i=daconfig.get('dispatch interview'), from_list='1', json='1'))
         else:
             return redirect(url_for('index', i=daconfig.get('dispatch interview'), from_list='1'))
@@ -6945,7 +6951,7 @@ def interview_start():
     else:
         embed = False
     interview_info = interview_menu(absolute_urls=embed)
-    if 'json' in request.form or 'json' in request.args:
+    if is_json:
         return jsonify(action='menu', interviews=interview_info)
     argu = dict(extra_css=Markup(global_css), extra_js=Markup(global_js), version_warning=None, interview_info=interview_info, tab_title=daconfig.get('start page title', word('Interviews')), title=daconfig.get('start page heading', word('Available interviews')))
     if embed:
@@ -10291,7 +10297,7 @@ def playground_files():
         use_gd = True
     form = PlaygroundFilesForm(request.form)
     formtwo = PlaygroundFilesEditForm(request.form)
-    if 'ajax' in request.form:
+    if 'ajax' in request.form and int(request.form['ajax']):
         is_ajax = True
     else:
         is_ajax = False
@@ -10930,6 +10936,7 @@ def playground_packages():
                     zippath.close()
                 #except Exception as errMess:
                     #flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
+        flash(word("The package was unpacked into the Playground."), 'success')
         if need_to_restart:
             return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file)))
         return redirect(url_for('playground_packages', file=the_file))
@@ -11649,7 +11656,7 @@ def ensure_ml_file_exists(interview, yaml_file):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_page():
-    if 'ajax' in request.form:
+    if 'ajax' in request.form and int(request.form['ajax']):
         is_ajax = True
         use_gd = False
     else:
@@ -13094,7 +13101,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
 @app.route('/interviews', methods=['GET', 'POST'])
 @login_required
 def interview_list():
-    if 'json' in request.form or 'json' in request.args:
+    if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
         is_json = True
     else:
         is_json = False
@@ -13139,7 +13146,7 @@ def interview_list():
         else:
             return redirect(url_for('interview_list'))
     if daconfig.get('session list interview', None) is not None:
-        if 'json' in request.form or 'json' in request.args:
+        if is_json:
             return redirect(url_for('index', i=daconfig.get('session list interview'), from_list='1', json='1'))
         else:
             return redirect(url_for('index', i=daconfig.get('session list interview'), from_list='1'))

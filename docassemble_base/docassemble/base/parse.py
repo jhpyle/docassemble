@@ -135,7 +135,8 @@ class InterviewSource(object):
     def get_index(self):
         the_index = docassemble.base.functions.server.server_redis.get('da:interviewsource:' + self.path)
         if the_index is None:
-            return docassemble.base.functions.server.server_redis.incr('da:interviewsource:' + self.path)
+            the_index = docassemble.base.functions.server.server_redis.incr('da:interviewsource:' + self.path)
+        return the_index
     def update_index(self):
         docassemble.base.functions.server.server_redis.incr('da:interviewsource:' + self.path)
     def set_filepath(self, filepath):
@@ -3474,7 +3475,7 @@ class Interview:
                         tags.add(tag)
             return tags
     def get_title(self, user_dict):
-        mapping = (('title', 'full'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'))
         if not hasattr(self, 'default_title'):
             self.default_title = dict()
             for metadata in self.metadata:

@@ -494,12 +494,13 @@ def interview_url(**kwargs):
     url += '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
     return url
 
-def set_title(title=None, short=None, subtitle=None, tab=None):
+def set_title(title=None, logo=None, short=None, subtitle=None, tab=None):
     """Sets the title of the interview that is displayed in the navigation
     bar and other places.
 
     """
     this_thread.internal['title'] = title
+    this_thread.internal['logo'] = logo
     this_thread.internal['short title'] = short
     this_thread.internal['subtitle'] = subtitle
     this_thread.internal['tab title'] = tab
@@ -730,6 +731,8 @@ class DANav(object):
         """Sets the sections of the navigation to the given list."""
         if language is None:
             language = this_thread.language
+        if sections is None:
+            sections = []
         self.sections[language] = sections
         self.past = set()
 

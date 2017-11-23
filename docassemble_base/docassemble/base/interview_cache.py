@@ -2,7 +2,7 @@ import docassemble.base.parse
 import sys
 import threading
 import thread
-from docassemble.base.logger import logmessage
+# from docassemble.base.logger import logmessage
 
 _interview_cache = dict()
 
@@ -14,13 +14,14 @@ this_thread = ThreadVariables()
 def get_interview(path):
     if path is None:
         sys.exit("Tried to load interview source with no path")
+    # logmessage("get_interview: " + str(thread.get_ident()) + " checking cache" + "\n")
     if cache_valid(path):
-        #logmessage("get_interview: " + str(thread.get_ident()) + " cache is valid" + "\n")
+        # logmessage("get_interview: " + str(thread.get_ident()) + " cache is valid" + "\n")
         the_interview = this_thread.cache[path]['interview']
         # the_interview = _interview_cache[path]['interview']
         the_interview.from_cache = True
     else:
-        #logmessage("get_interview: " + str(thread.get_ident()) + " fetching from cache" + "\n")
+        # logmessage("get_interview: " + str(thread.get_ident()) + " cache is not valid" + "\n")
         interview_source = docassemble.base.parse.interview_source_from_string(path)
         interview_source.update()
         #modtime = interview_source.get_modtime()
@@ -42,6 +43,10 @@ def cache_valid(questionPath):
     # if questionPath in _interview_cache and _interview_cache[questionPath]['modtime'] == _interview_cache[questionPath]['source'].get_modtime():
     #     return True
     # return False
+    # if questionPath in this_thread.cache:
+    #     logmessage("cache_valid: index is " + str(this_thread.cache[questionPath]['index']))
+    # else:
+    #     logmessage("cache_valid: index is unknown")
     if questionPath in this_thread.cache and this_thread.cache[questionPath]['index'] == this_thread.cache[questionPath]['source'].get_index():
         return True
     return False
