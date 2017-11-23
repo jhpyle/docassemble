@@ -622,6 +622,24 @@ python -m docassemble.webapp.install_certs $DA_CONFIG_FILE || exit 1
 # echo "43" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
+    if [ "${WWWUID:-none}" != "none" ] && [ "${WWWGID:-none}" != "none" ] && [ `id -u www-data` != $WWWUID ]; then
+	OLDUID=`id -u www-data`
+	OLDGID=`id -g www-data`
+
+	usermod -o -u $WWWUID www-data
+	groupmod -g $WWWGID www-data
+	find / -user $OLDUID -exec chown -h www-data {} \;
+	find / -group $OLDGID -exec chgrp -h www-data {} \;
+	if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
+	    supervisorctl --serverurl http://localhost:9001 stop celery
+	fi
+	supervisorctl --serverurl http://localhost:9001 reread
+	supervisorctl --serverurl http://localhost:9001 update
+	if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
+	    supervisorctl --serverurl http://localhost:9001 start celery
+	fi
+    fi
+
     echo "Listen 80" >> /etc/apache2/ports.conf
     if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
 	echo "Listen 8081" >> /etc/apache2/ports.conf
