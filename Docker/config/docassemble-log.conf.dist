@@ -1,17 +1,17 @@
 <VirtualHost *:8080>
     ServerAdmin webmaster@localhost
-    #ServerName {{DAHOSTNAME}}
+    ServerName ${DAHOSTNAME}
     DocumentRoot "/var/www/html/log"
     <Directory "/var/www/html/log">
-        DirectoryIndex {{POSTURLROOT}}cgi-bin/index.sh
+        DirectoryIndex ${POSTURLROOT}cgi-bin/index.sh
         Require all granted
     </Directory>
-    ScriptAlias "{{POSTURLROOT}}cgi-bin/" "/usr/lib/cgi-bin/"
+    ScriptAlias "${POSTURLROOT}cgi-bin/" "/usr/lib/cgi-bin/"
     <Directory "/usr/lib/cgi-bin/">
         Options +ExecCGI
     </Directory>
-    <IfDefine DAAllowCrossSite>
-        Header set Access-Control-Allow-Origin "{{CROSSSITEDOMAIN}}"
+    <IfDefine DACROSSSITEDOMAIN>
+        Header set Access-Control-Allow-Origin "${DACROSSSITEDOMAIN}"
         Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
         Header set Access-Control-Allow-Headers "Content-Type, origin"
         Header set Access-Control-Allow-Credentials "true"

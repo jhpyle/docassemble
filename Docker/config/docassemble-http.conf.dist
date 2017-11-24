@@ -1,19 +1,19 @@
-#ServerName {{DAHOSTNAME}}
+ServerName ${DAHOSTNAME}
 <VirtualHost *:80>
     ServerAdmin webmaster@localhost
-    #ServerName {{DAHOSTNAME}}
+    ServerName ${DAHOSTNAME}
     DocumentRoot /var/www/html
     RewriteEngine On
     <IfModule mod_ssl.c>
         RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
     </IfModule>
-    RewriteCond %{REQUEST_URI}     ^{{POSTURLROOT}}ws/socket.io         [NC]
+    RewriteCond %{REQUEST_URI}     ^${DAPOSTURLROOT}ws/socket.io         [NC]
     RewriteCond %{QUERY_STRING}    transport=websocket    [NC]
-    RewriteRule {{POSTURLROOT}}ws/(.*)           ws://127.0.0.1:5000/$1 [P,L]
-    ProxyPass {{POSTURLROOT}}ws/ http://127.0.0.1:5000/
-    ProxyPassReverse {{POSTURLROOT}}ws/ http://127.0.0.1:5000/
-    <IfDefine DAAllowCrossSite>
-        Header set Access-Control-Allow-Origin "{{CROSSSITEDOMAIN}}"
+    RewriteRule ${DAPOSTURLROOT}ws/(.*)           ws://127.0.0.1:5000/$1 [P,L]
+    ProxyPass ${DAPOSTURLROOT}ws/ http://127.0.0.1:5000/
+    ProxyPassReverse ${DAPOSTURLROOT}ws/ http://127.0.0.1:5000/
+    <IfDefine DACROSSSITEDOMAIN>
+        Header set Access-Control-Allow-Origin "${DACROSSSITEDOMAIN}"
         Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
         Header set Access-Control-Allow-Headers "Content-Type, origin"
         Header set Access-Control-Allow-Credentials "true"
@@ -24,7 +24,7 @@
         XSendFilePath /tmp
         KeepAliveTimeout 10
         WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
-        WSGIScriptAlias {{WSGIROOT}} /usr/share/docassemble/webapp/docassemble.wsgi
+        WSGIScriptAlias ${DAWSGIROOT} /usr/share/docassemble/webapp/docassemble.wsgi
         <Directory /usr/share/docassemble/webapp>
             WSGIProcessGroup docassemble.webserver
             WSGIApplicationGroup %{GLOBAL}

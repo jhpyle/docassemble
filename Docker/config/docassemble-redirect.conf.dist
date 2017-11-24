@@ -1,11 +1,11 @@
 <VirtualHost *:8081>
     ServerAdmin webmaster@localhost
-    #ServerName {{DAHOSTNAME}}
+    ServerName ${DAHOSTNAME}
     DocumentRoot /var/www/html
     RewriteEngine On
     RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
-    <IfDefine DAAllowCrossSite>
-        Header set Access-Control-Allow-Origin "{{CROSSSITEDOMAIN}}"
+    <IfDefine DACROSSSITEDOMAIN>
+        Header set Access-Control-Allow-Origin "${DACROSSSITEDOMAIN}"
         Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
         Header set Access-Control-Allow-Headers "Content-Type, origin"
         Header set Access-Control-Allow-Credentials "true"
