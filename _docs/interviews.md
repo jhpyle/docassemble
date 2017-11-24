@@ -517,3 +517,4 @@ For more information about [YAML], see the [YAML specification].
 [`go full screen`]: {{ site.baseurl }}/docs/initial.html#go full screen
 [`dispatch interview`]: {{ site.baseurl }}/docs/config.html#dispatch interview
 [`interview_menu()`]: {{ site.baseurl }}/docs/functions.html#interview_menu
+[`menu_items` special variable]: {{ site.baseurl }}/docs/special.html#menu_items

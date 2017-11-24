@@ -947,6 +947,10 @@ The `url_of()` function also has a few special uses.
   if there is a help tab.
 * `url_of('login')` returns a URL to the sign-in page.
 * `url_of('signin')` does the same thing as `url_of('login')`.
+* `url_of('logout')` returns a URL that logs the user out.
+* `url_of('exit')` returns a URL that deletes the interview session
+  and exits.
+* `url_of('register')` returns a URL to the user registration page.
 * `url_of('interviews')` returns a URL to the page listing the
   on-going interviews of a signed-in user.
 * `url_of('playground')` returns a URL to the [Playground].
@@ -2786,6 +2790,7 @@ In the above example, the file [`contacts.yml`] file has the following contents:
 
 {% highlight yaml %}
 object: Individual
+module: docassemble.base.util
 items:
   - name:
       object: IndividualName
