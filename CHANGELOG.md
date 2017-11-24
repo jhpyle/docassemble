@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.1.99]
+## [0.1.99] - 2017-11-23
 ### Added
 - Option for changing the UID and GID of www-data within the Docker
   container, so that `/usr/share/docassemble/files` can be mounted as
@@ -10,6 +10,11 @@
   `False` if those are the only options.
 - Additional headers are set to enable cross-site resource sharing 
   if the CROSSSITEDOMAIN variable is set.
+- Apache configuration files in Docker are configured differently;
+  existing site configuration files will not be overwritten and 
+  configuration options are now implemented as Apache variables.
+- `DAList` objects now work with the `+` operator; a regular list can
+  be added to a `DAList` but not the other way around.
 ### Fixed
 - The `uncheck others` feature triggered an error if it was not the
   last field.
