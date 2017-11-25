@@ -359,15 +359,26 @@ indicated location, **docassemble** will create an initial
 * <a name="AZUREACCOUNTKEY"></a>`AZUREACCOUNTKEY`: If you are
   using [Azure blob storage], set this to the account key.
 
-The following options are useful for pre-populating a fresh
-[configuration] with particular values.  These environment variables
-are effective only during an initial `run` of the [Docker] container,
-when a [configuration] file does not already exist.  If you are using
-[persistent volumes], or you have set the options above for
-[S3](#persistent s3)/[Azure blob storage](#persistent azure) and a
-[configuration] file exists in your cloud storage, the values in that
-[configuration] file will take precedence over any values you specify
-in `env.list`.
+The following options are "setup" parameters that are useful for
+pre-populating a fresh [configuration] with particular values.  These
+environment variables are effective only during an initial `run` of
+the [Docker] container, when a [configuration] file does not already
+exist.
+
+Note: if you are using [persistent volumes], or you have set the
+options above for 
+[S3](#persistent s3)/[Azure blob storage](#persistent azure) 
+and a [configuration] file exists in your cloud storage, the values 
+in that [configuration] file will take precedence over any values you 
+specify in `env.list`.
+
+Moreover, some of the values listed below are only used when
+generating the initial [Apache] configuration files.  To make changes
+to [Apache] configuration files after they have been created, edit the
+files directly.  If you are using [S3](#persistent
+s3)/[Azure blob storage](#persistent azure), you can edit these
+configuration files in the cloud and then stop and start your
+container for the new configuration to take effect.
 
 * <a name="DBHOST"></a>`DBHOST`: The hostname of the [PostgreSQL]
   server.  Keep undefined or set to `null` in order to use the

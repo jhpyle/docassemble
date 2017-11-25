@@ -58,8 +58,8 @@ Users who log in with an e-mail address and password have the
 additional option of using [two-factor authentication].
 
 If you do not want your users to be able to log in, you can hide the
-Login button by setting the [`show login`] setting in the
-[configuration].
+"Sign in or sign up to save answers" link by setting the
+[`show login`] setting in the [configuration].
 
 When a user is logged in, the user's information is made available to
 **docassemble** interviews through the [`user_info()`] function.

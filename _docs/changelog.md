@@ -4,6 +4,42 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.1.99](https://github.com/jhpyle/docassemble/releases/tag/v0.1.99) - 2017-11-23
+
+### Added
+- Option for changing the UID and GID of www-data within the Docker
+  container, so that `/usr/share/docassemble/files` can be mounted as
+  a Docker volume and the Playground files can be edited.
+
+### Changed
+- Multiple choice questions in `fields` will set boolean `True` or
+  `False` if those are the only options.
+- Additional headers are set to enable cross-site resource sharing 
+  if the CROSSSITEDOMAIN variable is set.
+- Apache configuration files in Docker are configured differently;
+  existing site configuration files will not be overwritten and 
+  configuration options are now implemented as Apache variables.
+- `DAList` objects now work with the `+` operator; a regular list can
+  be added to a `DAList` but not the other way around.
+
+### Fixed
+- The `uncheck others` feature triggered an error if it was not the
+  last field.
+
+## [0.1.98](https://github.com/jhpyle/docassemble/releases/tag/v0.1.98) - 2017-11-20
+
+### Changed
+- Going to "/exit" will now log out the user, if the user is logged
+  in.
+- When using `&json=1` for JSON responses, the `interface()` function
+  will return `'json'`.
+
+### Added
+- Action for `logout`, which works like `exit` but also logs the user out.
+
+### Fixed
+- Default values in object choices.
+
 ## [0.1.97](https://github.com/jhpyle/docassemble/releases/tag/v0.1.97) - 2017-11-14
 
 ### Fixed

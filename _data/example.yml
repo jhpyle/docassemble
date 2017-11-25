@@ -1969,12 +1969,10 @@
   mandatory: True
   question: |
     Here is your document.
-  attachment:
-    name: Your letter
-    filename: letter
-    docx template file: letter_template.docx
-    valid formats:
-      - pdf
+  attachment code: |
+
+    # qwerqwer
+    [asdf]
 "docx-template-auto": ""
 "docx-template-code": |-
   mandatory: True
@@ -1984,6 +1982,8 @@
     name: Your letter
     filename: letter
     docx template file: letter_template_code.docx
+    valid types:
+      - pdf
     fields:
       "letter_date": ${ format_date(today()) }
       "phone_number": 202-555-1234
@@ -2582,7 +2582,7 @@
     Congratulations, you found Nemo!
   buttons:
     - Try again: restart
-    - Learn More: exit
+    - Learn More: logout
       url: https://en.wikipedia.org/wiki/Amphiprioninae
   mandatory: True
 "exit-url-referer": |-
@@ -5668,6 +5668,25 @@
     choices:
       - protagonist
       - antagonist
+"object-default": |-
+  objects:
+    protagonist: Individual
+    antagonist: Individual
+  ---
+  code: |
+    protagonist.name.first = "Harry"
+    protagonist.name.last = "Potter"
+    antagonist.name.first = "Tom"
+    antagonist.name.last = "Riddle"
+  ---
+  question: Who is the villain?
+  fields:
+    The villain is: villain
+    datatype: object_radio
+    default: antagonist
+    choices:
+      - protagonist
+      - antagonist
 "object-demo": |-
   modules:
     - docassemble.base.core
@@ -7376,12 +7395,54 @@
   code: |
     interview_list(action='delete_all')
     log("Deleted interviews", "success")
+"session-interview-redirect": |-
+  initial: True
+  code: |
+    if not user_logged_in():
+      response(url=url_of('login'))
+    if interface() == 'json':
+      for interview in interview_list():
+        if interview['filename'] == 'docassemble.demo:data/questions/questions.yml':
+          response(url=interview_url(i=interview['filename'], session=interview['session'], local=True, json=1))
+      response(url=interview_url(i='docassemble.demo:data/questions/questions.yml', local=True, json=1))
+    else:
+      for interview in interview_list():
+        if interview['filename'] == 'docassemble.demo:data/questions/questions.yml':
+          response(url=interview_url(i=interview['filename'], session=interview['session'], local=True))
+      response(url=interview_url(i='docassemble.demo:data/questions/questions.yml', local=True))
 "set-language": "initial: True\ncode: |\n  set_language(language)\n---\nquestion:\
   \ |\n  What language do you speak?\nfield: language\nchoices:\n  - English: en\n\
   \  - Espa\xF1ol: es"
 "set-title": |-
-  modules:
-    - docassemble.base.util
+  metadata:
+    title: Set the interview title
+    short title: Title
+    tab title: The Title
+    subtitle: The subtitle
+  ---
+  question: |
+    What is your favorite fruit?
+  subquestion: |
+    Note the interview titles.
+  fields:
+    Fruit: favorite_fruit
+  ---
+  mandatory: True
+  code: |
+    favorite_fruit = noun_plural(favorite_fruit)
+    favorite_fruit = capitalize(favorite_fruit)
+    set_title(
+      title=favorite_fruit + " rule",
+      short="I'm Tiny!",
+      tab="TabTab",
+      subtitle="a fruit interview")
+  ---
+  mandatory: True
+  question: |
+    The interview titles have been
+    changed.
+  buttons:
+    - Restart: restart
 "showif": |-
   question: |
     Please fill in the following information.
@@ -7740,8 +7801,42 @@
     - Fruit Name: row_item.name
     - Seeds: row_item.seeds
 "tags": |-
-  modules:
-    - docassemble.base.util
+  metadata:
+    tags:
+      - apples
+      - oranges
+  ---
+  mandatory: True
+  question: Tags
+  subquestion: |
+    The tags are:
+
+    % for tag in session_tags():
+    * ${ tag }
+    % endfor
+
+    Check your
+    [interview list](${ url_of('interviews') })
+    to see these tags.
+  field: first_screen_done
+  ---
+  mandatory: True
+  code: |
+    session_tags().add('grapes')
+  ---
+  mandatory: True
+  question: Tags
+  subquestion: |
+    The tags are:
+
+    % for tag in session_tags():
+    * ${ tag }
+    % endfor
+
+    Check your
+    [interview list](${ url_of('interviews') })
+    to see how these tags
+    have changed.
 "target-code": |-
   question: |
     What is your favorite food?

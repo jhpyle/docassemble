@@ -1401,7 +1401,7 @@ users to log in with a phone number.  For this system to work, the
 or her phone number, and then a random verification code will be sent
 to that phone number via [SMS].  The user needs to type in that code
 in order to log in.  As with the
-[external authetication methods](#oauth), registration happens
+[external authentication methods](#oauth), registration happens
 automatically upon the first login.  Subsequent logins will also
 require entering a random verification code.
 
@@ -1777,7 +1777,7 @@ twilio:
   sms: True
   voice: True
   account sid: ACfad8e668d876f5473fb232a311243b58
-  auth token: auth token: 87559c7a427c25e34e20c654e8b05234
+  auth token: 87559c7a427c25e34e20c654e8b05234
   number: "+12762410114"
   dispatch:
     color: docassemble.base:data/questions/examples/buttons-code-color.yml
@@ -1796,7 +1796,7 @@ account dashboard.
 
 The `auth token` is another value you copy and paste from your
 [Twilio] account dashboard.  This is only necessary if you intend to
-use the [`send_sms()`] function.
+use the [`send_sms()`] function or the [phone login] feature.
 
 The `number` is the phone number you purchased.  The phone number
 must be written in [E.164] format.  This is the phone number with
