@@ -834,7 +834,7 @@ will be asked if they with to give your server access to their
 the contents of the user's [Playground] with a folder on the user's
 [Google Drive].
 
-In order for users to be able to connect their accounts in this way,
+In order for developers on your playground to be able to connect their accounts in this way,
 you will need to obtain an OAuth 2.0 client ID and secret from
 Google.
 
@@ -842,15 +842,18 @@ Google.
 * Start a "project" for your server if you do not already have one.
 * Enable the [Google Drive API] for the project.
 * Under "Credentials," create an OAuth 2.0 client ID for a "web
-  application."
+  application." If this is the first time you are creating credentials for this account,
+  you may also need to specify that the credentials are for a Web Browser (Javascript) and that
+  the application will be accessing user data, not application data.
 * Note the "Client ID."  You need to set this value as the `id` in the
   [`oauth`] configuration, under [`googledrive`].
 * Note also the "Client secret."  You need to set this as the `secret`
   in the [`oauth`] configuration.
 * Under Authorized JavaScript origins, add the URL for your
   **docassemble** site.  (E.g. `https://docassemble.example.com`)
-* Under Authorized redirect URIs, add the URL
-  `https://docassemble.example.com/google_drive_callback`.
+* Under Authorized redirect URIs, add the URL for your **docassemble** site, followed by /google_drive_callback.
+  E.g, `https://docassemble.example.com/google_drive_callback`.
+* In the [`oauth`] configuration, ensure that you enable Google Drive integration.
 
 ## <a name="github"></a>Setting up GitHub integration
 
