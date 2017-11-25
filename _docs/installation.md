@@ -878,18 +878,20 @@ application" on [GitHub]:
 * Log in to [GitHub].
 * Go to your "[Settings](https://github.com/settings/profile)."
 * Navigate to
-  "[OAuth applications](https://github.com/settings/developers)."
+  "[Developer settings](https://github.com/settings/developers)."
+* The "[OAuth Apps](https://github.com/settings/developers)" tab should be active.
 * Press the "Register a new application" button.
 * Enter an "Application name" that describes your **docassemble**
   server.  Your users will see this application name when [GitHub]
   asks them if they wish to grant your server access to their [GitHub]
   account.
 * Under "Homepage URL," enter the URL of your **docassemble** server.
-* If you want, enter an "Application description."  Users will see
+* If you want, enter an "Application description."  Developers on your
+  Docassemble playground will see
   this when [GitHub] asks them if they wish to grant your server
   access to their [GitHub] account.
 * Under "Authorization callback URL," enter the URL for your server
-  followed by `/github_oauth_callback`.  So, if your users access the
+  followed by `/github_oauth_callback`.  So, if your developers access the
   [Playground] at `https://docassemble.example.com/playground`, the
   callback URL will be
   `https://docassemble.example.com/github_oauth_callback`.  This
@@ -899,7 +901,8 @@ application" on [GitHub]:
 * [GitHub] will then tell you the "Client ID" and "Client Secret" of
   your new "OAuth application."  Note the values of these codes; you
   need to plug them into your **docassemble** [configuration].
-* On your **docassemble** server, go to "Configuration."  Set the
+* On your **docassemble** server, go to "Configuration."  Find the OAuth section, and
+  the Github section below. Set Enable: to True. Set the
   "Client ID" value as the `id` in the [`oauth`] configuration, under
   `github`.  Set the "Client Secret" value as the `secret` in the
   [`oauth`] configuration.
