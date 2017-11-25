@@ -1163,9 +1163,14 @@ class DADict(DAObject):
         """Returns the number of keys in the dictionary, spelling out the number if ten 
         or below.  Forces the gathering of the dictionary items if necessary."""
         return nice_number(self.number())
-    def _validate(self, item_object_type, complete_attribute):
+    def _validate(self, item_object_type, complete_attribute, keys=None):
+        if keys is None:
+            keys = sorted(self.elements.keys())
+        else:
+            keys = [key for key in keys if key in self.elements]
         if self.ask_object_type:
-            for key, elem in sorted(self.elements.iteritems()):
+            for key in keys:
+                elem = self.elements[key]
                 if elem is None:
                     if isinstance(self.new_object_type, DAObjectPlusParameters):
                         object_type_to_use = self.new_object_type.object_type
@@ -1178,12 +1183,13 @@ class DADict(DAObject):
                     self.elements[key] = object_type_to_use(self.instanceName + '[' + repr(key) + ']', **parameters_to_use)
             if hasattr(self, 'new_object_type'):
                 delattr(self, 'new_object_type')
-        for elem in sorted(self.elements.values()):
+        for key in keys:
+            elem = self.elements[key]
             if item_object_type is not None and complete_attribute is not None:
                 getattr(elem, complete_attribute)
             else:
                 str(elem)
-    def gather(self, item_object_type=None, number=None, minimum=None, complete_attribute=None):
+    def gather(self, item_object_type=None, number=None, minimum=None, complete_attribute=None, keys=None):
         """Causes the dictionary items to be gathered and named.  Returns True."""
         if hasattr(self, 'gathered') and self.gathered:
             return True
@@ -1198,7 +1204,7 @@ class DADict(DAObject):
         if complete_attribute is None and self.complete_attribute is not None:
             complete_attribute = self.complete_attribute
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
-        self._validate(item_object_type, complete_attribute)
+        self._validate(item_object_type, complete_attribute, keys=keys)
         # for elem in sorted(self.elements.values()):
         #     str(elem)
         #     if item_object_type is not None and complete_attribute is not None:
@@ -1240,7 +1246,7 @@ class DADict(DAObject):
                     self.__getitem__(the_name)
             if hasattr(self, 'there_is_another'):
                 delattr(self, 'there_is_another')
-        self._validate(item_object_type, complete_attribute)
+        self._validate(item_object_type, complete_attribute, keys=keys)
         if self.auto_gather:
             self.gathered = True
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)

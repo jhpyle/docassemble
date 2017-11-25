@@ -15,6 +15,4 @@ RUN rm -rf /tmp/docassemble && sed -i -e 's/^\(daemonize\s*\)yes\s*$/\1no/g' -e 
 EXPOSE 80 443 9001 514 25 465 8080 8081 5432 6379 4369 5671 5672 25672
 ENV CONTAINERROLE="all" LOCALE="en_US.UTF-8 UTF-8" TIMEZONE="America/New_York" EC2="" S3ENABLE="" S3BUCKET="" S3ACCESSKEY="" S3SECRETACCESSKEY="" DAHOSTNAME="" USEHTTPS="" USELETSENCRYPT="" LETSENCRYPTEMAIL="" DBHOST="" LOGSERVER="" REDIS="" RABBITMQ=""
 
-VOLUME  ["/usr/share/docassemble/certs", "/usr/share/docassemble/backup"]
-
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]

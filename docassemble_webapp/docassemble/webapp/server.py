@@ -10076,6 +10076,8 @@ def google_drive_page():
     if request.method == 'POST' and form.submit.data:
         if form.folder.data == '':
             set_gd_folder(None)
+            storage.locked_delete()
+            flash(word("Google Drive is not linked."), 'success')
         elif form.folder.data == -1:
             file_metadata = {
                 'name' : 'docassemble',
@@ -10898,7 +10900,7 @@ def playground_packages():
                                 readme_text = zf.read(zinfo)
                             if filename == 'setup.py' and len(levels) == 0:
                                 setup_py = zf.read(zinfo)
-                            elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py':
+                            elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
                                 need_to_restart = True
                                 data_files['modules'].append(filename)
                                 target_filename = os.path.join(area['playgroundmodules'].directory, filename)
@@ -11031,7 +11033,7 @@ def playground_packages():
                 if filename == 'setup.py' and len(levels) == 0:
                     with open(orig_file, 'rU') as fp:
                         setup_py = fp.read().decode('utf8')
-                elif len(levels) >= 1 and filename.endswith('.py') and filename != '__init__.py':
+                elif len(levels) >= 1 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
                     need_to_restart = True
                     data_files['modules'].append(filename)
                     target_filename = os.path.join(area['playgroundmodules'].directory, filename)

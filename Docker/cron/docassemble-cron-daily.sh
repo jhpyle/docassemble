@@ -30,14 +30,14 @@ mkdir -p $BACKUPDIR
 if [[ $CONTAINERROLE =~ .*:(all|web|celery|log|cron):.* ]]; then
     rsync -au /usr/share/docassemble/files $BACKUPDIR/
     rsync -au /usr/share/docassemble/config $BACKUPDIR/
-    rsync -au --exclude '*/worker.log' /usr/share/docassemble/log $BACKUPDIR/
+    rsync -au --exclude '*/worker.log*' /usr/share/docassemble/log $BACKUPDIR/
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     PGBACKUPDIR=`mktemp -d`
     chown postgres.postgres "$PGBACKUPDIR"
     su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
-    rsync -au "$PGBACKUPDIR" $BACKUPDIR/postgres
+    rsync -au "$PGBACKUPDIR/*" $BACKUPDIR/postgres
     if [ "${S3ENABLE:-false}" == "true" ]; then
 	s3cmd sync "$PGBACKUPDIR/" s3://${S3BUCKET}/postgres/
     fi
