@@ -228,11 +228,12 @@ asks what [AMI] you want to use, go to "Community AMIs," search for
 the keyword "ecs-optimized" and pick the most recent [AMI] that comes
 up.  The [AMI]s will not be listed in any useful order, so you have to
 look carefully at the names, which contain the dates the [AMI]s were
-created.  As of this writing, the most recent ECS-optimzed [AMI] is
-"amzn-ami-2017.03.g-amazon-ecs-optimized."  If you use a different
-AMI, make sure that you give the machine at least 20GB of storage.
-The ECS-optimized [AMI]s provide 30GB of storage in total, which
-should be sufficient.
+created.  There is also a [page on Amazon's web site] that lists the
+ECS-optimized AMIs by region.  As of this writing, the most recent
+ECS-optimzed [AMI] is "amzn-ami-2017.09.c-amazon-ecs-optimized."  If
+you use a different AMI, make sure that you give the machine at least
+20GB of storage.  The ECS-optimized [AMI]s provide 30GB of storage in
+total, which should be sufficient.
 
 In the "Choose Instance Type" section, select an instance type that
 has at least 2GB of RAM (e.g., t2.small).
@@ -1196,3 +1197,4 @@ number of PostgreSQL connections will be 12.
 [S3 persistent storage]: {{ site.baseurl }}/docs/docker.html#persistent s3
 [start an EC2 instance using an ECS-optimized AMI]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_container_instance.html
 [HTTPS]: {{ site.baseurl }}/docs/docker.html#https
+[page on Amazon's web site]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
