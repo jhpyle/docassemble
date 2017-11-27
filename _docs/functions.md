@@ -1569,8 +1569,12 @@ the navigation bar.
 
 It accepts any of four optional keyword arguments:
 
-* `title` - for the main title of the interview, which is displayed in
-  the navigation bar.
+* `title` - this is the main title of the interview.  It should be
+  plain text.  It is displayed in the navigation bar if there is no `logo`.
+* `logo` - this can be used for raw HTML that you want to go into the
+  navigation bar in place of the plain text title of the interview.
+  If you include an image, you should size it to be about 20 pixels in
+  height.
 * `short` - for the mobile-friendly version of the interview title,
   which is displayed in the navigation bar when the screen is small.
 * `subtitle` - for the subtitle of the interview, which is displayed
@@ -1580,6 +1584,11 @@ It accepts any of four optional keyword arguments:
   displayed in the browser tab.
 
 {% include side-by-side.html demo="set-title" %}
+
+The following example shows how you can use a [`DAStaticFile`] to
+display a logo from your "static" folder in the navigation bar.
+
+{% include side-by-side.html demo="set-logo-title" %}
 
 For more information about titles, see the documentation for the
 [`metadata` initial block].

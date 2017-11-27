@@ -425,9 +425,9 @@ sudo cp ./docassemble/Docker/rabbitmq.config /etc/rabbitmq/
 
 The `/etc/apache2/conf-available/docassemble.conf` file contains
 instructions for [Apache] to use the virtual environment to run the
-**docassemble** web application.  The
-`/etc/apache2/sites-available/docassemble-http.conf` and
-`/etc/apache2/sites-available/docassemble-ssl.conf` files contain
+**docassemble** web application.  It also contains some configuration
+variables.  The `/etc/apache2/sites-available/docassemble-http.conf`
+and `/etc/apache2/sites-available/docassemble-ssl.conf` files contain
 [Apache] site configuration directives for the **docassemble** web
 application.
 
@@ -471,6 +471,9 @@ will need to change the [`root`] directive to `/docassemble/` and the
 Note that it is important to include `/` marks at both the beginning
 and end of [`root`].
 
+You should set the [`server administrator email`] to an e-mail address
+that users should contact if [Apache] generates an error.
+
 Make sure that files in the **docassemble** directory can be read
 and written by the web server:
 
@@ -482,27 +485,8 @@ sudo chown -R www-data.www-data /usr/share/docassemble/local \
 sudo chmod ogu+r /usr/share/docassemble/config/config.yml.dist
 {% endhighlight %}
 
-Then, edit the [Apache] site configuration.
-
-{% highlight bash %}
-sudo vi /etc/apache2/sites-available/docassemble-http.conf
-{% endhighlight %}
-
-Edit the `ServerAdmin` line and add your e-mail address.
-
-Replace `{% raw %}{{DAHOSTNAME}}{% endraw %}` with the domain of your
-site (e.g., `assembly.example.com`).
-
-Replace `{% raw %}{{POSTURLROOT}}{% endraw %}` with `/` and replace
-`{% raw %}{{WSGIROOT}}{% endraw %}` with `/`.
-
-However, if you changed the [`root`] directive to `/docassemble/` in
-the [configuration], replace `{% raw %}{{POSTURLROOT}}{% endraw %}`
-with `/docassemble/` and replace `{% raw %}{{WSGIROOT}}{% endraw %}`
-with `/docassemble`.
-
-Make any other changes you need to make so that **docassemble** can
-coexist with your other web applications.
+If **docassemble** needs to coexist with your other web applications,
+you can edit the [Apache] configuration files in `/etc/apache2/sites-available`.
 
 If your **docassemble** interviews are not thread-safe, for example
 because different interviews on your server use different locales,
@@ -824,23 +808,31 @@ will be asked if they with to give your server access to their
 the contents of the user's [Playground] with a folder on the user's
 [Google Drive].
 
-In order for users to be able to connect their accounts in this way,
-you will need to obtain an OAuth 2.0 client ID and secret from
-Google.
+In order for users with `developer` or `admin` [privileges] to be able
+to connect their accounts in this way, you will need to obtain an
+OAuth 2.0 client ID and secret from Google.
 
 * Log in to the [Google Developers Console].
 * Start a "project" for your server if you do not already have one.
 * Enable the [Google Drive API] for the project.
-* Under "Credentials," create an OAuth 2.0 client ID for a "web
+* Under "Credentials," create an OAuth client ID for a "web
   application."
+* Under Authorized JavaScript origins, add the URL for your
+  **docassemble** site.  (E.g. `https://docassemble.example.com`)
+* Under Authorized redirect URIs, add the URL for your **docassemble**
+  site, followed by `/google_drive_callback`.  E.g.,
+  `https://docassemble.example.com/google_drive_callback`.
 * Note the "Client ID."  You need to set this value as the `id` in the
   [`oauth`] configuration, under [`googledrive`].
 * Note also the "Client secret."  You need to set this as the `secret`
   in the [`oauth`] configuration.
-* Under Authorized JavaScript origins, add the URL for your
-  **docassemble** site.  (E.g. `https://docassemble.example.com`)
-* Under Authorized redirect URIs, add the URL
-  `https://docassemble.example.com/google_drive_callback`.
+  
+When you have your "Client ID" and "Client secret," go to the
+[configuration] and create a [`googledrive`] directive.
+
+After the configuration is changed and the system restarts, users with
+`developer` or `admin` [privileges] will be able to go to their
+"Profile" and click "Google Drive synchronization."
 
 ## <a name="github"></a>Setting up GitHub integration
 
@@ -860,58 +852,60 @@ will see a "GitHub" button in the [packages folder] of the
 [Playground].  Pressing this button will push a [commit] to [GitHub]
 representing the current state of the code of the package.
 
-In order for users to be able to connect their accounts in this way,
-you will need to register your **docassemble** server as an "OAuth
-application" on [GitHub]:
+In order for interview authors to be able to connect their accounts in
+this way, you will need to register your **docassemble** server as an
+"OAuth application" on [GitHub]:
 
 * [Create an account on GitHub] if you have not done so already.
 * Log in to [GitHub].
 * Go to your "[Settings](https://github.com/settings/profile)."
 * Navigate to
-  "[OAuth applications](https://github.com/settings/developers)."
+  "[Developer settings](https://github.com/settings/developers)."  The
+  "[OAuth Apps](https://github.com/settings/developers)" tab should be
+  active.
 * Press the "Register a new application" button.
 * Enter an "Application name" that describes your **docassemble**
-  server.  Your users will see this application name when [GitHub]
+  server.  Interview authors will see this application name when [GitHub]
   asks them if they wish to grant your server access to their [GitHub]
   account.
 * Under "Homepage URL," enter the URL of your **docassemble** server.
-* If you want, enter an "Application description."  Users will see
+* If you want, enter an "Application description."  Interview authors will see
   this when [GitHub] asks them if they wish to grant your server
   access to their [GitHub] account.
 * Under "Authorization callback URL," enter the URL for your server
-  followed by `/github_oauth_callback`.  So, if your users access the
-  [Playground] at `https://docassemble.example.com/playground`, the
-  callback URL will be
-  `https://docassemble.example.com/github_oauth_callback`.  This
+  followed by `/github_oauth_callback`.  So, if interview authors
+  access the [Playground] at
+  `https://docassemble.example.com/playground`, the callback URL will
+  be `https://docassemble.example.com/github_oauth_callback`.  This
   setting needs to be precisely set or else the integration will not
   work.
 * Press the "Register application" button.
 * [GitHub] will then tell you the "Client ID" and "Client Secret" of
   your new "OAuth application."  Note the values of these codes; you
   need to plug them into your **docassemble** [configuration].
-* On your **docassemble** server, go to "Configuration."  Set the
-  "Client ID" value as the `id` in the [`oauth`] configuration, under
-  `github`.  Set the "Client Secret" value as the `secret` in the
-  [`oauth`] configuration.
+* On your **docassemble** server, go to "Configuration."  Under the
+  [`oauth`] directive, and under the [`github`] sub-directive within
+  [`oauth`], set `id` to the "Client ID," and set `secret` to the
+  "Client Secret".  Set `enable` to `True`.
 
 The server will restart after you change the [configuration].  Then,
 when you go to your "Profile," you should see a "GitHub integration"
 link.
 
-When users click this link and they choose to associate their [GitHub]
-account with their account on your **docassemble** server,
-**docassemble** stores an access token in [Redis] for the user.  This
-allows **docassemble** to authenticate with the [GitHub API].
-**docassemble** also creates an SSH private key and an SSH public key
-annotated with the e-mail address associated with the user's [GitHub]
-account.  These SSH keys are stored in the same directory in the
-Playground as the files for [Playground] packages, so they will appear
-in [Google Drive] if [Google Drive synchronization] is enabled, and
-they will be stored in the cloud if cloud [data storage] is enabled.
-Using the [GitHub API], **docassemble** stores the public key in the
-user's [GitHub] account, using the name of the application as
-specified in the [configuration] as the value of [`appname`] (which
-defaults to `docassemble`).
+When interview authors click this link and they choose to associate
+their [GitHub] account with their account on your **docassemble**
+server, **docassemble** stores an access token in [Redis] for the
+user.  This allows **docassemble** to authenticate with the
+[GitHub API].  **docassemble** also creates an SSH private key and an
+SSH public key annotated with the e-mail address associated with the
+user's [GitHub] account.  These SSH keys are stored in the same
+directory in the Playground as the files for [Playground] packages, so
+they will appear in [Google Drive] if [Google Drive synchronization]
+is enabled, and they will be stored in the cloud if cloud
+[data storage] is enabled.  Using the [GitHub API], **docassemble**
+stores the public key in the user's [GitHub] account, using the name
+of the application as specified in the [configuration] as the value of
+[`appname`] (which defaults to `docassemble`).
 
 ## <a name="email"></a>Setting up e-mail sending
 
@@ -1516,3 +1510,4 @@ All of these system administration headaches can be avoided by
 [pip]: https://pip.pypa.io/en/stable/
 [OAuth]: https://oauth.net/1/
 [alembic]: http://alembic.zzzcomputing.com/en/latest/
+[`github`]: {{ site.baseurl }}/docs/config.html#github

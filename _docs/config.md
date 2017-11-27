@@ -901,6 +901,19 @@ other os locales:
   - es_MX.UTF-8 UTF-8
 {% endhighlight %}
 
+## <a name="server administrator email"></a>E-mail address of server administrator
+   
+On [Docker], you can provide an e-mail address to the [Apache] web
+server, so that if your server has an error, users are told an
+appropriate e-mail address to contact.
+
+{% highlight yaml %}
+server administrator email: support@example.com
+{% endhighlight %}
+
+This e-mail address will be used to set the [`ServerAdmin`] directive
+in the [Apache] configuration.
+
 ## <a name="debian packages"></a>Debian packages to install
 
 On [Docker], you can ensure that particular [Debian] packages are
@@ -2141,3 +2154,4 @@ and Facebook API keys.
 [`interview_list()`]: {{ site.baseurl }}/docs/functions.html#interview_list
 [`interview_menu()`]: {{ site.baseurl }}/docs/functions.html#interview_menu
 [Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+[`ServerAdmin`]: https://httpd.apache.org/docs/2.4/mod/core.html#ServerAdmin

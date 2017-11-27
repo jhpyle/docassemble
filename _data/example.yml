@@ -7413,6 +7413,13 @@
 "set-language": "initial: True\ncode: |\n  set_language(language)\n---\nquestion:\
   \ |\n  What language do you speak?\nfield: language\nchoices:\n  - English: en\n\
   \  - Espa\xF1ol: es"
+"set-logo-title": |-
+  objects:
+    - company_logo: DAStaticFile.using(filename='example-inc.svg')
+  ---
+  mandatory: True
+  code: |
+    set_title(title='Example Inc.', logo='<img src="' + company_logo.url_for() + '" style="height: 20px; width: 157px;">')
 "set-title": |-
   metadata:
     title: Set the interview title
