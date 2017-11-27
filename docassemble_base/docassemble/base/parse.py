@@ -3280,7 +3280,7 @@ class Question:
                             if type(item) is not dict:
                                 raise DAError("code dict in an attachment returned something other than a dictionary or a list of dictionaries")
                             for key, var_code in item.iteritems():
-                                val = eval(var_code, user_dict)
+                                val = unicode(eval(var_code, user_dict))
                                 if val is True:
                                     val = 'Yes'
                                 elif val is False:
@@ -3726,7 +3726,7 @@ class Interview:
                             exec(import_and_run_process_action, user_dict)
                     for question in self.questions_list:
                         if question.question_type == 'code' and (question.is_initial or (question.initial_code is not None and eval(question.initial_code, user_dict))):
-                            #logmessage("Running some code:\n\n" + question.sourcecode)
+                            logmessage("Running some initial code:\n\n" + question.sourcecode)
                             if debug:
                                 interview_status.seeking.append({'question': question, 'reason': 'initial', 'time': time.time()})
                             docassemble.base.functions.this_thread.current_question = question

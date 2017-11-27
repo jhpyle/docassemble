@@ -1,5 +1,5 @@
 <VirtualHost *:8081>
-    ServerAdmin webmaster@localhost
+    ServerAdmin ${DASERVERADMIN}
     ServerName ${DAHOSTNAME}
     DocumentRoot /var/www/html
     RewriteEngine On

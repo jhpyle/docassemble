@@ -72,7 +72,6 @@
 "Description": Null
 "Developer Access": Null
 "Disable": Null
-"Disconnect": Null
 "Documentation": Null
 "Document": Null
 "docx_message": Null
@@ -136,9 +135,9 @@
 "Go": Null
 "Google Drive folder was set.": Null
 "Google Drive is not configured": Null
+"Google Drive is not linked.": Null
 "Google Drive": Null
 "Google Drive Test": Null
-"Google Drive was disconnected.": Null
 "Help is available for this question": Null
 "Help is available": Null
 "Help": Null

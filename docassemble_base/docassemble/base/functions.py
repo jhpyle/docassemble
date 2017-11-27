@@ -604,16 +604,25 @@ def session_tags():
     
 def interview_url_action(action, **kwargs):
     """Like interview_url, except it additionally specifies an action.
-    The keyword arguments are arguments to the action."""
+    The keyword arguments are arguments to the action, except for the keyword
+    arguments local, i, and session, which are used the way they are used in 
+    interview_url"""
     do_local = False
     if 'local' in kwargs:
         if kwargs['local']:
             do_local = True
         del kwargs['local']
     args = dict()
-    if 'i' not in kwargs:
+    if 'i' in kwargs:
+        args['i'] = kwargs['i']
+        del kwargs['i']
+    else:
         args['i'] = this_thread.current_info['yaml_filename']
-    args['session'] = this_thread.current_info['session']
+    if 'session' in kwargs:
+        args['session'] = kwargs['session']
+        del kwargs['session']
+    else:
+        args['session'] = this_thread.current_info['session']
     args['action'] = myb64quote(json.dumps({'action': action, 'arguments': kwargs}))
     if do_local:
         url = ''
@@ -2213,6 +2222,7 @@ def nodoublequote(text):
 
 def process_action():
     """If an action is waiting to be processed, it processes the action."""
+    sys.stderr.write("process_action() started")
     if 'action' not in this_thread.current_info:
         to_be_gathered = [variable_name for variable_name in this_thread.internal['gather']]
         for variable_name in to_be_gathered:
@@ -2221,6 +2231,7 @@ def process_action():
             else:
                 force_ask_nameerror(variable_name)
         return
+    sys.stderr.write("process_action() continuing")
     the_action = this_thread.current_info['action']
     del this_thread.current_info['action']
     if the_action == 'need':
@@ -2631,20 +2642,22 @@ def serializable_dict(user_dict):
         result_dict[key] = safe_json(data)
     return result_dict
 
-def safe_json(the_object):
+def safe_json(the_object, level=0):
+    if level > 6:
+        return None
     if type(the_object) in [str, unicode, bool, int, float]:
         return the_object
     if type(the_object) is list:
-        return [safe_json(x) for x in the_object]
+        return [safe_json(x, level=level+1) for x in the_object]
     if type(the_object) is dict:
         new_dict = dict()
         for key, value in the_object.iteritems():
-            new_dict[key] = safe_json(value)
+            new_dict[key] = safe_json(value, level=level+1)
         return new_dict
     if type(the_object) is set:
         new_list = list()
         for sub_object in the_object:
-            new_list.append(safe_json(sub_object))
+            new_list.append(safe_json(sub_object, level=level+1))
         return new_list
     if type(the_object) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, file]:
         return None
@@ -2660,7 +2673,7 @@ def safe_json(the_object):
         for key, data in the_object.__dict__.iteritems():
             if key in ['has_nonrandom_instance_name', 'attrList']:
                 continue
-            new_dict[key] = safe_json(data)
+            new_dict[key] = safe_json(data, level=level+1)
         return new_dict
     try:
         json.dumps(the_object)

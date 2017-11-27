@@ -1,0 +1,23 @@
+metadata:
+  title: Logo title
+  documentation: "https://docassemble.org/docs/functions.html#set_title"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - company_logo: DAStaticFile.using(filename='example-inc.svg')
+---
+mandatory: True
+code: |
+  set_title(title='Example Inc.', logo='<img src="' + company_logo.url_for() + '" style="height: 20px; width: 157px;">')
+---
+question: |
+  Welcome to the Example Inc. interview!
+field: intro
+---
+mandatory: True
+need: intro
+question: All done

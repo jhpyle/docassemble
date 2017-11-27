@@ -1,6 +1,6 @@
 <IfModule mod_ssl.c>
     <VirtualHost *:443>
-        ServerAdmin webmaster@localhost
+        ServerAdmin ${DASERVERADMIN}
         ServerName ${DAHOSTNAME}
         SSLEngine on
         SSLCertificateFile /etc/ssl/docassemble/apache.crt

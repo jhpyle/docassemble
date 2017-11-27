@@ -16,7 +16,7 @@ import docassemble.base.file_docx
 from docassemble.webapp.files import SavedFile
 from docxtpl import InlineImage
 
-__all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate']
+__all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty']
 
 unique_names = set()
 
@@ -46,6 +46,7 @@ def get_unique_name():
         return newname
 
 class DAEmpty(object):
+    """An object that does nothing except avoid triggering errors about missing information."""
     def __getattr__(self, thename):
         if thename.startswith('_'):
             return object.__getattribute__(self, thename)

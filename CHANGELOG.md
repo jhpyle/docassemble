@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.0] - 2015-11-25
+### Added
+- The `logo` option of `set_title()` and `metadata`.
+### Changed
+- Setting Google Drive Synchronization folder to "Do not link" will
+  now erase the connection between the OAuth app and the user.
+
 ## [0.1.99] - 2017-11-23
 ### Added
 - Option for changing the UID and GID of www-data within the Docker

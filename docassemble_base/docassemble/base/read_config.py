@@ -116,6 +116,12 @@ if __name__ == "__main__":
     else:
         print('export POSTURLROOT="/"')
         print('export WSGIROOT="/"')
+    if 'server administrator email' in daconfig and daconfig['server administrator email']:
+        print('export SERVERADMIN="' + str(daconfig['server administrator email']) + '"')
+    else:
+        print('export SERVERADMIN="webmaster@localhost"')
     if 'cross site domain' in daconfig and daconfig['cross site domain'] is not None:
         print('export CROSSSITEDOMAIN="' + str(daconfig['cross site domain']) + '"')
+    if 'web server timeout' in daconfig and daconfig['web server timeout'] is not None:
+        print('export DATIMEOUT="' + str(daconfig['web server timeout']) + '"')
     sys.exit(0)

@@ -1653,11 +1653,11 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
         if status.question.interview.options['inverse navbar']:
             inverse = 'navbar-inverse '
         else:
-            inverse = ''
+            inverse = 'navbar-default '
     elif daconfig.get('inverse navbar', True):
         inverse = 'navbar-inverse '
     else:
-        inverse = ''
+        inverse = 'navbar-default '
     navbar = """\
     <div class="navbar """ + inverse + """navbar-fixed-top">
       <div class="container-fluid">
