@@ -4806,7 +4806,7 @@ def index():
         steps += 1
         user_dict['_internal']['steps'] = steps
         #logmessage("Incrementing steps because action")
-    if changed and interview_status.question.interview.use_progress_bar:
+    if changed and interview_status.question.interview.use_progress_bar and interview_status.question.progress is None:
         advance_progress(user_dict)
     #logmessage("index: saving user dict where encrypted is " + str(encrypted))
     save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted, steps=steps)
