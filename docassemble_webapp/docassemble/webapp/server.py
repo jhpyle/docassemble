@@ -10772,6 +10772,9 @@ def playground_packages():
     github_http = None
     github_ssh = None
     github_use_ssh = False
+    github_user_name = None
+    github_email = None
+    github_author_name = None
     if the_file != '' and can_publish_to_github and not is_new:
         github_package_name = 'docassemble-' + the_file
         try:
@@ -10837,7 +10840,6 @@ def playground_packages():
         except Exception as e:
             logmessage('playground_packages: GitHub error.  ' + str(e))
             github_message = word('Unable to determine if the package is published on GitHub.')
-            github_user_name = None
     if request.method == 'GET' and the_file != '':
         if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
             filename = os.path.join(area['playgroundpackages'].directory, the_file)

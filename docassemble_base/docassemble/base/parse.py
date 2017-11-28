@@ -3762,7 +3762,7 @@ class Interview:
                             exec(import_and_run_process_action, user_dict)
                     for question in self.questions_list:
                         if question.question_type == 'code' and (question.is_initial or (question.initial_code is not None and eval(question.initial_code, user_dict))):
-                            logmessage("Running some initial code:\n\n" + question.sourcecode)
+                            #logmessage("Running some initial code:\n\n" + question.sourcecode)
                             if debug:
                                 interview_status.seeking.append({'question': question, 'reason': 'initial', 'time': time.time()})
                             docassemble.base.functions.this_thread.current_question = question

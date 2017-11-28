@@ -41,7 +41,7 @@ Feature: Example interviews
 
   Scenario: Test the interview "Interview"
     Given I start the interview "docassemble.base:data/questions/examples/all-mandatory.yml"
-    And I click the "Fine" choice
+    And I click the "Fine" option
     And I click the button "Continue"
     And I set "Color" to "red"
     When I click the button "Continue"

@@ -1,11 +1,19 @@
 # Change Log
 
-## [0.2.0] - 2015-11-25
+## [0.2.0]
 ### Added
 - The `logo` option of `set_title()` and `metadata`.
 ### Changed
 - Setting Google Drive Synchronization folder to "Do not link" will
   now erase the connection between the OAuth app and the user.
+- When populating PDF checkboxes, passing `None` to the checkbox or to
+  the `yesno()` or `noyes()` functions will result in the box not
+  being checked.
+- Apache web server variables are now reset after a restart (e.g.,
+  after the Configuration is changed.
+### Fixed
+- PDF checkbox problems
+- Git pull into Playground packages without integration.
 
 ## [0.1.99] - 2017-11-23
 ### Added

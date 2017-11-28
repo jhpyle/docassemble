@@ -2222,7 +2222,7 @@ def nodoublequote(text):
 
 def process_action():
     """If an action is waiting to be processed, it processes the action."""
-    sys.stderr.write("process_action() started")
+    #sys.stderr.write("process_action() started")
     if 'action' not in this_thread.current_info:
         to_be_gathered = [variable_name for variable_name in this_thread.internal['gather']]
         for variable_name in to_be_gathered:
@@ -2231,7 +2231,7 @@ def process_action():
             else:
                 force_ask_nameerror(variable_name)
         return
-    sys.stderr.write("process_action() continuing")
+    #sys.stderr.write("process_action() continuing")
     the_action = this_thread.current_info['action']
     del this_thread.current_info['action']
     if the_action == 'need':

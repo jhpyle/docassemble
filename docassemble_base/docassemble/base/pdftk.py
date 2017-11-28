@@ -114,7 +114,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
     fdf_file.close()
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name]
-    logmessage("Arguments are " + str(subprocess_arguments))
+    #logmessage("Arguments are " + str(subprocess_arguments))
     if not editable:
         subprocess_arguments.append('flatten')
     result = call(subprocess_arguments)
@@ -202,7 +202,7 @@ def concatenate_files(path_list, pdfa=False):
         raise DAError("concatenate_files: no valid files to concatenate")
     subprocess_arguments.extend(new_path_list)
     subprocess_arguments.extend(['cat', 'output', pdf_file.name])
-    logmessage("Arguments are " + str(subprocess_arguments))
+    #logmessage("Arguments are " + str(subprocess_arguments))
     result = call(subprocess_arguments)
     if result != 0:
         logmessage("Failed to concatenate PDF files")
