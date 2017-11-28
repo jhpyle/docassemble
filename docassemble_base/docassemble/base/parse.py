@@ -944,6 +944,8 @@ class Question:
                 self.interview.bootstrap_theme = data['features']['bootstrap theme']
             if 'inverse navbar' in data['features']:
                 self.interview.options['inverse navbar'] = data['features']['inverse navbar']
+            if 'hide standard menu' in data['features']:
+                self.interview.options['hide_standard_menu'] = data['features']['hide standard menu']
             for key in ['javascript', 'css']:
                 if key in data['features']:
                     if type(data['features'][key]) is list:
@@ -1162,7 +1164,7 @@ class Question:
         if 'id' in data:
             # if unicode(data['id']) in self.interview.ids_in_use:
             #     raise DAError("The id " + unicode(data['id']) + " is already in use by another block.  Id names must be unique." + self.idebug(data))
-            self.id = unicode(data['id'])
+            self.id = unicode(data['id']).strip()
             self.interview.ids_in_use.add(self.id)
             self.interview.questions_by_id[self.id] = self
         if 'supersedes' in data:
@@ -2205,13 +2207,18 @@ class Question:
                 self.interview.questions_list.append(self)
             self.number = self.interview.next_number()
             #self.number = len(self.interview.questions_list) - 1
-            self.name = "Question_" + str(self.number)
+            if hasattr(self, 'id'):
+                self.name = "ID " + self.id
+                # if self.name in self.interview.questions_by_name:
+                #     raise DAError("Question ID " + unicode(self.id) + " results in duplicate question name")
+            else:
+                self.name = "Question_" + str(self.number)
         # if hasattr(self, 'id'):
         #     try:
         #         self.interview.questions_by_id[self.id].append(self)
         #     except:
         #         self.interview.questions_by_id[self.id] = [self]
-        if hasattr(self, 'name'):
+        if self.name is not None:
             self.interview.questions_by_name[self.name] = self
         for field_name in self.fields_used:
             if field_name not in self.interview.questions:
@@ -2920,7 +2927,10 @@ class Question:
                         helptexts[field.number] = field.helptext.text(user_dict)
                     if hasattr(field, 'hint'):
                         hints[field.number] = field.hint.text(user_dict)
-        attachment_text = self.processed_attachments(user_dict, the_x=the_x, iterators=iterators)
+        if self.question_type == 'attachments':
+            attachment_text = self.processed_attachments(user_dict, the_x=the_x, iterators=iterators)
+        else:
+            attachment_text = []
         assumed_objects = set()
         for field in self.fields:
             if hasattr(field, 'saveas'):

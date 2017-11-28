@@ -744,6 +744,12 @@ def get_url_from_file_reference(file_reference, **kwargs):
     if file_reference in ['login', 'signin']:
         remove_question_package(kwargs)
         return(url_for('user.login', **kwargs))
+    elif file_reference in ['profile']:
+        remove_question_package(kwargs)
+        return(url_for('user_profile_page', **kwargs))
+    elif file_reference in ['change_password']:
+        remove_question_package(kwargs)
+        return(url_for('user.change_password', **kwargs))
     elif file_reference in ['register']:
         remove_question_package(kwargs)
         return(url_for('user.register', **kwargs))
@@ -1733,22 +1739,33 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '<span class="caret"></span></a><ul class="dropdown-menu">'
             if custom_menu:
                 navbar += custom_menu
-            if current_user.has_role('admin', 'developer', 'advocate'):
-                navbar +='<li><a href="' + url_for('monitor') + '">' + word('Monitor') + '</a></li>'
-            if current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
-                navbar +='<li><a href="' + url_for('train') + '">' + word('Train') + '</a></li>'
-            if current_user.has_role('admin', 'developer'):
-                navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
-                navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
-                navbar +='<li><a href="' + url_for('playground_page') + '">' + word('Playground') + '</a></li>'
-                navbar +='<li><a href="' + url_for('utilities') + '">' + word('Utilities') + '</a></li>'
-                if current_user.has_role('admin'):
-                    navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
-                    navbar +='<li><a href="' + url_for('config_page') + '">' + word('Configuration') + '</a></li>'
-            navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li><li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a></li></ul></li>'
+            if not status.question.interview.options.get('hide_standard_menu', False):
+                if current_user.has_role('admin', 'developer', 'advocate'):
+                    navbar +='<li><a href="' + url_for('monitor') + '">' + word('Monitor') + '</a></li>'
+                if current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
+                    navbar +='<li><a href="' + url_for('train') + '">' + word('Train') + '</a></li>'
+                if current_user.has_role('admin', 'developer'):
+                    navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
+                    navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
+                    navbar +='<li><a href="' + url_for('playground_page') + '">' + word('Playground') + '</a></li>'
+                    navbar +='<li><a href="' + url_for('utilities') + '">' + word('Utilities') + '</a></li>'
+                    if current_user.has_role('admin'):
+                        navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
+                        navbar +='<li><a href="' + url_for('config_page') + '">' + word('Configuration') + '</a></li>'
+                navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li>'
+                if current_user.has_role('admin', 'developer'):
+                    navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li>'
+                else:
+                    if app.config['SHOW_PROFILE']:
+                        navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li>'
+                    else:
+                        navbar += '<li><a href="' + url_for('user.change_password') + '">' + word('Change Password') + '</a></li>'
+                navbar += '<li><a href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a></li></ul></li>'
     else:
         if custom_menu:
-            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li></ul></li>' + "\n"
+            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu
+            if not status.question.interview.options.get('hide_standard_menu', False):
+                navbar += '<li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li></ul></li>' + "\n"
         else:
             navbar += '            <li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li>'
     navbar += """\
@@ -3724,7 +3741,9 @@ def get_variables():
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
         return jsonify(success=False)
-    return jsonify(success=True, variables=docassemble.base.functions.serializable_dict(user_dict), steps=steps, encrypted=is_encrypted, uid=session_id, i=yaml_filename)
+    variables = docassemble.base.functions.serializable_dict(user_dict)
+    variables['_internal'] = docassemble.base.functions.serializable_dict(user_dict['_internal'])
+    return jsonify(success=True, variables=variables, steps=steps, encrypted=is_encrypted, uid=session_id, i=yaml_filename)
 
 @app.route("/", methods=['POST', 'GET'])
 def index():
@@ -6706,6 +6725,9 @@ def index():
             # output += '</ul>\n'
             output += get_history(interview, interview_status)
         #output += '          <h4>' + word('Names defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
+        output += '          <h4>' + word('Question names') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview.questions_by_name.keys())]) + '</p>' + "\n"
+        if len(interview.questions_by_id):
+            output += '          <h4>' + word('Question IDs') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview.questions_by_id.keys())]) + '</p>' + "\n"
         output += '          <p><a target="_blank" href="' + url_for('get_variables') + '">' + word('Show variables and values') + '</a></p>' + "\n"
             # output += '          <h4>' + word('Variables as JSON') + '</h4>' + "\n        <pre>" + docassemble.base.functions.dict_as_json(user_dict) + '</pre>' + "\n"
         output += '        </div>' + "\n"
@@ -10676,8 +10698,10 @@ def pull_playground_package():
                 return redirect(url_for('playground_packages', pull='1', pypi=form.pypi.data))
         if form.cancel.data:
             return redirect(url_for('playground_packages'))
-    elif 'file' in request.args:
-        form.github_url.data = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['file'])
+    elif 'github' in request.args:
+        form.github_url.data = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['github'])
+    elif 'pypi' in request.args:
+        form.pypi.data = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['pypi'])
     description = word("Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.")
     return render_template('pages/pull_playground_package.html', form=form, description=description, version_warning=version_warning, bodyclass='adminbody', title=word("Pull GitHub or PyPI Package"), tab_title=word("Pull"), page_title=word("Pull")), 200
 
@@ -10840,6 +10864,8 @@ def playground_packages():
         except Exception as e:
             logmessage('playground_packages: GitHub error.  ' + str(e))
             github_message = word('Unable to determine if the package is published on GitHub.')
+    github_url_from_file = None
+    pypi_package_from_file = None
     if request.method == 'GET' and the_file != '':
         if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
             filename = os.path.join(area['playgroundpackages'].directory, the_file)
@@ -10847,6 +10873,8 @@ def playground_packages():
                 content = fp.read().decode('utf8')
                 old_info = yaml.load(content)
                 if type(old_info) is dict:
+                    github_url_from_file = old_info.get('github_url', None)
+                    pypi_package_from_file = old_info.get('pypi_package_name', None)
                     for field in ['license', 'description', 'version', 'url', 'readme']:
                         if field in old_info:
                             form[field].data = old_info[field]
@@ -10957,10 +10985,12 @@ def playground_packages():
         data_files = dict(templates=list(), static=list(), sources=list(), interviews=list(), modules=list(), questions=list())
         directory = tempfile.mkdtemp()
         output = ''
-        logmessage("Can publish " + repr(can_publish_to_github))
-        logmessage("username " + repr(github_user_name))
-        logmessage("email " + repr(github_email))
-        logmessage("author name " + repr(github_author_name))
+        #logmessage("Can publish " + repr(can_publish_to_github))
+        #logmessage("username " + repr(github_user_name))
+        #logmessage("email " + repr(github_email))
+        #logmessage("author name " + repr(github_author_name))
+        github_url = None
+        pypi_package = None
         if 'github_url' in request.args:
             github_url = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['github_url'])
             if github_url.startswith('git@') and can_publish_to_github and github_user_name and github_email:
@@ -11063,7 +11093,7 @@ def playground_packages():
                     inner_item = re.sub(r'^u?"+', '', inner_item)
                     the_list.append(inner_item)
                 extracted[m.group(1)] = the_list
-        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
+        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, pypi_package_name=pypi_package)
         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ['docassemble', 'docassemble.base', 'docassemble.webapp']]
         #output += "info_dict is set\n"
         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
@@ -11267,7 +11297,13 @@ def playground_packages():
         the_github_url = github_ssh
     else:
         the_github_url = github_http
-    return render_template('pages/playgroundpackages.html', version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, github_ssh=github_ssh, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+    if the_github_url is None and github_url_from_file is not None:
+        the_github_url = github_url_from_file
+    if the_github_url is None:
+        the_pypi_package_name = pypi_package_from_file
+    else:
+        the_pypi_package_name = None
+    return render_template('pages/playgroundpackages.html', version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, pypi_package_name=the_pypi_package_name, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
 
 def copy_if_different(source, destination):
     if (not os.path.isfile(destination)) or filecmp.cmp(source, destination) is False:

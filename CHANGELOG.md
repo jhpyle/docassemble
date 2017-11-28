@@ -11,6 +11,10 @@
   being checked.
 - Apache web server variables are now reset after a restart (e.g.,
   after the Configuration is changed.
+- When pulling the contents of a **docassemble** extension package
+  into the Playground, it will now remember the GitHub URL or PyPI
+  package name so that when you go to Pull again, you will not need to
+  retype.  This works even if you have not enabled GitHub integration.
 ### Fixed
 - PDF checkbox problems
 - Git pull into Playground packages without integration.

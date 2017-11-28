@@ -58,7 +58,11 @@
                   {%- endif %}
                 {%- endif %}
                 <li><a href="{{ url_for('interview_list') }}">{{ word('My Interviews') }}</a></li>
+                {%- if config['SHOW_PROFILE'] %}
                 <li><a href="{{ url_for('user_profile_page') }}">{{ word('Profile') }}</a></li>
+                {%- else %}
+                <li><a href="{{ url_for('user.change_password') }}">{{ word('Change Password') }}</a></li>
+                {%- endif %}
                 <li><a href="{{ url_for('user.logout') }}">{{ word('Sign Out') }}</a></li>
               </ul>
             </li>

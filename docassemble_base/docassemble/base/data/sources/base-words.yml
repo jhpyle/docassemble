@@ -35,6 +35,7 @@
 "Case No.": Null
 "Changed name of interview": Null
 "Change": Null
+"Change Password": Null
 "characters": Null
 "Check at least one option, or check": Null
 "Checkboxes:": Null
@@ -292,6 +293,8 @@
 "PyPI package": Null
 "PyPI Password": Null
 "PyPI Username": Null
+"Question IDs": Null
+"Question names": Null
 "question": Null
 "Question": Null
 "quit": Null
