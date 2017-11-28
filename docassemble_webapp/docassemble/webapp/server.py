@@ -2279,6 +2279,9 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
                 has_children.add(parent)
         in_nest = False
         for var in sorted(names_used):
+            var_trans = re.sub(r'\[[0-9]\]', '[i]', var)
+            var_trans = re.sub(r'\[i\](.*)\[i\](.*)\[i\]', r'[i]\1[j]\2[k]', var_trans)
+            var_trans = re.sub(r'\[i\](.*)\[i\]', r'[i]\1[j]', var_trans)
             if var in has_parent:
                 hide_it = ' style="display: none" data-parent="' + noquote(has_parent[var]) + '"'
             else:
@@ -2289,7 +2292,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             if var in documentation_dict or var in base_name_info:
                 class_type = 'info'
                 title = 'title="' + word("Special variable") + '" '
-            elif var not in fields_used and var not in implicitly_defined:
+            elif var not in fields_used and var not in implicitly_defined and var_trans not in fields_used and var_trans not in implicitly_defined:
                 class_type = 'default'
                 title = 'title="' + word("Possibly not defined") + '" '
             elif var not in needed_names:

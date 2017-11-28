@@ -2748,6 +2748,8 @@ def yesno(value, invert=False):
     This is used for populating PDF checkboxes.
 
     """
+    if value is None or value == '' or value.__class__.__name__ == 'DAEmpty':
+        return ""
     if value:
         if invert:
             return "No"
@@ -2762,6 +2764,8 @@ def noyes(value, invert=False):
     checkboxes.
 
     """
+    if value is None or value == '' or value.__class__.__name__ == 'DAEmpty':
+        return ""
     if value:
         if invert:
             return this_thread.misc.get('checkbox_export_value', 'Yes')

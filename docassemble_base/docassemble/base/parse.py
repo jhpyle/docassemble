@@ -1038,6 +1038,7 @@ class Question:
                 self.is_mandatory = False
                 if type(data['mandatory']) in (str, unicode):
                     self.mandatory_code = compile(data['mandatory'], '<mandatory code>', 'eval')
+                    self.find_fields_in(data['mandatory'])
                 else:
                     self.mandatory_code = None
         else:
@@ -1107,6 +1108,7 @@ class Question:
                 self.is_initial = False
                 if type(data['initial']) in (str, unicode):
                     self.initial_code = compile(data['initial'], '<initial code>', 'eval')
+                    self.find_fields_in(data['initial'])
                 else:
                     self.initial_code = None
         else:
@@ -1420,19 +1422,25 @@ class Question:
         if 'if' in data:
             if type(data['if']) == str:
                 self.condition = [compile(data['if'], '<if code>', 'eval')]
+                self.find_fields_in(data['if'])
             elif type(data['if']) == list:
                 self.condition = [compile(x, '<if code>', 'eval') for x in data['if']]
+                for x in data['if']:
+                    self.find_fields_in(x)
             else:
                 raise DAError("An if statement must either be text or a list." + self.idebug(data))
         if 'validation code' in data:
             if type(data['validation code']) not in [str, unicode]:
                 raise DAError("A validation code statement must be text." + self.idebug(data))
             self.validation_code = compile(data['validation code'], '<code block>', 'exec')
+            self.find_fields_in(data['validation code'])
         if 'require' in data:
             if type(data['require']) is list:
                 self.question_type = 'require'
                 try:
                     self.require_list = list(map((lambda x: compile(x, '<require code>', 'eval')), data['require']))
+                    for x in data['require']:
+                        self.find_fields_in(x)
                 except:
                     logmessage("Compile error in require:\n" + str(data['require']) + "\n" + str(sys.exc_info()[0]))
                     raise
@@ -1717,6 +1725,8 @@ class Question:
                 raise DAError("A need phrase must be text or a list." + self.idebug(data))
             try:
                 self.need = list(map((lambda x: compile(x, '<code block>', 'exec')), need_list))
+                for x in need_list:
+                    self.find_fields_in(x)
             except:
                 logmessage("Question: compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]))
                 raise
@@ -1743,6 +1753,7 @@ class Question:
             # else:
             #     header = list(map(lambda x: TextObject('&nbsp;'), data['column']))
             row = compile(data['rows'], '<row code>', 'eval')
+            self.find_fields_in(data['rows'])
             header = list()
             column = list()
             for col in data['columns']:
@@ -1762,6 +1773,7 @@ class Question:
                     header.append(TextObject('&nbsp;'))
                 else:
                     header.append(TextObject(definitions + unicode(header_text), names_used=self.mako_names))
+                self.find_fields_in(cell_text)
                 column.append(compile(cell_text, '<column code>', 'eval'))
             #column = list(map(lambda x: compile(x, '<expression>', 'eval'), data['column']))
             if self.scan_for_variables:
@@ -1849,6 +1861,7 @@ class Question:
                         field_info = {'type': 'text', 'number': field_number}
                         if len(field) == 1 and 'code' in field:
                             field_info['type'] = 'fields_code'
+                            self.find_fields_in(field['code'])
                             field_info['extras'] = dict(fields_code=compile(field['code'], '<fields code>', 'eval'))
                             self.fields.append(Field(field_info))
                             continue
@@ -1869,15 +1882,19 @@ class Question:
                                         field_info['extras']['ml_train'] = field[key]
                                     else:
                                         field_info['extras']['ml_train'] = {'compute': compile(field[key], '<keep for training code>', 'eval'), 'sourcecode': field[key]}
+                                        self.find_fields_in(field[key])
                             elif key == 'validate':
                                 field_info['validate'] = {'compute': compile(field[key], '<validate code>', 'eval'), 'sourcecode': field[key]}
+                                self.find_fields_in(field[key])
                             elif 'datatype' in field and field['datatype'] in ['file', 'files', 'camera'] and key == 'maximum image size':
                                 field_info['max_image_size'] = {'compute': compile(unicode(field[key]), '<maximum image size code>', 'eval'), 'sourcecode': unicode(field[key])}
+                                self.find_fields_in(field[key])
                             elif key == 'required':
                                 if type(field[key]) is bool:
                                     field_info['required'] = field[key]
                                 else:
                                     field_info['required'] = {'compute': compile(field[key], '<required code>', 'eval'), 'sourcecode': field[key]}
+                                    self.find_fields_in(field[key])
                             elif key == 'show if' or key == 'hide if':
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
@@ -1887,6 +1904,7 @@ class Question:
                                         field_info['extras']['show_if_val'] = TextObject(definitions + unicode(field[key]['is']), names_used=self.mako_names)
                                     elif 'code' in field[key]:
                                         field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')
+                                        self.find_fields_in(field[key]['code'])
                                     else:
                                         raise DAError("The keys of '" + key + "' must be 'variable' and 'is.'" + self.idebug(data))
                                 elif type(field[key]) is list:
@@ -1908,6 +1926,7 @@ class Question:
                                         if 'extras' not in field_info:
                                             field_info['extras'] = dict()
                                         field_info['extras']['default'] = {'compute': compile(field[key]['code'], '<default code>', 'eval'), 'sourcecode': field[key]['code']}
+                                        self.find_fields_in(field[key]['code'])
                                     else:
                                         if type(field[key]) in (dict, list):
                                             field_info[key] = field[key]
@@ -1937,17 +1956,21 @@ class Question:
                                 elif field[key] in ['noyesmaybe']:
                                     field_info['threestate'] = -1
                             elif key == 'code':
+                                self.find_fields_in(field[key])
                                 field_info['choicetype'] = 'compute'
                                 field_info['selections'] = {'compute': compile(field[key], '<choices code>', 'eval'), 'sourcecode': field[key]}
+                                self.find_fields_in(field[key])
                                 if 'exclude' in field:
                                     if type(field['exclude']) is dict:
                                         raise DAError("An exclude entry cannot be a dictionary." + self.idebug(data))
                                     if type(field['exclude']) is not list:
                                         field_info['selections']['exclude'] = [compile(field['exclude'], '<expression>', 'eval')]
+                                        self.find_fields_in(field['exclude'])
                                     else:
                                         field_info['selections']['exclude'] = list()
                                         for x in field['exclude']:
                                             field_info['selections']['exclude'].append(compile(x, '<expression>', 'eval'))
+                                            self.find_fields_in(x)
                             elif key == 'exclude':
                                 pass
                             elif key == 'choices':
@@ -1968,10 +1991,12 @@ class Question:
                                     if type(field['exclude']) is dict:
                                         raise DAError("An exclude entry cannot be a dictionary." + self.idebug(data))
                                     if type(field['exclude']) is not list:
+                                        self.find_fields_in(field['exclude'])
                                         field_info['selections']['exclude'] = [compile(field['exclude'].strip(), '<expression>', 'eval')]
                                     else:
                                         field_info['selections']['exclude'] = list()
                                         for x in field['exclude']:
+                                            self.find_fields_in(x)
                                             field_info['selections']['exclude'].append(compile(x, '<expression>', 'eval'))
                             elif key == 'note':
                                 field_info['type'] = 'note'
@@ -2135,6 +2160,7 @@ class Question:
                     #     field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
                     elif key == 'show if':
                         field_info['saveas_code'] = compile(field[key], '<expression>', 'eval')
+                        self.find_fields_in(field[key])
                         field[key] = field[key].strip()
                         if invalid_variable_name(field[key]):
                             raise DAError("Missing or invalid variable name " + repr(field[key]) + "." + self.idebug(data))
@@ -2161,6 +2187,7 @@ class Question:
                         else:
                             field_info['action'] = field[key]
                         field_info['saveas_code'] = compile(field[key], '<expression>', 'eval')
+                        self.find_fields_in(field[key])
                 if 'saveas' in field_info or ('type' in field_info and field_info['type'] in ['note', 'html']): #, 'script', 'css'
                     self.fields.append(Field(field_info))
                 else:
@@ -2279,6 +2306,7 @@ class Question:
     def process_attachment_code(self, sourcecode):
         try:
             self.compute_attachment = compile(sourcecode, '<expression>', 'eval')
+            self.find_fields_in(sourcecode)
             self.sourcecode = sourcecode
         except:
             logmessage("Question: compile error in code:\n" + unicode(sourcecode) + "\n" + str(sys.exc_info()[0]))
@@ -2453,6 +2481,7 @@ class Question:
                     if 'code' in target:
                         if type(target['code']) in [str, unicode]:
                             options['code'] = compile(target['code'], '<expression>', 'eval')
+                            self.find_fields_in(target['code'])
                     if 'field variables' in target:
                         if type(target['field variables']) is not list:
                             raise DAError('The field variables must be expressed in the form of a list' + self.idebug(target))
@@ -2462,6 +2491,7 @@ class Question:
                             if not valid_variable_match.match(str(varname)):
                                 raise DAError('The variable ' + str(varname) + " cannot be used in a code list" + self.idebug(target))
                             options['code dict'][varname] = compile(varname, '<expression>', 'eval')
+                            self.find_fields_in(varname)
                     if 'raw field variables' in target:
                         if type(target['raw field variables']) is not list:
                             raise DAError('The raw field variables must be expressed in the form of a list' + self.idebug(target))
@@ -2471,6 +2501,7 @@ class Question:
                             if not valid_variable_match.match(str(varname)):
                                 raise DAError('The variable ' + str(varname) + " cannot be used in a code list" + self.idebug(target))
                             options['raw code dict'][varname] = compile(varname, '<expression>', 'eval')
+                            self.find_fields_in(varname)
                     if 'field code' in target:
                         if 'code dict' not in options:
                             options['code dict'] = dict()
@@ -2481,6 +2512,7 @@ class Question:
                                 raise DAError('The field code must be expressed in the form of a dictionary' + self.idebug(target))
                             for key, val in item.iteritems():
                                 options['code dict'][key] = compile(val, '<expression>', 'eval')
+                                self.find_fields_in(val)
             if 'valid formats' in target:
                 if type(target['valid formats']) is str:
                     target['valid formats'] = [target['valid formats']]
@@ -2495,6 +2527,7 @@ class Question:
                     options['pdf_a'] = target['pdf/a']
                 elif type(target['pdf/a']) in [str, unicode]:
                     options['pdf_a'] = compile(target['pdf/a'], '<expression>', 'eval')
+                    self.find_fields_in(target['pdf/a'])
                 else:
                     raise DAError('Unknown data type in attachment pdf/a.' + self.idebug(target))
             if 'content' not in target:
@@ -2974,6 +3007,7 @@ class Question:
                     if key == 'code':
                         has_code = True
                         result_dict['compute'] = compile(value, '<expression>', 'eval')
+                        self.find_fields_in(value)
                     else:
                         result_dict['label'] = TextObject(key)
                         result_dict['key'] = TextObject(value)
@@ -3264,7 +3298,7 @@ class Question:
                                 raise DAError("code in an attachment returned something other than a dictionary or a list of dictionaries")
                             for key, val in item.iteritems():
                                 if val is True:
-                                    val = 'Yes'
+                                    val = yes_value
                                 elif val is False:
                                     val = 'No'
                                 elif val is None:
@@ -3280,13 +3314,15 @@ class Question:
                             if type(item) is not dict:
                                 raise DAError("code dict in an attachment returned something other than a dictionary or a list of dictionaries")
                             for key, var_code in item.iteritems():
-                                val = unicode(eval(var_code, user_dict))
+                                val = eval(var_code, user_dict)
                                 if val is True:
-                                    val = 'Yes'
+                                    val = yes_value
                                 elif val is False:
                                     val = 'No'
                                 elif val is None:
                                     val = ''
+                                else:
+                                    val = unicode(val)
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
                                 val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
                                 result['data_strings'].append((key, val))
@@ -3300,7 +3336,7 @@ class Question:
                             for key, var_code in item.iteritems():
                                 val = eval(var_code, user_dict)
                                 if val is True:
-                                    val = 'Yes'
+                                    val = yes_value
                                 elif val is False:
                                     val = 'No'
                                 elif val is None:
