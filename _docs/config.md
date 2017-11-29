@@ -1037,6 +1037,16 @@ show login: False
 The default behavior is to show the "Sign in or sign up to save
 answers" link.
 
+## <a name="show profile link"></a>Hiding the profile link
+
+If the `show profile link` directive is set to `False`, logged-in
+users will not see a "Profile" link in the web app menu.  Instead,
+they will see a "Change Password" link.
+
+{% highlight yaml %}
+show profile link: False
+{% endhighlight %}
+
 ## <a name="allow registration"></a>Invitation-only registration
 
 If the `allow registration` directive is set to `False`, users will

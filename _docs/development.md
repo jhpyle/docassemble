@@ -364,7 +364,7 @@ interview files in a "modular" way, putting general purpose [`question`]s
 and [`code`] blocks in separate [YAML] files that are [`include`]d in
 special-purpose interview files.
 
-# Using private GitHub repositories
+# <a name="githubprivate"></a>Using private GitHub repositories
 
 If you want to keep your docassemble extension package in a private
 GitHub repository, you can still use the [Playground].
@@ -402,11 +402,16 @@ on your server.
 If you want to use that package within your Playground, you could go
 to "Playground," open the "Packages" folder, click the "Pull" button,
 put the URL into the "GitHub URL" field, and click the "Pull" button.
+If you want to do another "pull" from GitHub later, go to
+"Playground," open the "Packages" folder, select the package you want
+to update, and then click the "Pull" button.  It will default the
+"GitHub URL" to the URL of the package.
+
 If you are using the [GitHub integration] feature, you can then
 publish changes to the GitHub repository by clicking the "GitHub"
 button.
 
-# Editing Playground files in a text editor on a local machine
+# <a name="localediting"></a>Editing Playground files in a text editor on a local machine
 
 If you are running **docassemble** [Docker] on a local machine, and
 you are not using S3 or Azure Blob Storage, you can use
@@ -526,30 +531,40 @@ $ lettuce
 Of course, you first need to create a `tests` directory and create the
 appropriate directory structure within it, 
 
-This directory structure is as follows:
+This directory structure needs to be as follows:
 
 {% highlight text %}
-tests
-`-- features
-    |-- steps
-    |   `-- docassemble.py
-    |-- terrain.py
-    `-- MyTest.feature
+docassemble-lt
+|-- docassemble
+|-- ... various files like README.md ...
+`-- tests
+    `-- features
+        |-- steps
+        |   `-- docassemble.py
+        |-- terrain.py
+        `-- MyTest.feature
 {% endhighlight %}
 
-A starting point for `docassemble.py` is available here:
+The file `MyTest.feature` can be called anything, and you can have
+more than one `.feature` file.  When you run `lettuce`, all of the
+feature files will be used.
 
-* [`docassemble.py`](https://github.com/jhpyle/docassemble/blob/master/tests/features/steps/docassemble.py)
+The `terrain.py` and `docassemble.py` files are the [Python] modules
+that perform the web browser automation.  Versions of these files are
+available in the **docassemble** [GitHub repository], but you may need
+to edit these modules to get your tests to work.
 
-A starting point for `terrain.py` is available here:
+A starting point for the `terrain.py` module is available here:
 
 * [`terrain.py`](https://github.com/jhpyle/docassemble/blob/master/tests/features/terrain.py)
-  
-These are the [Python] modules that perform the web browser
-automation.
 
-The test itself, which is called `MyTest.feature` above, would look
-something like this:
+A starting point for the `docassemble.py` module (which is imported
+into `terrain.py`) is available here:
+
+* [`docassemble.py`](https://github.com/jhpyle/docassemble/blob/master/tests/features/steps/docassemble.py)
+  
+The test file itself, which is called `MyTest.feature` above, would
+look something like this:
 
 {% highlight text %}
 Feature: Interview that works with actions
@@ -565,13 +580,11 @@ Feature: Interview that works with actions
     Then I should see the phrase "You have 3 blue fishes"
 {% endhighlight %}
 
-To get a testing program working on your system, you will probably
-need to make changes to both `terrain.py` and `docassemble.py`.
-
-One useful feature is the "step" called "I wait forever."  If you run
-this step, the browser will stay open and you can use it.  This can be
-helpful if you want to use [lettuce] to bring you to a particular step
-in your interview, without you having to re-do all of the steps by hand.
+One useful feature is the "step" invoked by "I wait forever."  If you
+run this step, the browser will stay open and you can use it.  This
+can be helpful if you want to use [lettuce] to bring you to a
+particular step in your interview, without you having to re-do all of
+the steps by hand.
 
 For more information about how automated testing works, read the
 documentation for [lettuce].  You may also wish to read about
@@ -645,3 +658,4 @@ to use [lettuce].
 [merge]: https://help.github.com/articles/merging-a-pull-request/
 [`import`]: https://docs.python.org/2/tutorial/modules.html
 [Python packages]: https://docs.python.org/2/tutorial/modules.html#packages
+[GitHub repository]: {{ site.github.repository_url }}

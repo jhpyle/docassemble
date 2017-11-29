@@ -4,7 +4,7 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.2.0](https://github.com/jhpyle/docassemble/releases/tag/v0.2.0) - 2015-11-25
+## [0.2.0](https://github.com/jhpyle/docassemble/releases/tag/v0.2.0) - 2017-11-29
 
 ### Added
 - The `logo` option of `set_title()` and `metadata`.
@@ -12,6 +12,23 @@ short_title: Change Log
 ### Changed
 - Setting Google Drive Synchronization folder to "Do not link" will
   now erase the connection between the OAuth app and the user.
+- When populating PDF checkboxes, passing `None` to the checkbox or to
+  the `yesno()` or `noyes()` functions will result in the box not
+  being checked.
+- Apache web server variables are now reset after a restart (e.g.,
+  after the Configuration is changed.
+- When pulling the contents of a **docassemble** extension package
+  into the Playground, it will now remember the GitHub URL or PyPI
+  package name so that when you go to Pull again, you will not need to
+  retype.  This works even if you have not enabled GitHub integration.
+
+### Fixed
+- PDF checkbox inconsistencies.
+- Git pull into Playground packages without integration generated an
+  error message.
+- When datatype is object and variable existed, it would try to reduce
+  the object to text in order to see if it should be highlighted as a
+  pre-selected default value.
 
 ## [0.1.99](https://github.com/jhpyle/docassemble/releases/tag/v0.1.99) - 2017-11-23
 

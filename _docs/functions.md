@@ -951,6 +951,9 @@ The `url_of()` function also has a few special uses.
 * `url_of('exit')` returns a URL that deletes the interview session
   and exits.
 * `url_of('register')` returns a URL to the user registration page.
+* `url_of('profile')` returns a URL to the logged-in user's profile page.
+* `url_of('change_password')` returns a URL to a page where a logged-in user
+  can change his or her password.
 * `url_of('interviews')` returns a URL to the page listing the
   on-going interviews of a signed-in user.
 * `url_of('playground')` returns a URL to the [Playground].
