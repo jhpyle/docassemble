@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.2.0]
+## [0.2.0] - 2017-11-28
 ### Added
 - The `logo` option of `set_title()` and `metadata`.
 ### Changed
@@ -18,6 +18,9 @@
 ### Fixed
 - PDF checkbox problems
 - Git pull into Playground packages without integration.
+- When datatype is object and variable existed, it would try to reduce
+  the object to text in order to see if it should be highlighted as a
+  pre-selected default value.
 
 ## [0.1.99] - 2017-11-23
 ### Added
