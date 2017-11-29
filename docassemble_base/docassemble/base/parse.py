@@ -2927,7 +2927,7 @@ class Question:
                         helptexts[field.number] = field.helptext.text(user_dict)
                     if hasattr(field, 'hint'):
                         hints[field.number] = field.hint.text(user_dict)
-        if self.question_type == 'attachments':
+        if len(self.attachments) or self.compute_attachment is not None:
             attachment_text = self.processed_attachments(user_dict, the_x=the_x, iterators=iterators)
         else:
             attachment_text = []

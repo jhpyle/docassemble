@@ -808,7 +808,7 @@ def rtf_image(file_info, width, insert_page_breaks):
         content = '\\page '
     else:
         content = ''
-    logmessage(content + image.Data)
+    #logmessage(content + image.Data)
     return(content + image.Data)
     
 unit_multipliers = {'twips': 0.0500, 'hp': 0.5, 'in': 72, 'pt': 1, 'px': 1, 'em': 12, 'cm': 28.346472}

@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.2.0] - 2017-11-28
+## [0.2.0] - 2017-11-29
 ### Added
 - The `logo` option of `set_title()` and `metadata`.
 ### Changed
@@ -16,8 +16,9 @@
   package name so that when you go to Pull again, you will not need to
   retype.  This works even if you have not enabled GitHub integration.
 ### Fixed
-- PDF checkbox problems
-- Git pull into Playground packages without integration.
+- PDF checkbox inconsistencies.
+- Git pull into Playground packages without integration generated an
+  error message.
 - When datatype is object and variable existed, it would try to reduce
   the object to text in order to see if it should be highlighted as a
   pre-selected default value.

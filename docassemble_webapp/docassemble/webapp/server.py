@@ -2422,15 +2422,15 @@ def make_png_for_pdf(doc, prefix):
     return task.id
 
 def wait_for_task(task_id):
-    logmessage("wait_for_task: starting")
+    #logmessage("wait_for_task: starting")
     try:
         result = docassemble.webapp.worker.workerapp.AsyncResult(id=task_id)
         if result.ready():
-            logmessage("wait_for_task: was ready")
+            #logmessage("wait_for_task: was ready")
             return True
-        logmessage("wait_for_task: waiting for task to complete")
+        #logmessage("wait_for_task: waiting for task to complete")
         result.get(timeout=60)
-        logmessage("wait_for_task: returning true")
+        #logmessage("wait_for_task: returning true")
         return True
     except Exception as the_error:
         logmessage("wait_for_task: got error: " + str(the_error))
