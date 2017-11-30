@@ -471,6 +471,43 @@ You can use [Mako] to determine the number of seconds.  If the
 `reload` value evaluates to `False` or `None`, the screen will not
 reload.
 
+# <a name="id"></a>Tag a block with a unique id
+
+In some situations, you may need to tag a block in your interview with
+a unique ID.  You can use the `id` directive to do so.
+
+{% highlight yaml %}
+---
+id: initialize
+mandatory: True
+code: |
+  initial_value = 48
+---
+{% endhighlight %}
+
+In the above example, **docassemble** will internally refer to this
+block with the ID `initialize`.  Without the `id` directive,
+**docassemble** would refer to the block with a name like
+`Question_3`, if this block was the third block in the interview.
+
+In most cases, your blocks do not need to have unique IDs.  However,
+there are some features in **docassemble**, such as the
+[changing order of precedence](#precedence) feature discussed
+[below](#precedence), which use `id` directives.
+
+In some situations, it can be important to tag your interview blocks
+with a unique name.  This is because when **docassemble** stores
+interview answers, it not only stores the current state of the
+interview variables, but it also stores information about which
+`mandatory` blocks have been completed.  When it does so, it needs an
+ID for the block.  By default, the IDs of blocks are IDs like
+`Question_3`, as discussed above.  Think about what would happen if a
+user started an interview on April 3, and then saved her answers and
+logged out, intending to log back in on April 10.  But on April 8, you
+upgrade the interview, adding new functionality.  When the user logs
+back in on April 10, will her interview answers be compatible with
+your new version of the interview?
+
 # <a name="sets"></a>Manually indicating that a block sets a variable
 
 Usually, **docassemble** can figure out which variables a block is
@@ -528,7 +565,6 @@ One alternative is to use the `id` and `supersedes` directives:
 
 In this example, the `id` and `supersedes` directives tell the
 interview that the first question takes precedence over the second.
-Adding an `id` to a block has no other side effects.
 
 Another way of changing the order of precedence is to use the
 [`order` initial block].

@@ -1289,6 +1289,23 @@ For more information about using [`DATemplate`]s, see the
 documentation for [templates].  Also, see the documentation for
 [`send_email()`] and [`send_sms()`].
 
+## <a name="DAEmpty"></a>DAEmpty
+
+The `DAEmpty` object is designed to stand in place of an object that
+might otherwise have important attributes, but it will always return
+an empty string whenever the interview tries to access its
+attributes.
+
+So if `exemption` is a `DAEmpty` object, `exemption.amount` will
+return `''`, as will `exemption[2]`,
+`exemption[4].authority.address.unit`, etc.
+
+This object is used internally by the [`item()`](#DAList.item) method.
+It can also be useful to use the `DAEmpty` object if you have a
+template that refers to variables that you decide you don't actually
+want to use.  If your interview simply sets those variables to
+`DAEmpty`, your template will not trigger an error.
+
 ## <a name="DARedis"></a>DARedis
 
 The `DARedis` class facilitates the use of [Redis] for in-memory

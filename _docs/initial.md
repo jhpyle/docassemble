@@ -30,6 +30,11 @@ If a `title` is defined, it will be displayed in the navigation bar in
 the web app.  If a `short title` is provided, it will be displayed
 in place of the `title` when the size of the screen is small.
 
+If a `logo` is defined, it will be displayed in the navigation bar in
+the web app in place of the `title` and `short title`.  The content of
+the `logo` should be raw HTML.  If you include an image, you should
+size it to be about 20 pixels in height.
+
 If a `tab title` is provided, it will be displayed as the title
 of the browser tab.  Otherwise, the `title` will be used.
 

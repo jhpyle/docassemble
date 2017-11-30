@@ -440,6 +440,13 @@ container for the new configuration to take effect.
   **docassemble** using the instructions in the [scalability] section,
   you do not need to worry about this.  See the [`rabbitmq`]
   configuration directive.
+* <a name="SERVERADMIN"></a>`SERVERADMIN`: If your **docassemble** web
+  server generates an error, the error message will contain an e-mail
+  address that the user can contact for help.  This e-mail address
+  defaults to `webmaster@localhost`.  You can set this e-mail address
+  by setting the `SERVERADMIN` environment variable to the e-mail
+  address you want to use.  See the [`server administrator email`]
+  configuration directive.
 * <a name="URLROOT"></a>`URLROOT`: If users access **docassemble** at
   https://docassemble.example.com, set `URLROOT` to
   `https://docassemble.example.com`.  See the [`url root`]
@@ -1561,3 +1568,4 @@ containers depend on the images.
 [`secret key`]: {{ site.baseurl }}/docs/config.html#secret key
 [Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 [`cross site domain`]: {{ site.baseurl }}/docs/config.html#cross site domain
+[`server administrator email`]: {{ site.baseurl }}/docs/config.html#server administrator email
