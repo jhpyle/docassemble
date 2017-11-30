@@ -4,12 +4,28 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.1](https://github.com/jhpyle/docassemble/releases/tag/v0.2.1) - 2017-11-30
+
+### Changed
+- The hard-coded limit on JSON nesting depth, which was mentioned 
+  in the 0.2.0 changes, has been changed from 6 to 20.
+
+### Fixed
+- Apache could not start unless Docker container started with a 
+  `DAHOSTNAME`.
+- GitHub push using GitHub integration failed because of an SSH 
+  issue.
+
 ## [0.2.0](https://github.com/jhpyle/docassemble/releases/tag/v0.2.0) - 2017-11-29
 
 ### Added
 - The `logo` option of `set_title()` and `metadata`.
 
 ### Changed
+- The `all_variables()` and `variables_as_json()` functions now
+  contain a limitation on nesting depth.  The limit is hard-coded at 
+  6 levels, after which values will be "null."  This is to prevent
+  exceptions being triggered by circular references.
 - Setting Google Drive Synchronization folder to "Do not link" will
   now erase the connection between the OAuth app and the user.
 - When populating PDF checkboxes, passing `None` to the checkbox or to
