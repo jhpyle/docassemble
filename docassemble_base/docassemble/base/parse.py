@@ -3530,7 +3530,7 @@ class Interview:
                         self.default_title[title_abb] = metadata[title_name].strip()
         title = dict()
         for title_name, title_abb in mapping:
-            if title_name in user_dict['_internal'] and user_dict['_internal'][title_name] is not None:
+            if '_internal' in user_dict and title_name in user_dict['_internal'] and user_dict['_internal'][title_name] is not None:
                 title[title_abb] = user_dict['_internal'][title_name].strip()
         for key, val in self.default_title.iteritems():
             if key not in title:

@@ -2643,7 +2643,7 @@ def serializable_dict(user_dict):
     return result_dict
 
 def safe_json(the_object, level=0):
-    if level > 6:
+    if level > 20:
         return None
     if type(the_object) in [str, unicode, bool, int, float]:
         return the_object

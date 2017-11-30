@@ -1532,4 +1532,10 @@ span.dainterviewsubtitle {
     margin-left: -5px;
 }
 
-    
+.halfgrey {
+    opacity: 0.5;
+}
+
+.nonclick {
+    cursor: default;
+}

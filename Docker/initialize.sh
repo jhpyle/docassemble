@@ -269,7 +269,7 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{USELETSENCRYPT}}/'"${USELETSENCRYPT:-false}"'/' \
 	-e 's/{{LETSENCRYPTEMAIL}}/'"${LETSENCRYPTEMAIL:-null}"'/' \
 	-e 's@{{LOGSERVER}}@'"${LOGSERVER:-null}"'@' \
-	-e 's/{{DAHOSTNAME}}/'"${DAHOSTNAME:-null}"'/' \
+	-e 's/{{DAHOSTNAME}}/'"${DAHOSTNAME:-none}"'/' \
 	-e 's/{{LOCALE}}/'"${LOCALE:-null}"'/' \
 	-e 's/{{SERVERADMIN}}/'"${SERVERADMIN:-webmaster@localhost}"'/' \
 	-e 's@{{DASECRETKEY}}@'"${DEFAULT_SECRET}"'@' \
@@ -602,7 +602,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	OLDGID=`id -g www-data`
 
 	usermod -o -u $WWWUID www-data
-	groupmod -g $WWWGID www-data
+	groupmod -o -g $WWWGID www-data
 	find / -user $OLDUID -exec chown -h www-data {} \;
 	find / -group $OLDGID -exec chgrp -h www-data {} \;
 	if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then

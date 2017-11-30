@@ -3165,7 +3165,7 @@ def delete_ssh_keys():
     area = SavedFile(current_user.id, fix=True, section='playgroundpackages')
     area.delete_file('.ssh-private')
     area.delete_file('.ssh-public')
-    area.delete_file('.ssh_command.sh')
+    #area.delete_file('.ssh_command.sh')
     area.finalize()
 
 def get_ssh_keys(email):
@@ -9227,7 +9227,13 @@ def create_playground_package():
                 (private_key_file, public_key_file) = get_ssh_keys(github_email)
                 os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
                 os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
-                git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
+                ssh_script = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.sh', delete=False)
+                with open(ssh_script.name, 'w') as fp:
+                    fp.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4')
+                ssh_script.close()
+                os.chmod(ssh_script.name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR )
+                #git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
+                git_prefix = "GIT_SSH=" + ssh_script.name + " "
                 ssh_url = all_repositories[github_package_name].get('ssh_url', None)
                 if ssh_url is None:
                     raise DAError("create_playground_package: could not obtain ssh_url for package")
@@ -10997,7 +11003,13 @@ def playground_packages():
                 (private_key_file, public_key_file) = get_ssh_keys(github_email)
                 os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
                 os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
-                git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
+                ssh_script = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.sh', delete=False)
+                with open(ssh_script.name, 'w') as fp:
+                    fp.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4')
+                ssh_script.close()
+                os.chmod(ssh_script.name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR )
+                #git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
+                git_prefix = "GIT_SSH=" + ssh_script.name + " "
                 output += "Doing " + git_prefix + "git clone " + github_url + "\n"
                 try:
                     output += subprocess.check_output(git_prefix + "git clone " + github_url, cwd=directory, stderr=subprocess.STDOUT, shell=True)
@@ -13109,6 +13121,9 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                 is_valid = False
         else:
             dictionary = unpack_dictionary(interview_info.dictionary)
+        if type(dictionary) is not dict:
+            logmessage("interview_list: found a dictionary that was not a dictionary")
+            continue
         if is_valid:
             interview_title = interview.get_title(dictionary)
             metadata = interview.get_metadata()
