@@ -689,6 +689,36 @@ before a paragraph in order to get the results you want.  Other
 modifiers besides `p` include `tr` for table rows and `tc` for table
 columns.
 
+If you have a bulleted or numbered list in a .docx template and you want
+to display an item in the list conditionally (using an if .. endif statement),
+you should use the  `{%p if [CONDITION] %}` syntax. Place the `{%p if}` and
+the `{%p endif %}` statements on their own lines in the list. If you place the
+`{%p endif %}` on the same line as the {%p if... %}` line, you will receive an error.
+For example, the following code in a docx template:
+
+1. `{% if my_var == "A"%}`The variable is A.`{% endif %}`
+1. item2
+1. item3
+
+will result in the following output if `my_var` is not equal to "A":
+
+1. ``
+1. item2
+1. item3
+
+Instead, if you write:
+
+1. `{%p if my_var == "A" %}`
+1. The variable is A.
+1. `{% endif %}`
+1. item2
+1. item3
+
+The output will be:
+
+1. item2
+1. item3
+
 If your interview uses [dictionary] data structures, you may need to
 change the "[auto-format]" settings of your word processor so that
 "straight quotes" are used instead of "curly quotes" within [Jinja2]
