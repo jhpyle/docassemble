@@ -689,6 +689,45 @@ before a paragraph in order to get the results you want.  Other
 modifiers besides `p` include `tr` for table rows and `tc` for table
 columns.
 
+If you have a bulleted or numbered list in a .docx template and you want
+to display an item in the list conditionally (using an if .. endif statement),
+you should use the  `{% raw %}{%p if [CONDITION] %}{% endraw %}` syntax. Place 
+the `{% raw %}{%p if...%}{% endraw %}` and
+the `{% raw %}{%p endif %}{% endraw %}` statements on their own lines in the list. 
+If you place the `{% raw %}{%p endif %}{% endraw %}` on the same line as the `{% raw %}{%p if... %}{% endraw %}` line, you will receive an error.
+For example, the following code in a docx template:
+
+{% highlight text %}
+1. `{% raw %}{% if my_var == "A"%}{% endraw %}`The variable is A.`{% raw %}{% endif %}{% endraw %}`
+1. item2
+1. item3
+{% endhighlight %}
+
+will result in the following output if `my_var` is not equal to "A":
+
+{% highlight text %}
+1. ``
+1. item2
+1. item3
+{% endhighlight %}
+
+Instead, if you write:
+
+{% highlight text %}
+1. `{% raw %}{%p if my_var == "A" %}{% endraw %}`
+1. The variable is A.
+1. `{% raw %}{% endif %}{% endraw %}`
+1. item2
+1. item3
+{% endhighlight %}
+
+The output will be:
+
+{% highlight text %}
+1. item2
+1. item3
+{% endhighlight %}
+
 If your interview uses [dictionary] data structures, you may need to
 change the "[auto-format]" settings of your word processor so that
 "straight quotes" are used instead of "curly quotes" within [Jinja2]
