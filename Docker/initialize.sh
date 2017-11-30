@@ -569,13 +569,13 @@ if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; t
     supervisorctl --serverurl http://localhost:9001 start celery
 fi
 
-# echo "41" >&2
+echo "41" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
     rm -f /etc/apache2/ports.conf
 fi
 
-# echo "42" >&2
+echo "42" >&2
 
 if [ ! -f /usr/share/docassemble/certs/apache.key ] && [ -f /usr/share/docassemble/certs/apache.key.orig ]; then
     mv /usr/share/docassemble/certs/apache.key.orig /usr/share/docassemble/certs/apache.key
@@ -594,7 +594,7 @@ if [ ! -f /usr/share/docassemble/certs/exim.crt ] && [ -f /usr/share/docassemble
 fi
 python -m docassemble.webapp.install_certs $DA_CONFIG_FILE || exit 1
 
-# echo "43" >&2
+echo "43" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
     if [ "${WWWUID:-none}" != "none" ] && [ "${WWWGID:-none}" != "none" ] && [ `id -u www-data` != $WWWUID ]; then
@@ -691,7 +691,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
     fi
 fi
 
-# echo "44" >&2
+echo "44" >&2
 
 if [[ $CONTAINERROLE =~ .*:(log):.* ]] && [ "$APACHERUNNING" = false ]; then
     echo "Listen 8080" >> /etc/apache2/ports.conf
@@ -699,19 +699,19 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]] && [ "$APACHERUNNING" = false ]; then
     a2ensite docassemble-log
 fi
 
-# echo "45" >&2
+echo "45" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 start websockets
 fi
 
-# echo "46" >&2
+echo "46" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start apache2
 fi
 
-# echo "47" >&2
+echo "47" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     if [ "${USEHTTPS:-false}" == "false" ]; then
@@ -725,17 +725,17 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     fi
 fi
 
-# echo "48" >&2
+echo "48" >&2
 
 su -c "source $DA_ACTIVATE && python -m docassemble.webapp.register $DA_CONFIG_FILE" www-data
 
-# echo "49" >&2
+echo "49" >&2
 
 if [ "$CRONRUNNING" = false ]; then
    supervisorctl --serverurl http://localhost:9001 start cron
 fi
 
-# echo "50" >&2
+echo "50" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|mail):.* && ($DBTYPE = "postgresql" || $DBTYPE = "mysql") ]]; then
     if [ "${DBTYPE}" = "postgresql" ]; then
@@ -791,7 +791,7 @@ if [[ $CONTAINERROLE =~ .*:(all|mail):.* && ($DBTYPE = "postgresql" || $DBTYPE =
     supervisorctl --serverurl http://localhost:9001 start exim4
 fi
 
-# echo "51" >&2
+echo "51" >&2
 
 function deregister {
     su -c "source $DA_ACTIVATE && python -m docassemble.webapp.deregister $DA_CONFIG_FILE" www-data
