@@ -9076,6 +9076,7 @@ def create_playground_package():
     do_pypi = request.args.get('pypi', False)
     do_github = request.args.get('github', False)
     do_install = request.args.get('install', False)
+    branch = request.args.get('branch', None)
     if do_github:
         if not app.config['USE_GITHUB']:
             abort(404)
@@ -9229,18 +9230,23 @@ def create_playground_package():
                 os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
                 ssh_script = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.sh', delete=False)
                 with open(ssh_script.name, 'w') as fp:
-                    fp.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4')
+                    fp.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4 $5 $6')
                 ssh_script.close()
                 os.chmod(ssh_script.name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR )
                 #git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
                 git_prefix = "GIT_SSH=" + ssh_script.name + " "
                 ssh_url = all_repositories[github_package_name].get('ssh_url', None)
+                github_url = all_repositories[github_package_name].get('html_url', None)
                 if ssh_url is None:
                     raise DAError("create_playground_package: could not obtain ssh_url for package")
                 output = ''
-                output += "Doing " + git_prefix + "git clone " + ssh_url + "\n"
+                if branch:
+                    branch_option = '-b ' + str(branch) + ' '
+                else:
+                    branch_option = ''
+                output += "Doing " + git_prefix + "git clone " + branch_option + ssh_url + "\n"
                 try:
-                    output += subprocess.check_output(git_prefix + "git clone " + ssh_url, cwd=directory, stderr=subprocess.STDOUT, shell=True)
+                    output += subprocess.check_output(git_prefix + "git clone " + branch_option + ssh_url, cwd=directory, stderr=subprocess.STDOUT, shell=True)
                 except subprocess.CalledProcessError as err:
                     output += err.output
                     raise DAError("create_playground_package: error running git clone.  " + output)
@@ -9258,23 +9264,33 @@ def create_playground_package():
                 # except subprocess.CalledProcessError as err:
                 #     output += err.output
                 #     raise DAError("create_playground_package: error running git init.  " + output)
+                output += "Doing git config user.email " + repr(str(github_email)) + "\n"
                 try:
                     output += subprocess.check_output(["git", "config", "user.email", repr(str(github_email))], cwd=packagedir, stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as err:
                     output += err.output
                     raise DAError("create_playground_package: error running git config user.email.  " + output)
+                output += "Doing git config user.name " + repr(str(current_user.first_name) + " " + str(current_user.last_name)) + "\n"
                 try:
                     output += subprocess.check_output(["git", "config", "user.name", repr(str(current_user.first_name) + " " + str(current_user.last_name))], cwd=packagedir, stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as err:
                     output += err.output
                     raise DAError("create_playground_package: error running git config user.email.  " + output)
+                output += "Doing git add .\n"
                 try:
                     output += subprocess.check_output(["git", "add", "."], cwd=packagedir, stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as err:
                     output += err.output
                     raise DAError("create_playground_package: error running git add.  " + output)
+                output += "Doing git status\n"
                 try:
-                    output += subprocess.check_output(["git", "commit", "-m", str(commit_message)], cwd=packagedir, stderr=subprocess.STDOUT)
+                    output += subprocess.check_output(["git", "status"], cwd=packagedir, stderr=subprocess.STDOUT)
+                except subprocess.CalledProcessError as err:
+                    output += err.output
+                    raise DAError("create_playground_package: error running git status.  " + output)
+                output += "Doing git commit -m " + repr(str(commit_message)) + "\n"
+                try:
+                    output += subprocess.check_output(["git", "commit", "-am", str(commit_message)], cwd=packagedir, stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as err:
                     output += err.output
                     raise DAError("create_playground_package: error running git commit.  " + output)
@@ -9284,23 +9300,40 @@ def create_playground_package():
                     except subprocess.CalledProcessError as err:
                         output += err.output
                         raise DAError("create_playground_package: error running git remote add origin.  " + output)
-                    output += git_prefix + "git push -u origin master\n"
+                    if branch:
+                        the_branch = branch
+                    else:
+                        the_branch = 'master'
+                    output += "Doing " + git_prefix + "git push -u origin " + the_branch + "\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git push -u origin master", cwd=packagedir, stderr=subprocess.STDOUT, shell=True)
+                        output += subprocess.check_output(git_prefix + "git push -u origin " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True)
                     except subprocess.CalledProcessError as err:
                         output += err.output
                         raise DAError("create_playground_package: error running first git push.  " + output)
                 else:
-                    output += git_prefix + "git push\n"
-                    try:
-                        output += subprocess.check_output(git_prefix + "git push", cwd=packagedir, stderr=subprocess.STDOUT, shell=True)
-                    except subprocess.CalledProcessError as err:
-                        output += err.output
-                        raise DAError("create_playground_package: error running git push.  " + output)
+                    if branch:
+                        output += "Doing " + git_prefix + "git push --set-upstream origin " + str(branch) + "\n"
+                        try:
+                            output += subprocess.check_output(git_prefix + "git push --set-upstream origin " + str(branch), cwd=packagedir, stderr=subprocess.STDOUT, shell=True)
+                        except subprocess.CalledProcessError as err:
+                            output += err.output
+                            raise DAError("create_playground_package: error running git push.  " + output)
+                    else:
+                        output += "Doing " + git_prefix + "git push\n"
+                        try:
+                            output += subprocess.check_output(git_prefix + "git push", cwd=packagedir, stderr=subprocess.STDOUT, shell=True)
+                        except subprocess.CalledProcessError as err:
+                            output += err.output
+                            raise DAError("create_playground_package: error running git push.  " + output)
+                logmessage(output)
                 flash(word("Pushed commit to GitHub.") + "  " + output, 'info')
                 time.sleep(3.0)
                 shutil.rmtree(directory)
-                return redirect(url_for('playground_packages', file=current_package))
+                if branch:
+                    return redirect(url_for('playground_packages', pull='1', github_url=ssh_url, branch=branch))
+                else:
+                    return redirect(url_for('playground_packages', pull='1', github_url=ssh_url))
+                #return redirect(url_for('playground_packages', file=current_package))
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(session.get('uid', None), nice_name)
             file_set_attributes(file_number, private=False, persistent=True)
@@ -10456,7 +10489,7 @@ def playground_files():
                         os.remove(old_filename)
                 filename = os.path.join(area.directory, the_file)
                 with open(filename, 'w') as fp:
-                    fp.write(formtwo.file_content.data.encode('utf8'))
+                    fp.write(re.sub(r'\r\n', r'\n', formtwo.file_content.data).encode('utf8'))
                 the_time = formatted_current_time()
                 for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
                     r.incr(key)
@@ -10533,7 +10566,7 @@ def playground_files():
         with open(filename, 'rU') as fp:
             content = fp.read().decode('utf8')
     elif formtwo.file_content.data:
-        content = formtwo.file_content.data
+        content = re.sub(r'\r\n', r'\n', formtwo.file_content.data)
     else:
         content = ''
     lowerdescription = None
@@ -10699,7 +10732,7 @@ def pull_playground_package():
             if form.github_url.data and form.pypi.data:
                 flash(word("You cannot pull from GitHub and PyPI at the same time.  Please fill in one and leave the other blank."), 'error')
             elif form.github_url.data:
-                return redirect(url_for('playground_packages', pull='1', github_url=form.github_url.data))
+                return redirect(url_for('playground_packages', pull='1', github_url=form.github_url.data, branch=form.github_branch.data))
             elif form.pypi.data:
                 return redirect(url_for('playground_packages', pull='1', pypi=form.pypi.data))
         if form.cancel.data:
@@ -10708,8 +10741,73 @@ def pull_playground_package():
         form.github_url.data = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['github'])
     elif 'pypi' in request.args:
         form.pypi.data = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['pypi'])
+    form.github_branch.choices = list()
     description = word("Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.")
-    return render_template('pages/pull_playground_package.html', form=form, description=description, version_warning=version_warning, bodyclass='adminbody', title=word("Pull GitHub or PyPI Package"), tab_title=word("Pull"), page_title=word("Pull")), 200
+    branch = request.args.get('branch')
+    extra_js = """
+    <script>
+      var default_branch = """ + repr(str(branch if branch else 'master')) + """;
+      function get_branches(){
+        console.log("get_branches");
+        var elem = $("#github_branch");
+        elem.empty();
+        var opt = $("<option></option>");
+        opt.attr("value", "").text("Not applicable");
+        elem.append(opt);
+        var github_url = $("#github_url").val();
+        if (!github_url){
+          return;
+        }
+        $.get(""" + repr(str(url_for('get_git_branches'))) + """, { url: github_url }, "json")
+        .done(function(data){
+          console.log(data);
+          if (data.success){
+            var n = data.result.length;
+            if (n > 0){
+              elem.empty();
+              for (var i = 0; i < n; i++){
+                opt = $("<option></option>");
+                opt.attr("value", data.result[i].name).text(data.result[i].name);
+                if (data.result[i].name == default_branch){
+                  opt.prop('selected', true);
+                }
+                $(elem).append(opt);
+              }
+            }
+          }
+        });
+      }
+      $( document ).ready(function() {
+        get_branches();
+        $("#github_url").on('change', get_branches);
+      });
+    </script>
+"""
+    return render_template('pages/pull_playground_package.html', form=form, description=description, version_warning=version_warning, bodyclass='adminbody', title=word("Pull GitHub or PyPI Package"), tab_title=word("Pull"), page_title=word("Pull"), extra_js=Markup(extra_js)), 200
+
+@app.route('/get_git_branches', methods=['GET'])
+@login_required
+@roles_required(['developer', 'admin'])
+def get_git_branches():
+    if not app.config['USE_GITHUB'] or 'url' not in request.args:
+        abort(404)
+    repo_name = request.args['url']
+    repo_name = re.sub(r'^http.*github.com/', '', repo_name)
+    repo_name = re.sub(r'.*@github.com:', '', repo_name)
+    repo_name = re.sub(r'.git$', '', repo_name)
+    try:
+        storage = RedisCredStorage(app='github')
+        credentials = storage.get()
+        if not credentials or credentials.invalid:
+            return jsonify(dict(success=False, reason="bad credentials"))
+        http = credentials.authorize(httplib2.Http())
+        resp, content = http.request("https://api.github.com/repos/" + repo_name + '/branches', "GET")
+        if int(resp['status']) == 200:
+            return jsonify(dict(success=True, result=json.loads(content)))
+        return jsonify(dict(success=False, reason=repo_name + " fetch failed"))
+    except Exception as err:
+        return jsonify(dict(success=False, reason=str(err)))
+    return jsonify(dict(success=False))
 
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required
@@ -10770,9 +10868,15 @@ def playground_packages():
         the_list.append((item, item))
     form.dependencies.choices = the_list
     validated = False
-    if request.method == 'POST' and form.validate():
-        the_file = form.file_name.data
-        validated = True
+    form.github_branch.choices = list()
+    if form.github_branch.data:
+        form.github_branch.choices.append((form.github_branch.data, form.github_branch.data))
+    if request.method == 'POST':
+        if form.validate():
+            the_file = form.file_name.data
+            validated = True
+        else:
+            raise DAError("Form did not validate")
     the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '-', the_file)
     the_file = re.sub(r'^docassemble-', r'', the_file)
     files = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f)) and not f.startswith('.')])
@@ -10799,6 +10903,7 @@ def playground_packages():
         the_file = file_list['playgroundpackages'][0]
     old_info = dict()
     on_github = False
+    branch_info = list()
     github_http = None
     github_ssh = None
     github_use_ssh = False
@@ -10827,7 +10932,7 @@ def playground_packages():
                 github_author_name = info.get('name', None)
                 github_email = info.get('email', None)
             else:
-                raise DAError("create_playground_package: could not get information about GitHub User")
+                raise DAError("playground_packages: could not get information about GitHub User")
             if github_email is None:
                 resp, content = http.request("https://api.github.com/user/emails", "GET")
                 if int(resp['status']) == 200:
@@ -10847,6 +10952,11 @@ def playground_packages():
                 if github_author_name:
                     github_message += "  " + word("The author is") + " " + github_author_name + "."
                 on_github = True
+                resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name + '/branches', "GET")
+                if int(resp['status']) == 200:
+                    branch_info = json.loads(content)
+                else:
+                    logmessage("could not get branch info " + "https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name + '/branches')
             else:
                 github_message = word('This package is not yet published on GitHub.')
                 resp, content = http.request("https://api.github.com/user/orgs", "GET")
@@ -10864,6 +10974,11 @@ def playground_packages():
                             if github_author_name:
                                 github_message += "  " + word("The author is") + " " + github_author_name + "."
                             on_github = True
+                            resp, content = http.request("https://api.github.com/repos/" + str(org_info['login']) + "/" + github_package_name + '/branches', "GET")
+                            if int(resp['status']) == 200:
+                                branch_info = json.loads(content)
+                            else:
+                                logmessage("could not get branch info " + "https://api.github.com/repos/" + str(org_info['login']) + "/" + github_package_name + '/branches')
                             break
                 else:
                     logmessage("Failed to get orgs using " + "https://api.github.com/user/orgs")
@@ -10986,6 +11101,11 @@ def playground_packages():
         area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
         readme_text = ''
         setup_py = ''
+        branch = request.args.get('branch', None)
+        if branch:
+            branch_option = '-b ' + branch + ' '
+        else:
+            branch_option = ''
         need_to_restart = False
         extracted = dict()
         data_files = dict(templates=list(), static=list(), sources=list(), interviews=list(), modules=list(), questions=list())
@@ -11005,23 +11125,27 @@ def playground_packages():
                 os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
                 ssh_script = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.sh', delete=False)
                 with open(ssh_script.name, 'w') as fp:
-                    fp.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4')
+                    fp.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4 $5 $6')
                 ssh_script.close()
                 os.chmod(ssh_script.name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR )
                 #git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
                 git_prefix = "GIT_SSH=" + ssh_script.name + " "
-                output += "Doing " + git_prefix + "git clone " + github_url + "\n"
+                output += "Doing " + git_prefix + "git clone " + branch_option + github_url + "\n"
                 try:
-                    output += subprocess.check_output(git_prefix + "git clone " + github_url, cwd=directory, stderr=subprocess.STDOUT, shell=True)
-                except subprocess.CalledProcessError as err:
-                    output += err.output
-                    raise DAError("create_playground_package: error running git clone.  " + output)
-            else:
-                try:
-                    output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT)
+                    output += subprocess.check_output(git_prefix + "git clone " + branch_option + github_url, cwd=directory, stderr=subprocess.STDOUT, shell=True)
                 except subprocess.CalledProcessError as err:
                     output += err.output
                     raise DAError("playground_packages: error running git clone.  " + output)
+            else:
+                try:
+                    if branch is not None:
+                        output += subprocess.check_output(['git', 'clone', '-b ' + branch, github_url], cwd=directory, stderr=subprocess.STDOUT)
+                    else:
+                        output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT)
+                except subprocess.CalledProcessError as err:
+                    output += err.output
+                    raise DAError("playground_packages: error running git clone.  " + output)
+            logmessage(output)
         elif 'pypi' in request.args:
             pypi_package = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['pypi'])
             pypi_package = 'docassemble.' + re.sub(r'^docassemble\.', '', pypi_package)
@@ -11105,7 +11229,7 @@ def playground_packages():
                     inner_item = re.sub(r'^u?"+', '', inner_item)
                     the_list.append(inner_item)
                 extracted[m.group(1)] = the_list
-        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, pypi_package_name=pypi_package)
+        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, github_branch=branch, pypi_package_name=pypi_package)
         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ['docassemble', 'docassemble.base', 'docassemble.webapp']]
         #output += "info_dict is set\n"
         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
@@ -11125,7 +11249,7 @@ def playground_packages():
             r.incr(key)
         the_file = package_name
         flash(word("The package was unpacked into the Playground."), 'success')
-        shutil.rmtree(directory)
+        #shutil.rmtree(directory)
         if need_to_restart:
             return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file)))
         return redirect(url_for('playground_packages', file=the_file))
@@ -11183,7 +11307,7 @@ def playground_packages():
                 if form.pypi.data:
                     return redirect(url_for('create_playground_package', package=the_file, pypi='1'))
                 if form.github.data:
-                    return redirect(url_for('create_playground_package', package=the_file, github='1', commit_message=form.commit_message.data))
+                    return redirect(url_for('create_playground_package', package=the_file, github='1', commit_message=form.commit_message.data, branch=form.github_branch.data))
                 the_time = formatted_current_time()
                 flash(word('The package information was saved.'), 'success')
                 
@@ -11315,7 +11439,19 @@ def playground_packages():
         the_pypi_package_name = pypi_package_from_file
     else:
         the_pypi_package_name = None
-    return render_template('pages/playgroundpackages.html', version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, pypi_package_name=the_pypi_package_name, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+    branch = old_info.get('github_branch', None)
+    branch_choices = list()
+    branch_names = set()
+    for br in branch_info:
+        branch_names.add(br['name'])
+        branch_choices.append((br['name'], br['name']))
+    if branch and branch in branch_names:
+        form.github_branch.data = branch
+    elif 'master' in branch_names:
+        form.github_branch.data = 'master'
+    form.github_branch.choices = branch_choices
+    default_branch = branch if branch else 'master'
+    return render_template('pages/playgroundpackages.html', branch=default_branch, version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, pypi_package_name=the_pypi_package_name, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
 
 def copy_if_different(source, destination):
     if (not os.path.isfile(destination)) or filecmp.cmp(source, destination) is False:
@@ -11680,7 +11816,7 @@ def playground_variables():
                 active_file = 'test.yml'
             content = ''
             if 'playground_content' in post_data:
-                content = post_data['playground_content']
+                content = re.sub(r'\r\n', r'\n', post_data['playground_content'])
             interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, package="docassemble.playground" + str(current_user.id), path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
         interview = interview_source.get_interview()
         ensure_ml_file_exists(interview, active_file)
@@ -11863,15 +11999,16 @@ def playground_page():
                     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
             the_time = formatted_current_time()
             should_save = True
+            the_content = re.sub(r'\r\n', r'\n', form.playground_content.data)
             if os.path.isfile(filename):
                 with open(filename, 'rU') as fp:
                     orig_content = fp.read().decode('utf8')
-                    if orig_content == form.playground_content.data:
+                    if orig_content == the_content:
                         logmessage("No need to save")
                         should_save = False
             if should_save:
                 with open(filename, 'w') as fp:
-                    fp.write(form.playground_content.data.encode('utf8'))
+                    fp.write(the_content.encode('utf8'))
             this_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + the_file
             active_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + active_file
             r.incr('da:interviewsource:' + this_interview_string)

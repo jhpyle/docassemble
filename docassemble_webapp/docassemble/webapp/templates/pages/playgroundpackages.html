@@ -1,5 +1,5 @@
 {%- extends 'base_templates/page_base_half_wider.html' %}
-{%- from "base_templates/form_macros.html" import render_addon_field, render_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
+{%- from "base_templates/form_macros.html" import render_addon_field, render_field, render_select_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
 {%- block top %}
 {%- endblock %}
 {%- block content %}
@@ -72,7 +72,7 @@
                 </a>
               </li>
               <li role="presentation">
-                <a tabindex="7" id="daPull" href="{{ url_for('pull_playground_package', github=github_url) if github_url else url_for('pull_playground_package', pypi=pypi_package_name) if pypi_package_name else url_for('pull_playground_package') }}" title="{{ word('Pull a package from GitHub or PyPI into the Playground') }}">
+                <a tabindex="7" id="daPull" href="{{ url_for('pull_playground_package', github=github_url, branch=branch) if github_url else url_for('pull_playground_package', pypi=pypi_package_name) if pypi_package_name else url_for('pull_playground_package') }}" title="{{ word('Pull a package from GitHub or PyPI into the Playground') }}">
                   <span class="glyphicon glyphicon-cloud" aria-hidden="true"></span>
                   {{ word("Pull") }}
                 </a>
@@ -136,7 +136,8 @@
               {%- endif %}
               {%- if can_publish_to_github %}
               <div id="commit_message_div" style="display:none">
-                {{ render_field(form.commit_message) }}
+                {{ render_select_field(form.github_branch) }}
+                {{ render_field(form.commit_message) }}    
               </div>
               {%- endif %}
               <div class="form-actions">

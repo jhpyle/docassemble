@@ -74,6 +74,7 @@ class PlaygroundFilesEditForm(FlaskForm):
 
 class PullPlaygroundPackage(FlaskForm):
     github_url = StringField(word('GitHub URL'))
+    github_branch = SelectField(word('GitHub Branch'))
     pypi = StringField(word('PyPI package'))
     pull = SubmitField(word('Pull'))
     cancel = SubmitField(word('Cancel'))
@@ -93,6 +94,7 @@ class PlaygroundPackagesForm(FlaskForm):
     static_files = SelectMultipleField(word('Static files'))
     sources_files = SelectMultipleField(word('Source files'))
     readme = TextAreaField(word('README file'), default='')
+    github_branch = SelectField(word('Branch'))
     commit_message = StringField(word('Commit message'), default="")
     submit = SubmitField(word('Save'))
     download = SubmitField(word('Download'))

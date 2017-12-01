@@ -1,7 +1,7 @@
 {% extends 'flask_user/public_base.html' %}
 
 {% block content %}
-{% from "base_templates/form_macros.html" import render_field, render_submit_field %}
+{% from "base_templates/form_macros.html" import render_field, render_submit_field, render_select_field %}
 <h1>{{ title }}</h1>
 
 <p>{{ description }}</p>
@@ -11,7 +11,9 @@
   <div class="form-actions">
     {{ render_field(form.github_url, tabindex=100, placeholder='https://github.com/username/docassemble-packagename') }}
 
-    {{ render_field(form.pypi, tabindex=100, prelabel='docassemble.') }}
+    {{ render_select_field(form.github_branch, tabindex=102) }}
+
+    {{ render_field(form.pypi, tabindex=108, prelabel='docassemble.') }}
 
     {{ render_submit_field(form.pull, tabindex=110, class="btn btn-primary " + config['BUTTON_CLASS']) }}
     
