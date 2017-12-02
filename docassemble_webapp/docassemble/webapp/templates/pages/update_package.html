@@ -1,7 +1,7 @@
 {% extends 'base_templates/page_base_half.html' %}
 
 {% block content %}
-{% from "base_templates/form_macros.html" import render_field, render_file_field_simple, render_submit_field with context %}
+{% from "base_templates/form_macros.html" import render_field, render_file_field_simple, render_select_field, render_submit_field with context %}
 
 <h2>{{ word('Upgrade docassemble') }}</h2>
 
@@ -16,6 +16,7 @@
   <div class="form-group">
     <h4>{{ word('You can provide a:') }}</h4>
     {{ render_field(form.giturl, tabindex=70, placeholder='https://github.com/username/packagename') }}
+    {{ render_select_field(form.gitbranch, tabindex=75) }}
     <h4>{{ word('Or you can upload a:') }}</h4>
     {{ render_file_field_simple(form.zipfile, tabindex=80) }}
     <h4>{{ word('Or you can specify a:') }}</h4>
@@ -38,7 +39,7 @@
   <tbody>
   {% for package in package_list %}
     <tr>
-      <td>{{ package.package.name }}{% if package.package.packageversion %} <span class="text-muted">{{ package.package.packageversion }}</span>{% endif %}</td>
+      <td>{{ package.package.name }}{% if package.package.packageversion %} <span class="text-muted">{{ package.package.packageversion }}</span>{% endif %}{% if package.package.gitbranch %} ({{ package.package.gitbranch }}){% endif %}</td>
       <td style="text-align:right;">{% if package.can_update %}<a class="btn btn-default btn-xs" href="{{ url_for('update_package', package=package.package.name, action='update') }}">{{ word('Update') }}</a>{% endif %} {% if package.can_uninstall %}<a class="btn btn-warning btn-xs" href="{{ url_for('update_package', package=package.package.name, action='uninstall') }}">{{ word('Uninstall') }}</a>{% endif %}</td>
     </tr>
 {% endfor %}

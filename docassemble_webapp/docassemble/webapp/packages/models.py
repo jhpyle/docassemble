@@ -16,6 +16,7 @@ class Package(db.Model):
     dependency = db.Column(db.Boolean(), nullable=False, server_default='0')
     core = db.Column(db.Boolean(), nullable=False, server_default='0')
     active = db.Column(db.Boolean(), nullable=False, server_default='1')
+    gitbranch = db.Column(db.String(255), nullable=True)
 
 class PackageAuth(db.Model):
     __tablename__ = dbtableprefix + 'package_auth'

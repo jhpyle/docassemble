@@ -1875,16 +1875,17 @@ def install_zip_package(packagename, file_number):
         existing_package.active = True
         existing_package.limitation = None
         existing_package.giturl = None
+        existing_package.gitbranch = None
         existing_package.type = 'zip'
         existing_package.version += 1
     db.session.commit()
     return
 
-def install_git_package(packagename, giturl):
+def install_git_package(packagename, giturl, branch=None):
     #logmessage("install_git_package: " + packagename + " " + str(giturl))
     if Package.query.filter_by(name=packagename).first() is None and Package.query.filter_by(giturl=giturl).first() is None:
         package_auth = PackageAuth(user_id=current_user.id)
-        package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git', upload=None, limitation=None)
+        package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git', upload=None, limitation=None, gitbranch=branch)
         db.session.add(package_auth)
         db.session.add(package_entry)
         db.session.commit()
@@ -1903,6 +1904,8 @@ def install_git_package(packagename, giturl):
             existing_package.version += 1
             existing_package.limitation = None
             existing_package.active = True
+            if branch:
+                existing_package.gitbranch = branch
             existing_package.type = 'git'
             db.session.commit()
         else:
@@ -1926,6 +1929,7 @@ def install_pip_package(packagename, limitation):
         existing_package.type = 'pip'
         existing_package.limitation = limitation
         existing_package.giturl = None
+        existing_package.gitbranch = None
         existing_package.upload = None
         existing_package.active = True
         db.session.commit()
@@ -8948,9 +8952,13 @@ def update_package():
     pip.utils.logging._log_state = threading.local()
     pip.utils.logging._log_state.indentation = 0
     form = UpdatePackageForm(request.form)
+    form.gitbranch.choices = list()
+    if form.gitbranch.data:
+        form.gitbranch.choices.append((form.gitbranch.data, form.gitbranch.data))
     action = request.args.get('action', None)
     target = request.args.get('package', None)
     is_base_upgrade = request.args.get('package', False)
+    branch = None
     if action is not None and target is not None:
         package_list, package_auth = get_package_info()
         the_package = None
@@ -8999,14 +9007,17 @@ def update_package():
         else:
             if form.giturl.data:
                 giturl = form.giturl.data.strip()
+                branch = form.gitbranch.data.strip()
                 packagename = re.sub(r'/*$', '', giturl)
                 packagename = re.sub(r'^git+', '', packagename)
                 packagename = re.sub(r'#.*', '', packagename)
                 packagename = re.sub(r'\.git$', '', packagename)
                 packagename = re.sub(r'.*/', '', packagename)
                 if user_can_edit_package(giturl=giturl) and user_can_edit_package(pkgname=packagename):
-                    #commands = ['install', '--egg', '--src=' + temp_directory, '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user", 'git+' + giturl + '.git#egg=' + packagename]
-                    install_git_package(packagename, giturl)
+                    if branch:
+                        install_git_package(packagename, giturl, branch=branch)
+                    else:
+                        install_git_package(packagename, giturl)
                     result = docassemble.webapp.worker.update_packages.delay()
                     session['taskwait'] = result.id
                     return redirect(url_for('update_package_wait'))
@@ -9033,7 +9044,45 @@ def update_package():
     package_list, package_auth = get_package_info(exclude_core=True)
     form.pippackage.data = None
     form.giturl.data = None
-    return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, package_list=package_list, tab_title=word('Update Package'), page_title=word('Update Package')), 200
+    extra_js = """
+    <script>
+      var default_branch = """ + repr(str(branch if branch else 'master')) + """;
+      function get_branches(){
+        console.log("get_branches");
+        var elem = $("#gitbranch");
+        elem.empty();
+        var opt = $("<option></option>");
+        opt.attr("value", "").text("Not applicable");
+        elem.append(opt);
+        var github_url = $("#giturl").val();
+        if (!github_url){
+          return;
+        }
+        $.get(""" + repr(str(url_for('get_git_branches'))) + """, { url: github_url }, "json")
+        .done(function(data){
+          console.log(data);
+          if (data.success){
+            var n = data.result.length;
+            if (n > 0){
+              elem.empty();
+              for (var i = 0; i < n; i++){
+                opt = $("<option></option>");
+                opt.attr("value", data.result[i].name).text(data.result[i].name);
+                if (data.result[i].name == default_branch){
+                  opt.prop('selected', true);
+                }
+                $(elem).append(opt);
+              }
+            }
+          }
+        });
+      }
+      $( document ).ready(function() {
+        get_branches();
+        $("#giturl").on('change', get_branches);
+      });
+    </script>"""
+    return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, package_list=package_list, tab_title=word('Update Package'), page_title=word('Update Package'), extra_js=Markup(extra_js)), 200
 
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():
@@ -9077,13 +9126,19 @@ def create_playground_package():
     do_github = request.args.get('github', False)
     do_install = request.args.get('install', False)
     branch = request.args.get('branch', None)
+    if app.config['USE_GITHUB']:
+        github_auth = r.get('da:using_github:userid:' + str(current_user.id))
+    else:
+        github_auth = None
     if do_github:
         if not app.config['USE_GITHUB']:
             abort(404)
         if current_package is None:
             logmessage('create_playground_package: package not specified')
             abort(404)
-    if app.config['USE_GITHUB'] and current_package is not None:
+        if not github_auth:
+            logmessage('create_playground_package: github button called when github auth not enabled.')
+            abort(404)
         github_package_name = 'docassemble-' + re.sub(r'^docassemble-', r'', current_package)
         #github_package_name = re.sub(r'[^A-Za-z\_\-]', '', github_package_name)
         if github_package_name in ['docassemble-base', 'docassemble-webapp', 'docassemble-demo']:
@@ -10789,18 +10844,25 @@ def pull_playground_package():
 @login_required
 @roles_required(['developer', 'admin'])
 def get_git_branches():
-    if not app.config['USE_GITHUB'] or 'url' not in request.args:
+    if 'url' not in request.args:
         abort(404)
+    if app.config['USE_GITHUB']:
+        github_auth = r.get('da:using_github:userid:' + str(current_user.id))
+    else:
+        github_auth = None
     repo_name = request.args['url']
     repo_name = re.sub(r'^http.*github.com/', '', repo_name)
     repo_name = re.sub(r'.*@github.com:', '', repo_name)
     repo_name = re.sub(r'.git$', '', repo_name)
     try:
-        storage = RedisCredStorage(app='github')
-        credentials = storage.get()
-        if not credentials or credentials.invalid:
-            return jsonify(dict(success=False, reason="bad credentials"))
-        http = credentials.authorize(httplib2.Http())
+        if github_auth:
+            storage = RedisCredStorage(app='github')
+            credentials = storage.get()
+            if not credentials or credentials.invalid:
+                return jsonify(dict(success=False, reason="bad credentials"))
+            http = credentials.authorize(httplib2.Http())
+        else:
+            http = httplib2.Http()
         resp, content = http.request("https://api.github.com/repos/" + repo_name + '/branches', "GET")
         if int(resp['status']) == 200:
             return jsonify(dict(success=True, result=json.loads(content)))
@@ -11309,8 +11371,7 @@ def playground_packages():
                 if form.github.data:
                     return redirect(url_for('create_playground_package', package=the_file, github='1', commit_message=form.commit_message.data, branch=form.github_branch.data))
                 the_time = formatted_current_time()
-                flash(word('The package information was saved.'), 'success')
-                
+                flash(word('The package information was saved.'), 'success')                
     form.original_file_name.data = the_file
     form.file_name.data = the_file
     if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):

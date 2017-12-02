@@ -1,6 +1,13 @@
 Feature: Example interviews
   In order to ensure docassemble is running properly, I want
   to run the example interviews.
+  
+  Scenario: Test the interview "File upload"
+    Given I start the interview "docassemble.base:data/questions/examples/file.yml"
+    Then I should see the phrase "Please upload a file"
+    And I upload the file "../../octocat.png"
+    And I click the button "Continue"
+    And I wait forever
 
   Scenario: Test the interview "Action with arguments"
     Given I start the interview "docassemble.base:data/questions/examples/actions-parameters.yml"
@@ -645,9 +652,6 @@ Feature: Example interviews
 
   # Scenario: Test the interview "Fields example"
   #   Given I start the interview "docassemble.base:data/questions/examples/fields.yml"
-
-  # Scenario: Test the interview "File upload"
-  #   Given I start the interview "docassemble.base:data/questions/examples/file.yml"
 
   # Scenario: Test the interview "End-of-sentence punctuation"
   #   Given I start the interview "docassemble.base:data/questions/examples/fix-punctuation.yml"

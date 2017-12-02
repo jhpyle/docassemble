@@ -24,6 +24,7 @@ class CreatePlaygroundPackageForm(FlaskForm):
 
 class UpdatePackageForm(FlaskForm):
     giturl = StringField(word('GitHub URL'))
+    gitbranch = SelectField(word('GitHub Branch'))
     zipfile = FileField(word('Zip File'))
     pippackage = StringField(word('Package on PyPI'))
     submit = SubmitField(word('Update'))

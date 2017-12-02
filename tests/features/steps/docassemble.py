@@ -1,6 +1,7 @@
 from lettuce import step, world
 from selenium.webdriver.common.keys import Keys
 import time
+import os
 
 @step('I log in with "([^"]+)" and "([^"]+)"')
 def login(step, username, password):
@@ -14,6 +15,12 @@ def login(step, username, password):
     elem.send_keys(password)
     world.browser.find_element_by_xpath('//button[text()="Sign in"]').click()
     world.browser.wait_for_it()
+
+@step('I upload the file "([^"]*)"')
+def do_upload(step, value):
+    elem = world.browser.find_element_by_xpath("//input[@type='file']")
+    elem.clear()
+    elem.send_keys(os.getcwd() + "/" + value)
 
 @step('I set the text area to "([^"]*)"')
 def set_text_area(step, value):
