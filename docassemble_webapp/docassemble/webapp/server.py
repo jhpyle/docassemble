@@ -10857,7 +10857,6 @@ def get_git_branches():
     repo_name = re.sub(r'^http.*github.com/', '', repo_name)
     repo_name = re.sub(r'.*@github.com:', '', repo_name)
     repo_name = re.sub(r'.git$', '', repo_name)
-    parts = re.split(r'/', repo_name)
     try:
         if github_auth:
             storage = RedisCredStorage(app='github')
@@ -10865,17 +10864,9 @@ def get_git_branches():
             if not credentials or credentials.invalid:
                 return jsonify(dict(success=False, reason="bad credentials"))
             http = credentials.authorize(httplib2.Http())
-            resp, content = http.request("https://api.github.com/users/" + parts[0] + "/repos", "GET")
-            if int(resp['status']) != 200:
-                resp, content = http.request("https://api.github.com/orgs/" + parts[0] + "/repos", "GET")
-            if int(resp['status']) == 200:
-                for repo in json.loads(content):
-                    if repo.get('name', None) == parts[1]:
-                        logmessage(json.dumps(repo))
         else:
             http = httplib2.Http()
         the_url = "https://api.github.com/repos/" + repo_name + '/branches' + access_token_part
-        logmessage("URL is " + the_url)
         resp, content = http.request(the_url, "GET")
         if int(resp['status']) == 200:
             return jsonify(dict(success=True, result=json.loads(content)))
