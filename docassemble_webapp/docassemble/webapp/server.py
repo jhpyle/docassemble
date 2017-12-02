@@ -8952,7 +8952,7 @@ def update_package():
     pip.utils.logging._log_state = threading.local()
     pip.utils.logging._log_state.indentation = 0
     form = UpdatePackageForm(request.form)
-    form.gitbranch.choices = list()
+    form.gitbranch.choices = [('', "Not applicable")]
     if form.gitbranch.data:
         form.gitbranch.choices.append((form.gitbranch.data, form.gitbranch.data))
     action = request.args.get('action', None)
@@ -9048,7 +9048,6 @@ def update_package():
     <script>
       var default_branch = """ + repr(str(branch if branch else 'master')) + """;
       function get_branches(){
-        console.log("get_branches");
         var elem = $("#gitbranch");
         elem.empty();
         var opt = $("<option></option>");
@@ -10803,7 +10802,6 @@ def pull_playground_package():
     <script>
       var default_branch = """ + repr(str(branch if branch else 'master')) + """;
       function get_branches(){
-        console.log("get_branches");
         var elem = $("#github_branch");
         elem.empty();
         var opt = $("<option></option>");
@@ -10851,9 +10849,15 @@ def get_git_branches():
     else:
         github_auth = None
     repo_name = request.args['url']
+    m = re.search(r'//(.+):x-oauth-basic@github.com', repo_name)
+    if m:
+        access_token_part = '?access_token=' + m.group(1)
+    else:
+        access_token_part = ''
     repo_name = re.sub(r'^http.*github.com/', '', repo_name)
     repo_name = re.sub(r'.*@github.com:', '', repo_name)
     repo_name = re.sub(r'.git$', '', repo_name)
+    parts = re.split(r'/', repo_name)
     try:
         if github_auth:
             storage = RedisCredStorage(app='github')
@@ -10863,7 +10867,7 @@ def get_git_branches():
             http = credentials.authorize(httplib2.Http())
         else:
             http = httplib2.Http()
-        resp, content = http.request("https://api.github.com/repos/" + repo_name + '/branches', "GET")
+        resp, content = http.request("https://api.github.com/repos/" + repo_name + '/branches' + access_token_part, "GET")
         if int(resp['status']) == 200:
             return jsonify(dict(success=True, result=json.loads(content)))
         return jsonify(dict(success=False, reason=repo_name + " fetch failed"))
