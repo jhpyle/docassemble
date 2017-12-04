@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.2] - 2017-12-04
+### Added
+- Pulling and pushing using GitHub branches.
+- The `.failed()` method on result of background task.
+
 ## [0.2.1] - 2017-11-30
 ### Changed
 - The hard-coded limit on JSON nesting depth, which was mentioned 

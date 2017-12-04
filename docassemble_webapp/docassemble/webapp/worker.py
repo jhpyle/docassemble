@@ -464,6 +464,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             interview.assemble(user_dict, interview_status)
         except Exception as e:
             sys.stderr.write("Error in assembly: " + str(e))
+            return(worker_controller.functions.ReturnValue(ok=False, error_message=str(e)))
         if not hasattr(interview_status, 'question'):
             #sys.stderr.write("background_action: status had no question\n")
             return(worker_controller.functions.ReturnValue(extra=extra))
@@ -489,7 +490,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             try:
                 interview.assemble(user_dict, interview_status)
             except Exception as e:
-                sys.stderr.write("Error in assembly: " + str(e))
+                sys.stderr.write("Error in assembly during callback: " + str(e))
             # is this right?
             if str(user_info.get('the_user_id', None)).startswith('t'):
                 worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)

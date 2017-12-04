@@ -15,6 +15,9 @@ import docassemble.base.functions
 import docassemble.base.file_docx
 from docassemble.webapp.files import SavedFile
 from docxtpl import InlineImage
+import tempfile
+import time
+import stat
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty']
 
@@ -1875,6 +1878,11 @@ class DAFile(DAObject):
         c.setopt(pycurl.COOKIEFILE, cookiefile.name)
         c.perform()
         c.close()
+    def make_pngs(self):
+        """Creates page images for a PDF file."""
+        self._make_pngs_for_pdf()
+        server.wait_for_task(self._taskscreen, timeout=60)
+        server.wait_for_task(self._taskpage, timeout=60)
     def _make_pngs_for_pdf(self):
         if not hasattr(self, '_taskscreen'):
             setattr(self, '_taskscreen', server.make_png_for_pdf(self, 'screen'))
@@ -1891,6 +1899,14 @@ class DAFile(DAObject):
         if 'pages' not in self.file_info:
             raise Exception("number of pages not found.")
         test_path = self.file_info['path'] + prefix + '-in-progress'
+        logmessage("Test path is " + test_path)
+        if wait and os.path.isfile(test_path):
+            logmessage("Test path exists")
+            while (os.path.isfile(test_path) and time.time() - os.stat(test_path)[stat.ST_MTIME]) < 30:
+                logmessage("Waiting for test path to go away")
+                if not os.path.isfile(test_path):
+                    break
+                time.sleep(1)
         if os.path.isfile(test_path) and hasattr(self, '_task' + prefix):
             if wait:
                 server.wait_for_task(getattr(self, '_task' + prefix))

@@ -84,6 +84,7 @@ package|limitation|text||
 package|dependency|boolean||false
 package|core|boolean||false
 package|active|boolean||true
+package|gitbranch|character varying|255|
 role|id|integer||nextval('role_id_seq'::regclass)
 role|name|character varying|50|
 role|description|character varying|255|

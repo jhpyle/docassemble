@@ -7,7 +7,8 @@ Feature: Example interviews
     Then I should see the phrase "Please upload a file"
     And I upload the file "../../octocat.png"
     And I click the button "Continue"
-    And I wait forever
+    And I wait 2 seconds
+    Then I should see the phrase "Here is the file you uploaded"
 
   Scenario: Test the interview "Action with arguments"
     Given I start the interview "docassemble.base:data/questions/examples/actions-parameters.yml"

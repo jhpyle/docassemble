@@ -221,7 +221,7 @@ def get_info_from_file_number(file_number, privileged=False, filename=None):
     final_filename = result['path'] + '.' + result['extension']
     if os.path.isfile(final_filename):
         add_info_about_file(final_filename, result)
-    #else:
-    #    logmessage("Filename DID NOT EXIST.")
+    # else:
+    #     logmessage("Filename " + final_filename + "did not exist.")
     return(result)
 

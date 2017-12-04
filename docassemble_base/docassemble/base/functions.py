@@ -79,7 +79,7 @@ class ReturnValue(object):
         return str(self.value)
     def __unicode__(self):
         return unicode(self.__str__())
-    
+
 def get_current_variable():
     if len(this_thread.current_variable):
         return this_thread.current_variable[-1]
@@ -1231,6 +1231,11 @@ def background_action(*pargs, **kwargs):
     return(server.bg_action(action, ui_notification, **kwargs))
 
 class MyAsyncResult(object):
+    def failed(self):
+        resp = server.worker_convert(self.obj).get()
+        if isinstance(resp, ReturnValue) and hasattr(resp, 'ok') and resp.ok is False:
+            return True
+        return False
     def ready(self):
         return server.worker_convert(self.obj).ready()
     def get(self):

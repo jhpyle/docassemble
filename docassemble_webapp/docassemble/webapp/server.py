@@ -1588,6 +1588,8 @@ def navigation_bar(nav, interview, wrapper=True, inner_ul_class=None, show_links
     return output        
 
 def progress_bar(progress):
+    if progress is None:
+        return('');
     progress = float(progress)
     if progress <= 0:
         return('');
@@ -2425,7 +2427,9 @@ def make_png_for_pdf(doc, prefix):
     task = docassemble.webapp.worker.make_png_for_pdf.delay(doc, prefix, resolution, session['uid'], PDFTOPPM_COMMAND)
     return task.id
 
-def wait_for_task(task_id):
+def wait_for_task(task_id, timeout=None):
+    if timeout is None:
+        timeout = 60
     #logmessage("wait_for_task: starting")
     try:
         result = docassemble.webapp.worker.workerapp.AsyncResult(id=task_id)
@@ -2433,7 +2437,7 @@ def wait_for_task(task_id):
             #logmessage("wait_for_task: was ready")
             return True
         #logmessage("wait_for_task: waiting for task to complete")
-        result.get(timeout=60)
+        result.get(timeout=timeout)
         #logmessage("wait_for_task: returning true")
         return True
     except Exception as the_error:
@@ -7155,6 +7159,11 @@ def serve_uploaded_pagescreen(number, page):
         # formatter = '%0' + str(len(str(max_pages))) + 'd'
         # filename = file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
         filename = the_file.page_path(1, 'screen')
+        if filename is None:
+            the_file = docassemble.base.functions.package_data_filename('docassemble.base:data/static/blank_page.png')
+            response = send_file(the_file, mimetype='image/png')
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+            return(response)
         if os.path.isfile(filename):
             response = send_file(filename, mimetype='image/png')
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
