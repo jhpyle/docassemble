@@ -1093,7 +1093,6 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         converter.convert(question)
         result = converter.output_content.decode('utf8')
     else:
-        #result = docassmarkdown.markdown(a, extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables'], output_format='html5')
         result = docassemble.base.functions.this_thread.markdown.reset().convert(a)
     result = re.sub(r'<table>', r'<table class="table table-striped">', result)
     #result = re.sub(r'<table>', r'<table class="datable">', result)

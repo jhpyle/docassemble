@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.3] - 2017-12-04
+### Changed
+- Turned off automatic curly quote conversion until Unicode error
+  in textstat can be fixed.
+
 ## [0.2.2] - 2017-12-04
 ### Added
 - Pulling and pushing using GitHub branches.

@@ -2419,13 +2419,20 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     content += "\n                  <tr><td><br><em>" + word("Type Ctrl-space to autocomplete.") + "</em></td><tr>"
     return content, sorted(vocab_set)
 
-def make_png_for_pdf(doc, prefix):
+def make_png_for_pdf(doc, prefix, page=None):
     if prefix == 'page':
         resolution = PNG_RESOLUTION
     else:
         resolution = PNG_SCREEN_RESOLUTION
-    task = docassemble.webapp.worker.make_png_for_pdf.delay(doc, prefix, resolution, session['uid'], PDFTOPPM_COMMAND)
+    task = docassemble.webapp.worker.make_png_for_pdf.delay(doc, prefix, resolution, session['uid'], PDFTOPPM_COMMAND, page=page)
     return task.id
+
+def fg_make_png_for_pdf(doc, prefix, page=None):
+    if prefix == 'page':
+        resolution = PNG_RESOLUTION
+    else:
+        resolution = PNG_SCREEN_RESOLUTION
+    docassemble.base.ocr.make_png_for_pdf(doc, prefix, resolution, PDFTOPPM_COMMAND, page=page)
 
 def wait_for_task(task_id, timeout=None):
     if timeout is None:
@@ -7154,7 +7161,7 @@ def serve_uploaded_pagescreen(number, page):
         logmessage('serve_uploaded_pagescreen: no access to file number ' + str(number))
         abort(404)
     else:
-        the_file = DAFile(mimetype=file_info['mimetype'], extension=file_info['extension'], number=number, make_pngs=True)
+        the_file = DAFile(mimetype=file_info['mimetype'], extension=file_info['extension'], number=number, make_thumbnail=page)
         # max_pages = 1 + int(file_info['pages'])
         # formatter = '%0' + str(len(str(max_pages))) + 'd'
         # filename = file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
@@ -14676,7 +14683,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          wait_for_task=wait_for_task,
                                          user_interviews=user_interviews,
                                          interview_menu=interview_menu,
-                                         file_set_attributes=file_set_attributes)
+                                         file_set_attributes=file_set_attributes,
+                                         fg_make_png_for_pdf=fg_make_png_for_pdf)
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
 #docassemble.base.parse.set_url_finder(get_url_from_file_reference)

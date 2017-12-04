@@ -1771,8 +1771,11 @@ class DAFile(DAObject):
             self.ok = True
         else:
             self.ok = False
-        if hasattr(self, 'extension') and self.extension == 'pdf' and 'make_pngs' in kwargs and kwargs['make_pngs']:
-            self._make_pngs_for_pdf()
+        if hasattr(self, 'extension') and self.extension == 'pdf':
+            if 'make_thumbnail' in kwargs and kwargs['make_thumbnail']:
+                self.make_pdf_thumbnail(kwargs['make_thumbnail'])
+            if 'make_pngs' in kwargs and kwargs['make_pngs']:
+                self._make_pngs_for_pdf()
         return
     def set_mimetype(self, mimetype):
         """Sets the MIME type of the file"""
@@ -1878,6 +1881,20 @@ class DAFile(DAObject):
         c.setopt(pycurl.COOKIEFILE, cookiefile.name)
         c.perform()
         c.close()
+    def make_pdf_thumbnail(self, page):
+        """Creates a page image for the first page of a PDF file."""
+        if not hasattr(self, 'file_info'):
+            self.retrieve()
+        max_pages = 1 + int(self.file_info['pages'])
+        formatter = '%0' + str(len(str(max_pages))) + 'd'
+        the_path = self.file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
+        if not os.path.isfile(the_path):
+            server.fg_make_png_for_pdf(self, 'screen', page=page)
+        # self._make_pdf_thumbnail(page)
+        # server.wait_for_task(getattr(self, '_taskthumbnail' + str(page)), timeout=60)
+    # def _make_pdf_thumbnail(self, page):
+    #     if not hasattr(self, '_taskthumbnail' + str(page)):
+    #         setattr(self, '_taskthumbnail' + str(page), server.make_png_for_pdf(self, 'screen', page=page))
     def make_pngs(self):
         """Creates page images for a PDF file."""
         self._make_pngs_for_pdf()
@@ -1944,7 +1961,7 @@ class DAFile(DAObject):
             #logmessage("Committed " + str(self.number))
             sf = SavedFile(self.number, fix=True)
             sf.finalize()
-    def show(self, width=None):
+    def show(self, width=None, wait=True):
         """Inserts markup that displays the file as an image.  Takes an
         optional keyword argument width.
 
@@ -1952,7 +1969,7 @@ class DAFile(DAObject):
         #logmessage("show")
         if not self.ok:
             return('')
-        if hasattr(self, 'number') and hasattr(self, 'extension') and self.extension == 'pdf':
+        if hasattr(self, 'number') and hasattr(self, 'extension') and self.extension == 'pdf' and wait:
             self.page_path(1, 'page')
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.docx_template, width=width)

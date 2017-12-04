@@ -12,6 +12,7 @@ import re
 import httplib2
 import strict_rfc3339
 import oauth2client.client
+import time
 from docassemble.webapp.files import SavedFile
 
 class WorkerController(object):
@@ -295,14 +296,14 @@ def ocr_finalize(*pargs, **kwargs):
             return worker_controller.functions.ReturnValue(ok=False, value=str(the_error), error_message=str(the_error), extra=kwargs.get('extra', None))
 
 @workerapp.task
-def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png):
+def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png, page=None):
     sys.stderr.write("make_png_for_pdf started in worker for size " + prefix + "\n")
     if worker_controller is None:
         initialize_db()
     worker_controller.functions.set_uid(user_code)
     worker_controller.functions.reset_local_variables()
     with worker_controller.flaskapp.app_context():
-        worker_controller.ocr.make_png_for_pdf(doc, prefix, resolution, pdf_to_png)
+        worker_controller.ocr.make_png_for_pdf(doc, prefix, resolution, pdf_to_png, page=page)
     return
 
 @workerapp.task
@@ -459,12 +460,14 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
         if user_dict is None:
             sys.stderr.write("background_action: dictionary could not be found\n")
             return(worker_controller.functions.ReturnValue(extra=extra))
+        start_time = time.time()
         interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, action=action['action'], interface='worker', arguments=action['arguments']))
         try:
             interview.assemble(user_dict, interview_status)
         except Exception as e:
             sys.stderr.write("Error in assembly: " + str(e))
             return(worker_controller.functions.ReturnValue(ok=False, error_message=str(e)))
+        sys.stderr.write("Time in background action was " + str(time.time() - start_time))
         if not hasattr(interview_status, 'question'):
             #sys.stderr.write("background_action: status had no question\n")
             return(worker_controller.functions.ReturnValue(extra=extra))
@@ -483,6 +486,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             return worker_controller.functions.ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
         if interview_status.question.question_type == "backgroundresponseaction":
             #sys.stderr.write("background_action: status was backgroundresponseaction\n")
+            start_time = time.time()
             new_action = interview_status.question.action
             worker_controller.obtain_lock(session_code, yaml_filename)
             steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
@@ -505,7 +509,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     elif not hasattr(interview_status.question, 'binaryresponse'):
                         sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
                 elif interview_status.question.question_type == "backgroundresponse":
+                    sys.stderr.write("Time in background response action was " + str(time.time() - start_time))
                     return worker_controller.functions.ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
+            sys.stderr.write("Time in background response action was " + str(time.time() - start_time))
             return worker_controller.functions.ReturnValue(value=new_action, extra=extra)
         if hasattr(interview_status, 'questionText') and interview_status.questionText:
             sys.stderr.write("background_action: The end result of the background action was the asking of this question: " + repr(str(interview_status.questionText).strip()) + "\n")
