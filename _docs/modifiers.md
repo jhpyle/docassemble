@@ -485,28 +485,50 @@ code: |
 ---
 {% endhighlight %}
 
-In the above example, **docassemble** will internally refer to this
-block with the ID `initialize`.  Without the `id` directive,
-**docassemble** would refer to the block with a name like
-`Question_3`, if this block was the third block in the interview.
+In the absence of an `id` directive, **docassemble** would refer to a
+block like this with a name like `Question_3` (if this block was the
+third block in the interview).  But with `id` set to `initialize`,
+**docassemble** will internally refer to this block with the ID
+`initialize`.
 
 In most cases, your blocks do not need to have unique IDs.  However,
 there are some features in **docassemble**, such as the
 [changing order of precedence](#precedence) feature discussed
 [below](#precedence), which use `id` directives.
 
-In some situations, it can be important to tag your interview blocks
-with a unique name.  This is because when **docassemble** stores
-interview answers, it not only stores the current state of the
+Also, in some situations, it can be important to tag your interview
+blocks with a unique name that does not change when the blocks in the
+interview [YAML] file change.  This is because when **docassemble**
+stores interview answers, it not only stores the current state of the
 interview variables, but it also stores information about which
-`mandatory` blocks have been completed.  When it does so, it needs an
-ID for the block.  By default, the IDs of blocks are IDs like
-`Question_3`, as discussed above.  Think about what would happen if a
-user started an interview on April 3, and then saved her answers and
-logged out, intending to log back in on April 10.  But on April 8, you
-upgrade the interview, adding new functionality.  When the user logs
-back in on April 10, will her interview answers be compatible with
-your new version of the interview?
+`mandatory` blocks have run to completion.  When it does so, it tracks
+the block using the ID for the block.  If the IDs are arbitrary names
+like `Question_3`, users could encounter problems
+
+For example, think about what would happen if a user started working
+an interview on April 3, and got half-way through, and then saved her
+answers and logged out, intending to log back in on April 10.  Then
+suppose that on April 8, you install a new version of the interview,
+adding new functionality.  When the user logs back in on April 10, her
+interview answers might not be compatible with your new version of the
+interview.  For example, suppose that on April 3, the
+[`mandatory`]<span></span> [`code`] block known as `Question_12` ran
+to completion.  But when the user logs in on April 10 and resumes the
+interview, the code block formerly known as `Question_12` is now known
+as `Question_14`.  When **docassemble** evaluates her interview
+session, it will determine that the [`mandatory`]
+<span></span>[`code`] block known as `Question_14` has not run yet, so
+it will run that code block.  This might cause information in the
+user's session to be overwritten.  You can avoid problems like these
+by tagging your code blocks with `id` tags, so that the names of the
+blocks do not change between versions of your interview.
+
+Another way to avoid problems with the impact of software upgrades on
+existing sessions is to use a different interview [YAML] file for each
+version of an interview.  So a user that starts
+`docassemble.tax:data/questions/tax-controversy-v2.yml` will always
+use the same [YAML] file, even when users who started later are using
+`docassemble.tax:data/questions/tax-controversy-v3.yml`.
 
 # <a name="sets"></a>Manually indicating that a block sets a variable
 

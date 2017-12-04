@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.2](https://github.com/jhpyle/docassemble/releases/tag/v0.2.2) - 2017-12-04
+
+### Added
+- Pulling and pushing using GitHub branches.
+- The `.failed()` method on result of background task.
+
 ## [0.2.1](https://github.com/jhpyle/docassemble/releases/tag/v0.2.1) - 2017-11-30
 
 ### Changed

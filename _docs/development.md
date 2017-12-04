@@ -175,6 +175,8 @@ there, and then [run] the image.
 
 # Production environment workflow
 
+## Separating production from development
+
 If end users are using your interviews, you will need to make sure
 that they are reliable, so that your users do not encounter the types
 of problems that tend to appear unexpectedly in a development
@@ -252,6 +254,50 @@ files are located.  For convenience, you may find yourself using
 multiple servers for development and experimentation, and if time
 passes, you may forget where the authoritative version of the package
 lives.
+
+## Managing the production upgrade process
+
+Since **docassemble** sessions can be saved and resumed later, it is
+possible that a user could start an interview in January, log out, and
+then you upgrade the software behind that interview in February, and
+then the user logs back in again in March.
+
+This could lead to problems.  Suppose that in the first version of
+your interview, you had a variable named `recieved_income`.  But in
+the second version of the interview, you changed the name of the
+variable to `received_income`.  If the user had already answered the
+question that defined `recieved_income`, then when they log in and use
+the second version of the interview, they may be asked the same
+question again, since `received_income` is not defined in their
+interview answers.
+
+Or, if the user started an interview in December, and then resumed it
+in January, but in the meantime an applicable law changed, the
+interview may have made legal determinations that are now outdated and
+need to be reconsidered.
+
+So if you will be upgrading your software as your users are using it,
+you will need to be careful about ensuring that your changes are
+"backwards-compatible."
+
+There are a variety of techniques that you can use to prevent problems
+caused by software updates.
+
+1. You could include a version number in your package.  So if users
+   start using the interview
+   `docasemble.bankruptcy102:data/questions/controversy.yml`, you can
+   upgrade your software by publishing
+   `docasemble.bankruptcy103:data/questions/controversy.yml`, and the
+   users with existing sessions will continue to use version 102.
+2. When you upgrade, you can add a [`mandatory`] code block early
+   on in your interview that performs upgrade-related functions, like
+   renaming the variable `recieved_income` to `received_income`.
+3. In every version of your interview, you can include a [`mandatory`]
+   code block that sets a variable like `interview_version` to
+   whatever the current interview version is.  Then, if the user
+   resumes an old session, your code can be aware of the fact that the
+   session was started under the old version.
+
 
 # Workflow for collaboration
 
@@ -498,6 +544,31 @@ that bypasses **docassemble**'s front end, so do not be surprised if
 you encounter problems.  For example, if the server is unable to
 access a file because your text editor has placed a lock on it, don't
 be surprised if you see an error.
+
+If you are not using [Docker], but you are using Linux, you can use
+sshfs to create a mount in your home directory that maps to the
+[Playground].
+
+First, if you don't have an SSH key stored in `~/.ssh/id_rsa` and
+`~/.ssh/id_rsa.pub`, generate one:
+
+{% highlight bash %}
+ssh-keygen -t rsa
+{% endhighlight %}
+
+Then, run the following as root, from your home directory:
+
+{% highlight bash %}
+mkdir -p /var/www/.ssh
+cat .ssh/id_rsa.pub >> /var/www/.ssh/authorized_keys
+chown www-data.www-data /var/www/.ssh/authorized_keys
+chmod 700 /var/www/.ssh/authorized_keys
+{% endhighlight %}
+
+{% highlight bash %}
+mkdir pg
+sshfs -o idmap=user www-data@localhost:/usr/share/docassemble/files pg
+{% endhighlight %}
 
 # <a name="testing"></a>Workflow for automated testing
 

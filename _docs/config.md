@@ -1673,6 +1673,21 @@ can be overridden for a given field using the
 order to allow image uploads of any resolution, use `None` as the
 override value.
 
+## <a name="celery processes"></a>Number of concurrent background tasks
+
+**docassemble** uses [Celery] to execute background tasks.  The
+[Celery] system is able to execute multiple tasks concurrently.  The
+number of concurrent processes is limited by default to the number of
+CPU cores on the machine.  If you want to increase the number of
+processes, set the `celery processes` directive.
+
+{% highlight yaml %}
+celery processes: 15
+{% endhighlight %}
+
+This value will be passed directly to [Celery]'s [`worker_concurrency`]
+configuration variable.
+
 ## <a name="timezone"></a>Setting the time zone
 
 Functions like [`as_datetime()`] that deal with dates will use a
@@ -2165,3 +2180,5 @@ and Facebook API keys.
 [`interview_menu()`]: {{ site.baseurl }}/docs/functions.html#interview_menu
 [Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 [`ServerAdmin`]: https://httpd.apache.org/docs/2.4/mod/core.html#ServerAdmin
+[background tasks]: {{ site.baseurl }}/docs/background.html#background
+[`worker_concurrency`]: http://docs.celeryproject.org/en/latest/userguide/configuration.html#worker-concurrency

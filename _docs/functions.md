@@ -3586,7 +3586,7 @@ The options for the `priority` are:
 * `'info'` - like `'success'`, except it uses the "info" [Bootstrap]
   color.  The message will not disappear.
 * `'warning'` - like `'info'`, but uses the "warning" [Bootstrap] color.
-* `'error'` - like `'info'`, but uses the "error" [Bootstrap] color.
+* `'error'` - like `'info'`, but uses the "danger" [Bootstrap] color.
 * `'default'` - like `'info'`, but uses the "default" [Bootstrap] color.
 
 You can also use the [Javascript] function [`flash()`] to display

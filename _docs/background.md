@@ -158,6 +158,8 @@ called `the_task`.  This variable can be used in the following ways:
 
 * `the_task.ready()` returns `True` if the task has been completed
   yet, and `False` if not.
+* `the_task.failed()` returns `True` if the task raised an exception,
+  and `False` if not.
 * `the_task.get()` returns the result of the task.  If the task has
   not been completed yet, the system will wait until the task is
   completed and then return the result of the task.
