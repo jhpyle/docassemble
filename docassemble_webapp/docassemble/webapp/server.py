@@ -3851,11 +3851,11 @@ def index():
                 raise DAError("Not authorized")
             show_flash = False
             session['i'] = yaml_filename
-            if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo"):
+            if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN:
                 show_flash = True
             if session_parameter is None:
                 #logmessage("index: change in yaml filename detected and session_parameter is None")
-                if show_flash and SHOW_LOGIN:
+                if show_flash:
                     if current_user.is_authenticated:
                         message = "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu."
                     else:

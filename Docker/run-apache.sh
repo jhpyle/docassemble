@@ -4,15 +4,14 @@ export DA_ACTIVATE="${DA_PYTHON:-/usr/share/docassemble/local}/bin/activate"
 export DA_CONFIG_FILE="${DA_CONFIG:-/usr/share/docassemble/config/config.yml}"
 source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
 
-if [ "${EC2:-false}" == "true" ]; then
-    export LOCAL_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
-    export PUBLIC_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/public-hostname`
-else
-    export LOCAL_HOSTNAME=`hostname --fqdn`
-    export PUBLIC_HOSTNAME=$LOCAL_HOSTNAME
-fi
-
 if [ "${DAHOSTNAME:-none}" == "none" ]; then
+    if [ "${EC2:-false}" == "true" ]; then
+	export LOCAL_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
+	export PUBLIC_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/public-hostname`
+    else
+	export LOCAL_HOSTNAME=`hostname --fqdn`
+	export PUBLIC_HOSTNAME=$LOCAL_HOSTNAME
+    fi
     export DAHOSTNAME=$PUBLIC_HOSTNAME
 fi
 
