@@ -60,7 +60,7 @@ def initialize_db():
     worker_controller.r = r
     worker_controller.apiclient = apiclient
     worker_controller.get_ext_and_mimetype = get_ext_and_mimetype
-
+    worker_controller.loaded = True
 
 def convert(obj):
     return result_from_tuple(obj.as_tuple(), app=workerapp)
@@ -106,7 +106,7 @@ class RedisCredStorage(oauth2client.client.Storage):
 @workerapp.task
 def sync_with_google_drive(user_id):
     sys.stderr.write("sync_with_google_drive: starting\n")
-    if worker_controller is None:
+    if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     sys.stderr.write("sync_with_google_drive: continuing\n")
     storage = RedisCredStorage(worker_controller.r, user_id, app='googledrive')
@@ -272,7 +272,7 @@ def sync_with_google_drive(user_id):
 @workerapp.task
 def ocr_page(**kwargs):
     sys.stderr.write("ocr_page started in worker\n")
-    if worker_controller is None:
+    if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     worker_controller.functions.set_uid(kwargs['user_code'])
     worker_controller.functions.reset_local_variables()
@@ -282,7 +282,7 @@ def ocr_page(**kwargs):
 @workerapp.task
 def ocr_finalize(*pargs, **kwargs):
     sys.stderr.write("ocr_finalize started in worker\n")
-    if worker_controller is None:
+    if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     #worker_controller.functions.set_uid(kwargs['user_code'])
     if 'message' in kwargs and kwargs['message']:
@@ -298,7 +298,7 @@ def ocr_finalize(*pargs, **kwargs):
 @workerapp.task
 def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png, page=None):
     sys.stderr.write("make_png_for_pdf started in worker for size " + prefix + "\n")
-    if worker_controller is None:
+    if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     worker_controller.functions.set_uid(user_code)
     worker_controller.functions.reset_local_variables()
@@ -309,7 +309,7 @@ def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png, page=None):
 @workerapp.task
 def update_packages():
     sys.stderr.write("update_packages in worker: starting\n")
-    if worker_controller is None:
+    if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     sys.stderr.write("update_packages in worker: continuing\n")
     try:
@@ -333,7 +333,7 @@ def update_packages():
 @workerapp.task
 def email_attachments(user_code, email_address, attachment_info):
     success = False
-    if worker_controller is None:
+    if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     worker_controller.functions.set_uid(user_code)
     worker_controller.functions.reset_local_variables()
@@ -375,7 +375,7 @@ def email_attachments(user_code, email_address, attachment_info):
 # @workerapp.task
 # def old_email_attachments(yaml_filename, user_info, user_code, secret, url, url_root, email_address, question_number, include_editable):
 #     success = False
-#     if worker_controller is None:
+#     if not hasattr(worker_controller, 'loaded'):
 #         initialize_db()
 #     worker_controller.functions.set_uid(user_code)
 #     with worker_controller.flaskapp.app_context():
@@ -441,7 +441,7 @@ def email_attachments(user_code, email_address, attachment_info):
 
 @workerapp.task
 def background_action(yaml_filename, user_info, session_code, secret, url, url_root, action, extra=None):
-    if worker_controller is None:
+    if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     worker_controller.functions.set_uid(session_code)
     worker_controller.functions.reset_local_variables()
