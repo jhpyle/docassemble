@@ -1767,9 +1767,9 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
         if custom_menu:
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu
             if not status.question.interview.options.get('hide_standard_menu', False):
-                navbar += '<li><a href="' + url_for(status.exit_page) + '">' + word(status.exit_label) + '</a></li></ul></li>' + "\n"
+                navbar += '<li><a href="' + url_for(status.exit_link) + '">' + word(status.exit_label) + '</a></li></ul></li>' + "\n"
         else:
-            navbar += '            <li><a href="' + url_for(status.exit_page) + '">' + word(status.exit_label) + '</a></li>'
+            navbar += '            <li><a href="' + url_for(status.exit_link) + '">' + word(status.exit_label) + '</a></li>'
     navbar += """\
           </ul>
         </div>
@@ -6586,7 +6586,7 @@ def index():
     else:
         interview_language = DEFAULT_LANGUAGE
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error', 'debug': False}
-    interview_status.exit_page = interview_status.question.interview.get_title(user_dict).get('exit link', 'exit')
+    interview_status.exit_link = interview_status.question.interview.get_title(user_dict).get('exit link', 'exit')
     interview_status.exit_label = interview_status.question.interview.get_title(user_dict).get('exit label', 'Exit')
     interview_status.title = interview_status.question.interview.get_title(user_dict).get('full', default_title)
     interview_status.display_title = interview_status.question.interview.get_title(user_dict).get('logo', interview_status.title)
