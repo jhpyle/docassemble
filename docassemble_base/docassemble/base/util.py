@@ -1356,6 +1356,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
             html = body_html
     if body is None and html is None:
         body = ""
+    subject = re.sub(r'[\n\r]+', ' ', subject)
     msg = Message(subject, sender=email_stringer(sender, first=True), recipients=email_stringer(to), cc=email_stringer(cc), bcc=email_stringer(bcc), body=body, html=html)
     filenames_used = set()
     success = True
