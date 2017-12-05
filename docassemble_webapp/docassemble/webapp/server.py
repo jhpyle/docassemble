@@ -3855,7 +3855,7 @@ def index():
                 show_flash = True
             if session_parameter is None:
                 #logmessage("index: change in yaml filename detected and session_parameter is None")
-                if show_flash:
+                if show_flash and SHOW_LOGIN:
                     if current_user.is_authenticated:
                         message = "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu."
                     else:
