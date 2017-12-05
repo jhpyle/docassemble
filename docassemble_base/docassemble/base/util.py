@@ -1422,7 +1422,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
             server.send_mail(msg)
             logmessage("send_email: finished sending")
         except Exception as errmess:
-            logmessage("send_email: sending mail failed: " + unicode(errmess))
+            logmessage("send_email: sending mail failed with error of " + " type " + str(errmess.__class__.__name__) + ": " + unicode(errmess))
             success = False
     if success and task is not None:
         mark_task_as_performed(task)
