@@ -871,7 +871,11 @@ def image_url_string(match, emoji=False, question=None, playground=False):
             image_url = server.url_finder(file_reference, size="screen", page=1, _question=question)
             if image_url is None:
                 return ('[ERROR: File reference ' + str(file_reference) + ' cannot be displayed]')
-            output = '<a target="_blank" class="daimageref" href="' + the_url + '"><img class="daicon dapdfscreen" style="' + width_string + '" src="' + image_url + '"/></a>'
+            if 'filename' in file_info:
+                title = ' title="' + file_info['filename'] + '"'
+            else:
+                title = ''
+            output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img class="daicon dapdfscreen" style="' + width_string + '" src="' + image_url + '"/></a>'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + str(file_info['pages']) + " " + word('pages') + ")"
             return(output)
