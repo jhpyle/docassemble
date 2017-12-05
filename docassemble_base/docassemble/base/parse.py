@@ -3521,7 +3521,7 @@ class Interview:
                         tags.add(tag)
             return tags
     def get_title(self, user_dict):
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit type', 'exit'))
         if not hasattr(self, 'default_title'):
             self.default_title = dict()
             for metadata in self.metadata:

@@ -1767,9 +1767,9 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
         if custom_menu:
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu
             if not status.question.interview.options.get('hide_standard_menu', False):
-                navbar += '<li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li></ul></li>' + "\n"
+                navbar += '<li><a href="' + url_for(status.exit_page) + '">' + word(status.exit_label) + '</a></li></ul></li>' + "\n"
         else:
-            navbar += '            <li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li>'
+            navbar += '            <li><a href="' + url_for(status.exit_page) + '">' + word(status.exit_label) + '</a></li>'
     navbar += """\
           </ul>
         </div>
@@ -3405,6 +3405,18 @@ def google_page():
 def post_sign_in():
     session_id = session.get('uid', None)
     return redirect(url_for('interview_list'))
+
+@app.route("/leave", methods=['POST', 'GET'])
+def leave():
+    if current_user.is_authenticated:
+        flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
+        logout_user()
+        delete_session()
+    response = redirect(exit_page)
+    response.set_cookie('visitor_secret', '', expires=0)
+    response.set_cookie('secret', '', expires=0)
+    response.set_cookie('session', '', expires=0)
+    return response
 
 @app.route("/exit", methods=['POST', 'GET'])
 def exit():
@@ -6574,10 +6586,8 @@ def index():
     else:
         interview_language = DEFAULT_LANGUAGE
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error', 'debug': False}
-    # if 'reload_after' in interview_status.extras:
-    #     reload_after = '\n    <meta http-equiv="refresh" content="' + str(interview_status.extras['reload_after']) + '">'
-    # else:
-    #     reload_after = ''
+    interview_status.exit_page = interview_status.question.interview.get_title(user_dict).get('exit link', 'exit')
+    interview_status.exit_label = interview_status.question.interview.get_title(user_dict).get('exit label', 'Exit')
     interview_status.title = interview_status.question.interview.get_title(user_dict).get('full', default_title)
     interview_status.display_title = interview_status.question.interview.get_title(user_dict).get('logo', interview_status.title)
     interview_status.tabtitle = interview_status.question.interview.get_title(user_dict).get('tab', interview_status.title)
@@ -6643,6 +6653,7 @@ def index():
             phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')
             if not phrase:
                 phrase = "The sky is blue."
+            phrase = re.sub(r'[^A-Za-z 0-9\.\,\?\#\!\%\&\(\)]', r' ', phrase)
             readability[question_type] = [('Flesch Reading Ease', textstat.flesch_reading_ease(phrase)),
                                           ('Flesch-Kincaid Grade Level', textstat.flesch_kincaid_grade(phrase)),
                                           ('Gunning FOG Scale', textstat.gunning_fog(phrase)),
@@ -9734,11 +9745,11 @@ def restart_page():
       }
       $( document ).ready(function() {
         //console.log("restarting");
-        setTimeout(daRestart, 500);
+        setTimeout(daRestart, 100);
       });
     </script>"""
     next_url = request.args.get('next', url_for('interview_list'))
-    extra_meta = """\n    <meta http-equiv="refresh" content="5;URL='""" + next_url + """'">"""
+    extra_meta = """\n    <meta http-equiv="refresh" content="8;URL='""" + next_url + """'">"""
     return render_template('pages/restart.html', version_warning=None, bodyclass='adminbody', extra_meta=Markup(extra_meta), extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting'))
 
 def get_gd_flow():
@@ -11184,7 +11195,7 @@ def playground_packages():
         readme_text = ''
         setup_py = ''
         branch = request.args.get('branch', None)
-        if branch:
+        if branch and branch != 'None':
             branch_option = '-b ' + branch + ' '
         else:
             branch_option = ''
@@ -11287,10 +11298,11 @@ def playground_packages():
                     with open(orig_file, 'rU') as fp:
                         setup_py = fp.read().decode('utf8')
                 elif len(levels) >= 1 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
-                    need_to_restart = True
                     data_files['modules'].append(filename)
                     target_filename = os.path.join(area['playgroundmodules'].directory, filename)
                     #output += "Copying " + orig_file + "\n"
+                    if (not os.path.isfile(target_filename)) or filecmp.cmp(orig_file, target_filename) is False:
+                        need_to_restart = True
                     copy_if_different(orig_file, target_filename)
         #output += "setup.py is " + str(len(setup_py)) + " characters long\n"
         setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)

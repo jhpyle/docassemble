@@ -1773,7 +1773,7 @@ class DAFile(DAObject):
             self.ok = False
         if hasattr(self, 'extension') and self.extension == 'pdf':
             if 'make_thumbnail' in kwargs and kwargs['make_thumbnail']:
-                self.make_pdf_thumbnail(kwargs['make_thumbnail'])
+                self._make_pdf_thumbnail(kwargs['make_thumbnail'])
             if 'make_pngs' in kwargs and kwargs['make_pngs']:
                 self._make_pngs_for_pdf()
         return
@@ -1881,7 +1881,7 @@ class DAFile(DAObject):
         c.setopt(pycurl.COOKIEFILE, cookiefile.name)
         c.perform()
         c.close()
-    def make_pdf_thumbnail(self, page):
+    def _make_pdf_thumbnail(self, page):
         """Creates a page image for the first page of a PDF file."""
         if not hasattr(self, 'file_info'):
             self.retrieve()
@@ -1890,11 +1890,6 @@ class DAFile(DAObject):
         the_path = self.file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
         if not os.path.isfile(the_path):
             server.fg_make_png_for_pdf(self, 'screen', page=page)
-        # self._make_pdf_thumbnail(page)
-        # server.wait_for_task(getattr(self, '_taskthumbnail' + str(page)), timeout=60)
-    # def _make_pdf_thumbnail(self, page):
-    #     if not hasattr(self, '_taskthumbnail' + str(page)):
-    #         setattr(self, '_taskthumbnail' + str(page), server.make_png_for_pdf(self, 'screen', page=page))
     def make_pngs(self):
         """Creates page images for a PDF file."""
         self._make_pngs_for_pdf()

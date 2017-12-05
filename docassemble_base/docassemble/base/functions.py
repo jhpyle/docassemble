@@ -494,9 +494,9 @@ def interview_url(**kwargs):
     url += '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
     return url
 
-def set_title(title=None, logo=None, short=None, subtitle=None, tab=None):
+def set_title(title=None, logo=None, short=None, subtitle=None, tab=None, exit_link=None, exit_label=None):
     """Sets the title of the interview that is displayed in the navigation
-    bar and other places.
+    bar and other places, as well as other features of the navigation bar.
 
     """
     this_thread.internal['title'] = title
@@ -504,6 +504,8 @@ def set_title(title=None, logo=None, short=None, subtitle=None, tab=None):
     this_thread.internal['short title'] = short
     this_thread.internal['subtitle'] = subtitle
     this_thread.internal['tab title'] = tab
+    this_thread.internal['exit link'] = exit_link
+    this_thread.internal['exit label'] = exit_label
 
 class DATagsSet():
     def add(self, item):
