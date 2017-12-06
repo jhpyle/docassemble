@@ -1,7 +1,6 @@
 min_system_version = '0.1.22'
 import re
 re._MAXCACHE = 10000
-#import pprint #comment out
 import os
 import sys
 import tempfile
@@ -432,7 +431,6 @@ lm = LoginManager()
 lm.init_app(app)
 lm.login_view = 'custom_login'
 
-#from twilio.rest import Capability as TwilioCapability
 from twilio.rest import Client as TwilioRestClient
 import twilio.twiml
 import twilio.twiml.messaging_response
@@ -462,15 +460,12 @@ import babel.dates
 import pytz
 import httplib2
 import zipfile
-import pprint
 import operator
 import traceback
 from Crypto.Hash import MD5
 import mimetypes
 import logging
 import cPickle as pickle
-#import string
-#import random
 import cgi
 import Cookie
 import urlparse
@@ -741,16 +736,16 @@ def get_url_from_file_reference(file_reference, **kwargs):
     file_reference = str(file_reference)
     if re.search(r'^http', file_reference):
         return(file_reference)
-    if file_reference in ['login', 'signin']:
+    if file_reference in ('login', 'signin'):
         remove_question_package(kwargs)
         return(url_for('user.login', **kwargs))
-    elif file_reference in ['profile']:
+    elif file_reference == 'profile':
         remove_question_package(kwargs)
         return(url_for('user_profile_page', **kwargs))
-    elif file_reference in ['change_password']:
+    elif file_reference == 'change_password':
         remove_question_package(kwargs)
         return(url_for('user.change_password', **kwargs))
-    elif file_reference in ['register']:
+    elif file_reference == 'register':
         remove_question_package(kwargs)
         return(url_for('user.register', **kwargs))
     elif file_reference == 'logout':
@@ -1114,8 +1109,11 @@ def copy_playground_modules():
         local_dir = os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'playground' + str(user_id))
         if os.path.isdir(local_dir):
             shutil.rmtree(local_dir)
+        os.makedirs(local_dir)
         #sys.stderr.write("Copying " + str(mod_dir.directory) + " to " + str(local_dir) + "\n")
-        shutil.copytree(mod_dir.directory, local_dir)
+        for f in [f for f in os.listdir(mod_dir.directory) if re.search(r'^[A-Za-z].*\.py$', f)]:
+            shutil.copyfile(os.path.join(mod_dir.directory, f), os.path.join(local_dir, f))
+        #shutil.copytree(mod_dir.directory, local_dir)
         with open(os.path.join(local_dir, '__init__.py'), 'w') as the_file:
             the_file.write(init_py_file)
 
@@ -1245,11 +1243,11 @@ def manual_checkout(manual_session_id=None, manual_filename=None):
 
 def chat_partners_available(session_id, yaml_filename, the_user_id, mode, partner_roles):
     key = 'da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-    if mode in ['peer', 'peerhelp']:
+    if mode in ('peer', 'peerhelp'):
         peer_ok = True
     else:
         peer_ok = False
-    if mode in ['help', 'peerhelp']:
+    if mode in ('help', 'peerhelp'):
         help_ok = True
     else:
         help_ok = False
@@ -1350,12 +1348,12 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
     if mimetype == 'audio/ogg' and daconfig.get('pacpl', 'pacpl') is not None:
         call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
         result = call(call_array)
-    if mimetype in ['audio/3gpp'] and daconfig.get('avconv', 'avconv') is not None:
+    if mimetype == 'audio/3gpp' and daconfig.get('avconv', 'avconv') is not None:
         call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.ogg']
         result = call(call_array)
         call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.mp3']
         result = call(call_array)
-    if mimetype in ['audio/x-wav', 'audio/wav'] and daconfig.get('pacpl', 'pacpl') is not None:
+    if mimetype in ('audio/x-wav', 'audio/wav') and daconfig.get('pacpl', 'pacpl') is not None:
         call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
         result = call(call_array)
         call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
@@ -1779,26 +1777,26 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
     return(navbar)
 
 def delete_session_for_interview():
-    for key in ['i', 'uid', 'key_logged', 'action', 'encrypted', 'chatstatus', 'observer', 'monitor', 'doing_sms']:
+    for key in ('i', 'uid', 'key_logged', 'action', 'encrypted', 'chatstatus', 'observer', 'monitor', 'doing_sms'):
         if key in session:
             del session[key]
     return
 
 def delete_session():
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next']:
+    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next'):
         if key in session:
             del session[key]
     return
 
 def backup_session():
     backup = dict()
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next']:
+    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next'):
         if key in session:
             backup[key] = session[key]
     return backup
 
 def restore_session(backup):
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next']:
+    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next'):
         if key in backup:
             session[key] = backup[key]
 
@@ -1950,7 +1948,7 @@ def get_package_info(exclude_core=False):
             package_auth[auth.package_id] = dict()
         package_auth[auth.package_id][auth.user_id] = auth.authtype
     for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
-        if exclude_core and package.name in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
+        if exclude_core and package.name in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
             continue
         if package.name in seen:
             continue
@@ -2191,13 +2189,13 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     classes = set()
     name_info = copy.deepcopy(base_name_info)
     area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
-    templates = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    templates = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     area = SavedFile(current_user.id, fix=True, section='playgroundstatic')
-    static = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    static = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     area = SavedFile(current_user.id, fix=True, section='playgroundsources')
-    sources = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    sources = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     area = SavedFile(current_user.id, fix=True, section='playgroundmodules')
-    avail_modules = sorted([re.sub(r'.py$', '', f) for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    avail_modules = sorted([re.sub(r'.py$', '', f) for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     for val in user_dict:
         if type(user_dict[val]) is types.FunctionType:
             functions.add(val)
@@ -2225,7 +2223,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         if base_name_info[var]['show']:
             names_used.add(var)
     names_used = set([i for i in names_used if not extraneous_var.search(i)])
-    for var in ['_internal', '__object_type']:
+    for var in ('_internal', '__object_type'):
         names_used.discard(var)
     for var in interview.mlfields:
         names_used.discard(var + '.text')
@@ -2281,7 +2279,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         while '.' in the_var:
             the_var = re.sub(r'(.*)\..*$', r'\1', the_var)
             implicitly_defined.add(the_var)
-    for var in ['_internal', '__object_type']:
+    for var in ('_internal', '__object_type'):
         undefined_names.discard(var)
         vocab_set.discard(var)
     for var in [x for x in undefined_names if x.endswith(']')]:
@@ -3511,7 +3509,7 @@ def checkin():
             if form_parameters is not None:
                 form_parameters = json.loads(form_parameters)
                 for param in form_parameters:
-                    if param['name'] in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action'] or param['name'].startswith('_ignore'):
+                    if param['name'] in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or param['name'].startswith('_ignore'):
                         continue
                     try:
                         parameters[from_safeid(param['name'])] = param['value']
@@ -3565,20 +3563,20 @@ def checkin():
                         break
         chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         potential_partners = list()
-        if str(chatstatus) != 'off': #in ['waiting', 'standby', 'ringing', 'ready', 'on', 'hangup', 'observeonly']:
+        if str(chatstatus) != 'off': #in ('waiting', 'standby', 'ringing', 'ready', 'on', 'hangup', 'observeonly'):
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             obj['chatstatus'] = chatstatus
             obj['secret'] = secret
             obj['encrypted'] = is_encrypted
             obj['mode'] = user_dict['_internal']['livehelp']['mode']
-            if obj['mode'] in ['peer', 'peerhelp']:
+            if obj['mode'] in ('peer', 'peerhelp'):
                 peer_ok = True
-            if obj['mode'] in ['help', 'peerhelp']:
+            if obj['mode'] in ('help', 'peerhelp'):
                 help_ok = True
             obj['partner_roles'] = user_dict['_internal']['livehelp']['partner_roles']
             if current_user.is_authenticated:
-                for attribute in ['email', 'confirmed_at', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone']:
-                    obj[attribute] = getattr(current_user, attribute, None)
+                for attribute in ('email', 'confirmed_at', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone'):
+                    obj[attribute] = unicode(getattr(current_user, attribute, None))
             else:
                 obj['temp_user_id'] = temp_user_id
             if help_ok and len(obj['partner_roles']) and not r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
@@ -3627,7 +3625,7 @@ def checkin():
                         chatstatus = 'ready'
                         session['chatstatus'] = chatstatus
                         obj['chatstatus'] = chatstatus
-                elif chatstatus in ['on']:
+                elif chatstatus == 'on':
                     if len(potential_partners) > 0:
                         already_connected_to_help = False
                         current_helper = None
@@ -3647,7 +3645,7 @@ def checkin():
                                 r.publish(mon_sid, json.dumps(dict(messagetype='chatready', uid=session_id, i=yaml_filename, userid=the_user_id, secret=secret, sid=int_sid)))
                                 r.publish(int_sid, json.dumps(dict(messagetype='chatpartner', sid=mon_sid)))
                                 break
-                if chatstatus in ['waiting', 'hangup']:
+                if chatstatus in ('waiting', 'hangup'):
                     chatstatus = 'standby'
                     session['chatstatus'] = chatstatus
                     obj['chatstatus'] = chatstatus
@@ -3667,12 +3665,12 @@ def checkin():
                         chatstatus = 'ready'
                         session['chatstatus'] = chatstatus
                         obj['chatstatus'] = chatstatus
-                    elif chatstatus in ['waiting', 'hangup']:
+                    elif chatstatus in ('waiting', 'hangup'):
                         chatstatus = 'standby'
                         session['chatstatus'] = chatstatus
                         obj['chatstatus'] = chatstatus
                 else:
-                    if chatstatus in ['standby', 'ready', 'ringing', 'hangup']:
+                    if chatstatus in ('standby', 'ready', 'ringing', 'hangup'):
                         chatstatus = 'waiting'
                         session['chatstatus'] = chatstatus
                         obj['chatstatus'] = chatstatus
@@ -3886,9 +3884,21 @@ def index():
                         message = "Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews."
             if show_flash:
                 flash(word(message), 'info')
-    elif not (is_ajax or is_json):
-        #logmessage("index: need_to_reset is True because not ajax and yaml_parameter is None")
-        need_to_reset = True
+    else:
+        if session_parameter is None and reset_interview:
+            user_code, user_dict = reset_session(yaml_filename, secret, retain_code=False)
+            reset_user_dict(user_code, yaml_filename)
+            add_referer(user_dict)
+            save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
+            release_lock(user_code, yaml_filename)
+            session_id = session.get('uid', None)
+            if 'key_logged' in session:
+                del session['key_logged']
+            need_to_resave = True
+            need_to_reset = True
+        elif not (is_ajax or is_json):
+            #logmessage("index: need_to_reset is True because not ajax/json and yaml_parameter is None")
+            need_to_reset = True
     if session_parameter is not None:
         #logmessage("index: session parameter is not None: " + str(session_parameter))
         session_id = session_parameter
@@ -3983,7 +3993,11 @@ def index():
             #logmessage("index: returning action response")
             return response
         for argname in request.args:
-            if argname in ['filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session', 'cache', 'reset', 'json']:
+            if argname in ('i', 'json'):
+                continue
+            if argname in ('from_list', 'session', 'cache', 'reset'):
+                # 'filename', 'question', 'format', 'index', 'action'
+                need_to_reset = True
                 continue
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
@@ -4101,7 +4115,7 @@ def index():
         the_location = None
     should_assemble = False
     for key in post_data:
-        if key.startswith('_') or key in ['csrf_token', 'ajax', 'json', 'informed']:
+        if key.startswith('_') or key in ('csrf_token', 'ajax', 'json', 'informed'):
             continue
         try:
             if key_requires_preassembly.search(from_safeid(key)):
@@ -4243,7 +4257,7 @@ def index():
         the_question = None
     known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action'] or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
             continue
         try:
             key = myb64unquote(orig_key)
@@ -4266,7 +4280,7 @@ def index():
     field_error = dict()
     validated = True
     for orig_key in post_data:
-        if orig_key in ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action'] or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
             continue
         #logmessage("Got a key: " + key)
         data = post_data[orig_key]
@@ -4348,14 +4362,14 @@ def index():
         test_data = data
         if real_key in known_datatypes:
             #logmessage("key " + real_key + "is in datatypes: " + known_datatypes[key])
-            if known_datatypes[real_key] in ['boolean', 'checkboxes', 'yesno', 'noyes', 'yesnowide', 'noyeswide']:
+            if known_datatypes[real_key] in ('boolean', 'checkboxes', 'yesno', 'noyes', 'yesnowide', 'noyeswide'):
                 if data == "True":
                     data = "True"
                     test_data = True
                 else:
                     data = "False"
                     test_data = False
-            elif known_datatypes[real_key] in ['threestate', 'yesnomaybe', 'noyesmaybe', 'yesnowidemaybe', 'noyeswidemaybe']:
+            elif known_datatypes[real_key] in ('threestate', 'yesnomaybe', 'noyesmaybe', 'yesnowidemaybe', 'noyeswidemaybe'):
                 if data == "True":
                     data = "True"
                     test_data = True
@@ -4366,7 +4380,7 @@ def index():
                     data = "False"
                     test_data = False
             elif known_datatypes[real_key] == 'date':
-                if type(data) in [str, unicode]:
+                if type(data) in (str, unicode):
                     data = data.strip()
                     if data != '':
                         try:
@@ -4382,14 +4396,14 @@ def index():
                     data = 0
                 test_data = int(data)
                 data = "int(" + repr(data) + ")"
-            elif known_datatypes[real_key] in ['ml', 'mlarea']:
+            elif known_datatypes[real_key] in ('ml', 'mlarea'):
                 is_ml = True
-            elif known_datatypes[real_key] in ['number', 'float', 'currency', 'range']:
+            elif known_datatypes[real_key] in ('number', 'float', 'currency', 'range'):
                 if data == '':
                     data = 0
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
-            elif known_datatypes[real_key] in ['object', 'object_radio']:
+            elif known_datatypes[real_key] in ('object', 'object_radio'):
                 #logmessage("We have an object type and objselections is " + str(user_dict['_internal']['objselections']))
                 #logmessage("We have an object type and key is " + str(key))
                 #logmessage("We have an object type and data is " + str(data))
@@ -4397,8 +4411,8 @@ def index():
                 if data == '' or set_to_empty:
                     continue
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
-            elif known_datatypes[real_key] in ['object_checkboxes'] and bracket_expression is not None:
-                if data not in ['True', 'False', 'None'] or set_to_empty:
+            elif known_datatypes[real_key] == 'object_checkboxes' and bracket_expression is not None:
+                if data not in ('True', 'False', 'None') or set_to_empty:
                     continue
                 do_append = True
                 if data == 'False':
@@ -4407,11 +4421,11 @@ def index():
             elif set_to_empty == 'object_checkboxes':
                 continue    
             else:
-                if type(data) in [str, unicode]:
+                if type(data) in (str, unicode):
                     data = data.strip()
                 test_data = data
                 data = repr(data)
-            if known_datatypes[real_key] in ['object_checkboxes']:
+            if known_datatypes[real_key] == 'object_checkboxes':
                 do_append = True
         elif key == "_multiple_choice":
             #logmessage("key is multiple choice")
@@ -4492,7 +4506,7 @@ def index():
                 docassemble.base.parse.ensure_object_exists(key, 'object_checkboxes', user_dict)
                 exec(key + '.clear()' , user_dict)
                 exec(key + '.gathered = True' , user_dict)
-            elif empty_fields[orig_key] in ['object', 'object_radio']:
+            elif empty_fields[orig_key] in ('object', 'object_radio'):
                 try:
                     eval(key, user_dict)
                 except:
@@ -4895,7 +4909,7 @@ def index():
             session['chatstatus'] = 'observeonly'
         else:
             chat_status = chatstatus
-        if chat_status in ['ready', 'on']:
+        if chat_status in ('ready', 'on'):
             chat_status = 'ringing'
             session['chatstatus'] = 'ringing'
         if chat_status != 'off':
@@ -5050,7 +5064,7 @@ def index():
             data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
             success: function(data){
               setTimeout(function(){
-                daProcessAjax(data, $("#daform"));
+                daProcessAjax(data, $("#daform"), 1);
               }, 0);
             },
             error: function(xhr, status, error){
@@ -5073,7 +5087,7 @@ def index():
             data: $.param({_action: btoa(JSON.stringify(data)), _next_action_to_set: btoa(JSON.stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
             success: function(data){
               setTimeout(function(){
-                daProcessAjax(data, $("#daform"));
+                daProcessAjax(data, $("#daform"), 1);
               }, 0);
             },
             error: function(xhr, status, error){
@@ -5349,7 +5363,7 @@ def index():
             socket.on('newpage', function(incoming) {
                 //console.log("newpage received");
                 var data = incoming.obj;
-                daProcessAjax(data, $("#daform"));
+                daProcessAjax(data, $("#daform"), 1);
             });
             socket.on('controllerchanges', function(data) {
                 //console.log("controllerchanges: " + data.parameters);
@@ -5588,7 +5602,7 @@ def index():
           $(form).attr("target", "uploadiframe");
           iframe.bind('load', function(){
             setTimeout(function(){
-              daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form);
+              daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form, 1);
             }, 0);
           });
           form.submit();
@@ -5600,7 +5614,7 @@ def index():
             data: $(form).serialize(), 
             success: function(data){
               setTimeout(function(){
-                daProcessAjax(data, form);
+                daProcessAjax(data, form, 1);
               }, 0);
             },
             error: function(xhr, status, error){
@@ -5628,7 +5642,7 @@ def index():
           $(form).attr("target", "uploadiframe");
           iframe.bind('load', function(){
             setTimeout(function(){
-              daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form);
+              daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form, 1);
             }, 0);
           });
           form.submit();
@@ -5640,7 +5654,7 @@ def index():
             data: $(form).serialize(), 
             success: function(data){
               setTimeout(function(){
-                daProcessAjax(data, form);
+                daProcessAjax(data, form, 1);
               }, 0);
             },
             error: function(xhr, status, error){
@@ -5671,7 +5685,7 @@ def index():
         script.defer = true;
         head.appendChild(script);
       }
-      function daProcessAjax(data, form){
+      function daProcessAjax(data, form, doScroll){
         daInformedChanged = false;
         if (dadisable != null){
           clearTimeout(dadisable);
@@ -5693,7 +5707,7 @@ def index():
           daMessageLog = data.message_log;
           //console.log("daProcessAjax: pushing " + daSteps);
           history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, "#page" + daSteps);
-          daInitialize();
+          daInitialize(doScroll);
           var tempDiv = document.createElement('div');
           tempDiv.innerHTML = data.extra_scripts;
           var scripts = tempDiv.getElementsByTagName('script');
@@ -5755,7 +5769,7 @@ def index():
           data: $.param({_action: data, csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
-              daProcessAjax(data, $("#daform"));
+              daProcessAjax(data, $("#daform"), 1);
             }, 0);
           },
           error: function(xhr, status, error){
@@ -5886,7 +5900,7 @@ def index():
           data: 'csrf_token=' + daCsrf + '&ajax=1',
           success: function(data){
             setTimeout(function(){
-              daProcessAjax(data, $("#daform"));
+              daProcessAjax(data, $("#daform"), 0);
             }, 0);
           },
           error: function(xhr, status, error){
@@ -6143,7 +6157,7 @@ def index():
           }
         }
       }
-      function daInitialize(){
+      function daInitialize(doScroll){
         daResetCheckinCode();
         if (daSpinnerTimeout != null){
           clearTimeout(daSpinnerTimeout);
@@ -6237,7 +6251,7 @@ def index():
             data: $("#backbutton").serialize() + '&ajax=1' + informed, 
             success: function(data){
               setTimeout(function(){
-                daProcessAjax(data, document.getElementById('backbutton'));
+                daProcessAjax(data, document.getElementById('backbutton'), 1);
               }, 0);
             },
             error: function(xhr, status, error){
@@ -6474,9 +6488,11 @@ def index():
             $(self).remove();
           });
         }, 3000);
-        setTimeout(function () {
-          window.scrollTo(0, 1);
-        }, 10);
+        if (doScroll){
+          setTimeout(function () {
+            window.scrollTo(0, 1);
+          }, 10);
+        }
         if (daShowingSpinner){
           hideSpinner();
         }
@@ -6489,7 +6505,7 @@ def index():
         $(document).trigger('daPageLoad');
       }
       $(document).ready(function(){
-        daInitialize();
+        daInitialize(1);
         //console.log("ready: replaceState " + daSteps);
         history.replaceState({steps: daSteps}, "", "#page" + daSteps);
         var daReloadAfter = """ + str(int(reload_after)) + """;
@@ -6628,8 +6644,8 @@ def index():
             logmessage("index: unable to determine dialect; reverting to default")
             the_language = DEFAULT_LANGUAGE
             the_dialect = DEFAULT_DIALECT
-        for question_type in ['question', 'help']:
-            for audio_format in ['mp3', 'ogg']:
+        for question_type in ('question', 'help'):
+            for audio_format in ('mp3', 'ogg'):
                 interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
     if (not validated) and the_question.name == interview_status.question.name:
         for def_key, def_val in post_data.iteritems():
@@ -6647,7 +6663,7 @@ def index():
     content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules, the_field_errors, the_progress_bar)
     if debug_mode:
         readability = dict()
-        for question_type in ['question', 'help']:
+        for question_type in ('question', 'help'):
             if question_type not in interview_status.screen_reader_text:
                 continue
             phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')
@@ -6664,7 +6680,7 @@ def index():
                                           ('Dale-Chall Readability Score', textstat.dale_chall_readability_score(phrase)),
                                           ('Readability Consensus', textstat.text_standard(phrase))]
         readability_report = ''
-        for question_type in ['question', 'help']:
+        for question_type in ('question', 'help'):
             if question_type in readability:
                 readability_report += '          <table style="display: none;" class="table" id="readability-' + question_type +'">' + "\n"
                 readability_report += '            <tr><th>Formula</th><th>Score</th></tr>' + "\n"
@@ -6672,7 +6688,7 @@ def index():
                     readability_report += '            <tr><td>' + read_type +'</td><td>' + str(value) + "</td></tr>\n"
                 readability_report += '          </table>' + "\n"
     if interview_status.using_screen_reader:
-        for question_type in ['question', 'help']:
+        for question_type in ('question', 'help'):
             #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf8'), 'base64').decode().replace('\n', '')
             if question_type not in interview_status.screen_reader_text:
                 continue
@@ -6729,7 +6745,7 @@ def index():
         #output += '            <pre style="white-space: pre-wrap;">' + sms_content + '</pre>\n'
         if interview_status.using_screen_reader:
             output += '          <h3>' + word('Plain text of sections') + '</h3>' + "\n"
-            for question_type in ['question', 'help']:
+            for question_type in ('question', 'help'):
                 if question_type in interview_status.screen_reader_text:
                     output += '<pre style="white-space: pre-wrap;">' + to_text(interview_status.screen_reader_text[question_type]) + '</pre>\n'
         output += '          <h3>' + word('Source code for question') + '</h3>' + "\n"
@@ -6772,12 +6788,11 @@ def index():
         pipe.execute()
         #sys.stderr.write("10\n")
         #logmessage("Done setting html key " + key)
-        #if session.get('chatstatus', 'off') in ['waiting', 'standby', 'ringing', 'ready', 'on']:
+        #if session.get('chatstatus', 'off') in ('waiting', 'standby', 'ringing', 'ready', 'on'):
         if user_dict['_internal']['livehelp']['availability'] != 'unavailable':
             inputkey = 'da:input:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
             r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_json:
-        #logmessage(pprint.pformat(interview_status.as_data(), indent=4))
         data = dict(browser_title=interview_status.tabtitle, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log())
         data.update(interview_status.as_data())
         if next_action_review:
@@ -6894,7 +6909,7 @@ def speak_file():
     secret = request.cookies.get('secret', None)
     if secret is not None:
         secret = str(secret)
-    if file_format not in ['mp3', 'ogg'] or not (filename and key and question and question_type and file_format and the_language and the_dialect):
+    if file_format not in ('mp3', 'ogg') or not (filename and key and question and question_type and file_format and the_language and the_dialect):
         logmessage("speak_file: could not serve speak file because invalid or missing data was provided: filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
         abort(404)
     entry = SpeakList.query.filter_by(filename=filename, key=key, question=question, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).first()
@@ -7420,7 +7435,7 @@ def observer():
             data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
             success: function(data){
               setTimeout(function(){
-                daProcessAjax(data, $("#daform"));
+                daProcessAjax(data, $("#daform"), 1);
               }, 0);
             },
             error: function(xhr, status, error){
@@ -7444,7 +7459,7 @@ def observer():
             data: $.param({_action: btoa(JSON.stringify(data)), _next_action_to_set: btoa(JSON.stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
             success: function(data){
               setTimeout(function(){
-                daProcessAjax(data, $("#daform"));
+                daProcessAjax(data, $("#daform"), 1);
               }, 0);
             },
             error: function(xhr, status, error){
@@ -7470,7 +7485,7 @@ def observer():
           }
         });
       }
-      function daInitialize(){
+      function daInitialize(doScroll){
         $('button[type="submit"], input[type="submit"], a.review-action, #backToQuestion, #questionlabel, #pagetitle, #helptoggle, a[data-linknum], a[data-embaction]').click(daSubmitter);
         $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
         $(".to-labelauty-icon").labelauty({ label: false });
@@ -7587,7 +7602,7 @@ def observer():
         $(document).trigger('daPageLoad');
       }
       $( document ).ready(function(){
-        daInitialize();
+        daInitialize(1);
         $( window ).bind('unload', function() {
           if (socket != null && socket.connected){
             socket.emit('terminate');
@@ -7641,7 +7656,7 @@ def observer():
                 $("body").html(data.body);
                 $("body").removeClass();
                 $("body").addClass(data.bodyclass);
-                daInitialize();
+                daInitialize(1);
                 var tempDiv = document.createElement('div');
                 tempDiv.innerHTML = data.extra_scripts;
                 var scripts = tempDiv.getElementsByTagName('script');
@@ -9167,7 +9182,7 @@ def create_playground_package():
             abort(404)
         github_package_name = 'docassemble-' + re.sub(r'^docassemble-', r'', current_package)
         #github_package_name = re.sub(r'[^A-Za-z\_\-]', '', github_package_name)
-        if github_package_name in ['docassemble-base', 'docassemble-webapp', 'docassemble-demo']:
+        if github_package_name in ('docassemble-base', 'docassemble-webapp', 'docassemble-demo'):
             abort(404)
         commit_message = request.args.get('commit_message', 'a commit')
         storage = RedisCredStorage(app='github')
@@ -9217,7 +9232,7 @@ def create_playground_package():
     area = dict()
     area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
     file_list = dict()
-    file_list['playgroundpackages'] = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f)) and not f.startswith('.')])
+    file_list['playgroundpackages'] = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     the_choices = list()
     for file_option in file_list['playgroundpackages']:
         the_choices.append((file_option, file_option))
@@ -9241,19 +9256,19 @@ def create_playground_package():
         current_package = None
     if current_package is not None:
         section_sec = {'playgroundtemplate': 'template', 'playgroundstatic': 'static', 'playgroundsources': 'sources', 'playgroundmodules': 'modules'}
-        for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
+        for sec in ('playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'):
             area[sec] = SavedFile(current_user.id, fix=True, section=sec)
-            file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f))])
+            file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
         if os.path.isfile(os.path.join(area['playgroundpackages'].directory, current_package)):
             filename = os.path.join(area['playgroundpackages'].directory, current_package)
             info = dict()
             with open(filename, 'rU') as fp:
                 content = fp.read().decode('utf8')
                 info = yaml.load(content)
-            for field in ['dependencies', 'dependency_links', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
+            for field in ('dependencies', 'dependency_links', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
                 if field not in info:
                     info[field] = list()
-            info['dependencies'] = [x for x in info['dependencies'] if x not in ['docassemble', 'docassemble.base', 'docassemble.webapp']]
+            info['dependencies'] = [x for x in info['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
             for package in info['dependencies']:
                 logmessage("create_playground_package: considering " + str(package))
                 existing_package = Package.query.filter_by(name=package, active=True).first()
@@ -9321,7 +9336,7 @@ def create_playground_package():
                 if ssh_url is None:
                     raise DAError("create_playground_package: could not obtain ssh_url for package")
                 output = ''
-                if branch:
+                if branch and branch != 'master':
                     branch_option = '-b ' + str(branch) + ' '
                 else:
                     branch_option = ''
@@ -10054,7 +10069,7 @@ def do_sync_with_google_drive():
     gd_deleted = dict()
     sections_modified = set()
     commentary = ''
-    for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+    for section in ('static', 'templates', 'questions', 'modules', 'sources'):
         local_files[section] = set()
         local_modtimes[section] = dict()
         if section == 'questions':
@@ -10467,10 +10482,10 @@ def playground_files():
         if (formtwo.file_name.data):
             the_file = formtwo.file_name.data
             the_file = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', the_file)
-    if section not in ["template", "static", "sources", "modules", "packages"]:
+    if section not in ("template", "static", "sources", "modules", "packages"):
         section = "template"
     pgarea = SavedFile(current_user.id, fix=True, section='playground')
-    pulldown_files = sorted([f for f in os.listdir(pgarea.directory) if os.path.isfile(os.path.join(pgarea.directory, f))])
+    pulldown_files = sorted([f for f in os.listdir(pgarea.directory) if os.path.isfile(os.path.join(pgarea.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     if 'variablefile' in session:
         if session['variablefile'] in pulldown_files:
             active_file = session['variablefile']
@@ -10592,7 +10607,7 @@ def playground_files():
                     return redirect(url_for('playground_files', section=section, file=the_file))
             else:
                 flash(word('You need to type in a name for the file'), 'error')                
-    files = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    files = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     editable_files = list()
     convertible_files = list()
     trainable_files = dict()
@@ -10931,7 +10946,7 @@ def playground_packages():
     pypi_version = None        
     package_list, package_auth = get_package_info()
     package_names = sorted([package.package.name for package in package_list])
-    for default_package in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
+    for default_package in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
         if default_package in package_names:
             package_names.remove(default_package)
     # if the_file:
@@ -10948,9 +10963,9 @@ def playground_packages():
     section_name = {'playground': 'Interview files', 'playgroundpackages': 'Packages', 'playgroundtemplate': 'Template files', 'playgroundstatic': 'Static files', 'playgroundsources': 'Source files', 'playgroundmodules': 'Modules'}
     section_sec = {'playgroundtemplate': 'template', 'playgroundstatic': 'static', 'playgroundsources': 'sources', 'playgroundmodules': 'modules'}
     section_field = {'playground': form.interview_files, 'playgroundtemplate': form.template_files, 'playgroundstatic': form.static_files, 'playgroundsources': form.sources_files, 'playgroundmodules': form.module_files}
-    for sec in ['playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
+    for sec in ('playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'):
         area[sec] = SavedFile(current_user.id, fix=True, section=sec)
-        file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f)) and not f.startswith('.')])
+        file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     for sec, field in section_field.iteritems():
         the_list = []
         for item in file_list[sec]:
@@ -10972,7 +10987,7 @@ def playground_packages():
             raise DAError("Form did not validate")
     the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '-', the_file)
     the_file = re.sub(r'^docassemble-', r'', the_file)
-    files = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f)) and not f.startswith('.')])
+    files = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     editable_files = list()
     mode = "yaml"
     for a_file in files:
@@ -11089,16 +11104,16 @@ def playground_packages():
                 if type(old_info) is dict:
                     github_url_from_file = old_info.get('github_url', None)
                     pypi_package_from_file = old_info.get('pypi_package_name', None)
-                    for field in ['license', 'description', 'version', 'url', 'readme']:
+                    for field in ('license', 'description', 'version', 'url', 'readme'):
                         if field in old_info:
                             form[field].data = old_info[field]
                         else:
                             form[field].data = ''
                     if 'dependencies' in old_info and type(old_info['dependencies']) is list and len(old_info['dependencies']):
-                        for item in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
+                        for item in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
                             if item in old_info['dependencies']:
                                 del old_info['dependencies'][item]
-                    for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
+                    for field in ('dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
                         if field in old_info and type(old_info[field]) is list and len(old_info[field]):
                             form[field].data = old_info[field]
         else:
@@ -11136,7 +11151,7 @@ def playground_packages():
                             levels = re.findall(r'/', directory)
                             time_tuple = zinfo.date_time
                             the_time = time.mktime(datetime.datetime(*time_tuple).timetuple())
-                            for sec in ['templates', 'static', 'sources', 'questions']:
+                            for sec in ('templates', 'static', 'sources', 'questions'):
                                 if directory.endswith('data/' + sec) and filename != 'README.md':
                                     data_files[sec].append(filename)
                                     target_filename = os.path.join(area[area_sec[sec]].directory, filename)
@@ -11173,7 +11188,7 @@ def playground_packages():
                                     the_list.append(inner_item)
                                 extracted[m.group(1)] = the_list
                         info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
-                        info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ['docassemble', 'docassemble.base', 'docassemble.webapp']]
+                        info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
                         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
                         with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w') as fp:
                             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
@@ -11231,8 +11246,8 @@ def playground_packages():
                     raise DAError("playground_packages: error running git clone.  " + output)
             else:
                 try:
-                    if branch is not None:
-                        output += subprocess.check_output(['git', 'clone', '-b ' + branch, github_url], cwd=directory, stderr=subprocess.STDOUT)
+                    if branch is not None and branch != 'master':
+                        output += subprocess.check_output(['git', 'clone', '-b', branch, github_url], cwd=directory, stderr=subprocess.STDOUT)
                     else:
                         output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as err:
@@ -11285,7 +11300,7 @@ def playground_packages():
                 if '.git' in dirparts:
                     continue
                 levels = re.findall(r'/', the_directory)
-                for sec in ['templates', 'static', 'sources', 'questions']:
+                for sec in ('templates', 'static', 'sources', 'questions'):
                     if the_directory.endswith('data/' + sec) and filename != 'README.md':
                         data_files[sec].append(filename)
                         target_filename = os.path.join(area[area_sec[sec]].directory, filename)
@@ -11324,7 +11339,7 @@ def playground_packages():
                     the_list.append(inner_item)
                 extracted[m.group(1)] = the_list
         info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, github_branch=branch, pypi_package_name=pypi_package)
-        info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ['docassemble', 'docassemble.base', 'docassemble.webapp']]
+        info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
         #output += "info_dict is set\n"
         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
         if not user_can_edit_package(pkgname='docassemble.' + package_name):
@@ -11371,7 +11386,7 @@ def playground_packages():
                     pypi_message = word('This package is not yet published on PyPI.')
     if request.method == 'POST' and validated:
         new_info = dict()
-        for field in ['license', 'description', 'version', 'url', 'readme', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
+        for field in ('license', 'description', 'version', 'url', 'readme', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
             new_info[field] = form[field].data
         #logmessage("found " + str(new_info))
         if form.submit.data or form.download.data or form.install.data or form.pypi.data or form.github.data:
@@ -11450,6 +11465,7 @@ def playground_packages():
               $("#daCancel").show();
             }
             $("#commit_message").focus();
+            window.scrollTo(0, document.body.scrollHeight);
             event.preventDefault();
             return false;
           }
@@ -11893,7 +11909,7 @@ function activatePopovers(){
 @roles_required(['developer', 'admin'])
 def playground_variables():
     playground = SavedFile(current_user.id, fix=True, section='playground')
-    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
+    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     if len(files) == 0:
         return jsonify(success=False, reason=1)
     post_data = request.form.copy()
@@ -11975,7 +11991,7 @@ def playground_page():
                 try:
                     filename = secure_filename(up_file.filename)
                     extension, mimetype = get_ext_and_mimetype(filename)
-                    if extension not in ['yml', 'yaml']:
+                    if extension not in ('yml', 'yaml'):
                         flash(word("Sorry, only YAML files can be uploaded here.  To upload other types of files, use the Folders."), 'error')
                         return redirect(url_for('playground_page'))
                     filename = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', filename)
@@ -12013,7 +12029,7 @@ def playground_page():
             flash(word('You need to type in a name for the interview'), 'error')
             is_new = True
     the_file = re.sub(r'[^A-Za-z0-9\_\-\. ]', '', the_file)
-    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
+    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)])
     content = ''
     if the_file and not is_new and the_file not in files:
         the_file = ''
@@ -12089,7 +12105,7 @@ def playground_page():
                     flash(word("Changed name of interview"), 'success')
                 if os.path.isfile(old_filename):
                     os.remove(old_filename)
-                    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
+                    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)])
             the_time = formatted_current_time()
             should_save = True
             the_content = re.sub(r'\r\n', r'\n', form.playground_content.data)
@@ -12865,7 +12881,7 @@ def get_corresponding_interview(the_package, the_file):
         separator = ':'
     else:
         separator = ':data/questions/'
-    for interview_file in [the_package + separator + the_file + '.yml', the_package + separator + the_file + '.yaml', the_package + separator + 'examples/' + the_file + '.yml']:
+    for interview_file in (the_package + separator + the_file + '.yml', the_package + separator + the_file + '.yaml', the_package + separator + 'examples/' + the_file + '.yml'):
         #logmessage("Looking for " + interview_file)
         try:
             interview = docassemble.base.interview_cache.get_interview(interview_file)
@@ -13216,7 +13232,7 @@ def train():
                     if not image_file.ok:
                         logmessage("train: file does not have a number")
                         continue
-                    if image_file.extension not in ['pdf', 'png', 'jpg', 'jpeg', 'gif']:
+                    if image_file.extension not in ('pdf', 'png', 'jpg', 'jpeg', 'gif'):
                         logmessage("train: file did not have a recognizable image type")
                         continue
                     doc_url = get_url_from_file_reference(image_file)
@@ -13613,7 +13629,7 @@ def voice():
     if twilio_config is None:
         logmessage("voice: ignoring call to voice because Twilio not enabled")
         return Response(str(resp), mimetype='text/xml')
-    if 'voice' not in twilio_config['name']['default'] or twilio_config['name']['default']['voice'] in [False, None]:
+    if 'voice' not in twilio_config['name']['default'] or twilio_config['name']['default']['voice'] in (False, None):
         logmessage("voice: ignoring call to voice because voice feature not enabled")
         return Response(str(resp), mimetype='text/xml')
     if "AccountSid" not in request.form or request.form["AccountSid"] != twilio_config['name']['default'].get('account sid', None):
@@ -13672,7 +13688,7 @@ def sms_body(phone_number, body='question', config='default'):
     if config not in twilio_config['name']:
         raise DAError("sms_body: specified config value, " + str(config) + ", not in Twilio configuration")
     tconfig = twilio_config['name'][config]
-    if 'sms' not in tconfig or tconfig['sms'] in [False, None, 0]:
+    if 'sms' not in tconfig or tconfig['sms'] in (False, None, 0):
         raise DAError("sms_body: sms feature is not enabled in Twilio configuration")
     if 'account sid' not in tconfig:
         raise DAError("sms_body: account sid not in Twilio configuration")
@@ -13768,7 +13784,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         logmessage("do_sms: request to sms ignored because recipient number " + str(form.get('To', None)) + " not in configuration, " + str(twilio_config))
         return resp
     tconfig = twilio_config['number'][form["To"]]
-    if 'sms' not in tconfig or tconfig['sms'] in [False, None, 0]:
+    if 'sms' not in tconfig or tconfig['sms'] in (False, None, 0):
         logmessage("do_sms: ignoring message to sms because SMS not enabled")
         return resp
     if "From" not in form or not re.search(r'[0-9]', form["From"]):
@@ -13809,7 +13825,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             logmessage("do_sms: unable to decode session information")
             return resp
         accepting_input = True
-    if inp.lower() in [word('exit'), word('quit')]:
+    if inp.lower() in (word('exit'), word('quit')):
         logmessage("do_sms: exiting")
         if save:
             reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
@@ -13867,7 +13883,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             sess_info['question'] = interview_status.question.name
             r.set(key, pickle.dumps(sess_info))
         elif 'question' in sess_info and sess_info['question'] != interview_status.question.name:
-            if inp not in [word('?'), word('back'), word('question'), word('exit')]:
+            if inp not in (word('?'), word('back'), word('question'), word('exit')):
                 logmessage("do_sms: blanking the input because question changed from " + str(sess_info['question']) + " to " + str(interview_status.question.name))
                 sess_info['question'] = interview_status.question.name
                 inp = 'question'
@@ -13902,7 +13918,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 inp = ''
                 continue
             break
-        if inp.lower() in [word('back')]:
+        if inp.lower() == word('back'):
             if 'skip' in user_dict['_internal'] and len(user_dict['_internal']['skip']):
                 max_entry = -1
                 for the_entry in user_dict['_internal']['skip'].keys():
@@ -13936,7 +13952,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
     changed = False
     nothing_more = False
     if accepting_input:
-        if inp_lower in [word('?')]:
+        if inp_lower == word('?'):
             sms_info = as_sms(interview_status)
             message = ''
             if sms_info['help'] is None:
@@ -13949,9 +13965,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             if 'uid' in session:
                 del session['uid']
             return resp
-        if inp_lower in [word('question')]:
+        if inp_lower == word('question'):
             accepting_input = False
-    if inp_lower in [word('skip')]:
+    if inp_lower == word('skip'):
         user_entered_skip = True
     else:
         user_entered_skip = False
@@ -13963,7 +13979,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 field = None
                 next_field = None
                 for the_field in interview_status.get_field_list():
-                    if hasattr(the_field, 'datatype') and the_field.datatype in ['html', 'note', 'script', 'css']:
+                    if hasattr(the_field, 'datatype') and the_field.datatype in ('html', 'note', 'script', 'css'):
                         continue
                     if is_empty_mc(interview_status, the_field):
                         continue
@@ -13991,7 +14007,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 field = interview_status.question.fields[0]
                 next_field = None
             if question.question_type == "settrue":
-                if inp_lower in [word('ok')]:
+                if inp_lower == word('ok'):
                     data = 'True'
                 else:
                     data = None
@@ -14003,7 +14019,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 image = Image.new("RGBA", (200, 50))
                 image.save(temp_image_file.name, 'PNG')
                 saved_file = save_numbered_file(filename, temp_image_file.name, yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
-                if inp_lower in [word('x')]:
+                if inp_lower == word('x'):
                     the_string = saveas + " = docassemble.base.core.DAFile('" + saveas + "', filename='" + str(filename) + "', number=" + str(saved_file.file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
                     logmessage("do_sms: doing import docassemble.base.core")
                     logmessage("do_sms: doing signature: " + the_string)
@@ -14021,7 +14037,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     data = repr('')
                 else:
                     data = None
-            elif hasattr(field, 'datatype') and field.datatype in ["ml", "mlarea"]:
+            elif hasattr(field, 'datatype') and field.datatype in ("ml", "mlarea"):
                 try:
                     exec("import docassemble.base.util", user_dict)
                 except Exception as errMess:
@@ -14037,7 +14053,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     data = 'docassemble.base.util.DAModel(' + repr(saveas) + ', group_id=' + repr(interview_status.extras['ml_group'][field.number]) + ', text=' + repr(inp) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
                 else:
                     data = 'docassemble.base.util.DAModel(' + repr(saveas) + ', text=' + repr(inp) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
-            elif hasattr(field, 'datatype') and field.datatype in ["file", "files", "camera", "camcorder", "microphone"]:
+            elif hasattr(field, 'datatype') and field.datatype in ("file", "files", "camera", "camcorder", "microphone"):
                 if user_entered_skip and not interview_status.extras['required'][field.number]:
                     skip_it = True
                     data = repr('')
@@ -14093,38 +14109,38 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         data = None
                         if interview_status.extras['required'][field.number]:
                             special_messages.append(word("You must attach a file."))
-            elif question.question_type in ["yesno"] or (hasattr(field, 'datatype') and (field.datatype in ['yesno', 'yesnowide'] or (hasattr(field, 'datatype') and field.datatype == 'boolean' and (hasattr(field, 'sign') and field.sign > 0)))):
+            elif question.question_type == "yesno" or (hasattr(field, 'datatype') and (field.datatype in ('yesno', 'yesnowide') or (hasattr(field, 'datatype') and field.datatype == 'boolean' and (hasattr(field, 'sign') and field.sign > 0)))):
                 if inp_lower in true_list:
                     data = 'True'
                 elif inp_lower in false_list:
                     data = 'False'
                 else:
                     data = None
-            elif question.question_type in ["yesnomaybe"] or (hasattr(field, 'datatype') and (field.datatype in ['yesnomaybe', 'yesnowidemaybe'] or (field.datatype == 'threestate' and (hasattr(field, 'sign') and field.sign > 0)))):
+            elif question.question_type == "yesnomaybe" or (hasattr(field, 'datatype') and (field.datatype in ('yesnomaybe', 'yesnowidemaybe') or (field.datatype == 'threestate' and (hasattr(field, 'sign') and field.sign > 0)))):
                 if inp_lower in true_list:
                     data = 'True'
                 elif inp_lower in false_list:
                     data = 'False'
                 else:
                     data = 'None'
-            elif question.question_type in ["noyes"] or (hasattr(field, 'datatype') and (field.datatype in ['noyes', 'noyeswide'] or (field.datatype == 'boolean' and (hasattr(field, 'sign') and field.sign < 0)))):
+            elif question.question_type == "noyes" or (hasattr(field, 'datatype') and (field.datatype in ('noyes', 'noyeswide') or (field.datatype == 'boolean' and (hasattr(field, 'sign') and field.sign < 0)))):
                 if inp_lower in true_list:
                     data = 'False'
                 elif inp_lower in false_list:
                     data = 'True'
                 else:
                     data = None
-            elif question.question_type in ['noyesmaybe', 'noyesmaybe', 'noyeswidemaybe'] or (hasattr(field, 'datatype') and field.datatype == 'threestate' and (hasattr(field, 'sign') and field.sign < 0)):
+            elif question.question_type in ('noyesmaybe', 'noyesmaybe', 'noyeswidemaybe') or (hasattr(field, 'datatype') and field.datatype == 'threestate' and (hasattr(field, 'sign') and field.sign < 0)):
                 if inp_lower in true_list:
                     data = 'False'
                 elif inp_lower in false_list:
                     data = 'True'
                 else:
                     data = 'None'
-            elif question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'radio', 'checkboxes', 'object_checkboxes']):
+            elif question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'radio', 'checkboxes', 'object_checkboxes')):
                 cdata, choice_list = get_choices_with_abb(interview_status, field)
                 data = None
-                if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes'] and saveas is not None:
+                if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes') and saveas is not None:
                     if 'command_cache' not in user_dict['_internal']:
                         user_dict['_internal']['command_cache'] = dict()
                     if field.number not in user_dict['_internal']['command_cache']:
@@ -14132,16 +14148,16 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     docassemble.base.parse.ensure_object_exists(saveas, field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][field.number])
                     saveas = saveas + '.gathered'
                     data = 'True'
-                if (user_entered_skip or (inp_lower == word('none') and hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes'])) and ((hasattr(field, 'disableothers') and field.disableothers) or (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']) or not (interview_status.extras['required'][field.number] or (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')))):
+                if (user_entered_skip or (inp_lower == word('none') and hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'))) and ((hasattr(field, 'disableothers') and field.disableothers) or (hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes')) or not (interview_status.extras['required'][field.number] or (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')))):
                     logmessage("do_sms: skip accepted")
                     # user typed 'skip,' or, where checkboxes, 'none.'  Also:
                     # field is skippable, either because it has disableothers, or it is a checkbox field, or
                     # it is not required.  Multiple choice fields with saveas are considered required.
                     if hasattr(field, 'datatype'):
-                        if field.datatype in ['object', 'object_radio']:
+                        if field.datatype in ('object', 'object_radio'):
                             skip_it = True
                             data = repr('')
-                        if field.datatype in ['checkboxes', 'object_checkboxes']:
+                        if field.datatype in ('checkboxes', 'object_checkboxes'):
                             for choice in choice_list:
                                 if choice[1] is None:
                                     continue
@@ -14150,9 +14166,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                             logmessage("do_sms: setting skip_it to True")
                             skip_it = True
                             data = repr('')
-                        elif field.datatype in ['integer']:
+                        elif field.datatype == 'integer':
                             data = '0'
-                        elif field.datatype in ['number', 'float', 'currency', 'range']:
+                        elif field.datatype in ('number', 'float', 'currency', 'range'):
                             data = '0.0'
                         else:
                             data = repr('')
@@ -14160,7 +14176,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         data = repr('')
                 else:
                     # There is a real value here
-                    if hasattr(field, 'datatype') and field.datatype in ['object_checkboxes']:
+                    if hasattr(field, 'datatype') and field.datatype == 'object_checkboxes':
                         true_values = set()
                         for selection in re.split(r' *[,;] *', inp_lower):
                             for potential_abb, value in cdata['abblower'].iteritems():
@@ -14179,7 +14195,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                             else:
                                 the_string = 'if ' + choice[2] + ' in ' + the_saveas + '.elements:\n    ' + the_saveas + '.remove(' + choice[2] + ')'
                             user_dict['_internal']['command_cache'][field.number].append(the_string)
-                    elif hasattr(field, 'datatype') and field.datatype in ['checkboxes']:
+                    elif hasattr(field, 'datatype') and field.datatype == 'checkboxes':
                         true_values = set()
                         for selection in re.split(r' *[,;] *', inp_lower):
                             for potential_abb, value in cdata['abblower'].iteritems():
@@ -14206,13 +14222,13 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                     if value == choice[0]:
                                         #logmessage("do_sms: found a match")
                                         saveas = choice[1]
-                                        if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio']:
+                                        if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio'):
                                             data = choice[2]
                                         else:
                                             data = repr(choice[2])
                                         break
                                 break
-            elif hasattr(field, 'datatype') and field.datatype in ['integer']:
+            elif hasattr(field, 'datatype') and field.datatype == 'integer':
                 if user_entered_skip and not interview_status.extras['required'][field.number]:
                     data = repr('')
                     skip_it = True
@@ -14226,7 +14242,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     except:
                         special_messages.append('"' + inp + '" ' + word("is not a whole number."))
                         data = None
-            elif hasattr(field, 'datatype') and field.datatype in ['date']:
+            elif hasattr(field, 'datatype') and field.datatype == 'date':
                 if user_entered_skip and not interview_status.extras['required'][field.number]:
                     data = repr('')
                     skip_it = True
@@ -14238,7 +14254,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         logmessage("do_sms: date validation error was " + str(the_err))
                         special_messages.append('"' + inp + '" ' + word("is not a valid date."))
                         data = None                    
-            elif hasattr(field, 'datatype') and field.datatype in ['range']:
+            elif hasattr(field, 'datatype') and field.datatype == 'range':
                 if user_entered_skip and not interview_status.extras['required'][field.number]:
                     data = repr('')
                     skip_it = True
@@ -14251,7 +14267,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                             data = None
                     except:
                         data = None
-            elif hasattr(field, 'datatype') and field.datatype in ['number', 'float', 'currency']:
+            elif hasattr(field, 'datatype') and field.datatype in ('number', 'float', 'currency'):
                 if user_entered_skip and not interview_status.extras['required'][field.number]:
                     data = repr('')
                     skip_it = True
@@ -14307,7 +14323,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                         docassemble.base.parse.ensure_object_exists(the_saveas, 'object_checkboxes', user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.clear()')
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.gathered = True')
-                                    elif the_field.datatype in ['object', 'object_radio']:
+                                    elif the_field.datatype in ('object', 'object_radio'):
                                         try:
                                             eval(the_saveas, user_dict)
                                         except:
@@ -14373,7 +14389,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         r.set(key, pickle.dumps(sess_info))
     else:
         logmessage("do_sms: not accepting input.")    
-    if interview_status.question.question_type in ["restart", "exit", "logout"]:
+    if interview_status.question.question_type in ("restart", "exit", "logout"):
         logmessage("do_sms: exiting because of restart or exit")
         if save:
             reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
@@ -14431,7 +14447,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     for doc_format in attachment['formats_to_use']:
                         if media_count >= 9:
                             break
-                        if doc_format not in ['pdf', 'rtf']:
+                        if doc_format not in ('pdf', 'rtf'):
                             continue
                         filename = attachment['filename'] + '.' + extension_of_doc_format[doc_format]
                         saved_file = save_numbered_file(filename, attachment['file'][doc_format], yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
@@ -14664,7 +14680,7 @@ def get_short_code(**pargs):
         raise SystemError("Failed to generate unique short code")
     return new_short
         
-for path in [FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY]: #PACKAGE_CACHE
+for path in (FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY): #PACKAGE_CACHE
     if not os.path.isdir(path):
         try:
             os.makedirs(path)

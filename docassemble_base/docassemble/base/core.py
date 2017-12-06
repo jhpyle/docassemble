@@ -1911,9 +1911,9 @@ class DAFile(DAObject):
         if 'pages' not in self.file_info:
             raise Exception("number of pages not found.")
         test_path = self.file_info['path'] + prefix + '-in-progress'
-        logmessage("Test path is " + test_path)
+        #logmessage("Test path is " + test_path)
         if wait and os.path.isfile(test_path):
-            logmessage("Test path exists")
+            #logmessage("Test path exists")
             while (os.path.isfile(test_path) and time.time() - os.stat(test_path)[stat.ST_MTIME]) < 30:
                 logmessage("Waiting for test path to go away")
                 if not os.path.isfile(test_path):
