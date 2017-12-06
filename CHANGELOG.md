@@ -1,5 +1,20 @@
 # Change Log
 
+## [0.2.4] - 2017-12-06
+### Changed
+- Automatically remove newlines from e-mail subject lines
+- PDF thumbnails now have the filename as the "title."
+- Background tasks no longer try to process responses if exception
+  triggered.
+### Added
+- Ability to set `exit link` and `exit label` in metadata and
+  `set_title()`.
+### Fixed
+- Error when pulling "master" branches of GitHub packages into the
+  Playground.
+- Flash message showing when interview YAML file changes and "allow
+  login" is False.
+
 ## [0.2.3] - 2017-12-04
 ### Changed
 - Turned off automatic curly quote conversion until Unicode error
