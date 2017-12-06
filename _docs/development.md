@@ -459,6 +459,19 @@ button.
 
 # <a name="localediting"></a>Editing Playground files in a text editor on a local machine
 
+## Not using Docker
+
+If you are not using [Docker] to run **docassemble**, you can use
+[sshfs] to "mount" your [Playground].
+
+{% highlight bash %}
+sshfs www-data@localhost:/usr/share/docassemble/files pg
+{% endhighlight %}
+
+This way, you can use a text editor to edit your [Playground] files.
+
+## Using Docker
+
 If you are running **docassemble** [Docker] on a local machine, and
 you are not using S3 or Azure Blob Storage, you can use
 [Docker volume]s to access your [Playground] files using a text editor
@@ -501,6 +514,8 @@ The contents of `da` will include:
 * `playgroundstatic` - This is where "static" files are stored.
 * `playgroundtemplate` - This is where "template" files are stored.
 
+## Editing locally and running interviews in the Playground.
+
 Within each `playground` directory, there are subdirectories with
 numbers like `1`.  These refer to user numbers.  Each user has their
 own separate folder.  Typically, if you have a server all to yourself,
@@ -542,8 +557,8 @@ version you had been working with.
 Note that editing files in your [Playground] in this way is a "hack"
 that bypasses **docassemble**'s front end, so do not be surprised if
 you encounter problems.  For example, if the server is unable to
-access a file because your text editor has placed a lock on it, don't
-be surprised if you see an error.
+access a file because your text editor has placed a lock on it, you
+might see an error.
 
 If you are not using [Docker], but you are using Linux, you can use
 sshfs to create a mount in your home directory that maps to the

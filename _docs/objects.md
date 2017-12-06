@@ -1046,6 +1046,15 @@ written, just in case there is an error.
 the_file.commit()
 {% endhighlight %}
 
+<a name="DAFile.make_pngs"></a>The `.make_pngs()` method can be used
+on PDF files.  It creates PNG versions of the pages of the document.
+In most circumstances, you will not need to use this function, because
+when a user uploads a file, a process is started whereby each page of
+the PDF file is converted to PNG.  However, if that process is not
+started for whatever reason, for example if you are constructing files
+manually, you can start the process by running `.make_pngs()`.  This
+will launch background processes and wait until they are completed.
+
 ## <a name="DAFileCollection"></a>DAFileCollection
 
 `DAFileCollection` objects are created internally by **docassemble**

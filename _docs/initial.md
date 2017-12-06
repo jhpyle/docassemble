@@ -44,6 +44,25 @@ at `/interviews`.
 
 These titles can be overridden using the [`set_title()` function].
 
+The `metadata` block and the [`set_title()` function] can be used to
+modify other aspects of the navigation bar.
+
+If an `exit link` is provided, the behavior of the "Exit" link can be
+modified.  (The "Exit" menu option is displayed when the
+[`show login`] directive is set to `False`.) The value can be either
+`exit` or `leave.` If it is `exit`, then when the user clicks the
+link, they will be logged out (if they are logged in) and their
+interview answers will be deleted from the server.  If it is `leave`,
+the user will be logged out (if they are logged in), but the interview
+answers will not be deleted from the server.  It can be important to
+keep the interview answers on the server if [background tasks] are
+still running.
+
+If `exit label` is provided, the given text will be used in place of
+the word "Exit" on the "Exit" menu option.  This text is passed through the
+[`word()`] function, so that it can be translated into different
+languages.
+
 If you set `unlisted: True` for an interview that has an entry in the
 [`dispatch`] list in your [configuration], the interview will be
 exempted from display in the interview list available at `/list`.  For
@@ -667,6 +686,32 @@ Note that the section list is not shown on small devices, such as
 smartphones.  To show a smartphone user a list of sections, you can
 use the [`nav.show_sections()`] function.
 
+## <a name="hide standard menu"></a>Hiding the standard menu items
+
+By default, the menu in the corner provides logged-in users with the
+ability to edit their "Profile" and the ability to go to "My
+Interviews," which is a list of interview sessions that have been
+started.  If you want to disable these links, you can use the `hide
+standard menu` directive:
+
+{% highlight yaml %}
+features:
+  hide standard menu: True
+{% endhighlight %}
+
+If you want to add any of these links manually, or add them with
+different names, you can do so with the
+[`menu_items` special variable] and the [`url_of()`] function.
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  menu_items = [
+    {'label': 'Edit my Profile', 'url': url_of('profile')},
+    {'label': 'Saved Sessions', 'url': url_of('interviews')}
+  ]
+{% endhighlight %}
+
 ## <a name="javascript"></a><a name="css"></a>Javascript and CSS files
 
 If you are a web developer and you know how to write [HTML],
@@ -982,3 +1027,8 @@ features:
 [`objects_from_file()` function]: {{ site.baseurl}}/docs/functions.html#objects_from_file
 [`data`]: #data
 [`set_title()` function]: {{ site.baseurl}}/docs/functions.html#set_title
+[`show login`]: {{ site.baseurl }}/docs/config.html#show login
+[`url_of()`]: {{ site.baseurl}}/docs/functions.html#url_of
+[`menu_items` special variable]: {{ site.baseurl}}/docs/special.html#menu_items
+[background tasks]: {{ site.baseurl}}/docs/background.html#background
+[`word()`]: {{ site.baseurl}}/docs/functions.html#word

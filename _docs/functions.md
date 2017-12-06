@@ -1585,6 +1585,13 @@ It accepts any of four optional keyword arguments:
   of the interview itself.
 * `tab` - for the [HTML] title of the web page.  This is typically
   displayed in the browser tab.
+* `exit_link` - can be set to `'exit'` or `'leave'` in order to
+  control the behavior of the "Exit" menu option, which is displayed
+  when [`show login`] is `False`.  If set to `'exit'`, then clicking
+  "Exit" will delete the user's answers.  If set to `'leave'`, the
+  user's answers will not be deleted.  The default behavior is `'exit'`.
+* `exit_label` - can be used to change the appearance of the "Exit"
+  menu option.
 
 {% include side-by-side.html demo="set-title" %}
 
@@ -4555,3 +4562,4 @@ $(document).on('daPageLoad', function(){
 [`geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate
 [`google`]: {{ site.baseurl }}/docs/config.html#google
 [list of available interviews]: {{ site.baseurl }}/docs/config.html#dispatch
+[`show login`]: {{ site.baseurl }}/docs/config.html#show login

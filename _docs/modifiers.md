@@ -217,8 +217,14 @@ The progress along the bar at any question needs to be set with the
 {% include side-by-side.html demo="progress" %}
 
 The value of `progress` needs to be a number between 0 and 100.  If
-the value is zero, the progress bar is hidden.  If the value is
-greater than 100, a full progress bar will be shown.
+the value is zero, the progress bar is hidden for the current
+question.  If the value is greater than 100, a full progress bar will
+be shown.  If the value is `None` (`null` in [YAML]), then the
+progress bar will be hidden and will not advance until it is set to
+something else.
+
+You can also control the progress meter with the [`get_progress()`]
+and [`set_progress()`] functions.
 
 # <a name="section"></a>The section navigation bar
 
@@ -791,3 +797,5 @@ by **docassemble**, so it can contain any valid [YAML].
 [index variable documentation]: {{ site.baseurl }}/docs/fields.html#index variables
 [`supersedes` modifier]: #precedence
 [Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[`get_progress()`]: {{ site.baseurl}}/docs/functions.html#get_progress
+[`set_progress()`]: {{ site.baseurl}}/docs/functions.html#set_progress

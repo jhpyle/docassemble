@@ -1035,7 +1035,9 @@ show login: False
 {% endhighlight %}
 
 The default behavior is to show the "Sign in or sign up to save
-answers" link.
+answers" link.  If `show login` is `False`, users will see an "Exit"
+option.  The behavior of this is configurable in the interview
+[`metadata`].
 
 ## <a name="show profile link"></a>Hiding the profile link
 
