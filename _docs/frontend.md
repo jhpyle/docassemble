@@ -354,7 +354,7 @@ site:
 
 {% highlight text %}
 SetEnvIf Origin ^(https?://.+(?::\d{1,5})?)$ CORS_ALLOW_ORIGIN=$1
-Header append Access-Control-Allow-Origin  %{CORS_ALLOW_ORIGIN}e   env=CORS_ALLOW_ORIGIN
+Header set Access-Control-Allow-Origin  %{CORS_ALLOW_ORIGIN}e   env=CORS_ALLOW_ORIGIN
 Header merge  Vary "Origin"
 Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
 Header set Access-Control-Allow-Headers "Content-Type, origin"

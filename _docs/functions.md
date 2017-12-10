@@ -1313,13 +1313,14 @@ for the [navigation bar] feature.
 ## <a name="get_progress"></a>get_progress()
 
 You can retrieve the current numeric value of the progress bar by
-calling `nav.get_progress()`.
+calling `get_progress()`.
 
 ## <a name="set_progress"></a>set_progress()
 
 You can set the numeric value of the progress bar by calling, e.g.,
-`nav.set_progress(20)`.  Alternatively, you can use the [`progress`]
-modifier on a [`question`].
+`set_progress(20)`.  If you run `set_progress(None)`, the progress
+meter will be hidden.  You can also use the [`progress`] modifier on a
+[`question`] to set the progress meter to a particular value.
 
 ## <a name="DANav.get_section"></a>nav.get_section()
 
@@ -2614,19 +2615,22 @@ The keys in each dictionary are:
 * `subtitle`: the [subtitle](#get_title) of the interview.
 * `utc_modtime`: the modification time of the interview, in [UTC].
 * `utc_starttime`: the start time of the interview, in [UTC].
-* `valid`: whether the interview session can be resumed.
+* `valid`: whether the interview session can be resumed.  Sometimes
+  there is an error with the interview that prevents it from being
+  resumed.
 
 The `interview_list()` function takes an optional keyword argument
 `exclude_invalid`.  If this is set to `False`, a session will be
 included even if there is an error that would prevent the session from
-being resumed.  By default, sessions will only be included if they can
-be resumed.  You can check whether as session can be resumed by
-checking the value of the `valid` key.
+being resumed.  By default, `exclude_invalue` is `True`, meaning that
+sessions will only be included if they can be resumed.  You can check
+whether as session can be resumed by checking the value of the `valid`
+key.
 
 You can also use `interview_list()` to delete interview sessions.  If
-you set the optional keyword parameter `action` to `delete_all`, all
+you set the optional keyword parameter `action` to `'delete_all'`, all
 of the user's interview sessions will be deleted.  You can delete a
-particular session by setting `action` to `delete`, with optional
+particular session by setting `action` to `'delete'`, with optional
 keyword parameter `filename` set to the filename of the session's
 interview, and optional keyword parameter `session` set to the session
 ID of the session.
