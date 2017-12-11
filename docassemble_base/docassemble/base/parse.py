@@ -1137,9 +1137,9 @@ class Question:
             if type(data['variable name']) not in (str, unicode):
                 raise DAError("A data block variable name must be plain text." + self.idebug(data))
             if self.scan_for_variables:
-                self.fields_used.add(data['variable name'])
+                self.fields_used.add(data['variable name'].strip())
             self.question_type = 'data'
-            self.fields.append(Field({'saveas': data['variable name'], 'type': 'data', 'data': self.recursive_dataobject(data['data'])}))
+            self.fields.append(Field({'saveas': data['variable name'].strip(), 'type': 'data', 'data': self.recursive_dataobject(data['data'])}))
         if 'data from code' in data and 'variable name' in data:
             if type(data['variable name']) not in (str, unicode):
                 raise DAError("A data from code block variable name must be plain text." + self.idebug(data))
@@ -2928,7 +2928,7 @@ class Question:
                     if hasattr(field, 'hint'):
                         hints[field.number] = field.hint.text(user_dict)
         if len(self.attachments) or self.compute_attachment is not None:
-            attachment_text = self.processed_attachments(user_dict, the_x=the_x, iterators=iterators)
+            attachment_text = self.processed_attachments(user_dict) # , the_x=the_x, iterators=iterators
         else:
             attachment_text = []
         assumed_objects = set()
@@ -2959,29 +2959,42 @@ class Question:
                 raise NameError("name 'role_event' is not defined")
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought}) #'defined': defined, 
     def processed_attachments(self, user_dict, **kwargs):
+        seeking_var = kwargs.get('seeking_var', '__novar')
         steps = user_dict['_internal'].get('steps', -1)
         # logmessage("processed_attachments: steps is " + str(steps))
-        if self.interview.cache_documents and hasattr(self, 'name') and self.name in user_dict['_internal']['doc_cache'] and steps in user_dict['_internal']['doc_cache'][self.name]:
+        if self.interview.cache_documents and hasattr(self, 'name') and self.name + '__SEEKING__' + seeking_var in user_dict['_internal']['doc_cache']:
+            if steps in user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var]:
             #logmessage("processed_attachments: result was in document cache")
-            return user_dict['_internal']['doc_cache'][self.name][steps]
+                return user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var][steps]
+            user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var].clear()
         result_list = list()
         items = list()
         for x in self.attachments:
-            items.append([x, self.prepare_attachment(x, user_dict, **kwargs)])
+            items.append([x, self.prepare_attachment(x, user_dict, **kwargs), None])
+        for item in items:
+            result_list.append(self.finalize_attachment(item[0], item[1], user_dict))
         if self.compute_attachment is not None:
             computed_attachment_list = eval(self.compute_attachment, user_dict)
             if type(computed_attachment_list) is not list:
                 computed_attachment_list = [computed_attachment_list]
-            for x in computed_attachment_list:
-                if x.__class__.__name__ == 'DAFileCollection' and 'attachment' in x.info and type(x.info) is dict and 'name' in x.info['attachment'] and 'number' in x.info['attachment'] and len(self.interview.questions_by_name[x.info['attachment']['name']].attachments) > x.info['attachment']['number']:
-                    attachment = self.interview.questions_by_name[x.info['attachment']['name']].attachments[x.info['attachment']['number']]
-                    items.append([attachment, self.prepare_attachment(attachment, user_dict, **kwargs)])
-        for item in items:
-            result_list.append(self.finalize_attachment(item[0], item[1], user_dict))
+            for the_att in computed_attachment_list:
+                if the_att.__class__.__name__ == 'DAFileCollection':
+                    file_dict = dict()
+                    for doc_format in ('pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html'):
+                        if hasattr(the_att, doc_format):
+                            the_dafile = getattr(the_att, doc_format)
+                            if hasattr(the_dafile, 'number'):
+                                file_dict[doc_format] = the_dafile.number
+                    result_list.append({'name': the_att.info['name'], 'filename': the_att.info['filename'], 'description': the_att.info['description'], 'valid_formats': the_att.info.get('valid_formats', ['*']), 'formats_to_use': the_att.info['formats'], 'markdown': the_att.info.get('markdown', dict()), 'content': the_att.info.get('content', dict()), 'extension': the_att.info.get('extension', dict()), 'mimetype': the_att.info.get('mimetype', dict()), 'file': file_dict, 'metadata': the_att.info.get('metadata', dict()), 'variable_name': str()})
+                    #convert_to_pdf_a
+                    #file is dict of file numbers
+                # if the_att.__class__.__name__ == 'DAFileCollection' and 'attachment' in the_att.info and type(the_att.info) is dict and 'name' in the_att.info['attachment'] and 'number' in the_att.info['attachment'] and len(self.interview.questions_by_name[the_att.info['attachment']['name']].attachments) > the_att.info['attachment']['number']:
+                #     attachment = self.interview.questions_by_name[the_att.info['attachment']['name']].attachments[the_att.info['attachment']['number']] #PPP
+                #     items.append([attachment, self.prepare_attachment(attachment, user_dict, **kwargs)])
         if self.interview.cache_documents and hasattr(self, 'name'):
-            if self.name not in user_dict['_internal']['doc_cache']:
-                user_dict['_internal']['doc_cache'][self.name] = dict()
-            user_dict['_internal']['doc_cache'][self.name][steps] = result_list
+            if self.name + '__SEEKING__' + seeking_var not in user_dict['_internal']['doc_cache']:
+                user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var] = dict()
+            user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var][steps] = result_list
         return result_list
         #return(list(map((lambda x: self.make_attachment(x, user_dict, **kwargs)), self.attachments)))
     def parse_fields(self, the_list, register_target, uses_field):
@@ -3159,19 +3172,27 @@ class Question:
                 result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
         if attachment['variable_name']:
             string = "import docassemble.base.core"
-            exec(string, user_dict)                        
-            string = attachment['variable_name'] + " = docassemble.base.core.DAFileCollection(" + repr(attachment['variable_name']) + ")"
+            exec(string, user_dict)
+            variable_name = attachment['variable_name']
+            m = re.search(r'^(.*)\.([A-Za-z0-9\_]+)$', attachment['variable_name'])
+            if m:
+                base_var = m.group(1)
+                attrib = m.group(2)
+                the_var = eval(base_var, user_dict)
+                if hasattr(the_var, 'instanceName'):
+                    variable_name = the_var.instanceName + '.' + attrib
+            string = variable_name + " = docassemble.base.core.DAFileCollection(" + repr(variable_name) + ")"
             # logmessage("Executing " + string + "\n")
             exec(string, user_dict)
-            the_name = attachment['name'].text(user_dict)
-            the_filename = attachment['filename'].text(user_dict)
+            the_name = attachment['name'].text(user_dict).strip()
+            the_filename = attachment['filename'].text(user_dict).strip()
             if the_filename == '':
                 the_filename = docassemble.base.functions.space_to_underscore(the_name)
-            user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(user_dict), formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']))
-            exec(attachment['variable_name'] + '.info = _attachment_info', user_dict)
+            user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False))
+            exec(variable_name + '.info = _attachment_info', user_dict)
             del user_dict['_attachment_info']
             for doc_format in result['file']:
-                variable_string = attachment['variable_name'] + '.' + extension_of_doc_format[doc_format]
+                variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
                 # filename = result['filename'] + '.' + doc_format
                 # file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
                 if result['file'][doc_format] is None:
@@ -3190,7 +3211,7 @@ class Question:
             for doc_format in result['content']:
                 # logmessage("Considering " + doc_format)
                 if doc_format not in result['file']:
-                    variable_string = attachment['variable_name'] + '.' + extension_of_doc_format[doc_format]
+                    variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
                     # logmessage("Setting " + variable_string)
                     string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ', markdown=' + repr(result['markdown'][doc_format]) + ', content=' + repr(result['content'][doc_format]) + ")"
                     exec(string, user_dict)
@@ -3201,8 +3222,8 @@ class Question:
             docassemble.base.functions.set_language(attachment['options']['language'])
         else:
             old_language = None
-        the_name = attachment['name'].text(user_dict)
-        the_filename = attachment['filename'].text(user_dict)
+        the_name = attachment['name'].text(user_dict).strip()
+        the_filename = attachment['filename'].text(user_dict).strip()
         if the_filename == '':
             the_filename = docassemble.base.functions.space_to_underscore(the_name)
         result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
@@ -3527,11 +3548,11 @@ class Interview:
             for metadata in self.metadata:
                 for title_name, title_abb in mapping:
                     if metadata.get(title_name, None) is not None:
-                        self.default_title[title_abb] = metadata[title_name].strip()
+                        self.default_title[title_abb] = unicode(metadata[title_name]).strip()
         title = dict()
         for title_name, title_abb in mapping:
             if '_internal' in user_dict and title_name in user_dict['_internal'] and user_dict['_internal'][title_name] is not None:
-                title[title_abb] = user_dict['_internal'][title_name].strip()
+                title[title_abb] = unicode(user_dict['_internal'][title_name]).strip()
         for key, val in self.default_title.iteritems():
             if key not in title:
                 title[key] = val
@@ -3559,7 +3580,7 @@ class Interview:
             source_package = None
         if hasattr(source, 'path'):
             if source.path in self.includes:
-                logmessage("Interview: source " + str(source.path) + " has already been included.  Skipping.")
+                logmessage("Interview: source " + unicode(source.path) + " has already been included.  Skipping.")
                 return
             self.includes.add(source.path)
         #for document in ruamel.yaml.safe_load_all(source.content):
@@ -3574,10 +3595,11 @@ class Interview:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code)
                         self.names_used.update(question.fields_used)
                 except Exception as errMess:
+                    #sys.stderr.write(unicode(source_code) + "\n")
                     try:
-                        logmessage('Interview: error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
+                        logmessage('Interview: error reading YAML file ' + unicode(source.path) + '\n\nDocument source code was:\n\n---\n' + unicode(source_code) + '---\n\nError was:\n\n' + unicode(errMess))
                     except:
-                        logmessage('Interview: error reading YAML file ' + str(source.path) + '. Error was:\n\n' + str(errMess))
+                        logmessage('Interview: error reading YAML file ' + unicode(source.path) + '. Error was:\n\n' + unicode(errMess))
                     self.success = False
                     pass
             else:
@@ -3585,20 +3607,19 @@ class Interview:
                     document = ruamel.yaml.safe_load(source_code)
                 except Exception as errMess:
                     self.success = False
-                    try:
-                        raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
-                    except:
-                        raise DAError('Error reading YAML file ' + str(source.path) + '.  Error was:\n\n' + str(errMess))
+                    #sys.stderr.write("Error: " + unicode(source_code) + "\n")
+                    #unicode(source_code)
+                    raise DAError('Error reading YAML file ' + unicode(source.path) + '\n\nDocument source code was:\n\n---\n' + unicode(source_code) + '---\n\nError was:\n\n' + unicode(errMess))
                 if document is not None:
                     try:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code)
                         self.names_used.update(question.fields_used)
                     except SyntaxException as qError:
                         self.success = False
-                        raise Exception("Syntax Exception: " + str(qError) + "\n\nIn file " + str(source.path) + " from package " + str(source_package) + ":\n" + source_code)
+                        raise Exception("Syntax Exception: " + unicode(qError) + "\n\nIn file " + unicode(source.path) + " from package " + unicode(source_package) + ":\n" + unicode(source_code))
                     except SyntaxError as qError:
                         self.success = False
-                        raise Exception("Syntax Error: " + str(qError) + "\n\nIn file " + str(source.path) + " from package " + str(source_package) + ":\n" + source_code)
+                        raise Exception("Syntax Error: " + unicode(qError) + "\n\nIn file " + unicode(source.path) + " from package " + unicode(source_package) + ":\n" + unicode(source_code))
         for ordering in self.id_orderings:
             if ordering['type'] == 'supersedes':
                 new_list = [ordering['question'].number]
@@ -4309,7 +4330,7 @@ class Interview:
                         return({'type': 'continue', 'sought': missing_var})
                     if question.question_type == 'attachments':
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
-                        attachment_text = question.processed_attachments(user_dict)
+                        attachment_text = question.processed_attachments(user_dict, seeking_var=origMissingVariable)
                         if missing_var in variable_stack:
                             variable_stack.remove(missing_var)
                         try:

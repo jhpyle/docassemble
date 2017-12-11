@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import types
 import markdown
-#from mdx_smartypants import SmartypantsExt
+from mdx_smartypants import SmartypantsExt
 import pattern.en
 import re
 #import operator
@@ -46,7 +46,7 @@ __all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_l
 # except:
 #     default_timezone = 'America/New_York'
 # daconfig = dict()
-#smartyext = SmartypantsExt(configs=dict())
+smartyext = SmartypantsExt(configs=dict())
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 newlines = re.compile(r'[\r\n]+')
 single_newline = re.compile(r'[\r\n]')
@@ -1191,7 +1191,7 @@ class ThreadVariables(threading.local):
     current_variable = list()
     open_files = set()
     #markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
-    markdown = markdown.Markdown(extensions=['markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
+    markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
     #temporary_resources = set()
     saved_files = dict()
     message_log = list()

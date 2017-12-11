@@ -9167,6 +9167,8 @@ def create_playground_package():
     do_github = request.args.get('github', False)
     do_install = request.args.get('install', False)
     branch = request.args.get('branch', None)
+    if branch is not None:
+        branch = branch.strip()
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
@@ -9336,7 +9338,7 @@ def create_playground_package():
                 if ssh_url is None:
                     raise DAError("create_playground_package: could not obtain ssh_url for package")
                 output = ''
-                if branch and branch != 'master':
+                if branch:
                     branch_option = '-b ' + str(branch) + ' '
                 else:
                     branch_option = ''
@@ -10979,12 +10981,19 @@ def playground_packages():
     form.github_branch.choices = list()
     if form.github_branch.data:
         form.github_branch.choices.append((form.github_branch.data, form.github_branch.data))
-    if request.method == 'POST':
+    else:
+        form.github_branch.choices.append(('', ''))
+    if request.method == 'POST' and 'uploadfile' not in request.files:
         if form.validate():
             the_file = form.file_name.data
             validated = True
         else:
-            raise DAError("Form did not validate")
+            the_error = ''
+            for attrib in ('original_file_name', 'file_name', 'license', 'description', 'version', 'url', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files', 'readme', 'github_branch', 'commit_message', 'submit', 'download', 'install', 'pypi', 'github', 'cancel', 'delete'):
+                the_field = getattr(form, attrib)
+                for error in the_field.errors:
+                    the_error += str(error)
+            raise DAError("Form did not validate with " + str(the_error))
     the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '-', the_file)
     the_file = re.sub(r'^docassemble-', r'', the_file)
     files = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
@@ -11246,7 +11255,7 @@ def playground_packages():
                     raise DAError("playground_packages: error running git clone.  " + output)
             else:
                 try:
-                    if branch is not None and branch != 'master':
+                    if branch is not None:
                         output += subprocess.check_output(['git', 'clone', '-b', branch, github_url], cwd=directory, stderr=subprocess.STDOUT)
                     else:
                         output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT)
@@ -11549,6 +11558,8 @@ def playground_packages():
     else:
         the_pypi_package_name = None
     branch = old_info.get('github_branch', None)
+    if branch is not None:
+        branch = branch.strip()
     branch_choices = list()
     branch_names = set()
     for br in branch_info:

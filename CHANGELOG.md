@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.2.5] - 2017-12-09
+### Fixed
+- Documents with `variable name`s containing generic object or
+  iterator references can now be used with `attachment code`
+- Error when uploading Zip file to Playground packages folder.
+
 ## [0.2.4] - 2017-12-06
 ### Changed
 - Automatically remove newlines from e-mail subject lines
