@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.6](https://github.com/jhpyle/docassemble/releases/tag/v0.2.6) - 2017-12-12
+
+### Fixed
+- GitHub pagination problem with `links_from_header`
+
 ## [0.2.5](https://github.com/jhpyle/docassemble/releases/tag/v0.2.5) - 2017-12-12
 
 ### Changed
