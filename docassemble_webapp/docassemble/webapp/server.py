@@ -479,6 +479,7 @@ import pyotp
 import qrcode
 import qrcode.image.svg
 import StringIO
+import links_from_header
 from distutils.version import LooseVersion
 from subprocess import call, Popen, PIPE
 import subprocess

@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.6] - 2017-12-12
+### Fixed
+- GitHub pagination problem with `links_from_header`
+
 ## [0.2.5] - 2017-12-12
 ### Changed
 - The `global css` and `global javascript` now apply to all pages on
