@@ -689,6 +689,42 @@ before a paragraph in order to get the results you want.  Other
 modifiers besides `p` include `tr` for table rows and `tc` for table
 columns.
 
+If you have a bulleted or numbered list in a .docx template and you want
+to display an item in the list conditionally (using an if .. endif statement),
+you should use the  `{% raw %}{%p if ... %}{% endraw %}` syntax. Place 
+the `{% raw %}{%p if ... %}{% endraw %}` and
+the `{% raw %}{%p endif %}{% endraw %}` statements on their own lines in the list. 
+If you place the `{% raw %}{%p endif %}{% endraw %}` on the same line
+as the
+`{% raw %}{%p if... %}{% endraw %}` line, you may get an error about
+a missing `endif` statement, since the `p` modifier could cause the 
+`endif` statement to be deleted before it is processed.
+
+The following code in a .docx template:
+
+> 1. {% raw %}{% if my_var == 'A' %}{% endraw %}The variable is A.{% raw %}{% endif %}{% endraw %}
+> 2. item2
+> 3. item3
+
+will result in the following output if `my_var` is not equal to `'A'`:
+
+> 1. 
+> 2. item2
+> 3. item3
+
+Instead, if you write:
+
+> 1. {% raw %}{%p if my_var == 'A' %}{% endraw %}
+> 2. The variable is A.
+> 3. {% raw %}{% endif %}{% endraw %}
+> 4. item2
+> 5. item3
+
+The output will be:
+
+> 1. item2
+> 2. item3
+
 If your interview uses [dictionary] data structures, you may need to
 change the "[auto-format]" settings of your word processor so that
 "straight quotes" are used instead of "curly quotes" within [Jinja2]
@@ -1122,6 +1158,25 @@ a `True` value, a [PDF/A] will be produced.
 If `pdf/a` is not specified, the default behavior is determined by the
 interview's [`pdf/a` features setting].
 
+# <a name="password"></a>Protecting PDF files with a password
+
+If you want the [PDF] file produced by an attachment to be protected
+with a password, you can set a `password`, and the [PDF] file will be
+protected using [pdftk].  There are two passwords that can be set: an
+"owner" password and a "user" password.
+
+The `password` can be specified in the following ways:
+
+* If set to a string, only the "user" password will be set.
+* If set to a list, the first element is the "owner" password and the
+  second elementt is the "user" password.
+* If set to a [Python dict], the value of the `owner` key is the
+  "owner" password and the value of the `user` key is the "user"
+  password.
+
+If the user password and the owner password are the same, then only
+the "user" password will be set.
+
 # <a name="language"></a>Assembling documents in a different language than the current language
 
 If you need to produce a document in a different language than the
@@ -1266,3 +1321,4 @@ interview, see the [`cache documents` feature].
 [`.url_for()`]: {{ site.baseurl }}/docs/objects.html#DAFile.url_for
 [`yesno()`]: {{ site.baseurl }}/docs/functions.html#yesno
 [`noyes()`]: {{ site.baseurl }}/docs/functions.html#noyes
+[pdftk]: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/

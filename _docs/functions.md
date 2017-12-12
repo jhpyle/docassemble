@@ -3566,12 +3566,14 @@ arguments is a list, it will be unpacked.
 
 {% include side-by-side.html demo="pdf-concatenate" %}
 
-`pdf_concatenate()` has two optional keyword parameters:
+`pdf_concatenate()` has three optional keyword parameters:
 
 * `filename`: if provided, this will be the name of the resulting
   file.  If not provided, the file will be named `file.pdf`.
 * `pdfa`: if `True`, the [PDF] file will be converted to [PDF/A]
   format.  The default is `False`.
+* `password`: if provided, the [PDF] file will be protected.  See the
+  documentation for the [`password`] document modifier.
 
 ## <a name="log"></a>log()
 
@@ -4567,3 +4569,4 @@ $(document).on('daPageLoad', function(){
 [`google`]: {{ site.baseurl }}/docs/config.html#google
 [list of available interviews]: {{ site.baseurl }}/docs/config.html#dispatch
 [`show login`]: {{ site.baseurl }}/docs/config.html#show login
+[`password`]: {{ site.baseurl }}/docs/documents.html#password

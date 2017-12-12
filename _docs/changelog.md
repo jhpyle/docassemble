@@ -4,12 +4,24 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.2.5](https://github.com/jhpyle/docassemble/releases/tag/v0.2.5) - 2017-12-09
+## [0.2.5](https://github.com/jhpyle/docassemble/releases/tag/v0.2.5) - 2017-12-12
+
+### Changed
+- The `global css` and `global javascript` now apply to all pages on
+  the site.
+- Curly quote conversion is re-enabled.
+
+### Added
+- Password protection on generated PDF files.
 
 ### Fixed
 - Documents with `variable name`s containing generic object or
   iterator references can now be used with `attachment code`
 - Error when uploading Zip file to Playground packages folder.
+- Problem setting boolean character of yesno variables that are
+  specified using brackets.
+- Problem with referring to `get_url_from_file_reference()` outside of 
+  request context.
 
 ## [0.2.4](https://github.com/jhpyle/docassemble/releases/tag/v0.2.4) - 2017-12-06
 

@@ -745,3 +745,4 @@ to use [lettuce].
 [`import`]: https://docs.python.org/2/tutorial/modules.html
 [Python packages]: https://docs.python.org/2/tutorial/modules.html#packages
 [GitHub repository]: {{ site.github.repository_url }}
+[sshfs]: https://en.wikipedia.org/wiki/SSHFS
