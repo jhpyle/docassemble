@@ -14,6 +14,7 @@ from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from flask import session, has_request_context, url_for
 from flask_login import current_user
 from sqlalchemy import or_, and_
+import docassemble.base.config
 
 import docassemble.webapp.cloud
 cloud = docassemble.webapp.cloud.get_cloud()
@@ -40,7 +41,7 @@ def url_if_exists(file_reference):
         the_path = docassemble.base.functions.static_filename_path(file_reference)
         if the_path is None or not os.path.isfile(the_path):
             return None
-        return url_for('package_static', package=parts[0], filename=re.sub(r'^data/static/', '', parts[1]))
+        return docassemble.base.config.daconfig.get('root', '/') + 'packagestatic/' + parts[0] + '/' + re.sub(r'^data/static/', '', parts[1])
     return None
 
 def reference_exists(file_reference):
@@ -169,8 +170,11 @@ def get_info_from_file_reference(file_reference, **kwargs):
 
 def add_info_about_file(filename, result):
     if result['extension'] == 'pdf':
-        reader = pyPdf.PdfFileReader(open(filename))
-        result['pages'] = reader.getNumPages()
+        try:
+            reader = pyPdf.PdfFileReader(open(filename))
+            result['pages'] = reader.getNumPages()
+        except:
+            result['pages'] = 1
     elif result['extension'] in ['png', 'jpg', 'gif']:
         im = Image.open(filename)
         result['width'], result['height'] = im.size

@@ -10,6 +10,7 @@ import re
 from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
 from docassemble.base.pdfa import pdf_to_pdfa
+from docassemble.base.pdftk import pdf_encrypt
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
@@ -41,6 +42,7 @@ class MyPandoc(object):
             self.pdfa = True
         else:
             self.pdfa = False
+        self.password = kwargs.get('password', None)
         self.input_content = None
         self.output_content = None
         self.input_format = 'markdown'
@@ -146,6 +148,8 @@ class MyPandoc(object):
             else:
                 self.output_filename = temp_outfile.name
             self.output_content = None
+            if self.output_format == 'pdf' and self.password:
+                pdf_encrypt(self.output_filename, self.password)
         else:
             raise IOError("Failed creating file: %s" % output_filename)
         return
@@ -171,7 +175,7 @@ class MyPandoc(object):
             self.output_content = p.communicate(self.input_content.encode('utf8'))[0]
         return
 
-def word_to_pdf(in_file, in_format, out_file, pdfa=False):
+def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None):
     tempdir = tempfile.mkdtemp()
     from_file = os.path.join(tempdir, "file." + in_format)
     to_file = os.path.join(tempdir, "file.pdf")
@@ -184,6 +188,8 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False):
     if result == 0:
         if pdfa:
             pdf_to_pdfa(to_file)
+        if password:
+            pdf_encrypt(to_file, password)
         shutil.copyfile(to_file, out_file)
     if tempdir is not None:
         shutil.rmtree(tempdir)

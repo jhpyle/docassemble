@@ -1234,7 +1234,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     output += '                  <p><a href="' + server.url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="glyphicon glyphicon-pencil"></i> DOCX</a> (' + word('docx_message') + ')</p>\n'
                 if 'rtf to docx' in attachment['valid_formats']:
                     output += '                  <p><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="glyphicon glyphicon-pencil"></i> DOCX</a> (' + word('docx_message') + ')</p>\n'
-                if debug and ('tex' in attachment['valid_formats'] or '*' in attachment['valid_formats']):
+                if debug and ('tex' in attachment['valid_formats']):
                     output += '                  <p><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="glyphicon glyphicon-pencil"></i> LaTeX</a> (' + word('tex_message') + ')</p>\n'
                 output += '                </div>\n'
             if show_preview:

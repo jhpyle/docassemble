@@ -105,7 +105,7 @@ def read_fields_pdftk(pdffile):
             fields.append((field['FieldName'], default))
     return fields
     
-def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True, pdfa=False):
+def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True, pdfa=False, password=None):
     if pdf_url is None:
         pdf_url = ''
     fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
@@ -168,9 +168,11 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
             shutil.copyfile(new_pdf_file.name, pdf_file.name)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
+    if password:
+        pdf_encrypt(pdf_file.name, password)
     return pdf_file.name
 
-def concatenate_files(path_list, pdfa=False):
+def concatenate_files(path_list, pdfa=False, password=None):
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     subprocess_arguments = [PDFTK_PATH]
     new_path_list = list()
@@ -209,4 +211,33 @@ def concatenate_files(path_list, pdfa=False):
         raise DAError("Call to pdftk failed for concatenation where arguments were " + " ".join(subprocess_arguments))
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
+    if password:
+        pdf_encrypt(pdf_file.name, password)
     return pdf_file.name
+
+def pdf_encrypt(filename, password):
+    logmessage("pdf_encrypt: running; password is " + repr(password))
+    if type(password) in (str, unicode, bool, int, float):
+        owner_password = unicode(password).strip()
+        user_password = unicode(password).strip()
+    elif type(password) is list:
+        owner_password = unicode(password[0]).strip()
+        user_password = unicode(password[1]).strip()
+    elif type(password) is dict:
+        owner_password = unicode(password.get('owner', 'password')).strip()
+        user_password = unicode(password.get('user', 'password')).strip()
+    else:
+        raise DAError("pdf_encrypt: invalid password")
+    outfile = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+    if owner_password == user_password:
+        commands = ['pdftk', filename, 'output', outfile.name, 'user_pw', user_password, 'allow', 'printing']
+    else:
+        commands = ['pdftk', filename, 'output', outfile.name, 'owner_pw', owner_password, 'user_pw', user_password, 'allow', 'printing']
+    try:
+        output = subprocess.check_output(commands, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as err:
+        output = err.output
+        raise DAError("pdf_encrypt: error running pdftk.  " + output)
+    logmessage(' '.join(commands))
+    logmessage(output)
+    shutil.move(outfile.name, filename)

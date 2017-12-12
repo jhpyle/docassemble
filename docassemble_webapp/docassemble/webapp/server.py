@@ -1430,7 +1430,7 @@ def process_bracket_expression(match):
         inner = codecs.decode(match.group(1), 'base64').decode('utf8')
     except:
         inner = match.group(1)
-    return("[" + repr(inner) + "]")
+    return("[" + re.sub(r'^u', r'', repr(inner)) + "]")
 
 def myb64unquote(the_string):
     return(codecs.decode(the_string, 'base64').decode('utf8'))
@@ -4361,8 +4361,9 @@ def index():
         is_ml = False
         test_data = data
         if real_key in known_datatypes:
-            #logmessage("key " + real_key + "is in datatypes: " + known_datatypes[key])
+            #logmessage("real key " + real_key + " is in datatypes: " + known_datatypes[real_key])
             if known_datatypes[real_key] in ('boolean', 'checkboxes', 'yesno', 'noyes', 'yesnowide', 'noyeswide'):
+                #logmessage("Processing boolean")
                 if data == "True":
                     data = "True"
                     test_data = True
@@ -4427,6 +4428,61 @@ def index():
                 data = repr(data)
             if known_datatypes[real_key] == 'object_checkboxes':
                 do_append = True
+        elif orig_key in known_datatypes:
+            #logmessage("key " + key + " is in datatypes: " + known_datatypes[orig_key])
+            if known_datatypes[orig_key] in ('boolean', 'checkboxes', 'yesno', 'noyes', 'yesnowide', 'noyeswide'):
+                #logmessage("Processing boolean")
+                if data == "True":
+                    data = "True"
+                    test_data = True
+                else:
+                    data = "False"
+                    test_data = False
+            elif known_datatypes[orig_key] in ('threestate', 'yesnomaybe', 'noyesmaybe', 'yesnowidemaybe', 'noyeswidemaybe'):
+                if data == "True":
+                    data = "True"
+                    test_data = True
+                elif data == "None":
+                    data = "None"
+                    test_data = None
+                else:
+                    data = "False"
+                    test_data = False
+            elif known_datatypes[orig_key] == 'date':
+                if type(data) in (str, unicode):
+                    data = data.strip()
+                    if data != '':
+                        try:
+                            dateutil.parser.parse(data)
+                        except:
+                            validated = False
+                            field_error[orig_key] = word("You need to enter a valid date.")
+                            continue
+                        test_data = data
+                data = repr(data)
+            elif known_datatypes[orig_key] == 'integer':
+                if data == '':
+                    data = 0
+                test_data = int(data)
+                data = "int(" + repr(data) + ")"
+            elif known_datatypes[orig_key] in ('ml', 'mlarea'):
+                is_ml = True
+            elif known_datatypes[orig_key] in ('number', 'float', 'currency', 'range'):
+                if data == '':
+                    data = 0
+                test_data = float(data)
+                data = "float(" + repr(data) + ")"
+            elif known_datatypes[orig_key] in ('object', 'object_radio'):
+                if data == '' or set_to_empty:
+                    continue
+                data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
+            elif set_to_empty == 'object_checkboxes':
+                continue    
+            else:
+                if type(data) in (str, unicode):
+                    data = data.strip()
+                test_data = data
+                data = repr(data)
         elif key == "_multiple_choice":
             #logmessage("key is multiple choice")
             data = "int(" + repr(data) + ")"
@@ -4488,7 +4544,7 @@ def index():
                     field_error[orig_key] = str(errstr)
                     validated = False
                     continue
-        #logmessage("Doing " + str(the_string))
+        # logmessage("Doing " + str(the_string))
         try:
             exec(the_string, user_dict)
             if not changed:
@@ -7020,7 +7076,7 @@ def interview_start():
     interview_info = interview_menu(absolute_urls=embed)
     if is_json:
         return jsonify(action='menu', interviews=interview_info)
-    argu = dict(extra_css=Markup(global_css), extra_js=Markup(global_js), version_warning=None, interview_info=interview_info, tab_title=daconfig.get('start page title', word('Interviews')), title=daconfig.get('start page heading', word('Available interviews')))
+    argu = dict(version_warning=None, interview_info=interview_info, tab_title=daconfig.get('start page title', word('Interviews')), title=daconfig.get('start page heading', word('Available interviews'))) #extra_css=Markup(global_css), extra_js=Markup(global_js), 
     if embed:
         the_page = 'pages/start-embedded.html'
     else:
@@ -7187,11 +7243,14 @@ def serve_uploaded_pagescreen(number, page):
         logmessage('serve_uploaded_pagescreen: no access to file number ' + str(number))
         abort(404)
     else:
-        the_file = DAFile(mimetype=file_info['mimetype'], extension=file_info['extension'], number=number, make_thumbnail=page)
-        # max_pages = 1 + int(file_info['pages'])
-        # formatter = '%0' + str(len(str(max_pages))) + 'd'
-        # filename = file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
-        filename = the_file.page_path(1, 'screen')
+        try:
+            the_file = DAFile(mimetype=file_info['mimetype'], extension=file_info['extension'], number=number, make_thumbnail=page)
+            # max_pages = 1 + int(file_info['pages'])
+            # formatter = '%0' + str(len(str(max_pages))) + 'd'
+            # filename = file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
+            filename = the_file.page_path(1, 'screen')
+        except:
+            filename = None
         if filename is None:
             the_file = docassemble.base.functions.package_data_filename('docassemble.base:data/static/blank_page.png')
             response = send_file(the_file, mimetype='image/png')
@@ -13500,7 +13559,7 @@ def interview_list():
                 tags_used.add(the_tag)
     interview_page_title = word(daconfig.get('interview page title', 'Interviews'))
     title = word(daconfig.get('interview page heading', 'Resume an interview'))
-    argu = dict(version_warning=version_warning, extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title, tags_used=sorted(tags_used) if len(tags_used) else None, numinterviews=len(interviews), interviews=sorted(interviews, key=valid_date_key), tag=tag)
+    argu = dict(version_warning=version_warning, tab_title=interview_page_title, page_title=interview_page_title, title=title, tags_used=sorted(tags_used) if len(tags_used) else None, numinterviews=len(interviews), interviews=sorted(interviews, key=valid_date_key), tag=tag) # extra_css=Markup(global_css), extra_js=Markup(script), 
     if 'interview page template' in daconfig and daconfig['interview page template']:
         the_page = docassemble.base.functions.package_template_filename(daconfig['interview page template'])
         if the_page is None:
@@ -14785,14 +14844,8 @@ else:
 pg_ex = dict()
 
 global_css = ''
-if 'global css' in daconfig:
-    for fileref in daconfig['global css']:
-        global_css += "\n" + '    <link href="' + get_url_from_file_reference(fileref) + '" rel="stylesheet">'
         
 global_js = ''
-if 'global javascript' in daconfig:
-    for fileref in daconfig['global javascript']:
-        global_js += "\n" + '    <script src="' + get_url_from_file_reference(fileref) + '"></script>';
 
 def define_examples():
     if 'encoded_example_html' in pg_ex:
@@ -14827,6 +14880,14 @@ with app.app_context():
     else:
         app.config['BOOTSTRAP_THEME'] = None
         app.config['BOOTSTRAP_THEME_DEFAULT'] = True
+    if 'global css' in daconfig:
+        for fileref in daconfig['global css']:
+            global_css += "\n" + '    <link href="' + get_url_from_file_reference(fileref) + '" rel="stylesheet">'
+    if 'global javascript' in daconfig:
+        for fileref in daconfig['global javascript']:
+            global_js += "\n" + '    <script src="' + get_url_from_file_reference(fileref) + '"></script>';
+    app.config['GLOBAL_CSS'] = global_css
+    app.config['GLOBAL_JS'] = global_js
     copy_playground_modules()
     for interview_path in [x for x in r.keys('da:interviewsource:*')]:
         r.delete(interview_path)

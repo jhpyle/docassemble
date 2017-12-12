@@ -2529,6 +2529,8 @@ class Question:
                     raise DAError('Valid formats cannot include both "rtf to docx" and "docx."' + self.idebug(target))
             else:
                 target['valid formats'] = ['*']
+            if 'password' in target:
+                options['password'] = TextObject(target['password'])
             if 'pdf/a' in target:
                 if type(target['pdf/a']) is bool:
                     options['pdf_a'] = target['pdf/a']
@@ -3100,7 +3102,7 @@ class Question:
                         if hasattr(the_file, 'number'):
                             result['file'][doc_format] = the_file.number
                 #logmessage("finalize_attachment: returning " + attachment['variable_name'] + " from cache")
-                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a'):
+                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'password'):
                     if key in result:
                         del result[key]
                 return result
@@ -3111,9 +3113,9 @@ class Question:
             if doc_format in ('pdf', 'rtf', 'rtf to docx', 'tex', 'docx'):
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
-                        the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'])
+                        the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'], password=result['password'])
                         result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
-                        for key in ('images', 'data_strings', 'convert_to_pdf_a'):
+                        for key in ('images', 'data_strings', 'convert_to_pdf_a', 'password'):
                             if key in result:
                                 del result[key]
                     elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
@@ -3132,13 +3134,13 @@ class Question:
                             result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)
                         if 'pdf' in result['formats_to_use']:
                             pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'])
+                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'])
                             result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
-                        for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a']:
+                        for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'password']:
                             if key in result:
                                 del result[key]
                 else:
-                    converter = MyPandoc(pdfa=result['convert_to_pdf_a'])
+                    converter = MyPandoc(pdfa=result['convert_to_pdf_a'], password=result['password'])
                     converter.output_format = doc_format
                     converter.input_content = result['markdown'][doc_format]
                     if 'initial_yaml' in attachment['options']:
@@ -3233,7 +3235,7 @@ class Question:
         result['mimetype'] = dict();
         result['file'] = dict();
         if '*' in attachment['valid_formats']:
-            result['formats_to_use'] = ['pdf', 'rtf', 'html', 'tex']
+            result['formats_to_use'] = ['pdf', 'rtf', 'html']
         else:
             result['formats_to_use'] = attachment['valid_formats']
         result['metadata'] = dict()
@@ -3253,6 +3255,10 @@ class Question:
                 result['convert_to_pdf_a'] = eval(attachment['options']['pdf_a'], user_dict)
         else:
             result['convert_to_pdf_a'] = self.interview.use_pdf_a
+        if 'password' in attachment['options']:
+            result['password'] = attachment['options']['password'].text(user_dict)
+        else:
+            result['password'] = None
         for doc_format in result['formats_to_use']:
             if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx']:
                 if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
