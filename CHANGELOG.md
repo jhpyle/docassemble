@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.2.7] - 2017-12-12
+## [0.2.7] - 2017-12-13
 ### Added
 - Configuration directives for inserting HTML, CSS, and JavaScript
   into administrative pages.
