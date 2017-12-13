@@ -253,32 +253,92 @@ to note about this example:
 You can also call `/list?json=1` to obtain a [JSON] version of the
 available interviews.
 
-## <a name="start page template"></a><a name="interview page template"></a><a name="start page title"></a><a name="interview page title"></a><a name="start page heading"></a><a name="interview page heading"></a>Customization of pages
+## <a name="customization"></a>Customization of administrative pages
 
-There are two pages that you can customize:
+When the user is interacting with an interview, the page can be
+customized with a [`features`] block.  If you want to customize the
+appearance of other pages on the site, you can do so in the
+Configuration using directives like `login page heading` or `profile
+page title`.
 
-* The [start page] that shows a list of available interviews.
-* The list of saved interviews.
+The names of these directives have two parts: the first part is the
+name of the page, and the second is the name of the aspect of the page
+you wish to customize.
 
-You can customize the titles.  There are two types of titles:
+The available page names are:
 
-* A "page title" that appears in the browser tab and in the top
-navigation bar; and
-* A "heading" that appears in the body of the page.
+* `start page`: the [start page] that shows a list of available interviews.
+* `register page`: the page where the user registers for an account.
+* `login page`: the page where the user logs in.
+* `interview page`: the page that shows a list of saved interview sessions.
+* `profile page`: the page where the user can edit his or her name.
+* `change password page`: the page where users can change their password.
+* `forgot password page`: the page where users can type in their
+  e-mail address and receive an e-mail with a link to reset their password.
+* `reset password page`: the page where users are directed when they
+  forget their password.
 
-You can customize these titles with the following directives:
+The aspects of the page that can be manipulated are:
+
+* `tab title`: the [HTML] title, which is displayed in the web browser
+  tab.
+* `title`: the title of the page in the navigation bar.
+* `heading`: the large font heading that displays the title of the
+  page in the main body of the page.
+* `pre`: text that appears after the heading but before the rest of
+  the content of a page.  This is empty by default.
+* `submit`: text that appears before the submit buttons on a page that
+  has one or more submit buttons.  This is empty by default.
+* `post`: text that appears after the content of a page.  This is
+  empty by default.
+* `extra css`: raw [HTML] that you can insert into the `<head>` of the
+  page.  This is empty by default.
+* `extra javascript`: raw [HTML] that you can insert at the end of the
+  `<body>` of the page.  This is empty by default.
+
+All of the directives accept [HTML], except you will not want to use
+[HTML] in the `tab title`, since it will not be displayed as [HTML].
+
+Here are some examples of using these directives:
 
 {% highlight yaml %}
 start page title: Missouri interviews
 start page heading: Interviews available to Missouri residents
 interview page title: Your interviews
 interview page heading: Interviews you have started
+interview page extra css: |
+  <link href="https://example.com/css/mystyles.css" rel="stylesheet">
+login page pre: |
+  <p>Unauthorized access to this site is <strong>strictly</strong>
+  prohibited!</p>
+register page extra javascript: |
+  <script>
+    console.log("We are registering.")
+  </script>
 {% endhighlight %}
 
-If you want to customize more than the titles, you can specify an
-[HTML] template to use.  Use the `start page template` and `interview
-page template` directives to point to files in the "templates"
-directory of a package.
+You can also use these directives to provide different language to be
+used depending on the user's language.
+
+{% highlight yaml %}
+start page title: 
+  en: Available tools
+  es: Herramientas disponibles
+{% endhighlight %}
+
+If you want to include the same [CSS] or [Javascript] files in every
+page of the site, including administrative pages and interview pages,
+you can use the [`global css`] and [`global javascript`] directives.
+
+<a name="start page template"></a><a name="interview page template"></a>
+There are two pages that you can customize even more extensively:
+
+* The [start page] that shows a list of available interviews.
+* The list of saved interview sessions.
+
+For these pages, you can specify an [HTML] template to use.  Use the
+`start page template` and `interview page template` directives to
+point to files in the "templates" directory of a package.
 
 {% highlight yaml %}
 start page template: docassemble.missouri:data/templates/my_start_page.html
@@ -302,7 +362,7 @@ On the interviews page, there is a bit of [Javascript] that
 asks the user "are you sure?" before deleting all of the interview.
 The start page does not use [Javascript].
 
-You can also customize the appearance of these pages using [CSS].  The
+You can also customize these pages using [CSS].  The
 [HTML] elements in the standard template use some classes do nothing;
 they are just placeholders for customization.  For example, to
 customize [`start.html`] and [`interviews.html`], you could include
@@ -2184,3 +2244,4 @@ and Facebook API keys.
 [`ServerAdmin`]: https://httpd.apache.org/docs/2.4/mod/core.html#ServerAdmin
 [background tasks]: {{ site.baseurl }}/docs/background.html#background
 [`worker_concurrency`]: http://docs.celeryproject.org/en/latest/userguide/configuration.html#worker-concurrency
+[`features`]: {{ site.baseurl }}/docs/initial.html#features

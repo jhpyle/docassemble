@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.7](https://github.com/jhpyle/docassemble/releases/tag/v0.2.7) - 2017-12-13
+
+### Added
+- Configuration directives for inserting HTML, CSS, and JavaScript
+  into administrative pages.
+
 ## [0.2.6](https://github.com/jhpyle/docassemble/releases/tag/v0.2.6) - 2017-12-12
 
 ### Fixed
