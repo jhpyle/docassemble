@@ -71,19 +71,19 @@
 {% macro render_checkbox_field(field, label=None) %}
     {%- if not label %}{% set label=field.label.text|word %}{% endif %}
     <div class="checkbox">
-        <label>
-            {{ field(type='checkbox', **kwargs) }} {{ label }}
-        </label>
+      <label>
+        {{ field(type='checkbox', **kwargs) }} {{ label }}
+      </label>
     </div>
 {% endmacro %}
  
 {% macro render_radio_field(field) -%}
     {%- for value, label, checked in field.iter_choices() %}
         <div class="radio">
-            <label>
-                <input type="radio" name="{{ field.id }}" id="{{ field.id }}" value="{{ value }}"{% if checked %} checked{% endif %}>
-                {{ label }}
-            </label>
+          <label>
+            <input type="radio" name="{{ field.id }}" id="{{ field.id }}" value="{{ value }}"{% if checked %} checked{% endif %}>
+            {{ label }}
+          </label>
         </div>
     {%- endfor %}
 {%- endmacro %}
@@ -93,7 +93,7 @@
   <label for="{{ field.id }}" class="control-label">{{ field.label.text }}</label>
   <select class="form-control" name="{{ field.id }}" id="{{ field.id }}" name="{{ field.id }}">
   {%- for value, name, checked in field.iter_choices() %}
-  <option value="{{ value }}"{% if checked %} selected="selected"{% endif %}>{{ name }}</option>
+    <option value="{{ value }}"{% if checked %} selected="selected"{% endif %}>{{ name }}</option>
   {%- endfor %}
   </select>
   {%- if field.errors %}
@@ -110,7 +110,7 @@
   <div>
   <select multiple name="{{ field.id }}" id="{{ field.id }}" name="{{ field.id }}">
   {%- for value, name, checked in field.iter_choices() %}
-  <option value="{{ value }}"{% if checked %} selected="selected"{% endif %}>{{ name }}</option>
+    <option value="{{ value }}"{% if checked %} selected="selected"{% endif %}>{{ name }}</option>
   {%- endfor %}
   </select>
   </div>
@@ -129,18 +129,20 @@
 
 {% macro myrender_field(field, label=None, label_visible=True, right_url=None, right_label=None) %}
     <div class="control-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
-        {%- if field.type != 'HiddenField' and label_visible %}
-            {% if not label %}{% set label=field.label.text|word %}{% endif %}
-            <label for="{{ field.id }}" class="control-label">{{ label|safe }}</label>
+      {%- if field.type != 'HiddenField' and label_visible %}
+        {%- if not label %}
+          {%- set label=field.label.text|word %}
         {%- endif %}
-	<div class="controls">    
-        {{ field(class_='form-control', **kwargs) }}
-        {%- if field.errors %}
-            {% for e in field.errors %}
-                <p class="help-block">{{ e }}</p>
-            {% endfor %}
+      <label for="{{ field.id }}" class="control-label">{{ label|safe }}</label>
         {%- endif %}
-	</div>    
+      <div class="controls">    
+      {{ field(class_='form-control', **kwargs) }}
+      {%- if field.errors %}
+        {% for e in field.errors %}
+      <p class="help-block">{{ e }}</p>
+        {% endfor %}
+      {%- endif %}
+      </div>    
     </div>
 {%- endmacro %}
 

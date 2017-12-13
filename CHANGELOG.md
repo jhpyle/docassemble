@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.7] - 2017-12-12
+### Added
+- Configuration directives for inserting HTML, CSS, and JavaScript
+  into administrative pages.
+
 ## [0.2.6] - 2017-12-12
 ### Fixed
 - GitHub pagination problem with `links_from_header`

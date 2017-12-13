@@ -1,10 +1,15 @@
-{% extends 'base_templates/flask_wide_base.html' %}
+{%- set page_title = get_part('start page title', word('Interviews')) %}
+{%- set tab_title = get_part('start page tab title', word('Interviews')) %}
+{%- set extra_css = get_part('start page extra css') %}
+{%- set extra_js = get_part('start page extra javascript') %}
+{%- extends 'base_templates/flask_wide_base.html' %}
 
 {%- block content %}
-            <h1 class="dastartpage">{{ title }}</h1>
-            <ul class="dastartpage">
-              {%- for interview in interview_info %}
-              <li><a href="{{ interview['link'] }}"{% if interview['status_class'] %} class="{{ interview['status_class'] }}"{% endif %}>{{ interview['title'] }}</a>{% if interview['subtitle'] %} <span class="{% if interview['subtitle_class'] %}{{ interview['subtitle_class'] }}{% else %}text-muted dasubtitle{% endif %}">{{ interview['subtitle'] }}</span>{% endif %}</li>
-              {%- endfor %}
-            </ul>
+          <h1 class="dastartpage">{{ get_part('start page heading', word('Available interviews')) }}</h1>
+{{ get_part('start page pre') }}
+          <ul class="dastartpage">
+            {%- for interview in interview_info %}
+            <li><a href="{{ interview['link'] }}"{% if interview['status_class'] %} class="{{ interview['status_class'] }}"{% endif %}>{{ interview['title'] }}</a>{% if interview['subtitle'] %} <span class="{% if interview['subtitle_class'] %}{{ interview['subtitle_class'] }}{% else %}text-muted dasubtitle{% endif %}">{{ interview['subtitle'] }}</span>{% endif %}</li>
+            {%- endfor %}
+          </ul>{{ get_part('start page post') }}
 {%- endblock %}

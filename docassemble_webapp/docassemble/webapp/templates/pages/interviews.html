@@ -1,58 +1,62 @@
-{% extends 'flask_user/public_base.html' %}
+{%- set page_title = get_part('interview page title', word('Interviews')) %}
+{%- set tab_title = get_part('interview page tab title', word('Interviews')) %}
+{%- set extra_css = get_part('interview page extra css') %}
+{%- set extra_js = get_part('interview page extra javascript') %}
+{%- extends 'flask_user/public_base.html' %}
+{%- block content %}
+            <h3 class="page-header dainterviewpage">{{ get_part('interview page heading', word('Resume an interview')) }}</h3>
+{{ get_part('interview page pre') }}
+            {%- if tag %}
+            <p>
+              {{ word('Showing interviews tagged with:') }} <a class="label label-primary da-label" href="?tag={{ tag }}">{{ tag }}</a>.
+              <a href="?">{{ word("Show all") }}</a>
+            </p>
+            {%- else %}
+            {%- if tags_used %}
+            <p>
+              {{ word('Filter by tag') }}:
+              {% for tag in tags_used %}<a class="label label-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}
+            </p>
+            {%- endif %}
+            {%- endif %}
 
-{% block content %}
+            <p class="dainterviewpage">{{ word('Click interview title to resume an interview you already started.') }}</p>
 
-<h3 class="page-header dainterviewpage">{{ title }}</h3>
-{%- if tag %}
-<p>
-  Showing interviews tagged with: <a class="label label-primary da-label" href="?tag={{ tag }}">{{ tag }}</a>.
-  <a href="?">{{ word("Show all") }}</a>
-</p>
-{%- else %}
-{%- if tags_used %}
-<p>
-  {{ word('Filter by tag') }}:
-  {% for tag in tags_used %}<a class="label label-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}
-</p>
-{%- endif %}
-{%- endif %}
-
-<p class="dainterviewpage">{{ word('Click interview title to resume an interview you already started.') }}</p>
-
-<table class="table table-striped dainterviewpage">
-  <thead>
-    <tr>
-      <th>{{ word('Title') }}</th>
-      {%- if tags_used %}
-      <th>{{ word('Tags') }}</th>
-      {%- endif %}
-      <th>{{ word('Started') }}</th>
-      <th>{{ word('Delete') }}</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for interview in interviews %}
-    <tr>
-      <td>{% if interview['valid'] %}<a href="{{ url_for('index', i=interview['filename'], session=interview['session'], from_list=1) }}">{{ interview['title'] }}</a>{% else %}{{ interview['title'] }}{% endif %}{% if interview['subtitle'] %}<br><span class="text-muted dainterviewsubtitle">{{ interview['subtitle'] }}</span>{% endif %}</td>
-      {%- if tags_used %}
-      <td>
-        {% for tag in interview['tags'] %}<a class="label label-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}
-      </td>
-      {%- endif %}
-      <td>{{ interview['starttime'] }}</td>
-      <td><a class="label label-warning" href="{{ url_for('interview_list', action='delete', filename=interview['filename'], session=interview['session']) }}">{{ word('Delete') }}</a></td>
-    </tr>
-  {% endfor %}
-  {% if numinterviews > 0 %}  
-    <tr>
-      <td>&nbsp;</td>
-      {%- if tags_used %}
-      <td>&nbsp;</td>
-      {%- endif %}
-      <td>&nbsp;</td>
-      <td><a id="delete_all" class="label label-danger" href="{% if tag %}{{ url_for('interview_list', action='delete_all', tag=tag) }}{% else %}{{ url_for('interview_list', action='delete_all') }}{% endif %}">{{ word('Delete All') }}</a></td>
-    </tr>
-  {% endif %}
-  </tbody>
-</table>
+            <table class="table table-striped dainterviewpage">
+              <thead>
+                <tr>
+                  <th>{{ word('Title') }}</th>
+                  {%- if tags_used %}
+                  <th>{{ word('Tags') }}</th>
+                  {%- endif %}
+                  <th>{{ word('Started') }}</th>
+                  <th>{{ word('Delete') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+              {%- for interview in interviews %}
+                <tr>
+                  <td>{% if interview['valid'] %}<a href="{{ url_for('index', i=interview['filename'], session=interview['session'], from_list=1) }}">{{ interview['title'] }}</a>{% else %}{{ interview['title'] }}{% endif %}{% if interview['subtitle'] %}<br><span class="text-muted dainterviewsubtitle">{{ interview['subtitle'] }}</span>{% endif %}</td>
+                  {%- if tags_used %}
+                  <td>
+                    {% for tag in interview['tags'] %}<a class="label label-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}
+                  </td>
+                  {%- endif %}
+                  <td>{{ interview['starttime'] }}</td>
+                  <td><a class="label label-warning" href="{{ url_for('interview_list', action='delete', filename=interview['filename'], session=interview['session']) }}">{{ word('Delete') }}</a></td>
+                </tr>
+              {%- endfor %}
+              {%- if numinterviews > 0 %}  
+                <tr>
+                  <td>&nbsp;</td>
+                  {%- if tags_used %}
+                  <td>&nbsp;</td>
+                  {%- endif %}
+                  <td>&nbsp;</td>
+                  <td><a id="delete_all" class="label label-danger" href="{% if tag %}{{ url_for('interview_list', action='delete_all', tag=tag) }}{% else %}{{ url_for('interview_list', action='delete_all') }}{% endif %}">{{ word('Delete All') }}</a></td>
+                </tr>
+              {%- endif %}
+              </tbody>
+            </table>
+{{ get_part('interview page post') }}
 {% endblock %}

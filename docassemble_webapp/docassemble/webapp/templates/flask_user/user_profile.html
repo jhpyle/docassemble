@@ -1,14 +1,18 @@
+{%- set page_title = get_part('profile page title', word('User Profile')) %}
+{%- set tab_title = get_part('profile page tab title', word('User Profile')) %}
+{%- set extra_css = get_part('profile page extra css') %}
+{%- set extra_js = get_part('profile page extra javascript') %}
 {% extends 'flask_user/member_base.html' %}
 
 {% block content %}
 {% from "flask_user/_macros.html" import render_field, render_checkbox_field, render_submit_field %}
-<h1>{{ word("User profile") }}</h1>
-
-{% if user_manager.enable_change_username %}
+<h1>{{ get_part('profile page heading', word("User profile")) }}</h1>
+{{ get_part('profile page pre') }}
+{%- if user_manager.enable_change_username %}
 <p><a href="{{ url_for('user.change_username') }}">{{ word("Change username") }}</a></p>
-{% endif %}
-{% if user_manager.enable_change_password %}
+{%- endif %}
+{%- if user_manager.enable_change_password %}
 <p><a href="{{ url_for('user.change_password') }}">{{ word("Change password") }}</a></p>
-{% endif %}
-
+{%- endif %}
+{{ get_part('profile page post') }}
 {% endblock %}

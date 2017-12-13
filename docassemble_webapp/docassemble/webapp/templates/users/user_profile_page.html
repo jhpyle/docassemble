@@ -1,49 +1,34 @@
-{% extends 'flask_user/public_base.html' %}
-
-{% block content %}
-{% from "base_templates/form_macros.html" import render_field, render_submit_field, render_checkbox_field %}
-
-<h1>{{ word('User Profile') }}</h1>
-
-<ul class="nav nav-pills nav-stacked">{% if current_user.social_id.startswith('local') %}<li><a href="{{ url_for('user.change_password') }}">{{ word('Change password') }}</a></li>{% endif %}{% if in_debug() and (current_user.email) and (not current_user.is_anonymous) and (not current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('request_developer') }}">{{ word('Request Developer Account') }}</a></li>{% endif %}{% if config['USE_GOOGLE_DRIVE'] and (not current_user.is_anonymous) and (current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('google_drive_page') }}">{{ word('Google Drive synchronization') }}</a></li>{% endif %}{% if config['USE_MFA'] and current_user.has_roles(config['MFA_ROLES']) and current_user.social_id.startswith('local') %}<li><a href="{{ url_for('mfa_reconfigure') }}">{{ word('Second factor authentication') }}</a></li>{% endif %}{% if config['USE_GITHUB'] and (not current_user.is_anonymous) and (current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('github_menu') }}">{{ word('GitHub integration') }}</a></li>{% endif %}</ul>
-
-<form action="" method="POST" role="form" class="form">
-    {{ form.hidden_tag() }}
-
-    {{ render_field(form.first_name, tabindex=240) }}
-
-    {{ render_field(form.last_name, tabindex=250) }}
-
-    {% if current_user.social_id and current_user.social_id.startswith('phone$') %}
-
-    {{ render_field(form.email, tabindex=255) }}
-
-    {% endif %}
-
-    {% if (not current_user.is_anonymous) and current_user.has_roles(['admin', 'developer']) %}
-
-      {{ render_field(form.country, tabindex=260, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }} 
-
-      {{ render_field(form.subdivisionfirst, tabindex=270) }}
-  
-      {{ render_field(form.subdivisionsecond, tabindex=280) }}
-
-      {{ render_field(form.subdivisionthird, tabindex=290) }}
-  
-      {{ render_field(form.organization, tabindex=300) }}
-  
-      {{ render_field(form.language, tabindex=310) }}
-    
-      {{ render_field(form.timezone, tabindex=320) }}
-
-      {{ render_field(form.pypi_username, tabindex=322) }}
-
-      {{ render_field(form.pypi_password, tabindex=324) }}
-    {% endif %}
-    <br>
-    <div class="form-actions">
-      {{ render_submit_field(form.submit, tabindex=330) }}
-    </div>
-</form>
-
-{% endblock %}
+{%- set page_title = get_part('profile page title', word('User profile')) %}
+{%- set tab_title = get_part('profile page tab title', word('User profile')) %}
+{%- set extra_css = get_part('profile page extra css') %}
+{%- set extra_js = get_part('profile page extra javascript') %}
+{%- extends 'flask_user/public_base.html' %}
+{%- block content %}
+{%- from "base_templates/form_macros.html" import render_field, render_submit_field, render_checkbox_field %}
+          <h1>{{ get_part('profile page heading', word('User profile')) }}</h1>
+{{ get_part('profile page pre') }}
+          <ul class="nav nav-pills nav-stacked">{% if current_user.social_id.startswith('local') %}<li><a href="{{ url_for('user.change_password') }}">{{ word('Change password') }}</a></li>{% endif %}{% if in_debug() and (current_user.email) and (not current_user.is_anonymous) and (not current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('request_developer') }}">{{ word('Request Developer Account') }}</a></li>{% endif %}{% if config['USE_GOOGLE_DRIVE'] and (not current_user.is_anonymous) and (current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('google_drive_page') }}">{{ word('Google Drive synchronization') }}</a></li>{% endif %}{% if config['USE_MFA'] and current_user.has_roles(config['MFA_ROLES']) and current_user.social_id.startswith('local') %}<li><a href="{{ url_for('mfa_reconfigure') }}">{{ word('Second factor authentication') }}</a></li>{% endif %}{% if config['USE_GITHUB'] and (not current_user.is_anonymous) and (current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('github_menu') }}">{{ word('GitHub integration') }}</a></li>{% endif %}</ul>
+          <form action="" method="POST" role="form" class="form">
+            {{ form.hidden_tag() }}
+            {{ render_field(form.first_name, tabindex=240) }}
+            {{ render_field(form.last_name, tabindex=250) }}
+            {%- if current_user.social_id and current_user.social_id.startswith('phone$') %}
+            {{ render_field(form.email, tabindex=255) }}
+            {%- endif %}
+            {%- if (not current_user.is_anonymous) and current_user.has_roles(['admin', 'developer']) %}
+            {{ render_field(form.country, tabindex=260, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }} 
+            {{ render_field(form.subdivisionfirst, tabindex=270) }}
+            {{ render_field(form.subdivisionsecond, tabindex=280) }}
+            {{ render_field(form.subdivisionthird, tabindex=290) }}
+            {{ render_field(form.organization, tabindex=300) }}
+            {{ render_field(form.language, tabindex=310) }}
+            {{ render_field(form.timezone, tabindex=320) }}
+            {{ render_field(form.pypi_username, tabindex=322) }}
+            {{ render_field(form.pypi_password, tabindex=324) }}
+            {%- endif %}
+            <br>
+            {{ get_part('profile page submit') }}<div class="form-actions">
+              {{ render_submit_field(form.submit, tabindex=330) }}
+            </div>
+          </form>{{ get_part('profile page post') }}
+{%- endblock %}

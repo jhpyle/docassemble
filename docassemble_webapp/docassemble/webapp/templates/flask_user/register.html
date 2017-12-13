@@ -1,113 +1,104 @@
-{% extends 'flask_user/public_base.html' %}
-
-{% block content %}
-{% from "base_templates/form_macros.html" import render_field, render_checkbox_field, render_submit_field, myrender_hidden_field %}
-
-<h1>{{ word("Register") }}</h1>
-
-{% if user_manager.enable_register %}
-    <p>{{ word("Already registered?") }} <a href="{{ url_for('user.login', next=url_for('index')) }}" tabindex='290'>{{ word("Sign in.") }}</a></p>
-{% endif %}
-
-<form action="" method="POST" novalidate formnovalidate class="form" role="form">
-    {{ form.hidden_tag() }}
-
-    {# Username or Email #}
-    {% set field = form.username if user_manager.enable_username else form.email %}
-    <!--<div class="control-group {% if field.errors %}has-error{% endif %}">-->
-    {# Label on left, "Already registered? Sign in." on right #}
-    <div class="form-group">
-	<label for="{{ field.id }}" class="control-label">{{ field.label.text }}</label>
-	    {{ field(tabindex=210, class_="form-control", type="email") }}
-	    {% if field.errors %}
-		{% for e in field.errors %}
-		    <p class="help-block">{{ e }}</p>
-		{% endfor %}
-	    {% endif %}
-    </div>
-    {% if user_manager.enable_email and user_manager.enable_username %}
-	{{ render_field(form.email, type='email', tabindex=220) }}
-    {% endif %}
-
-    <!--{{ render_field(form.first_name, tabindex=240) }}
-
-    {{ render_field(form.last_name, tabindex=250) }}-->
-
-    {{ render_field(form.password, tabindex=260) }}
-
-    {% if user_manager.enable_retype_password %}
-	{{ render_field(form.retype_password, tabindex=270) }}
-    {% endif %}
-    {{ myrender_hidden_field(form.social_id, value=random_social()) }}
-    <br>
-    <div class="form-actions">
-      {{ render_submit_field(form.submit, tabindex=280) }}
-    </div>
-</form>
-{% if config['USE_GOOGLE_LOGIN'] or config['USE_FACEBOOK_LOGIN'] or config['USE_TWITTER_LOGIN'] or config['USE_AZURE_LOGIN'] or config['USE_PHONE_LOGIN'] %}
-<p style="padding: 15px 15px 5px 15px;"><strong>or</strong></p>
-{% endif %}
-{% if config['USE_PHONE_LOGIN'] %}
-<div class="row nomargin">
-  <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('phone_login') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/phone-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with your mobile phone') }}</td></tr></tbody></table></a></div>
-</div>
-{% endif %}
-{% if config['USE_GOOGLE_LOGIN'] %}
-<div class="row nomargin">
-  <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('google_page') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/google-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Google') }}</td></tr></tbody></table></a></div>
-</div>
-{% endif %}
-{% if config['USE_FACEBOOK_LOGIN'] %}
-<div class="row nomargin">
-  <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Facebook') }}</td></tr></tbody></table></a></div>
-</div>
-{% endif %}
-{% if config['USE_TWITTER_LOGIN'] %}
-<div class="row nomargin">
-  <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='twitter') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/twitter-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Twitter') }}</td></tr></tbody></table></a></div>
-</div>
-{% endif %}
-{% if config['USE_AZURE_LOGIN'] %}
-<div class="row nomargin">
-  <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='azure') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/azure-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Azure') }}</td></tr></tbody></table></a></div>
-</div>
-{% endif %}
-{% if False and config['USE_GOOGLE_LOGIN'] %}
-<script>
-function myOnLoadCallback() {
-  console.log("myOnLoadCallback()");
-}
-</script>
-<script src="https://apis.google.com/js/platform.js?onload=myOnLoadCallback" async defer></script>
-<script>
-function onSignIn(googleUser) {
-  var profile = googleUser.getBasicProfile();
-  console.log('ID: ' + profile.getId());
-  console.log('Name: ' + profile.getName());
-  console.log('Image URL: ' + profile.getImageUrl());
-  console.log('Email: ' + profile.getEmail());
-  if (profile.getId()){
-    $.ajax({
-      type: 'POST',
-      url: '{{ url_for('oauth_authorize', provider='google') }}',
-      contentType: 'application/octet-stream; charset=utf-8',
-      success: function(result) {
-	console.log(result);
-	window.location = '{{ url_for('oauth_callback', provider='google', _external=True) }}';
-      },
-      dataType: "json",
-      data: {
-	"id": profile.getId(),
-	"name": profile.getName(),
-	"image": profile.getImageUrl(),
-	"email": profile.getEmail()
-      }
-    });
-  }
-  else if (authResult['error']) {
-    console.log('There was an error: ' + authResult['error']);
-  }
-}
-</script>
-{% endif %}
-{% endblock %}
+{%- set page_title = get_part('register page title', word('Register')) %}
+{%- set tab_title = get_part('register page tab title', word('Register')) %}
+{%- set extra_css = get_part('register page extra css') %}
+{%- set extra_js = get_part('register page extra javascript') %}
+{%- extends 'flask_user/public_base.html' %}
+{%- block content %}
+{%- from "base_templates/form_macros.html" import render_field, render_checkbox_field, render_submit_field, myrender_hidden_field %}
+          <h1>{{ get_part('register page heading', word('Register')) }}</h1>
+{{ get_part('register page pre') }}
+          {%- if user_manager.enable_register %}
+          <p>{{ word("Already registered?") }} <a href="{{ url_for('user.login', next=url_for('index')) }}" tabindex='290'>{{ word("Sign in.") }}</a></p>
+          {%- endif %}
+          <form action="" method="POST" novalidate formnovalidate class="form" role="form">
+            {{ form.hidden_tag() }}
+            {%- set field = form.username if user_manager.enable_username else form.email %}
+            <div class="form-group">
+              <label for="{{ field.id }}" class="control-label">{{ field.label.text }}</label>
+              {{ field(tabindex=210, class_="form-control", type="email") }}
+              {%- if field.errors %}
+                {%- for e in field.errors %}
+              <p class="help-block">{{ e }}</p>
+                {% endfor %}
+              {% endif %}
+            </div>
+            {%- if user_manager.enable_email and user_manager.enable_username %}
+            {{ render_field(form.email, type='email', tabindex=220) }}
+            {%- endif %}
+            {{ render_field(form.password, tabindex=260) }}
+            {%- if user_manager.enable_retype_password %}
+            {{ render_field(form.retype_password, tabindex=270) }}
+            {%- endif %}
+            {{ myrender_hidden_field(form.social_id, value=random_social()) }}
+            <br>
+            {{ get_part('register page submit') }}<div class="form-actions">
+              {{ render_submit_field(form.submit, tabindex=280) }}
+            </div>
+          </form>
+          {%- if config['USE_GOOGLE_LOGIN'] or config['USE_FACEBOOK_LOGIN'] or config['USE_TWITTER_LOGIN'] or config['USE_AZURE_LOGIN'] or config['USE_PHONE_LOGIN'] %}
+          <p style="padding: 15px 15px 5px 15px;"><strong>or</strong></p>
+          {%- endif %}
+          {%- if config['USE_PHONE_LOGIN'] %}
+          <div class="row nomargin">
+            <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('phone_login') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/phone-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with your mobile phone') }}</td></tr></tbody></table></a></div>
+          </div>
+          {%- endif %}
+          {%- if config['USE_GOOGLE_LOGIN'] %}
+          <div class="row nomargin">
+            <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('google_page') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/google-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Google') }}</td></tr></tbody></table></a></div>
+          </div>
+          {%- endif %}
+          {%- if config['USE_FACEBOOK_LOGIN'] %}
+          <div class="row nomargin">
+            <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Facebook') }}</td></tr></tbody></table></a></div>
+          </div>
+          {%- endif %}
+          {%- if config['USE_TWITTER_LOGIN'] %}
+          <div class="row nomargin">
+            <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='twitter') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/twitter-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Twitter') }}</td></tr></tbody></table></a></div>
+          </div>
+          {%- endif %}
+          {%- if config['USE_AZURE_LOGIN'] %}
+          <div class="row nomargin">
+            <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='azure') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/azure-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Azure') }}</td></tr></tbody></table></a></div>
+          </div>
+          {%- endif %}{{ get_part('register page post') }}
+          {%- if False and config['USE_GOOGLE_LOGIN'] %}
+          <script>
+          function myOnLoadCallback() {
+            console.log("myOnLoadCallback()");
+          }
+          </script>
+          <script src="https://apis.google.com/js/platform.js?onload=myOnLoadCallback" async defer></script>
+          <script>
+          function onSignIn(googleUser) {
+            var profile = googleUser.getBasicProfile();
+            console.log('ID: ' + profile.getId());
+            console.log('Name: ' + profile.getName());
+            console.log('Image URL: ' + profile.getImageUrl());
+            console.log('Email: ' + profile.getEmail());
+            if (profile.getId()){
+              $.ajax({
+                type: 'POST',
+                url: '{{ url_for('oauth_authorize', provider='google') }}',
+                contentType: 'application/octet-stream; charset=utf-8',
+                success: function(result) {
+                  console.log(result);
+                  window.location = '{{ url_for('oauth_callback', provider='google', _external=True) }}';
+                },
+                dataType: "json",
+                data: {
+                  "id": profile.getId(),
+                  "name": profile.getName(),
+                  "image": profile.getImageUrl(),
+                  "email": profile.getEmail()
+                }
+              });
+            }
+            else if (authResult['error']) {
+              console.log('There was an error: ' + authResult['error']);
+            }
+          }
+          </script>
+{%- endif %}
+{%- endblock %}

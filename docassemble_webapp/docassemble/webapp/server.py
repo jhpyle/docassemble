@@ -615,6 +615,18 @@ if daconfig.get('button size', 'large') == 'large':
 else:
     app.config['BUTTON_CLASS'] = 'btn-da'
 
+page_parts = dict()
+for page_key in ('login page', 'register page', 'interview page', 'start page', 'profile page', 'reset password', 'forgot password', 'change password'):
+    for part_key in ('title', 'tab title', 'extra css', 'extra javascript', 'heading', 'pre', 'submit', 'post'):
+        key = page_key + ' ' + part_key
+        if key in daconfig:
+            if type(daconfig[key]) is dict:
+                page_parts[key] = dict()
+                for lang, val in daconfig[key].iteritems():
+                    page_parts[key][lang] = Markup(val)
+            else:
+                page_parts[key] = {'*': Markup(unicode(daconfig[key]))}
+
 def get_sms_session(phone_number, config='default'):
     sess_info = None
     if twilio_config is None:
@@ -5050,7 +5062,7 @@ def index():
       var daDoAction = """ + do_action + """;
       var daNextAction = """ + json.dumps(next_action_review) + """;
       var daCsrf = """ + repr(str(generate_csrf())) + """;
-      var daMessageLog = """ + json.dumps(docassemble.base.functions.get_message_log()) + """;
+      var daMessageLog = JSON.parse(atob('""" + safeid(json.dumps(docassemble.base.functions.get_message_log())) + """'));
       function preloadImage(url){
         var img = new Image();
         img.src = url;
@@ -6934,6 +6946,23 @@ def add_referer(user_dict):
 def word_filter(text):
     return docassemble.base.functions.word(unicode(text))
 
+def get_part(part, default=None):
+    if default is None:
+        default = unicode()
+    if part not in page_parts:
+        return default
+    if 'language' in session:
+        lang = session['language']
+    else:
+        lang = DEFAULT_LANGUAGE
+    if lang in page_parts[part]:
+        return page_parts[part][lang]
+    if lang != DEFAULT_LANGUAGE and DEFAULT_LANGUAGE in page_parts[part]:
+        return page_parts[part][DEFAULT_LANGUAGE]
+    if '*' in page_parts[part]:
+        return page_parts[part]['*']
+    return default
+
 @app.context_processor
 def utility_processor():
     def user_designator(the_user):
@@ -6941,15 +6970,17 @@ def utility_processor():
             return the_user.email
         else:
             return re.sub(r'.*\$', '', the_user.social_id)
-    def word(text):
-        return docassemble.base.functions.word(text)
+    #def word(text):
+    #    return docassemble.base.functions.word(text)
     def random_social():
         return 'local$' + random_alphanumeric(32)
     if 'language' in session:
         docassemble.base.functions.set_language(session['language'])
+    else:
+        docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
     def in_debug():
         return DEBUG
-    return dict(random_social=random_social, word=word, in_debug=in_debug, user_designator=user_designator)
+    return dict(random_social=random_social, word=docassemble.base.functions.word, in_debug=in_debug, user_designator=user_designator, get_part=get_part)
 
 @app.route('/speakfile', methods=['GET'])
 def speak_file():
@@ -7077,7 +7108,7 @@ def interview_start():
     interview_info = interview_menu(absolute_urls=embed)
     if is_json:
         return jsonify(action='menu', interviews=interview_info)
-    argu = dict(version_warning=None, interview_info=interview_info, tab_title=daconfig.get('start page title', word('Interviews')), title=daconfig.get('start page heading', word('Available interviews'))) #extra_css=Markup(global_css), extra_js=Markup(global_js), 
+    argu = dict(version_warning=None, interview_info=interview_info) #extra_css=Markup(global_css), extra_js=Markup(global_js), tab_title=daconfig.get('start page title', word('Interviews')), title=daconfig.get('start page heading', word('Available interviews'))
     if embed:
         the_page = 'pages/start-embedded.html'
     else:
@@ -10417,7 +10448,7 @@ def config_page():
         version = word("Version ") + unicode(python_version)
     else:
         version = word("Version ") + unicode(python_version) + ' (Python); ' + unicode(system_version) + ' (' + word('system') + ')'
-    return render_template('pages/config.html', version_warning=version_warning, version=version, bodyclass='adminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200
+    return render_template('pages/config.html', version_warning=version_warning, version=version, bodyclass='adminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200
 
 @app.route('/view_source', methods=['GET'])
 @login_required
@@ -12582,7 +12613,7 @@ def server_error(the_error):
         errmess = '<blockquote>' + errmess + '</blockquote>'
     script = """
     <script>
-      var daMessageLog = """ + json.dumps(docassemble.base.functions.get_message_log()) + """;
+      var daMessageLog = JSON.parse(atob('""" + safeid(json.dumps(docassemble.base.functions.get_message_log())) + """'));
       function flash(message, priority){
         if (priority == null){
           priority = 'info'
@@ -13558,9 +13589,9 @@ def interview_list():
         for the_tag in interview['tags']:
             if the_tag != tag:
                 tags_used.add(the_tag)
-    interview_page_title = word(daconfig.get('interview page title', 'Interviews'))
-    title = word(daconfig.get('interview page heading', 'Resume an interview'))
-    argu = dict(version_warning=version_warning, tab_title=interview_page_title, page_title=interview_page_title, title=title, tags_used=sorted(tags_used) if len(tags_used) else None, numinterviews=len(interviews), interviews=sorted(interviews, key=valid_date_key), tag=tag) # extra_css=Markup(global_css), extra_js=Markup(script), 
+    #interview_page_title = word(daconfig.get('interview page title', 'Interviews'))
+    #title = word(daconfig.get('interview page heading', 'Resume an interview'))
+    argu = dict(version_warning=version_warning, tags_used=sorted(tags_used) if len(tags_used) else None, numinterviews=len(interviews), interviews=sorted(interviews, key=valid_date_key), tag=tag) # extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title
     if 'interview page template' in daconfig and daconfig['interview page template']:
         the_page = docassemble.base.functions.package_template_filename(daconfig['interview page template'])
         if the_page is None:
@@ -14889,6 +14920,7 @@ with app.app_context():
             global_js += "\n" + '    <script src="' + get_url_from_file_reference(fileref) + '"></script>';
     app.config['GLOBAL_CSS'] = global_css
     app.config['GLOBAL_JS'] = global_js
+    app.config['PARTS'] = page_parts
     copy_playground_modules()
     for interview_path in [x for x in r.keys('da:interviewsource:*')]:
         r.delete(interview_path)
