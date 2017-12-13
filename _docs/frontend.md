@@ -4,7 +4,7 @@ title: Custom Front Ends
 short_title: Custom Front Ends
 ---
 
-# Interacting with **docassemble** over HTTP
+# <a name="interface"></a>Interacting with **docassemble** over HTTP
 
 If you are a software developer, you can develop your own front end
 for **docassemble**.  If you add `&json=1` to the end of the URL, or
@@ -138,9 +138,58 @@ The format of the [JSON] representation should be self-explanatory.
 Toggle the `json=1` URL parameter to compare the HTML version of the
 screen to the [JSON] representation.
 
-# Sessions
+# <a name="login"></a>Example of "logging in" with JavaScript
 
-## Background information
+If you need to programmatically "log in" to **docassemble**, you can
+use code like the following:
+
+{% highlight js %}
+var myHeaders = new Headers();
+
+var myInit = { method: 'GET',
+               headers: myHeaders,
+               mode: 'cors',
+               cache: 'default',
+               redirect: 'follow',
+               credentials: 'include' };
+
+var myRequest = new Request('https://docassemble.example.com/user/sign-in?json=1', myInit);
+
+fetch(myRequest).then(function(response) {
+  var contentType = response.headers.get("content-type");
+  if(contentType && contentType.includes("application/json")) {
+    return response.json();
+  }
+  throw new TypeError("Error: JSON not returned from sign-in site");
+}).then(function(json) {
+  var form = new FormData();
+  form.append('next', 'https://docassemble.example.com/interviews?json=1');
+  form.append('csrf_token', json.csrf_token);
+  form.append('email', 'someuser@example.com');
+  form.append('password', 'xxsecretxx');
+  var loginInit = { method: 'POST',
+                    headers: myHeaders,
+                    mode: 'cors',
+                    cache: 'default',
+                    credentials: 'include',
+                    redirect: 'follow',
+                    body: form };
+  var loginRequest = new Request('https://docassemble.example.com/user/sign-in', loginInit);
+  fetch(loginRequest).then(function(response) {
+    var contentType = response.headers.get("content-type");
+    if(contentType && contentType.includes("application/json")) {
+      return response.json();
+    }
+    throw new TypeError("Error: JSON not returned after signing in");
+  }).then(function(json) {
+    console.log(json)
+  });
+});
+{% endhighlight %}
+
+# <a name="sessions"></a>Sessions
+
+## <a name="sessionsbackground"></a>Background information
 
 If you are building a front end to **docassemble**, you do not need to
 know exactly how **docassemble** works internally, but it may help for
@@ -215,7 +264,7 @@ HTML of the `<body>` of the new screen.  The server knows it is
 dealing with an [Ajax] request because the browser includes `ajax=1`
 among the parameters of every request.
 
-## How sessions work
+## <a name="sessionsdetail"></a>How sessions work
 
 All interviews take place using the root location `/` (unless the
 [`root`] of the whole site is changed in the configuration to
@@ -309,7 +358,7 @@ that the user of the interview would be that the interview could use
 functions like [`user_info()`] to do different things based on who the
 user is.
 
-# Cross-Origin Resource Sharing (CORS)
+# <a name="cors"></a>Cross-Origin Resource Sharing (CORS)
 
 There are many security issues with sending sensitive data over HTTP.
 By default, HTTP libraries implement fairly strict security
