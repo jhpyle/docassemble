@@ -47,6 +47,7 @@ class MyChrome(Chrome):
 def setup_browser():
     if use_firefox:
         world.browser = MyFirefox()
+        world.browser.maximize_window()
     else:
         options = ChromeOptions()
         options.add_argument("--start-maximized");

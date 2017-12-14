@@ -1,0 +1,58 @@
+metadata:
+  title: PDF fill-in with signature
+  documentation: "https://docassemble.org/docs/documents.html#signature"
+  example start: 7
+  example end: 8
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+  - friend: Individual
+---
+mandatory: True
+code: |
+  need(user.name.first,
+       friend.name.first,
+       prized_collection,
+       final_screen)
+---
+question: |
+  What is your name?
+fields:
+  - First Name: user.name.first
+  - Last Name: user.name.last
+---
+question: |
+  What is your best friend's name?
+fields:
+  - First Name: friend.name.first
+  - Last Name: friend.name.last
+---
+question: What objects do you collect?
+fields:
+  - Collection: prized_collection
+    hint: baseball cards, fine china
+---
+question: |
+  Please sign your name below.
+signature: user.signature
+under: |
+  ${ user }
+---
+sets: final_screen
+question: Congratulations!
+subquestion: |
+  You have now transferred everything
+  you own to ${ friend }.
+attachment:
+  - name: Transfer of Ownership
+    filename: Transfer-of-Ownership
+    pdf template file: |
+      Transfer-of-Ownership.pdf
+    field code:
+      - "grantor": user
+      - "grantee": friend
+      - "collection": prized_collection
+      - "signature": user.signature

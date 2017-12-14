@@ -130,7 +130,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
             if field not in fields:
                 logmessage("field name " + str(field) + " not found in PDF file")
                 continue
-            logmessage("Need to put image on page " + str(fields[field]['pageno']))
+            #logmessage("Need to put image on page " + str(fields[field]['pageno']))
             temp_png = tempfile.NamedTemporaryFile(mode="wb", suffix=".png")
             args = ["convert", file_info['fullpath'], "-trim", "+repage", temp_png.name]
             result = call(args)
@@ -216,7 +216,7 @@ def concatenate_files(path_list, pdfa=False, password=None):
     return pdf_file.name
 
 def pdf_encrypt(filename, password):
-    logmessage("pdf_encrypt: running; password is " + repr(password))
+    #logmessage("pdf_encrypt: running; password is " + repr(password))
     if type(password) in (str, unicode, bool, int, float):
         owner_password = unicode(password).strip()
         user_password = unicode(password).strip()
@@ -238,6 +238,6 @@ def pdf_encrypt(filename, password):
     except subprocess.CalledProcessError as err:
         output = err.output
         raise DAError("pdf_encrypt: error running pdftk.  " + output)
-    logmessage(' '.join(commands))
-    logmessage(output)
+    #logmessage(' '.join(commands))
+    #logmessage(output)
     shutil.move(outfile.name, filename)

@@ -86,10 +86,14 @@ attachment:
   filename: letter
   docx template file: letter_template.docx
   field code:
-    letter_date: today()
-    address_block: adverse_party.address_block()
-    signature: user.signature
-    full_name: user.name
+    letter_date: |
+      today()
+    address_block: |
+      adverse_party.address_block()
+    signature: |
+      user.signature
+    full_name: |
+      user.name
   field variables:
     - subject_matter
     - phone_number

@@ -7212,6 +7212,7 @@ def serve_uploaded_file_with_extension(number, extension):
                 return(response)
             else:
                 abort(404)
+    abort(404)
 
 @app.route('/uploadedfile/<number>', methods=['GET'])
 def serve_uploaded_file(number):
@@ -7233,6 +7234,7 @@ def serve_uploaded_file(number):
         response = send_file(file_info['path'], mimetype=file_info['mimetype'])
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
+    abort(404)
 
 @app.route('/uploadedpage/<number>/<page>', methods=['GET'])
 def serve_uploaded_page(number, page):
@@ -9429,7 +9431,7 @@ def create_playground_package():
                 if ssh_url is None:
                     raise DAError("create_playground_package: could not obtain ssh_url for package")
                 output = ''
-                if branch:
+                if branch and branch != 'None':
                     branch_option = '-b ' + str(branch) + ' '
                 else:
                     branch_option = ''
@@ -11346,7 +11348,7 @@ def playground_packages():
                     raise DAError("playground_packages: error running git clone.  " + output)
             else:
                 try:
-                    if branch is not None:
+                    if branch is not None and branch != 'None':
                         output += subprocess.check_output(['git', 'clone', '-b', branch, github_url], cwd=directory, stderr=subprocess.STDOUT)
                     else:
                         output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT)

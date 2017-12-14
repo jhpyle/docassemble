@@ -3342,7 +3342,13 @@ class Question:
                                     val = ''
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
                                 val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
-                                result['data_strings'].append((key, val))
+                                m = re.search(r'\[FILE ([^\]]+)\]', val)
+                                if m:
+                                    file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                                    file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                    result['images'].append((key, file_info))
+                                else:
+                                    result['data_strings'].append((key, val))
                     if 'code dict' in attachment['options']:
                         additional_fields = attachment['options']['code dict']
                         if type(additional_fields) is not list:
@@ -3362,7 +3368,13 @@ class Question:
                                     val = unicode(val)
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
                                 val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
-                                result['data_strings'].append((key, val))
+                                m = re.search(r'\[FILE ([^\]]+)\]', val)
+                                if m:
+                                    file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                                    file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                    result['images'].append((key, file_info))
+                                else:
+                                    result['data_strings'].append((key, val))
                     if 'raw code dict' in attachment['options']:
                         additional_fields = attachment['options']['raw code dict']
                         if type(additional_fields) is not list:
@@ -3380,7 +3392,13 @@ class Question:
                                     val = ''
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
                                 val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
-                                result['data_strings'].append((key, val))
+                                m = re.search(r'\[FILE ([^\]]+)\]', val)
+                                if m:
+                                    file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                                    file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                    result['images'].append((key, file_info))
+                                else:
+                                    result['data_strings'].append((key, val))
                 else:
                     the_markdown = ""
                     if len(result['metadata']):

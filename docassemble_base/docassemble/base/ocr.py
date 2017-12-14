@@ -104,7 +104,8 @@ def make_png_for_pdf(doc, prefix, resolution, pdf_to_ppm, page=None):
         result = subprocess.call([str(pdf_to_ppm), '-r', str(resolution), '-png', str(path), str(basefile + prefix)])
     else:
         result = subprocess.call([str(pdf_to_ppm), '-f', str(page), '-f', str(page), '-r', str(resolution), '-png', str(path), str(basefile + prefix)])
-    os.remove(test_path)
+    if os.path.isfile(test_path):
+        os.remove(test_path)
     if result > 0:
         raise Exception("Unable to extract images from PDF file")
     doc.commit()
