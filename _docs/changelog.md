@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.8](https://github.com/jhpyle/docassemble/releases/tag/v0.2.8) - 2017-12-14
+
+### Fixed
+- Inserting images into PDFs using `field code`.
+
 ## [0.2.7](https://github.com/jhpyle/docassemble/releases/tag/v0.2.7) - 2017-12-13
 
 ### Added
