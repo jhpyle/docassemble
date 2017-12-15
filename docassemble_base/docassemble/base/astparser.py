@@ -33,6 +33,10 @@ class myextract(ast.NodeVisitor):
             self.stack.append('[' + str(node.slice.value.n) + ']')
             self.in_subscript += 1
             self.seen_name = False
+        elif hasattr(node.slice, 'value') and hasattr(node.slice.value, 's'):
+            self.stack.append('[' + repr(str(node.slice.value.s)) + ']')
+            self.in_subscript += 1
+            self.seen_name = False
         else:
             self.seen_complexity = 1
         ast.NodeVisitor.generic_visit(self, node)

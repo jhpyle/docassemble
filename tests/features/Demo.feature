@@ -4,7 +4,7 @@ Feature: Demonstration interview
 
   @all
   Scenario: Start to "Were you injured?"
-    Given I am using the server "https://dev.upsolve.org"
+    Given I am using the server "http://localhost"
     And I start the interview "docassemble.demo:data/questions/questions.yml"
     Then I should see the phrase "What language do you speak?"
     And I click the "English" option
@@ -53,4 +53,33 @@ Feature: Demonstration interview
     And I click the "Single" option
     And I click the button "Continue"
     Then I should see the phrase "Are you a plaintiff in this case?"
+    And I click the button "Yes"
+    Then I should see the phrase "You have told me that there is one plaintiff, John Smith. Is there another plaintiff?"
+    And I click the button "No"
+    Then I should see the phrase "What is the name of the first defendant in the case?"
+    And I set "First Name" to "Daniel"
+    And I set "Last Name" to "Defoe"
+    And I click the button "Continue"
+    Then I should see the phrase "You have told me that there is one defendant, Daniel Defoe. Is there another defendant?"
+    And I click the button "No"
+    Then I should see the phrase "What is the village idiot’s name?"
+    And I set "First Name" to "William"
+    And I set "Last Name" to "Dunce"
+    And I click the button "Continue"
+    Then I should see the phrase "What kinds of income do you have?"
+    And I click the "SSI" option
+    And I click the button "Continue"
+    Then I should see the phrase "How much do you make from SSI?"
+    And I set "SSI Income" to "704"
+    And I click the button "Continue"
+    Then I should see the phrase "Do you have income from rent?"
+    And I click the button "No"
+    Then I should see the phrase "Do you own any automobiles?"
+    And I click the button "No"
+    Then I should see the phrase "What kinds of assets do you own?"
+    And I click the "Stocks and Bonds" option
+    And I click the button "Continue"
+    Then I should see the phrase "How much do you have in stocks and bonds?"
+    And I set "Amount in Stocks and Bonds" to "203200"
+    And I click the button "Continue"
     And I wait forever

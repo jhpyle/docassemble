@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.10] - 2017-12-15
+### Fixed
+- Problem recognizing string indices in code.
+
 ## [0.2.9] - 2017-12-15
 ### Fixed
 - Problem with dictionaries inside of dictionaries.
