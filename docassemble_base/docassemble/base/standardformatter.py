@@ -542,7 +542,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     master_output = ""
     master_output += '          <section role="tabpanel" id="question" class="tab-pane active col-lg-6 col-md-7 col-sm-9">\n'
     output = ""
-    if the_progress_bar and status.question.question_type != "signature":
+    if the_progress_bar:
+        if status.question.question_type == "signature":
+            the_progress_bar = re.sub(r'class="row"', 'class="hidden-xs"', the_progress_bar)
         output += the_progress_bar
     if status.question.question_type == "signature":
         output += '            <div class="sigpage" id="sigpage">\n              <div class="sigshowsmallblock sigheader" id="sigheader">\n                <div class="siginnerheader">\n                  <a class="btn btn-sm btn-warning signav-left signavbutton sigclear">' + word('Clear') + '</a>\n                  <a class="btn btn-sm btn-primary signav-right signavbutton sigsave">' + continue_label + '</a>\n                  <div class="sigtitle">'
@@ -807,7 +809,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     validation_rules['groups'][the_saveas + '_group'] = ' '.join(uncheck_list + [the_saveas])
                     validation_rules['ignore'] = None
                     
-                for key in ['minlength', 'maxlength']:
+                for key in ('minlength', 'maxlength'):
                     if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                         #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
                         validation_rules['rules'][the_saveas][key] = int(status.extras[key][field.number])
@@ -816,7 +818,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         elif key == 'maxlength':
                             validation_rules['messages'][the_saveas][key] = word("You cannot type more than") + " " + str(status.extras[key][field.number]) + " " + word("characters")
             if hasattr(field, 'datatype'):
-                if field.datatype in ['checkboxes', 'object_checkboxes'] and hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
+                if field.datatype in ('checkboxes', 'object_checkboxes') and hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
                     #validation_rules['rules'][the_saveas]['checkboxgroup'] = dict(name=the_saveas, foobar=2)
                     #validation_rules['messages'][the_saveas]['checkboxgroup'] = word("You need to select one.")
                     if 'groups' not in validation_rules:

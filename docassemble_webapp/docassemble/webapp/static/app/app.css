@@ -5,6 +5,12 @@ body.dabody {
     font-size: 16px;
 }
 
+body.dasignature {
+    border: 0px;
+    margin: 0px;
+    font-size: 16px;
+}
+
 .form-control {
     font-size: 16px;
     padding: 2px 12px;
@@ -1307,6 +1313,10 @@ div.dasections ul.dainlineinside a.label {
 
 div.danavdiv {
     margin-top: 30px;
+}
+
+body.dasignature div.danavdiv {
+    margin-top: 90px;
 }
 
 div.danavdiv a.clickable {

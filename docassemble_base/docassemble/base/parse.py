@@ -8,6 +8,7 @@ from jinja2.environment import Template as JinjaTemplate
 from jinja2 import meta as jinja2meta
 import ast
 import ruamel.yaml
+import string
 import os
 import os.path
 import sys
@@ -2936,9 +2937,16 @@ class Question:
         assumed_objects = set()
         for field in self.fields:
             if hasattr(field, 'saveas'):
-                m = re.match(r'(.*)\.[^\.]+', from_safeid(field.saveas))
-                if m and m.group(1) != 'x':
-                    assumed_objects.add(m.group(1))
+                # m = re.match(r'(.*)\.[^\.]+', from_safeid(field.saveas))
+                # if m and m.group(1) != 'x':
+                #     assumed_objects.add(m.group(1))
+                parse_result = parse_var_name(from_safeid(field.saveas))
+                if not parse_result['valid']:
+                    raise DAError("Variable name " + from_safeid(field.saveas) + " is invalid: " + parse_result['reason'])
+                if len(parse_result['objects']):
+                    assumed_objects.add(parse_result['objects'][-1])
+                if len(parse_result['bracket_objects']):
+                    assumed_objects.add(parse_result['bracket_objects'][-1])
         for var in assumed_objects:
             if complications.search(var) or var not in user_dict:
                 eval(var, user_dict)
@@ -4796,7 +4804,7 @@ def recurse_indices(expression_array, variable_list, pre_part, final_list, var_s
         recurse_indices(copy.copy(expression_array), variable_list, ['x'], final_list, var_subs_dict, var_subs, generic_dict, copy.copy(pre_part))
 
 def ensure_object_exists(saveas, datatype, user_dict, commands=None):
-    #logmessage("ensure object exists")
+    # logmessage("ensure object exists: " + str(saveas))
     if commands is None:
         execute = True
         commands = list()
@@ -4812,22 +4820,39 @@ def ensure_object_exists(saveas, datatype, user_dict, commands=None):
         #logmessage("ensure object exists: already there")
         return
     use_initialize = False
-    if re.search(r'\.', saveas):
-        core_key_name = re.sub(r'^(.*)\..*', r'\1', saveas)
-        attribute_name = re.sub(r'.*\.', '', saveas)
-        try:
-            core_key = eval(core_key, user_dict)
-            if hasattr(core_key, 'instanceName'):
-                use_initialize = True
-        except:
-            pass
+    parse_result = parse_var_name(saveas)
+    if not parse_result['valid']:
+        raise DAError("Variable name " + saveas + " is invalid: " + parse_result['reason'])
+    method = None
+    if parse_result['final_parts'][1] != '':
+        if parse_result['final_parts'][1][0] == '.':
+            try:
+                core_key = eval(parse_result['final_parts'][0], user_dict)
+                if hasattr(core_key, 'instanceName'):
+                    method = 'attribute'
+            except:
+                pass
+        elif parse_result['final_parts'][1][0] == '[':
+            try:
+                core_key = eval(parse_result['final_parts'][0], user_dict)
+                if hasattr(core_key, 'instanceName'):
+                    method = 'index'
+            except:
+                pass
     if "import docassemble.base.core" not in commands:
         commands.append("import docassemble.base.core")
-    if use_initialize:
+    if method == 'attribute':
+        attribute_name = parse_result['final_parts'][1][1:]
         if datatype == 'checkboxes':
-            commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DADict, auto_gather=False)")
+            commands.append(parse_result['final_parts'][0] + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DADict, auto_gather=False)")
         elif datatype == 'object_checkboxes':
-            commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DAList, auto_gather=False)")
+            commands.append(parse_result['final_parts'][0] + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DAList, auto_gather=False)")
+    elif method == 'index':
+        index_name = parse_result['final_parts'][1][1:-1]
+        if datatype == 'checkboxes':
+            commands.append(parse_result['final_parts'][0] + ".initializeObject(" + repr(index_name) + ", docassemble.base.core.DADict, auto_gather=False)")
+        elif datatype == 'object_checkboxes':
+            commands.append(parse_result['final_parts'][0] + ".initializeObject(" + repr(index_name) + ", docassemble.base.core.DAList, auto_gather=False)")
     else:
         if datatype == 'checkboxes':
             commands.append(saveas + ' = docassemble.base.core.DADict(' + repr(saveas) + ', auto_gather=False)')
@@ -4835,6 +4860,7 @@ def ensure_object_exists(saveas, datatype, user_dict, commands=None):
             commands.append(saveas + ' = docassemble.base.core.DAList(' + repr(saveas) + ', auto_gather=False)')
     if execute:
         for command in commands:
+            # logmessage("Doing " + command)
             exec(command, user_dict)
     
 def invalid_variable_name(varname):
@@ -4861,3 +4887,84 @@ def exec_with_trap(the_question, the_dict):
                 exc.traceback = traceback.format_exc()
         del tb
         raise
+
+ok_outside_string = string.ascii_letters + string.digits + '.[]_'
+ok_inside_string = string.ascii_letters + string.digits + string.punctuation + " "
+
+def parse_var_name(var):
+    var_len = len(var)
+    cur_pos = 0
+    in_bracket = 0
+    in_quote = 0
+    the_quote = None
+    dots = list()
+    brackets = list()
+    while cur_pos < var_len:
+        char = var[cur_pos]
+        if char == '[':
+            if cur_pos == 0:
+                return dict(valid=False, reason='bracket at start')
+            if var[cur_pos - 1] == '.':
+                return dict(valid=False, reason='dot before bracket')
+            if not in_quote:
+                if in_bracket:
+                    return dict(valid=False, reason='nested brackets')
+                in_bracket = 1
+                brackets.append(cur_pos)
+        elif char == ']':
+            if cur_pos == 0:
+                return dict(valid=False)
+            if var[cur_pos - 1] == '.':
+                return dict(valid=False, reason='dot before bracket')
+            if not in_quote:
+                if in_bracket:
+                    in_bracket = 0
+                else:
+                    return dict(valid=False, reason='unexpected end bracket')
+        elif char in ("'", '"'):
+            if cur_pos == 0 or not in_bracket:
+                return dict(valid=False, reason='unexpected quote mark')
+            if in_quote:
+                if char == the_quote and var[cur_pos - 1] != "\\":
+                    in_quote = 0
+            else:
+                in_quote = 1
+                the_quote = char
+        else:
+            if not (in_quote or in_bracket):
+                if char not in ok_outside_string:
+                    return dict(valid=False, reason='invalid character in variable name')
+            if cur_pos == 0:
+                if char in string.digits or char == '.':
+                    return dict(valid=False, reason='starts with digit or dot')
+            else:
+                if var[cur_pos - 1] == '.' and char in string.digits:
+                    return dict(valid=False, reason='attribute starts with digit')
+            if in_quote:
+                if char not in ok_inside_string:
+                    return dict(valid=False, reason='invalid character in string')
+            else:
+                if char == '.':
+                    if in_bracket:
+                        return dict(valid=False, reason="dot in bracket")
+                    if cur_pos > 0 and var[cur_pos - 1] == '.':
+                        return dict(valid=False, reason = 'two dots')
+                    dots.append(cur_pos)
+        cur_pos += 1
+    if in_bracket:
+        return dict(valid=False, reason='dangling bracket part')
+    if in_quote:
+        return dict(valid=False, reason='dangling quote part')
+    objects = [var[0:dot_pos] for dot_pos in dots]
+    bracket_objects = [var[0:bracket_pos] for bracket_pos in brackets]
+    final_cut = 0
+    if len(dots):
+        final_cut = dots[-1]
+    if len(brackets):
+        if brackets[-1] > final_cut:
+            final_cut = brackets[-1]
+    if final_cut > 0:
+        final_parts = (var[0:final_cut], var[final_cut:])
+    else:
+        final_parts = (var, '')
+    return dict(valid=True, objects=objects, bracket_objects=bracket_objects, final_parts=final_parts)

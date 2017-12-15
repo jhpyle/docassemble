@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.9] - 2017-12-15
+### Fixed
+- Problem with dictionaries inside of dictionaries.
+- Some of the administrative page customizations did not work.
+
 ## [0.2.8] - 2017-12-14
 ### Fixed
 - Inserting images into PDFs using `field code`.
@@ -11,7 +16,7 @@
 
 ## [0.2.6] - 2017-12-12
 ### Fixed
-- GitHub pagination problem with `links_from_header`
+- GitHub pagination problem with `links_from_header`.
 
 ## [0.2.5] - 2017-12-12
 ### Changed

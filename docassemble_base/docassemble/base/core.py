@@ -1225,6 +1225,10 @@ class DADict(DAObject):
                     minimum = 0
             else:
                 minimum = 1
+        if item_object_type is None and hasattr(self, 'new_item_name') and self.new_item_name in self.elements:
+            delattr(self, 'new_item_name')
+            if hasattr(self, 'there_is_another'):
+                delattr(self, 'there_is_another')
         while (number is not None and len(self.elements) < int(number)) or (minimum is not None and len(self.elements) < int(minimum)) or (self.ask_number is False and minimum != 0 and self.there_is_another):
             if item_object_type is not None:
                 self.initializeObject(self.new_item_name, item_object_type, **new_item_parameters)
@@ -1243,11 +1247,11 @@ class DADict(DAObject):
                         delattr(self, 'there_is_another')
                 else:
                     the_name = self.new_item_name
+                    self.__getitem__(the_name)
                     if hasattr(self, 'new_item_name'):
                         delattr(self, 'new_item_name')
                     if hasattr(self, 'there_is_another'):
                         delattr(self, 'there_is_another')
-                    self.__getitem__(the_name)
             if hasattr(self, 'there_is_another'):
                 delattr(self, 'there_is_another')
         self._validate(item_object_type, complete_attribute, keys=keys)
@@ -1367,10 +1371,8 @@ class DADict(DAObject):
         self._trigger_gather()
         return self.elements.__hash__(the_object)
     def __str__(self):
-        self._trigger_gather()
         return self.comma_and_list()
     def __unicode__(self):
-        self._trigger_gather()
         return unicode(self.__str__())
     def union(self, other_set):
         """Returns a Python set consisting of the keys of the current dict,

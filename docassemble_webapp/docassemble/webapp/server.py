@@ -96,8 +96,8 @@ key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice|.*\[[ijklmn]\]
 match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
 match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
 match_brackets = re.compile('\[\'.*\'\]$')
-match_inside_and_outside_brackets = re.compile('(.*)(\[\'[^\]]+\'\])$')
-match_inside_brackets = re.compile('\[\'([^\]]+)\'\]')
+match_inside_and_outside_brackets = re.compile('(.*)(\[u?\'[^\]]+\'\])$')
+match_inside_brackets = re.compile('\[u?\'([^\]]+)\'\]')
 valid_python_var = re.compile(r'[A-Za-z][A-Za-z0-9\_]+')
 
 if 'mail' not in daconfig:
@@ -616,7 +616,7 @@ else:
     app.config['BUTTON_CLASS'] = 'btn-da'
 
 page_parts = dict()
-for page_key in ('login page', 'register page', 'interview page', 'start page', 'profile page', 'reset password', 'forgot password', 'change password'):
+for page_key in ('login page', 'register page', 'interview page', 'start page', 'profile page', 'reset password page', 'forgot password page', 'change password page'):
     for part_key in ('title', 'tab title', 'extra css', 'extra javascript', 'heading', 'pre', 'submit', 'post'):
         key = page_key + ' ' + part_key
         if key in daconfig:
@@ -627,6 +627,8 @@ for page_key in ('login page', 'register page', 'interview page', 'start page', 
             else:
                 page_parts[key] = {'*': Markup(unicode(daconfig[key]))}
 
+    
+                
 def get_sms_session(phone_number, config='default'):
     sess_info = None
     if twilio_config is None:
@@ -4281,6 +4283,7 @@ def index():
                 post_data[known_varnames[orig_key]] = post_data[orig_key]
         if key.endswith('.gathered'):
             objname = re.sub(r'\.gathered$', '', key)
+            logmessage("Considering gathered key: " + str(key))
             try:
                 eval(objname, user_dict)
             except:
@@ -4292,6 +4295,7 @@ def index():
                         docassemble.base.parse.ensure_object_exists(objname, 'checkboxes', user_dict)
     field_error = dict()
     validated = True
+    imported_core = False
     for orig_key in post_data:
         if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
             continue
@@ -4310,17 +4314,14 @@ def index():
         else:
             #logmessage("orig_key " + str(orig_key) + " is not set to empty")
             set_to_empty = False
+        #logmessage("Searching key " + str(key))
         if match_brackets.search(key):
-            #logmessage("Searching key " + str(key))
             match = match_inside_and_outside_brackets.search(key)
             try:
                 key = match.group(1)
             except:
                 raise DAError("index: invalid bracket name " + str(match.group(1)))
             real_key = safeid(key)
-            if match_invalid.search(key):
-                error_messages.append(("error", "Error: Invalid character in key: " + key))
-                break
             b_match = match_inside_brackets.search(match.group(2))
             if b_match:
                 try:
@@ -4328,44 +4329,129 @@ def index():
                 except:
                     bracket_expression = b_match.group(1)
             bracket = match_inside_brackets.sub(process_bracket_expression, match.group(2))
-            #logmessage("key is " + str(key) + " and bracket is " + str(bracket))
-            if key in user_dict:
-                known_variables[key] = True
-            if key not in known_variables:
+            parse_result = docassemble.base.parse.parse_var_name(key)
+            if not parse_result['valid']:
+                error_messages.append(("error", "Error: Invalid key " + key + ": " + parse_result['reason']))
+                break
+            key = key + bracket
+            core_key_name = parse_result['final_parts'][0]
+            whole_key = core_key_name + parse_result['final_parts'][1]
+            real_key = safeid(whole_key)
+            # logmessage("core key name is " + str(core_key_name) + " whole key is " + str(whole_key) + " Checking for existence of " + str(whole_key))
+            if whole_key in user_dict:
+                it_exists = True
+            else:
                 try:
-                    eval(key, user_dict)
+                    the_object = eval(whole_key, user_dict)
+                    it_exists = True
                 except:
-                    #logmessage("setting key " + str(key) + " to empty dict")
-                    #m = re.search(r'(.*)\.([^.]+)', key)
-                    use_initialize = False
-                    if re.search(r'\.', key):
-                        core_key_name = re.sub(r'^(.*)\..*', r'\1', key)
-                        attribute_name = re.sub(r'.*\.', '', key)
-                        #logmessage("Core key is " + str(core_key_name))
+                    it_exists = False
+            # if it_exists:
+            #     logmessage(whole_key + "exists and is a " + the_object.__class__.__name__)
+            if not it_exists:
+                # logmessage("It does not exist")
+                method = None
+                commands = list()
+                # logmessage(repr(parse_result['final_parts']))
+                if parse_result['final_parts'][1] != '':
+                    if parse_result['final_parts'][1][0] == '.':
                         try:
-                            core_key = eval(core_key, user_dict)
-                            if isinstance(core_key, DAObject):
-                                use_initialize = True
+                            #logmessage("Evaling " + core_key_name)
+                            core_key = eval(core_key_name, user_dict)
+                            if hasattr(core_key, 'instanceName'):
+                                method = 'attribute'
                         except:
                             pass
-                    objtype = 'DADict'
-                    if orig_key in known_datatypes:
-                        #logmessage("key " + key + " is a " + known_datatypes[orig_key])
-                        if known_datatypes[orig_key] == 'object_checkboxes':
-                            objtype = 'DAList'
-                    if use_initialize:
-                        the_string = "import docassemble.base.core\n" + core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base." + objtype + ", auto_gather=False, gathered=True)"
-                    else:
-                        the_string = "import docassemble.base.core\n" + key + ' = docassemble.base.core.' + objtype + '(' + repr(key) + ', auto_gather=False, gathered=True)'
-                    try:
-                        exec(the_string, user_dict)
-                        known_variables[key] = True
-                    except:
-                        raise DAError("cannot initialize " + key)
-            key = key + bracket
+                    elif parse_result['final_parts'][1][0] == '[':
+                        try:
+                            #logmessage("Evaling " + core_key_name)
+                            core_key = eval(core_key_name, user_dict)
+                            if hasattr(core_key, 'instanceName'):
+                                method = 'index'
+                        except:
+                            pass
+                datatype = known_datatypes.get(real_key, None)
+                #logmessage("datatype is " + str(datatype))
+                #logmessage("method is " + str(method))
+                if not imported_core:
+                    commands.append("import docassemble.base.core")
+                    imported_core = True
+                if method == 'attribute':
+                    attribute_name = parse_result['final_parts'][1][1:]
+                    if datatype == 'checkboxes':
+                        commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
+                    elif datatype == 'object_checkboxes':
+                        commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
+                elif method == 'index':
+                    index_name = parse_result['final_parts'][1][1:-1]
+                    if datatype == 'checkboxes':
+                        commands.append(core_key_name + ".initializeObject(" + repr(index_name) + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
+                    elif datatype == 'object_checkboxes':
+                        commands.append(core_key_name + ".initializeObject(" + repr(index_name) + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
+                else:
+                    if datatype == 'checkboxes':
+                        commands.append(whole_key + ' = docassemble.base.core.DADict(' + repr(whole_key) + ', auto_gather=False, gathered=True)')
+                    elif datatype == 'object_checkboxes':
+                        commands.append(whole_key + ' = docassemble.base.core.DAList(' + repr(whole_key) + ', auto_gather=False, gathered=True)')
+                for command in commands:
+                    # logmessage("Doing " + command)
+                    exec(command, user_dict)            
+            #logmessage("key is now " + key)
+            # match = match_inside_and_outside_brackets.search(key)
+            # try:
+            #     key = match.group(1)
+            # except:
+            #     raise DAError("index: invalid bracket name " + str(match.group(1)))
+            # real_key = safeid(key)
+            # if match_invalid_key.search(key):
+            #     error_messages.append(("error", "Error: Invalid character in key: " + key))
+            #     break
+            # b_match = match_inside_brackets.search(match.group(2))
+            # if b_match:
+            #     try:
+            #         bracket_expression = from_safeid(b_match.group(1))
+            #     except:
+            #         bracket_expression = b_match.group(1)
+            # bracket = match_inside_brackets.sub(process_bracket_expression, match.group(2))
+            # #logmessage("key is " + str(key) + " and bracket is " + str(bracket))
+            # if key in user_dict:
+            #     known_variables[key] = True
+            # if key not in known_variables:
+            #     try:
+            #         eval(key, user_dict)
+            #     except:
+            #         #logmessage("setting key " + str(key) + " to empty dict")
+            #         #m = re.search(r'(.*)\.([^.]+)', key)
+            #         use_initialize = False
+            #         if re.search(r'\.', key):
+            #             core_key_name = re.sub(r'^(.*)\..*', r'\1', key)
+            #             attribute_name = re.sub(r'.*\.', '', key)
+            #             #logmessage("Core key is " + str(core_key_name))
+            #             try:
+            #                 core_key = eval(core_key, user_dict)
+            #                 if isinstance(core_key, DAObject):
+            #                     use_initialize = True
+            #             except:
+            #                 pass
+            #         objtype = 'DADict'
+            #         if orig_key in known_datatypes:
+            #             #logmessage("key " + key + " is a " + known_datatypes[orig_key])
+            #             if known_datatypes[orig_key] == 'object_checkboxes':
+            #                 objtype = 'DAList'
+            #         if use_initialize:
+            #             the_string = "import docassemble.base.core\n" + core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base." + objtype + ", auto_gather=False, gathered=True)"
+            #         else:
+            #             the_string = "import docassemble.base.core\n" + key + ' = docassemble.base.core.' + objtype + '(' + repr(key) + ', auto_gather=False, gathered=True)'
+            #         try:
+            #             exec(the_string, user_dict)
+            #             known_variables[key] = True
+            #         except:
+            #             raise DAError("cannot initialize " + key)
+            # key = key + bracket
         else:
             real_key = orig_key
-            if match_invalid_key.search(key):
+            parse_result = docassemble.base.parse.parse_var_name(key)
+            if not parse_result['valid']:
                 error_messages.append(("error", "Error: Invalid character in key: " + key))
                 break
         #logmessage("Real key is " + real_key + " and key is " + key)
@@ -5761,6 +5847,9 @@ def index():
         }
         daCsrf = data.csrf_token;
         if (data.action == 'body'){""" + forceFullScreen + """
+          if ("activeElement" in document){
+            document.activeElement.blur();
+          }
           $("body").html(data.body);
           $("body").removeClass();
           $("body").addClass(data.bodyclass);
@@ -6836,9 +6925,9 @@ def index():
             # output += '</ul>\n'
             output += get_history(interview, interview_status)
         #output += '          <h4>' + word('Names defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
-        output += '          <h4>' + word('Question names') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview.questions_by_name.keys())]) + '</p>' + "\n"
-        if len(interview.questions_by_id):
-            output += '          <h4>' + word('Question IDs') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview.questions_by_id.keys())]) + '</p>' + "\n"
+        #output += '          <h4>' + word('Question names') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview.questions_by_name.keys())]) + '</p>' + "\n"
+        #if len(interview.questions_by_id):
+        #    output += '          <h4>' + word('Question IDs') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview.questions_by_id.keys())]) + '</p>' + "\n"
         output += '          <p><a target="_blank" href="' + url_for('get_variables') + '">' + word('Show variables and values') + '</a></p>' + "\n"
             # output += '          <h4>' + word('Variables as JSON') + '</h4>' + "\n        <pre>" + docassemble.base.functions.dict_as_json(user_dict) + '</pre>' + "\n"
         output += '        </div>' + "\n"
@@ -8950,7 +9039,7 @@ def monitor():
               }
               e.preventDefault();
               return false;
-          })
+          });
       });
     </script>"""
     return render_template('pages/monitor.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Monitor'), page_title=word('Monitor')), 200
