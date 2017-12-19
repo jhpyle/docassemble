@@ -6,12 +6,12 @@ metadata:
   example end: 3
 ---
 modules:
-  docassemble.demo.validationfuncs
+  - docassemble.demo.validationfuncs
 ---
 mandatory: True
 question: |
   There were ${ number_of_tires }
-  in the garage.
+  tires in the garage.
 ---
 question: |
   How many car tires are in the

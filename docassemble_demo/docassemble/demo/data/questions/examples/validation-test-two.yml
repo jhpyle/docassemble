@@ -11,7 +11,7 @@ modules:
 mandatory: True
 question: |
   There were ${ number_of_tires }
-  in the garage.
+  tires in the garage.
 ---
 question: |
   How many car tires are in the

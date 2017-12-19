@@ -44,6 +44,7 @@ fi
 
 function stopfunc {
     /usr/sbin/apache2ctl stop
+    while pgrep apache2 > /dev/null; do sleep 1; done
     exit 0
 }
 

@@ -4631,16 +4631,23 @@ def index():
         else:
             the_string = key + ' = ' + data
             if orig_key in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_key] and hasattr(the_question.fields[field_numbers[orig_key]], 'validate'):
-                logmessage("field has validation function")
+                #logmessage("field " + orig_key + " has validation function")
+                field_name = safeid('_field_' + str(field_numbers[orig_key]))
+                if field_name in post_data:
+                    the_key = field_name
+                else:
+                    the_key = orig_key
                 the_func = eval(the_question.fields[field_numbers[orig_key]].validate['compute'], user_dict)
                 try:
                     the_result = the_func(test_data)
+                    #logmessage("the result was " + str(the_result))
                     if not the_result:
-                        field_error[orig_key] = word("Please enter a valid value.")
+                        field_error[the_key] = word("Please enter a valid value.")
                         validated = False
                         continue
                 except Exception as errstr:
-                    field_error[orig_key] = str(errstr)
+                    #logmessage("the result was an exception")
+                    field_error[the_key] = str(errstr)
                     validated = False
                     continue
         # logmessage("Doing " + str(the_string))

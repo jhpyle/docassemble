@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.11] - 2017-12-18
+### Fixed
+- Problem with validating fields inside `show if`.
+
 ## [0.2.10] - 2017-12-15
 ### Fixed
 - Problem recognizing string indices in code.

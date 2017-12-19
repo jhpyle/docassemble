@@ -107,7 +107,7 @@ def select_option(step, value, label):
             option.click()
             break
 
-@step('I select "([^"]+)"')
+@step('I choose "([^"]+)"')
 def select_option_from_only_select(step, value):
     elem = world.browser.find_element_by_xpath('//select')
     for option in elem.find_elements_by_tag_name('option'):
