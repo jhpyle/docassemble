@@ -4,6 +4,22 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.12](https://github.com/jhpyle/docassemble/releases/tag/v0.2.12) - 2017-12-24
+
+### Fixed
+- The `for` attributes of `<label>` elements were mislabeled when a
+  field with `show if` defined the same variable.
+
+## [0.2.11](https://github.com/jhpyle/docassemble/releases/tag/v0.2.11) - 2017-12-18
+
+### Fixed
+- Problem with validating fields inside `show if`.
+
+## [0.2.10](https://github.com/jhpyle/docassemble/releases/tag/v0.2.10) - 2017-12-15
+
+### Fixed
+- Problem recognizing string indices in code.
+
 ## [0.2.9](https://github.com/jhpyle/docassemble/releases/tag/v0.2.9) - 2017-12-15
 
 ### Fixed

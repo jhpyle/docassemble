@@ -824,6 +824,9 @@
 
     Your draft choices were
     ${ comma_and_list(drafts) }.
+"checkbox-dict-dict": |-
+  modules:
+    - docassemble.base.util
 "checkbox-export-value": |-
   question: |
     Here is your PDF form
@@ -8878,12 +8881,12 @@
       raise Exception("The number of fruit must add up to 10!")
 "validation-test": |-
   modules:
-    docassemble.demo.validationfuncs
+    - docassemble.demo.validationfuncs
   ---
   mandatory: True
   question: |
     There were ${ number_of_tires }
-    in the garage.
+    tires in the garage.
   ---
   question: |
     How many car tires are in the
@@ -8899,7 +8902,7 @@
   mandatory: True
   question: |
     There were ${ number_of_tires }
-    in the garage.
+    tires in the garage.
   ---
   question: |
     How many car tires are in the

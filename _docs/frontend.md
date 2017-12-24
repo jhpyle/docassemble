@@ -140,7 +140,7 @@ screen to the [JSON] representation.
 
 # <a name="login"></a>Example of "logging in" with JavaScript
 
-If you need to programmatically "log in" to **docassemble**, you can
+If you want to programmatically "log in" to **docassemble**, you can
 use code like the following:
 
 {% highlight js %}
