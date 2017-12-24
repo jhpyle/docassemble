@@ -9,9 +9,12 @@ fields:
   - "Select the fruits you like": likes_fruit
     datatype: checkboxes
     choices:
-      - Apples
-      - Peaches
-      - Pears
+      - Apples: apple
+        help: red
+      - Peaches: peach
+        help: peachy
+      - Pears: pear
+        help: gritty
   - "What is your favorite fruit overall?": favorite_fruit
 ---
 question: |

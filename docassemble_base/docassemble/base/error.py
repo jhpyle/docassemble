@@ -3,7 +3,7 @@ class DAError(Exception):
         self.value = value
         self.error_code = code
     def __str__(self):
-        return str(self.value)
+        return unicode(self.value)
 
 class CodeExecute(Exception):
     def __init__(self, compute, question):
@@ -16,7 +16,7 @@ class CodeExecute(Exception):
 class ForcedNameError(NameError):
     def __init__(self, *pargs):
         the_args = [x for x in pargs]
-        self.name = str(the_args.pop(0))
+        self.name = unicode(the_args.pop(0))
         if len(the_args):
             self.next_action = list()
             while len(the_args):
@@ -44,7 +44,7 @@ class MandatoryQuestion(Exception):
     def __init__(self):
         self.value = 'Mandatory Question'
     def __str__(self):
-        return str(self.value)
+        return unicode(self.value)
 
 class QuestionError(Exception):
     def __init__(self, *pargs, **kwargs):

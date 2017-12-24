@@ -11,6 +11,7 @@
 "anonymous": Null
 "Anonymous": Null
 "anonymous visitor": Null
+"API Keys": Null
 "Apply": Null
 "App": Null
 ", are attached": Null
@@ -58,8 +59,10 @@
 "Continue": Null
 "Control": Null
 "could not connect to Google Drive": Null
+"Could not create new key": Null
 "Country code": Null
 "Created new Markdown file called ": Null
+"Create": Null
 "Create Package": Null
 "day": Null
 "Decorations": Null
@@ -80,10 +83,13 @@
 "Done": Null
 "-- Do not link --": Null
 "Download": Null
+"Edit API Key": Null
 "Edit module files": Null
 "Edit source files": Null
 "Edit text files": Null
 "Edit User Profile": Null
+"e.g., 56.33.114.49": Null
+"e.g., *example.com": Null
 "E-mail address is required": Null
 "E-mail address": Null
 "E-mail is required": Null
@@ -171,6 +177,7 @@
 "is not a valid number.": Null
 "is not a whole number.": Null
 "is not within the range.": Null
+"is": Null
 "Join": Null
 "JSON file": Null
 "Language": Null
@@ -205,6 +212,7 @@
 "Name of new privilege is required": Null
 "Name of new privilege": Null
 "Names defined": Null
+"New API Key": Null
 "New chat connection from": Null
 "New conversation above": Null
 "New conversation below": Null
@@ -320,6 +328,7 @@
 "Search": Null
 "Second subdivision": Null
 "Section": Null
+"Security Method": Null
 "Select a value between": Null
 "Select box": Null
 "Select file": Null
@@ -370,7 +379,10 @@
 "The author is": Null
 "The configuration file was saved.": Null
 "The information was saved.": Null
+"The key no longer exists": Null
+"The key was deleted": Null
 "The mapping was reset because the folder does not appear to exist anymore.": Null
+"The name must be filled in.": Null
 "The new user has been created": Null
 "The operator is no longer controlling your screen.": Null
 "The package information was saved.": Null
@@ -510,6 +522,7 @@
 "You have signed out successfully.": Null
 "You must attach a file.": Null
 "You must provide a file.": Null
+"You must select an option.": Null
 "You must sign your name to continue.": Null
 "You must type at least": Null
 "You need to enter a complete e-mail address.": Null
@@ -536,6 +549,7 @@
 "Your e-mail address": Null
 "Your GitHub integration has already been configured.": Null
 "Your information was saved.": Null
+"Your new API key, known internally as": Null
 "Your password is insecure and needs to be changed": Null
 "Your request was submitted.": Null
 "Your screen is being controlled by an operator.": Null

@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.12] - 2017-12-24
+### Fixed
+- The `for` attributes of `<label>` elements were mislabeled when a
+  field with `show if` defined the same variable.
+
 ## [0.2.11] - 2017-12-18
 ### Fixed
 - Problem with validating fields inside `show if`.

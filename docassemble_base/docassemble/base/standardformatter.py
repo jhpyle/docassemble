@@ -763,10 +763,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             if hasattr(field, 'saveas'):
                 varnames[safeid('_field_' + str(field.number))] = field.saveas
                 the_saveas = saveas_to_use[field.saveas]
-                # if (hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras) or (hasattr(field, 'disableothers') and field.disableothers):
-                #     the_saveas = safeid('_field_' + str(field.number))
-                # else:
-                #     the_saveas = field.saveas                        
+                if (hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras) or (hasattr(field, 'disableothers') and field.disableothers):
+                    label_saveas = the_saveas
+                else:
+                    label_saveas = field.saveas                        
                 if not (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']):
                 #     validation_rules['messages'][the_saveas] = dict()
                 #     validation_rules['rules'][the_saveas] = dict()
@@ -888,7 +888,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
                     fieldlist.append('                <div class="form-group yesnospacing' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
                 else:
-                    fieldlist.append('                <div class="form-group' + req_tag + '"><label for="' + escape_id(the_saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group' + req_tag + '"><label for="' + escape_id(label_saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
             if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras:
                 fieldlist.append('                </div>\n')
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n              <fieldset>\n'

@@ -492,7 +492,7 @@ from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
 #from flask_wtf.csrf import generate_csrf
-from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm
+from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey
 from flask_mail import Mail, Message
 import flask_user.signals
 import flask_user.translations
@@ -9188,7 +9188,7 @@ def update_package():
         form.gitbranch.choices.append((form.gitbranch.data, form.gitbranch.data))
     action = request.args.get('action', None)
     target = request.args.get('package', None)
-    is_base_upgrade = request.args.get('package', False)
+    is_base_upgrade = request.args.get('base', False)
     branch = None
     if action is not None and target is not None:
         package_list, package_auth = get_package_info()
@@ -14663,6 +14663,310 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         del session['uid']
     return resp
 
+def api_verify(req, roles=None):
+    api_key = request.args.get('key', None)
+    if request.method == 'POST':
+        post_data = request.form.copy()
+        if 'key' in post_data:
+            api_key = post_data['key']
+    if api_key is None:
+        logmessage("api_verify: no API key provided")
+        return False
+    rkeys = r.keys('da:api:userid:*:key:' + api_key + ':info')
+    if len(rkeys) == 0:
+        logmessage("api_verify: API key not found")
+        return False
+    try:
+        info = json.loads(r.get(rkeys[0]))
+    except:
+        logmessage("api_verify: API information could not be unpacked")
+        return False
+    m = re.match('da:api:userid:([0-9]+):key:' + api_key + ':info', rkeys[0])
+    if not m:
+        logmessage("api_verify: user id could not be extracted")
+        return False
+    user_id = m.group(1)
+    if type(info) is not dict:
+        logmessage("api_verify: API information was in the wrong format")
+        return False
+    if len(info['constraints']):
+        if info['method'] == 'ip' and request.remote_addr not in info['constraints']:
+            logmessage("api_verify: IP address " + str(request.remote_addr) + " did not match")
+            return False
+        if info['method'] == 'referer':
+            if not request.referrer:
+                logmessage("api_verify: could not authorize based on referer because no referer provided")
+                return False
+            matched = False
+            for constraint in info['constraints']:
+                constraint = re.sub(r'^[\*]+|[\*]+$', '', constraint)
+                constraint = re.escape(constraint)
+                constraint = re.sub(r'\\\*+', '.*', constraint)
+                referer = re.sub(r'\?.*', '', request.referrer)
+                if re.search(constraint, referer):
+                    matched = True
+                    break
+            if not matched:
+                logmessage("api_verify: authorization failure referer " + str(request.referrer) + " could not be matched")
+                return False
+    user = UserModel.query.filter_by(id=user_id).first()
+    if user is None:
+        logmessage("api_verify: user does not exist")
+        return False
+    login_user(user, remember=False)
+    if roles:
+        ok_role = False
+        for role in roles:
+            if current_user.has_role(role):
+                ok_role = True
+                break
+        if not ok_role:
+            logmessage("api_verify: user did not have correct privileges for resource")
+            return False
+    return True
+    
+# @app.route('/test_api', methods=['GET', 'POST'])
+# def test_api():
+#     if not api_verify(request):
+#         abort(403)
+#     return jsonify(dict(success=True, user_id=current_user.id))
+
+@app.route('/api/user_list', methods=['GET', 'POST'])
+def api_user_list():
+    if not api_verify(request, roles=['admin']):
+        abort(403)
+    user_list = []
+    for user in UserModel.query.filter_by(active=True).all():
+        user_info = dict(roles=[])
+        for role in user.roles:
+            user_info['roles'].append(role.name)
+        for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
+            user_info[attrib] = getattr(user, attrib)
+        user_list.append(user_info)
+    return jsonify(dict(success=True, data=user_list))
+
+@app.route('/api/user', methods=['GET', 'POST'])
+def api_user():
+    if not api_verify(request):
+        abort(403)
+    user_list = []
+    user = UserModel.query.filter_by(active=True, id=current_user.id).first()
+    user_info = dict(roles=[])
+    for role in user.roles:
+        user_info['roles'].append(role.name)
+    for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
+        user_info[attrib] = getattr(user, attrib)
+    return jsonify(dict(success=True, data=user_info))
+
+@app.route('/api/secret', methods=['GET'])
+def api_get_secret():
+    username = request.args.get('username', None)
+    password = request.args.get('password', None)
+    if username is None or password is None:
+        return jsonify(dict(success=False, error="A username and password must be supplied"))
+    user = UserModel.query.filter_by(active=True, email=username).first()
+    if user is None:
+        return jsonify(dict(success=False, error="Username not known"))
+    if daconfig.get('two factor authentication', False) is True and user.otp_secret is not None:
+        return jsonify(dict(success=False, error="Secret will not be supplied because two factor authentication is enabled"))
+    user_manager = current_app.user_manager
+    if not user_manager.get_password(user):
+        return jsonify(dict(success=False, error="Password not set"))
+    if not user_manager.verify_password(password, user):
+        return jsonify(dict(success=False, error="Incorrect password"))
+    return jsonify(dict(success=True, data=pad_to_16(MD5Hash(data=password).hexdigest())))
+
+@app.route('/api/user/<user_id>/interviews', methods=['GET', 'POST'])
+def api_user_interviews():
+    if not api_verify(request, roles=['admin']):
+        abort(403)
+    tag = request.args.get('tag', None)
+    # subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
+    # interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key, UserDict.modtime, UserDict.encrypted).filter(UserDictKeys.user_id == user_id).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).group_by(UserDictKeys.filename, UserDictKeys.key, UserDict.modtime, UserDict.encrypted)
+    # interviews = list()
+    # for interview_info in interview_query:
+    #     info = dict(filename=interview_info.filename, session=interview_info.key, utc_modtime=nice_utc_date(interview_info.modtime), encrypted=interview_info.encrypted)
+    #     interviews.append(info)
+    return jsonify(dict(success=True, data=user_interviews(user_id=user_id, secret=secret, exclude_invalid=False, tag=tag)))
+
+@app.route('/manage_api', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def manage_api():
+    form = APIKey(request.form)
+    action = request.args.get('action', None)
+    api_key = request.args.get('key', None)
+    argu = dict()
+    argu['mode'] = 'list'
+    if action is None:
+        action = 'list'
+    argu['form'] = form
+    argu['extra_js'] = Markup("""
+<script>
+  function remove_constraint(elem){
+    $(elem).parents('.constraintlist div').remove();
+    fix_constraints();
+  }
+  function fix_constraints(){
+    var empty
+    var filled_exist = 0;
+    var empty_exist = 0;
+    $(".constraintlist input").each(function(){
+      if ($(this).val() == ''){
+        empty_exist = 1;
+      }
+      else{
+        filled_exist = 1;
+      }
+      if (!($(this).next().length)){
+        var new_span = $('<span>');
+        var new_a = $('<a>');
+        var new_i = $('<i>');
+        $(new_a).addClass('pointer');
+        $(new_span).addClass('input-group-addon');
+        $(new_span).append(new_a);
+        $(new_a).append(new_i);
+        $(new_i).addClass('glyphicon glyphicon-remove');
+        $(new_a).on('click', function(){remove_constraint(this);});
+        $(this).parent().append(new_span);
+      }
+    });
+    if (empty_exist == 0){
+      var new_div = $('<div>');
+      var new_input = $('<input>');
+      $(new_div).append(new_input);
+      $(new_div).addClass('input-group');
+      $(new_input).addClass('form-control');
+      $(new_input).attr('type', 'text');
+      if ($("#method").val() == 'ip'){
+        $(new_input).attr('placeholder', """ + repr(str(word('e.g., 56.33.114.49'))) + """);
+      }
+      else{
+        $(new_input).attr('placeholder', """ + repr(str(word('e.g., *example.com'))) + """);
+      }
+      $(new_input).on('change', fix_constraints);
+      $(new_input).on('keyup', fix_constraints);
+      $(".constraintlist").append(new_div);
+      var new_span = $('<span>');
+      var new_a = $('<a>');
+      var new_i = $('<i>');
+      $(new_a).addClass('pointer');
+      $(new_span).addClass('input-group-addon');
+      $(new_span).append(new_a);
+      $(new_a).append(new_i);
+      $(new_i).addClass('glyphicon glyphicon-remove');
+      $(new_a).on('click', function(){remove_constraint(this);});
+      $(new_div).append(new_span);
+    }
+  }
+  $( document ).ready(function(){
+    $(".constraintlist input").on('change', fix_constraints);
+    $("#method").on('change', function(){
+      $(".constraintlist div.input-group").remove();
+      fix_constraints();
+    });
+    $("#submit").on('click', function(){
+      var the_constraints = [];
+      $(".constraintlist input").each(function(){
+        if ($(this).val() != ''){
+          the_constraints.push($(this).val());
+        }
+      });
+      $("#security").val(JSON.stringify(the_constraints));
+    });
+    fix_constraints();
+  });
+</script>
+""")
+    form.method.choices = [('ip', 'IP Address'), ('referer', 'Referring URL')]
+    if request.method == 'POST' and form.validate():
+        action = form.action.data
+        try:
+            constraints = json.loads(form.security.data)
+            if type(constraints) is not list:
+                constraints = []
+        except:
+            constraints = []
+        if action == 'new':
+            argu['title'] = word("New API Key")
+            info = json.dumps(dict(name=form.name.data, method=form.method.data, constraints=constraints))
+            success = False
+            for attempt in range(10):
+                api_key = random_alphanumeric(32)
+                if not len(r.keys('da:api:userid:*:key:' + api_key + ':info')):
+                    r.set('da:api:userid:' + str(current_user.id) + ':key:' + api_key + ':info', info)
+                    success = True
+                    break
+            if not success:
+                flash(word("Could not create new key"), 'error')
+                return render_template('pages/manage_api.html', **argu)
+            argu['description'] = Markup(word("Your new API key, known internally as") + " " + form.name.data + ", " + word("is") + " <code>" + api_key + "</code>.")
+        elif action == 'edit':
+            argu['title'] = word("Edit API Key")
+            api_key = form.key.data
+            argu['api_key'] = api_key
+            rkey = 'da:api:userid:' + str(current_user.id) + ':key:' + str(form.key.data) + ':info'
+            existing_key = r.get(rkey)
+            if existing_key is None:
+                flash(word("The key no longer exists"), 'error')
+                return render_template('pages/manage_api.html', **argu)
+            if form.delete.data:
+                r.delete(rkey)
+                flash(word("The key was deleted"), 'error')
+            else:
+                try:
+                    info = json.loads(existing_key)
+                except:
+                    flash(word("The key no longer exists"), 'error')
+                    return render_template('pages/manage_api.html', **argu)
+                info['name'] = form.name.data
+                if form.method.data != info['method'] and form.method.data in ('ip', 'referer'):
+                    info['method'] = form.method.data
+                info['constraints'] = constraints
+                r.set(rkey, json.dumps(info))
+        action = 'list'
+    if action == 'new':
+        argu['title'] = word("New API Key")
+        argu['mode'] = 'new'
+    if api_key is not None and action == 'edit':
+        argu['title'] = word("Edit API Key")
+        argu['api_key'] = api_key
+        argu['mode'] = 'edit'
+        rkey = 'da:api:userid:' + str(current_user.id) + ':key:' + api_key + ':info'
+        info = r.get(rkey)
+        if info is not None:
+            info = json.loads(info)
+            if type(info) is dict and info.get('name', None) and info.get('method', None):
+                argu['method'] = info.get('method')
+                form.method.data = info.get('method')
+                form.action.data = 'edit'
+                form.key.data = api_key
+                form.name.data = info.get('name')
+                argu['constraints'] = info.get('constraints')
+    if action == 'list':
+        argu['title'] = word("API Keys")
+        argu['mode'] = 'list'
+        avail_keys = list()
+        for rkey in r.keys('da:api:userid:' + str(current_user.id) + ':key:*:info'):
+            try:
+                info = json.loads(r.get(rkey))
+                if type(info) is not dict:
+                    logmessage("not a dict")
+                    continue
+            except:
+                logmessage("error with json")
+                continue
+            m = re.match(r'da:api:userid:[0-9]+:key:([^:]+):info', rkey)
+            if not m:
+                logmessage("error with redis key")
+                continue
+            api_key = m.group(1)
+            info['api_key'] = api_key
+            avail_keys.append(info)
+        argu['avail_keys'] = avail_keys
+        argu['has_any_keys'] = True if len(avail_keys) > 0 else False
+    return render_template('pages/manage_api.html', **argu)
+    
 def retrieve_email(email_id):
     email = Email.query.filter_by(id=email_id).first()
     if email is None:

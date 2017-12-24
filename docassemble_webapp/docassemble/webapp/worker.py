@@ -454,8 +454,8 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
         interview = worker_controller.interview_cache.get_interview(yaml_filename)
         try:
             steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
-        except:
-            sys.stderr.write("background_action: could not decrypt dictionary\n")
+        except Exception as the_err:
+            sys.stderr.write("background_action: could not obtain dictionary because of " + str(the_err.__class__.__name__) + ": " + str(the_err) + "\n")
             return(worker_controller.functions.ReturnValue(extra=extra))
         if user_dict is None:
             sys.stderr.write("background_action: dictionary could not be found\n")

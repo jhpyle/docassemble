@@ -127,3 +127,29 @@ class TrainingUploadForm(FlaskForm):
     jsonfile = FileField(word('JSON file'))
     importtype = RadioField(word('Import method'))
     submit = SubmitField(word('Import'))
+
+class APIKey(FlaskForm):
+    action = HiddenField()
+    key = HiddenField()
+    security = HiddenField()
+    name = StringField(word('Name'), validators=[validators.Length(min=1, max=255)])
+    method = SelectField(word('Security Method'))
+    submit = SubmitField(word('Create'))
+    delete = SubmitField(word('Delete'))
+    def validate(self):
+        rv = FlaskForm.validate(self)
+        if not rv:
+            return False
+        if self.action.data not in ('edit', 'new'):
+            return False
+        has_error = False
+        if self.action.data in ('edit', 'new'):
+            if type(self.name.data) not in (str, unicode) or not re.search(r'[A-Za-z0-9]', self.name.data):
+                self.name.errors.append(word("The name must be filled in."))
+                has_error = True
+            if type(self.method.data) not in (str, unicode) or self.method.data not in ('referer', 'ip'):
+                self.name.errors.append(word("You must select an option."))
+                has_error = True
+        if has_error:
+            return False
+        return True

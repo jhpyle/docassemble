@@ -1549,3 +1549,7 @@ span.dainterviewsubtitle {
 .nonclick {
     cursor: default;
 }
+
+div.constraintlist a {
+    text-decoration: none;
+}
