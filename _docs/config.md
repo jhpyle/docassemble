@@ -1084,6 +1084,50 @@ else, set the `ocr dpi` directive:
 ocr dpi: 500
 {% endhighlight %}
 
+## <a name="retype password"></a>Controlling whether registering users need to retype their passwords
+
+By default, users when registering must type in their passwords twice.
+To allow users to register after only typing the password once, you
+can set the `retype password` directive to `False`.
+
+{% highlight yaml %}
+retype password: False
+{% endhighlight %}
+
+## <a name="password complexity"></a>Controlling password complexity
+
+By default, users when registering must select a password that is at
+least six characters long and that contains at least one lower case
+letter, at least one upper case letter, and at least one digit
+character.  You can alter these requirements using the `password
+complexity` directive.
+
+{% highlight yaml %}
+password complexity:
+  length: 8
+  uppercase: 0
+  lowercase: 1
+  digits: 2
+  punctuation: 1
+{% endhighlight %}
+
+In this example, passwords must be eight characters in length, must
+contain at least one lower case character, must contain at least two
+digit characters, and must contain at least one punctuation character.
+
+If you leave out any one of these directives, the default value for
+that setting will be used.
+
+Changing the `password complexity` directive has no effect on users
+who have already set their passwords.
+
+If a user tries to set a password that does not meet the password
+complexity requirements, an error message will be displayed that
+describes what the password complexity requirements are.  You can
+manually override this error message by setting the `error message`
+directive within the `password complexity` directive to what you want
+the error message to be.
+
 ## <a name="show login"></a>Hiding the login link
 
 If the `show login` directive is set to `False`, users will not see a

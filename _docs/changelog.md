@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.13](https://github.com/jhpyle/docassemble/releases/tag/v0.2.13) - 2017-12-24
+
+### Added
+- Ability to change the `password complexity` requirements in the 
+  Configuration.
+- Ability to control whether registering users must retype their 
+  passwords.
+
 ## [0.2.12](https://github.com/jhpyle/docassemble/releases/tag/v0.2.12) - 2017-12-24
 
 ### Fixed
