@@ -416,6 +416,43 @@ def make_safe_url(url):
         safe_url += '#' + parts.fragment
     return safe_url
 
+def password_validator(form, field):
+    password = list(field.data)
+    password_length = len(password)
+
+    lowers = uppers = digits = punct = 0
+    for ch in password:
+        if ch.islower():
+            lowers += 1
+        if ch.isupper():
+            uppers += 1
+        if ch.isdigit():
+            digits += 1
+        if not (ch.islower() or ch.isupper() or ch.isdigit()):
+            punct += 1
+
+    rules = daconfig.get('password complexity', dict())
+    is_valid = password_length >= rules.get('length', 6) and lowers >= rules.get('lowercase', 1) and uppers >= rules.get('uppercase', 1) and digits >= rules.get('digits', 1) and punct >= rules.get('punctuation', 0)
+    if not is_valid:
+        import wtforms
+        if 'error message' in rules:
+            error_message = unicode(rules['error message'])
+        else:
+            error_message = 'Password must be ' + docassemble.base.functions.quantity_noun(rules.get('length', 6), 'character') + ' long'
+            standards = list()
+            if rules.get('lowercase', 1) > 0:
+                standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('lowercase', 1), 'lowercase letter'))
+            if rules.get('uppercase', 1) > 0:
+                standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('uppercase', 1), 'uppercase letter'))
+            if rules.get('digits', 1) > 0:
+                standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('digits', 1), 'number'))
+            if rules.get('punctuation', 0) > 0:
+                standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('punctuation', 1), 'punctuation character'))
+            if len(standards):
+                error_message += ' with ' + docassemble.base.functions.comma_and_list(standards)
+            error_message += '.'
+        raise wtforms.ValidationError(word(error_message))
+
 import docassemble.webapp.setup
 from docassemble.webapp.app_object import app, csrf, flaskbabel
 from docassemble.webapp.db_object import db
@@ -425,7 +462,7 @@ from flask_user import UserManager, SQLAlchemyAdapter
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 from docassemble.webapp.users.views import user_profile_page
 user_manager = UserManager()
-user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, login_view_function=custom_login, resend_confirm_email_view_function=custom_resend_confirm_email, resend_confirm_email_form=MyResendConfirmEmailForm)
+user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, login_view_function=custom_login, resend_confirm_email_view_function=custom_resend_confirm_email, resend_confirm_email_form=MyResendConfirmEmailForm, password_validator=password_validator)
 from flask_login import LoginManager
 lm = LoginManager()
 lm.init_app(app)

@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.13] - 2017-12-24
+### Added
+- Ability to change the `password complexity` requirements in the 
+  Configuration.
+
 ## [0.2.12] - 2017-12-24
 ### Fixed
 - The `for` attributes of `<label>` elements were mislabeled when a

@@ -228,6 +228,15 @@ def load(**kwargs):
                 del daconfig[key]
             elif type(daconfig[key]) is not list:
                 daconfig[key] = [daconfig[key]]
+    if 'password complexity' in daconfig:
+        if type(daconfig['password complexity']) is dict:
+            for key in ('length', 'lowercase', 'uppercase', 'digits', 'punctuation'):
+                if key in daconfig['password complexity'] and type(daconfig['password complexity'][key]) is not int:
+                    sys.stderr.write("password complexity key " + key + " must be an integer\n")
+                    del daconfig['password complexity'][key]
+        else:
+            sys.stderr.write("password complexity must be in the form of a dict\n")
+            del daconfig['password complexity']
     return
 
 def default_config():
