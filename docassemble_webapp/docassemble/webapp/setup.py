@@ -23,6 +23,7 @@ app.config['USER_APP_NAME'] = app.config['APP_NAME']
 app.config['USER_SEND_PASSWORD_CHANGED_EMAIL'] = False
 app.config['USER_SEND_REGISTERED_EMAIL'] = False
 app.config['USER_SEND_USERNAME_CHANGED_EMAIL'] = False
+app.config['USER_ENABLE_RETYPE_PASSWORD'] = True if daconfig.get('retype password', False) else False
 app.config['USER_ENABLE_EMAIL'] = True
 app.config['USER_ENABLE_USERNAME'] = False
 app.config['USER_ENABLE_REGISTRATION'] = True

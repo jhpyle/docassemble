@@ -438,7 +438,7 @@ def password_validator(form, field):
         if 'error message' in rules:
             error_message = unicode(rules['error message'])
         else:
-            error_message = 'Password must be ' + docassemble.base.functions.quantity_noun(rules.get('length', 6), 'character') + ' long'
+            error_message = 'Password must be at least' + docassemble.base.functions.quantity_noun(rules.get('length', 6), 'character') + ' long'
             standards = list()
             if rules.get('lowercase', 1) > 0:
                 standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('lowercase', 1), 'lowercase letter'))
