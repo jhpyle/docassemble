@@ -950,7 +950,7 @@ class DADict(DAObject):
         exclusive = kwargs.get('exclusive', False)
         for parg in pargs:
             if hasattr(parg, '__iter__'):
-                the_list.extend([x for x in arg])
+                the_list.extend([x for x in parg])
             else:
                 the_list.append(parg)
         if len(the_list) == 0:
@@ -971,6 +971,12 @@ class DADict(DAObject):
                     return False
         self._trigger_gather()
         return True
+    def any_true(self, *pargs, **kwargs):
+        """Returns the opposite of all_false()."""
+        return not self.all_false(*pargs, **kwargs)
+    def any_false(self, *pargs, **kwargs):
+        """Returns the opposite of all_true()."""
+        return not self.all_true(*pargs, **kwargs)
     def all_true(self, *pargs, **kwargs):
         """Returns True if the values of all keys are True.  If one or more
         keys are provided as arguments, returns True if all of the
@@ -983,7 +989,7 @@ class DADict(DAObject):
         exclusive = kwargs.get('exclusive', False)
         for parg in pargs:
             if hasattr(parg, '__iter__'):
-                the_list.extend([x for x in arg])
+                the_list.extend([x for x in parg])
             else:
                 the_list.append(parg)
         if len(the_list) == 0:

@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.14] - 2017-12-27
+### Added
+- Customizable 404 error message.
+- The `any_true()` and `all_true()` methods for the `DADict` object.
+### Fixed
+- Typo in password complexity error message.
+
 ## [0.2.13] - 2017-12-24
 ### Added
 - Ability to change the `password complexity` requirements in the 

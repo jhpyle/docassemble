@@ -1,0 +1,14 @@
+{%- set page_title = get_part('404 page title', word('Not Found')) %}
+{%- set tab_title = get_part('404 page tab title', word('404 Not Found')) %}
+{%- set extra_css = get_part('404 page extra css') %}
+{%- set extra_js = get_part('404 page extra javascript') %}
+{%- extends "flask_user/public_base.html" %}
+{%- block content %}
+<h1>{{ get_part('404 page heading', word('Not Found')) }}</h1>
+{%- if get_part('404 page pre', False) %}
+{{ get_part('404 page pre') }}
+{%- else %}
+<p>{{ word("The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.") }}</p>
+{%- endif %}
+{{ get_part('404 page post') }}
+{% endblock %}

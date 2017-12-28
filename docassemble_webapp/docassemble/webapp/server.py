@@ -438,7 +438,7 @@ def password_validator(form, field):
         if 'error message' in rules:
             error_message = unicode(rules['error message'])
         else:
-            error_message = 'Password must be at least' + docassemble.base.functions.quantity_noun(rules.get('length', 6), 'character') + ' long'
+            error_message = 'Password must be at least ' + docassemble.base.functions.quantity_noun(rules.get('length', 6), 'character') + ' long'
             standards = list()
             if rules.get('lowercase', 1) > 0:
                 standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('lowercase', 1), 'lowercase letter'))
@@ -653,7 +653,7 @@ else:
     app.config['BUTTON_CLASS'] = 'btn-da'
 
 page_parts = dict()
-for page_key in ('login page', 'register page', 'interview page', 'start page', 'profile page', 'reset password page', 'forgot password page', 'change password page'):
+for page_key in ('login page', 'register page', 'interview page', 'start page', 'profile page', 'reset password page', 'forgot password page', 'change password page', '404 page'):
     for part_key in ('title', 'tab title', 'extra css', 'extra javascript', 'heading', 'pre', 'submit', 'post'):
         key = page_key + ' ' + part_key
         if key in daconfig:
@@ -12700,6 +12700,10 @@ def package_page():
         return redirect(url_for('user.change_password', next=url_for('interview_list')))
     return render_template('pages/packages.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Package Management"), page_title=word("Package Management")), 200
 
+@app.errorhandler(404)
+def page_not_found_error(the_error):
+    return render_template('pages/404.html'), 404
+
 @app.errorhandler(Exception)
 def server_error(the_error):
     if DEBUG and hasattr(the_error, 'interview') and hasattr(the_error, 'interview_status'):
@@ -13536,7 +13540,8 @@ def train():
     </script>"""
         return render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True, is_data=is_data)
 
-def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None):
+def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True):
+    # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))
     if user_id is None:
         raise Exception("user_interviews: no user_id provided")
     the_user = get_person(int(user_id), dict())
@@ -13583,10 +13588,10 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         interview_valid = True
         try:
             interview = docassemble.base.interview_cache.get_interview(interview_info.filename)
-        except:
+        except Exception as the_err:
             if exclude_invalid:
                 continue
-            logmessage("interview_list: unable to load interview file " + interview_info.filename)
+            logmessage("user_interviews: unable to load interview file " + interview_info.filename)
             interview_title['full'] = word('Error: interview not found')
             interview_valid = False
             is_valid = False
@@ -13594,10 +13599,10 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         if interview_info.encrypted:
             try:
                 dictionary = decrypt_dictionary(interview_info.dictionary, secret)
-            except:
+            except Exception as the_err:
                 if exclude_invalid:
                     continue
-                logmessage("interview_list: unable to decrypt dictionary")
+                logmessage("user_interviews: unable to decrypt dictionary.  " + str(the_err.__class__.__name__) + ": " + unicode(the_err))
                 dictionary = fresh_dictionary()
                 dictionary['_internal']['starttime'] = None
                 dictionary['_internal']['modtime'] = None
@@ -13605,7 +13610,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         else:
             dictionary = unpack_dictionary(interview_info.dictionary)
         if type(dictionary) is not dict:
-            logmessage("interview_list: found a dictionary that was not a dictionary")
+            logmessage("user_interviews: found a dictionary that was not a dictionary")
             continue
         if is_valid:
             interview_title = interview.get_title(dictionary)
@@ -13637,7 +13642,10 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             modtime = ''
         if tag is not None and tag not in tags:
             continue
-        interviews.append({'filename': interview_info.filename, 'session': interview_info.key, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid, 'metadata': metadata, 'tags': tags})
+        out = {'filename': interview_info.filename, 'session': interview_info.key, 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid, 'metadata': metadata, 'tags': tags}
+        if include_dict:
+            out['dict'] = dictionary
+        interviews.append(out)
     return interviews
     
 @app.route('/interviews', methods=['GET', 'POST'])
@@ -14762,16 +14770,20 @@ def api_verify(req, roles=None):
             return False
     return True
     
-# @app.route('/test_api', methods=['GET', 'POST'])
-# def test_api():
-#     if not api_verify(request):
-#         abort(403)
-#     return jsonify(dict(success=True, user_id=current_user.id))
+def jsonify_with_status(data, code):
+    resp = jsonify(data)
+    resp.status_code = code
+    return resp
 
+def true_or_false(text):
+    if text is False or text == 0 or str(text).lower() in ('0', 'false', 'f'):
+        return False
+    return True
+            
 @app.route('/api/user_list', methods=['GET', 'POST'])
 def api_user_list():
     if not api_verify(request, roles=['admin']):
-        abort(403)
+        return jsonify_with_status(dict(error="Access denied."), 403)
     user_list = []
     for user in UserModel.query.filter_by(active=True).all():
         user_info = dict(roles=[])
@@ -14780,52 +14792,99 @@ def api_user_list():
         for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
             user_info[attrib] = getattr(user, attrib)
         user_list.append(user_info)
-    return jsonify(dict(success=True, data=user_list))
+    return jsonify(user_list)
 
-@app.route('/api/user', methods=['GET', 'POST'])
+@app.route('/api/user', methods=['GET', 'DELETE'])
 def api_user():
     if not api_verify(request):
-        abort(403)
+        return jsonify_with_status(dict(error="Access denied."), 403)
     user_list = []
     user = UserModel.query.filter_by(active=True, id=current_user.id).first()
-    user_info = dict(roles=[])
-    for role in user.roles:
-        user_info['roles'].append(role.name)
-    for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
-        user_info[attrib] = getattr(user, attrib)
-    return jsonify(dict(success=True, data=user_info))
+    if user is None:
+        return jsonify_with_status(dict(error="User not found."), 403)
+    if request.method == 'GET':
+        user_info = dict(roles=[])
+        for role in user.roles:
+            user_info['roles'].append(role.name)
+        for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
+            user_info[attrib] = getattr(user, attrib)
+        return jsonify(user_info)
+    elif request.method == 'DELETE':
+        user.active = False
+        db.session.commit()
+        return ('', 204)
 
 @app.route('/api/secret', methods=['GET'])
 def api_get_secret():
+    if not api_verify(request):
+        return jsonify_with_status(dict(error="Access denied."), 403)
     username = request.args.get('username', None)
     password = request.args.get('password', None)
     if username is None or password is None:
-        return jsonify(dict(success=False, error="A username and password must be supplied"))
+        return jsonify_with_status(dict(error="A username and password must be supplied"), 400)
     user = UserModel.query.filter_by(active=True, email=username).first()
     if user is None:
-        return jsonify(dict(success=False, error="Username not known"))
+        return jsonify_with_status(dict(error="Username not known"), 403)
     if daconfig.get('two factor authentication', False) is True and user.otp_secret is not None:
-        return jsonify(dict(success=False, error="Secret will not be supplied because two factor authentication is enabled"))
+        return jsonify_with_status(dict(error="Secret will not be supplied because two factor authentication is enabled"), 403)
     user_manager = current_app.user_manager
     if not user_manager.get_password(user):
-        return jsonify(dict(success=False, error="Password not set"))
+        return jsonify_with_status(dict(error="Password not set"), 403)
     if not user_manager.verify_password(password, user):
-        return jsonify(dict(success=False, error="Incorrect password"))
-    return jsonify(dict(success=True, data=pad_to_16(MD5Hash(data=password).hexdigest())))
+        return jsonify_with_status(dict(error="Incorrect password"), 403)
+    return jsonify(pad_to_16(MD5Hash(data=password).hexdigest()))
 
-@app.route('/api/user/<user_id>/interviews', methods=['GET', 'POST'])
-def api_user_interviews():
+@app.route('/api/user/<user_id>/interviews', methods=['GET', 'DELETE'])
+def api_user_interviews(user_id):
     if not api_verify(request, roles=['admin']):
-        abort(403)
+        return jsonify_with_status(dict(error="Access denied."), 403)
     tag = request.args.get('tag', None)
-    # subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
-    # interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key, UserDict.modtime, UserDict.encrypted).filter(UserDictKeys.user_id == user_id).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).group_by(UserDictKeys.filename, UserDictKeys.key, UserDict.modtime, UserDict.encrypted)
-    # interviews = list()
-    # for interview_info in interview_query:
-    #     info = dict(filename=interview_info.filename, session=interview_info.key, utc_modtime=nice_utc_date(interview_info.modtime), encrypted=interview_info.encrypted)
-    #     interviews.append(info)
-    return jsonify(dict(success=True, data=user_interviews(user_id=user_id, secret=secret, exclude_invalid=False, tag=tag)))
+    secret = request.args.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
+    include_dict = true_or_false(request.args.get('include_dictionary', False))
+    if request.method == 'GET':
+        return jsonify(docassemble.base.functions.safe_json(user_interviews(user_id=user_id, secret=secret, exclude_invalid=False, tag=tag, include_dict=include_dict)))
+    elif request.method == 'DELETE':
+        filename = request.args.get('filename', None)
+        session = request.args.get('session', None)
+        if (filename is not None and session is None) or (filename is None and session is not None):
+            return jsonify_with_status(dict(error="To delete an interview, both filename and session must be provided"), 400)
+        if (filename is not None and session is not None):
+            user_interviews(user_id=user_id, secret=secret, exclude_invalid=False, action='delete', filename=filename, session=session, tag=tag)
+        else:
+            user_interviews(user_id=user_id, secret=secret, exclude_invalid=False, action='delete_all', tag=tag)
+        return ('', 204)
 
+@app.route('/api/list', methods=['GET'])
+def api_list():
+    if not api_verify(request):
+        return jsonify_with_status(dict(error="Access denied."), 403)
+    return jsonify(interview_menu(absolute_urls=true_or_false(request.args.get('absolute_urls', True))))
+
+@app.route('/api/interviews', methods=['GET', 'DELETE'])
+def api_interviews():
+    if not api_verify(request):
+        return jsonify_with_status(dict(error="Access denied."), 403)
+    tag = request.args.get('tag', None)
+    secret = request.args.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
+    include_dict = true_or_false(request.args.get('include_dictionary', False))
+    logmessage("Current user is " + str(current_user.id) + " and secret is " + str(secret))
+    if request.method == 'GET':
+        return jsonify(docassemble.base.functions.safe_json(user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=False, tag=tag, include_dict=include_dict)))
+    elif request.method == 'DELETE':
+        filename = request.args.get('filename', None)
+        session = request.args.get('session', None)
+        if (filename is not None and session is None) or (filename is None and session is not None):
+            return jsonify_with_status(dict(error="To delete an interview, both filename and session must be provided"), 400)
+        if (filename is not None and session is not None):
+            user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=False, action='delete', filename=filename, session=session, tag=tag)
+        else:
+            user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=False, action='delete_all', tag=tag)
+        return ('', 204)
+    
 @app.route('/manage_api', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])

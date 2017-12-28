@@ -42,4 +42,11 @@ subquestion: |
   not true
   % endif
   that apples and pears are the only fruits you do not like.
-  
+
+  It is
+  % if likes_fruit.any_false():
+  true
+  % else:
+  not true
+  % endif
+  that there is at least one fruit you do not like.
