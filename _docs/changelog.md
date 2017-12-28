@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.14](https://github.com/jhpyle/docassemble/releases/tag/v0.2.14) - 2017-12-27
+
+### Added
+- Customizable 404 error message.
+- The `any_true()` and `all_true()` methods for the `DADict` object.
+
+### Fixed
+- Typo in password complexity error message.
+
 ## [0.2.13](https://github.com/jhpyle/docassemble/releases/tag/v0.2.13) - 2017-12-24
 
 ### Added

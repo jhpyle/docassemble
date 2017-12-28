@@ -277,6 +277,8 @@ The available page names are:
   e-mail address and receive an e-mail with a link to reset their password.
 * `reset password page`: the page where users are directed when they
   forget their password.
+* `404 page`: the page users see when they try to visit a URL that
+  does not exist on the server.
 
 The aspects of the page that can be manipulated are:
 

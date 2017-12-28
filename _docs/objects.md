@@ -745,7 +745,7 @@ code: |
 ---
 {% endhighlight %}
 
-<a name="DADict.all_true"></a><a name="DADict.all_false"></a>The
+<a name="DADict.all_true"></a><a name="DADict.all_false"></a><a name="DADict.any_true"></a><a name="DADict.any_false"></a>The
 [`DADict`] object also uses some methods that are unique to it.  The
 `all_true()` and `all_false()` methods are useful when working with
 [checkbox groups].  If you use `datatype: checkboxes` to set a
@@ -753,11 +753,13 @@ variable called `choices`, then `choices` will be a [`DADict`] object.
 
 If you call `choices.all_true()`, the result will be `True` if all of
 the checkboxes were selected (i.e., all of the values of the
-dictionary are `True`).
+dictionary are `True`).  If you call `choices.any_false()`, the result
+is the opposite of `choices.all_true()`.
 
 If you call `choices.all_false()`, the result will be `True` if none
 of the values were selected (i.e., all of the values of the dictionary
-are `False`).
+are `False`).  If you call `choices.any_true()`, the result is the
+opposite of `choices.all_false()`.
 
 You can also call these methods with parameters.  Calling
 `choices.all_true('red', 'green')` will return `True` if the user

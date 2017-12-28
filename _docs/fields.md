@@ -833,6 +833,9 @@ You can generate checkbox choices with code:
 
 {% include side-by-side.html demo="fields-checkboxes-code" %}
 
+The [`all_true()`], [`all_false()`], [`any_true()`] and [`any_false()`]
+methods can be used to analyze the values set by a checkboxes field.
+
 ### <a name="fields checkboxes defaults"></a>Default values for checkboxes
 
 To set default values in a checkbox list, you have a few options.
@@ -1571,3 +1574,7 @@ why this needs to be done manually as opposed to automatically:
 [`label` and `field`]: #label
 [`str()`]: https://docs.python.org/2/library/functions.html#str
 [`repr()`]: https://docs.python.org/2/library/functions.html#repr
+[`all_true()`]: "{{ site.baseurl }}/docs/objects.html#DADict.all_true"
+[`all_false()`]: "{{ site.baseurl }}/docs/objects.html#DADict.all_false"
+[`any_true()`]: "{{ site.baseurl }}/docs/objects.html#DADict.any_true"
+[`any_false()`]: "{{ site.baseurl }}/docs/objects.html#DADict.any_false"
