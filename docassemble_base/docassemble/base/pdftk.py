@@ -224,8 +224,7 @@ def concatenate_files(path_list, pdfa=False, password=None):
         raise DAError("Call to pdftk failed for concatenation where arguments were " + " ".join(subprocess_arguments))
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
-    if password:
-        pdf_encrypt(pdf_file.name, password)
+    replicate_js_and_calculations(new_path_list[0], pdf_file.name, password)
     return pdf_file.name
 
 def get_passwords(password):
@@ -304,14 +303,14 @@ def remove_nonprintable(text):
     return final
 
 def replicate_js_and_calculations(template_filename, original_filename, password):
-    logmessage("replicate_js_and_calculations where template_filename is " + template_filename + " and original_filename is " + original_filename)
+    #logmessage("replicate_js_and_calculations where template_filename is " + template_filename + " and original_filename is " + original_filename)
     template = pypdf.PdfFileReader(open(template_filename, 'rb'))
     co_field_names = list()
     if '/AcroForm' in template.trailer['/Root']:
-        logmessage("Found AcroForm")
+        #logmessage("Found AcroForm")
         acroform = template.trailer['/Root']['/AcroForm'].getObject()
         if '/CO' in acroform:
-            logmessage("Found CO in AcroForm")
+            #logmessage("Found CO in AcroForm")
             for f in acroform['/CO']:
                 field = f.getObject()
                 if '/TM' in field:
@@ -320,15 +319,15 @@ def replicate_js_and_calculations(template_filename, original_filename, password
                     name = field['/T']
                 else:
                     continue
-                logmessage("Found CO name " + str(name))
+                #logmessage("Found CO name " + str(name))
                 co_field_names.append(name)
 
     js_to_write = list()
     if '/Names' in template.trailer['/Root'] and '/JavaScript' in template.trailer['/Root']['/Names']:
-        logmessage("Found name in root and javascript in names")
+        #logmessage("Found name in root and javascript in names")
         js_names = template.trailer['/Root']['/Names']['/JavaScript'].getObject()
         if '/Names' in js_names:
-            logmessage("Found names in javascript")
+            #logmessage("Found names in javascript")
             js_list = js_names['/Names']
             while len(js_list):
                 name = js_list.pop(0)
@@ -341,24 +340,27 @@ def replicate_js_and_calculations(template_filename, original_filename, password
                         js_to_write.append((name, remove_nonprintable(js_obj['/JS'].getData())))
 
     if len(js_to_write) == 0 and len(co_field_names) == 0:
-        logmessage("Nothing to do here")
+        #logmessage("Nothing to do here")
         if password:
             pdf_encrypt(original_filename, password)
         return
     original = pypdf.PdfFileReader(open(original_filename, 'rb'))
-    logmessage("Opening " + original_filename)
+    #logmessage("Opening " + original_filename)
     writer = DAPdfFileWriter()
     writer.cloneReaderDocumentRoot(original)
     if len(co_field_names) > 0:
-        logmessage("Cloning CO")
+        #logmessage("Cloning CO")
         fields = writer.DAGetFields()
-        co = pypdf.generic.ArrayObject()
+        co = []
         for field_name in co_field_names:
             if field_name in fields:
                 co.append(fields[field_name])
-        writer._root_object['/AcroForm'][pypdf.generic.NameObject("/CO")] = co
+        #writer._root_object['/AcroForm'][pypdf.generic.NameObject("/CO")] = pypdf.generic.ArrayObject(co)
+        writer._root_object['/AcroForm'].update({
+            pypdf.generic.NameObject("/CO"): pypdf.generic.ArrayObject(co)
+        })
     if len(js_to_write) > 0:
-        logmessage("Cloning JS")
+        #logmessage("Cloning JS")
         name_array = []
         for js_string_name, js_text in js_to_write:
             js_object = pypdf.generic.DecodedStreamObject()
