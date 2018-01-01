@@ -305,7 +305,7 @@ def remove_nonprintable(text):
     return final
 
 def replicate_js_and_calculations(template_filename, original_filename, password):
-    logmessage("replicate_js_and_calculations where template_filename is " + template_filename + " and original_filename is " + original_filename + " and password is " + repr(password))
+    #logmessage("replicate_js_and_calculations where template_filename is " + template_filename + " and original_filename is " + original_filename + " and password is " + repr(password))
     template = pypdf.PdfFileReader(open(template_filename, 'rb'))
     co_field_names = list()
     if '/AcroForm' in template.trailer['/Root']:
@@ -390,10 +390,10 @@ def replicate_js_and_calculations(template_filename, original_filename, password
     if password is not None:
         (owner_password, user_password) = get_passwords(password)
         if owner_password == user_password:
-            logmessage("Password for encryption is " + str(user_password))
+            #logmessage("Password for encryption is " + str(user_password))
             writer.encrypt(str(user_password))
         else:
-            logmessage("Passwords for encryption are " + str(user_password) + " and " + str(owner_password))
+            #logmessage("Passwords for encryption are " + str(user_password) + " and " + str(owner_password))
             writer.encrypt(str(user_password), owner_pwd=str(owner_password))
     outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     writer.write(outfile)
