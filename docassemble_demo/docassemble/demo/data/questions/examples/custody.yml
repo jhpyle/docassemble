@@ -1,0 +1,215 @@
+metadata:
+  title: Custody
+  see: http://www.legis.state.pa.us/WU01/LI/LI/CT/HTM/23/00.053..HTM
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - has_standing: DADict.using(auto_gather=False)
+---
+code: |
+  for custody_type in custody_types:
+    has_standing[custody_type]
+  has_standing.gathered = True
+---
+mandatory: True
+question: |
+  Filing for custody
+subquestion: |
+  % if has_standing.all_false():
+    
+  You do not have standing to seek custody of the child.
+  
+  % else:
+    
+  You can seek the following types of custody:
+    
+  % for custody_type in has_standing.true_values():
+  * ${ custody_type }
+  % endfor
+  
+  % endif
+---
+comment: 23 Pa. C.S.A. 5323
+code: |
+  custody_types = [
+    'shared physical custody',
+    'primary physical custody',
+    'partial physical custody',
+    'sole physical custody',
+    'supervised physical custody',
+    'shared legal custody',
+    'sole legal custody']
+---
+code: |
+  has_standing[i] = False
+---
+comment: 23 Pa. C.S.A. 5324
+code: |
+  if relationship == 'Parent' \
+     or stands_in_loco_parentis \
+     or has_grandparent_standing:
+        has_standing[i] = True
+---
+comment: 23 Pa. C.S.A. 5325
+code: |
+  if (relationship == 'Grandparent' or relationship == 'Great-grandparent' ) \
+     and \
+     (grandparent_of_deceased_parent \
+      or (parents_separated and parents_separated_for_six_months) \
+      or (parents_were_ever_married and (parents_divorced or parents_divorcing)) \
+      or cared_for_child_for_a_year):
+        has_standing['partial physical custody'] = True
+        has_standing['supervised physical custody'] = True
+---
+comment: 23 Pa. C.S.A. 5324(3)
+code: |
+  if relationship == 'Grandparent' \
+     and (relationship_began_with_consent \
+          or relationship_began_with_court_order) \
+     and willing_to_assume_responsibility \
+     and (child_is_dependent \
+          or child_is_at_risk \
+          or cared_for_child_for_a_year):
+    has_grandparent_standing = True
+  else:
+    has_grandparent_standing = False
+---
+comment: 23 Pa. C.S.A. 5324(3)(iii)(C) and 23 Pa. C.S.A. 5325(3)
+code: |
+  if (not child_lives_with_client) \
+     and child_used_to_live_with_client \
+     and child_taken_from_client_by_parent \
+     and child_taken_within_last_six_months \
+     and child_moved_in_at_least_12_months_before \
+     and child_lived_with_client_continuously:
+       cared_for_child_for_a_year = True
+  else:
+       cared_for_child_for_a_year = False
+---
+code: |
+  if as_datetime(date_child_taken_away) >= date_as_of_six_months_ago:
+    child_taken_within_last_six_months = True
+  else:
+    child_taken_within_last_six_months = False
+---
+code: |
+  date_as_of_six_months_ago = current_datetime() - date_interval(months=6)
+---
+question: |
+  Does the child currently live with you?
+yesno: child_lives_with_client
+---
+question: |
+  Did the child ever live with you?
+yesno: child_used_to_live_with_client
+---
+question: |
+  Was the child taken away from your home by one of the child's parents?
+yesno: child_taken_from_client_by_parent
+---
+question: |
+  When did the parents take the child away?
+subquestion: |
+  If you are not sure of the exact date, give me your best guess.
+fields:
+  - Date: date_child_taken_away
+    datatype: date
+---
+question: |
+  Was the child living with you on
+  ${ format_date(twelve_months_before_taken_away) }?
+yesno: child_moved_in_at_least_12_months_before
+---
+code: |
+  twelve_months_before_taken_away = as_datetime(date_child_taken_away) - date_interval(year=1)
+---
+question: |
+  Did the child live with you for the whole time
+  between
+  ${ format_date(twelve_months_before_taken_away) }
+  and
+  ${ format_date(date_child_taken_away) }?
+subquestion: |
+  If the child lived with someone else for more than a few days during this period, say No here.
+yesno: child_lived_with_client_continuously
+---
+question: |
+  At some point, did one of the child's parents agree to let you care for the child?
+yesno: relationship_began_with_consent
+---
+question: |
+  Was there ever a family court order that said you were allowed to care for the child?
+yesno: relationship_began_with_court_order
+---
+question: |
+  Are you willing to assume responsibility for the child?
+yesno: willing_to_assume_responsibility
+---
+question: |
+  To your knowledge, has the child ever been put under the
+  care of the Family Court?
+yesno: child_is_dependent
+---
+question: |
+  If the child is not put under your care, do you think the child
+  would be at risk of harm due to parental abuse, neglect, drug or
+  alcohol abuse or incapacity?
+yesno: child_is_at_risk
+---
+if: |
+  relationship == 'Grandparent'
+question: |
+  I understand you are the child's grandparent.
+  Is your child (the parent of the child over whom you wish to have custody), still alive?
+noyes: grandparent_of_deceased_parent
+---
+if: |
+  relationship == 'Great-grandparent'
+question: |
+  I understand you are the child's great-grandparent.
+  Is your grandchild (the parent of the child over whom you wish to have custody), still alive?
+noyes: grandparent_of_deceased_parent
+---
+question: |
+  Are the child's parents currently separated?
+yesno: parents_separated
+---
+question: |
+  Have the child's parents been separated for the last six months?
+yesno: parents_separated_for_six_months
+---
+question: |
+  Did the parents of the child ever get married to each other?
+yesno: parents_were_ever_married
+---
+question: |
+  Are the parents of the child divorced?
+yesno: parents_divorced
+---
+question: |
+  Are the parents of the child in the process of getting divorced?
+yesno: parents_divorcing
+# ---
+# code: |
+#   if client_is_grandparent_who_cared_for_child \
+#      or client_is_older_sibling_who_cared_for_child \
+#      or client_is_extended_family_who_cared_for_child \
+#      or client_can_show_evidence_of_caring_for_child:
+#        stands_in_loco_parentis = True
+#   else:
+#        stands_in_loco_parentis = False
+---
+question: |
+  Are you currently acting as the child's guardian?
+yesno: stands_in_loco_parentis
+---
+question: |
+  What is your relationship to the child over which you want to have custody?
+field: relationship
+choices:
+  - Parent
+  - Grandparent
+  - Great-grandparent
+  - Other

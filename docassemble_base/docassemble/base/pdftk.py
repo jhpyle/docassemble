@@ -9,6 +9,7 @@ import fdfgen
 import yaml
 import re
 import PyPDF2 as pypdf
+import pypdftk
 from PIL import Image
 from docassemble.base.error import DAError
 from docassemble.base.pdfa import pdf_to_pdfa
@@ -112,10 +113,20 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
     fdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".fdf", delete=False)
     fdf_file.write(fdf)
     fdf_file.close()
+    if False:
+        fdf_dict = dict()
+        for key, val in data_strings:
+            fdf_dict[key] = val
+        xfdf_temp_filename = pypdftk.gen_xfdf(fdf_dict)
+        xfdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=\
+".xfdf", delete=False)
+        shutil.copyfile(xfdf_temp_filename, xfdf_file.name)
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name]
     #logmessage("Arguments are " + str(subprocess_arguments))
-    if not editable:
+    if editable:
+        subprocess_arguments.append('need_appearances')
+    else:
         subprocess_arguments.append('flatten')
     result = call(subprocess_arguments)
     if result != 0:
@@ -168,7 +179,9 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
             shutil.copyfile(new_pdf_file.name, pdf_file.name)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
-    if password:
+    if editable:
+        replicate_js_and_calculations(template, pdf_file.name, password)
+    elif password:
         pdf_encrypt(pdf_file.name, password)
     return pdf_file.name
 
@@ -215,8 +228,7 @@ def concatenate_files(path_list, pdfa=False, password=None):
         pdf_encrypt(pdf_file.name, password)
     return pdf_file.name
 
-def pdf_encrypt(filename, password):
-    #logmessage("pdf_encrypt: running; password is " + repr(password))
+def get_passwords(password):
     if type(password) in (str, unicode, bool, int, float):
         owner_password = unicode(password).strip()
         user_password = unicode(password).strip()
@@ -228,6 +240,11 @@ def pdf_encrypt(filename, password):
         user_password = unicode(password.get('user', 'password')).strip()
     else:
         raise DAError("pdf_encrypt: invalid password")
+    return owner_password, user_password
+
+def pdf_encrypt(filename, password):
+    #logmessage("pdf_encrypt: running; password is " + repr(password))
+    owner_password, user_password = get_passwords(password)
     outfile = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
     if owner_password == user_password:
         commands = ['pdftk', filename, 'output', outfile.name, 'user_pw', user_password, 'allow', 'printing']
@@ -241,3 +258,126 @@ def pdf_encrypt(filename, password):
     #logmessage(' '.join(commands))
     #logmessage(output)
     shutil.move(outfile.name, filename)
+
+class DAPdfFileWriter(pypdf.PdfFileWriter):
+    def DAGetFields(self, tree=None, results=None):
+        if results is None:
+            results = dict()
+        if tree is None:
+            tree = self._root_object['/AcroForm']
+        if isinstance(tree, pypdf.generic.IndirectObject):
+            the_tree = tree.getObject()
+        else:
+            the_tree = tree
+        self.DABuildField(tree, results=results)
+        if "/Fields" in the_tree:
+            fields = the_tree["/Fields"]
+            for f in fields:
+                self.DABuildField(f, results)
+        return results
+
+    def DABuildField(self, f, results):
+        if isinstance(f, pypdf.generic.IndirectObject):
+            field = f.getObject()
+        else:
+            field = f
+        self.DACheckKids(field, results=results)
+        try:
+            key = field["/TM"]
+        except KeyError:
+            try:
+                key = field["/T"]
+            except KeyError:
+                return
+        results[key] = f
+
+    def DACheckKids(self, tree, results):
+        if "/Kids" in tree:
+            for kid in tree["/Kids"]:
+                self.DAGetFields(tree=kid, results=results)
+
+def remove_nonprintable(text):
+    final = ''
+    for char in text:
+        if char in string.printable:
+            final += char
+    return final
+
+def replicate_js_and_calculations(template_filename, original_filename, password):
+    template = pypdf.PdfFileReader(open(template_filename, 'rb'))
+    co_field_names = list()
+    if '/AcroForm' in template.trailer['/Root']:
+        acroform = template.trailer['/Root']['/AcroForm'].getObject()
+        if '/CO' in acroform:
+            for f in acroform['/CO']:
+                field = f.getObject()
+                if '/TM' in field:
+                    name = field['/TM']
+                elif '/T' in field:
+                    name = field['/T']
+                else:
+                    continue
+                co_field_names.append(name)
+
+    js_to_write = list()
+    if '/Names' in template.trailer['/Root'] and '/JavaScript' in template.trailer['/Root']['/Names']:
+        js_names = template.trailer['/Root']['/Names']['/JavaScript'].getObject()
+        if '/Names' in js_names:
+            js_list = js_names['/Names']
+            while len(js_list):
+                name = js_list.pop(0)
+                obj = js_list.pop(0)
+                js_obj = obj.getObject()
+                if '/S' in js_obj and js_obj['/S'] == '/JavaScript' and '/JS' in js_obj:
+                    if isinstance(js_obj['/JS'], pypdf.generic.ByteStringObject) or isinstance(js_obj['/JS'], pypdf.generic.TextStringObject):
+                        js_to_write.append((name, remove_nonprintable(js_obj['/JS'])))
+                    elif isinstance(js_obj['/JS'], pypdf.generic.EncodedStreamObject) or isinstance(js_obj['/JS'], pypdf.generic.DecodedStreamObject):
+                        js_to_write.append((name, remove_nonprintable(js_obj['/JS'].getData())))
+
+    if len(js_to_write) == 0 and len(co_field_names) == 0:
+        if password:
+            pdf_encrypt(original_filename, password)
+        return
+    original = pypdf.PdfFileReader(open(original_filename, 'rb'))
+    writer = DAPdfFileWriter()
+    writer.cloneReaderDocumentRoot(original)
+    if len(co_field_names) > 0:
+        fields = writer.DAGetFields()
+        co = pypdf.generic.ArrayObject()
+        for field_name in co_field_names:
+            if field_name in fields:
+                co.append(fields[field_name])
+        writer._root_object['/AcroForm'][pypdf.generic.NameObject("/CO")] = co
+    if len(js_to_write) > 0:
+        name_array = pypdf.generic.ArrayObject()
+        for js_string_name, js_text in js_to_write:
+            js_object = pypdf.generic.DecodedStreamObject()
+            js_object.setData(js_text)
+            js = pypdf.generic.DictionaryObject()
+            js.update({
+                pypdf.generic.NameObject("/Type"): pypdf.generic.NameObject("/Action"),
+                pypdf.generic.NameObject("/S"): pypdf.generic.NameObject("/JavaScript"),
+                pypdf.generic.NameObject("/JS"): js_object
+            })
+            js_indirect_object = writer._addObject(js)
+            name_array.append(pypdf.generic.createStringObject(js_string_name))
+            name_array.append(js_indirect_object)
+
+        js_name_tree = pypdf.generic.DictionaryObject()
+        js_name_tree.update({
+            pypdf.generic.NameObject("/JavaScript"): pypdf.generic.DictionaryObject({
+                pypdf.generic.NameObject("/Names"): name_array
+            })
+        })
+        writer._addObject(js_name_tree)
+    if password is not None:
+        owner_password, user_password = get_passwords(password)
+        if owner_password == user_password:
+            writer.encrypt(user_password)
+        else:
+            writer.encrypt(user_password, owner_pwd=owner_password)
+    outfile = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+    with open(outfile.name, "wb") as fp:
+        writer.write(fp)
+    fp.flush()
+    shutil.move(outfile.name, original_filename)
