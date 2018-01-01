@@ -228,6 +228,8 @@ def concatenate_files(path_list, pdfa=False, password=None):
     return pdf_file.name
 
 def get_passwords(password):
+    if password is None:
+        return (None, None)
     if type(password) in (str, unicode, bool, int, float):
         owner_password = unicode(password).strip()
         user_password = unicode(password).strip()
@@ -389,10 +391,10 @@ def replicate_js_and_calculations(template_filename, original_filename, password
         (owner_password, user_password) = get_passwords(password)
         if owner_password == user_password:
             logmessage("Password for encryption is " + str(user_password))
-            writer.encrypt(user_password)
+            writer.encrypt(str(user_password))
         else:
             logmessage("Passwords for encryption are " + str(user_password) + " and " + str(owner_password))
-            writer.encrypt(user_password, owner_pwd=owner_password)
+            writer.encrypt(str(user_password), owner_pwd=str(owner_password))
     outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     writer.write(outfile)
     outfile.flush()
