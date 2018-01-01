@@ -297,8 +297,10 @@ def email_string(persons, include_name=None, first=False):
         else:
             result.append(unicode(person))
     result = [x for x in result if x is not None and x != '']
-    if len(result) and first:
-        return [result[0]]
+    if first:
+        if len(result):
+            return result[0]
+        return None
     return result
 
 def email_stringer(variable, first=False):
