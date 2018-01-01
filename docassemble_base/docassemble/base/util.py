@@ -303,8 +303,8 @@ def email_string(persons, include_name=None, first=False):
         return None
     return result
 
-def email_stringer(variable, first=False):
-    return email_string(variable, include_name=False, first=first)
+def email_stringer(variable, first=False, include_name=False):
+    return email_string(variable, include_name=include_name, first=first)
 
 def valid_datetime(the_datetime):
     """Returns True if the provided text represents a valid date or time."""
@@ -1359,7 +1359,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
     if body is None and html is None:
         body = ""
     subject = re.sub(r'[\n\r]+', ' ', subject)
-    sender_string = email_stringer(sender, first=True)
+    sender_string = email_stringer(sender, first=True, include_name=True)
     to_string = email_stringer(to)
     cc_string = email_stringer(cc)
     bcc_string = email_stringer(bcc)
