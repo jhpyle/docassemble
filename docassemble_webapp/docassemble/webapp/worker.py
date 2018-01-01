@@ -10,6 +10,7 @@ import importlib
 import os
 import re
 import httplib2
+import traceback
 import strict_rfc3339
 import oauth2client.client
 import time
@@ -465,7 +466,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
         try:
             interview.assemble(user_dict, interview_status)
         except Exception as e:
-            sys.stderr.write("Error in assembly: " + str(e))
+            sys.stderr.write("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e) + ": " + traceback.format_exc(e))
             return(worker_controller.functions.ReturnValue(ok=False, error_message=str(e)))
         sys.stderr.write("Time in background action was " + str(time.time() - start_time))
         if not hasattr(interview_status, 'question'):
@@ -494,7 +495,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             try:
                 interview.assemble(user_dict, interview_status)
             except Exception as e:
-                sys.stderr.write("Error in assembly during callback: " + str(e))
+                sys.stderr.write("Error in assembly during callback: " + str(e.__class__.__name__) + ": " + str(e) + ": " + traceback.format_exc(e))
             # is this right?
             if str(user_info.get('the_user_id', None)).startswith('t'):
                 worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
