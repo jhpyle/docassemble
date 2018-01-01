@@ -81,7 +81,6 @@ def recursively_add_fields(fields, id_to_page, outfields):
                 #    logmessage("Got a " + str(ord(val)))
                 #logmessage(repr(value.decode('utf8')))
                 #default = re.sub(r'^\xc3\xbe\xc3\xbf', '', value)
-                #default = re.sub(r'^þÿ', '', value)
                 default = value
                 if not default:
                     default = word("something")
@@ -377,8 +376,7 @@ def replicate_js_and_calculations(template_filename, original_filename, password
             writer.encrypt(user_password)
         else:
             writer.encrypt(user_password, owner_pwd=owner_password)
-    outfile = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
-    with open(outfile.name, "wb") as fp:
-        writer.write(fp)
-    fp.flush()
+    outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+    writer.write(outfile)
+    outfile.flush()
     shutil.move(outfile.name, original_filename)

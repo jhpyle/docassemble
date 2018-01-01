@@ -1363,7 +1363,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
     to_string = email_stringer(to)
     cc_string = email_stringer(cc)
     bcc_string = email_stringer(bcc)
-    logmessage("Sending mail to: " + repr(dict(subject=subject, recipients=to_string, sender=sender_string, cc=cc_string, bcc=bcc_string, body=body, html=html)))
+    #logmessage("Sending mail to: " + repr(dict(subject=subject, recipients=to_string, sender=sender_string, cc=cc_string, bcc=bcc_string, body=body, html=html)))
     msg = Message(subject, sender=sender_string, recipients=to_string, cc=cc_string, bcc=bcc_string, body=body, html=html)
     filenames_used = set()
     success = True
