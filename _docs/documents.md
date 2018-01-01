@@ -1162,14 +1162,14 @@ interview's [`pdf/a` features setting].
 
 If you want the [PDF] file produced by an attachment to be protected
 with a password, you can set a `password`, and the [PDF] file will be
-protected using [pdftk].  There are two passwords that can be set: an
+encrypted.  There are two passwords that can be set: an
 "owner" password and a "user" password.
 
 The `password` can be specified in the following ways:
 
 * If set to a string, only the "user" password will be set.
 * If set to a list, the first element is the "owner" password and the
-  second elementt is the "user" password.
+  second element is the "user" password.
 * If set to a [Python dict], the value of the `owner` key is the
   "owner" password and the value of the `user` key is the "user"
   password.

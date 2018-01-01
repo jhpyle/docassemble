@@ -147,7 +147,9 @@
   \  \n  It is\n  % if likes_fruit.all_false('Apples', 'Pears'):\n  true\n  % else:\n\
   \  not true\n  % endif\n  that you do not like apples or pears.\n\n  It is\n  %\
   \ if likes_fruit.all_false('Apples', 'Pears', exclusive=True):\n  true\n  % else:\n\
-  \  not true\n  % endif\n  that apples and pears are the only fruits you do not like."
+  \  not true\n  % endif\n  that apples and pears are the only fruits you do not like.\n\
+  \n  It is\n  % if likes_fruit.any_false():\n  true\n  % else:\n  not true\n  % endif\n\
+  \  that there is at least one fruit you do not like."
 "all-mandatory": |-
   mandatory: True
   question: |
@@ -181,7 +183,8 @@
   \ is\n  % if likes_fruit.all_true('Apples', 'Pears'):\n  true\n  % else:\n  not\
   \ true\n  % endif\n  that you like apples and pears.\n\n  It is\n  % if likes_fruit.all_true('Apples',\
   \ 'Pears', exclusive=True):\n  true\n  % else:\n  not true\n  % endif\n  that apples\
-  \ and pears are the only fruits you like."
+  \ and pears are the only fruits you like.\n\n  It is\n  % if likes_fruit.any_true():\n\
+  \  true\n  % else:\n  not true\n  % endif\n  that you like at least one fruit."
 "all_variables": "mandatory: True\nquestion: |\n  Interview dictionary\nsubquestion:\
   \ |\n  The variables in the dictionary are:\n    \n  `${ all_variables() }`"
 "allow-emailing-false": |-
@@ -2764,9 +2767,12 @@
     - "Select the fruits you like": likes_fruit
       datatype: checkboxes
       choices:
-        - Apples
-        - Peaches
-        - Pears
+        - Apples: apple
+          help: red
+        - Peaches: peach
+          help: peachy
+        - Pears: pear
+          help: gritty
     - "What is your favorite fruit overall?": favorite_fruit
 "fields-checkboxes-code": |-
   question: |
@@ -8497,6 +8503,9 @@
 "bootstrap-theme": |-
   features:
     bootstrap theme: lumen.min.css
+"custody": |-
+  modules:
+    - docassemble.base.util
 "discovery": |-
   template: discovery['rent records']
   content: |

@@ -4,6 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.15](https://github.com/jhpyle/docassemble/releases/tag/v0.2.15) - 2018-01-01
+
+### Changed
+- When filling a PDF form, the Document JavaScripts and Field
+  Calculation Order of the template file will be reproduced in the
+  resulting PDF file.
+- When concatenating PDF files, the Document JavaScripts and Field
+  Calculation Order of the first file will be reproduced in the
+  resulting PDF file.
+
+### Fixed
+- Problem with using specific person as sender of an e-mail.
+
 ## [0.2.14](https://github.com/jhpyle/docassemble/releases/tag/v0.2.14) - 2017-12-27
 
 ### Added
