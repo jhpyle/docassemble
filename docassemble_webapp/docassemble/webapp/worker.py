@@ -497,10 +497,10 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             try:
                 interview.assemble(user_dict, interview_status)
             except Exception as e:
-            if hasattr(e, 'traceback'):
-                sys.stderr.write("Error in assembly during callback: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))
-            else:
-                sys.stderr.write("Error in assembly during callback: " + str(e.__class__.__name__) + ": " + str(e))
+                if hasattr(e, 'traceback'):
+                    sys.stderr.write("Error in assembly during callback: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))
+                else:
+                    sys.stderr.write("Error in assembly during callback: " + str(e.__class__.__name__) + ": " + str(e))
             # is this right?
             if str(user_info.get('the_user_id', None)).startswith('t'):
                 worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
