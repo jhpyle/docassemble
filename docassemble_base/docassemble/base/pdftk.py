@@ -10,6 +10,7 @@ import yaml
 import re
 import PyPDF2 as pypdf
 import pypdftk
+import string
 from PIL import Image
 from docassemble.base.error import DAError
 from docassemble.base.pdfa import pdf_to_pdfa
