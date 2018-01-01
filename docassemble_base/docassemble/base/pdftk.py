@@ -238,12 +238,12 @@ def get_passwords(password):
         owner_password = unicode(password.get('owner', 'password')).strip()
         user_password = unicode(password.get('user', 'password')).strip()
     else:
-        raise DAError("pdf_encrypt: invalid password")
-    return owner_password, user_password
+        raise DAError("get_passwords: invalid password")
+    return (owner_password, user_password)
 
 def pdf_encrypt(filename, password):
     #logmessage("pdf_encrypt: running; password is " + repr(password))
-    owner_password, user_password = get_passwords(password)
+    (owner_password, user_password) = get_passwords(password)
     outfile = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
     if owner_password == user_password:
         commands = ['pdftk', filename, 'output', outfile.name, 'user_pw', user_password, 'allow', 'printing']
@@ -303,7 +303,7 @@ def remove_nonprintable(text):
     return final
 
 def replicate_js_and_calculations(template_filename, original_filename, password):
-    #logmessage("replicate_js_and_calculations where template_filename is " + template_filename + " and original_filename is " + original_filename)
+    logmessage("replicate_js_and_calculations where template_filename is " + template_filename + " and original_filename is " + original_filename + " and password is " + repr(password))
     template = pypdf.PdfFileReader(open(template_filename, 'rb'))
     co_field_names = list()
     if '/AcroForm' in template.trailer['/Root']:
@@ -386,10 +386,12 @@ def replicate_js_and_calculations(template_filename, original_filename, password
             pypdf.generic.NameObject("/Names"): js_name_tree
         })
     if password is not None:
-        owner_password, user_password = get_passwords(password)
+        (owner_password, user_password) = get_passwords(password)
         if owner_password == user_password:
+            logmessage("Password for encryption is " + str(user_password))
             writer.encrypt(user_password)
         else:
+            logmessage("Passwords for encryption are " + str(user_password) + " and " + str(owner_password))
             writer.encrypt(user_password, owner_pwd=owner_password)
     outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     writer.write(outfile)
