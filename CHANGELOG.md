@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.16] - 2018-01-01
+### Fixed
+- Problems with cron jobs, including an error in the documentation;
+  the variable is not `use_cron`, but `allow_cron`.
+
 ## [0.2.15] - 2018-01-01
 ### Changed
 - When filling a PDF form, the Document JavaScripts and Field
