@@ -6,7 +6,7 @@ metadata:
 ---
 mandatory: True
 code: |
-  use_cron = True
+  allow_cron = True
   multi_user = True
   counter = 0
 ---
