@@ -552,7 +552,7 @@ appropriate legal document.
 {% highlight yaml %}
 mandatory: True
 code: |
-  use_cron = True
+  allow_cron = True
   multi_user = True
 ---
 initial: True
@@ -593,7 +593,7 @@ code: |
 
 Let's go through this example step-by-step.
 
-First, we set [`use_cron`] to `True`, which allows scheduled tasks to
+First, we set [`allow_cron`] to `True`, which allows scheduled tasks to
 run, and we set [`multi_user`] to `True`, which disables
 [server-side encryption].  (We need to disable this feature so that
 the computer can access the interview when the user is not logged in.
@@ -604,7 +604,7 @@ additional security provided by server-side encryption.)
 ---
 mandatory: True
 code: |
-  use_cron = True
+  allow_cron = True
   multi_user = True
 ---
 {% endhighlight %}
@@ -750,7 +750,7 @@ The [`docassemble.webapp.cron`] looks at every interview in the system
 for which [server-side encryption] has been turned off.  (Disabling
 [server-side encryption] is performed by setting the [`multi_user`]
 variable in the interview to `True`).  The module then inspects the
-interview data to see if [`use_cron`] is set to `True`.  If is, it
+interview data to see if [`allow_cron`] is set to `True`.  If is, it
 will see if the interview uses the variable given with the `-type`
 argument.  For example, if the type is [`cron_weekly`], the module
 will check if the interview has a block that offers to define the
@@ -1028,7 +1028,7 @@ privileges and user identity of the [cron user].
 [`template`]: {{ site.baseurl }}/docs/template.html
 [`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
 [`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
-[`use_cron`]: {{ site.baseurl }}/docs/special.html#use_cron
+[`allow_cron`]: {{ site.baseurl }}/docs/special.html#allow_cron
 [`user_has_privilege()`]: {{ site.baseurl }}/docs/functions.html#user_has_privilege
 [`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
 [`user_logged_in()`]: {{ site.baseurl }}/docs/functions.html#user_logged_in

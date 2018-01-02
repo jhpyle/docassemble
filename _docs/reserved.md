@@ -49,7 +49,7 @@ experience errors or unexpected results.
 * <span></span>[`url_args`]: a dictionary available to interview code that contains
   values encoded in the URL with which the interview was initially
   loaded.
-* <span></span>[`use_cron`]: a [special variable] that is used as
+* <span></span>[`allow_cron`]: a [special variable] that is used as
   part of the [scheduled tasks] system.
 * <span></span>[`x`]: used as a reference to the underlying object when
   [generic objects] are defined.
@@ -445,7 +445,7 @@ All others are available for you to use and to retrieve with
 [`role_event`]: {{ site.baseurl }}/docs/roles.html
 [`role_needed`]: {{ site.baseurl }}/docs/special.html#role_needed
 [`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
-[`use_cron`]: {{ site.baseurl }}/docs/special.html#use_cron
+[`allow_cron`]: {{ site.baseurl }}/docs/special.html#allow_cron
 [`cron_hourly`]: {{ site.baseurl }}/docs/special.html#cron_hourly
 [`cron_daily`]: {{ site.baseurl }}/docs/special.html#cron_daily
 [`cron_weekly`]: {{ site.baseurl }}/docs/special.html#cron_weekly
