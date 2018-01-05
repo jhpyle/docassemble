@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.2.17] - 2018-01-04
+### Changed
+- Better features in background actions for handling exceptions.
+### Added
+- The `background_error_action()` function.
+
 ## [0.2.16] - 2018-01-01
 ### Fixed
 - Problems with cron jobs, including an error in the documentation;

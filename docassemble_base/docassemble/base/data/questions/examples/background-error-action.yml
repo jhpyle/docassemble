@@ -1,0 +1,87 @@
+metadata:
+  title: Background error callback
+  example start: 2
+  example end: 10
+  documentation: "https://docassemble.org/docs/background.html#background_error_action"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  if the_task.ready():
+    if the_task.failed():
+      error_screen
+    else:
+      final_screen
+  else:
+    waiting_screen
+---
+code: |
+  the_task = background_action('bg_task', additional=value_to_add)
+---
+question: |
+  How much shall I add to 553?
+fields:
+  - Number: value_to_add
+    datatype: integer
+---
+event: bg_task
+code: |
+  # This is where time-consuming code
+  # would go
+  background_error_action('bg_fail', stage='calculation')
+  value = 553 + action_argument('additional') / 0
+  background_response_action('bg_resp', ans=value)
+---
+event: bg_resp
+code: |
+  answer = action_argument('ans')
+  background_response()
+---
+event: bg_fail
+code: |
+  errmess = "Failure at the " \
+            + action_argument('stage') \
+            + " stage due to a " \
+            + action_argument('error_type') \
+            + " error"
+  background_response('handled_error')
+---
+event: error_screen
+question: |
+  There was an error.
+subquestion: |
+  The saved error message was
+  ${ errmess }.
+  
+  The value was
+  `${ the_task.get() }`.
+  
+  The error was
+  `${ the_task.result().error_type }`.
+
+  The trace was
+  
+  ${ indent(the_task.result().error_trace) }
+
+  The message was
+  
+  ${ indent(the_task.result().error_message) }
+
+  The variables were
+  `${ repr(the_task.result().variables) }`.
+---
+event: final_screen
+question: |
+  The answer is ${ answer }.
+---
+event: waiting_screen
+question: |
+  Hang tight.
+  Still waiting for an answer.
+subquestion: |
+  This screen will reload every
+  ten seconds until the answer
+  is available.
+reload: True

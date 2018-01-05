@@ -1,0 +1,61 @@
+metadata:
+  title: Background error callback
+  example start: 2
+  example end: 9
+  documentation: "https://docassemble.org/docs/background.html#background_error_action"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Give me some numbers.
+fields:
+ - Numerator: b
+   datatype: number
+ - Denominator: c
+   datatype: number
+---
+code: |
+  need(b, c)
+  task = background_action('bg_task')
+---
+mandatory: True
+code: |
+  if task.ready():
+    show_result
+  else:
+    show_waiting_screen
+---
+event: show_waiting_screen
+reload: True
+question: |
+  Waiting for result...
+---
+event: show_result
+question: |
+  Result of task
+subquestion: |
+  % if computation_ok:
+  The result was ${ answer }.
+  % else:
+  There was an error.
+  % endif
+---
+event: bg_task
+code: |
+  # This is where time-consuming code
+  # would go.
+  background_error_action('bg_failure')
+  a = b / c
+  background_response_action('bg_success', answer=a)
+---
+event: bg_success
+code: |
+  computation_ok = True
+  answer = action_argument('answer')
+  background_response()
+---
+event: bg_failure
+code: |
+  computation_ok = False
+  background_response()

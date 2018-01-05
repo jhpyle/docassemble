@@ -1222,9 +1222,12 @@ def background_response_action(*pargs, **kwargs):
     """Finishes a background task by running an action to save values."""
     raise BackgroundResponseActionError(*pargs, **kwargs)
 
+def background_error_action(*pargs, **kwargs):
+    """Indicates an action that should be run if the current background task results in an error."""
+    this_thread.current_info['on_error'] = dict(action=pargs[0], arguments=kwargs)
+
 def background_action(*pargs, **kwargs):
     """Runs an action in the background."""
-    #sys.stderr.write("Got to background_action in functions\n")
     action = pargs[0]
     if len(pargs) > 1:
         ui_notification = pargs[1]
@@ -1232,16 +1235,35 @@ def background_action(*pargs, **kwargs):
         ui_notification = None
     return(server.bg_action(action, ui_notification, **kwargs))
 
+class BackgroundResult(object):
+    def __init__(self, result):
+        for attr in ('value', 'error_type', 'error_trace', 'error_message', 'variables'):
+            if hasattr(result, attr):
+                setattr(self, attr, getattr(result, attr))
+            else:
+                setattr(self, attr, None)
+
 class MyAsyncResult(object):
+    def wait(self):
+        if not hasattr(self, '_cached_result'):
+            self._cached_result = BackgroundResult(server.worker_convert(self.obj).get())
+        return True
     def failed(self):
-        resp = server.worker_convert(self.obj).get()
-        if isinstance(resp, ReturnValue) and hasattr(resp, 'ok') and resp.ok is False:
+        if not hasattr(self, '_cached_result'):
+            self._cached_result = BackgroundResult(server.worker_convert(self.obj).get())
+        if self._cached_result.error_type is not None:
             return True
         return False
     def ready(self):
         return server.worker_convert(self.obj).ready()
+    def result(self):
+        if not hasattr(self, '_cached_result'):
+            self._cached_result = BackgroundResult(server.worker_convert(self.obj).get())
+        return self._cached_result
     def get(self):
-        return server.worker_convert(self.obj).get().value
+        if not hasattr(self, '_cached_result'):
+            self._cached_result = BackgroundResult(server.worker_convert(self.obj).get())
+        return self._cached_result.value
 
 def worker_caller(func, ui_notification, action):
     #sys.stderr.write("Got to worker_caller in functions\n")

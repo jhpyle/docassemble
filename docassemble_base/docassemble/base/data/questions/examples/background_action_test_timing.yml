@@ -12,7 +12,10 @@ code: |
     waiting_screen
 ---
 code: |
-  the_task = background_action('bg_task', additional=value_to_add)
+  need(value_to_add)
+  the_task = background_action('bg_task')
+  import time
+  time.sleep(2)
 ---
 question: |
   How much shall I add to 553?
@@ -24,7 +27,7 @@ event: bg_task
 code: |
   # This is where time-consuming code
   # would go.
-  background_response(553 + action_argument('additional'))
+  background_response(553 + value_to_add)
 ---
 event: waiting_screen
 question: |

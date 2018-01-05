@@ -12,7 +12,7 @@ code: |
     waiting_screen
 ---
 code: |
-  the_task = background_action('bg_task', None, additional=value_to_add)
+  the_task = background_action('bg_task', additional=value_to_add)
 ---
 question: |
   How much shall I add to 553?
@@ -30,6 +30,7 @@ code: |
 event: bg_resp
 code: |
   answer = action_argument('ans')
+  background_response()
 ---
 event: final_screen
 question: |

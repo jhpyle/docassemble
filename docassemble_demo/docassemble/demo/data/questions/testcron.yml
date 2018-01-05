@@ -30,6 +30,7 @@ code: |
 event: save_counter
 code: |
   counter = action_argument('counter')
+  background_response()
 ---
 event: set_status
 code: |

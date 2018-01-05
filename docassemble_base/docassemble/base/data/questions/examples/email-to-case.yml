@@ -69,4 +69,4 @@ code: |
 event: save_email
 code: |
   email = action_argument('email')
-  response()
+  background_response()

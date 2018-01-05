@@ -28,6 +28,7 @@ code: |
 event: bg_resp
 code: |
   answer = action_argument('ans')
+  background_response()
 ---
 event: waiting_screen
 question: |

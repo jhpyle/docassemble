@@ -446,12 +446,14 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
     worker_controller.functions.set_uid(session_code)
     worker_controller.functions.reset_local_variables()
     with worker_controller.flaskapp.app_context():
-        sys.stderr.write("background_action: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
+        sys.stderr.write("background_action: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + " and action is " + repr(action) + "\n")
         worker_controller.set_request_active(False)
         if action['action'] == 'incoming_email':
             if 'id' in action['arguments']:
                 action['arguments'] = dict(email=worker_controller.retrieve_email(action['arguments']['id']))
         interview = worker_controller.interview_cache.get_interview(yaml_filename)
+        worker_controller.obtain_lock(session_code, yaml_filename)
+        worker_controller.release_lock(session_code, yaml_filename)
         try:
             steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
         except Exception as the_err:
@@ -469,7 +471,20 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 sys.stderr.write("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))
             else:
                 sys.stderr.write("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e))
-            return(worker_controller.functions.ReturnValue(ok=False, error_message=str(e)))
+            error_type = e.__class__.__name__
+            error_message = unicode(e)
+            if hasattr(e, 'traceback'):
+                error_trace = unicode(e.traceback)
+                if hasattr(e, 'da_line_with_error'):
+                    error_trace += "\nIn line: " + unicode(e.da_line_with_error)
+            else:
+                error_trace = None
+            variables = list(reversed([y for y in worker_controller.functions.this_thread.current_variable]))
+            if 'on_error' not in worker_controller.functions.this_thread.current_info:
+                return(worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace, variables=variables))
+            else:
+                sys.stderr.write("Time in background action before error callback was " + str(time.time() - start_time))
+                return process_error(interview, session_code, yaml_filename, secret, user_info, url, url_root, is_encrypted, error_type, error_message, error_trace, variables, extra)
         sys.stderr.write("Time in background action was " + str(time.time() - start_time))
         if not hasattr(interview_status, 'question'):
             #sys.stderr.write("background_action: status had no question\n")
@@ -491,22 +506,36 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             #sys.stderr.write("background_action: status was backgroundresponseaction\n")
             start_time = time.time()
             new_action = interview_status.question.action
+            sys.stderr.write("new action is " + repr(new_action) + "\n")
             worker_controller.obtain_lock(session_code, yaml_filename)
             steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
             interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
             try:
                 interview.assemble(user_dict, interview_status)
+                has_error = False
             except Exception as e:
                 if hasattr(e, 'traceback'):
                     sys.stderr.write("Error in assembly during callback: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))
                 else:
                     sys.stderr.write("Error in assembly during callback: " + str(e.__class__.__name__) + ": " + str(e))
+                error_type = e.__class__.__name__
+                error_message = unicode(e)
+                if hasattr(e, 'traceback'):
+                    error_trace = unicode(e.traceback)
+                    if hasattr(e, 'da_line_with_error'):
+                        error_trace += "\nIn line: " + unicode(e.da_line_with_error)
+                else:
+                    error_trace = None
+                variables = list(reversed([y for y in worker_controller.functions.this_thread.current_variable]))
+                has_error = True
             # is this right?
             if str(user_info.get('the_user_id', None)).startswith('t'):
                 worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
             else:
                 worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
             worker_controller.release_lock(session_code, yaml_filename)
+            if has_error:
+                return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
             if hasattr(interview_status, 'question'):
                 if interview_status.question.question_type == "response":
                     #sys.stderr.write("background_action: status was response\n")
@@ -523,5 +552,58 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             sys.stderr.write("background_action: The end result of the background action was the asking of this question: " + repr(str(interview_status.questionText).strip()) + "\n")
             sys.stderr.write("background_action: Perhaps your interview did not ask all of the questions needed for the background action to do its work.")
             sys.stderr.write("background_action: Or perhaps your background action did its job, but you did not end it with a call to background_response().")
+            error_type = 'QuestionError'
+            error_trace = None
+            error_message = interview_status.questionText
+            variables = list(reversed([y for y in worker_controller.functions.this_thread.current_variable]))
+            if 'on_error' not in worker_controller.functions.this_thread.current_info:
+                return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
+            else:
+                return process_error(interview, session_code, yaml_filename, secret, user_info, url, url_root, is_encrypted, error_type, error_message, error_trace, variables, extra)
         sys.stderr.write("background_action: finished\n")
         return(worker_controller.functions.ReturnValue(extra=extra))
+
+def process_error(interview, session_code, yaml_filename, secret, user_info, url, url_root, is_encrypted, error_type, error_message, error_trace, variables, extra):
+    start_time = time.time()
+    new_action = worker_controller.functions.this_thread.current_info['on_error']
+    new_action['arguments']['error_type'] = error_type
+    new_action['arguments']['error_message'] = error_message
+    new_action['arguments']['error_trace'] = error_trace
+    new_action['arguments']['variables'] = variables
+    worker_controller.obtain_lock(session_code, yaml_filename)
+    steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
+    interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
+    try:
+        interview.assemble(user_dict, interview_status)
+    except Exception as e:
+        if hasattr(e, 'traceback'):
+            sys.stderr.write("Error in assembly during error callback: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))
+        else:
+            sys.stderr.write("Error in assembly during error callback: " + str(e.__class__.__name__) + ": " + str(e))
+        error_type = e.__class__.__name__
+        error_message = unicode(e)
+        if hasattr(e, 'traceback'):
+            error_trace = unicode(e.traceback)
+            if hasattr(e, 'da_line_with_error'):
+                error_trace += "\nIn line: " + unicode(e.da_line_with_error)
+        else:
+            error_trace = None
+    # is this right?
+    if str(user_info.get('the_user_id', None)).startswith('t'):
+        worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
+    else:
+        worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
+    worker_controller.release_lock(session_code, yaml_filename)
+    if hasattr(interview_status, 'question'):
+        if interview_status.question.question_type == "response":
+            sys.stderr.write("Time in error callback was " + str(time.time() - start_time))
+            #sys.stderr.write("background_action: status in error callback was response\n")
+            if hasattr(interview_status.question, 'all_variables'):
+                pass
+            elif not hasattr(interview_status.question, 'binaryresponse'):
+                sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
+        elif interview_status.question.question_type == "backgroundresponse":
+            sys.stderr.write("Time in error callback was " + str(time.time() - start_time))
+            return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, value=interview_status.question.backgroundresponse, extra=extra)
+    sys.stderr.write("Time in error callback was " + str(time.time() - start_time))
+    return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)

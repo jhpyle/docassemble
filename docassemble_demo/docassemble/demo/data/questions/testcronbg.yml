@@ -34,6 +34,7 @@ code: |
   import sys
   sys.stderr.write("The new counter is " + str(answer) + "\n")
   counter = answer
+  background_response()
 ---
 event: cron_hourly
 code: |

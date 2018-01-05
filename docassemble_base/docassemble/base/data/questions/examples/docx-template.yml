@@ -1,6 +1,6 @@
 metadata:
-  title: Fill fields in a DOCX template
-  short title: DOCX
+  title: Using a .docx template
+  short title: .docx
   documentation: "https://docassemble.org/docs/documents.html#docx template file"
   example start: 11
   example end: 11
@@ -78,14 +78,11 @@ mandatory: true
 code: |
   introduction_shown
 ---
-mandatory: True
 question: |
   Here is your document.
-attachment code: |
-
-  # qwerqwer
-  [asdf]
----
+subquestion: |
+  Does it meet your approval?
+yesno: user_approves
 attachment:
   name: Your letter
   filename: letter
@@ -93,13 +90,24 @@ attachment:
   docx template file: letter_template.docx
   valid formats:
     - pdf
+    - docx
 ---
-features:
-  pdf/a: True
-  cache documents: False
+mandatory: True
+code: |
+  if user_approves:
+    success_screen
+  else:
+    fail_screen
 ---
+event: success_screen
 question: |
-  Give me a file
-fields:
-  - File: the_file
-    datatype: file
+  Great!
+buttons:
+  Exit: exit
+---
+event: fail_screen
+question: |
+  Sorry to hear that!
+buttons:
+  Exit: exit
+  Restart: restart
