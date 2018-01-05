@@ -458,6 +458,80 @@
     If you have met a zombie pigman, you
     have almost certainly met a creeper.
   yesno: met_a_creeper
+"background-error-action": "mandatory: True\ncode: |\n  if the_task.ready():\n   \
+  \ if the_task.failed():\n      error_screen\n    else:\n      final_screen\n  else:\n\
+  \    waiting_screen\n---\ncode: |\n  the_task = background_action('bg_task', additional=value_to_add)\n\
+  ---\nquestion: |\n  How much shall I add to 553?\nfields:\n  - Number: value_to_add\n\
+  \    datatype: integer\n---\nevent: bg_task\ncode: |\n  # This is where time-consuming\
+  \ code\n  # would go\n  background_error_action('bg_fail', stage='calculation')\n\
+  \  value = 553 + action_argument('additional') / 0\n  background_response_action('bg_resp',\
+  \ ans=value)\n---\nevent: bg_resp\ncode: |\n  answer = action_argument('ans')\n\
+  \  background_response()\n---\nevent: bg_fail\ncode: |\n  errmess = \"Failure at\
+  \ the \" \\\n            + action_argument('stage') \\\n            + \" stage due\
+  \ to a \" \\\n            + action_argument('error_type') \\\n            + \" error\"\
+  \n  background_response('handled_error')\n---\nevent: error_screen\nquestion: |\n\
+  \  There was an error.\nsubquestion: |\n  The saved error message was\n  ${ errmess\
+  \ }.\n  \n  The value was\n  `${ the_task.get() }`.\n  \n  The error was\n  `${\
+  \ the_task.result().error_type }`.\n\n  The trace was\n  \n  ${ indent(the_task.result().error_trace)\
+  \ }\n\n  The message was\n  \n  ${ indent(the_task.result().error_message) }\n\n\
+  \  The variables were\n  `${ repr(the_task.result().variables) }`.\n---\nevent:\
+  \ final_screen\nquestion: |\n  The answer is ${ answer }.\n---\nevent: waiting_screen\n\
+  question: |\n  Hang tight.\n  Still waiting for an answer.\nsubquestion: |\n  This\
+  \ screen will reload every\n  ten seconds until the answer\n  is available.\nreload:\
+  \ True"
+"background-error-action-demo": |-
+  question: |
+    Give me some numbers.
+  fields:
+   - Numerator: b
+     datatype: number
+   - Denominator: c
+     datatype: number
+  ---
+  code: |
+    need(b, c)
+    task = background_action('bg_task')
+  ---
+  mandatory: True
+  code: |
+    if task.ready():
+      show_result
+    else:
+      show_waiting_screen
+  ---
+  event: show_waiting_screen
+  reload: True
+  question: |
+    Waiting for result...
+  ---
+  event: show_result
+  question: |
+    Result of task
+  subquestion: |
+    % if computation_ok:
+    The result was ${ answer }.
+    % else:
+    There was an error.
+    % endif
+  ---
+  event: bg_task
+  code: |
+    # This is where time-consuming code
+    # would go.
+    background_error_action('bg_failure')
+    a = b / c
+    background_response_action('bg_success', answer=a)
+  ---
+  event: bg_success
+  code: |
+    computation_ok = True
+    answer = action_argument('answer')
+    background_response()
+  ---
+  event: bg_failure
+  code: |
+    computation_ok = False
+    background_response()
 "background_action": |-
   mandatory: True
   code: |
@@ -467,7 +541,7 @@
       waiting_screen
   ---
   code: |
-    the_task = background_action('bg_task', None, additional=value_to_add)
+    the_task = background_action('bg_task', additional=value_to_add)
   ---
   question: |
     How much shall I add to 553?
@@ -478,7 +552,7 @@
   event: bg_task
   code: |
     # This is where time-consuming code
-    # would go
+    # would go.
     background_response(553 + action_argument('additional'))
   ---
   event: waiting_screen
@@ -554,6 +628,46 @@
   event: bg_resp
   code: |
     answer = action_argument('ans')
+    background_response()
+"background_action_test_timing": |-
+  mandatory: True
+  code: |
+    if the_task.ready():
+      final_screen
+    else:
+      waiting_screen
+  ---
+  code: |
+    need(value_to_add)
+    the_task = background_action('bg_task')
+    import time
+    time.sleep(2)
+  ---
+  question: |
+    How much shall I add to 553?
+  fields:
+    - Number: value_to_add
+      datatype: integer
+  ---
+  event: bg_task
+  code: |
+    # This is where time-consuming code
+    # would go.
+    background_response(553 + value_to_add)
+  ---
+  event: waiting_screen
+  question: |
+    Hang tight.
+    Still waiting for an answer.
+  subquestion: |
+    This screen will reload every
+    ten seconds until the answer
+    is available.
+  reload: True
+  ---
+  event: final_screen
+  question: |
+    The answer is ${ the_task.get() }.
 "background_action_with_response_action": |-
   event: bg_task
   code: |
@@ -565,6 +679,7 @@
   event: bg_resp
   code: |
     answer = action_argument('ans')
+    background_response()
   ---
   event: final_screen
   question: |
@@ -1113,7 +1228,7 @@
 "cron": |-
   mandatory: True
   code: |
-    use_cron = True
+    allow_cron = True
     multi_user = True
     counter = 0
   ---
@@ -1972,13 +2087,19 @@
           - sugar
       - preparation_time: 48 hours
 "docx-template": |-
-  mandatory: True
   question: |
     Here is your document.
-  attachment code: |
-
-    # qwerqwer
-    [asdf]
+  subquestion: |
+    Does it meet your approval?
+  yesno: user_approves
+  attachment:
+    name: Your letter
+    filename: letter
+    variable name: asdf
+    docx template file: letter_template.docx
+    valid formats:
+      - pdf
+      - docx
 "docx-template-auto": ""
 "docx-template-code": |-
   mandatory: True
@@ -2125,7 +2246,7 @@
   \ }\n  % endif\n---\nevent: incoming_email\ncode: |\n  # Time-consuming code that\
   \ processes the\n  # e-mail can go here.\n  background_response_action('save_email',\
   \ email=action_argument('email'))\n---\nevent: save_email\ncode: |\n  email = action_argument('email')\n\
-  \  response()"
+  \  background_response()"
 "email-to-case-simple": "modules:\n  - docassemble.base.util\n---\nquestion: |\n \
   \ E-mailing to the interview\nsubquestion: |\n  When you press continue, you will\
   \ be\n  provided with an e-mail address to\n  which you can send an email.\nfield:\

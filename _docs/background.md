@@ -49,7 +49,7 @@ For example:
    user logging in, but by the receipt of an e-mail.
 
 There are features in **docassemble** that address each of these
-limitations.
+needs.
 
 1. If you have [`code`] that takes a long time to run, you can run it
    in a [background process].
@@ -100,7 +100,9 @@ The next subsections explain how these functions work.
 ## <a name="background_action"></a>background_action()
 
 Here is an example that uses a background task to add a user-supplied
-number to 553 and return the result.
+number to 553 and return the result.  (Of course, adding two numbers
+is not time-consuming and does not need to run in the background --
+this is just a demonstration!)
 
 {% include side-by-side.html demo="background_action" %}
 
@@ -117,8 +119,8 @@ Briefly, here is what happens in this interview.
    background that adds `value_to_add` to the number 553.  The
    variable `the_task`, representing the status of the background task,
    is defined.
-3. The call to `the_task.ready()` returns `False` because the task is
-   still running, so the `waiting_screen` is shown.
+3. The call to `the_task.ready()` returns `False` because the task has
+   not been completed yet, so the `waiting_screen` is shown.
 4. Since the `waiting_screen` has the [`reload` modifier] set, the
    screen reloads after ten seconds.
 5. In the meantime, the `bg_task` [action] is running in the
@@ -133,7 +135,7 @@ Starting a background process involves calling the
 {% highlight yaml %}
 ---
 code: |
-  the_task = background_action('bg_task', None, additional=value_to_add)
+  the_task = background_action('bg_task', additional=value_to_add)
 ---
 {% endhighlight %}
 
@@ -142,15 +144,16 @@ of an [action] available in the interview.  Notice that the next block
 is identified with `event: bg_task`; this is the block that contains
 the code you want to run in the background.
 
-The second argument to [`background_action()`] indicates how the
-result of the [action] should be communicated to the user.  In this
-case, `None` means no communication (more on this
-setting [below](#ui_notification)).
+There is an optional second argument to [`background_action()`], not
+used in this example, which indicates how the result of the [action]
+should be communicated to the user.  Omitting the second argument or
+setting it to `None` means no communication (more on this setting
+[below](#ui_notification)).
 
-The keyword argument, `additional`, is an argument that is passed to
-the [action] (which can be retrieved with [`action_argument()`]).  You
-can have as many keyword arguments as you want, called anything you
-want.  You can also have no keyword arguments at all.
+The keyword argument, `additional`, is passed to the [action] (and
+theh value can be retrieved using [`action_argument()`]).  You can
+include as many keyword arguments as you want, called anything you want.
+You can also have no keyword arguments at all.
 
 The `background_action()` function returns an object that represents a
 [Celery] "task."  In this example, the object is saved to a variable
@@ -160,9 +163,25 @@ called `the_task`.  This variable can be used in the following ways:
   yet, and `False` if not.
 * `the_task.failed()` returns `True` if the task raised an exception,
   and `False` if not.
+* `the_task.wait()` will wait until the background task completes and
+  then return `True`.
 * `the_task.get()` returns the result of the task.  If the task has
   not been completed yet, the system will wait until the task is
   completed and then return the result of the task.
+* `the_task.result()` is like `.get()`, except it returns an object
+  containing details about the result of the task.  This is useful
+  primarily if the task ended prematurely because an exception was
+  raised.  The attributes of the object are:
+    * `error_type` - the name of the exception object (e.g.,
+      `IndexError`).
+    * `error_message` - the error message (in plain text).
+    * `error_trace` - a [traceback] message (in plain text),
+      which can be useful when debugging errors.
+    * `variables` - a list of variable names that the interview had
+      been seeking, in order from most recent to least recent.  This
+      is useful if the task failed because a necessary variable was
+      undefined; in that case, the first item in this list will be the
+      name of this undefined variable.
 
 [Celery] will start trying to run the `bg_task` [action] as soon as
 possible after `background_action()` is called.  If a lot of other
@@ -173,15 +192,15 @@ Regardless of how long the `bg_task` [action] takes to finish, the
 `background_action()` function will always return a response right
 away.  This means that when your interview starts a time-consuming
 background task, the server will immediately present the user with a
-new screen instead of making the user wait for the screen to load.
-The `bg_task` [action] will run in the background, independently of
-whatever goes on between the user and the interview.  It will continue
-running even if the user exits the browser.
+new screen instead of making the user wait.  The `bg_task` [action]
+will run in the background, independently of whatever goes on between
+the user and the interview.  It will continue running even if the user
+exits the browser.
 
 The `bg_task` [action] runs in much the same way as an [action]
 invoked by the user clicking on a hyperlink generated by
 [`url_action()`].  (The parameters to `background_action()` will be
-familiar if you have ever used [`url_action()`].)
+familiar to you if you have ever used [`url_action()`].)
 
 {% highlight yaml %}
 ---
@@ -194,7 +213,8 @@ code: |
 {% endhighlight %}
 
 The code in a background action can use the [`action_argument()`] and
-[`action_arguments()`] functions to access the [action] parameters.
+[`action_arguments()`] functions to access the [action] parameters
+(i.e., the keyword arguments passed to [`background_action()`]).
 It can use the [`user_logged_in()`], [`user_has_privilege()`], and
 [`user_info()`] functions to determine information about the current
 user (i.e. the user who caused the `background_action()` function to
@@ -204,13 +224,13 @@ addition, background tasks are different from [scheduled tasks] in
 that you can run background tasks regardless of whether [`multi_user`]
 is set to `True` or `False`.
 
-There is two important things to understand about [actions] invoked
+There are two important things to understand about [actions] invoked
 through `background_action()`:
 
 #. Background actions are not capable of asking the user any
    questions.  Before calling [`background_action()`], you need to
-   make sure that all of the variables the [action] needs to gather
-   from the user by asking [`question`]s have been defined.
+   make sure that all of the variables the [action] needs have been
+   defined.
 #. Any changes made to variables by a background action will not be
    remembered after the action finishes.  In order to communicate back
    to the interview, you need to use [`background_response()`] or
@@ -218,11 +238,11 @@ through `background_action()`:
 
 Your background action is prevented from saving changes to the
 variables because background actions are intended to run at the same
-time the user is answering questions in the interview.  If the
-background process starts at 3:05 p.m. and finishes at 3:10 p.m., but
-the user answers five questions between 3:05 p.m. and 3:10 p.m., the
-user's changes would be overwritten if the background process saved
-its changes at 3:10 p.m.
+time the user is answering questions in the interview.  For example,
+if the background process starts at 3:05 p.m. and finishes at 3:10
+p.m., but the user answers five questions between 3:05 p.m. and 3:10
+p.m., the user's changes would be overwritten if the background
+process saved its changes at 3:10 p.m.
 
 The [`background_response()`] function is the simplest way to return a
 value to the interview, but you may want to use
@@ -231,10 +251,10 @@ to the interview variables based on the code that is run in the background.
 
 Also, even if you are not interested in obtaining any results from the
 background action, and are only interested in the action's side
-effects, it is a good practice to end the [action] with a call to
-`background_response()` (with no arguments).  If you follow this
-practice, you will have an easier time debugging problems with your
-background actions.
+effects, it is important that you end the [action] with a call to
+`background_response()` (with no arguments).  Otherwise, the result of
+the background action is likely to be an exception (if the interview
+asks the user a question, this counts as an exception).
 
 ## <a name="background_response"></a>background_response()
 
@@ -242,10 +262,10 @@ The `background_response()` function allows you to return information
 from a background action to the interview.  The information is
 accessed by using the `.get()` method on the "task" that was created.
 
-For example, in the above example, the task is created like this:
+For example, in the interview above, the task is created like this:
 
 {% highlight python %}
-the_task = background_action('bg_task', None, additional=value_to_add)
+the_task = background_action('bg_task', additional=value_to_add)
 {% endhighlight %}
 
 There is now a variable `the_task` in the interview, which is used to
@@ -280,12 +300,13 @@ question: |
 It is possible for long-running tasks to save information to the
 interview's dictionary, but they need to do so by sending the
 information to a separate "action," the purpose of which is to save
-the information to the interview's dictionary.  Information can be
-passed to the action as arguments.
+the information to the interview's dictionary.  The action is
+triggered by calling the `background_response_action()` function.
+Information can be passed to this [action] in the form of arguments.
 
 {% include side-by-side.html demo="background_action_with_response_action" %}
 
-In this example, the action that runs in the background is `bg_task`
+In this example, the [action] that runs in the background is `bg_task`
 and the action that changes the interview's dictionary is `bg_resp`.
 
 {% highlight yaml %}
@@ -298,6 +319,7 @@ code: |
 event: bg_resp
 code: |
   answer = action_argument('ans')
+  background_response()
 ---
 {% endhighlight %}
 
@@ -307,17 +329,20 @@ The `bg_task` action finishes by calling
 [`background_response()`], [`message()`], [`command()`], and
 [`response()`], tells **docassemble** to stop whatever it is doing.
 **docassemble** will not process any code that follows
-`background_response_action()`.)
+`background_response_action()` in a [`code`] block.)
 
 The first argument to `background_response_action()` is the name of
-the action to be run, and the remainder of the arguments are keyword
-arguments that are provided to the action.  In the above example, The
+the [action] to be run, and the remainder of the arguments are keyword
+arguments that are sent to the action.  In the above example, The
 `bg_resp` action retrieves the argument `ans` and changes the variable
-`answer` in the interview's dictionary to the value of `ans`.
+`answer` in the interview's dictionary to the value of the `ans` argument.
 
 The idea here is that `bg_task` is a long-running task, while
-`bg_resp` is a short-running task devoted only to saving the results
-of the long-running task.
+`bg_resp` is a short-running task devoted only to saving specific
+results of the long-running task.  The brief [action] does not
+interfere with the ongoing interview; it simply retrieves the
+dictionary from storage, makes some specific changes, and then saves
+the dictionary to storage.
 
 When the code for the `bg_resp` action runs, it runs separately from
 the `bg_task` action.  If `bg_task` changes a variable in the
@@ -326,8 +351,145 @@ those changes.  The only way the `bg_task` action can send information
 to the `bg_resp` action is by passing arguments to it via the
 `background_response_action()` function.
 
-In computer science terminology, the `bg_resp` action is similar to a
+In computer programming terminology, the `bg_resp` action is similar to a
 [callback function].
+
+The `bg_resp` action ends with `background_response()` to indicate that
+the action has run successfully and nothing further needs to be done.
+It is important that the action end with a call to
+[`background_response()`] because if it did not end with this, the
+interview code would continue to be processed (just as it would with a
+regular [action]), which may generate an error or cause unwanted side
+effects.
+
+If you call `background_response()` with an argument, the value of the
+argument will be available in your interview as the result of
+`the_task.get()`.  You probably will not need to pass values this way,
+since you can communicate results by setting interview variables.
+
+## <a name="background_error_action"></a>background_error_action()
+
+If your long-running background process ends with an error, such as a
+[Python] computation error, or a situation where a necessary variable
+is undefined, an error will be printed to the `worker.log` file.  But
+you might want your interview to do something special in response to
+this circumstance.  For example, you might want an e-mail to be sent
+to an administrator so that someone can fix a problem right away.  Or
+you might want to make a record in the interview dictionary regarding
+what went wrong with the background task.
+
+One way to intercept errors is to use [Python]'s [`try`/`except`]
+logic.  However, this can be tricky because **docassemble** uses
+[Python]'s exception system to execute [`code`] blocks and process
+[`template`]s, so some error types should not be intercepted
+(e.g. `NameError`).  You can use [`try`/`except`] to trap specific
+error types, if you know what errors are likely to happen.  But if you
+don't know what errors your code will encounter, this might not be
+feasible.
+
+Another way to handle errors gracefully in a background process is to
+use the `background_error_action()` function.  This function allows
+you to specify an [action] that should be run in case the background
+process fails for any reason.  For example, the following code will
+run the `bg_failure` action if the background task runs into an error.
+In this case, there will be a "divide by zero" error if the user sets
+the "Denominator" to zero.
+
+{% include side-by-side.html demo="background-error-action-demo" %}
+
+In this example, `background_error_action()` is called, before the
+`bg_task` block does its work, in order to tell **docassemble** that
+if the `bg_task` action results in an error, the `bg_failure`
+[action] should be run.  If `bg_task` succeeds in running to
+completion, it ends with a call to [`background_response_action()`],
+which will run the `bg_success` action.
+
+The `bg_success` and `bg_failure` [action]s are effectively two
+[callback function]s, one of which runs on success and one of which
+runs on failure.  The ways that each operates are very similar.  While
+the changes that `bg_task` makes to the interview's dictionary will
+not be saved, the changes that `bg_success` and `bg_failure` make will
+be saved.  While `bg_task` may take a long time, `bg_success` and
+`bg_failure` should be designed to finish their work promptly.
+
+When you call `background_error_action()`, you can specify arguments,
+much as you can specify arguments when you call
+[`background_response_action()`].  You might wish to use arguments to
+indicate in what context an error took place.
+
+Another similarity with [`background_response_action()`] is that
+within an [action] specified by `background_error_action()`, you can
+use `background_response()` to return a response value back to the
+interview.  This value can be retrieved using the `.get()` method on
+the task object.
+
+One difference between an [action] specified by
+`background_error_action()` and an [action] specified by
+[`background_response_action()`] is that when an "error" [action] is
+run, **docassemble** will pass additional arguments to the [action],
+which contain information about the error.  These arguments are:
+
+* `error_type` - contains the name of the exception object (e.g.,
+  `IndexError`).
+* `error_message` - contains the error message (in plain text).
+* `error_trace` - contains a [traceback] message (in plain text)
+  that can be useful in debugging.
+* `variables` - contains a list of variable names that the interview had
+  been seeking, in order from most recent to least recent.
+
+(These arguments will override any existing arguments, so don't use
+these names when indicating arguments in your call to
+`background_error_action()`.)
+
+The following interview illustrates these features.
+
+{% include side-by-side.html demo="background-error-action" %}
+
+## <a name="timing"></a>Timing issues
+
+As soon as `background_action()` is called, a task goes into the
+[celery] task queue.  If [celery] has an available "worker," the task
+will start running right away.
+
+If the task starts running while the interview is still running code,
+the background task will wait for the interview code to save its work
+before retrieving the interview dictionary and running the [action]
+code.
+
+Likewise, if the task finishes while the interview is still running
+code, and the task ends with a call to
+[`background_response_action()`], the "background response action"
+will not run until the interview code is done processing.
+
+This waiting is necessary to prevent concurrent processes from
+stepping on each others' toes.  Note, however, that the waiting will
+"time out" after four seconds.  For this reason, your interview code
+and your "background response actions" should be designed to always
+finish in well under four seconds.
+
+This waiting also imposes some limitations on what you can do in your
+interview code.  For example, if you are using
+[`background_response_action()`] or [`background_error_action()`],
+your interview code should never wait for the background task to
+finish.  This means you should never:
+
+* Call `.wait()` on the task object; or
+* Call `.failed()`, `.get()` or `.response()` on the task object
+  unless `.ready()` is `True`.
+
+It is safe to wait for the background task to finish if you know that
+your interview's background tasks do not use
+[`background_response_action()`] or [`background_error_action()`].
+
+Instead of using code to wait for a background task to finish, you can
+use the [`reload` modifier] on a [`question`], or some other technique
+where the waiting takes place while code is not running.
+
+Also, because of timing issues, you cannot use methods on a task
+object from code that runs in the background.  (All
+[`code`] blocks indicated by [`background_action()`],
+[`background_response_action()`], and [`background_error_action()`]
+run in the background.)
 
 ## <a name="ui_notification"></a>Communicating results to the user interface
 
@@ -1081,3 +1243,6 @@ privileges and user identity of the [cron user].
 [`flash()`]: {{ site.baseurl }}/docs/functions.html#flash
 [document]: {{ site.baseurl }}/docs/documents.html
 [`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
+[traceback]: https://docs.python.org/2/library/traceback.html
+[`try`/`except`]: https://docs.python.org/2/tutorial/errors.html#handling-exceptions
+[`background_error_action()`]: #background_error_action

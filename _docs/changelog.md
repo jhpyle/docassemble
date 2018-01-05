@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.17](https://github.com/jhpyle/docassemble/releases/tag/v0.2.17) - 2018-01-04
+
+### Changed
+- Better features in background actions for handling exceptions.
+
+### Added
+- The `background_error_action()` function.
+
 ## [0.2.16](https://github.com/jhpyle/docassemble/releases/tag/v0.2.16) - 2018-01-01
 
 ### Fixed
