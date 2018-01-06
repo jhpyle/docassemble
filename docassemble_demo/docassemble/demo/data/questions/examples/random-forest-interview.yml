@@ -8,7 +8,7 @@ modules:
   - docassemble.base.util
 ---
 objects:
-  - characteristics: DADict
+  - characteristics: DADict.using(gathered=True)
 ---
 mandatory: True
 question: |
@@ -66,12 +66,6 @@ fields:
     min: 1
     max: 5
     default: 3
----
-mandatory: True
-question: |
-  The characteristics
-subquestion: |
-  ${ indent(repr(characteristics)) }
 ---
 code: |
   rf = RandomForestMachineLearner('fruit', use_initial_file=True)
