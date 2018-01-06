@@ -6,7 +6,7 @@
         "color": "Red", 
         "round": true, 
         "seed location": "Inside", 
-        "sweetness": 2, 
+        "sweetness": 2.0, 
         "width": 4.1
       }
     }, 
@@ -16,7 +16,7 @@
         "color": "Red", 
         "round": false, 
         "seed location": "Outside", 
-        "sweetness": 4, 
+        "sweetness": 4.0, 
         "width": 1.5
       }
     }, 
@@ -26,7 +26,7 @@
         "color": "Yellow", 
         "round": false, 
         "seed location": "Inside", 
-        "sweetness": 1, 
+        "sweetness": 1.0, 
         "width": 1.2
       }
     }, 
@@ -36,7 +36,7 @@
         "color": "Yellow", 
         "round": false, 
         "seed location": "Inside", 
-        "sweetness": 3, 
+        "sweetness": 3.0, 
         "width": 2.9
       }
     }, 
@@ -46,7 +46,7 @@
         "color": "Yellow", 
         "round": true, 
         "seed location": "Inside", 
-        "sweetness": 4, 
+        "sweetness": 4.0, 
         "width": 4
       }
     }, 
@@ -56,7 +56,7 @@
         "color": "Purple", 
         "round": true, 
         "seed location": "Inside", 
-        "sweetness": 3, 
+        "sweetness": 3.0, 
         "width": 0.5
       }
     }, 
@@ -66,8 +66,8 @@
         "color": "Yellow", 
         "round": false, 
         "seed location": "Inside", 
-        "sweetness": 3, 
-        "width": 1
+        "sweetness": 3.0, 
+        "width": 1.0
       }
     }, 
     {
@@ -76,8 +76,8 @@
         "color": "Yellow", 
         "round": true, 
         "seed location": "Inside", 
-        "sweetness": 4, 
-        "width": 6
+        "sweetness": 4.0, 
+        "width": 6.0
       }
     }, 
     {
@@ -86,8 +86,8 @@
         "color": "Orange", 
         "round": true, 
         "seed location": "Inside", 
-        "sweetness": 4, 
-        "width": 4
+        "sweetness": 4.0, 
+        "width": 4.0
       }
     }, 
     {
@@ -96,7 +96,7 @@
         "color": "Yellow", 
         "round": true, 
         "seed location": "Inside", 
-        "sweetness": 2, 
+        "sweetness": 2.0, 
         "width": 6.6
       }
     }, 
@@ -106,7 +106,7 @@
         "color": "Yellow", 
         "round": false, 
         "seed location": "Inside", 
-        "sweetness": 2, 
+        "sweetness": 2.0, 
         "width": 1.5
       }
     }, 
@@ -116,8 +116,8 @@
         "color": "Green", 
         "round": false, 
         "seed location": "Inside", 
-        "sweetness": 3, 
-        "width": 4
+        "sweetness": 3.0, 
+        "width": 4.0
       }
     }, 
     {
@@ -126,8 +126,8 @@
         "color": "Red", 
         "round": false, 
         "seed location": "Inside", 
-        "sweetness": 2, 
-        "width": 4
+        "sweetness": 2.0, 
+        "width": 4.0
       }
     }
   ]

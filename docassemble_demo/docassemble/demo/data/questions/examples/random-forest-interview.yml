@@ -67,6 +67,12 @@ fields:
     max: 5
     default: 3
 ---
+mandatory: True
+question: |
+  The characteristics
+subquestion: |
+  ${ indent(repr(characteristics)) }
+---
 code: |
   rf = RandomForestMachineLearner('fruit', use_initial_file=True)
 ---
