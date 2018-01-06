@@ -4,130 +4,130 @@
       "dependent": "apple", 
       "independent": {
         "color": "Red", 
-        "round": "True", 
+        "round": true, 
         "seed location": "Inside", 
-        "sweetness": "2", 
-        "width": "4.1"
+        "sweetness": 2, 
+        "width": 4.1
       }
     }, 
     {
       "dependent": "strawberry", 
       "independent": {
         "color": "Red", 
-        "round": "False", 
+        "round": false, 
         "seed location": "Outside", 
-        "sweetness": "4", 
-        "width": "1.5"
+        "sweetness": 4, 
+        "width": 1.5
       }
     }, 
     {
       "dependent": "banana", 
       "independent": {
         "color": "Yellow", 
-        "round": "False", 
+        "round": false, 
         "seed location": "Inside", 
-        "sweetness": "1", 
-        "width": "1.2"
+        "sweetness": 1, 
+        "width": 1.2
       }
     }, 
     {
       "dependent": "pear", 
       "independent": {
         "color": "Yellow", 
-        "round": "False", 
+        "round": false, 
         "seed location": "Inside", 
-        "sweetness": "3", 
-        "width": "2.9"
+        "sweetness": 3, 
+        "width": 2.9
       }
     }, 
     {
       "dependent": "peach", 
       "independent": {
         "color": "Yellow", 
-        "round": "True", 
+        "round": true, 
         "seed location": "Inside", 
-        "sweetness": "4", 
-        "width": "4"
+        "sweetness": 4, 
+        "width": 4
       }
     }, 
     {
       "dependent": "grape", 
       "independent": {
         "color": "Purple", 
-        "round": "True", 
+        "round": true, 
         "seed location": "Inside", 
-        "sweetness": "3", 
-        "width": "0.5"
+        "sweetness": 3, 
+        "width": 0.5
       }
     }, 
     {
       "dependent": "banana", 
       "independent": {
         "color": "Yellow", 
-        "round": "False", 
+        "round": false, 
         "seed location": "Inside", 
-        "sweetness": "3", 
-        "width": "1"
+        "sweetness": 3, 
+        "width": 1
       }
     }, 
     {
       "dependent": "cantaloupe", 
       "independent": {
         "color": "Yellow", 
-        "round": "True", 
+        "round": true, 
         "seed location": "Inside", 
-        "sweetness": "4", 
-        "width": "6"
+        "sweetness": 4, 
+        "width": 6
       }
     }, 
     {
       "dependent": "orange", 
       "independent": {
         "color": "Orange", 
-        "round": "True", 
+        "round": true, 
         "seed location": "Inside", 
-        "sweetness": "4", 
-        "width": "4"
+        "sweetness": 4, 
+        "width": 4
       }
     }, 
     {
       "dependent": "grapefruit", 
       "independent": {
         "color": "Yellow", 
-        "round": "True", 
+        "round": true, 
         "seed location": "Inside", 
-        "sweetness": "2", 
-        "width": "6.6"
+        "sweetness": 2, 
+        "width": 6.6
       }
     }, 
     {
       "dependent": "banana", 
       "independent": {
         "color": "Yellow", 
-        "round": "False", 
+        "round": false, 
         "seed location": "Inside", 
-        "sweetness": "2", 
-        "width": "1.5"
+        "sweetness": 2, 
+        "width": 1.5
       }
     }, 
     {
       "dependent": "apple", 
       "independent": {
         "color": "Green", 
-        "round": "False", 
+        "round": false, 
         "seed location": "Inside", 
-        "sweetness": "3", 
-        "width": "4"
+        "sweetness": 3, 
+        "width": 4
       }
     }, 
     {
       "dependent": "apple", 
       "independent": {
         "color": "Red", 
-        "round": "False", 
+        "round": false, 
         "seed location": "Inside", 
-        "sweetness": "2", 
-        "width": "4"
+        "sweetness": 2, 
+        "width": 4
       }
     }
   ]

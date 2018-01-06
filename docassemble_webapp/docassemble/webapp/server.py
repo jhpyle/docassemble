@@ -4537,7 +4537,7 @@ def index():
                 is_ml = True
             elif known_datatypes[real_key] in ('number', 'float', 'currency', 'range'):
                 if data == '':
-                    data = 0
+                    data = 0.0
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[real_key] in ('object', 'object_radio'):
@@ -4605,7 +4605,7 @@ def index():
                 is_ml = True
             elif known_datatypes[orig_key] in ('number', 'float', 'currency', 'range'):
                 if data == '':
-                    data = 0
+                    data = 0.0
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[orig_key] in ('object', 'object_radio'):
