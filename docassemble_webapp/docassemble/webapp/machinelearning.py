@@ -509,6 +509,8 @@ class RandomForestMachineLearner(MachineLearner):
                 if type(val) is not learners[self.group_id]['indep_type'][key]:
                     if type(val) is int and learners[self.group_id]['indep_type'][key] is float:
                         val = float(val)
+                    elif type(val) is float and learners[self.group_id]['indep_type'][key] is int:
+                        learners[self.group_id]['indep_type'][key] = float
                     else:
                         raise Exception("RandomForestMachineLearner: independent variable type for key " + repr(key) + " was not consistent")
             else:
