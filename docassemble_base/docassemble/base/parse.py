@@ -1889,7 +1889,7 @@ class Question:
                             elif key == 'validate':
                                 field_info['validate'] = {'compute': compile(field[key], '<validate code>', 'eval'), 'sourcecode': field[key]}
                                 self.find_fields_in(field[key])
-                            elif 'datatype' in field and field['datatype'] in ('file', 'files', 'camera') and key == 'maximum image size':
+                            elif 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment') and key == 'maximum image size':
                                 field_info['max_image_size'] = {'compute': compile(unicode(field[key]), '<maximum image size code>', 'eval'), 'sourcecode': unicode(field[key])}
                                 self.find_fields_in(field[key])
                             elif key == 'required':
@@ -2827,7 +2827,7 @@ class Question:
                     extras['required'][field.number] = field.required
                 else:
                     extras['required'][field.number] = eval(field.required['compute'], user_dict)
-                if hasattr(field, 'max_image_size') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera'):
+                if hasattr(field, 'max_image_size') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
                     extras['max_image_size'] = eval(field.max_image_size['compute'], user_dict)
                 if hasattr(field, 'validate'):
                     the_func = eval(field.validate['compute'], user_dict)

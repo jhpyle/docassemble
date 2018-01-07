@@ -298,7 +298,7 @@ def as_sms(status, links=None, menu_items=None):
             if label:
                 qoutput += "\n" + label + ":" + next_label
             qoutput += "\n" + word('Type a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string
-        elif hasattr(field, 'datatype') and field.datatype in ['file', 'camera']:
+        elif hasattr(field, 'datatype') and field.datatype in ['file', 'camera', 'user', 'environment']:
             if label:
                 qoutput += "\n" + label + ":" + next_label 
                 if status.extras['required'][field.number]:
@@ -860,7 +860,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                                 validation_rules['messages'][the_saveas][key] = word("You need to enter a number that is at least") + " " + str(status.extras[key][field.number])
                             elif key == 'max':
                                 validation_rules['messages'][the_saveas][key] = word("You need to enter a number that is at most") + " " + str(status.extras[key][field.number])
-                if (field.datatype in ['files', 'file', 'camera', 'camcorder', 'microphone']):
+                if (field.datatype in ['files', 'file', 'camera', 'user', 'environment', 'camcorder', 'microphone']):
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(field.saveas)
                     validation_rules['messages'][field.saveas]['required'] = word("You must provide a file.")
@@ -1888,13 +1888,17 @@ def input_for(status, field, wide=False, embedded=False):
                 output += " ".join(inner_fieldlist) + '</span>'
             else:
                 output += "".join(inner_fieldlist)
-        elif field.datatype in ['file', 'files', 'camera', 'camcorder', 'microphone']:
+        elif field.datatype in ['file', 'files', 'camera', 'user', 'environment', 'camcorder', 'microphone']:
             if field.datatype == 'files':
                 multipleflag = ' multiple'
             else:
                 multipleflag = ''
             if field.datatype == 'camera':
                 accept = ' accept="image/*" capture="camera"'
+            elif field.datatype == 'user':
+                accept = ' accept="image/*" capture="user"'
+            elif field.datatype == 'environment':
+                accept = ' accept="image/*" capture="environment"'
             elif field.datatype == 'camcorder':
                 accept = ' accept="video/*" capture="camcorder"'
             elif field.datatype == 'microphone':
@@ -1967,7 +1971,7 @@ def input_for(status, field, wide=False, embedded=False):
                 output += '<span class="inline-error-wrapper">'
                 # output += '<span class="inline-error-wrapper"><label for="' + escape_id(saveas_string) + '" class="da-has-error inline-error-position inline-error" style="display: none" id="' + escape_id(saveas_string) + '-error"></label>'
             output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + extra_style + title_text + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
-            if not embedded and field.datatype in ('currency', 'file', 'files', 'camera', 'camcorder', 'microphone'):
+            if not embedded and field.datatype in ('currency', 'file', 'files', 'camera', 'user', 'environment', 'camcorder', 'microphone'):
                 output += ' aria-describedby="addon-' + do_escape_id(saveas_string) + '"/></div><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
             else:
                 output += '/>'

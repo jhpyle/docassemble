@@ -14298,7 +14298,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     data = 'docassemble.base.util.DAModel(' + repr(saveas) + ', group_id=' + repr(interview_status.extras['ml_group'][field.number]) + ', text=' + repr(inp) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
                 else:
                     data = 'docassemble.base.util.DAModel(' + repr(saveas) + ', text=' + repr(inp) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
-            elif hasattr(field, 'datatype') and field.datatype in ("file", "files", "camera", "camcorder", "microphone"):
+            elif hasattr(field, 'datatype') and field.datatype in ("file", "files", "camera", "user", "environment", "camcorder", "microphone"):
                 if user_entered_skip and not interview_status.extras['required'][field.number]:
                     skip_it = True
                     data = repr('')
