@@ -1894,11 +1894,11 @@ def input_for(status, field, wide=False, embedded=False):
             else:
                 multipleflag = ''
             if field.datatype == 'camera':
-                accept = ' accept="image/*;capture=camera"'
+                accept = ' accept="image/*" capture="camera"'
             elif field.datatype == 'camcorder':
-                accept = ' accept="video/*;capture=camcorder"'
+                accept = ' accept="video/*" capture="camcorder"'
             elif field.datatype == 'microphone':
-                accept = ' accept="audio/*;capture=microphone"'
+                accept = ' accept="audio/*" capture="microphone"'
             else:
                 accept = ''
             maximagesize = ''
