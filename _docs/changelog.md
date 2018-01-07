@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.18](https://github.com/jhpyle/docassemble/releases/tag/v0.2.18) - 2018-01-06
+
+### Added
+- The `user` and `environment` datatypes.
+
+### Fixed
+- Typo in HTML when `camera` and other HTML5 upload datatypes were used.
+
 ## [0.2.17](https://github.com/jhpyle/docassemble/releases/tag/v0.2.17) - 2018-01-04
 
 ### Changed

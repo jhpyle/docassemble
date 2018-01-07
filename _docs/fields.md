@@ -750,6 +750,14 @@ There are a few other data types that result in file uploads:
 with an [HTML5] input type that suggests using the device's camera to take a
 picture.  On many devices, this is no different from `datatype: file`.
 
+<a name="user"></a>`datatype: user` is just like `camera`, except with
+an [HTML5] input type that suggests using the device's front
+(user-facing) camera.
+
+<a name="environment"></a>`datatype: environment` is just like
+`camera`, except with an [HTML5] input type that suggests using the
+device's rear (environment-facing) camera.
+
 <a name="camcorder"></a>`datatype: camcorder` is just like `camera`,
 except for recording a video.
 
