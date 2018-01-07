@@ -8,7 +8,7 @@ question: |
   Please upload a picture of yourself.
 fields:
   - Picture: user_picture
-    datatype: user
+    datatype: file
 ---
 question: |
   You're so adorable!
