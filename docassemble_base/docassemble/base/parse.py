@@ -426,7 +426,7 @@ class InterviewStatus(object):
             if hasattr(field, 'saveas'):
                 the_field['variable_name'] = from_safeid(field.saveas)
                 the_field['variable_name_encoded'] = field.saveas
-            for param in ('datatype', 'fieldtype', 'sign', 'inputtype'):
+            for param in ('datatype', 'fieldtype', 'sign', 'inputtype', 'address autocomplete'):
                 if hasattr(field, param):
                     the_field[param] = getattr(field, param)
             if hasattr(field, 'shuffle') and field.shuffle is not False:
@@ -1974,7 +1974,7 @@ class Question:
                                         for x in field['exclude']:
                                             field_info['selections']['exclude'].append(compile(x, '<expression>', 'eval'))
                                             self.find_fields_in(x)
-                            elif key == 'exclude':
+                            elif key in ('exclude', 'address autocomplete'):
                                 pass
                             elif key == 'choices':
                                 if 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'object_checkboxes'):

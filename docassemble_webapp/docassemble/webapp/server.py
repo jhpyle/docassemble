@@ -5086,6 +5086,8 @@ def index():
         allow_going_back = False
     if not is_ajax:
         scripts = standard_scripts()
+        if 'google maps api key' in daconfig.get('google', dict()):
+            scripts += "\n" + '    <script src="https://maps.googleapis.com/maps/api/js?key=' + daconfig['google']['google maps api key'] + '&libraries=places"></script>'
         if 'javascript' in interview_status.question.interview.external_files:
             for packageref, fileref in interview_status.question.interview.external_files['javascript']:
                 the_url = get_url_from_file_reference(fileref, _package=packageref)

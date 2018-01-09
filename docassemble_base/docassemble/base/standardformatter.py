@@ -490,6 +490,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     datatypes = dict()
     varnames = dict()
     onchange = list()
+    autocomplete_id = False    
     if 'script' in status.extras and status.extras['script'] is not None:
         status.extra_scripts.append(status.extras['script'])
     if 'css' in status.extras and status.extras['css'] is not None:
@@ -676,6 +677,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         field_list = status.get_field_list()
         saveas_to_use = dict()
         for field in field_list:
+            if hasattr(field, 'autocomplete_id') and field.autocomplete_id and hasattr(field, 'saveas'):
+                autocomplete_id = field.saveas
             if hasattr(field, 'datatype') and field.datatype == 'note':
                 note_fields[field.number] = '                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, embedder=embed_input) + '</div></div>\n'
             if hasattr(field, 'saveas'):
@@ -1448,6 +1451,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
       });
     </script>"""
         status.extra_scripts.append(track_js)
+    if autocomplete_id:
+        status.extra_scripts.append("""\
+    <script>
+      initAutocomplete(""" + repr(str(autocomplete_id)) + """);
+    </script>
+""")
     if len(status.maps):
         map_js = """\
     <script>
