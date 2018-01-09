@@ -1,0 +1,13 @@
+question: |
+  What is the address of ${ adverse_party }?
+fields:
+  - Address: adverse_party.address.address
+    address autocomplete: True
+  - Unit: adverse_party.address.unit
+    required: False
+  - City: adverse_party.address.city
+  - State: adverse_party.address.state
+    code: |
+      states_list()
+  - Zip: adverse_party.address.zip
+    required: False
