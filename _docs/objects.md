@@ -1849,8 +1849,6 @@ An `Address` has the following text attributes:
 It also has an attribute `location`, which is a [`LatitudeLongitude`]
 object representing the GPS coordinates of the address.
 
-You can use the function 
-
 If you refer to an address in a [Mako] template, it returns `.block()`.
 
 <a name="Address.block"></a> The `.block()` method returns a formatted
@@ -1952,6 +1950,12 @@ consisting of the city, state, and zip code.
 <a name="Address.on_one_line"></a>
 The `.on_one_line()` method returns the address, consisting of
 the city, state, and zip code, as a single line of text.
+
+### Autocomplete
+
+With a Google Maps API key, you can use the auto-complete feature to provide address suggestions as the user begins to type.  After selecting a suggested address from the drop-down box, other address fields will be completed with the appropriate information.  Addresses closer to the user's location will be suggested first.
+
+{% include side-by-side.html demo="autocomplete" %}
 
 ### <a name="City"></a>City
 
