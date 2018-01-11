@@ -305,84 +305,6 @@ function isCanvasSupported(){
   return !!(elem.getContext && elem.getContext('2d'));
 }
 
-<<<<<<< HEAD
-// Thanks to Quinten Steenhuis for this code
-
-var placeSearch, autocomplete, base_id;
-
-function initAutocomplete(id) {
-  base_id = id;
-  // Create the autocomplete object, restricting the search to geographical
-  // location types.
-  autocomplete = new google.maps.places.Autocomplete(
-      (document.getElementById(base_id)),
-      {types: ['geocode']});
-
-  // When the user selects an address from the dropdown, populate the address
-  // fields in the form.
-  autocomplete.addListener('place_changed', fillInAddress);
-}
-
-function fillInAddress() {
-  // Get the place details from the autocomplete object.
-  var base_varname = atob(base_id);
-  var componentForm = {
-    locality: 'long_name',
-    administrative_area_level_1: 'short_name',
-    country: 'long_name',
-    postal_code: 'short_name'
-  };
-
-  var fields_to_fill = [];
-
-  $("input, select").each(function(){
-    var field_name = atob($(this).attr('id'));
-    console.log("Found " + field_name);
-  })
-  
-  var place = autocomplete.getPlace();
-
-  document.getElementById('street').value = '';
-
-  for (var component in fields_to_fill) {
-    document.getElementById(component).value = '';
-  }
-  
-  var street_number;
-  var route;
-
-  for (var i = 0; i < place.address_components.length; i++) {
-    var addressType = place.address_components[i].types[0];
-    console.log(addressType);                  
-    if (addressType == 'street_number'){
-      street_number = place.address_components[i]['short_name'];
-    }                
-    if (addressType == 'route'){
-      route = place.address_components[i]['long_name'];
-    }                
-    if (componentForm[addressType]) {
-      var val = place.address_components[i][componentForm[addressType]];
-      document.getElementById(addressType).value = val;
-    }
-  }
-  document.getElementById('street').value = street_number + " " + route;
-}
-
-function geolocate() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(position) {
-      var geolocation = {
-	lat: position.coords.latitude,
-	lng: position.coords.longitude
-      };
-      var circle = new google.maps.Circle({
-	center: geolocation,
-	radius: position.coords.accuracy
-      });
-      autocomplete.setBounds(circle.getBounds());
-    });
-  }
-}
 //autocomplete 
   
 var placeSearch, autocomplete, base_id;
@@ -402,27 +324,43 @@ function initAutocomplete(id) {
 
 function fillInAddress() {
   // Get the place details from the autocomplete object.
-  var base_varname = atob(base_id);
+  var base_varname = atob(base_id).replace(/.address$/, '');
+  var re = new RegExp('^' + base_varname + '\\.(.*)');
   var componentForm = {
     locality: 'long_name',
+    administrative_area_level_2: 'long_name',
     administrative_area_level_1: 'short_name',
     country: 'long_name',
     postal_code: 'short_name'
   };
+  var componentTrans = {
+    locality: 'city',
+    administrative_area_level_2: 'county',
+    administrative_area_level_1: 'state',
+    country: 'country',
+    postal_code: 'zip'
+  };
 
-  var fields_to_fill = [];
-
+  var fields_to_fill = ['address', 'city', 'county', 'state', 'zip'];
+  var id_for_part = {};
   $("input, select").each(function(){
-    var field_name = atob($(this).attr('id'));
-    console.log("Found " + field_name);
-  })
-  
+    try {
+      var field_name = atob($(this).attr('id'));
+      var m = re.exec(field_name);
+      if (m.length > 0){
+        id_for_part[m[1]] = $(this).attr('id');
+      }
+    } catch (e){
+    }
+  });
   var place = autocomplete.getPlace();
 
-  document.getElementById('street').value = '';
+  document.getElementById(id_for_part['address']).value = '';
 
   for (var component in fields_to_fill) {
-    document.getElementById(component).value = '';
+    if (id_for_part[component] != undefined){
+      document.getElementById(id_for_part[component]).value = '';
+    }
   }
   
   var street_number;
@@ -437,12 +375,12 @@ function fillInAddress() {
     if (addressType == 'route'){
       route = place.address_components[i]['long_name'];
     }                
-    if (componentForm[addressType]) {
+    if (componentForm[addressType] && id_for_part[componentTrans[addressType]]) {
       var val = place.address_components[i][componentForm[addressType]];
-      document.getElementById(addressType).value = val;
+      document.getElementById(id_for_part[componentTrans[addressType]]).value = val;
     }
   }
-  document.getElementById('street').value = street_number + " " + route;
+  document.getElementById(id_for_part['address']).value = street_number + " " + route;
 }
 
 function geolocate() {
