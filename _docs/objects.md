@@ -1951,7 +1951,7 @@ consisting of the city, state, and zip code.
 The `.on_one_line()` method returns the address, consisting of
 the city, state, and zip code, as a single line of text.
 
-### Autocomplete
+### <a name="address autocomplete"></a>Address autocomplete
 
 With a Google Maps API key, you can use the auto-complete feature to provide address suggestions as the user begins to type.  After selecting a suggested address from the drop-down box, other address fields will be completed with the appropriate information.  Addresses closer to the user's location will be suggested first.
 
