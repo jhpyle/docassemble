@@ -8,22 +8,23 @@ modules:
   - docassemble.base.util
 ---
 objects:
-  - adverse_party: Individual
+  - defendant: Individual
 ---
 question: |
-  What is the address of the adverse party?
+  What is the address of the adverse
+  party?
 fields:
-  - Address: adverse_party.address.address
+  - Address: defendant.address.address
     address autocomplete: True
-  - City: adverse_party.address.city
-  - State: adverse_party.address.state
+  - City: defendant.address.city
+  - State: defendant.address.state
     code: |
       states_list()
-  - Zip: adverse_party.address.zip
+  - Zip: defendant.address.zip
     required: False
-  - County: adverse_party.address.county
+  - County: defendant.address.county
 ---
 mandatory: True
 question: |
   The adverse party's zip code
-  is ${ adverse_party.address.zip }.
+  is ${ defendant.address.zip }.
