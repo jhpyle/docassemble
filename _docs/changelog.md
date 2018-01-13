@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.19](https://github.com/jhpyle/docassemble/releases/tag/v0.2.19) - 2018-01-12
+
+### Added
+- Ability to run `interview_list()` on all users.  Additional keys
+`user_id` and `email` are included in results.
+- Integrated the Place Autocomplete feature from the Google Places API.
+
+### Fixed
+- Bug in YAML parser triggered sometimes by fields with blank labels.
+- Newline to space error in docx templates that affected Word but not LibreOffice.
+
 ## [0.2.18](https://github.com/jhpyle/docassemble/releases/tag/v0.2.18) - 2018-01-06
 
 ### Added

@@ -1953,9 +1953,23 @@ the city, state, and zip code, as a single line of text.
 
 ### <a name="address autocomplete"></a>Address autocomplete
 
-With a Google Maps API key, you can use the auto-complete feature to provide address suggestions as the user begins to type.  After selecting a suggested address from the drop-down box, other address fields will be completed with the appropriate information.  Addresses closer to the user's location will be suggested first.
+If you have defined a [`google maps api key`] in the [Configuration],
+you can use the [Place Autocomplete] feature of the
+[Google Places API] to help your users enter addresses.  Address
+suggestions will be provided as the user begins to type.  To use this
+feature, modify the street address (`.address`) field by setting
+`address autocomplete` to `True`.  Then, when the user selects an
+address, the other components of the address will be filled in with
+the values obtained from Google.  This will only work if the address
+components are part of the same `Address` object.  For example, if the
+street address field is `client.address.address`, the other fields
+must be called `client.address.city`, `client.address.state`, etc.
+The only attributes that can be populated include `.city`, `.county`,
+`.state`, `.zip`, and `.country`.  You do not need to include all of
+these attributes; any attributes not included in the front end of the
+page will be ignored.
 
-{% include side-by-side.html demo="autocomplete" %}
+{% include side-by-side.html demo="address-autocomplete" %}
 
 ### <a name="City"></a>City
 
@@ -3057,3 +3071,7 @@ and not an instance of the `Attorney` class.
 [`PeriodicValue`]: #PeriodicValue
 [Modules folder]: {{ site.baseurl }}/docs/playground.html#modules
 [Playground]: {{ site.baseurl }}/docs/playground.html
+[Place Autocomplete]: https://developers.google.com/places/web-service/autocomplete
+[Google Places API]: https://developers.google.com/places/
+[Configuration]: {{ site.baseurl }}/docs/config.html
+[`google maps api key`]: {{ site.baseurl }}/docs/config.html#google

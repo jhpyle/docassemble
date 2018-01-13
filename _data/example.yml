@@ -32,6 +32,20 @@
   event: add
   code: |
     fishes[action_argument('color')] += 1
+"address-autocomplete": |-
+  question: |
+    What is the address of the adverse
+    party?
+  fields:
+    - Address: defendant.address.address
+      address autocomplete: True
+    - City: defendant.address.city
+    - State: defendant.address.state
+      code: |
+        states_list()
+    - Zip: defendant.address.zip
+      required: False
+    - County: defendant.address.county
 "age_in_years": |-
   question: |
     What is your date of birth?
@@ -458,20 +472,6 @@
     If you have met a zombie pigman, you
     have almost certainly met a creeper.
   yesno: met_a_creeper
-"autocomplete": |-
-  question: |
-    What is the address of the adverse
-    party?
-  fields:
-    - Address: defendant.address.address
-      address autocomplete: True
-    - City: defendant.address.city
-    - State: defendant.address.state
-      code: |
-        states_list()
-    - Zip: defendant.address.zip
-      required: False
-    - County: defendant.address.county
 "background-error-action": "mandatory: True\ncode: |\n  if the_task.ready():\n   \
   \ if the_task.failed():\n      error_screen\n    else:\n      final_screen\n  else:\n\
   \    waiting_screen\n---\ncode: |\n  the_task = background_action('bg_task', additional=value_to_add)\n\
@@ -2109,7 +2109,6 @@
   attachment:
     name: Your letter
     filename: letter
-    variable name: asdf
     docx template file: letter_template.docx
     valid formats:
       - pdf

@@ -2603,6 +2603,8 @@ available at `/interviews`.
 The keys in each dictionary are:
 
 * `dict`: the interview dictionary for the session.
+* `email`: the e-mail address of the user who started the interview.
+* `user_id`: the user ID of the user who started the interview.
 * `filename`: the filename of the interview, e.g.,
   `docassemble.demo:data/questions/questions.yml`
 * `metadata`: the metadata of the interview as a dictionary.

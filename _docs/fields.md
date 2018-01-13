@@ -672,6 +672,8 @@ browsers, like [Firefox], the format may be some other format.
 
 {% include side-by-side.html demo="email-field" %}
 
+{% include side-by-side.html demo="address-autocomplete" %}
+
 ## <a name="numbers"></a>Numbers
 
 <a name="integer"></a>`datatype: integer` indicates that the input
@@ -1081,6 +1083,20 @@ If an exception is raised, the input for the question is invalid.
 If the input is invalid, the user will see a message at the top of the
 screen containing the error message passed to the [`Exception`] that
 was raised.
+
+## <a name="address autocomplete"></a>Address autocomplete
+
+If you have defined a [`google maps api key`] in the [Configuration],
+you can use the [Place Autocomplete] feature of the
+[Google Places API] to help your users enter addresses.  Address
+suggestions will be provided as the user begins to type.  To use this
+feature, modify the street address (`.address`) field by setting
+`address autocomplete` to `True`.
+
+{% include side-by-side.html demo="address-autocomplete" %}
+
+For more information on using this feature, see the documentation for
+the [`Address`] object.
 
 ## <a name="bigexample"></a>A comprehensive example
 
@@ -1582,7 +1598,11 @@ why this needs to be done manually as opposed to automatically:
 [`label` and `field`]: #label
 [`str()`]: https://docs.python.org/2/library/functions.html#str
 [`repr()`]: https://docs.python.org/2/library/functions.html#repr
-[`all_true()`]: "{{ site.baseurl }}/docs/objects.html#DADict.all_true"
-[`all_false()`]: "{{ site.baseurl }}/docs/objects.html#DADict.all_false"
-[`any_true()`]: "{{ site.baseurl }}/docs/objects.html#DADict.any_true"
-[`any_false()`]: "{{ site.baseurl }}/docs/objects.html#DADict.any_false"
+[`all_true()`]: {{ site.baseurl }}/docs/objects.html#DADict.all_true
+[`all_false()`]: {{ site.baseurl }}/docs/objects.html#DADict.all_false
+[`any_true()`]: {{ site.baseurl }}/docs/objects.html#DADict.any_true
+[`any_false()`]: {{ site.baseurl }}/docs/objects.html#DADict.any_false
+[`Address`]: {{ site.baseurl }}/docs/objects.html#address autocomplete
+[`google maps api key`]: {{ site.baseurl }}/docs/config.html#google
+[Place Autocomplete]: https://developers.google.com/places/web-service/autocomplete
+[Google Places API]: https://developers.google.com/places/
