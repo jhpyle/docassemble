@@ -560,7 +560,7 @@ class InterviewStatus(object):
                     pairlist = list(self.selectcompute[field.number])
                 elif field.datatype in ('checkboxes', 'object_checkboxes'):
                     pairlist = list()
-                if field.datatype in ('object_checkboxes'):
+                if field.datatype == 'object_checkboxes':
                     for pair in pairlist:
                         item = dict(label=pair['label'], value=from_safeid(pair['key']))
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in (list, set) and unicode(pair['key']) in defaultvalue) or (type(defaultvalue) is dict and unicode(pair['key']) in defaultvalue and defaultvalue[unicode(pair['key'])]) or (type(defaultvalue) in (str, unicode, int, bool, float) and unicode(pair['key']) == unicode(defaultvalue)):
@@ -1978,7 +1978,7 @@ class Question:
                                             self.find_fields_in(x)
                             elif key == 'address autocomplete':
                                 field_info['address_autocomplete'] = True
-                            elif key in ('exclude'):
+                            elif key == 'exclude':
                                 pass
                             elif key == 'choices':
                                 if 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'object_checkboxes'):
@@ -2122,7 +2122,7 @@ class Question:
                         elif 'type' in field_info and field_info['type'] in ('note', 'html'): #, 'script', 'css'
                             self.fields.append(Field(field_info))
                         else:
-                            raise DAError("A field was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(field_info))
+                            raise DAError("A field was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(data))
                     else:
                         raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
                     field_number += 1
@@ -2905,7 +2905,7 @@ class Question:
                             if key not in extras:
                                 extras[key] = dict()
                             extras[key][field.number] = field.extras[key].text(user_dict)
-                    for key in ('ml_train'):
+                    for key in ('ml_train',):
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()

@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.18] - 2018-01-12
+### Added
+- Ability to run `interview_list()` on all users.  Additional keys
+`user_id` and `email` are included in results.
+### Fixed
+- Bug in YAML parser triggered sometimes by fields with blank labels.
+
 ## [0.2.18] - 2018-01-06
 ### Added
 - The `user` and `environment` datatypes.

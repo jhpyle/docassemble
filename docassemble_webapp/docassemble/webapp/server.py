@@ -13544,11 +13544,14 @@ def train():
 
 def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True):
     # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))
-    if user_id is None:
-        raise Exception("user_interviews: no user_id provided")
-    the_user = get_person(int(user_id), dict())
-    if the_user is None:
-        raise Exception("user_interviews: user_id " + str(user_id) + " not valid")
+    if user_id is None and (current_user.is_anonymous or not current_user.has_role('admin')):
+        raise Exception('user_interviews: non-administrator cannot access information about other users')
+    if action is not None:
+        if user_id is None:
+            raise Exception("user_interviews: no user_id provided")
+        the_user = get_person(int(user_id), dict())
+        if the_user is None:
+            raise Exception("user_interviews: user_id " + str(user_id) + " not valid")
     if action == 'delete_all':
         sessions_to_delete = set()
         if tag:
@@ -13576,12 +13579,22 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         reset_user_dict(session, filename)
         release_lock(session, filename)
         return True
-    if the_user.timezone:
-        the_timezone = pytz.timezone(the_user.timezone)
+    if current_user and current_user.is_authenticated and current_user.timezone:
+        the_timezone = pytz.timezone(current_user.timezone)
     else:
         the_timezone = pytz.timezone(get_default_timezone())
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
-    interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted).filter(UserDictKeys.user_id == the_user.id).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).group_by(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
+    if user_id is not None:
+        if filename is not None:
+            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
+        else:
+            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
+            
+    else:
+        if filename is not None:
+            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(User.active == True, UserDictKeys.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
+        else:
+            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(User.active == True).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
     #logmessage(str(interview_query))
     interviews = list()
     for interview_info in interview_query:
@@ -13644,7 +13657,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             modtime = ''
         if tag is not None and tag not in tags:
             continue
-        out = {'filename': interview_info.filename, 'session': interview_info.key, 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid, 'metadata': metadata, 'tags': tags}
+        out = {'filename': interview_info.filename, 'session': interview_info.key, 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid, 'metadata': metadata, 'tags': tags, 'email': interview_info.email, 'user_id': interview_info.user_id}
         if include_dict:
             out['dict'] = dictionary
         interviews.append(out)
@@ -14781,11 +14794,10 @@ def true_or_false(text):
     if text is False or text == 0 or str(text).lower() in ('0', 'false', 'f'):
         return False
     return True
-            
-@app.route('/api/user_list', methods=['GET', 'POST'])
-def api_user_list():
-    if not api_verify(request, roles=['admin']):
-        return jsonify_with_status(dict(error="Access denied."), 403)
+
+def get_user_list():
+    if not (current_user.is_authenticated and current_user.has_role('admin')):
+        raise Exception("You cannot call get_user_list() unless you are an administrator")
     user_list = []
     for user in UserModel.query.filter_by(active=True).all():
         user_info = dict(roles=[])
@@ -14794,22 +14806,36 @@ def api_user_list():
         for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
             user_info[attrib] = getattr(user, attrib)
         user_list.append(user_info)
+    user_list = get_user_list()
+    return user_list
+    
+@app.route('/api/user_list', methods=['GET', 'POST'])
+def api_user_list():
+    if not api_verify(request, roles=['admin']):
+        return jsonify_with_status(dict(error="Access denied."), 403)
     return jsonify(user_list)
+
+def get_user_info(user_id):
+    if current_user.is_anonymous:
+        raise Exception("You cannot call get_user_list() unless you are logged in")
+    if not (current_user.id == user_id or current_user.has_role('admin')):
+        raise Exception("You cannot call get_user_list() unless you are an administrator")
+    user_info = dict(roles=[])
+    user = UserModel.query.filter_by(active=True, id=user_id).first()
+    for role in user.roles:
+        user_info['roles'].append(role.name)
+    for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
+        user_info[attrib] = getattr(user, attrib)
+    return user_info    
 
 @app.route('/api/user', methods=['GET', 'DELETE'])
 def api_user():
     if not api_verify(request):
         return jsonify_with_status(dict(error="Access denied."), 403)
-    user_list = []
     user = UserModel.query.filter_by(active=True, id=current_user.id).first()
     if user is None:
         return jsonify_with_status(dict(error="User not found."), 403)
     if request.method == 'GET':
-        user_info = dict(roles=[])
-        for role in user.roles:
-            user_info['roles'].append(role.name)
-        for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
-            user_info[attrib] = getattr(user, attrib)
         return jsonify(user_info)
     elif request.method == 'DELETE':
         user.active = False
