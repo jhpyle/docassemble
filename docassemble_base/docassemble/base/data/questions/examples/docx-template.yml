@@ -86,7 +86,6 @@ yesno: user_approves
 attachment:
   name: Your letter
   filename: letter
-  variable name: asdf
   docx template file: letter_template.docx
   valid formats:
     - pdf

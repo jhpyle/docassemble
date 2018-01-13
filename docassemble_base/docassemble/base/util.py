@@ -710,7 +710,7 @@ class Address(DAObject):
         """Returns the address formatted as a block, as in a mailing."""
         output = ""
         if this_thread.evaluation_context == 'docx':
-            line_breaker = "\n"
+            line_breaker = '</w:t><w:br/><w:t xml:space="preserve">'
         else:
             line_breaker = " [NEWLINE] "
         if self.city_only is False:
@@ -865,7 +865,7 @@ class Person(DAObject):
     def address_block(self):
         """Returns the person name address as a block, for use in mailings."""
         if this_thread.evaluation_context == 'docx':
-            return(self.name.full() + "\n" + self.address.block())
+            return(self.name.full() + '</w:t><w:br/><w:t xml:space="preserve">' + self.address.block())
         else:
             return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block())
     def sms_number(self):

@@ -304,26 +304,18 @@ function isCanvasSupported(){
   var elem = document.createElement('canvas');
   return !!(elem.getContext && elem.getContext('2d'));
 }
-
-//autocomplete 
   
 var placeSearch, autocomplete, base_id;
 
 function initAutocomplete(id) {
   base_id = id;
-  // Create the autocomplete object, restricting the search to geographical
-  // location types.
   autocomplete = new google.maps.places.Autocomplete(
       (document.getElementById(base_id)),
       {types: ['geocode']});
-
-  // When the user selects an address from the dropdown, populate the address
-  // fields in the form.
   autocomplete.addListener('place_changed', fillInAddress);
 }
 
 function fillInAddress() {
-  // Get the place details from the autocomplete object.
   var base_varname = atob(base_id).replace(/.address$/, '');
   var re = new RegExp('^' + base_varname + '\\.(.*)');
   var componentForm = {
