@@ -273,7 +273,19 @@ def date_difference(starting=None, ending=None, timezone=None):
     output.years = (delta.days + delta.seconds / 86400.0) / 365.2425
     return output
 
-def phone_string(person):
+def fax_string(person, country=None):
+    if person is None:
+        return None
+    fax_number = None
+    if isinstance(person, Person):
+        fax_number = person.facsimile_number()
+    elif isinstance(person, phonenumbers.PhoneNumber):
+        fax_number = phonenumbers.format_number(person, phonenumbers.PhoneNumberFormat.E164)
+    else:
+        fax_number = phone_number_in_e164(person, country=country)
+    return fax_number
+
+def phone_string(person, country=None):
     if person is None:
         return None
     phone_number = None
@@ -282,7 +294,7 @@ def phone_string(person):
     elif isinstance(person, phonenumbers.PhoneNumber):
         phone_number = phonenumbers.format_number(person, phonenumbers.PhoneNumberFormat.E164)
     else:
-        phone_number = phone_number_in_e164(person)
+        phone_number = phone_number_in_e164(person, country=country)
     return phone_number
 
 def email_string(persons, include_name=None, first=False):
@@ -643,7 +655,10 @@ class Address(DAObject):
                     if 'types' in component and 'long_name' in component:
                         for geo_type, addr_type in geo_types.iteritems():
                             if geo_type in component['types'] and ((not hasattr(self, addr_type[0])) or getattr(self, addr_type[0]) == '' or getattr(self, addr_type[0]) is None):
-                                setattr(self, addr_type[0], component[addr_type[1]])
+                                if geo_type == 'country':
+                                    setattr(self, addr_type[0], component[addr_type[1]].lower())
+                                else:
+                                    setattr(self, addr_type[0], component[addr_type[1]])
                 geo_types = {
                     'street_number': 'street_number',
                     'route': 'street',
@@ -876,6 +891,18 @@ class Person(DAObject):
             the_number = self.phone_number
         if hasattr(self, 'country'):
             the_country = self.country
+        elif hasattr(self, 'address') and hasattr(self.address, 'country'):
+            the_country = self.address.country
+        else:
+            the_country = get_country()
+        return phone_number_in_e164(the_number, country=the_country)
+    def facsimile_number(self):
+        """Returns the person's fax_number, formatted appropriately."""
+        the_number = self.fax_number
+        if hasattr(self, 'country'):
+            the_country = self.country
+        elif hasattr(self, 'address') and hasattr(self.address, 'country'):
+            the_country = self.address.country
         else:
             the_country = get_country()
         return phone_number_in_e164(the_number, country=the_country)
@@ -1377,7 +1404,7 @@ def send_fax(fax_number, file_object, config='default', country=None):
     if 'fax' not in tconfig or tconfig['fax'] in [False, None]:
         logmessage("send_fax: ignoring because fax not enabled")
         return FaxStatus(None)
-    return FaxStatus(server.send_fax(phone_number_in_e164(fax_number, country=country), file_object, config))
+    return FaxStatus(server.send_fax(fax_string(fax_number, country=country), file_object, config))
 
 def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, attachments=None):
     """Sends an e-mail and returns whether sending the e-mail was successful."""

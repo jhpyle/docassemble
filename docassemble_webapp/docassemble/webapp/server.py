@@ -7300,16 +7300,13 @@ def serve_stored_file(uid, number, filename, extension):
 
 @app.route('/tempfile/<code>/<filename>.<extension>', methods=['GET'])
 def serve_temporary_file(code, filename, extension):
-    logmessage("Looking for " + 'da:tempfile:' + str(code))
     file_info = r.get('da:tempfile:' + str(code))
     if file_info is None:
         logmessage("file_info was none")
         abort(404)
     (section, file_number) = file_info.split('^')
-    logmessage("The section is " + str(section) + " and the file number is " + str(file_number))
     the_file = SavedFile(file_number, fix=True, section=section)
     the_path = the_file.path
-    logmessage("The path is " + str(the_path))
     (extension, mimetype) = get_ext_and_mimetype(filename + '.' + extension)
     return send_file(the_path, mimetype=mimetype)
 
@@ -12376,7 +12373,7 @@ def playground_page():
                 with open(filename, 'rU') as fp:
                     orig_content = fp.read().decode('utf8')
                     if orig_content == the_content:
-                        logmessage("No need to save")
+                        #logmessage("No need to save")
                         should_save = False
             if should_save:
                 with open(filename, 'w') as fp:
