@@ -1337,18 +1337,43 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
         mark_task_as_performed(task)
     return True
 
+
+class FaxStatus(object):
+    def __init__(self, sid):
+        self.sid = sid
+    def status(self):
+        if self.sid is None:
+            return 'not-configured'
+        info = json.loads(r.get('da:faxcallback:sid:' + self.sid))
+        if info is None:
+            return 'no-information'
+        return info['FaxStatus']
+    def info(self):
+        if self.sid is None:
+            return dict(FaxStatus='not-configured')
+        info_dict = json.loads(r.get('da:faxcallback:sid:' + self.sid))
+        return info_dict
+    def received(self):
+        the_status = self.status()
+        if the_status in ('no-information', 'not-configured'):
+            return None
+        if the_status == 'received':
+            return True
+        else:
+            return False
+        
 def send_fax(fax_number, file_object, config='default'):
     if server.twilio_config is None:
         logmessage("send_fax: ignoring because Twilio not enabled")
-        return False
+        return FaxStatus(None)
     if config not in server.twilio_config['name']:
         logmessage("send_fax: ignoring because requested configuration does not exist")
-        return False
+        return FaxStatus(None)
     tconfig = server.twilio_config['name'][config]
     if 'fax' not in tconfig or tconfig['fax'] in [False, None]:
         logmessage("send_fax: ignoring because fax not enabled")
-        return False
-    server.send_fax()
+        return FaxStatus(None)
+    return FaxStatus(server.send_fax())
 
 def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, attachments=None):
     """Sends an e-mail and returns whether sending the e-mail was successful."""

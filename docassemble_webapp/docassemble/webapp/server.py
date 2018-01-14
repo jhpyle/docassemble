@@ -15257,31 +15257,11 @@ def get_email_obj(email, short_record, user):
         email_obj.body_html = None
     return email_obj
 
-class FaxStatus(object):
-    def __init__(self, sid):
-        self.sid = sid
-    def status(self):
-        info = json.loads(r.get('da:faxcallback:sid:' + self.sid))
-        if info is None:
-            return 'no-information'
-        return info['FaxStatus']
-    def info(self):
-        info_dict = json.loads(r.get('da:faxcallback:sid:' + self.sid))
-        return info_dict
-    def received(self):
-        the_status = self.status()
-        if the_status == 'no-information':
-            return None
-        if the_status == 'received':
-            return True
-        else:
-            return False
-
 def da_send_fax(fax_number, the_file, config):
     if twilio_config is None:
         logmessage("da_send_fax: ignoring call to da_send_fax because Twilio not enabled")
         return None
-    if 'fax' not in twilio_config['name'][config] or twilio_config['name'][config]['fax'] in (False, None):
+    if config not in twilio_config['name'] or 'fax' not in twilio_config['name'][config] or twilio_config['name'][config]['fax'] in (False, None):
         logmessage("da_send_fax: ignoring call to da_send_fax because fax feature not enabled")
         return None
     account_sid = twilio_config['name'][config].get('account sid', None)
@@ -15297,7 +15277,7 @@ def da_send_fax(fax_number, the_file, config):
         media_url=the_file.url_for(temporary=True, seconds=600),
         status_callback=url_for('fax_callback', _external=True)
     )
-    return FaxStatus(fax.sid)
+    return fax.sid
 
 def write_pypirc():
     pypirc_file = daconfig.get('pypirc path', '/var/www/.pypirc')
