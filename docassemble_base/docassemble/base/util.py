@@ -1362,7 +1362,7 @@ class FaxStatus(object):
         else:
             return False
         
-def send_fax(fax_number, file_object, config='default'):
+def send_fax(fax_number, file_object, config='default', country=None):
     if server.twilio_config is None:
         logmessage("send_fax: ignoring because Twilio not enabled")
         return FaxStatus(None)
@@ -1373,7 +1373,7 @@ def send_fax(fax_number, file_object, config='default'):
     if 'fax' not in tconfig or tconfig['fax'] in [False, None]:
         logmessage("send_fax: ignoring because fax not enabled")
         return FaxStatus(None)
-    return FaxStatus(server.send_fax())
+    return FaxStatus(server.send_fax(fax_number, phone_number_in_e164(file_object, country=country), config))
 
 def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, attachments=None):
     """Sends an e-mail and returns whether sending the e-mail was successful."""
