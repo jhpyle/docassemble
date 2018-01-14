@@ -13912,16 +13912,18 @@ def fax_callback():
     if twilio_config is None:
         logmessage("fax_callback: Twilio not enabled")
         return ('', 204)
-    if 'fax' not in twilio_config['name']['default'] or twilio_config['name']['default']['fax'] in (False, None):
-        logmessage("fax_callback: fax feature not enabled")
-        return ('', 204)
-    account_sid = twilio_config['name']['default'].get('account sid', None)
     post_data = request.form.copy()
     if 'FaxSid' not in post_data or 'AccountSid' not in post_data:
         logmessage("fax_callback: FaxSid and/or AccountSid missing")
         return ('', 204)
-    if account_sid != post_data['AccountSid']:
-        logmessage("fax_callback: account sid of fax callback did not match the default sid in the Twilio configuration")
+    tconfig = None
+    for config_name, config_info in twilio_config['name'].iteritems():
+        if 'account sid' in config_info and config_info['account sid'] == post_data['AccountSid']:
+            tconfig = config_info
+    if tconfig is None:
+        logmessage("fax_callback: account sid of fax callback did not match any account sid in the Twilio configuration")
+    if 'fax' not in tconfig or tconfig['fax'] in (False, None):
+        logmessage("fax_callback: fax feature not enabled")
         return ('', 204)
     params = dict()
     for param in ('FaxSid', 'AccountSid', 'From', 'To', 'RemoteStationId', 'FaxStatus', 'ApiVersion', 'OriginalMediaUrl', 'NumPages', 'MediaUrl', 'ErrorCode', 'ErrorMessage'):
@@ -15275,16 +15277,16 @@ class FaxStatus(object):
         else:
             return False
 
-def da_send_fax(fax_number, the_file):
+def da_send_fax(fax_number, the_file, config):
     if twilio_config is None:
         logmessage("da_send_fax: ignoring call to da_send_fax because Twilio not enabled")
         return None
-    if 'fax' not in twilio_config['name']['default'] or twilio_config['name']['default']['fax'] in (False, None):
+    if 'fax' not in twilio_config['name'][config] or twilio_config['name'][config]['fax'] in (False, None):
         logmessage("da_send_fax: ignoring call to da_send_fax because fax feature not enabled")
         return None
-    account_sid = twilio_config['name']['default'].get('account sid', None)
-    auth_token = twilio_config['name']['default'].get('auth token', None)
-    from_number = twilio_config['name']['default'].get('number', None)
+    account_sid = twilio_config['name'][config].get('account sid', None)
+    auth_token = twilio_config['name'][config].get('auth token', None)
+    from_number = twilio_config['name'][config].get('number', None)
     if account_sid is None or auth_token is None or from_number is None:
         logmessage("da_send_fax: ignoring call to da_send_fax because account sid, auth token, and/or number missing")
         return None
