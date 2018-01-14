@@ -13928,9 +13928,10 @@ def fax_callback():
     params = dict()
     for param in ('FaxSid', 'AccountSid', 'From', 'To', 'RemoteStationId', 'FaxStatus', 'ApiVersion', 'OriginalMediaUrl', 'NumPages', 'MediaUrl', 'ErrorCode', 'ErrorMessage'):
         params[param] = post_data.get(param, None)
+    the_key = 'da:faxcallback:sid:' + post_data['FaxSid']
     pipe = r.pipeline()
-    pipe.set('da:faxcallback:sid:' + post_data['FaxSid'], json.dumps(params))
-    pipe.expire(86400)
+    pipe.set(the_key, json.dumps(params))
+    pipe.expire(the_key, 86400)
     pipe.execute()
     return ('', 204)
 
