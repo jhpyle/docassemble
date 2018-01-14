@@ -1344,14 +1344,14 @@ class FaxStatus(object):
     def status(self):
         if self.sid is None:
             return 'not-configured'
-        info = json.loads(r.get('da:faxcallback:sid:' + self.sid))
+        info = json.loads(server.server_redis.get('da:faxcallback:sid:' + self.sid))
         if info is None:
             return 'no-information'
         return info['FaxStatus']
     def info(self):
         if self.sid is None:
             return dict(FaxStatus='not-configured')
-        info_dict = json.loads(r.get('da:faxcallback:sid:' + self.sid))
+        info_dict = json.loads(server.server_redis.get('da:faxcallback:sid:' + self.sid))
         return info_dict
     def received(self):
         the_status = self.status()
