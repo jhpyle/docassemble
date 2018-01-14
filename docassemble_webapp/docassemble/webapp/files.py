@@ -17,6 +17,7 @@ from docassemble.base.error import DAError
 from docassemble.base.config import daconfig
 import docassemble.webapp.cloud
 import docassemble.base.functions
+from docassemble.base.generate_key import random_alphanumeric
 
 cloud = docassemble.webapp.cloud.get_cloud()
 
@@ -221,6 +222,31 @@ class SavedFile(object):
         if kwargs.get('save', True):
             self.save()
         return
+    def temp_url_for(self, **kwargs):
+        seconds = kwargs.get('seconds', None)
+        if type(seconds) is float:
+            seconds = int(seconds)
+        if type(seconds) is not int:
+            seconds = 30
+        if cloud is not None:
+            keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
+            key = cloud.get_key(keyname)
+            if key.does_exist:
+                if 'display_filename' in kwargs:
+                    return key.generate_url(seconds, display_filename=kwargs['display_filename'])
+                else:
+                    return key.generate_url(seconds)
+            else:
+                sys.stderr.write("key " + str(keyname) + " did not exist\n")
+                return('about:blank')
+        r = docassemble.base.functions.server.server_redis
+        while True:
+            code = random_alphanumeric(32)
+            keyname = 'da:tempfile:' + code
+            if r.setnx(keyname, str(self.section) + '^' + str(self.file_number)):
+                r.expire(keyname, seconds)
+                break
+        return docassemble.base.functions.get_url_root() + '/tempfile/' + code + '/' + kwargs.get('display_filename', self.filename)
     def url_for(self, **kwargs):
         if 'ext' in kwargs and kwargs['ext'] is not None:
             extn = kwargs['ext']

@@ -664,8 +664,6 @@ for page_key in ('login page', 'register page', 'interview page', 'start page', 
                     page_parts[key][lang] = Markup(val)
             else:
                 page_parts[key] = {'*': Markup(unicode(daconfig[key]))}
-
-    
                 
 def get_sms_session(phone_number, config='default'):
     sess_info = None
@@ -773,7 +771,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif isinstance(file_reference, DAFileCollection):
         file_reference = file_reference._first_file()
     elif isinstance(file_reference, DAStaticFile):
-        return file_reference.url_for()
+        return file_reference.url_for(**kwargs)
     if isinstance(file_reference, DAFile) and hasattr(file_reference, 'number'):
         file_number = file_reference.number
         if privileged or can_access_file_number(file_number):
@@ -785,7 +783,10 @@ def get_url_from_file_reference(file_reference, **kwargs):
             for key, val in kwargs.iteritems():
                 url_properties[key] = val
             the_file = SavedFile(file_number)
-            return(the_file.url_for(**url_properties))
+            if kwargs.get('temporary', False):
+                return(the_file.temp_url_for(**url_properties))
+            else:
+                return(the_file.url_for(**url_properties))
     file_reference = str(file_reference)
     if re.search(r'^http', file_reference):
         return(file_reference)
@@ -838,9 +839,10 @@ def get_url_from_file_reference(file_reference, **kwargs):
     if re.search('^[0-9]+$', file_reference):
         remove_question_package(kwargs)
         file_number = file_reference
-        if can_access_file_number(file_number):
-            the_file = SavedFile(file_number)
-            url = the_file.url_for(**kwargs)
+        if kwargs.get('temporary', False):
+            url = SavedFile(file_number).temp_url_for(**kwargs)
+        elif can_access_file_number(file_number):
+            url = SavedFile(file_number).url_for(**kwargs)
         else:
             logmessage("Problem accessing " + str(file_number))
             url = 'about:blank'
@@ -7295,6 +7297,21 @@ def serve_stored_file(uid, number, filename, extension):
         response = send_file(file_info['path'], mimetype=file_info['mimetype'])
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
+
+@app.route('/tempfile/<code>/<filename>.<extension>', methods=['GET'])
+def serve_temporary_file(code, filename, extension):
+    logmessage("Looking for " + 'da:tempfile:' + str(code))
+    file_info = r.get('da:tempfile:' + str(code))
+    if file_info is None:
+        logmessage("file_info was none")
+        abort(404)
+    (section, file_number) = file_info.split('^')
+    logmessage("The section is " + str(section) + " and the file number is " + str(file_number))
+    the_file = SavedFile(file_number, fix=True, section=section)
+    the_path = the_file.path
+    logmessage("The path is " + str(the_path))
+    (extension, mimetype) = get_ext_and_mimetype(filename + '.' + extension)
+    return send_file(the_path, mimetype=mimetype)
 
 @app.route('/uploadedfile/<number>/<filename>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_filename_and_extension(number, filename, extension):
@@ -13889,6 +13906,32 @@ def on_register_hook(sender, user, **extra):
 
 #     return jsonify(identity=identity, token=token)
 
+@app.route("/fax_callback", methods=['POST'])
+@csrf.exempt
+def fax_callback():
+    if twilio_config is None:
+        logmessage("fax_callback: Twilio not enabled")
+        return ('', 204)
+    if 'fax' not in twilio_config['name']['default'] or twilio_config['name']['default']['fax'] in (False, None):
+        logmessage("fax_callback: fax feature not enabled")
+        return ('', 204)
+    account_sid = twilio_config['name']['default'].get('account sid', None)
+    post_data = request.form.copy()
+    if 'FaxSid' not in post_data or 'AccountSid' not in post_data:
+        logmessage("fax_callback: FaxSid and/or AccountSid missing")
+        return ('', 204)
+    if account_sid != post_data['AccountSid']:
+        logmessage("fax_callback: account sid of fax callback did not match the default sid in the Twilio configuration")
+        return ('', 204)
+    params = dict()
+    for param in ('FaxSid', 'AccountSid', 'From', 'To', 'RemoteStationId', 'FaxStatus', 'ApiVersion', 'OriginalMediaUrl', 'NumPages', 'MediaUrl', 'ErrorCode', 'ErrorMessage'):
+        params[param] = post_data.get(param, None)
+    pipe = r.pipeline()
+    pipe.set('da:faxcallback:sid:' + post_data['FaxSid'], json.dumps(params))
+    pipe.expire(86400)
+    pipe.execute()
+    return ('', 204)
+
 @app.route("/voice", methods=['POST', 'GET'])
 @csrf.exempt
 def voice():
@@ -15212,6 +15255,48 @@ def get_email_obj(email, short_record, user):
         email_obj.body_html = None
     return email_obj
 
+class FaxStatus(object):
+    def __init__(self, sid):
+        self.sid = sid
+    def status(self):
+        info = json.loads(r.get('da:faxcallback:sid:' + self.sid))
+        if info is None:
+            return 'no-information'
+        return info['FaxStatus']
+    def info(self):
+        info_dict = json.loads(r.get('da:faxcallback:sid:' + self.sid))
+        return info_dict
+    def received(self):
+        the_status = self.status()
+        if the_status == 'no-information':
+            return None
+        if the_status == 'received':
+            return True
+        else:
+            return False
+
+def da_send_fax(fax_number, the_file):
+    if twilio_config is None:
+        logmessage("da_send_fax: ignoring call to da_send_fax because Twilio not enabled")
+        return None
+    if 'fax' not in twilio_config['name']['default'] or twilio_config['name']['default']['fax'] in (False, None):
+        logmessage("da_send_fax: ignoring call to da_send_fax because fax feature not enabled")
+        return None
+    account_sid = twilio_config['name']['default'].get('account sid', None)
+    auth_token = twilio_config['name']['default'].get('auth token', None)
+    from_number = twilio_config['name']['default'].get('number', None)
+    if account_sid is None or auth_token is None or from_number is None:
+        logmessage("da_send_fax: ignoring call to da_send_fax because account sid, auth token, and/or number missing")
+        return None
+    client = TwilioRestClient(account_sid, auth_token)
+    fax = client.fax.v1.faxes.create(
+        from_=from_number,
+        to=fax_number,
+        media_url=the_file.url_for(temporary=True, seconds=600),
+        status_callback=url_for('fax_callback', _external=True)
+    )
+    return FaxStatus(fax.sid)
+
 def write_pypirc():
     pypirc_file = daconfig.get('pypirc path', '/var/www/.pypirc')
     #pypi_username = daconfig.get('pypi username', None)
@@ -15334,6 +15419,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          navigation_bar=navigation_bar,
                                          chat_partners_available=chat_partners_available,
                                          sms_body=sms_body,
+                                         send_fax=da_send_fax,
                                          get_sms_session=get_sms_session,
                                          initiate_sms_session=initiate_sms_session,
                                          terminate_sms_session=terminate_sms_session,
