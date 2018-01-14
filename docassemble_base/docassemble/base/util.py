@@ -655,10 +655,7 @@ class Address(DAObject):
                     if 'types' in component and 'long_name' in component:
                         for geo_type, addr_type in geo_types.iteritems():
                             if geo_type in component['types'] and ((not hasattr(self, addr_type[0])) or getattr(self, addr_type[0]) == '' or getattr(self, addr_type[0]) is None):
-                                if geo_type == 'country':
-                                    setattr(self, addr_type[0], component[addr_type[1]].lower())
-                                else:
-                                    setattr(self, addr_type[0], component[addr_type[1]])
+                                setattr(self, addr_type[0], component[addr_type[1]])
                 geo_types = {
                     'street_number': 'street_number',
                     'route': 'street',
