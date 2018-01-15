@@ -87,10 +87,12 @@ def get_current_variable():
 
 def reset_context():
     this_thread.evaluation_context = None
+    this_thread.docx_include_count = 0
     this_thread.docx_template = None
 
 def set_context(new_context, template=None):
     this_thread.evaluation_context = new_context
+    this_thread.docx_include_count = 0
     this_thread.docx_template = template
 
 def set_current_variable(var):
@@ -1039,7 +1041,7 @@ def url_of(file_reference, **kwargs):
 
 def server_capabilities():
     """Returns a dictionary with true or false values indicating various capabilities of the server."""
-    result = dict(sms=False, google_login=False, facebook_login=False, twitter_login=False, azure_login=False, phone_login=False, voicerss=False, s3=False, azure=False, github=False, pypi=False, googledrive=False, google_maps=False)
+    result = dict(sms=False, fax=False, google_login=False, facebook_login=False, twitter_login=False, azure_login=False, phone_login=False, voicerss=False, s3=False, azure=False, github=False, pypi=False, googledrive=False, google_maps=False)
     if 'twilio' in server.daconfig and type(server.daconfig['twilio']) in [list, dict]:
         if type(server.daconfig['twilio']) is list:
             tconfigs = server.daconfig['twilio']
@@ -1049,9 +1051,10 @@ def server_capabilities():
             if 'enable' in tconfig and not tconfig['enable']:
                 continue
             result['sms'] = True
+            if tconfig.get('fax', False):
+                result['fax'] = True
             if 'phone login' in server.daconfig:
                 result['phone_login'] = True
-            break
     if 'oauth' in server.daconfig and type(server.daconfig['oauth']) is dict:
         if 'google' in server.daconfig['oauth'] and type(server.daconfig['oauth']['google']) is dict:
             if not ('enable' in server.daconfig['oauth']['google'] and not server.daconfig['oauth']['google']['enable']):

@@ -1,5 +1,5 @@
 import re
-from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing
+from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document
 from docx.shared import Mm, Inches, Pt
 from docassemble.base.functions import server
 import docassemble.base.filter

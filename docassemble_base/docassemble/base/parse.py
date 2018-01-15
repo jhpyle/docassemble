@@ -3134,14 +3134,24 @@ class Question:
                         #logmessage("field_data is " + str(result['field_data']))
                         docassemble.base.functions.set_context('docx', template=result['template'])
                         try:
-                            result['template'].render(result['field_data'], jinja_env=Environment(undefined=StrictUndefined))
+                            the_template = result['template']
+                            while True:
+                                old_count = docassemble.base.functions.this_thread.docx_include_count
+                                the_template.render(result['field_data'], jinja_env=Environment(undefined=StrictUndefined))
+                                if docassemble.base.functions.this_thread.docx_include_count > old_count:
+                                    new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+                                    the_template.save(new_template_file.name)
+                                    the_template = docassemble.base.file_docx.DocxTemplate(new_template_file.name)
+                                    docassemble.base.functions.this_thread.docx_template = the_template
+                                else:
+                                    break
                         except TemplateError as the_error:
                             if (not hasattr(the_error, 'filename')) or the_error.filename is None:
                                 the_error.filename = os.path.basename(attachment['options']['docx_template_file'].path(user_dict=user_dict))
                             raise the_error
                         docassemble.base.functions.reset_context()
                         docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
-                        result['template'].save(docx_file.name)
+                        the_template.save(docx_file.name)
                         if 'docx' in result['formats_to_use']:
                             result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)
                         if 'pdf' in result['formats_to_use']:

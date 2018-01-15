@@ -1,0 +1,48 @@
+metadata:
+  title: Including one .docx in another
+  short title: Sub documents
+  documentation: "https://docassemble.org/docs/functions.html#include_docx_template"
+  example start: 6
+  example end: 6
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+---
+mandatory: True
+question: |
+  Including one .docx file in another .docx file  
+subquestion: |
+  This interview will fill fields in
+  a .docx template, demonstrating how
+  one document can be included in 
+  another document.
+  
+  You can download the [main document]
+  and the [sub document] to see how
+  this works.
+
+  [main document]: ${ url_of('main_document.docx') }
+  [sub document]: ${ url_of('sub_document.docx') }
+field: intro
+---
+question: |
+  What is your name?
+fields:
+  - First name: user.name.first
+  - Last name: user.name.last
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+---
+mandatory: True
+question: |
+  Here is your document.
+attachment:
+  name: A document
+  filename: final_document
+  docx template file: main_document.docx

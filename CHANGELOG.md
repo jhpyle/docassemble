@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.2.20] - 2018-01-14
+### Added
+- The `send_fax()` function for sending faxes using Twilio.
+- The `include_docx_template()` function for including .docx content
+  within a .docx file.
+
 ## [0.2.19] - 2018-01-12
 ### Added
 - Ability to run `interview_list()` on all users.  Additional keys

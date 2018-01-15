@@ -2517,12 +2517,13 @@ def wait_for_task(task_id, timeout=None):
 #     return
 
 def trigger_update(except_for=None):
-    logmessage("trigger_update: except_for is " + str(except_for))
+    logmessage("trigger_update: except_for is " + str(except_for) + " and hostname is " + hostname)
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url and not (except_for and host.hostname == except_for):
                 if host.hostname == hostname:
                     the_url = 'http://localhost:9001'
+                    logmessage("trigger_update: using http://localhost:9001")
                 else:
                     the_url = host.url
                 args = [SUPERVISORCTL, '-s', the_url, 'start update']
@@ -13923,7 +13924,7 @@ def fax_callback():
         logmessage("fax_callback: fax feature not enabled")
         return ('', 204)
     params = dict()
-    for param in ('FaxSid', 'AccountSid', 'From', 'To', 'RemoteStationId', 'FaxStatus', 'ApiVersion', 'OriginalMediaUrl', 'NumPages', 'MediaUrl', 'ErrorCode', 'ErrorMessage'):
+    for param in ('FaxSid', 'From', 'To', 'RemoteStationId', 'FaxStatus', 'ApiVersion', 'OriginalMediaUrl', 'NumPages', 'MediaUrl', 'ErrorCode', 'ErrorMessage'):
         params[param] = post_data.get(param, None)
     the_key = 'da:faxcallback:sid:' + post_data['FaxSid']
     pipe = r.pipeline()
