@@ -1172,6 +1172,89 @@ only return information about e-mail addresses created with
 to the e-mail address created by `interview_email(key='evidence',
 index=2)`.
 
+# <a name="faxfunctions"></a>Fax functions
+
+## <a name="send_fax"></a>send_fax()
+
+The `send_fax()` function sends a PDF document as a fax.  It requires
+a [`twilio`] configuration in which `fax` is set to `True`.
+
+`send_fax()` takes two arguments, a destination and a file.
+
+{% highlight yaml %}
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+---
+question: |
+  What is your fax number?
+fields:
+  - Fax: user.fax_number
+---
+question: |
+  What file would you like 
+  me to fax?
+fields:
+  - File: document
+    datatype: file
+---
+code: |
+  fax_result = send_fax(user, document)
+---
+mandatory: True
+question: |
+  % if fax_result.received():
+  The fax was received.
+  % else:
+  The status of the fax is 
+  ${ fax_result.status() }.
+  % endif
+reload: True
+{% endhighlight %}
+
+The destination can be a [`Person`] or a fax number.  If it is a
+[`Person`], the fax number will be obtained from the `fax_number`
+attribute of the object.  The `send_fax()` function will convert the
+fax number to [E.164] format.  To do so, it will need a country code.
+This country code will be obtained from the `country` attribute of the
+object, or the `address.country` attribute, but if neither of these
+attributes is already defined, the value of [`get_country()`] will be
+used.  If you want to use a specific country, you can call
+`send_fax()` with the optional keyword parameter `country`.
+
+The second argument, the file, must be a file object such as a
+[`DAFile`], [`DAFileList`], [`DAFileCollection`], or [`DAStaticFile`]
+object.
+
+The `send_fax()` function returns an object that represents the status
+of the fax sending.  The object has the following methods:
+
+* `.status()` - this will be one of [Twilio]'s [fax status values].
+  However, if there is a [Twilio] configuration error, it will be
+  `'not-configured'`, and if no result is available, it will be
+  `'no-information'`.
+* `.info()` - this will be a [dictionary] containing the
+  [status callback values] returned from [Twilio] (excluding the
+  `AccountSid`).  If no result is available, this will be a
+  [dictionary] with the `FaxStatus` set to `'not-configured'` or
+  `'no-information'`.
+* `.received()` - this will be `True` or `False` depending on whether
+  the fax has been received yet.  It will be `None` if no result is
+  available.
+  
+Immediately after `send_fax()` is called, the result will likely be
+unavailable, because [Twilio] will not have had time to start
+processing the request.
+
+In addition, the result will expire 24 hours after the last time
+[Twilio] reported a change in the status of the fax sending.  Thus, if
+you want to ensure that the outcome of a fax sending gets recorded in
+the interview dictionary, you should launch a [`background_action()`]
+that polls the status, or set up a [scheduled task] that checks in
+hourly.
+
 # <a name="geofunctions"></a>Geographic functions
 
 ## <a name="map_of"></a>map_of()
@@ -2687,6 +2770,8 @@ The keys are:
 
 * `sms` - whether SMS messaging is available.  See the [`twilio`]
   configuration.
+* `fax` - whether fax sending is available.  See the [`twilio`]
+  configuration.
 * `google_login` - whether logging in with Google is available.  See
   the [`oauth`] configuration.
 * `facebook_login` - whether logging in with Facebook is available.
@@ -3956,6 +4041,30 @@ database.  If you connect to the database with the credentials from
 
 # <a name="docx"></a>Functions for working with .docx templates
 
+## <a name="include_docx_template"></a>include_docx_template()
+
+The `include_docx_template()` function can be called from within a
+[.docx template file] in order to include the contents of another
+.docx file within the template being assembled.
+
+{% include demo-side-by-side.html demo="subdocument" %}
+
+The file `main_document.docx` looks like this:
+
+![include_docx_template]({{ site.baseurl }}/img/include_docx_template.png)
+
+Note that it is important to use the `p` form of [Jinja2] markup, or
+else the contents of the included document will not be visible.  The
+template tax must also be by itself on a line, and the
+`include_docx_template()` function must be by itself within a [Jinja2]
+`p` tag, and not combined with the `+` operator with any other text.
+
+The filename that you give to `include_docx_template()` must be a file
+that exists in the templates folder of the current package.  You can
+also refer to templates in other packages using a full package
+filename reference, such as
+`docassemble.demo:data/templates/sub_document.docx`.
+
 ## <a name="raw"></a>raw()
 
 This function is only used in the context of an [`attachments`] block
@@ -4572,3 +4681,7 @@ $(document).on('daPageLoad', function(){
 [list of available interviews]: {{ site.baseurl }}/docs/config.html#dispatch
 [`show login`]: {{ site.baseurl }}/docs/config.html#show login
 [`password`]: {{ site.baseurl }}/docs/documents.html#password
+[status callback values]: https://www.twilio.com/docs/api/fax/rest/faxes#fax-status-callback
+[fax status values]: https://www.twilio.com/docs/api/fax/rest/faxes#fax-status-values
+[.docx template file]: {{ site.baseurl }}/docs/documents.html#docx template file
+[Jinja2]: http://jinja.pocoo.org/docs/2.9/

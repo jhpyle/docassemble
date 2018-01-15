@@ -8955,6 +8955,14 @@
     - Suffix: gardener.name.suffix
       required: False
       code: name_suffix()
+"subdocument": |-
+  mandatory: True
+  question: |
+    Here is your document.
+  attachment:
+    name: A document
+    filename: final_document
+    docx template file: main_document.docx
 "testcooking": |-
   modules:
     - .objects

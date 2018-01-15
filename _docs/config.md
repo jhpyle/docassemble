@@ -1912,8 +1912,9 @@ section of the [installation] page.
 There are several features of **docassemble** that involve integration
 with the [Twilio] service, including the [`send_sms()`] function for
 sending text messages, the [text messaging interface] for interacting
-with interviewees through text messaging, and the [call forwarding]
-feature for connecting interviewees with operators over the phone.
+with interviewees through text messaging, the [call forwarding]
+feature for connecting interviewees with operators over the phone, and
+the [fax sending] feature.
 
 These features are enabled using a `twilio` configuration directive.
 Here is an example:
@@ -1922,6 +1923,7 @@ Here is an example:
 twilio:
   sms: True
   voice: True
+  fax: True
   account sid: ACfad8e668d876f5473fb232a311243b58
   auth token: 87559c7a427c25e34e20c654e8b05234
   number: "+12762410114"
@@ -1936,6 +1938,9 @@ text messaging features.
 
 The `voice: True` line tells **docassemble** that you intend to use the
 [call forwarding] feature.
+
+The `fax: True` line tells **docassemble** that you intend to use the
+[fax sending] feature.
 
 The `account sid` is a value you copy and paste from your [Twilio]
 account dashboard.
@@ -1975,6 +1980,7 @@ twilio:
   - name: default
     sms: True
     voice: True
+    fax: True
     account sid: ACfad8e668d876f5473fb232a311243b58
     auth token: auth token: 87559c7a427c25e34e20c654e8b05234
     number: "+12762410114"
@@ -1986,6 +1992,7 @@ twilio:
   - name: bankruptcy
     sms: True
     voice: False
+    fax: False
     account sid: ACfad8e668d876f5473fb232a311243b58
     auth token: auth token: 87559c7a427c25e34e20c654e8b05234
     number: "+12768571217"
@@ -2291,3 +2298,4 @@ and Facebook API keys.
 [background tasks]: {{ site.baseurl }}/docs/background.html#background
 [`worker_concurrency`]: http://docs.celeryproject.org/en/latest/userguide/configuration.html#worker-concurrency
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
+[fax sending]: {{ site.baseurl }}/docs/functions.html#send_fax

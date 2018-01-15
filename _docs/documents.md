@@ -765,6 +765,19 @@ The `docx-jinja2-demo.docx` file looks like this:
 For more information on using [Jinja2] in .docx templates, see the
 documentation of [`python-docx-template`].
 
+### <a name="include_docx_template"></a>Inserting other .docx files into .docx templates
+
+You can include the paragraphs of a .docx file inside of your .docx
+template.
+
+![include_docx_template]({{ site.baseurl }}/img/include_docx_template.png)
+
+See the documentation for the [`include_docx_template()`] function for
+more information.  Note that it is important to use the `p` form of
+[Jinja2] markup, by itself on a line in the document:
+
+> {% raw %}{{p include_docx_template('sub_document.docx') }}{% endraw %}
+
 ### <a name="docx tables"></a>Inserting tables into .docx templates
 
 You can assemble tables in a .docx template using a [Jinja2] "for loop."
@@ -1322,3 +1335,4 @@ interview, see the [`cache documents` feature].
 [`yesno()`]: {{ site.baseurl }}/docs/functions.html#yesno
 [`noyes()`]: {{ site.baseurl }}/docs/functions.html#noyes
 [pdftk]: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/
+[`include_docx_template()`]: {{ site.baseurl }}/docs/functions.html#include_docx_template
