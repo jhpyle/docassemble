@@ -582,6 +582,7 @@ question: |
   Where ${ x.do_question('live') }?
 fields:
   - Address: x.address.address
+    address autocomplete: True    
   - Unit: x.address.unit
     required: False
     help: The apartment, suite, or unit number of the residence.
@@ -674,7 +675,7 @@ decoration: finishline
 subquestion: |
   Here is an advice letter and a pleading you can file.
 
-  (Note: the options to see documents in Markdown and LaTeX format are
+  (Note: the option to see documents in Markdown format is
   hidden when **docassemble** is configured as a production server.
   End users will not see these options.)
 help: |
