@@ -1,7 +1,7 @@
 metadata:
   title: Opt out of variable seeking
   short title: Scan for variables
-  documentation: "https://docassemble.org/docs/logic.html#scan for variables"
+  documentation: "https://docassemble.org/docs/modifiers.html#scan for variables"
   example start: 1
   example end: 5
 ---

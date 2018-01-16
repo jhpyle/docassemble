@@ -438,9 +438,6 @@ Feature: Example interviews
   # Scenario: Test the interview "Fill fields in a DOCX template with code"
   #   Given I start the interview "docassemble.base:data/questions/examples/docx-template-code.yml"
 
-  # Scenario: Test the interview "Field variables"
-  #   Given I start the interview "docassemble.base:data/questions/examples/docx-template-field-variables.yml"
-
   # Scenario: Test the interview "Fill fields in DOCX templates"
   #   Given I start the interview "docassemble.base:data/questions/examples/docx-template-multiple.yml"
 

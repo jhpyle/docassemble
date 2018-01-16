@@ -1,6 +1,6 @@
 metadata:
   title: Assets
-  documentation: "https://docassemble.org/docs/objects.html#asset"
+  documentation: "https://docassemble.org/docs/objects.html#Asset"
   example start: 2
   example end: 10
 ---

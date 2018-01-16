@@ -1,6 +1,6 @@
 metadata:
   title: Checkbox method
-  documentation: "https://docassemble.org/docs/objects.html#all_true"
+  documentation: "https://docassemble.org/docs/objects.html#DADict.all_true"
   example start: 1
   example end: 2
 ---

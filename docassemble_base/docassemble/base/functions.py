@@ -1416,9 +1416,12 @@ def word(the_word, **kwargs):
     elif the_word is None:
         the_word = "I don't know"
     try:
-        return word_collection[this_thread.language][the_word].decode('utf8')
+        the_word = word_collection[this_thread.language][the_word].decode('utf8')
     except:
-        return unicode(the_word)
+        the_word = unicode(the_word)
+    if kwargs.get('capitalize', False):
+        return capitalize(the_word)
+    return the_word
 
 def update_language_function(lang, term, func):
     if term not in language_functions:
