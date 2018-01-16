@@ -1062,6 +1062,9 @@ def substitute_secret(oldsecret, newsecret):
             except Exception as e:
                 logmessage("substitute_secret: error decrypting dictionary for filename " + filename + " and uid " + user_code)
                 continue
+            if type(the_dict) is not dict:
+                logmessage("substitute_secret: dictionary was not a dict for filename " + filename + " and uid " + user_code)
+                continue
             record.dictionary = encrypt_dictionary(the_dict, newsecret)
             changed = True
         if changed:
@@ -3526,7 +3529,53 @@ def restart_ajax():
 
 class ChatPartners(object):
     pass
-    
+
+def get_current_chat_log(yaml_filename, session_id, secret, utc=True, timezone=None):
+    if timezone is None:
+        timezone = get_default_timezone()
+    timezone = pytz.timezone(timezone)
+    output = []
+    if yaml_filename is None or session_id is None:
+        return output
+    user_cache = user_id_dict()
+    for record in ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id)).order_by(ChatLog.id).all():
+        if record.encrypted:
+            try:
+                message = decrypt_phrase(record.message, secret)
+            except:
+                sys.stderr.write("get_current_chat_log: Could not decrypt phrase with secret " + secret + "\n")
+                continue
+        else:
+            message = unpack_phrase(record.message)
+        # if record.temp_owner_id:
+        #     owner_first_name = None
+        #     owner_last_name = None
+        #     owner_email = None
+        # elif record.owner_id in user_cache:
+        #     owner_first_name = user_cache[record.owner_id].first_name
+        #     owner_last_name = user_cache[record.owner_id].last_name
+        #     owner_email = user_cache[record.owner_id].email
+        # else:
+        #     sys.stderr.write("get_current_chat_log: Invalid owner ID in chat log\n")
+        #     continue
+        if record.temp_user_id:
+            user_first_name = None
+            user_last_name = None
+            user_email = None
+        elif record.user_id in user_cache:
+            user_first_name = user_cache[record.user_id].first_name
+            user_last_name = user_cache[record.user_id].last_name
+            user_email = user_cache[record.user_id].email
+        else:
+            sys.stderr.write("get_current_chat_log: Invalid user ID in chat log\n")
+            continue
+        if utc:
+            the_datetime = record.modtime.replace(tzinfo=tz.tzutc())
+        else:
+            the_datetime = record.modtime.replace(tzinfo=tz.tzutc()).astimezone(timezone)
+        output.append(dict(message=message, datetime=the_datetime, user_email=user_email, user_first_name=user_first_name, user_last_name=user_last_name))
+    return output
+
 @app.route("/checkin", methods=['POST', 'GET'])
 def checkin():
     session_id = session.get('uid', None)
@@ -15399,6 +15448,7 @@ r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
 docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          navigation_bar=navigation_bar,
                                          chat_partners_available=chat_partners_available,
+                                         get_chat_log=get_current_chat_log,
                                          sms_body=sms_body,
                                          send_fax=da_send_fax,
                                          get_sms_session=get_sms_session,

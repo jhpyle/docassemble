@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.2.21] - 2018-01-15
+### Added
+- The `get_chat_log()` function.
+### Fixed
+- Problem with formatting of chat log after going back into a session.
+
 ## [0.2.20] - 2018-01-14
 ### Added
 - The `send_fax()` function for sending faxes using Twilio.

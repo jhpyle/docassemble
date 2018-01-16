@@ -42,6 +42,10 @@ threads = dict()
 secrets = dict()
 
 def background_thread(sid=None, user_id=None, temp_user_id=None):
+    if user_id is not None:
+        user_id = int(user_id)
+    if temp_user_id is not None:
+        temp_user_id = int(temp_user_id)
     with app.app_context():
         sys.stderr.write("Started client thread for " + str(sid) + " who is " + str(user_id) + " or " + str(temp_user_id) + "\n")
         if user_id is None:
@@ -141,10 +145,15 @@ def chat_log(message):
         temp_user_id = session.get('tempuser', None)
     else:
         temp_user_id = None
+    if user_id is not None:
+        user_id = int(user_id)
+    if temp_user_id is not None:
+        temp_user_id = int(temp_user_id)
     secret = request.cookies.get('secret', None)
+    #sys.stderr.write("chat_log: " + str(repr(user_id)) + " " + str(repr(temp_user_id)) + "\n")
     messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, user_id, temp_user_id)
     socketio.emit('chat_log', {'data': messages}, namespace='/interview', room=request.sid)
-    #sys.stderr.write("Interview: sending back " + str(len(messages)) + " messages")
+    #sys.stderr.write("Interview: sending back " + str(len(messages)) + " messages\n")
 
 @socketio.on('transmit', namespace='/interview')
 def handle_message(message):
@@ -178,6 +187,10 @@ def chat_message(data):
         temp_user_id = session.get('tempuser', None)
     else:
         temp_user_id = None
+    if user_id is not None:
+        user_id = int(user_id)
+    if temp_user_id is not None:
+        temp_user_id = int(temp_user_id)
     user_dict = get_dict()
     chat_mode = user_dict['_internal']['livehelp']['mode']
     if chat_mode in ['peer', 'peerhelp']:
@@ -696,6 +709,8 @@ def monitor_chat_message(data):
     else:
         message = pack_phrase(data['data'])
     user_id = session.get('user_id', None)
+    if user_id is not None:
+        user_id = int(user_id)
     person = UserModel.query.filter_by(id=user_id).first()
     chat_mode = user_dict['_internal']['livehelp']['mode']
     m = re.match('t([0-9]+)', chat_user_id)
@@ -754,6 +769,12 @@ def monitor_chat_log(data):
         temp_user_id = None
         user_id = chat_user_id
     self_user_id = session.get('user_id', None)
+    if user_id is not None:
+        user_id = int(user_id)
+    if temp_user_id is not None:
+        temp_user_id = int(temp_user_id)
+    if self_user_id is not None:
+        self_user_id = int(self_user_id)
     messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, self_user_id, None)
     socketio.emit('chat_log', {'uid': session_id, 'i': yaml_filename, 'userid': chat_user_id, 'mode': chat_mode, 'data': messages}, namespace='/monitor', room=request.sid)
     #sys.stderr.write("Monitor: sending back " + str(len(messages)) + " messages")

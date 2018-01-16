@@ -6,6 +6,10 @@ source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.r
 
 PGVERSION=`pg_config --version | sed 's/PostgreSQL \([0-9][0-9]*\.[0-9][0-9]*\).*/\1/'`
 
+if [[ $PGVERSION == 10* ]]; then
+    PGVERSION=10
+fi
+
 export DA_ACTIVATE="${DA_PYTHON:-/usr/share/docassemble/local}/bin/activate"
 
 chown -R postgres.postgres /etc/postgresql

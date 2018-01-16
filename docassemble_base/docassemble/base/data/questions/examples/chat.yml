@@ -47,11 +47,18 @@ subquestion: |
   [get help]: ${ url_of('help') }
 field: penultimate
 ---
+code: |
+  chat_log = get_chat_log(utc=True)
+---
 mandatory: True
 question: |
   All done
 subquestion: |
   Thank you for telling me that information.
+
+  The chat log is:
+
+  `${ chat_log }`
 ---
 code: |
   lucky_number = 2
