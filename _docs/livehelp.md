@@ -389,6 +389,34 @@ If you are only interested in the value of `.peer`, you do not need to
 provide any [partner roles]; you can simply get the value of
 `chat_partners_available().peer`.
 
+### The <a name="get_chat_log"></a>`get_chat_log()` function 
+
+If you want to access the chat log from the interview dictionary, you
+can use the `get_chat_log()` function.  It will return a list of chat
+messages in chronological order.  Each entry in the list will be a
+dictionary with the following keys:
+
+* `message` - the text of the message
+* `datetime` - a [`datetime.datetime`] object (with a timezone)
+  representing the time the message was sent.
+* `user_email` - the e-mail address of the sender.  This will be
+  `None` if the user is anonymous.
+* `user_first_name` - the first name of the sender.  This will be
+  `None` if the user is anonymous, and `''` if the user has not set up
+  a first name on the user profile page.
+* `user_last_name` - the last name of the sender.  This will be
+  `None` if the user is anonymous, and `''` if the user has not set up
+  a last name on the user profile page.
+
+The `get_chat_log()` takes two optional keyword arguments:
+
+* `utc` - if `True`, then `datetime` values are reported in [Coordinated Universal
+  Time].
+* `timezone` - if you want the `datetime` values to be in a specific
+  time zone, you can indicate the time zone with the `timezone`
+  argument.  This should be a plain text time zone like
+  `'US/Eastern'`.  (See [`timezone_list()`] and the [`pytz`] module.)
+
 ## Live chat from the user's perspective
 
 The user conducts live chat on the help tab of the interview.
@@ -650,3 +678,7 @@ user will not longer see the calling instructions or the phone icon.
 [chat mode]: #mode
 [`mode`]: #mode
 [availability]: #availability
+[`datetime.datetime`]: https://docs.python.org/2/library/datetime.html#datetime.datetime
+[Coordinated Universal Time]: https://en.wikipedia.org/wiki/Coordinated_Universal_Time
+[`timezone_list()`]: {{ site.baseurl }}/docs/functions.html#timezone_list
+[`pytz`]: http://pytz.sourceforge.net/

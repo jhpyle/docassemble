@@ -1941,6 +1941,17 @@ The function `last_access_delta()` works just like
 [`datetime.timedelta`] object giving the difference between the
 current time and the last access time.
 
+## <a name="returning_user"></a>returning_user()
+
+The function [`returning_user()`] returns `True` if the user has not
+accessed the interview in at least six hours, and otherwise returns
+`False`.  To use a different time limit, you can set one of the
+optional keyword arguments.
+
+* `returning_user(minutes=5)`
+* `returning_user(hours=1)`
+* `returning_user(days=30)`
+
 # <a name="date functions"></a>Functions for working with dates and times
 
 ## <a name="month_of"></a><a name="day_of"></a><a name="year_of"></a><a name="dow_of"></a>month_of(), day_of(), year_of(), and dow_of()
@@ -4488,6 +4499,7 @@ $(document).on('daPageLoad', function(){
 [`last_access_hours()`]: #last_access_hours
 [`last_access_minutes()`]: #last_access_minutes
 [`last_access_delta()`]: #last_access_delta
+[`returning_user()`]: #returning_user
 [UTC time]: https://en.wikipedia.org/wiki/Coordinated_Universal_Time
 [`timezone_list()`]: #timezone_list
 [`pytz`]: http://pytz.sourceforge.net/

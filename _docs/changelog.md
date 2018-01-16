@@ -15,7 +15,7 @@ short_title: Change Log
 
 ### Added
 - Ability to run `interview_list()` on all users.  Additional keys
-`user_id` and `email` are included in results.
+  `user_id` and `email` are included in results.
 - Integrated the Place Autocomplete feature from the Google Places API.
 
 ### Fixed

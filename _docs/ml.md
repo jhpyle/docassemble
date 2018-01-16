@@ -709,7 +709,7 @@ parameter is the dependent variable.
 The [`.add_to_training_set()`] method is explained in more detail in
 the next section, which explains all of the methods available.
 
-# <a name="SimpleTextMachineLearner"></a>The `SimpleTextMachineLearner` object
+# <a name="DAModel"></a><a name="SimpleTextMachineLearner"></a>The `SimpleTextMachineLearner` object
 
 The `SimpleTextMachineLearner` is an object for interacting with
 **docassemble**'s machine learning features.  It uses the k-nearest
@@ -1062,7 +1062,7 @@ To classify the entry, use the [`.classify()`] method.
 
 {% include side-by-side.html demo="classify" %}
 
-## <a name="SimpleTextMachineLearner.predict"></a>.predict()
+## <a name="DAModel.predict"></a><a name="SimpleTextMachineLearner.predict"></a>.predict()
 
 The `.predict()` method of the `SimpleTextMachineLearner` class returns
 the predictions of the machine learner for the given independent variable.

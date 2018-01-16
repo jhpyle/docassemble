@@ -2147,10 +2147,6 @@
            subject_matter=subject_matter,
            address_block=adverse_party.address_block(),
            signature=user.signature)
-"docx-template-field-variables": |-
-  mandatory: true
-  code: |
-    introduction_shown
 "docx-template-multiple": |-
   question: |
     Tell me about a fruit.

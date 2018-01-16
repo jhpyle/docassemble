@@ -672,8 +672,6 @@ browsers, like [Firefox], the format may be some other format.
 
 {% include side-by-side.html demo="email-field" %}
 
-{% include side-by-side.html demo="address-autocomplete" %}
-
 ## <a name="numbers"></a>Numbers
 
 <a name="integer"></a>`datatype: integer` indicates that the input

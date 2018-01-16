@@ -408,6 +408,21 @@ code: |
 ---
 {% endhighlight %}
 
+As discussed below, the [`Individual`] object has interesting methods
+related to pronouns.  These methods are universal, so you can use them
+on any [`DAObject`].
+
+<a name="DAObject.pronoun"></a><a
+name="DAObject.pronoun_objective"></a><a
+name="DAObject.pronoun_subjective"></a><a
+name="DAObject.pronoun_possessive"></a>If the object is a generic
+[`DAObject`], or a subclass of [`DAObject`] that does not have any
+special pronoun behavior, then the `.pronoun()`,
+`.pronoun_subjective()`, and `.pronoun_objective()` methods all return
+`'it'`.  The `.pronoun_possessive()` method returns `'its'` followed
+by the argument.  For example, `thing.pronoun_possessive('reason')`
+returns `'its reason'`.
+
 ## <a name="DAList"></a>DAList
 
 A `DAList` acts like an ordinary [Python list], except that
@@ -659,7 +674,7 @@ The `DAList` uses the following attributes:
 For more information about gathering items using [`DAList`] objects,
 see the section on [groups].
 
-## <a name="DADict"></a><a name="DADict.initializeObject"></a><a name="DADict.new"></a>DADict
+## <a name="DADict"></a><a name="DADict.initializeObject"></a>DADict
 
 A `DADict` acts like a [Python dictionary] except that dictionary keys
 and values can be defined through **docassemble** questions.
@@ -675,15 +690,17 @@ The first parameter is the name of the attribute.  The second
 parameter is the type of object.  The result of [`using()`] can be
 used in place of the class name.
 
-The `DADict` also uses a similar method called `.new()`.  This method
-initializes a new object and makes it an entry in the dictionary.  For
-example, if the dictionary is called `positions`, calling
-`positions.new('file clerk', 'supervisor')` will result in the
-creation of the object `positions['file clerk']` and the object
-`positions['supervisor']`.  The type of object is given by the
-[`object_type`] attribute, or [`DAObject`] if [`object_type`] is not set.
-You can also pass a [list] and it will unpack the list, initializing
-dictionary entries for each value.
+<a name="DADict.new"></a><a name="FinancialList.new"></a><a
+name="PeriodicFinancialList.new"></a>The `DADict` also uses a similar
+method called `.new()`.  This method initializes a new object and
+makes it an entry in the dictionary.  For example, if the dictionary
+is called `positions`, calling `positions.new('file clerk',
+'supervisor')` will result in the creation of the object
+`positions['file clerk']` and the object `positions['supervisor']`.
+The type of object is given by the [`object_type`] attribute, or
+[`DAObject`] if [`object_type`] is not set.  You can also pass a
+[list] and it will unpack the list, initializing dictionary entries
+for each value.
 
 `DADict`s use the same attributes that [`DAList`]s use.  It also uses:
 
@@ -1183,7 +1200,7 @@ call `show()` on itself.
 <a name="DAStaticFile.url_for"></a>The `.url_for()` method returns a
 URL at which the file can be accessed.
 
-<a name="DAFileList.path"></a>The `.path()` method returns a complete
+<a name="DAStaticFile.path"></a>The `.path()` method returns a complete
 file path that you can use to access the file on the server.
 
 Here is an example that shows how [`DAStaticFile`],
@@ -1332,15 +1349,17 @@ object created through `redis.StrictRedis()` using the standard
 However, there are three additional methods that facilitate the use of
 [Redis] in the context of **docassemble** interviews.
 
-The `key()` method is a convenience function for obtaining keys that
-you can use as [Redis] keys in order to avoid name collisions across
-interviews.  Given a key like `'favorite_fruit'`, it returns the key
-with a prefix based on the interview, like
+<a name="DARedis.key"></a>The `key()` method is a convenience function
+for obtaining keys that you can use as [Redis] keys in order to avoid
+name collisions across interviews.  Given a key like
+`'favorite_fruit'`, it returns the key with a prefix based on the
+interview, like
 `docassemble.food:data/questions/fruit.yml:favorite_fruit`.  You could
 use `favorite_fruit` as a key, but if another interview on the system
 used the same key, the interviews would interfere with one another.
 
-The `set_data()` and `get_data()` methods act just like the standard
+<a name="DARedis.set_data"></a><a name="DARedis.get_data"></a>The 
+`set_data()` and `get_data()` methods act just like the standard
 methods `set()` and `get()`, except that they perform [pickling] and
 unpickling.  This allows you to store and retrieve **docassemble**
 objects or any type of data structure that is able to be [pickled].
@@ -2601,10 +2620,11 @@ objects:
 ---
 {% endhighlight %}
 
-The `init()` function is a special function that is called on all
-[`DAObject`] objects at the time they are initialized.  This is not to
-be confused with the `__init__()` function, which is built in to
-[Python]; you should use `init()`, not `__init__()`.
+<a name="DAObject.init"></a>The `init()` function is a special
+function that is called on all [`DAObject`] objects at the time they
+are initialized.  This is not to be confused with the `__init__()`
+function, which is built in to [Python]; you should use `init()`, not
+`__init__()`.
 
 When you write your own `init()` function for a class, you should (but
 are not required to) include the 

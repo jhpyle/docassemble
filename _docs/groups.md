@@ -248,12 +248,13 @@ knows that there are no more elements in the list, it does not need to
 ask any further questions.  `${ fruit }` will result in 
 `apples and oranges`.
 
-Note that the variable `i` is special in **docassemble**.  When the
-interview seeks a definition for `fruit[0]`, the interview will first
-look for a question that offers to define `fruit[0]`.  If it does not
-find one, it will take a more general approach and look for a question
-that offers to define `fruit[i]`.  The question that offers to define
-`fruit[i]` will be reused as many times as necessary.
+<a name="i"></a>Note that the variable `i` is special in
+**docassemble**.  When the interview seeks a definition for
+`fruit[0]`, the interview will first look for a question that offers
+to define `fruit[0]`.  If it does not find one, it will take a more
+general approach and look for a question that offers to define
+`fruit[i]`.  The question that offers to define `fruit[i]` will be
+reused as many times as necessary.
 
 ## Customizing the way information is gathered
 
