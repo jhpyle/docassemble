@@ -17,6 +17,7 @@ app.config['APPLICATION_ROOT'] = daconfig.get('root', '/')
 app.config['CSRF_ENABLED'] = False
 app.config['USE_MFA'] = True if daconfig.get('two factor authentication', False) is True else False
 app.config['MFA_ROLES'] = daconfig.get('two factor authentication privileges', ['admin', 'developer'])
+app.config['API_ROLES'] = daconfig.get('api privileges', ['admin', 'developer'])
 app.config['WTF_CSRF_TIME_LIMIT'] = 604800
 app.config['WTF_CSRF_SSL_STRICT'] = daconfig.get('require referer', True)
 app.config['USER_APP_NAME'] = app.config['APP_NAME']

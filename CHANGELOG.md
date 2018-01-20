@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.2.22] - 2018-01-17
+### Added
+- API interface
+### Fixed
+- Result of `user_interviews()` was reporting wrong `utc_modtime`.
+- Error with `google maps api key` when `api key` alone was set under
+  `google` in the Configuration.
+
 ## [0.2.21] - 2018-01-15
 ### Added
 - The `get_chat_log()` function.

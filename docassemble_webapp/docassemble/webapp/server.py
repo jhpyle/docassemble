@@ -2072,10 +2072,10 @@ def public_method(method, the_class):
 def noquote(string):
     if string is None:
         return string
+    string = amp_match.sub('&amp;', string)
     string = noquote_match.sub('&quot;', string)
     string = lt_match.sub('&lt;', string)
     string = gt_match.sub('&gt;', string)
-    string = amp_match.sub('&amp;', string)
     return string
 
 def infobutton(title):
@@ -2490,9 +2490,15 @@ def fg_make_png_for_pdf(doc, prefix, page=None):
         resolution = PNG_SCREEN_RESOLUTION
     docassemble.base.ocr.make_png_for_pdf(doc, prefix, resolution, PDFTOPPM_COMMAND, page=page)
 
+def task_ready(task_id):
+    result = docassemble.webapp.worker.workerapp.AsyncResult(id=task_id)
+    if result.ready():
+        return True
+    return False
+
 def wait_for_task(task_id, timeout=None):
     if timeout is None:
-        timeout = 60
+        timeout = 3
     #logmessage("wait_for_task: starting")
     try:
         result = docassemble.webapp.worker.workerapp.AsyncResult(id=task_id)
@@ -2503,6 +2509,9 @@ def wait_for_task(task_id, timeout=None):
         result.get(timeout=timeout)
         #logmessage("wait_for_task: returning true")
         return True
+    except docassemble.webapp.worker.celery.exceptions.TimeoutError as the_error:
+        logmessage("wait_for_task: timed out")
+        return False
     except Exception as the_error:
         logmessage("wait_for_task: got error: " + str(the_error))
         return False
@@ -4104,7 +4113,7 @@ def index():
                 # 'filename', 'question', 'format', 'index', 'action'
                 need_to_reset = True
                 continue
-            if re.match('[A-Za-z_]+', argname):
+            if re.match('[A-Za-z_][A-Za-z0-9_]*', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
                 #logmessage("index: there was an argname " + str(argname) + " and we need to reset")
             need_to_resave = True
@@ -5146,7 +5155,7 @@ def index():
         else:
             api_key = None
         if api_key is not None:
-            scripts += "\n" + '    <script src="https://maps.googleapis.com/maps/api/js?key=' + daconfig['google']['google maps api key'] + '&libraries=places"></script>'
+            scripts += "\n" + '    <script src="https://maps.googleapis.com/maps/api/js?key=' + api_key + '&libraries=places"></script>'
         if 'javascript' in interview_status.question.interview.external_files:
             for packageref, fileref in interview_status.question.interview.external_files['javascript']:
                 the_url = get_url_from_file_reference(fileref, _package=packageref)
@@ -7488,7 +7497,7 @@ def serve_uploaded_pagescreen(number, page):
             # max_pages = 1 + int(file_info['pages'])
             # formatter = '%0' + str(len(str(max_pages))) + 'd'
             # filename = file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
-            filename = the_file.page_path(1, 'screen')
+            filename = the_file.page_path(page, 'screen')
         except:
             filename = None
         if filename is None:
@@ -12819,6 +12828,7 @@ def server_error(the_error):
                 if re.match('Exception', line):
                     flask_logtext = []
                 flask_logtext.append(line)
+    errmess = noquote(errmess)
     if re.search(r'\n', errmess):
         errmess = '<pre>' + errmess + '</pre>'
     else:
@@ -13660,15 +13670,16 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
         else:
             interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
-            
     else:
         if filename is not None:
-            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(User.active == True, UserDictKeys.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
+            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserModel.active == True, UserDictKeys.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
         else:
-            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(User.active == True).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
+            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserModel.active == True).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
     #logmessage(str(interview_query))
     interviews = list()
     for interview_info in interview_query:
+        if session is not None and interview_info.key != session:
+            continue
         interview_title = dict()
         is_valid = True
         interview_valid = True
@@ -13721,7 +13732,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             utc_starttime = None
             starttime = ''
         if dictionary['_internal']['modtime']:
-            utc_modtime = dictionary['_internal']['starttime']
+            utc_modtime = dictionary['_internal']['modtime']
             modtime = nice_date_from_utc(dictionary['_internal']['modtime'], timezone=the_timezone)
         else:
             utc_modtime = None
@@ -14825,7 +14836,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
 
 def api_verify(req, roles=None):
     api_key = request.args.get('key', None)
-    if request.method == 'POST':
+    if api_key is None and request.method == 'POST':
         post_data = request.form.copy()
         if 'key' in post_data:
             api_key = post_data['key']
@@ -14873,6 +14884,9 @@ def api_verify(req, roles=None):
     if user is None:
         logmessage("api_verify: user does not exist")
         return False
+    if not user.active:
+        logmessage("api_verify: user is no longer active")
+        return False
     login_user(user, remember=False)
     if roles:
         ok_role = False
@@ -14895,124 +14909,538 @@ def true_or_false(text):
         return False
     return True
 
-def get_user_list():
+def get_user_list(include_inactive=False):
     if not (current_user.is_authenticated and current_user.has_role('admin')):
         raise Exception("You cannot call get_user_list() unless you are an administrator")
-    user_list = []
-    for user in UserModel.query.filter_by(active=True).all():
+    if include_inactive:
+        the_users = UserModel.query.order_by(UserModel.id).all()
+    else:
+        the_users = UserModel.query.filter_by(active=True).order_by(UserModel.id).all()
+    user_list = list()
+    for user in the_users:
         user_info = dict(roles=[])
         for role in user.roles:
             user_info['roles'].append(role.name)
         for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
             user_info[attrib] = getattr(user, attrib)
+        if include_inactive:
+            user_info['active'] = getattr(user, 'active')
         user_list.append(user_info)
-    user_list = get_user_list()
     return user_list
-    
-@app.route('/api/user_list', methods=['GET', 'POST'])
+
+@app.route('/api/user_list', methods=['GET'])
 def api_user_list():
     if not api_verify(request, roles=['admin']):
-        return jsonify_with_status(dict(error="Access denied."), 403)
+        return jsonify_with_status("Access denied.", 403)
+    include_inactive = true_or_false(request.args.get('include_inactive', False))
+    user_list = get_user_list(include_inactive)
     return jsonify(user_list)
 
-def get_user_info(user_id):
+def get_user_info(user_id=None, email=None):
     if current_user.is_anonymous:
-        raise Exception("You cannot call get_user_list() unless you are logged in")
-    if not (current_user.id == user_id or current_user.has_role('admin')):
-        raise Exception("You cannot call get_user_list() unless you are an administrator")
+        raise Exception("You cannot call get_user_info() unless you are logged in")
+    if user_id is None and email is None:
+        user_id = current_user.id
+    if not (current_user.has_role('admin')):
+        if (user_id is not None and current_user.id != user_id) or (email is not None and current_user.email != email):
+            raise Exception("You cannot call get_user_info() unless you are an administrator")
     user_info = dict(roles=[])
-    user = UserModel.query.filter_by(active=True, id=user_id).first()
+    if user_id is not None:
+        user = UserModel.query.filter_by(id=user_id).first()
+    else:
+        user = UserModel.query.filter_by(email=email).first()
+    if user is None:
+        return None
     for role in user.roles:
         user_info['roles'].append(role.name)
-    for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
+    for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'active'):
         user_info[attrib] = getattr(user, attrib)
     return user_info    
 
-@app.route('/api/user', methods=['GET', 'DELETE'])
+def make_user_inactive(user_id=None, email=None):
+    if current_user.is_anonymous:
+        raise Exception("You cannot call make_user_inactive() unless you are logged in")
+    if not (current_user.has_role('admin')):
+        raise Exception("You cannot call make_user_inactive() unless you are an administrator")
+    if user_id is None and email is None:
+        raise Exception("You must call make_user_inactive() with a user ID or an e-mail address")
+    if user_id is not None:
+        user = UserModel.query.filter_by(id=user_id).first()
+    else:
+        user = UserModel.query.filter_by(email=email).first()
+    if user is None:
+        raise Exception("User not found")
+    user.active = False
+    db.session.commit()
+
+@app.route('/api/user', methods=['GET', 'POST'])
+@csrf.exempt
 def api_user():
     if not api_verify(request):
-        return jsonify_with_status(dict(error="Access denied."), 403)
-    user = UserModel.query.filter_by(active=True, id=current_user.id).first()
-    if user is None:
-        return jsonify_with_status(dict(error="User not found."), 403)
+        return jsonify_with_status("Access denied.", 403)
+    try:
+        user_info = get_user_info(user_id=current_user.id)
+    except Exception as err:
+        return jsonify_with_status("Error obtaining user information: " + str(err), 400)
+    if user_info is None:
+        return jsonify_with_status('User not found', 404)
+    if request.method == 'GET':
+        return jsonify(user_info)
+    elif request.method == 'POST':
+        post_data = request.form.copy()
+        info = dict()
+        for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
+            if key in post_data:
+                info[key] = post_data[key]
+        set_user_info(user_id=current_user.id, **info)
+        return ('', 204)
+
+@app.route('/api/user/<user_id>', methods=['GET', 'DELETE', 'POST'])
+@csrf.exempt
+def api_user_by_id(user_id):
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    try:
+        user_id = int(user_id)
+    except:
+        return jsonify_with_status("User ID must be an integer.", 400)
+    try:
+        user_info = get_user_info(user_id=user_id)
+    except Exception as err:
+        return jsonify_with_status("Error obtaining user information: " + str(err), 400)
+    if user_info is None:
+        return jsonify_with_status("User not found.", 404)
     if request.method == 'GET':
         return jsonify(user_info)
     elif request.method == 'DELETE':
-        user.active = False
-        db.session.commit()
+        make_user_inactive(user_id=user_id)
+        return ('', 204)
+    elif request.method == 'POST':
+        post_data = request.form.copy()
+        info = dict()
+        for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
+            if key in post_data:
+                info[key] = post_data[key]
+        set_user_info(user_id=user_id, **info)
         return ('', 204)
 
+def set_user_info(**kwargs):
+    if current_user.is_anonymous:
+        raise Exception("You cannot call set_user_info() unless you are logged in")
+    user_id = kwargs.get('user_id', None)
+    email = kwargs.get('email', None)
+    if user_id is None and email is None:
+        user_id = current_user.id
+    if not (current_user.has_role('admin')):
+        if (user_id is not None and current_user.id != user_id) or (email is not None and current_user.email != email):
+            raise Exception("You cannot call set_user_info() unless you are an administrator")
+    if user_id is not None:
+        user = UserModel.query.filter_by(id=user_id).first()
+    else:
+        user = UserModel.query.filter_by(email=email).first()
+    if user is None:
+        raise Exception("User not found")
+    for key, val in kwargs.iteritems():
+        if key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
+            setattr(user, key, val)
+    if 'active' in kwargs:
+        if type(kwargs['active']) is not bool:
+            raise Exception("The active parameter must be True or False")
+        if user.id == current_user.id:
+            raise Exception("Cannot disable the current user.")
+        user.active = kwargs['active']
+    db.session.commit()
+    
 @app.route('/api/secret', methods=['GET'])
 def api_get_secret():
     if not api_verify(request):
-        return jsonify_with_status(dict(error="Access denied."), 403)
+        return jsonify_with_status("Access denied.", 403)
     username = request.args.get('username', None)
     password = request.args.get('password', None)
     if username is None or password is None:
-        return jsonify_with_status(dict(error="A username and password must be supplied"), 400)
+        return jsonify_with_status("A username and password must be supplied", 400)
+    try:
+        secret = get_secret(username, password)
+    except Exception as err:
+        return jsonify_with_status(str(err), 403)
+    return jsonify(secret)
+    
+def get_secret(username, password):
     user = UserModel.query.filter_by(active=True, email=username).first()
     if user is None:
-        return jsonify_with_status(dict(error="Username not known"), 403)
+        raise Exception("Username not known")
     if daconfig.get('two factor authentication', False) is True and user.otp_secret is not None:
-        return jsonify_with_status(dict(error="Secret will not be supplied because two factor authentication is enabled"), 403)
+        raise Exception("Secret will not be supplied because two factor authentication is enabled")
     user_manager = current_app.user_manager
     if not user_manager.get_password(user):
-        return jsonify_with_status(dict(error="Password not set"), 403)
+        raise Exception("Password not set")
     if not user_manager.verify_password(password, user):
-        return jsonify_with_status(dict(error="Incorrect password"), 403)
-    return jsonify(pad_to_16(MD5Hash(data=password).hexdigest()))
+        raise Exception("Incorrect password")
+    return pad_to_16(MD5Hash(data=password).hexdigest())
+
+@app.route('/api/users/interviews', methods=['GET', 'DELETE'])
+@csrf.exempt
+def api_users_interviews():
+    if not api_verify(request, roles=['admin']):
+        return jsonify_with_status("Access denied.", 403)
+    user_id = request.args.get('user_id', None)
+    filename = request.args.get('i', None)
+    secret = request.args.get('secret', None)
+    tag = request.args.get('tag', None)
+    if secret is not None:
+        secret = str(secret)
+    if request.method == 'GET':
+        include_dict = true_or_false(request.args.get('include_dictionary', False))
+        try:
+            the_list = user_interviews(user_id=user_id, secret=secret, exclude_invalid=False, tag=tag, filename=filename, include_dict=include_dict)
+        except:
+            return jsonify_with_status("Error getting interview list.", 400)
+    elif request.method == 'DELETE':
+        try:
+            the_list = user_interviews(user_id=user_id, exclude_invalid=False, tag=tag, filename=filename)
+        except:
+            return jsonify_with_status("Error reading interview list.", 400)
+        for info in the_list:
+            user_interviews(user_id=info['user_id'], action='delete', filename=info['filename'], session=info['session'])
+        return ('', 204)
 
 @app.route('/api/user/<user_id>/interviews', methods=['GET', 'DELETE'])
-def api_user_interviews(user_id):
-    if not api_verify(request, roles=['admin']):
-        return jsonify_with_status(dict(error="Access denied."), 403)
-    tag = request.args.get('tag', None)
+@csrf.exempt
+def api_user_user_id_interviews(user_id):
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    if not (current_user.id == user_id or current_user.has_role('admin')):
+        return jsonify_with_status("Access denied.", 403)
+    filename = request.args.get('i', None)
     secret = request.args.get('secret', None)
+    tag = request.args.get('tag', None)
     if secret is not None:
         secret = str(secret)
     include_dict = true_or_false(request.args.get('include_dictionary', False))
     if request.method == 'GET':
-        return jsonify(docassemble.base.functions.safe_json(user_interviews(user_id=user_id, secret=secret, exclude_invalid=False, tag=tag, include_dict=include_dict)))
+        try:
+            the_list = user_interviews(user_id=user_id, secret=secret, exclude_invalid=False, tag=tag, filename=filename, include_dict=include_dict)
+        except:
+            return jsonify_with_status("Error reading interview list.", 400)
+        return jsonify(docassemble.base.functions.safe_json(the_list))
     elif request.method == 'DELETE':
-        filename = request.args.get('filename', None)
-        session = request.args.get('session', None)
-        if (filename is not None and session is None) or (filename is None and session is not None):
-            return jsonify_with_status(dict(error="To delete an interview, both filename and session must be provided"), 400)
-        if (filename is not None and session is not None):
-            user_interviews(user_id=user_id, secret=secret, exclude_invalid=False, action='delete', filename=filename, session=session, tag=tag)
-        else:
-            user_interviews(user_id=user_id, secret=secret, exclude_invalid=False, action='delete_all', tag=tag)
+        try:
+            the_list = user_interviews(user_id=user_id, exclude_invalid=False, tag=tag, filename=filename)
+        except:
+            return jsonify_with_status("Error reading interview list.", 400)
+        for info in the_list:
+            user_interviews(user_id=info['user_id'], action='delete', filename=info['filename'], session=info['session'])
         return ('', 204)
 
+@app.route('/api/session', methods=['GET', 'POST', 'DELETE'])
+@csrf.exempt
+def api_session():
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    if request.method == 'GET':
+        yaml_filename = request.args.get('i', None)
+        session_id = request.args.get('session', None)
+        secret = request.args.get('secret', None)
+        if secret is not None:
+            secret = str(secret)
+        if yaml_filename is None or session_id is None:
+            return jsonify_with_status("Parameters i and session are required.", 400)
+        try:
+            variables = get_session_variables(yaml_filename, session_id, secret=secret)
+        except Exception as the_err:
+            return jsonify_with_status(str(the_err), 400)
+        return jsonify(variables)
+    elif request.method == 'POST':
+        post_data = request.form.copy()
+        yaml_filename = post_data.get('i', None)
+        session_id = post_data.get('session', None)
+        secret = str(post_data.get('secret', None))
+        if yaml_filename is None or session_id is None:
+            return jsonify_with_status("Parameters i and session are required.", 400)
+        try:
+            variables = json.loads(post_data.get('variables', '{}'))
+        except:
+            return jsonify_with_status("Malformed variables.", 400)
+        if type(variables) is not dict:
+            return jsonify_with_status("Variables data is not a dict.", 400)
+        try:
+            set_session_variables(yaml_filename, session_id, variables, secret=secret)
+        except Exception as the_err:
+            return jsonify_with_status(str(the_err), 400)
+        return ('', 204)
+    elif request.method == 'DELETE':
+        yaml_filename = request.args.get('i', None)
+        session_id = request.args.get('session', None)
+        if yaml_filename is None or session_id is None:
+            return jsonify_with_status("Parameters i and session are required.", 400)
+        user_interviews(action='delete', filename=yaml_filename, session=session_id)
+        return ('', 204)
+
+def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
+    try:
+        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=str(secret))
+    except Exception as the_err:
+        raise Exception("Unable to decrypt interview dictionary: " + str(the_err))
+    if user_dict is None:
+        raise Exception("Unable to obtain interview dictionary.")
+    if simplify:
+        variables = docassemble.base.functions.serializable_dict(user_dict)
+        variables['_internal'] = docassemble.base.functions.serializable_dict(user_dict['_internal'])
+        return variables
+    return user_dict
+
+def set_session_variables(yaml_filename, session_id, variables, secret=None):
+    obtain_lock(session_id, yaml_filename)
+    try:
+        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+    except:
+        release_lock(session_id, yaml_filename)
+        raise Exception("Unable to decrypt interview dictionary.")
+    if user_dict is None:
+        release_lock(session_id, yaml_filename)
+        raise Exception("Unable to obtain interview dictionary.")
+    try:
+        for key, val in variables.iteritems():
+            exec(unicode(key) + ' = ' + repr(val), user_dict)
+    except Exception as the_err:
+        release_lock(session_id, yaml_filename)
+        raise Exception("Problem setting variables:" + str(the_err))
+    save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
+    release_lock(session_id, yaml_filename)
+
+@app.route('/api/session/new', methods=['GET'])
+def api_session_new():
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    yaml_filename = request.args.get('i', None)
+    if yaml_filename is None:
+        return jsonify_with_status("Parameter i is required.", 400)
+    secret = request.args.get('secret', None)
+    if secret is None:
+        new_secret = True
+        secret = random_string(16)
+    else:
+        new_secret = False
+    url_args = dict()
+    for argname in request.args:
+        if argname in ('i', 'secret', 'key'):
+            continue
+        if re.match('[A-Za-z_][A-Za-z0-9_]*', argname):
+            url_args[argname] = request.args[argname]
+    try:
+        (encrypted, session_id) = create_new_interview(yaml_filename, secret, url_args=url_args, request=request)
+    except Exception as err:
+        return jsonify_with_status(str(err), 400)
+    if encrypted and new_secret:
+        return jsonify(dict(session=session_id, i=yaml_filename, secret=secret, encrypted=encrypted))
+    else:
+        return jsonify(dict(session=session_id, i=yaml_filename, encrypted=encrypted))
+        
+def create_new_interview(yaml_filename, secret, url_args=None, request=None):
+    session_id, user_dict = reset_session(yaml_filename, secret)
+    obtain_lock(session_id, yaml_filename)
+    add_referer(user_dict)
+    if url_args:
+        for key, val in url_args.iteritems():
+            exec("url_args['" + key + "'] = " + repr(val.encode('unicode_escape')), user_dict)
+    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
+    try:
+        interview.assemble(user_dict, interview_status)
+    except Exception as e:
+        release_lock(session_id, yaml_filename)
+        raise Exception("Failure to assemble interview: " + str(e))
+    if user_dict.get('multi_user', False) is True:
+        encrypted = False
+    else:
+        encrypted = True
+    save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=encrypted, changed=True, steps=1)
+    release_lock(session_id, yaml_filename)
+    return (encrypted, session_id)
+
+@app.route('/api/session/question', methods=['GET'])
+def api_session_question():
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    yaml_filename = request.args.get('i', None)
+    session_id = request.args.get('session', None)
+    secret = request.args.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
+    if yaml_filename is None or session_id is None:
+        return jsonify_with_status("Parameters i and session are required.", 400)
+    try:
+        data = get_question_data(yaml_filename, session_id, secret)
+    except Exception as err:
+        return jsonify_with_status(str(err), 400)
+    return jsonify(**data)    
+
+def get_question_data(yaml_filename, session_id, secret):
+    obtain_lock(session_id, yaml_filename)
+    try:
+        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+    except Exception as err:
+        release_lock(session_id, yaml_filename)
+        raise Exception("Unable to obtain interview dictionary: " + str(err))
+    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
+    try:
+        interview.assemble(user_dict, interview_status)
+    except Exception as e:
+        release_lock(session_id, yaml_filename)
+        raise Exception("Failure to assemble interview: " + str(e))
+    save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
+    release_lock(session_id, yaml_filename)
+    if interview_status.question.language != '*':
+        interview_language = interview_status.question.language
+    else:
+        interview_language = DEFAULT_LANGUAGE
+    interview_status.exit_link = interview_status.question.interview.get_title(user_dict).get('exit link', 'exit')
+    interview_status.exit_label = interview_status.question.interview.get_title(user_dict).get('exit label', 'Exit')
+    interview_status.title = interview_status.question.interview.get_title(user_dict).get('full', default_title)
+    interview_status.display_title = interview_status.question.interview.get_title(user_dict).get('logo', interview_status.title)
+    interview_status.tabtitle = interview_status.question.interview.get_title(user_dict).get('tab', interview_status.title)
+    interview_status.short_title = interview_status.question.interview.get_title(user_dict).get('short', interview_status.question.interview.get_title(user_dict).get('full', default_short_title))
+    interview_status.display_short_title = interview_status.question.interview.get_title(user_dict).get('logo', interview_status.short_title)
+    if interview_status.question.can_go_back and (steps - user_dict['_internal']['steps_offset']) > 1:
+        allow_going_back = True
+    else:
+        allow_going_back = False
+    data = dict(browser_title=interview_status.tabtitle, exit_link=interview_status.exit_link, exit_label=interview_status.exit_label, title=interview_status.title, display_title=interview_status.display_title, short_title=interview_status.short_title, lang=interview_language, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log())
+    data.update(interview_status.as_data())
+    if interview_status.question.question_type == "review":
+        next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
+    else:
+        next_action_review = None
+    if 'reload_after' in interview_status.extras:
+        reload_after = 1000 * int(interview_status.extras['reload_after'])
+    else:
+        reload_after = 0
+    if next_action_review:
+        data['next_action'] = next_action_review
+    if reload_after and reload_after > 0:
+        data['reload_after'] = reload_after
+    return data
+
+@app.route('/api/session/action', methods=['POST'])
+@csrf.exempt
+def api_session_action():
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    post_data = request.form.copy()
+    yaml_filename = post_data.get('i', None)
+    session_id = post_data.get('session', None)
+    secret = post_data.get('secret', None)
+    action = post_data.get('action', None)
+    if yaml_filename is None or session_id is None or action is None:
+        return jsonify_with_status("Parameters i, session, and action are required.", 400)
+    secret = str(secret)
+    if 'arguments' in post_data:
+        try:
+            arguments = json.loads(post_data.get('arguments', dict()))
+        except:
+            return jsonify_with_status("Malformed arguments.", 400)
+        if type(arguments) is not dict:
+            return jsonify_with_status("Arguments data is not a dict.", 400)
+    else:
+        arguments = dict()
+    obtain_lock(session_id, yaml_filename)
+    try:
+        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+    except:
+        release_lock(session_id, yaml_filename)
+        return jsonify_with_status("Unable to obtain interview dictionary.", 400)
+    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=action, arguments=arguments)))
+    try:
+        interview.assemble(user_dict, interview_status)
+    except Exception as e:
+        release_lock(session_id, yaml_filename)
+        return jsonify_with_status("Failure to assemble interview: " + str(e), 400)
+    save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
+    release_lock(session_id, yaml_filename)
+    if interview_status.question.question_type == "response":
+        if hasattr(interview_status.question, 'all_variables'):
+            response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict).encode('utf8'), '200 OK')
+        elif hasattr(interview_status.question, 'binaryresponse'):
+            response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
+        else:
+            response_to_send = make_response(interview_status.questionText.encode('utf8'), '200 OK')
+        response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
+        return response_to_send
+    elif interview_status.question.question_type == "sendfile":
+        if interview_status.question.response_file is not None:
+            the_path = interview_status.question.response_file.path()
+        else:
+            return jsonify_with_status("Could not send file because the response was None", 404)
+        if not os.path.isfile(the_path):
+            return jsonify_with_status("Could not send file because " + str(the_path) + " not found", 404)
+        response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
+        response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        return response_to_send
+    else:
+        return ('', 204)
+    
 @app.route('/api/list', methods=['GET'])
 def api_list():
     if not api_verify(request):
-        return jsonify_with_status(dict(error="Access denied."), 403)
+        return jsonify_with_status("Access denied.", 403)
     return jsonify(interview_menu(absolute_urls=true_or_false(request.args.get('absolute_urls', True))))
 
-@app.route('/api/interviews', methods=['GET', 'DELETE'])
-def api_interviews():
+@app.route('/api/user/interviews', methods=['GET', 'DELETE'])
+@csrf.exempt
+def api_user_interviews():
     if not api_verify(request):
-        return jsonify_with_status(dict(error="Access denied."), 403)
+        return jsonify_with_status("Access denied.", 403)
+    filename = request.args.get('i', None)
+    session = request.args.get('session', None)
     tag = request.args.get('tag', None)
     secret = request.args.get('secret', None)
     if secret is not None:
         secret = str(secret)
     include_dict = true_or_false(request.args.get('include_dictionary', False))
-    logmessage("Current user is " + str(current_user.id) + " and secret is " + str(secret))
     if request.method == 'GET':
-        return jsonify(docassemble.base.functions.safe_json(user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=False, tag=tag, include_dict=include_dict)))
+        try:
+            the_list = user_interviews(user_id=current_user.id, secret=secret, filename=filename, session=session, exclude_invalid=False, tag=tag, include_dict=include_dict)
+        except:
+            return jsonify_with_status("Error reading interview list.", 400)            
+        return jsonify(docassemble.base.functions.safe_json(the_list))
     elif request.method == 'DELETE':
-        filename = request.args.get('filename', None)
-        session = request.args.get('session', None)
-        if (filename is not None and session is None) or (filename is None and session is not None):
-            return jsonify_with_status(dict(error="To delete an interview, both filename and session must be provided"), 400)
-        if (filename is not None and session is not None):
-            user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=False, action='delete', filename=filename, session=session, tag=tag)
-        else:
-            user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=False, action='delete_all', tag=tag)
+        try:
+            the_list = user_interviews(user_id=current_user.id, filename=filename, session=session, exclude_invalid=False, tag=tag)
+        except:
+            return jsonify_with_status("Error reading interview list.", 400)
+        for info in the_list:
+            user_interviews(user_id=info['user_id'], action='delete', filename=info['filename'], session=info['session'])
         return ('', 204)
-    
+
+@app.route('/api/interviews', methods=['GET', 'DELETE'])
+@csrf.exempt
+def api_interviews():
+    if not api_verify(request, roles=['admin']):
+        return jsonify_with_status("Access denied.", 403)
+    filename = request.args.get('i', None)
+    session = request.args.get('session', None)
+    tag = request.args.get('tag', None)
+    secret = request.args.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
+    include_dict = true_or_false(request.args.get('include_dictionary', False))
+    if request.method == 'GET':
+        try:
+            the_list = user_interviews(secret=secret, filename=filename, session=session, exclude_invalid=False, tag=tag, include_dict=include_dict)
+        except Exception as err:
+            return jsonify_with_status("Error reading interview list: " + str(err), 400)            
+        return jsonify(docassemble.base.functions.safe_json(the_list))
+    elif request.method == 'DELETE':
+        try:
+            the_list = user_interviews(filename=filename, session=session, exclude_invalid=False, tag=tag)
+        except:
+            return jsonify_with_status("Error reading interview list.", 400)
+        for info in the_list:
+            user_interviews(user_id=info['user_id'], action='delete', filename=info['filename'], session=info['session'])
+        return ('', 204)
+
 @app.route('/manage_api', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -15460,9 +15888,17 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          retrieve_emails=retrieve_emails,
                                          get_short_code=get_short_code,
                                          make_png_for_pdf=make_png_for_pdf,
+                                         task_ready=task_ready,
                                          wait_for_task=wait_for_task,
                                          user_interviews=user_interviews,
                                          interview_menu=interview_menu,
+                                         get_user_list=get_user_list,
+                                         get_user_info=get_user_info,
+                                         set_user_info=set_user_info,
+                                         make_user_inactive=make_user_inactive,
+                                         get_secret=get_secret,
+                                         get_session_variables=get_session_variables,
+                                         set_session_variables=set_session_variables,
                                          file_set_attributes=file_set_attributes,
                                          fg_make_png_for_pdf=fg_make_png_for_pdf)
 #docassemble.base.util.set_user_id_function(user_id_dict)

@@ -33,7 +33,7 @@ from user_agents import parse as ua_parse
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'get_session_variables', 'set_session_variables']
 
 # debug = False
 # default_dialect = 'us'
@@ -146,11 +146,11 @@ def reset_gathering_mode(*pargs):
         del this_thread.gathering_mode[item]
 
 def set_uid(uid):
-    this_thread.uid = uid
+    this_thread.session_id = uid
 
 def get_uid():
-    if this_thread.uid is not None:
-        return this_thread.uid
+    if this_thread.session_id is not None:
+        return this_thread.session_id
     try:
         return this_thread.current_info['session']
     except:
@@ -2095,9 +2095,11 @@ def variables_as_json():
     """Sends an HTTP response with all variables in JSON format."""
     raise ResponseError(None, all_variables=True)
 
-def all_variables():
+def all_variables(simplify=True):
     """Returns the interview variables as a dictionary suitable for export to JSON or other formats."""
-    return serializable_dict(get_user_dict())
+    if simplify:
+        return serializable_dict(get_user_dict())
+    return pickleable_objects(get_user_dict())
 
 def command(*pargs, **kwargs):
     """Executes a command, such as exit, logout, restart, or leave."""
@@ -2900,10 +2902,7 @@ def decode_name(var):
     return(codecs.decode(var, 'base64').decode('utf8'))
 
 def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None):
-    """Returns a list of interviews that the user has started, or None if
-    the user is not logged in.
-
-    """
+    """Returns a list of interviews that users have started."""
     if this_thread.current_info['user']['is_authenticated']:
         if user_id == 'all':
             user_id = None
@@ -2921,3 +2920,44 @@ def interview_list(exclude_invalid=True, action=None, filename=None, session=Non
 def interview_menu():
     """Returns the list of interviews that is offered at /list."""
     return server.interview_menu()
+
+def get_user_list(include_inactive=False):
+    """Returns a list of users on the system."""
+    if this_thread.current_info['user']['is_authenticated']:
+        return server.get_user_list(include_inactive=include_inactive)
+    return None
+
+def get_user_info(user_id=None, email=None):
+    """Returns information about the given user, or the current user, if no user ID or e-mail is provided."""
+    if this_thread.current_info['user']['is_authenticated']:
+        if user_id is None and email is None:
+            user_id = this_thread.current_info['user']['the_user_id']
+        return server.get_user_info(user_id=user_id, email=email)
+    return None
+
+def set_user_info(**kwargs):
+    """Sets information about the given user, or the current user, if no user ID or e-mail is provided"""
+    user_id = kwargs.get('user_id', None)
+    email = kwargs.get('email', None)
+    server.set_user_info(**kwargs)
+    if (user_id is None and email is None) or (user_id is not None and user_id == this_thread.current_info['user']['id']) or (email is not None and email == this_thread.current_info['user']['email']):
+        for key, val in kwargs.iteritems():
+            if key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
+                this_thread.current_info['user'][key] = val
+
+def get_user_secret(username, password):
+    """Tests the username and password and if they are valid, returns the
+    decryption key for the user account.
+
+    """
+    return server.get_secret(username, password)
+
+def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
+    """Returns the interview dictionary for the given interview session."""
+    return server.get_session_variables(yaml_filename, session_id, secret=secret, simplify=True)
+
+def set_session_variables(yaml_filename, session_id, variables, secret=None):
+    """Sets variables in the interview dictionary for the given interview session."""
+    if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
+        raise Exception("You cannot set variables in the current interview session")
+    server.set_session_variables(yaml_filename, session_id, variables, secret=secret)

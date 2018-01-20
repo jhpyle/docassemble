@@ -1898,11 +1898,12 @@ class DAFile(DAObject):
         the_path = self.file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
         if not os.path.isfile(the_path):
             server.fg_make_png_for_pdf(self, 'screen', page=page)
-    def make_pngs(self):
+    def pngs_ready(self):
         """Creates page images for a PDF file."""
         self._make_pngs_for_pdf()
-        server.wait_for_task(self._taskscreen, timeout=60)
-        server.wait_for_task(self._taskpage, timeout=60)
+        if server.task_ready(self._taskscreen) and server.task_ready(self._taskpage):
+            return True
+        return False
     def _make_pngs_for_pdf(self):
         if not hasattr(self, '_taskscreen'):
             setattr(self, '_taskscreen', server.make_png_for_pdf(self, 'screen'))

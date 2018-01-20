@@ -209,6 +209,12 @@ def load(**kwargs):
         daconfig['verification code digits'] = 6
     if 'verification code timeout' not in daconfig or type(daconfig['verification code timeout']) not in [int, float] or daconfig['verification code timeout'] < 1:
         daconfig['verification code timeout'] = 180
+    if 'api privileges' in daconfig:
+        if type(daconfig['api privileges']) is not list:
+            sys.stderr.write("api privileges must be in the form of a list\n")
+            daconfig['api privileges'] = ['admin', 'developer']
+    else:
+        daconfig['api privileges'] = ['admin', 'developer']
     if 'two factor authentication privileges' in daconfig:
         if type(daconfig['two factor authentication privileges']) is not list:
             sys.stderr.write("two factor authentication privileges must be in the form of a list\n")
