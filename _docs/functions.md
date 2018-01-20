@@ -354,6 +354,11 @@ or other formats.  Each [object] is converted to a
 [Python dictionary].  Each [`datetime`] object is converted to its
 `isoformat()`.  Other objects are converted to `None`.
 
+If you want the raw [Python] dictionary, you can call
+`all_variables(simplify=False)`.  However, you should never
+save the result of this function to your interview, because then your
+interview dictionary will double in size.
+
 # <a name="special responses"></a>Functions for special responses
 
 ## <a name="message"></a>message()
@@ -2685,16 +2690,19 @@ the condition is true.
 The `showifdef()` function is like `showif()`, except that the value
 of the variable is only returned if the variable is defined.
 
-# <a name="functions"></a>Miscellaneous functions
+# <a name="admin"></a>Administrative functions
 
 ## <a name="interview_list"></a>interview_list()
 
 If the current user is logged in, `interview_list()` returns a list of
 dictionaries indicating information about the user's interview
 sessions.  This function provides a programmatic version of the screen
-available at `/interviews`.
+available at `/interviews`.  In addition, the optional keyword
+parameter `user_id` can be used (by a user with `admin` privileges) to
+get information about interviews owned by other people.
 
-The keys in each dictionary are:
+In the list of dictionaries returned by the function, the keys of each
+dictionary are:
 
 * `dict`: the interview dictionary for the session.
 * `email`: the e-mail address of the user who started the interview.
@@ -2711,17 +2719,81 @@ The keys in each dictionary are:
 * `subtitle`: the [subtitle](#get_title) of the interview.
 * `utc_modtime`: the modification time of the interview, in [UTC].
 * `utc_starttime`: the start time of the interview, in [UTC].
-* `valid`: whether the interview session can be resumed.  Sometimes
-  there is an error with the interview that prevents it from being
-  resumed.
+* `valid`: whether the interview session can be resumed.  This will be
+  `False` if there is an error with the interview that prevents it
+  from being resumed, or the interview is not able to be decrypted.
+
+The following question will display a list of the titles of each
+interview session belonging to the current user:
+
+{% highlight yaml %}
+question: Sessions
+subquestion: |
+  % for info in interview_list()
+  * ${ info['title'] }
+  % endfor
+{% endhighlight %}
+
+To limit the results to sessions involving specific interviews, you
+can provide the optional keyword argument `filename`:
+
+{% highlight yaml %}
+question: Session start times
+subquestion: |
+  % for info in interview_list(filename='docassemble.demo:data/questions/questions.yml')
+  * ${ info['starttime'] }
+  % endfor
+{% endhighlight %}
+
+If the current user has `admin` privileges, the optional keyword
+argument `user_id` can be used to retrieve a list of interview
+sessions belonging to another user:
+
+{% highlight yaml %}
+question: Sessions John has started
+subquestion: |
+  % for info in interview_list(user_id=22)
+  * ${ info['title'] }
+  % endfor
+{% endhighlight %}
+
+Or, if you want to list sessions belonging to any user, you can set
+`user_id` to `'all'`.
+
+{% highlight yaml %}
+question: Who has what session
+subquestion: |
+  % for info in interview_list(filename='docassemble.demo:data/questions/questions.yml', user_id='all'):
+  * ${ info['email'] } started at ${ info['starttime'] }.
+  % endfor
+{% endhighlight %}
+
+Since the information about each interview could include the interview
+dictionary, to avoid storing all of this information in your own
+dictionary, it is a good idea to avoid keeping interview information
+around when you are done using it.  For example, this interview runs
+`del` to ensure that the variable `info` is not left over when the for
+loop completes its work:
+
+{% highlight yaml %}
+code: |
+  users = set()
+  for info in interview_list():
+    users.add(info['email'])
+    del info
+{% endhighlight %}
 
 The `interview_list()` function takes an optional keyword argument
 `exclude_invalid`.  If this is set to `False`, a session will be
 included even if there is an error that would prevent the session from
-being resumed.  By default, `exclude_invalue` is `True`, meaning that
+being resumed.  By default, `exclude_invalid` is `True`, meaning that
 sessions will only be included if they can be resumed.  You can check
 whether as session can be resumed by checking the value of the `valid`
-key.
+key.  The most common reason for an interview not to be `valid` is
+that the current user does not have an encryption key that decrypts
+the interview answers; so an interview belonging to someone else might
+be not `valid` for you, but `valid` for the user who started that
+interview.
 
 You can also use `interview_list()` to delete interview sessions.  If
 you set the optional keyword parameter `action` to `'delete_all'`, all
@@ -2734,6 +2806,9 @@ ID of the session.
 This function can be useful in interviews that replace the standard
 list of user sessions.  See the [`session list interview`]
 configuration directive for more information.
+
+For [API] versions of this function, see [`/api/interviews`],
+[`/api/user/interviews`], and [`/api/user/<user_id>/interviews`].
 
 ## <a name="interview_menu"></a>interview_menu()
 
@@ -2770,6 +2845,203 @@ This function can be useful in interviews that replace the standard
 list of available interviews.  See the [`dispatch interview`]
 configuration directive for more information.
 
+For an [API] version of this function, see [`/api/list`].
+
+## <a name="get_user_list"></a>get_user_list()
+
+The [`get_user_list()`] function returns a list of registered users on
+the server.  If the optional keyword parameter `include_inactive` is
+set to `True`, then any inactive users are included in the results;
+otherwise they are excluded.
+
+The function returns a [Python list] of [Python dictionaries], where
+each dictionary has the following keys:
+
+ - `active`: whether the user is active.  This is only included if the
+   `include_inactive` parameter is set.
+ - `country`: user's country code.
+ - `email`: user's e-mail address.
+ - `first_name`: user's first name.
+ - `id`: the integer ID of the user. 
+ - `language`: user's language code.
+ - `last_name`: user's last name.
+ - `organization`: user's organization 
+ - `roles`: a [Python list] of the user's privileges (e.g., `'admin'`,
+   `'developer'`).
+ - `subdivisionfirst`: user's state.
+ - `subdivisionsecond`: user's county.
+ - `subdivisionthird`: user's municipality.
+ - `timezone`: user's time zone (e.g. `'America/New_York'`).
+
+For an [API] version of this function, see [`/api/user_list`].
+
+## <a name="get_user_info"></a>get_user_info()
+
+The [`get_user_info()`] function is like [`get_user_list()`], except
+it only returns information about one user at a time.  If called
+without arguments, it returns a [Python dictionary] of information
+about the current user.  The function can also take a user ID as an
+argument (e.g., `get_user_info(user_id=22)`), or an e-mail address as
+an argument (e.g., `get_user_info(email='jsmith@example.com')`, in
+which case it returns information about the user with that user ID or
+e-mail address.  If no user is found, `None` is returned.
+
+Only users with `admin` privileges can see information about other
+users.
+
+This function will only work if the user running the interview that
+calls the function is logged in.
+
+For [API] versions of this function, see [`/api/user`] and
+[`/api/user/<user_id>`].  (Searching by e-mail address is not
+supported in the [API].)
+
+## <a name="set_user_info"></a>set_user_info()
+
+The [`set_user_info()`] function writes information to user profiles.
+
+It accepts the following keyword parameters, all of which are
+optional:
+
+ - `country`: user's country code.
+ - `first_name`: user's first name.
+ - `language`: user's language code.
+ - `last_name`: user's last name.
+ - `organization`: user's organization 
+ - `subdivisionfirst`: user's state.
+ - `subdivisionsecond`: user's county.
+ - `subdivisionthird`: user's municipality.
+ - `timezone`: user's time zone (e.g. `'America/New_York'`).
+
+The current user's profile will be updated with the values of the
+parameters.  Note that the `user_id`, `email`, and `role` settings
+cannot be changed with this function.
+
+This function will only work if the user running the interview that
+calls the function is logged in.
+
+Here is an example of a code block that updates the name of the user:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  set_user_info(first_name=user.name.first, last_name=user.name.last)
+{% endhighlight %}
+
+If the user running the interview that calls the function has `admin`
+privileges, then the function can be used to change the profiles of
+other users.  A user account can be indicated by the inclusion of an
+additional keyword parameter, `user_id` or `email`, that identifies
+the user whose profile should be changed.
+
+For example, the following [Python] code, when run by a user with
+`admin` privileges, will change the "organization" setting of the user
+`jsmith@example.com`:
+
+{% highlight python %}
+set_user_info(email='jsmith@example.com', organization='Example, Inc.')
+{% endhighlight %}
+
+Users with `admin` privileges can disable user accounts by setting the
+`active` parameter to `False` (or enable a disabled account by setting
+`active` to `True`.
+
+For an [API] version of this function, see the [POST method of
+`/api/user/<user_id>`] and the [DELETE method of
+`/api/user/<user_id>`].  (Changing accounts by e-mail address is
+not supported in the [API].)
+
+## <a name="get_user_secret"></a>get_user_secret()
+
+The [`get_user_secret()`] function takes an e-mail address and a
+password as arguments and returns a decryption key if the e-mail
+address/password combination is valid.  You will need this decryption
+key in order to use [`get_session_variables()`] and
+[`set_session_variables()`] with interview answers that are encrypted.
+
+{% highlight python %}
+secret = get_user_secret('jsmith@example.com', 'xx_Secr3t_xx')
+{% endhighlight %}
+
+Note that you need to keep decryption keys secret, or else you defeat
+the purpose of server-side encryption.  The idea behind server-side
+encryption is that if a system's security is breached, and all the
+data on the server is revealed, the information would still be
+protected because it is encrypted.  But if the decryption key is
+stored on the server in an accessible place, then the information
+would no longer be protected, since someone who found the decryption
+key could decrypt the data.  Thus, you would not want to store the
+result of [`get_user_secret()`] in the interview dictionary of an
+interview that sets [`multi_user`] to `True`.  Also, even if your
+interview answers are encrypted, it is still a good idea to avoid
+storing passwords or decryption keys in an interview dictionary.
+
+For an [API] version of this function, see [`/api/secret`].
+
+## <a name="get_session_variables"></a>get_session_variables()
+
+The [`get_session_variables()`] function retrieves the interview
+dictionary for an interview.  It has two required arguments: an
+interview filename (e.g.,
+`'docassemble.demo:data/questions/questions.yml'`), a session ID
+(e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`).  In addition, it can
+take a third argument, an encryption key for decrypting the interview
+answers.  If the interview is encrypted, the third argument is
+required.
+
+To get the interview filename for the current interview, and the
+session ID for the current interview session, you can use the
+[`user_info()`] function.
+
+However, note that if you want to get the interview dictionary for the
+current interview, you can simply use the [`all_variables()`]
+function.
+
+To obtain an encryption key, you can use [`get_user_secret()`].
+
+Like the [`all_variables()`] function, [`get_session_variables()`]
+simplifies the dictionary (converting objects to dictionaries, for
+example), so that it is safe to convert the result to a format like
+[JSON].  If you want the raw [Python dictionary], you can call
+[`get_session_variables()`] with the optional keyword parameter
+`simplify` set to `False`.
+
+{% highlight python %}
+vars = get_session_variables(filename, session_id, secret, simplify=False)
+{% endhighlight %}
+
+For an [API] version of this function, see the [GET method of `/api/session`].
+
+## <a name="set_session_variables"></a>set_session_variables()
+
+The [`set_session_variables()`] function allows you to write changes
+to any interview dictionary.  It has three required arguments: an
+interview filename (e.g.,
+`'docassemble.demo:data/questions/questions.yml'`), a session ID
+(e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`), and a [Python
+dictionary] containing the variables you want to set.  In addition, it
+can take a fourth argument, an encryption key for decrypting the
+interview answers.  If the interview is encrypted, the fourth argument
+is required.
+
+For example, if you run this:
+
+{% highlight python %}
+vars = {"defense['latches']": False, "client.phone_number": "202-555-3434"}
+set_session_variables(filename, session_id, vars, secret)
+{% endhighlight %}
+
+Then the following statements will be executed in the interview dictionary:
+
+{% highlight python %}
+defense['latches'] = False
+client.phone_number = u'202-555-3434'
+{% endhighlight %}
+
+For an [API] version of this function, see the [POST method of `/api/session`].
+
+# <a name="functions"></a>Miscellaneous functions
+
 ## <a name="server_capabilities"></a>server_capabilities()
 
 The `server_capabilities()` function returns a dictionary indicating
@@ -2797,7 +3069,7 @@ The keys are:
   configuration.
 * `azure` - whether [Azure blob storage] is enabled.  See the [`azure`]
   configuration.
-* `googledrive` - whether [Google Drive Synchronization] is
+* `googledrive` - whether [Google Drive synchronization] is
   available.  See the [`googledrive`] configuration.
 * `github` - whether developers have the option of integrating their
   [Playground]s with [GitHub].  See the [`github`] configuration.
@@ -4697,3 +4969,23 @@ $(document).on('daPageLoad', function(){
 [fax status values]: https://www.twilio.com/docs/api/fax/rest/faxes#fax-status-values
 [.docx template file]: {{ site.baseurl }}/docs/documents.html#docx template file
 [Jinja2]: http://jinja.pocoo.org/docs/2.9/
+[`/api/list`]: {{ site.baseurl }}/docs/api.html#list
+[`/api/interviews`]: {{ site.baseurl }}/docs/api.html#interviews
+[`/api/user/interviews`]: {{ site.baseurl }}/docs/api.html#user_interviews
+[`/api/user/<user_id>/interviews`]: {{ site.baseurl }}/docs/api.html#user_user_id_interviews
+[`/api/user_list`]: {{ site.baseurl }}/docs/api.html#user_list
+[`/api/user`]: {{ site.baseurl }}/docs/api.html#user
+[`/api/user/<user_id>`]: {{ site.baseurl }}/docs/api.html#user_user_id
+[POST method of `/api/user/<user_id>`]: {{ site.baseurl }}/docs/api.html#user_user_id_post
+[DELETE method of `/api/user/<user_id>`]: {{ site.baseurl }}/docs/api.html#user_user_id_delete
+[`/api/secret`]: {{ site.baseurl }}/docs/api.html#secret
+[GET method of `/api/session`]: {{ site.baseurl }}/docs/api.html#session_get
+[POST method of `/api/session`]: {{ site.baseurl }}/docs/api.html#session_post
+[`get_user_list()`]: #get_user_list
+[`get_user_secret()`]: #get_user_secret
+[`get_session_variables()`]: #get_session_variables
+[`set_session_variables()`]: #set_session_variables
+[API]: {{ site.baseurl }}/docs/api.html
+[`get_user_info()`]: #get_user_info
+[`set_user_info()`]: #set_user_info
+[Google Drive synchronization]: {{ site.baseurl }}/docs/playground.html#google drive

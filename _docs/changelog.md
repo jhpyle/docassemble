@@ -4,6 +4,24 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.22](https://github.com/jhpyle/docassemble/releases/tag/v0.2.22) - 2018-01-17
+
+### Added
+- API interface
+
+### Fixed
+- Result of `user_interviews()` was reporting wrong `utc_modtime`.
+- Error with `google maps api key` when `api key` alone was set under
+  `google` in the Configuration.
+
+## [0.2.21](https://github.com/jhpyle/docassemble/releases/tag/v0.2.21) - 2018-01-15
+
+### Added
+- The `get_chat_log()` function.
+
+### Fixed
+- Problem with formatting of chat log after going back into a session.
+
 ## [0.2.20](https://github.com/jhpyle/docassemble/releases/tag/v0.2.20) - 2018-01-14
 
 ### Added

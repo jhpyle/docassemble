@@ -1510,6 +1510,19 @@ work, you can change the URL that **docassemble** uses by setting the
 ec2 ip url: http://169.254.169.254/latest/meta-data/local-ipv4
 {% endhighlight %}
 
+## <a name="api privileges"></a>API usage
+
+By default, only users with privileges of `admin` or `developer` may
+obtain an API key in order to use the **docassemble** [API].  You can
+change this by editing the `api privileges`.
+
+{% highlight yaml %}
+api privileges:
+  - admin
+  - developer
+  - user
+{% endhighlight %}
+
 ## <a name="password login"></a>Password login
 
 If `password login` is set to `False`, then users will not see an
@@ -2299,3 +2312,4 @@ and Facebook API keys.
 [`worker_concurrency`]: http://docs.celeryproject.org/en/latest/userguide/configuration.html#worker-concurrency
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
 [fax sending]: {{ site.baseurl }}/docs/functions.html#send_fax
+[API]: {{ site.baseurl }}/docs/api.html
