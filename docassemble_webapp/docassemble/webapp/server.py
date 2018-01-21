@@ -3866,7 +3866,10 @@ def setup_celery_and_variables():
 
 @app.after_request
 def print_time_of_request(response):
-    sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " complete after " + str("%.5fs" % (time.time() - g.request_start_time)) + "\n")
+    time_spent = time.time() - g.request_start_time
+    sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " complete after " + str("%.5fs" % time_spent) + "\n")
+    if time_spent > 3.0 and hasattr(g, 'interview') and hasattr(g, 'interview_status'):
+        logmessage(get_history(g.interview, g.interview_status))
     return response
 
 # @app.before_request
@@ -4256,12 +4259,14 @@ def index():
         except:
             logmessage("index: bad key was " + str(key))
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    g.interview = interview
     if not interview.from_cache and len(interview.mlfields):
         ensure_training_loaded(interview)
     debug_mode = DEBUG or yaml_filename.startswith('docassemble.playground')
     # if should_assemble and '_action_context' in post_data:
     #     action = json.loads(myb64unquote(post_data['_action_context']))
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface), tracker=user_dict['_internal']['tracker'])
+    g.interview_status = interview_status
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
         should_assemble = True
     if should_assemble or something_changed:
