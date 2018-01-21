@@ -3869,7 +3869,7 @@ def print_time_of_request(response):
     time_spent = time.time() - g.request_start_time
     sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " complete after " + str("%.5fs" % time_spent) + "\n")
     if time_spent > 3.0 and hasattr(g, 'interview') and hasattr(g, 'interview_status'):
-        logmessage(get_history(g.interview, g.interview_status))
+        logmessage(to_text(get_history(g.interview, g.interview_status)))
     return response
 
 # @app.before_request
