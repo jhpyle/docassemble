@@ -347,10 +347,12 @@ function fillInAddress() {
   });
   var place = autocomplete.getPlace();
 
-  document.getElementById(id_for_part['address']).value = '';
+  if (document.getElementById(id_for_part['address']) != null){
+    document.getElementById(id_for_part['address']).value = '';
+  }
 
   for (var component in fields_to_fill) {
-    if (id_for_part[component] != undefined){
+    if (id_for_part[component] != undefined && document.getElementById(id_for_part[component]) != null){
       document.getElementById(id_for_part[component]).value = '';
     }
   }
@@ -360,19 +362,21 @@ function fillInAddress() {
 
   for (var i = 0; i < place.address_components.length; i++) {
     var addressType = place.address_components[i].types[0];
-    console.log(addressType);                  
+    //console.log(addressType);                  
     if (addressType == 'street_number'){
       street_number = place.address_components[i]['short_name'];
     }                
     if (addressType == 'route'){
       route = place.address_components[i]['long_name'];
     }                
-    if (componentForm[addressType] && id_for_part[componentTrans[addressType]]) {
+    if (componentForm[addressType] && id_for_part[componentTrans[addressType]] && document.getElementById(id_for_part[componentTrans[addressType]]) != null) {
       var val = place.address_components[i][componentForm[addressType]];
       document.getElementById(id_for_part[componentTrans[addressType]]).value = val;
     }
   }
-  document.getElementById(id_for_part['address']).value = street_number + " " + route;
+  if (document.getElementById(id_for_part['address']) != null){
+    document.getElementById(id_for_part['address']).value = street_number + " " + route;
+  }
 }
 
 function geolocate() {

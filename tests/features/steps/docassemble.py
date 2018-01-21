@@ -5,16 +5,31 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
+from random import randint
 import time
 import os
 import re
+
+def do_wait():
+    if world.wait_seconds > 0:
+        if world.wait_seconds > 3:
+            time.sleep(world.wait_seconds + randint(-2, 2))
+        else:
+            time.sleep(world.wait_seconds)
+
+def do_wait():
+    if world.wait_seconds > 0:
+        time.sleep(world.wait_seconds)
+
+@step('I spend at least ([0-9]+) seconds? on each page')
+def change_wait_seconds(step, secs):
+    world.wait_seconds = float(secs)
 
 @step('I click inside the signature area')
 def click_inside(step):
     elem = WebDriverWait(world.browser, 10).until(
         EC.presence_of_element_located((By.ID, "sigcanvas"))
     )
-    #elem = world.browser.find_element_by_xpath("//canvas")
     action = webdriver.common.action_chains.ActionChains(world.browser)
     action.move_to_element_with_offset(elem, 20, 20)
     action.click()
@@ -51,6 +66,7 @@ def set_text_area(step, value):
 
 @step('If I see it, I will click the link "([^"]+)"')
 def click_link_if_exists(step, link_name):
+    do_wait()
     try:
         world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
         world.browser.wait_for_it()
@@ -59,26 +75,30 @@ def click_link_if_exists(step, link_name):
 
 @step('I wait forever')
 def wait_forever(step):
-    time.sleep(999999999)
+    time.sleep(999999)
     world.browser.wait_for_it()
 
 @step('I start the interview "([^"]+)"')
 def start_interview(step, interview_name):
-    world.browser.get(world.da_path + "/?i=" + interview_name + '&cache=0')
-    #world.browser.wait_for_it()
+    do_wait()
+    world.browser.get(world.da_path + "/?i=" + interview_name + '&reset=1')
+    world.browser.wait_for_it()
 
 @step('I click the button "([^"]+)"')
 def click_button(step, button_name):
+    do_wait()
     world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
     world.browser.wait_for_it()
 
 @step('I click the link "([^"]+)"')
 def click_link(step, link_name):
+    do_wait()
     world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
     world.browser.wait_for_it()
 
 @step('I click the second link "([^"]+)"')
 def click_second_link(step, link_name):
+    do_wait()
     world.browser.find_element_by_xpath('(//a[text()="' + link_name + '"])[2]').click()
     world.browser.wait_for_it()
 
@@ -163,6 +183,7 @@ def url_of_page(step, url):
 
 @step('I exit by clicking "([^"]+)"')
 def exit_button(step, button_name):
+    do_wait()
     world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
     time.sleep(1.0)
 

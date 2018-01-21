@@ -2,21 +2,21 @@ Feature: Example interviews
   In order to ensure docassemble is running properly, I want
   to run the example interviews.
   
-  Scenario: Set up the server
-    Given I am using the server "http://localhost"
+  # Scenario: Set up the server
+  #   Given I am using the server "http://localhost"
   
-  Scenario: Test the interview "File upload"
-    Given I start the interview "docassemble.base:data/questions/examples/file.yml"
-    Then I should see the phrase "Please upload a file"
-    And I upload the file "../../octocat.png"
-    And I click the button "Continue"
-    And I wait 2 seconds
-    Then I should see the phrase "Here is the file you uploaded"
+  # Scenario: Test the interview "File upload"
+  #   Given I start the interview "docassemble.base:data/questions/examples/file.yml"
+  #   Then I should see the phrase "Please upload a file"
+  #   And I upload the file "../../octocat.png"
+  #   And I click the button "Continue"
+  #   And I wait 2 seconds
+  #   Then I should see the phrase "Here is the file you uploaded"
 
   Scenario: Test the interview "Action with arguments"
     Given I start the interview "docassemble.base:data/questions/examples/actions-parameters.yml"
     And I click the link "Add blue fish"
-    When I wait 1 second
+    When I wait 4 seconds
     Then I should see the phrase "You have 3 blue fishes"
     And I click the button "Continue"
     Then I should see the phrase "You have 3 blue fishes"
@@ -31,7 +31,8 @@ Feature: Example interviews
 
   Scenario: Test the interview "Age of Individual"
     Given I start the interview "docassemble.base:data/questions/examples/age_in_years.yml"
-    And I set the text box to "3/31/1977"
+    Then I should see the phrase "What is your date of birth?"
+    And I set the text box to "03/31/1977"
     And I click the button "Continue"
     Then I should see the phrase "You are 40 years old"
 
@@ -59,16 +60,19 @@ Feature: Example interviews
     Then I should see the phrase "I am glad you are doing well"
     And I should see the phrase "Your favorite color is red"
 
-  Scenario: Test the interview "Disallowing e-mailing"
+  Scenario: Test the interview "Disallowing e-mailing 1"
     Given I start the interview "docassemble.base:data/questions/examples/allow-emailing-false-pdf.yml"
+    And I wait 5 seconds
     Then I should not see the phrase "E-mail this document"
 
-  Scenario: Test the interview "Disallowing e-mailing"
+  Scenario: Test the interview "Disallowing e-mailing 2"
     Given I start the interview "docassemble.base:data/questions/examples/allow-emailing-false.yml"
+    And I wait 5 seconds
     Then I should not see the phrase "E-mail this document"
 
   Scenario: Test the interview "Allowing documents to be e-mailed"
     Given I start the interview "docassemble.base:data/questions/examples/allow-emailing-true.yml"
+    And I wait 5 seconds
     Then I should see the phrase "E-mail this document"
 
   Scenario: Test the interview "Checkbox method"
@@ -95,6 +99,7 @@ Feature: Example interviews
     When I click the button "Continue"
     Then I should see the phrase "My favorite animal is the pig, too"
     When I exit by clicking "Exit"
+    And I wait 5 seconds
     Then I should see "Docassemble" as the title of the page
     And I should see "https://docassemble.org/" as the URL of the page
     
@@ -123,17 +128,20 @@ Feature: Example interviews
 
   Scenario: Test the interview "Computed attachment list"
     Given I start the interview "docassemble.base:data/questions/examples/attachment-code.yml"
+    And I wait 4 seconds
     Then I should see the phrase "The first document"
     And I should see the phrase "The second document"
     And I should see the phrase "The third document"
 
   Scenario: Test the interview "Attachment"
     Given I start the interview "docassemble.base:data/questions/examples/attachment-simple.yml"
+    And I wait 4 seconds
     Then I should see the phrase "A hello world document"
     And I should see the phrase "A document with a classic message"
 
   Scenario: Test the interview "Allowing documents to be e-mailed"
     Given I start the interview "docassemble.base:data/questions/examples/attachment.yml"
+    And I wait 4 seconds
     Then I should see the phrase "A hello world document"
     And I should see the phrase "A document with a classic message"
     And I should see the phrase "E-mail address"
@@ -147,53 +155,141 @@ Feature: Example interviews
   # Scenario: Test the interview "Audio"
   #   Given I start the interview "docassemble.base:data/questions/examples/audio.yml"
 
-  # Scenario: Test the interview "Global terms"
-  #   Given I start the interview "docassemble.base:data/questions/examples/auto-terms.yml"
+  Scenario: Test the interview "Global terms"
+    Given I start the interview "docassemble.base:data/questions/examples/auto-terms.yml"
+    Then I should see the phrase "Have you ever met a creeper?"
+    And I click the link "creeper"
+    Then I should see the phrase "A tall green creature that explodes if you get too close."
+    And I click the button "No"
+    Then I should see the phrase "You clearly need to play more Minecraft."
 
-  # Scenario: Test the interview "Return a value and show a message"
-  #   Given I start the interview "docassemble.base:data/questions/examples/background_action_flash.yml"
+  Scenario: Test the interview "Return a value and show a message"
+    Given I start the interview "docassemble.base:data/questions/examples/background_action_flash.yml"
+    Then I should see the phrase "How much shall I add to 553?"
+    And I set "Number" to "2"
+    And I click the button "Continue"
+    Then I should see the phrase "Your answer will appear shortly."
+    And I wait 10 seconds
+    Then I should see the phrase "The answer is 555."
+    And I click the button "Continue"
+    Then I should see the phrase "All done."
+    And I should see the phrase "The answer is 555."
 
   # Scenario: Test the interview "Return a value and run Javascript"
   #   Given I start the interview "docassemble.base:data/questions/examples/background_action_javascript.yml"
 
-  # Scenario: Test the interview "Set a variable and refresh the screen"
-  #   Given I start the interview "docassemble.base:data/questions/examples/background_action_refresh.yml"
+  Scenario: Test the interview "Set a variable and refresh the screen"
+    Given I start the interview "docassemble.base:data/questions/examples/background_action_refresh.yml"
+    Then I should see the phrase "How much shall I add to 553?"
+    And I set "Number" to "2"
+    And I click the button "Continue"
+    And I wait 12 seconds
+    Then I should see the phrase "The answer is 555."
 
-  # Scenario: Test the interview "Set a variable"
-  #   Given I start the interview "docassemble.base:data/questions/examples/background_action_with_response_action.yml"
+  Scenario: Test the interview "Set a variable"
+    Given I start the interview "docassemble.base:data/questions/examples/background_action_with_response_action.yml"
+    Then I should see the phrase "How much shall I add to 553?"
+    And I set "Number" to "2"
+    And I click the button "Continue"
+    Then I should see the phrase "Hang tight."
+    And I wait 12 seconds
+    Then I should see the phrase "The answer is 555."
 
-  # Scenario: Test the interview "Return a value"
-  #   Given I start the interview "docassemble.base:data/questions/examples/background_action.yml"
+  Scenario: Test the interview "Return a value"
+    Given I start the interview "docassemble.base:data/questions/examples/background_action.yml"
+    Then I should see the phrase "How much shall I add to 553?"
+    And I set "Number" to "2"
+    And I click the button "Continue"
+    Then I should see the phrase "Hang tight."
+    And I wait 12 seconds
+    Then I should see the phrase "The answer is 555."
 
-  # Scenario: Test the interview "Set a variable and show a message"
-  #   Given I start the interview "docassemble.base:data/questions/examples/background_response_action_flash.yml"
+  Scenario: Test the interview "Set a variable and show a message"
+    Given I start the interview "docassemble.base:data/questions/examples/background_response_action_flash.yml"
+    Then I should see the phrase "How much shall I add to 553?"
+    And I set "Number" to "2"
+    And I click the button "Continue"
+    Then I should see the phrase "Your answer will appear shortly."
+    And I wait 12 seconds
+    Then I should see the phrase "The answer is 555."
+    And I click the button "Continue"
+    Then I should see the phrase "The answer is 555."
 
-  # Scenario: Test the interview "Blank label"
-  #   Given I start the interview "docassemble.base:data/questions/examples/blank-label-field.yml"
+  Scenario: Test the interview "Blank label"
+    Given I start the interview "docassemble.base:data/questions/examples/blank-label-field.yml"
+    Then I should see the phrase "What is your Zodiac sign?"
+    And I set the text box to "Aries"
+    And I click the button "Continue"
+    Then I should see the phrase "target_variable is: “Aries”"
 
-  # Scenario: Test the interview "Object"
-  #   Given I start the interview "docassemble.base:data/questions/examples/branch-no-error.yml"
+  Scenario: Test the interview "Object"
+    Given I start the interview "docassemble.base:data/questions/examples/branch-no-error.yml"
+    Then I should see the phrase "What is the length of the branch on the tree?"
+    And I set "Length" to "30"
+    And I click the button "Continue"
+    Then I should see the phrase "The length of the branch is 30."
 
-  # Scenario: Test the interview "Buttons that run code"
-  #   Given I start the interview "docassemble.base:data/questions/examples/buttons-code-color.yml"
+  Scenario: Test the interview "Buttons that run code"
+    Given I start the interview "docassemble.base:data/questions/examples/buttons-code-color.yml"
+    Then I should see the phrase "What is your favorite color?"
+    And I click the button "Red"
+    Then I should see the phrase "Dark red or light red?"
+    And I click the button "Dark Red"
+    Then I should see the phrase "Your favorite color is Dark Red."
 
-  # Scenario: Test the interview "Buttons defined with list"
-  #   Given I start the interview "docassemble.base:data/questions/examples/buttons-code-list-equivalent.yml"
+  Scenario: Test the interview "Buttons defined with list" and understands
+    Given I start the interview "docassemble.base:data/questions/examples/buttons-code-list-equivalent.yml"
+    Then I should see the phrase "Your use of this system does not mean that you have a lawyer. Do you understand this?"
+    And I click the button "I understand"
+    Then I should see the phrase "target_variable is: “understands”"
 
-  # Scenario: Test the interview "Buttons defined with code"
-  #   Given I start the interview "docassemble.base:data/questions/examples/buttons-code-list-partial.yml"
+  Scenario: Test the interview "Buttons defined with list" and does not understand
+    Given I start the interview "docassemble.base:data/questions/examples/buttons-code-list-equivalent.yml"
+    Then I should see the phrase "Your use of this system does not mean that you have a lawyer. Do you understand this?"
+    And I click the button "I do not understand"
+    Then I should see the phrase "target_variable is: “does not understand”"
 
-  # Scenario: Test the interview "Buttons defined with code"
-  #   Given I start the interview "docassemble.base:data/questions/examples/buttons-code-list.yml"
+  Scenario: Test the interview "Buttons defined with list" and is not sure
+    Given I start the interview "docassemble.base:data/questions/examples/buttons-code-list-equivalent.yml"
+    Then I should see the phrase "Your use of this system does not mean that you have a lawyer. Do you understand this?"
+    And I click the button "I’m not sure"
+    Then I should see the phrase "target_variable is: “unsure”"
 
-  # Scenario: Test the interview "Buttons that run code"
-  #   Given I start the interview "docassemble.base:data/questions/examples/buttons-code.yml"
+  Scenario: Test the interview "Buttons defined with code"
+    Given I start the interview "docassemble.base:data/questions/examples/buttons-code-list-partial.yml"
+    Then I should see the phrase "Your use of this system does not mean that you have a lawyer. Do you understand this?"
+    And I click the button "I understand"
+    Then I should see the phrase "target_variable is: “understands”"
 
+  Scenario: Test the interview "Buttons defined with code"
+    Given I start the interview "docassemble.base:data/questions/examples/buttons-code-list.yml"
+    Then I should see the phrase "Your use of this system does not mean that you have a lawyer. Do you understand this?"
+    And I click the button "I understand"
+    Then I should see the phrase "target_variable is: “understands”"
+
+  Scenario: Test the interview "Buttons that run code" with Ford Focus
+    Given I start the interview "docassemble.base:data/questions/examples/buttons-code.yml"
+    Then I should see the phrase "What kind of car do you want?"
+    And I click the button "Ford Focus"
+    Then I should see the phrase "You need to go to a Ford dealership and ask if they have a Focus for sale."
+
+  Scenario: Test the interview "Buttons that run code" with Toyota Camry
+    Given I start the interview "docassemble.base:data/questions/examples/buttons-code.yml"
+    Then I should see the phrase "What kind of car do you want?"
+    And I click the button "Toyota Camry"
+    Then I should see the phrase "You need to go to a Toyota dealership and ask if they have a Camry for sale."
+    
   # Scenario: Test the interview "Buttons with icons from code"
   #   Given I start the interview "docassemble.base:data/questions/examples/buttons-icons-code-upload.yml"
 
-  # Scenario: Test the interview "Buttons with icons from code"
-  #   Given I start the interview "docassemble.base:data/questions/examples/buttons-icons-code.yml"
+  Scenario: Test the interview "Buttons with icons from code"
+    Given I start the interview "docassemble.base:data/questions/examples/buttons-icons-code.yml"
+    Then I should see the phrase "What is the most important question to ask?"
+    And I click the button "When?"
+    Then I should see the phrase "In that case, when were you born?"
+    And I set the text box to "1977"
+    And I click the button "Continue"
+    Then I should see the phrase "You were born in 1977."
 
   # Scenario: Test the interview "Buttons with icons"
   #   Given I start the interview "docassemble.base:data/questions/examples/buttons-icons.yml"

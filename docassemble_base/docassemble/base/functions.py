@@ -1186,7 +1186,7 @@ class ThreadVariables(threading.local):
     #user_dict = None
     initialized = False
     redis = None
-    uid = None
+    session_id = None
     current_package = None
     interview = None
     interview_status = None
@@ -1213,12 +1213,12 @@ this_thread = ThreadVariables()
 
 def backup_thread_variables():
     backup = dict()
-    for key in ['language', 'dialect', 'country', 'locale', 'user', 'role', 'current_info', 'internal', 'initialized', 'uid', 'gathering_mode', 'current_variable']:
+    for key in ['language', 'dialect', 'country', 'locale', 'user', 'role', 'current_info', 'internal', 'initialized', 'session_id', 'gathering_mode', 'current_variable']:
         backup[key] = copy.deepcopy(getattr(this_thread, key))
     return backup
 
 def restore_thread_variables(backup):
-    for key in ['language', 'dialect', 'country', 'locale', 'user', 'role', 'current_info', 'internal', 'initialized', 'uid', 'gathering_mode', 'current_variable']:
+    for key in ['language', 'dialect', 'country', 'locale', 'user', 'role', 'current_info', 'internal', 'initialized', 'session_id', 'gathering_mode', 'current_variable']:
         setattr(this_thread, key, backup[key])
 
 def background_response(*pargs, **kwargs):

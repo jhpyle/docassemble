@@ -15,6 +15,13 @@ from urllib import unquote
 from docassemble.base.config import daconfig, hostname, in_celery
 
 DEBUG = daconfig.get('debug', False)
+if DEBUG:
+    PREVENT_DEMO = False
+elif daconfig.get('allow demo', False):
+    PREVENT_DEMO = True
+else:
+    PREVENT_DEMO = False
+    
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 request_active = True
 
@@ -115,7 +122,7 @@ DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'en_US.utf8')
 DEFAULT_DIALECT = daconfig.get('dialect', 'us')
 LOGSERVER = daconfig.get('log server', None)
-CHECKIN_INTERVAL = daconfig.get('checkin interval', 6000)
+CHECKIN_INTERVAL = int(daconfig.get('checkin interval', 6000))
 #message_sequence = dbtableprefix + 'message_id_seq'
 
 if os.environ.get('SUPERVISOR_SERVER_URL', None):
@@ -3959,7 +3966,7 @@ def index():
         #logmessage("index: old_yaml_filename is " + str(old_yaml_filename))
         if old_yaml_filename != yaml_filename or reset_interview:
             #logmessage("index: change in yaml filename detected")
-            if (not DEBUG) and (yaml_filename.startswith('docassemble.base') or yaml_filename.startswith('docassemble.demo')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
+            if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base') or yaml_filename.startswith('docassemble.demo')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
                 raise DAError("Not authorized")
             show_flash = False
             session['i'] = yaml_filename
@@ -5698,6 +5705,7 @@ def index():
             });
         }
       }
+      var checkinSeconds = """ + str(CHECKIN_INTERVAL) + """;
       var checkinInterval = null;
       var daReloader = null;
       var dadisable = null;
@@ -5936,11 +5944,14 @@ def index():
       }
       function pushChanges(){
         //console.log("pushChanges");
+        if (checkinSeconds == 0){
+          return;
+        }
         if (checkinInterval != null){
           clearInterval(checkinInterval);
         }
         daCheckin();
-        checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
+        checkinInterval = setInterval(daCheckin, checkinSeconds);
       }
       function daProcessAjaxError(xhr, status, error){
         $("body").html(xhr.responseText);
@@ -6379,10 +6390,6 @@ def index():
           clearInterval(checkinInterval);
         }
       }
-      //function daStartCheckingIn(){
-      //  daStopCheckingIn();
-      //  checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
-      //}
       function showSpinner(){
         if ($("#question").length > 0){
           $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-lg-6 col-md-8 col-sm-10"><img class="da-spinner" src=""" + '"' + str(url_for('static', filename='app/loader.gif')) + '"' + """></div></div></div></div>').appendTo("body");
@@ -6771,8 +6778,10 @@ def index():
         if (checkinInterval != null){
           clearInterval(checkinInterval);
         }
-        setTimeout(daCheckin, 100);
-        checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
+        if (checkinSeconds > 0){
+          setTimeout(daCheckin, 100);
+          checkinInterval = setInterval(daCheckin, checkinSeconds);
+        }
         showNotifications();
         $(document).trigger('daPageLoad');
       }
@@ -6784,8 +6793,6 @@ def index():
         if (daReloadAfter > 0){
           daReloader = setTimeout(function(){daRefreshSubmit();}, daReloadAfter);
         }
-        // setTimeout(daCheckin, 100);
-        // checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
         window.onpopstate = function(event) {
           if (event.state != null && event.state.steps < daSteps && daAllowGoingBack){
             $("#backbutton").submit();
