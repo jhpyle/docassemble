@@ -1709,6 +1709,7 @@ def obtain_lock(user_code, filename):
         found = True
         count -= 1
     if found:
+        sys.stderr.write("Request for " + key + " deadlocked\n")
         release_lock(user_code, filename)
     pipe = r.pipeline()
     pipe.set(key, 1)
