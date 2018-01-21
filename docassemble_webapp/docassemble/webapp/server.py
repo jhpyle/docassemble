@@ -3870,8 +3870,8 @@ def print_time_of_request(response):
     sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " complete after " + str("%.5fs" % time_spent) + "\n")
     if time_spent > 3.0 and hasattr(g, 'interview') and hasattr(g, 'interview_status'):
         dur_to_status = g.status_created - g.request_start_time
-        dur_to_assembly_start = g.status_created - g.assembly_status
-        dur_to_assembly_end = g.status_created - g.assembly_status
+        dur_to_assembly_start = g.assembly_start - g.request_start_time
+        dur_to_assembly_end = g.assembly_end - g.request_start_time
         logmessage("Duration to status: %fs" % dur_to_status)
         logmessage("Duration to assembly start: %fs" % dur_to_assembly_start)
         logmessage("Duration to assembly end: %fs" % dur_to_assembly_end)
