@@ -2249,7 +2249,7 @@ def setify(item, output=set()):
 
 def objects_from_file(file_ref, recursive=True, gathered=True, name=None):
     """A utility function for initializing a group of objects from a YAML file written in a certain format."""
-    from docassemble.base.core import DAObject, DAList, DADict, DASet
+    #from docassemble.base.core import DAObject, DAList, DADict, DASet
     if name is None:
         frame = inspect.stack()[1][0]
         #logmessage("co_name is " + str(frame.f_code.co_names))

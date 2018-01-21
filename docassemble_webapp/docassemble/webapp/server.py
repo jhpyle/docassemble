@@ -3869,6 +3869,13 @@ def print_time_of_request(response):
     time_spent = time.time() - g.request_start_time
     sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " complete after " + str("%.5fs" % time_spent) + "\n")
     if time_spent > 3.0 and hasattr(g, 'interview') and hasattr(g, 'interview_status'):
+        dur_to_status = g.status_created - g.request_start_time
+        dur_to_assembly_start = g.status_created - g.assembly_status
+        dur_to_assembly_end = g.status_created - g.assembly_status
+        logmessage("Duration to status: %fs" % dur_to_status)
+        logmessage("Duration to assembly start: %fs" % dur_to_assembly_start)
+        logmessage("Duration to assembly end: %fs" % dur_to_assembly_end)
+        logmessage("Duration to end of request: %fs" % time_spent)
         logmessage(to_text(get_history(g.interview, g.interview_status)))
     return response
 
@@ -4267,6 +4274,7 @@ def index():
     #     action = json.loads(myb64unquote(post_data['_action_context']))
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface), tracker=user_dict['_internal']['tracker'])
     g.interview_status = interview_status
+    g.status_created = time.time()
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
         should_assemble = True
     if should_assemble or something_changed:
@@ -4990,7 +4998,9 @@ def index():
         interview_status.next_action = next_action
         interview_status.current_info.update(the_next_action)
     #startTime = int(round(time.time() * 1000))
+    g.assembly_start = time.time()
     interview.assemble(user_dict, interview_status, old_user_dict)
+    g.assembly_end = time.time()
     #endTime = int(round(time.time() * 1000))
     #logmessage(str(endTime - startTime))
     current_language = docassemble.base.functions.get_language()
@@ -5070,7 +5080,6 @@ def index():
             response.set_cookie('secret', '', expires=0)
             response.set_cookie('session', '', expires=0)
         return response
-            
     if interview_status.question.question_type == "response":
         if is_ajax:
             # Duplicative to save here?
@@ -7150,7 +7159,7 @@ def get_history(interview, interview_status):
             elif 'variable' in stage:
                 output += "          <h5>Needed definition of <code>" + str(stage['variable']) + "</code>" + the_time + "</h5>\n"
             elif 'done' in stage:
-                output += "          <h5>Completed processing " + the_time + "</h5>\n"
+                output += "          <h5>Completed processing" + the_time + "</h5>\n"
     return output
 
 def is_mobile_or_tablet():
