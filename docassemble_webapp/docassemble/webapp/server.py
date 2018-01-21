@@ -3857,9 +3857,16 @@ def checkin():
 
 @app.before_request
 def setup_celery_and_variables():
+    sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " for " + request.path + " at " + time.strftime("%Y-%m-%d %H:%M:%S") + "\n")
+    g.request_start_time = time.time()
     docassemble.webapp.worker.workerapp.set_current()
     #docassemble.base.functions.reset_thread_variables()
     docassemble.base.functions.reset_local_variables()
+
+@app.after_request
+def print_time_of_request(response):
+    sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " complete after " + str("%.5fs" % (time.time() - g.request_start_time)) + "\n")
+    return response
 
 # @app.before_request
 # def setup_celery():
