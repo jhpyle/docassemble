@@ -317,6 +317,7 @@ function initAutocomplete(id) {
 
 function fillInAddress() {
   var base_varname = atob(base_id).replace(/.address$/, '');
+  base_varname = base_varname.replace(/[\[\]]/g, '.');
   var re = new RegExp('^' + base_varname + '\\.(.*)');
   var componentForm = {
     locality: 'long_name',
@@ -336,23 +337,25 @@ function fillInAddress() {
   var fields_to_fill = ['address', 'city', 'county', 'state', 'zip'];
   var id_for_part = {};
   $("input, select").each(function(){
-    try {
-      var field_name = atob($(this).attr('id'));
-      var m = re.exec(field_name);
-      if (m.length > 0){
-        id_for_part[m[1]] = $(this).attr('id');
+    var the_id = $(this).attr('id');
+    if (typeof the_id !== typeof undefined && the_id !== false) {      
+      try {
+	var field_name = atob($(this).attr('id'));
+	var m = re.exec(field_name);
+	if (m.length > 0){
+	  id_for_part[m[1]] = $(this).attr('id');
+	}
+      } catch (e){
       }
-    } catch (e){
     }
   });
   var place = autocomplete.getPlace();
-
-  if (document.getElementById(id_for_part['address']) != null){
+  if (typeof(id_for_part['address']) != "undefined" && document.getElementById(id_for_part['address']) != null){
     document.getElementById(id_for_part['address']).value = '';
   }
 
   for (var component in fields_to_fill) {
-    if (id_for_part[component] != undefined && document.getElementById(id_for_part[component]) != null){
+    if (typeof(id_for_part[component]) != "undefined" && document.getElementById(id_for_part[component]) != null){
       document.getElementById(id_for_part[component]).value = '';
     }
   }
@@ -362,19 +365,18 @@ function fillInAddress() {
 
   for (var i = 0; i < place.address_components.length; i++) {
     var addressType = place.address_components[i].types[0];
-    //console.log(addressType);                  
     if (addressType == 'street_number'){
       street_number = place.address_components[i]['short_name'];
     }                
     if (addressType == 'route'){
       route = place.address_components[i]['long_name'];
     }                
-    if (componentForm[addressType] && id_for_part[componentTrans[addressType]] && document.getElementById(id_for_part[componentTrans[addressType]]) != null) {
+    if (componentForm[addressType] && id_for_part[componentTrans[addressType]] && typeof(id_for_part[componentTrans[addressType]]) != "undefined" && document.getElementById(id_for_part[componentTrans[addressType]]) != null) {
       var val = place.address_components[i][componentForm[addressType]];
       document.getElementById(id_for_part[componentTrans[addressType]]).value = val;
     }
   }
-  if (document.getElementById(id_for_part['address']) != null){
+  if (typeof(id_for_part['address']) != "undefined" && document.getElementById(id_for_part['address']) != null){
     document.getElementById(id_for_part['address']).value = street_number + " " + route;
   }
 }

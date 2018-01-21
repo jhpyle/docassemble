@@ -1797,9 +1797,9 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
     if show_login:
         if current_user.is_anonymous:
             if custom_menu:
-                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login') + '">' + sign_in_text + '</a></li></ul></li>' + "\n"
+                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login') + '">' + sign_in_text + '</a></li></ul></li>'
             else:
-                navbar += '            <li><a href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>' + "\n"
+                navbar += '            <li><a href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>'
         else:
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '<span class="caret"></span></a><ul class="dropdown-menu">'
             if custom_menu:
@@ -1825,15 +1825,17 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
                         navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li>'
                     else:
                         navbar += '<li><a href="' + url_for('user.change_password') + '">' + word('Change Password') + '</a></li>'
-                navbar += '<li><a href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a></li></ul></li>'
+                navbar += '<li><a href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a></li>'
+            navbar += '</ul></li>'
     else:
         if custom_menu:
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu
             if not status.question.interview.options.get('hide_standard_menu', False):
-                navbar += '<li><a href="' + url_for(status.exit_link) + '">' + word(status.exit_label) + '</a></li></ul></li>' + "\n"
+                navbar += '<li><a href="' + url_for(status.exit_link) + '">' + word(status.exit_label) + '</a></li>'
+            navbar += '</ul></li>'
         else:
             navbar += '            <li><a href="' + url_for(status.exit_link) + '">' + word(status.exit_label) + '</a></li>'
-    navbar += """\
+    navbar += """
           </ul>
         </div>
       </div>
@@ -6724,7 +6726,7 @@ def index():
         if (daChatStatus == 'ready' || daBeingControlled){
           daInitializeSocket();
         }
-        if (daInitialized == false){ // why was this set to always retrieve the chat log?
+        if (daInitialized == false && checkinSeconds > 0){ // why was this set to always retrieve the chat log?
           setTimeout(function(){
             //console.log("daInitialize call to chat_log in checkin");
             $.ajax({
