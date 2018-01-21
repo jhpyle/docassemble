@@ -41,3 +41,4 @@ posttoslack.sh
 CHANGELOG.yml
 copychangelog.sh
 cc-changelog.sh
+tests/ghostdriver.log
