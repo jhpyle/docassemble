@@ -4,7 +4,7 @@ import threading
 import thread
 # from docassemble.base.logger import logmessage
 
-_interview_cache = dict()
+# _interview_cache = dict()
 
 class ThreadVariables(threading.local):
     cache = dict()
@@ -21,7 +21,7 @@ def get_interview(path):
         # the_interview = _interview_cache[path]['interview']
         the_interview.from_cache = True
     else:
-        # logmessage("get_interview: " + str(thread.get_ident()) + " cache is not valid" + "\n")
+        sys.stderr.write("get_interview: " + str(thread.get_ident()) + " cache is not valid\n")
         interview_source = docassemble.base.parse.interview_source_from_string(path)
         interview_source.update()
         #modtime = interview_source.get_modtime()
@@ -36,6 +36,7 @@ def get_interview(path):
 def clear_cache(path):
     # if path in _interview_cache:
     #     del _interview_cache[path]
+    sys.stderr.write("clear_cache: " + str(thread.get_ident()) + " cache being cleared\n")
     if path in this_thread.cache:
         del this_thread.cache[path]
 

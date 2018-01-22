@@ -2572,6 +2572,8 @@ def restart_on(host):
     return
 
 def restart_all():
+    for interview_path in [x for x in r.keys('da:interviewsource:*')]:
+        r.delete(interview_path)
     restart_others()
     restart_this()
     return
@@ -16052,8 +16054,6 @@ with app.app_context():
     app.config['GLOBAL_JS'] = global_js
     app.config['PARTS'] = page_parts
     copy_playground_modules()
-    for interview_path in [x for x in r.keys('da:interviewsource:*')]:
-        r.delete(interview_path)
     write_pypirc()
 
 if __name__ == "__main__":
