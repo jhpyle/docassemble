@@ -3865,33 +3865,33 @@ def setup_celery():
 @app.before_request
 def setup_variables():
     #sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " for " + request.path + " at " + time.strftime("%Y-%m-%d %H:%M:%S") + "\n")
-    g.request_start_time = time.time()
+    #g.request_start_time = time.time()
     #docassemble.base.functions.reset_thread_variables()
     docassemble.base.functions.reset_local_variables()
 
-@app.after_request
-def print_time_of_request(response):
-    time_spent = time.time() - g.request_start_time
-    sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " complete after " + str("%.5fs" % time_spent) + "\n")
-    if time_spent > 3.0:
-        if hasattr(g, 'start_index'):
-            logmessage("Duration to beginning: %fs" % (g.start_index - g.request_start_time))
-        if hasattr(g, 'got_dict'):
-            logmessage("Duration to getting dictionary: %fs" % (g.got_dict - g.request_start_time))
-        if hasattr(g, 'before_interview'):
-            logmessage("Duration to before interview: %fs" % (g.before_interview - g.request_start_time))
-        if hasattr(g, 'after_interview'):
-            logmessage("Duration to after interview: %fs" % (g.after_interview - g.request_start_time))
-        if hasattr(g, 'status_created'):
-            logmessage("Duration to status: %fs" % (g.status_created - g.request_start_time))
-        if hasattr(g, 'assembly_start'):
-            logmessage("Duration to assembly start: %fs" % (g.assembly_start - g.request_start_time))
-        if hasattr(g, 'assembly_end'):
-            logmessage("Duration to assembly end: %fs" % (g.assembly_end - g.request_start_time))
-        logmessage("Duration to end of request: %fs" % time_spent)
-        if hasattr(g, 'interview') and hasattr(g, 'interview_status'):
-            logmessage(to_text(get_history(g.interview, g.interview_status)))
-    return response
+# @app.after_request
+# def print_time_of_request(response):
+#     time_spent = time.time() - g.request_start_time
+#     sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " complete after " + str("%.5fs" % time_spent) + "\n")
+#     if time_spent > 3.0:
+#         if hasattr(g, 'start_index'):
+#             logmessage("Duration to beginning: %fs" % (g.start_index - g.request_start_time))
+#         if hasattr(g, 'got_dict'):
+#             logmessage("Duration to getting dictionary: %fs" % (g.got_dict - g.request_start_time))
+#         if hasattr(g, 'before_interview'):
+#             logmessage("Duration to before interview: %fs" % (g.before_interview - g.request_start_time))
+#         if hasattr(g, 'after_interview'):
+#             logmessage("Duration to after interview: %fs" % (g.after_interview - g.request_start_time))
+#         if hasattr(g, 'status_created'):
+#             logmessage("Duration to status: %fs" % (g.status_created - g.request_start_time))
+#         if hasattr(g, 'assembly_start'):
+#             logmessage("Duration to assembly start: %fs" % (g.assembly_start - g.request_start_time))
+#         if hasattr(g, 'assembly_end'):
+#             logmessage("Duration to assembly end: %fs" % (g.assembly_end - g.request_start_time))
+#         logmessage("Duration to end of request: %fs" % time_spent)
+#         if hasattr(g, 'interview') and hasattr(g, 'interview_status'):
+#             logmessage(to_text(get_history(g.interview, g.interview_status)))
+#     return response
 
 # @app.before_request
 # def setup_celery():
@@ -3993,7 +3993,7 @@ def index():
             yaml_filename = final_default_yaml_filename
     session_parameter = request.args.get('session', None)
     #logmessage("index: session_parameter is " + str(session_parameter))
-    g.start_index = time.time()
+    #g.start_index = time.time()
     if yaml_parameter is not None:
         #logmessage("index: yaml_parameter is not None: " + str(yaml_parameter))
         yaml_filename = yaml_parameter
@@ -4110,7 +4110,7 @@ def index():
         if 'key_logged' in session:
             del session['key_logged']
         steps = 1
-    g.got_dict = time.time()
+    #g.got_dict = time.time()
     action = None
     if user_dict.get('multi_user', False) is True and encrypted is True:
         #logmessage("index: encryption mismatch, should be False")
@@ -4165,7 +4165,7 @@ def index():
         #logmessage("index: needed to reset, so redirecting; encrypted is " + str(encrypted))
         if use_cache == 0:
             # docassemble.base.parse.interview_source_from_string(yaml_filename).reset_modtime()
-            sys.stderr.write("Updating index because of cache being 0")
+            #sys.stderr.write("Updating index because of cache being 0\n")
             docassemble.base.parse.interview_source_from_string(yaml_filename).update_index()
         if need_to_resave:
             save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
@@ -4282,18 +4282,18 @@ def index():
                 break
         except:
             logmessage("index: bad key was " + str(key))
-    g.before_interview = time.time()
+    #g.before_interview = time.time()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    g.after_interview = time.time()
-    g.interview = interview
+    #g.after_interview = time.time()
+    #g.interview = interview
     if not interview.from_cache and len(interview.mlfields):
         ensure_training_loaded(interview)
     debug_mode = DEBUG or yaml_filename.startswith('docassemble.playground')
     # if should_assemble and '_action_context' in post_data:
     #     action = json.loads(myb64unquote(post_data['_action_context']))
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface), tracker=user_dict['_internal']['tracker'])
-    g.interview_status = interview_status
-    g.status_created = time.time()
+    #g.interview_status = interview_status
+    #g.status_created = time.time()
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
         should_assemble = True
     if should_assemble or something_changed:
@@ -5017,9 +5017,9 @@ def index():
         interview_status.next_action = next_action
         interview_status.current_info.update(the_next_action)
     #startTime = int(round(time.time() * 1000))
-    g.assembly_start = time.time()
+    #g.assembly_start = time.time()
     interview.assemble(user_dict, interview_status, old_user_dict)
-    g.assembly_end = time.time()
+    #g.assembly_end = time.time()
     #endTime = int(round(time.time() * 1000))
     #logmessage(str(endTime - startTime))
     current_language = docassemble.base.functions.get_language()
@@ -14058,8 +14058,8 @@ def voice():
         return Response(str(resp), mimetype='text/xml')
     for item in request.form:
         logmessage("voice: item " + str(item) + " is " + str(request.form[item]))
-    with resp.gather(action=daconfig.get('root', '/') + "digits", finishOnKey='#', method="POST", timeout=10, numDigits=5) as g:
-        g.say(word("Please enter the four digit code, followed by the pound sign."))
+    with resp.gather(action=daconfig.get('root', '/') + "digits", finishOnKey='#', method="POST", timeout=10, numDigits=5) as gg:
+        gg.say(word("Please enter the four digit code, followed by the pound sign."))
 
     # twilio_config = daconfig.get('twilio', None)
     # if twilio_config is None:

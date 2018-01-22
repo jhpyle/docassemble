@@ -507,7 +507,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             #sys.stderr.write("background_action: status was backgroundresponseaction\n")
             start_time = time.time()
             new_action = interview_status.question.action
-            sys.stderr.write("new action is " + repr(new_action) + "\n")
+            #sys.stderr.write("new action is " + repr(new_action) + "\n")
             worker_controller.obtain_lock(session_code, yaml_filename)
             steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
             interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, interface='worker', action=new_action['action'], arguments=new_action['arguments']))

@@ -22,11 +22,11 @@ def get_interview(path):
         # the_interview = _interview_cache[path]['interview']
         the_interview.from_cache = True
     else:
-        sys.stderr.write("get_interview: " + str(thread.get_ident()) + " cache is not valid\n")
-        if path in this_thread.cache:
-            sys.stderr.write("get_interview: had been cached with indexno " + this_thread.cache[path]['index'] + "\n")
-        else:
-            sys.stderr.write("get_interview: had never been cached\n")
+        # sys.stderr.write("get_interview: " + str(thread.get_ident()) + " cache is not valid\n")
+        # if path in this_thread.cache:
+        #     sys.stderr.write("get_interview: had been cached with indexno " + this_thread.cache[path]['index'] + "\n")
+        # else:
+        #     sys.stderr.write("get_interview: had never been cached\n")
         interview_source = docassemble.base.parse.interview_source_from_string(path)
         interview_source.update()
         #modtime = interview_source.get_modtime()
@@ -41,7 +41,7 @@ def get_interview(path):
 def clear_cache(path):
     # if path in _interview_cache:
     #     del _interview_cache[path]
-    sys.stderr.write("clear_cache: " + str(thread.get_ident()) + " cache being cleared\n")
+    # sys.stderr.write("clear_cache: " + str(thread.get_ident()) + " cache being cleared\n")
     if path in this_thread.cache:
         del this_thread.cache[path]
 

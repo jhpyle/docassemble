@@ -136,11 +136,11 @@ class InterviewSource(object):
     def get_index(self):
         the_index = docassemble.base.functions.server.server_redis.get('da:interviewsource:' + self.path)
         if the_index is None:
-            sys.stderr.write("Updating index from get_index for " + self.path + "\n")
+            #sys.stderr.write("Updating index from get_index for " + self.path + "\n")
             the_index = docassemble.base.functions.server.server_redis.incr('da:interviewsource:' + self.path)
         return the_index
     def update_index(self):
-        sys.stderr.write("Updating index for " + self.path + "\n")
+        #sys.stderr.write("Updating index for " + self.path + "\n")
         docassemble.base.functions.server.server_redis.incr('da:interviewsource:' + self.path)
     def set_filepath(self, filepath):
         self.filepath = filepath
