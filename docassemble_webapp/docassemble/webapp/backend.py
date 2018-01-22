@@ -27,6 +27,10 @@ import re
 import os
 import sys
 from flask import session, current_app, has_request_context, url_for
+if 'mailgun api' in daconfig['mail'] and 'mailgun api key' in daconfig['mail']:
+    from docassemble.webapp.mailgun_mail import Mail, Message
+else:
+    from flask_mail import Mail, Message
 from flask_mail import Mail, Message
 from flask_wtf.csrf import generate_csrf
 from flask_login import current_user

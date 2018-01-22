@@ -10,8 +10,8 @@ import time
 
 default_path = "https://test221.docassemble.org"
 default_wait_seconds = 4
-use_firefox = True
-use_phantomjs = False
+use_firefox = False
+use_phantomjs = True
 
 class MyFirefox(webdriver.Firefox):
     def loaded(self):

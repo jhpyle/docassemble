@@ -108,10 +108,6 @@ match_inside_and_outside_brackets = re.compile('(.*)(\[u?\'[^\]]+\'\])$')
 match_inside_brackets = re.compile('\[u?\'([^\]]+)\'\]')
 valid_python_var = re.compile(r'[A-Za-z][A-Za-z0-9\_]+')
 
-if 'mail' not in daconfig:
-    daconfig['mail'] = dict()
-if 'dispatch' not in daconfig:
-    daconfig['dispatch'] = dict()
 default_title = daconfig.get('default title', daconfig.get('brandname', 'docassemble'))
 default_short_title = daconfig.get('default short title', default_title)
 os.environ['PYTHON_EGG_CACHE'] = tempfile.gettempdir()
@@ -538,7 +534,6 @@ from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
 #from flask_wtf.csrf import generate_csrf
 from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey
-from flask_mail import Mail, Message
 import flask_user.signals
 import flask_user.translations
 import flask_user.views
@@ -561,7 +556,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Mail, Message
 from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning #Attachments
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -5286,6 +5281,7 @@ def index():
 """
         else:
             forceFullScreen = ''
+        the_checkin_interval = interview_status.question.interview.options.get('checkin interval', CHECKIN_INTERVAL)
         scripts += """
     <script type="text/javascript" charset="utf-8">
       var map_info = null;
@@ -5752,7 +5748,7 @@ def index():
             });
         }
       }
-      var checkinSeconds = """ + str(CHECKIN_INTERVAL) + """;
+      var checkinSeconds = """ + str(the_checkin_interval) + """;
       var checkinInterval = null;
       var daReloader = null;
       var dadisable = null;

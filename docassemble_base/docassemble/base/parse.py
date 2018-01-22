@@ -950,7 +950,13 @@ class Question:
             if 'inverse navbar' in data['features']:
                 self.interview.options['inverse navbar'] = data['features']['inverse navbar']
             if 'hide standard menu' in data['features']:
-                self.interview.options['hide_standard_menu'] = data['features']['hide standard menu']
+                self.interview.options['hide standard menu'] = data['features']['hide standard menu']
+            if 'checkin interval' in data['features']:
+                if type(data['features']['checkin interval']) is not int:
+                    raise DAError("A features section checkin interval entry must be an integer." + self.idebug(data))
+                if data['features']['checkin interval'] > 0 and data['features']['checkin interval'] < 1000:
+                    raise DAError("A features section checkin interval entry must be at least 1000, if not 0." + self.idebug(data))
+                self.interview.options['checkin interval'] = data['features']['checkin interval']
             for key in ('javascript', 'css'):
                 if key in data['features']:
                     if type(data['features'][key]) is list:
@@ -3364,6 +3370,10 @@ class Question:
                                     val = 'No'
                                 elif val is None:
                                     val = ''
+                                elif type(val) is float:
+                                    val = '.2f' % val
+                                else:
+                                    val = unicode(val)
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
                                 val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
                                 m = re.search(r'\[FILE ([^\]]+)\]', val)
@@ -3388,6 +3398,8 @@ class Question:
                                     val = 'No'
                                 elif val is None:
                                     val = ''
+                                elif type(val) is float:
+                                    val = '.2f' % val
                                 else:
                                     val = unicode(val)
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
@@ -3412,6 +3424,8 @@ class Question:
                                     val = yes_value
                                 elif val is False:
                                     val = 'No'
+                                elif type(val) is float:
+                                    val = '.2f' % val
                                 elif val is None:
                                     val = ''
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)

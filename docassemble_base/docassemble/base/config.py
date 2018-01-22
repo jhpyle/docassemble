@@ -238,11 +238,22 @@ def load(**kwargs):
         if type(daconfig['password complexity']) is dict:
             for key in ('length', 'lowercase', 'uppercase', 'digits', 'punctuation'):
                 if key in daconfig['password complexity'] and type(daconfig['password complexity'][key]) is not int:
-                    sys.stderr.write("password complexity key " + key + " must be an integer\n")
+                    sys.stderr.write("password complexity key " + key + " must be an integer.\n")
                     del daconfig['password complexity'][key]
         else:
-            sys.stderr.write("password complexity must be in the form of a dict\n")
+            sys.stderr.write("password complexity must be in the form of a dict.\n")
             del daconfig['password complexity']
+    if 'checkin interval' in daconfig:
+        if type(daconfig['checkin interval']) is not int:
+            sys.stderr.write("checkin interval must be an integer.\n")
+            del daconfig['checkin interval']
+        elif daconfig['checkin interval'] > 0 and daconfig['checkin interval'] < 1000:
+            sys.stderr.write("checkin interval must be at least 1000, if not 0.\n")
+            del daconfig['checkin interval']
+    if 'mail' not in daconfig:
+        daconfig['mail'] = dict()
+    if 'dispatch' not in daconfig:
+        daconfig['dispatch'] = dict()
     return
 
 def default_config():
