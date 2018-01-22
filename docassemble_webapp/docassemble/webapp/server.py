@@ -3858,11 +3858,14 @@ def checkin():
             return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control, commands=commands, checkin_code=checkin_code)
     return jsonify(success=False)
 
-@app.before_request
-def setup_celery_and_variables():
-    sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " for " + request.path + " at " + time.strftime("%Y-%m-%d %H:%M:%S") + "\n")
-    g.request_start_time = time.time()
+@app.before_first_request
+def setup_celery():
     docassemble.webapp.worker.workerapp.set_current()
+
+@app.before_request
+def setup_variables():
+    #sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " for " + request.path + " at " + time.strftime("%Y-%m-%d %H:%M:%S") + "\n")
+    g.request_start_time = time.time()
     #docassemble.base.functions.reset_thread_variables()
     docassemble.base.functions.reset_local_variables()
 
@@ -4162,6 +4165,7 @@ def index():
         #logmessage("index: needed to reset, so redirecting; encrypted is " + str(encrypted))
         if use_cache == 0:
             # docassemble.base.parse.interview_source_from_string(yaml_filename).reset_modtime()
+            sys.stderr.write("Updating index because of cache being 0")
             docassemble.base.parse.interview_source_from_string(yaml_filename).update_index()
         if need_to_resave:
             save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
