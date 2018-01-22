@@ -36,7 +36,7 @@ worker_controller = None
 def initialize_db():
     global worker_controller
     worker_controller = WorkerController()
-    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype
+    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype, get_user_object, login_user
     from docassemble.webapp.server import app as flaskapp
     import docassemble.base.functions
     import docassemble.base.interview_cache
@@ -62,6 +62,8 @@ def initialize_db():
     worker_controller.apiclient = apiclient
     worker_controller.get_ext_and_mimetype = get_ext_and_mimetype
     worker_controller.loaded = True
+#    worker_controller.get_user_object = get_user_object
+#    worker_controller.login_user = login_user
 
 def convert(obj):
     return result_from_tuple(obj.as_tuple(), app=workerapp)
@@ -447,6 +449,8 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
     worker_controller.functions.set_uid(session_code)
     worker_controller.functions.reset_local_variables()
     with worker_controller.flaskapp.app_context():
+        #if not str(user_info['the_user_id']).startswith('t'):
+        #    worker_controller.login_user(worker_controller.get_user_object(user_info['theid']), remember=False)
         sys.stderr.write("background_action: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + " and action is " + repr(action) + "\n")
         worker_controller.set_request_active(False)
         if action['action'] == 'incoming_email':

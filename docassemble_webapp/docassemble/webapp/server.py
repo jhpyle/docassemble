@@ -2880,6 +2880,10 @@ def get_locale():
     translations = [str(translation) for translation in flaskbabel.list_translations()]
     return request.accept_languages.best_match(translations)
 
+def get_user_object(user_id):
+    the_user = UserModel.query.filter_by(id=user_id).first()
+    return the_user
+
 @lm.user_loader
 def load_user(id):
     return UserModel.query.get(int(id))
@@ -13675,7 +13679,7 @@ def train():
 
 def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True):
     # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))
-    if user_id is None and (current_user.is_anonymous or not current_user.has_role('admin')):
+    if user_id is None and not in_celery and (current_user.is_anonymous or not current_user.has_role('admin')):
         raise Exception('user_interviews: non-administrator cannot access information about other users')
     if action is not None:
         if user_id is None:

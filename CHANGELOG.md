@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.2.22] - 2018-01-21
+### Added
+- Configuration directive `allow demo` for allowing demonstration
+  interviews in production mode.
+### Changed
+- If the `checkin interval` configuration directive is set to `0`, the
+  browser will not "check in" at all.
+### Fixed
+- Invalid HTML in navigation bar.
+- Removed unnecessary invalidation of interview cache.
+- Problem with address autocomplete when variable name contains a bracket.
+
 ## [0.2.21] - 2018-01-19
 ### Added
 - The `get_chat_log()` function.
