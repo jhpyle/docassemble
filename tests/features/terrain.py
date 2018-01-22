@@ -10,8 +10,8 @@ import time
 
 default_path = "https://test221.docassemble.org"
 default_wait_seconds = 4
-use_firefox = False
-use_phantomjs = True
+use_firefox = True
+use_phantomjs = False
 
 class MyFirefox(webdriver.Firefox):
     def loaded(self):
@@ -68,7 +68,9 @@ class MyChrome(Chrome):
 def setup_browser():
     if use_firefox:
         world.browser = MyFirefox()
-        world.browser.maximize_window()
+        world.browser.set_window_size(450, 1200)
+        world.browser.set_window_position(0, 0)
+        #world.browser.maximize_window()
     elif use_phantomjs:
         world.browser = MyPhantomJS()
     else:

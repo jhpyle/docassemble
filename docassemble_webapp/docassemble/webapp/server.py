@@ -18,9 +18,9 @@ DEBUG = daconfig.get('debug', False)
 if DEBUG:
     PREVENT_DEMO = False
 elif daconfig.get('allow demo', False):
-    PREVENT_DEMO = True
-else:
     PREVENT_DEMO = False
+else:
+    PREVENT_DEMO = True
     
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 request_active = True
