@@ -3371,7 +3371,7 @@ class Question:
                                 elif val is None:
                                     val = ''
                                 elif type(val) is float:
-                                    val = '.2f' % val
+                                    val = '%.2f' % val
                                 else:
                                     val = unicode(val)
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
@@ -3399,7 +3399,7 @@ class Question:
                                 elif val is None:
                                     val = ''
                                 elif type(val) is float:
-                                    val = '.2f' % val
+                                    val = '%.2f' % val
                                 else:
                                     val = unicode(val)
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
@@ -3425,7 +3425,7 @@ class Question:
                                 elif val is False:
                                     val = 'No'
                                 elif type(val) is float:
-                                    val = '.2f' % val
+                                    val = '%.2f' % val
                                 elif val is None:
                                     val = ''
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
