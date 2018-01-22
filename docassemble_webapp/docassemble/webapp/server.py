@@ -3868,15 +3868,25 @@ def setup_celery_and_variables():
 def print_time_of_request(response):
     time_spent = time.time() - g.request_start_time
     sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " complete after " + str("%.5fs" % time_spent) + "\n")
-    if time_spent > 3.0 and hasattr(g, 'interview') and hasattr(g, 'interview_status'):
-        dur_to_status = g.status_created - g.request_start_time
-        dur_to_assembly_start = g.assembly_start - g.request_start_time
-        dur_to_assembly_end = g.assembly_end - g.request_start_time
-        logmessage("Duration to status: %fs" % dur_to_status)
-        logmessage("Duration to assembly start: %fs" % dur_to_assembly_start)
-        logmessage("Duration to assembly end: %fs" % dur_to_assembly_end)
+    if time_spent > 3.0:
+        if hasattr(g, 'start_index'):
+            dur_to_beginning = g.start_index - g.request_start_time
+            logmessage("Duration to beginning: %fs" % dur_to_beginning)
+        if hasattr(g, 'got_dict'):
+            dur_to_dict = g.got_dict - g.request_start_time
+            logmessage("Duration to getting dictionary: %fs" % dur_to_dict)
+        if hasattr(g, 'status_created'):
+            dur_to_status = g.status_created - g.request_start_time
+            logmessage("Duration to status: %fs" % dur_to_status)
+        if hasattr(g, 'assembly_start'):
+            dur_to_assembly_start = g.assembly_start - g.request_start_time
+            logmessage("Duration to assembly start: %fs" % dur_to_assembly_start)
+        if hasattr(g, 'assembly_end'):
+            dur_to_assembly_end = g.assembly_end - g.request_start_time
+            logmessage("Duration to assembly end: %fs" % dur_to_assembly_end)
         logmessage("Duration to end of request: %fs" % time_spent)
-        logmessage(to_text(get_history(g.interview, g.interview_status)))
+        if hasattr(g, 'interview') and hasattr(g, 'interview_status'):
+            logmessage(to_text(get_history(g.interview, g.interview_status)))
     return response
 
 # @app.before_request
@@ -3979,6 +3989,7 @@ def index():
             yaml_filename = final_default_yaml_filename
     session_parameter = request.args.get('session', None)
     #logmessage("index: session_parameter is " + str(session_parameter))
+    g.start_index = time.time()
     if yaml_parameter is not None:
         #logmessage("index: yaml_parameter is not None: " + str(yaml_parameter))
         yaml_filename = yaml_parameter
@@ -4095,6 +4106,7 @@ def index():
         if 'key_logged' in session:
             del session['key_logged']
         steps = 1
+    g.got_dict = time.time()
     action = None
     if user_dict.get('multi_user', False) is True and encrypted is True:
         #logmessage("index: encryption mismatch, should be False")
