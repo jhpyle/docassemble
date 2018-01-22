@@ -3870,20 +3870,19 @@ def print_time_of_request(response):
     sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " complete after " + str("%.5fs" % time_spent) + "\n")
     if time_spent > 3.0:
         if hasattr(g, 'start_index'):
-            dur_to_beginning = g.start_index - g.request_start_time
-            logmessage("Duration to beginning: %fs" % dur_to_beginning)
+            logmessage("Duration to beginning: %fs" % (g.start_index - g.request_start_time))
         if hasattr(g, 'got_dict'):
-            dur_to_dict = g.got_dict - g.request_start_time
-            logmessage("Duration to getting dictionary: %fs" % dur_to_dict)
+            logmessage("Duration to getting dictionary: %fs" % (g.got_dict - g.request_start_time))
+        if hasattr(g, 'before_interview'):
+            logmessage("Duration to before interview: %fs" % (g.before_interview - g.request_start_time))
+        if hasattr(g, 'after_interview'):
+            logmessage("Duration to after interview: %fs" % (g.after_interview - g.request_start_time))
         if hasattr(g, 'status_created'):
-            dur_to_status = g.status_created - g.request_start_time
-            logmessage("Duration to status: %fs" % dur_to_status)
+            logmessage("Duration to status: %fs" % (g.status_created - g.request_start_time))
         if hasattr(g, 'assembly_start'):
-            dur_to_assembly_start = g.assembly_start - g.request_start_time
-            logmessage("Duration to assembly start: %fs" % dur_to_assembly_start)
+            logmessage("Duration to assembly start: %fs" % (g.assembly_start - g.request_start_time))
         if hasattr(g, 'assembly_end'):
-            dur_to_assembly_end = g.assembly_end - g.request_start_time
-            logmessage("Duration to assembly end: %fs" % dur_to_assembly_end)
+            logmessage("Duration to assembly end: %fs" % (g.assembly_end - g.request_start_time))
         logmessage("Duration to end of request: %fs" % time_spent)
         if hasattr(g, 'interview') and hasattr(g, 'interview_status'):
             logmessage(to_text(get_history(g.interview, g.interview_status)))
@@ -4277,7 +4276,9 @@ def index():
                 break
         except:
             logmessage("index: bad key was " + str(key))
+    g.before_interview = time.time()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    g.after_interview = time.time()
     g.interview = interview
     if not interview.from_cache and len(interview.mlfields):
         ensure_training_loaded(interview)
