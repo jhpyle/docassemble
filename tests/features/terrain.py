@@ -8,8 +8,8 @@ from selenium.common.exceptions import NoSuchElementException, WebDriverExceptio
 from selenium.webdriver import ChromeOptions, Chrome
 import time
 
-default_path = "https://test221.docassemble.org"
-default_wait_seconds = 4
+default_path = "https://demo.docassemble.org"
+default_wait_seconds = 0
 use_firefox = False
 use_phantomjs = True
 

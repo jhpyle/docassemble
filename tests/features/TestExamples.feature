@@ -100,8 +100,8 @@ Feature: Example interviews
     Then I should see the phrase "My favorite animal is the pig, too"
     When I exit by clicking "Exit"
     And I wait 5 seconds
-    Then I should see "Docassemble" as the title of the page
-    And I should see "https://docassemble.org/" as the URL of the page
+    Then I should see "A demonstration of docassemble" as the title of the page
+    And I should see "https://docassemble.org/demo.html" as the URL of the page
     
   Scenario: Test the interview "Convert to datetime"
     Given I start the interview "docassemble.base:data/questions/examples/as-datetime.yml"

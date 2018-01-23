@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.2.22] - 2018-01-21
+## [0.2.22] - 2018-01-23
 ### Added
 - Configuration directive `allow demo` for allowing demonstration
   interviews in production mode.
