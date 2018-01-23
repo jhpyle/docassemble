@@ -35,7 +35,10 @@ class DAErrorNoEndpoint(DAError):
     pass
 
 class DAErrorMissingVariable(DAError):
-    pass
+    def __init__(self, value, variable=None, code=501):
+        self.value = value
+        self.variable = variable
+        self.error_code = code        
 
 class DAErrorCompileError(DAError):
     pass

@@ -2359,6 +2359,10 @@ class Question:
                 if type(target['checkbox export value']) not in (str, unicode):
                     raise DAError("A checkbox export value must be a string." + self.idebug(target))
                 options['checkbox_export_value'] = TextObject(target['checkbox export value'])
+            if 'decimal places' in target and 'pdf template file' in target:
+                if type(target['decimal places']) not in (str, unicode, int):
+                    raise DAError("A decimal places directive must be an integer or string." + self.idebug(target))
+                options['decimal_places'] = TextObject(unicode(target['decimal places']))
             if 'initial yaml' in target:
                 if type(target['initial yaml']) is not list:
                     target['initial yaml'] = [target['initial yaml']]
@@ -3291,6 +3295,14 @@ class Question:
             result['password'] = None
         for doc_format in result['formats_to_use']:
             if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx']:
+                if 'decimal_places' in attachment['options']:
+                    try:
+                        float_formatter = '%.' + str(int(attachment['options']['decimal_places'].text(user_dict).strip())) + 'f'
+                    except:
+                        logmessage("prepare_attachment: error in float_formatter")
+                        float_formatter = None
+                else:
+                    float_formatter = None
                 if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
                     if doc_format == 'docx' or ('docx' not in result['formats_to_use'] and doc_format == 'pdf'):
                         result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'].path(user_dict=user_dict))
@@ -3309,7 +3321,9 @@ class Question:
                             additional_dict = eval(attachment['options']['code'], user_dict)
                             if type(additional_dict) is dict:
                                 for key, val in additional_dict.iteritems():
-                                    if type(val) is RawValue:
+                                    if type(val) is float and float_formatter is not None:
+                                        result['field_data'][key] = float_formatter % val
+                                    elif type(val) is RawValue:
                                         result['field_data'][key] = val.value
                                     else:
                                         result['field_data'][key] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
@@ -3317,11 +3331,17 @@ class Question:
                                 raise DAError("code in an attachment returned something other than a dictionary")
                         if 'raw code dict' in attachment['options']:
                             for varname, var_code in attachment['options']['raw code dict'].iteritems():
-                                result['field_data'][varname] = eval(var_code, user_dict)
+                                val = eval(var_code, user_dict)
+                                if type(val) is float and float_formatter is not None:
+                                    result['field_data'][varname] = float_formatter % val
+                                else:
+                                    result['field_data'][varname] = val
                         if 'code dict' in attachment['options']:
                             for varname, var_code in attachment['options']['code dict'].iteritems():
                                 val = eval(var_code, user_dict)
-                                if type(val) is RawValue:
+                                if type(val) is float and float_formatter is not None:
+                                    result['field_data'][varname] = float_formatter % val
+                                elif type(val) is RawValue:
                                     result['field_data'][varname] = val.value
                                 else:
                                     result['field_data'][varname] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
@@ -3370,8 +3390,8 @@ class Question:
                                     val = 'No'
                                 elif val is None:
                                     val = ''
-                                elif type(val) is float:
-                                    val = '%.2f' % val
+                                elif type(val) is float and float_formatter is not None:
+                                    val = float_formatter % val
                                 else:
                                     val = unicode(val)
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
@@ -3398,8 +3418,8 @@ class Question:
                                     val = 'No'
                                 elif val is None:
                                     val = ''
-                                elif type(val) is float:
-                                    val = '%.2f' % val
+                                elif type(val) is float and float_formatter is not None:
+                                    val = float_formatter % val
                                 else:
                                     val = unicode(val)
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
@@ -3424,8 +3444,8 @@ class Question:
                                     val = yes_value
                                 elif val is False:
                                     val = 'No'
-                                elif type(val) is float:
-                                    val = '%.2f' % val
+                                elif type(val) is float and float_formatter is not None:
+                                    val = float_formatter % val
                                 elif val is None:
                                     val = ''
                                 val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
@@ -4439,7 +4459,7 @@ class Interview:
                         return question.ask(user_dict, old_user_dict, the_x, iterators, missing_var)
                 if a_question_was_skipped:
                     raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
-                raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
+                raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
             except NameError as the_exception:
                 # logmessage("NameError: " + str(the_exception))
                 docassemble.base.functions.reset_context()
@@ -4621,7 +4641,7 @@ class Interview:
             #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
             #     new_question.name = "Question_Temp"
             #     return(new_question.ask(user_dict, old_user_dict, 'None', [], None))
-        raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.")
+        raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
 
 def reproduce_basics(interview, new_interview):
     new_interview.metadata = interview.metadata

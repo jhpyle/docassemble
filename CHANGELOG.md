@@ -4,9 +4,17 @@
 ### Added
 - Configuration directive `allow demo` for allowing demonstration
   interviews in production mode.
+- Ability to send e-mail using the Mailgun API instead of SMTP.
+- The `decimal places` option for automatically formatting floating
+  point numbers passed to DOCX and PDF forms using `field code`,
+  `code`, or `field variables`.
 ### Changed
 - If the `checkin interval` configuration directive is set to `0`, the
   browser will not "check in" at all.
+- When the `/api/session/question` API encounters an undefined
+  variable for which a definition is not available, it will no longer
+  return an error code, but will return a success code and indicate
+  what variable was not defined.
 ### Fixed
 - Invalid HTML in navigation bar.
 - Removed unnecessary invalidation of interview cache.

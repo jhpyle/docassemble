@@ -556,7 +556,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Mail, Message
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message
 from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning #Attachments
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -13042,7 +13042,6 @@ def request_developer():
         if form.reason.data:
             body += "Reason given: " + str(form.reason.data) + "\n\n"
         body += "Go to " + str(url) + url_for('edit_user_profile_page', id=current_user.id) + " to change the user's privileges."
-        from flask_mail import Message
         msg = Message("Request for developer account from " + str(current_user.email), recipients=recipients, body=body)
         if not len(recipients):
             flash(word('No administrators could be found.'), 'error')
@@ -15331,11 +15330,15 @@ def get_question_data(yaml_filename, session_id, secret):
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
         release_lock(session_id, yaml_filename)
-        raise Exception("Unable to obtain interview dictionary: " + str(err))
+        raise Exception("Unable to obtain interview dictionary")
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
     try:
         interview.assemble(user_dict, interview_status)
+    except DAErrorMissingVariable as err:
+        save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
+        release_lock(session_id, yaml_filename)
+        return dict(questionType='undefined_variable', variable=err.variable.encode('utf8')) #message_log=docassemble.base.functions.get_message_log(), 
     except Exception as e:
         release_lock(session_id, yaml_filename)
         raise Exception("Failure to assemble interview: " + str(e))
@@ -15404,6 +15407,10 @@ def api_session_action():
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=action, arguments=arguments)))
     try:
         interview.assemble(user_dict, interview_status)
+    except DAErrorMissingVariable as err:
+        save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
+        release_lock(session_id, yaml_filename)
+        return ('', 204)        
     except Exception as e:
         release_lock(session_id, yaml_filename)
         return jsonify_with_status("Failure to assemble interview: " + str(e), 400)
@@ -15653,14 +15660,14 @@ def manage_api():
             try:
                 info = json.loads(r.get(rkey))
                 if type(info) is not dict:
-                    logmessage("not a dict")
+                    logmessage("manage_api: response from redis was not a dict")
                     continue
             except:
-                logmessage("error with json")
+                logmessage("manage_api: response from redis had invalid json")
                 continue
             m = re.match(r'da:api:userid:[0-9]+:key:([^:]+):info', rkey)
             if not m:
-                logmessage("error with redis key")
+                logmessage("manage_api: error with redis key")
                 continue
             api_key = m.group(1)
             info['api_key'] = api_key

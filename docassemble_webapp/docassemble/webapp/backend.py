@@ -27,14 +27,11 @@ import re
 import os
 import sys
 from flask import session, current_app, has_request_context, url_for
-if 'mailgun api' in daconfig['mail'] and 'mailgun api key' in daconfig['mail']:
-    from docassemble.webapp.mailgun_mail import Mail, Message
-else:
-    from flask_mail import Mail, Message
-from flask_mail import Mail, Message
+from flask_mail import Mail as FlaskMail, Message
 from flask_wtf.csrf import generate_csrf
 from flask_login import current_user
 import docassemble.webapp.worker
+from docassemble.webapp.mailgun_mail import Mail as MailgunMail
 #sys.stderr.write("I am in backend\n")
 
 import docassemble.webapp.setup
@@ -142,8 +139,11 @@ def absolute_filename(the_file):
         return playground
     return(None)
 
-mail = Mail(app)
-
+if 'mailgun domain' in daconfig['mail'] and 'mailgun api key' in daconfig['mail']:
+    mail = MailgunMail(app)
+else:
+    mail = FlaskMail(app)
+    
 def da_send_mail(the_message):
     mail.send(the_message)
 
