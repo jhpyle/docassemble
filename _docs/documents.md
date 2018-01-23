@@ -932,6 +932,32 @@ using `fields`, `field variables`, or `field code`, you should read
 the next section, which explains how to pass variables in "raw" format
 to the template.
 
+When using `field code`, `code`, or `field variables` to define your
+fields, there is a shortcut for formatting decimal numbers: set the
+option `decimal places` to the number of decimal places you want to
+use.
+
+{% highlight yaml %}
+---
+attachment:
+  name: My Document
+  filename: my_document
+  pdf template file: letter_template.pdf
+  variable name: the_document
+  decimal places: 2
+---
+{% endhighlight %}
+
+By default, when `decimal places` is not used, numbers are converted
+to text using the standard [Python] method, which uses at least one
+decimal place.
+
+Note that `decimal places` does nothing for variables passed to your
+template with a method other than `field code`, `code`, or `field
+variables`.  In other cases, you will need to manually format your
+numbers, for example by writing something like `${ '%.3f' %
+ounces_of_gold }`.
+
 ### <a name="raw field variables"></a>Turning off automatic conversion of .docx variables
 
 Normally, all values that you transfer to a .docx template using

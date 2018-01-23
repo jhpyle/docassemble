@@ -1990,6 +1990,11 @@ page will be ignored.
 
 {% include side-by-side.html demo="address-autocomplete" %}
 
+You will need to enable the following APIs:
+
+* Google Places API Web Service
+* Google Maps JavaScript API
+
 ### <a name="City"></a>City
 
 A `City` is a type of `Address` for which the attribute `.city_only`

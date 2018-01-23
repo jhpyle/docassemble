@@ -105,6 +105,17 @@ Setting `debug` to `True` enables the following features:
   statistics] for the question and the help text.
 * Viewing [LaTeX] and [Markdown] source in document attachments.
 
+## <a name="allow demo"></a>Allowing sample interviews in production mode
+
+By default, when `debug` is `False`, users without the privileges of
+`admin` or `developer` cannot run the sample interviews in the
+`docassemble.base` and `docassemble.demo` packages.  If you would like
+to allow users to run these interviews, you can set `allow demo` to `True`.
+
+{% highlight yaml %}
+allow demo: True
+{% endhighlight %}
+
 ## <a name="root"></a>Path to web application
 
 Set the `root` directive if you have configured **docassemble** to run
@@ -828,7 +839,7 @@ also, of course, need to change the web server configuration file.
 passwords, or to let users of a multi-user interview know that it is
 their turn to start answering questions.
 
-By default, **docassemble** assumes that an SMTP server is installed
+By default, **docassemble** assumes that an [SMTP] server is installed
 on the same machine as the web server and that it uses port 25.
 
 <a name="default sender"></a>If you are going to send mail, you should
@@ -840,7 +851,13 @@ mail:
   default sender: '"Administrator" <no-reply@example.com>'
 {% endhighlight %}
 
-To use another SMTP server as the mail server, do something like:
+The default set-up of a local [SMTP] server will probably not be
+appropriate for your situation, as most internet service providers
+block outgoing e-mail.
+
+### <a name="smtp"></a>Using an external [SMTP] server
+
+To use another [SMTP] server as the mail server, do something like:
 
 {% highlight yaml %}
 mail:
@@ -854,7 +871,7 @@ mail:
 {% endhighlight %}
 
 If you are hosting **docassemble** in the cloud, you will probably
-have to use a separate SMTP server in order to send e-mail.
+have to use a separate [SMTP] server in order to send e-mail.
 
 A free option is [Mailgun].  You can sign up with [Mailgun], provide a
 credit card (which will only be charged if you exceed the free tier),
@@ -867,6 +884,25 @@ mail:
   username: 'postmaster@mg.example.com'
   password: '5a4a0c5f3da35f3bc10f0462364c26dd'
   server: 'smtp.mailgun.org'
+{% endhighlight %}
+
+### <a name="mailgun api"></a>Using the Mailgun API
+
+Another way to send e-mail using [Mailgun] is through its API.  If you
+use the API, mail is sent to [Mailgun] using [HTTP], rather than
+[SMTP].  This may be more reliable than [SMTP], since internet service
+providers may slow down or block [SMTP] traffic as a way of protecting
+against spam.
+
+To use this method, obtain an API key from [Mailgun] and set it as the
+`mailgun api key`.  Also set your [Mailgun] domain as the `mailgun
+domain`.
+
+{% highlight yaml %}
+mail:
+  default sender: '"Example, Inc." <no-reply@mg.example.com>'
+  mailgun api key: key-b21b28f6e29be1f463478238d172813e
+  mailgun domain: mg.example.com
 {% endhighlight %}
 
 ## <a name="default interview"></a>Default interview
@@ -1246,6 +1282,22 @@ the server.
 checkin interval: 6000
 {% endhighlight %}
 
+If you set the `checkin interval` to `0`, this will turn off the
+check-in mechanism altogether.  This might be useful if you do not
+need the check-in feature and you want to prevent unnecessary traffic
+and CPU usage.
+
+The features that rely on the `checkin interval` being greater than
+zero include:
+
+- Notifications of the results of [background tasks].
+- The [check in] feature.
+- The [live help] features.
+
+Other than setting `checkin interval` to `0`, it is probably not a
+good idea to reduce this value below `6000`.  If requests to modify a
+single interview come in too frequently, problems can occur.
+
 ## <a name="docassemble git url"></a>Alternative GitHub location for docassemble
 
 The [Packages] feature updates the **docassemble** software directly
@@ -1376,6 +1428,12 @@ the [Google Cloud Translation API].
 
 If you specify a specific `google maps api key`, this key will be used
 for the [`map_of()`] feature instead of the `api key`.
+
+{% highlight yaml %}
+google:
+  api key: UIJGeyD-23aSdgSE34gEGRg3GDRGdrge9z-YUia
+  google maps api key: YyFeyuE-36grDgEE34jETRy3WDjGerye0y-wrRb
+{% endhighlight %}
 
 If you use both geocoding and Google Maps, you will probably want to
 use a separate `google maps api key` because you can secure it
@@ -1604,10 +1662,10 @@ external hostname: docassemble.example.com
 
 Set the `behind https load balancer` directive to `True` if you are
 running **docassemble** in a configuration where **docassemble**
-itself is running HTTP, but requests are being forwarded to it by a
+itself is running [HTTP], but requests are being forwarded to it by a
 server running HTTPS.  This might be your configuration if you are
 using a [load balancer] or you are running [Docker] on machine that
-[forwards] HTTPS requests to [Docker] on a non-standard HTTP port.
+[forwards] HTTPS requests to [Docker] on a non-standard [HTTP] port.
 
 ## <a name="cross site domain"></a>Cross-Origin Resource Sharing (CORS)
 
@@ -2313,3 +2371,6 @@ and Facebook API keys.
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
 [fax sending]: {{ site.baseurl }}/docs/functions.html#send_fax
 [API]: {{ site.baseurl }}/docs/api.html
+[check in]: {{ site.baseurl }}/docs/background.html#check in
+[SMTP]: https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol
+[HTTP]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
