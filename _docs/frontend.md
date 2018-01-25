@@ -7,10 +7,16 @@ short_title: Custom Front Ends
 # <a name="interface"></a>Interacting with **docassemble** over HTTP
 
 If you are a software developer, you can develop your own front end
-for **docassemble**.  If you add `&json=1` to the end of the URL, or
-include `json=1` as parameter of a POST request, a [JSON]
-representation of the screen will be returned.  (In fact, `json` set
-to anything will cause a [JSON] representation to be returned.)
+for **docassemble**.  You can use **docassemble**'s [API] to
+communicate with **docassemble** sessions.  It is slightly more
+complicated, but just as effective, to communicate with
+**docassemble** the same way that the web browser does.
+
+You can extract a machine-readable version of any **docassemble**
+screen.  If you add `&json=1` to the end of the URL, or include
+`json=1` as parameter of a POST request, a [JSON] representation of
+the screen will be returned.  (In fact, `json` set to anything will
+cause a [JSON] representation to be returned.)
 
 To communicate back with the server, you will need to mimic the way
 that the browser communicates with the server.  The easiest way to
@@ -413,7 +419,11 @@ Header set Access-Control-Allow-Credentials "true"
 However, there may be serious security implications to using a setup
 like this.
 
-[`cross site domain`]:{{ site.baseurl }}/docs/config.html#cross site domain
+Using the [API] avoids issues with [CORS].
+
+[API]: {{ site.baseurl }}/docs/api.html
+[CORS]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+[`cross site domain`]: {{ site.baseurl }}/docs/config.html#cross site domain
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`require referer`]: {{ site.baseurl }}/docs/config.html#root
 [referer header]: https://en.wikipedia.org/wiki/HTTP_referer

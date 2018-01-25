@@ -1073,7 +1073,7 @@ code: |
 
 # <a name="email"></a>E-mailing the interview
 
-Interviews can allow users to send e-mails to a case.
+An interview can allow users to send e-mails to it.
 
 Here is how it works:
 
@@ -1089,8 +1089,24 @@ Here is how it works:
 {% include side-by-side.html demo="email-to-case-simple" %}
 
 In order for this feature to work, your server must be configured to
-receive e-mails.  See the [e-mail setup] section of the [installation]
-instructions for information about configuring the e-mail server.
+receive e-mails.  If you are using [Docker], this involves:
+* Disabling any e-mail server already running on the [Docker] host.
+* Including `-p 25:25` in the `docker run` statement when you start your
+  [Docker] container, so that communications to your server on [port
+  25] are forwarded to the [Docker] container;
+* Setting the [MX record] for your domain to point to your server.
+  (If you are using a [multi-server arrangement], make sure to point
+  it specifically to the machine that operates with the `mail`
+  container role);
+* Ensuring that the firewall rules (a/k/a "security groups")
+  protecting your server allow incoming connections on [port 25].
+* Setting the [`incoming mail domain`] directive in the
+  [configuration] to the e-mail domain you want to use, unless the
+  domain you want to use for e-mailing is the same as the domain used
+  for your web server ([`external hostname`]).
+
+See the [e-mail setup] section of the [installation] instructions for
+details about how the e-mail receiving feature works.
 
 ## Running code in the background when an e-mail arrives
 
@@ -1211,6 +1227,7 @@ privileges and user identity of the [cron user].
 [interview deletion]: #deleting
 [interview logic]: {{ site.baseurl }}/docs/logic.html
 [multi-user interview]: {{ site.baseurl }}/docs/roles.html
+[multi-server arrangement]: {{ site.baseurl }}/docs/docker.html#multi server arrangement
 [multiple servers]: {{ site.baseurl }}/docs/scalability.html
 [privilege]: {{ site.baseurl }}/docs/users.html
 [scheduled task]: #scheduled
@@ -1246,3 +1263,7 @@ privileges and user identity of the [cron user].
 [traceback]: https://docs.python.org/2/library/traceback.html
 [`try`/`except`]: https://docs.python.org/2/tutorial/errors.html#handling-exceptions
 [`background_error_action()`]: #background_error_action
+[`incoming mail domain`]: {{ site.baseurl }}/docs/config.html#incoming mail domain
+[`external hostname`]: {{ site.baseurl }}/docs/config.html#external hostname
+[MX record]: https://en.wikipedia.org/wiki/MX_record
+[port 25]: https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol

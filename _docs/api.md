@@ -253,7 +253,7 @@ Response on success: [204]
 
 Body of response: empty.
 
-## <a name="interviews"></a>Interview sessions on the system
+## <a name="interviews"></a>List interview sessions on the system
 
 Description: Provides a filterable list of interview sessions that are
 stored on the system.
@@ -309,6 +309,40 @@ sessions, where each object has the following keys:
   `secret` is missing or does not match the encryption key used by the
   interview.
 
+## <a name="interviews_delete"></a>Delete interview sessions on the system
+
+Description: Deletes interview sessions.
+
+Path: `/api/interviews`
+
+Method: [DELETE]
+
+Parameters:
+
+ - `key`: the API key.
+ - `tag` (optional): set to a tag if you want to delete only those
+   interview sessions with the given tag.
+ - `i` (optional): set to an interview filename if you want to delete
+   only those interview sessions with the given interview filename.
+ - `session` (optional): set to a session ID if you want to delete
+   only the interview session with the given session ID.
+
+Required privileges: `admin`
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Error reading interview list." if there was a problem
+   obtaining the list of interviews to delete.
+
+Response on success: [204]
+
+Body of response: empty.
+
+This API, which is available only to administrators, allows you to
+delete interviews from the system, even all of them.  The filters are
+cumulative applied (as if connected with "and").  If you include no
+filters, all of the interview sessions, regardless of user, are deleted.
+
 ## <a name="user_interviews"></a>Interviews of the user
 
 Description: Provides a filterable list of interview sessions stored
@@ -321,13 +355,37 @@ Required privileges: none.
 This works just like the [`/api/interviews`], except it only returns
 interviews belonging to the owner of the API.
 
-## <a name="user_user_id_interviews"></a>Interviews of another user
+## <a name="user_user_id_interviews"></a>List interview sessions of another user
 
 Description: Provides a filterable list of interview sessions stored
 on the system where the user with the given user ID started the interview.
 
 Path: `/api/user/<user_id>/interviews`
 
+Method: [GET]
+
+Required privileges: `admin`
+
+This works just like the [`/api/interviews`], except it only returns
+interviews belonging to the user with user ID `user_id`.
+
+## <a name="user_user_id_interviews_delete"></a>Delete interview sessions of another user
+
+Description: Deletes interview sessions belonging to a particular user.
+
+Path: `/api/user/<user_id>/interviews`
+
+Method: [GET]
+
+Parameters:
+
+ - `key`: the API key.
+ - `i` (optional): set to a filename of an interview, e.g.,
+   `docassemble.demo:data/questions/questions.yml`, if you want to
+   delete only those sessions for a given interview file.
+ - `tag` (optional): set to a tag if you want to delete only those
+   interview sessions with the given tag.
+ 
 Required privileges: `admin`
 
 This works just like the [`/api/interviews`], except it only returns
@@ -496,7 +554,8 @@ about how the conversion is done, see the documentation for the
 
 ## <a name="session_post"></a>Set variables in an interview
 
-Description: Sets variables in the interview dictionary.
+Description: Sets variables in the interview dictionary and returns a
+[JSON] representation of the current question in the interview.
 
 Path: `/api/session`
 
@@ -510,8 +569,26 @@ Form data:
  - `session`: the session ID of the interview.
  - `secret` (optional): the encryption key to use with the interview,
    if the interview uses server-side encryption.
- - `variables`: a [JSON] object where the keys are variable names and
+ - `variables` (optional): a [JSON] object where the keys are variable names and
    the values are the values those variables should have.
+ - `question` (optional): if set to `0`, then the interview is not
+   evaluated after the variables are set and the current question in
+   the interview is not returned in response to the request.  You may
+   wish to set `question` to `0` if you want to change the interview
+   dictionary, but you do not want to trigger any side effects by
+   causing the interview to be evaluated.
+ - `file_variables` (optional): if you are uploading one or more
+   files, and the name of the `DAFileList` variable cannot be passed
+   as the name of the file upload, you can set `file_variables` to a
+   [JSON] representation of an object with key/value pairs that
+   associate the names of file uploads with the variable name you want
+   to use.  For example, if `file_variables` is `{"my_file":
+   "user.relative['aunt']"}`, then when you upload a file using the
+   input name `my_file`, this will have the effect of setting the
+   [Python] variable `user.relative['aunt']` equal to a [`DAFileList`]
+   containing the file.
+
+File uploads: you can include file uploads in the POST request.
 
 Responses on failure: 
  - [403] "Access Denied" if the API key did not authenticate.
@@ -525,16 +602,21 @@ Responses on failure:
    not a [JSON] object.
  - [400] "Problem setting variables" if there was an error while
    setting variables in the dictionary.
+ - [400] "Failure to assemble interview" if the interview generates an
+   error.
 
-Response on success: [204]
+Response on success: [200], but if `question` is set to `0`, then [204].
 
-Body of response: empty.
+Body of response: a [JSON] representation of the current question.
+This response is the same as that of [`/api/session/question`].
+However, if the `question` data value is set to `0`, then the response
+is empty.
 
-The `variables` object is converted from [JSON] to a [Python dict].
-For each key/value pair in the [Python dict], an assignment statement
-is executed inside the interview dictionary.  The key is used as the
-left side of the assignment operator and the value is used as the
-right side.
+When this API is called, the `variables` object is converted from
+[JSON] to a [Python dict].  For each key/value pair in the [Python
+dict], an assignment statement is executed inside the interview
+dictionary.  The key is used as the left side of the assignment
+operator and the value is used as the right side.
 
 For example, if `variables` is this [JSON] string:
 
@@ -554,6 +636,22 @@ And the following statements will be executed in the interview dictionary:
 defense['latches'] = False
 client.phone_number = u'202-555-3434'
 {% endhighlight %}
+
+You can also upload files along with a [POST] request to this API.  In
+HTTP, a [POST] request can contain one or more file uploads.  Each
+file upload is associated with a name, just as a data element is
+associated with a name.  Your [POST] request can contain zero or more
+of these names, and each name can be associated with one or more
+files.
+
+When a [POST] request includes one or more names associated with file
+uploads, **docassemble** creates a [`DAFileList`] object for each
+name.  This object can contain one or more files.
+
+After all the variables from the `variables` data have been set, the
+interview is evaluated and a [JSON] representation of the current
+question is returned.  However, if the `question` data value is set to
+`0`, this step is skipped and an empty response is returned.
 
 ## <a name="session_question"></a>Get information about the current question
 
@@ -587,7 +685,30 @@ Responses on failure:
 Response on success: [200]
 
 Body of response: a [JSON] representation of the current question.
-The structure varies by question type.
+The structure of the object varies by question type and is largely
+self-explanatory.
+
+The `message_log` is a list of messages generated by the [`log()`]
+function if the priority of the message was something other than
+`'log'`.  For example, if the interview ran `log("Hello, world!",
+priority="info")`, then the `message_log` would look like the
+following:
+
+{% highlight json %}
+{
+  "message_log": [
+    {
+      "message": "Hello, world!", 
+      "priority": "info"
+    }
+  ],
+  ...
+}
+{% endhighlight %}
+
+Some of the information in the response may only be relevant to you
+if you are trying to create a front end similar to **docassemble**'s
+web application.
 
 ## <a name="session_action"></a>Run an action in an interview
 
@@ -636,6 +757,58 @@ returned.
 For more information about how actions run in **docassemble**
 interviews, see [actions].
 
+## <a name="session_back"></a>Go back one step in an interview session
+
+Description: Goes back one step in the interview session and returns a
+[JSON] representation of the current question in the interview.
+
+Path: `/api/session/back`
+
+Method: [POST]
+
+Form data:
+
+ - `key`: the API key.
+ - `i`: the filename of the interview.  E.g.,
+   `docassemble.demo:data/questions/questions.yml`.
+ - `session`: the session ID of the interview.
+ - `secret` (optional): the encryption key to use with the interview,
+   if the interview uses server-side encryption.
+ - `question` (optional): if set to `0`, then the interview is not
+   evaluated and the current question in the interview is not returned
+   in response to the request.  You may wish to set `question` to `0`
+   if you want to go back a step, but you do not want to trigger any
+   side effects by causing the interview to be evaluated.
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Cannot go back" if the interview is just beginning and
+   cannot go back.
+ - [400] "Parameters i and session are required" if the `i` parameter
+   and `session` parameters are not included.
+ - [400] "Unable to obtain interview dictionary" if there was a problem
+   locating the interview dictionary.
+ - [400] "Unable to decrypt interview dictionary" if there was a problem
+   obtaining and decrypting the interview dictionary.
+ - [400] "Variables data is not a dict" if the variables dictionary is
+   not a [JSON] object.
+ - [400] "Problem setting variables" if there was an error while
+   setting variables in the dictionary.
+ - [400] "Failure to assemble interview" if the interview generates an
+   error.
+
+Response on success: [200], but if `question` is set to `0`, then [204].
+
+Body of response: a [JSON] representation of the current question.
+This response is the same as that of [`/api/session/question`].
+However, if the `question` data value is set to `0`, then the response
+is empty.
+
+After the last step in the interview is undone, the interview is
+evaluated and a [JSON] representation of the current question is
+returned.  However, if the `question` data value is set to `0`, this
+step is skipped and an empty response is returned.
+
 ## <a name="session_delete"></a>Delete an interview session
 
 Description: Deletes a single interview session.
@@ -662,6 +835,104 @@ Response on success: [204]
 
 Body of response: empty.
 
+# <a name="questionless"></a>Example of usage: questionless interview
+
+One way to use the API is to use **docassemble** as nothing more than
+a logic engine, ignoring **docassemble**'s system for asking
+questions.
+
+The following interview, which is in the [`docassemble.demo`] package,
+contains no [`question`] blocks, but it is still usable through an API.
+
+{% highlight yaml %}
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  json_response({'final': True, 'inhabitants': inhabitant_count})
+---
+code: |
+  if favorite_number == 42 and user_agrees_to_waive_penalties:
+    inhabitant_count = 2
+  else:
+    inhabitant_count = 2000 + favorite_number * 45
+{% endhighlight %}
+
+Its sole purpose is to return a [`json_response()`] to the user,
+letting the user know the number of "inhabitants."
+
+Here is how you would use it:
+
+First, do a [GET] request to [`/api/session/new`] with
+`i=docassemble.demo:data/questions/examples/questionless.yml` and
+obtain a session ID and encryption key for a new interview.
+
+{% highlight json %}
+{
+  "encrypted": true, 
+  "i": "docassemble.base:data/questions/examples/questionless.yml", 
+  "secret": "aZLbSszVzfVpnOfK", 
+  "session": "YOwLSycrtezLXEWhIUheRSpLNLEfRMxP"
+}
+{% endhighlight %}
+   
+Next, do a [GET] request to `/api/session/question`, passing the
+`i`, `session`, and `secret` values as parameters.  You will get back:
+
+{% highlight json %}
+{
+  "message_log": [], 
+  "questionType": "undefined_variable", 
+  "variable": "favorite_number"
+}
+{% endhighlight %}
+
+This indicates that the interview was unable to reach achieve its end
+goal because the variable `favorite_number` was undefined, and there
+was no [`question`] that could be asked to define the variable.  In
+the web interface, this situation would result in a [501] error, but
+in an interview designed for use with the API, this situation results
+in [JSON] like the above, telling you that you need to do something to
+define the variable `favorite_number`.
+
+To define this variable, you would next send a [POST] request to
+[`/api/session`], including as data values the `i`, `session`, and
+`secret` values, as well as a data value `variables`, which needs to
+be a [JSON] string containing an object where the keys are variable
+names and the values are the values you want those variables to have.
+
+For example if you set `variables` to `{"favorite_number": 42}`, then
+the [Python] variable `favorite_number` will be set to the integer
+`42`.
+
+The interview will then be evaluated and the current state of the
+interview will be returned:
+
+{% highlight json %}
+{
+  "message_log": [], 
+  "questionType": "undefined_variable", 
+  "variable": "user_agrees_to_waive_penalties"
+}
+{% endhighlight %}
+
+You would then send another [POST] request to [`/api/session`] in
+order to provide a definition for `user_agrees_to_waive_penalties`.
+Setting `variables` equal to `{"user_agrees_to_waive_penalties":
+false}` yields the following response:
+
+{% highlight json %}
+{
+  "final": true, 
+  "inhabitants": 3890
+}
+{% endhighlight %}
+
+Note that this [JSON] originates directly from the [`json_response()`]
+function.
+
+[`json_response()`]: {{ site.baseurl }}/docs/functions.html#json_response
 [GET]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET
 [POST]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
 [DELETE]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/DELETE
@@ -676,7 +947,9 @@ Body of response: empty.
 [interview `metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [`/api/interviews`]: #interviews
 [`/api/secret`]: #secret
+[`/api/session`]: #session_post
 [`/api/session/new`]: #session_new
+[`/api/session/question`]: #session_question
 [Python dict]: https://docs.python.org/2.7/tutorial/datastructures.html#dictionaries
 [Python objects]: https://docs.python.org/2.7/tutorial/classes.html
 [`all_variables()`]: {{ site.baseurl }}/docs/functions.html#all_variables
@@ -689,3 +962,8 @@ Body of response: empty.
 [400]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
 [403]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
 [404]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+[501]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`docassemble.demo`]: https://github.com/jhpyle/docassemble/tree/master/docassemble_demo/docassemble/demo
+[`log()`]: {{ site.baseurl }}/docs/functions.html#log
+[`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList

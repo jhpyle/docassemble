@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.23](https://github.com/jhpyle/docassemble/releases/tag/v0.2.23) - 2018-01-23
+
+### Added
+- The `/api/session/back` API and the `go_back_in_session()` function.
+
+### Changed
+- The `/api/session` POST API now returns the current question, unless the
+  `question` data value is set to `0`.
+
 ## [0.2.22](https://github.com/jhpyle/docassemble/releases/tag/v0.2.22) - 2018-01-23
 
 ### Added

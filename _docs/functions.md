@@ -3040,6 +3040,11 @@ client.phone_number = u'202-555-3434'
 
 For an [API] version of this function, see the [POST method of `/api/session`].
 
+## <a name="go_back_in_session"></a>go_back_in_session()
+
+
+For an [API] version of this function, see the [POST method of `/api/session/back`].
+
 # <a name="functions"></a>Miscellaneous functions
 
 ## <a name="server_capabilities"></a>server_capabilities()
@@ -4981,6 +4986,7 @@ $(document).on('daPageLoad', function(){
 [`/api/secret`]: {{ site.baseurl }}/docs/api.html#secret
 [GET method of `/api/session`]: {{ site.baseurl }}/docs/api.html#session_get
 [POST method of `/api/session`]: {{ site.baseurl }}/docs/api.html#session_post
+[POST method of `/api/session/back`]: {{ site.baseurl }}/docs/api.html#session_back
 [`get_user_list()`]: #get_user_list
 [`get_user_secret()`]: #get_user_secret
 [`get_session_variables()`]: #get_session_variables
