@@ -261,9 +261,9 @@ with certificates hosted on [Let's Encrypt].  (The directive `-p
 443:443` is included so that the [HTTPS] port is exposed.)
 
 If you want your server to be able to accept incoming [e-mails], you
-will need to add `-p 25:25` in order to open port 25.  See the [e-mail
-setup] section of the [installation] instructions for information
-about configuring the e-mail server.
+will need to add `-p 25:25` in order to open port 25.  See the
+[e-mailing the interview] section for information about configuring
+your server to receive e-mails.
 
 A [template for the `env.list` file] is included in distribution.
 
@@ -1576,3 +1576,4 @@ containers depend on the images.
 [`server administrator email`]: {{ site.baseurl }}/docs/config.html#server administrator email
 [e-mail setup]: {{ site.baseurl }}/docs/installation.html#setup_email
 [installation]: {{ site.baseurl }}/docs/installation.html
+[e-mailing the interview]: {{ site.baseurl }}/docs/background.html#email

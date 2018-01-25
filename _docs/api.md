@@ -235,7 +235,7 @@ Path: `/api/user/<user_id>`
 
 Example: `/api/user/22`
 
-Method: [DELETE]
+Method: [POST]
 
 Parameters:
 
@@ -311,11 +311,13 @@ sessions, where each object has the following keys:
 
 ## <a name="interviews_delete"></a>Delete interview sessions on the system
 
-Description: Deletes interview sessions.
+Description: Deletes interview sessions on the server.
 
 Path: `/api/interviews`
 
 Method: [DELETE]
+
+Required privileges: `admin`
 
 Parameters:
 
@@ -327,8 +329,6 @@ Parameters:
  - `session` (optional): set to a session ID if you want to delete
    only the interview session with the given session ID.
 
-Required privileges: `admin`
-
 Responses on failure: 
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Error reading interview list." if there was a problem
@@ -339,39 +339,46 @@ Response on success: [204]
 Body of response: empty.
 
 This API, which is available only to administrators, allows you to
-delete interviews from the system, even all of them.  The filters are
-cumulative applied (as if connected with "and").  If you include no
-filters, all of the interview sessions, regardless of user, are deleted.
+delete interviews from the system, even all of them.  The filters
+`tag`, `i`, and `session` are cumulatively applied (as if connected
+with "and").  If you include no filters, all of the interview
+sessions, regardless of user, are deleted.
 
-## <a name="user_interviews"></a>Interviews of the user
+See also the [`/api/user/interviews`](#user_interview_delete) method
+and the [`/api/user/<user_id>/interviews`](#user_user_id_interviews_delete) method.
+
+## <a name="user_interviews"></a>List interviews of the user
 
 Description: Provides a filterable list of interview sessions stored
 on the system where the owner of the API started the interview.
 
 Path: `/api/user/interviews`
 
+Method: [GET]
+
 Required privileges: none.
 
 This works just like the [`/api/interviews`], except it only returns
 interviews belonging to the owner of the API.
 
+## <a name="user_interviews_delete"></a>Delete interviews of the user
+
+Description: Deletes interview sessions stored on the system that were
+started by the owner of the API key.
+
+Path: `/api/user/interviews`
+
+Method: [DELETE]
+
+Required privileges: none.
+
+This works just like the [DELETE] method of [`/api/interviews`],
+except it only deletes interviews belonging to the owner of the API.
+
 ## <a name="user_user_id_interviews"></a>List interview sessions of another user
 
 Description: Provides a filterable list of interview sessions stored
 on the system where the user with the given user ID started the interview.
-
-Path: `/api/user/<user_id>/interviews`
-
-Method: [GET]
-
-Required privileges: `admin`
-
-This works just like the [`/api/interviews`], except it only returns
-interviews belonging to the user with user ID `user_id`.
-
-## <a name="user_user_id_interviews_delete"></a>Delete interview sessions of another user
-
-Description: Deletes interview sessions belonging to a particular user.
 
 Path: `/api/user/<user_id>/interviews`
 
@@ -385,10 +392,32 @@ Parameters:
    delete only those sessions for a given interview file.
  - `tag` (optional): set to a tag if you want to delete only those
    interview sessions with the given tag.
- 
+
 Required privileges: `admin`
 
 This works just like the [`/api/interviews`], except it only returns
+interviews belonging to the user with user ID `user_id`.
+
+## <a name="user_user_id_interviews_delete"></a>Delete interview sessions of another user
+
+Description: Deletes interview sessions belonging to a particular user.
+
+Path: `/api/user/<user_id>/interviews`
+
+Method: [DELETE]
+
+Required privileges: `admin`
+
+Parameters:
+
+ - `key`: the API key.
+ - `i` (optional): set to a filename of an interview, e.g.,
+   `docassemble.demo:data/questions/questions.yml`, if you want to
+   delete only those sessions for a given interview file.
+ - `tag` (optional): set to a tag if you want to delete only those
+   interview sessions with the given tag.
+
+This works just like the [`/api/interviews`], except it only deletes
 interviews belonging to the user with user ID `user_id`.
 
 ## <a name="list"></a>Get a list of advertised interviews
