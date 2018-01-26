@@ -1,0 +1,19 @@
+metadata:
+  title: Questionless interview
+  short title: Questionless
+  documentation: "https://docassemble.org/docs/api.html#questionless"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  json_response({'final': True, 'inhabitants': inhabitant_count})
+---
+code: |
+  if favorite_number == 42 and user_agrees_to_waive_penalties:
+    inhabitant_count = 2
+  else:
+    inhabitant_count = 2000 + favorite_number * 45

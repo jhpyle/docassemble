@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.2.23] - 2018-01-25
+### Added
+- The `/api/session/back` API and the `go_back_in_session()` function.
+### Changed
+- The `/api/session` POST API now returns the current question, unless the
+  `question` data value is set to `0`.
+- The `/api/session` POST API now accepts file uploads.
+
 ## [0.2.22] - 2018-01-23
 ### Added
 - Configuration directive `allow demo` for allowing demonstration

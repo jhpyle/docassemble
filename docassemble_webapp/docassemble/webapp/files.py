@@ -356,6 +356,8 @@ def get_ext_and_mimetype(filename):
         extension = "tif"
     if extension == '3gpp':
         mimetype = 'audio/3gpp'
+    if extension in ('yaml', 'yml'):
+        mimetype = 'text/plain'
     return(extension, mimetype)
 
 def publish_package(pkgname, info, author_info, tz_name):

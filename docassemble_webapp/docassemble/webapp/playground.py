@@ -345,7 +345,7 @@ class PlaygroundSection(object):
         if result_file is None:
             return False
         with open(result_file.name, 'rU') as fp:
-            result = fp.read()
+            result = fp.read().decode('utf8')
         fields = set()
         for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
             fields.add(docx_variable_fix(variable))

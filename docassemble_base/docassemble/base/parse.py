@@ -359,7 +359,7 @@ class InterviewStatus(object):
         self.sought = question_result['sought']
     def set_tracker(self, tracker):
         self.tracker = tracker
-    def as_data(self):
+    def as_data(self, encode=True):
         result = dict()
         for param in ('questionText', 'subquestionText', 'underText', 'continueLabel'):
             if hasattr(self, param) and getattr(self, param) is not None:
@@ -427,7 +427,8 @@ class InterviewStatus(object):
             the_field['number'] = field.number
             if hasattr(field, 'saveas'):
                 the_field['variable_name'] = from_safeid(field.saveas)
-                the_field['variable_name_encoded'] = field.saveas
+                if encode:
+                    the_field['variable_name_encoded'] = field.saveas
             for param in ('datatype', 'fieldtype', 'sign', 'inputtype', 'address_autocomplete'):
                 if hasattr(field, param):
                     the_field[param] = getattr(field, param)
@@ -451,7 +452,7 @@ class InterviewStatus(object):
             else:
                 the_default = None
             if self.question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'checkboxes', 'object_checkboxes', 'object_radio')):
-                the_field['choices'] = self.get_choices_data(field, the_default)
+                the_field['choices'] = self.get_choices_data(field, the_default, encode=encode)
             if hasattr(field, 'nota'):
                 the_field['none_of_the_above'] = self.extras['nota'][field.number]
             the_field['active'] = self.extras['ok'][field.number]
@@ -535,7 +536,7 @@ class InterviewStatus(object):
             self.attributions.add(the_image.attribution)
         url = docassemble.base.functions.server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
         return url
-    def get_choices_data(self, field, defaultvalue):
+    def get_choices_data(self, field, defaultvalue, encode=True):
         question = self.question
         choice_list = list()
         if hasattr(field, 'saveas') and field.saveas is not None:
@@ -582,7 +583,9 @@ class InterviewStatus(object):
                         choice_list.append(item)
                 elif field.datatype == 'checkboxes':
                     for pair in pairlist:
-                        item = dict(label=pair['label'], variable_name=saveas + "[" + repr(pair['key']) + "]", variable_name_encoded=safeid(saveas + "[" + repr(pair['key']) + "]"), value=True)
+                        item = dict(label=pair['label'], variable_name=saveas + "[" + repr(pair['key']) + "]", value=True)
+                        if encode:
+                            item[variable_name_encoded] = safeid(saveas + "[" + repr(pair['key']) + "]")
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in (list, set) and unicode(pair['key']) in defaultvalue) or (type(defaultvalue) is dict and unicode(pair['key']) in defaultvalue and defaultvalue[unicode(pair['key'])]) or (type(defaultvalue) in (str, unicode, int, bool, float) and unicode(pair['key']) == unicode(defaultvalue)):
                             item['selected'] = True
                         if 'help' in pair:
@@ -603,7 +606,9 @@ class InterviewStatus(object):
         else:
             indexno = 0
             for choice in self.selectcompute[field.number]:
-                item = dict(label=choice['label'], variable_name='_internal["answers"][' + repr(question.name) + ']', variable_name_encoded=safeid('_internal["answers"][' + repr(question.name) + ']'), value=indexno)
+                item = dict(label=choice['label'], variable_name='_internal["answers"][' + repr(question.name) + ']', value=indexno)
+                if encode:
+                    item['variable_name_encoded'] = safeid('_internal["answers"][' + repr(question.name) + ']')
                 if 'image' in choice:
                     the_image = self.icon_url(choice['image'])
                     if the_image:

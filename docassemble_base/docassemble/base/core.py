@@ -1849,14 +1849,17 @@ class DAFile(DAObject):
         self.mimetype = self.file_info.get('mimetype', None)
         self.persistent = self.file_info['persistent']
         self.private = self.file_info['private']
-    def slurp(self):
+    def slurp(self, auto_decode=True):
         """Returns the contents of the file."""
         self.retrieve()
         the_path = self.path()
         if not os.path.isfile(the_path):
             raise Exception("File " + str(the_path) + " does not exist yet.")
         with open(the_path, 'rU') as f:
-            return(f.read())
+            if auto_decode and hasattr(self, 'mimetype') and self.mimetype.startswith('text') or self.mimetype in ('application/json', 'application/javascript'):
+                return(f.read().decode('utf8'))
+            else:
+                return(f.read())
     def readlines(self):
         """Returns the contents of the file."""
         self.retrieve()

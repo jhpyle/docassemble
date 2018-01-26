@@ -6703,7 +6703,7 @@ def index():
           var saveAs = $(this).data('saveas');
           var isSame = (saveAs == showIfVar);
           var showIfDiv = this;
-          var showHideDiv = function(){
+          var showHideDiv = function(speed){
             if ($(this).parents(".showif").length !== 0){
               //console.log("Returning because inside a showif.");
               return;
@@ -6720,12 +6720,14 @@ def index():
               //console.log("They are the same");
               if (showIfSign){
                 //console.log("Showing1!");
-                $(showIfDiv).removeClass("invisible");
+                //$(showIfDiv).removeClass("invisible");
+                $(showIfDiv).show(speed);
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
               else{
                 //console.log("Hiding1!");
-                $(showIfDiv).addClass("invisible");
+                //$(showIfDiv).addClass("invisible");
+                $(showIfDiv).hide(speed);
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
             }
@@ -6733,22 +6735,30 @@ def index():
               //console.log("They are not the same");
               if (showIfSign){
                 //console.log("Hiding2!");
-                $(showIfDiv).addClass("invisible");
+                $(showIfDiv).hide(speed);
+                //$(showIfDiv).addClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
               else{
                 //console.log("Showing2!");
-                $(showIfDiv).removeClass("invisible");
+                $(showIfDiv).hide('show');
+                //$(showIfDiv).removeClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
             }
           };
-          $("#" + showIfVarEscaped).each(showHideDiv);
-          $("#" + showIfVarEscaped).change(showHideDiv);
-          $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDiv);
-          $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDiv);
-          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDiv);
-          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDiv);
+          var showHideDivImmediate = function(){
+            showHideDiv.apply(this, [null]);
+          }
+          var showHideDivFast = function(){
+            showHideDiv.apply(this, ['fast']);
+          }
+          $("#" + showIfVarEscaped).each(showHideDivImmediate);
+          $("#" + showIfVarEscaped).change(showHideDivFast);
+          $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+          $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
         });
         $("#daSend").click(daSender);
         if (daChatAvailable == 'unavailable'){
@@ -7901,7 +7911,7 @@ def observer():
           var saveAs = $(this).data('saveas');
           var isSame = (saveAs == showIfVar);
           var showIfDiv = this;
-          var showHideDiv = function(){
+          var showHideDiv = function(speed){
             if($(this).parents(".showif").length !== 0){
               return;
             }
@@ -7916,32 +7926,42 @@ def observer():
             if(theVal == showIfVal){
               //console.log("They are the same");
               if (showIfSign){
-                $(showIfDiv).removeClass("invisible");
+                $(showIfDiv).show(speed);
+                //$(showIfDiv).removeClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
               else{
-                $(showIfDiv).addClass("invisible");
+                $(showIfDiv).hide(speed);
+                //$(showIfDiv).addClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
             }
             else{
               //console.log("They are not the same");
               if (showIfSign){
-                $(showIfDiv).addClass("invisible");
+                $(showIfDiv).hide(speed);
+                //$(showIfDiv).addClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
               else{
-                $(showIfDiv).removeClass("invisible");
+                $(showIfDiv).show(speed);
+                //$(showIfDiv).removeClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
             }
           };
-          $("#" + showIfVarEscaped).each(showHideDiv);
-          $("#" + showIfVarEscaped).change(showHideDiv);
-          $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDiv);
-          $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDiv);
-          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDiv);
-          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDiv);
+          var showHideDivImmediate = function(){
+            showHideDiv.apply(this, [null]);
+          }
+          var showHideDivFast = function(){
+            showHideDiv.apply(this, ['fast']);
+          }
+          $("#" + showIfVarEscaped).each(showHideDivImmediate);
+          $("#" + showIfVarEscaped).change(showHideDivFast);
+          $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+          $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
         });
         // dadisable = setTimeout(function(){
         //   $("#daform").find('button[type="submit"]').prop("disabled", true);
@@ -13141,7 +13161,7 @@ def utilities():
                     fields_output = word("Error: no fields could be found in the file")
                 else:
                     with open(result_file.name, 'rU') as fp:
-                        result = fp.read()
+                        result = fp.read().decode('utf8')
                     fields = set()
                     for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
                         fields.add(docx_variable_fix(variable))
@@ -14993,7 +15013,7 @@ def get_user_info(user_id=None, email=None):
     if not (current_user.has_role('admin')):
         if (user_id is not None and current_user.id != user_id) or (email is not None and current_user.email != email):
             raise Exception("You cannot call get_user_info() unless you are an administrator")
-    user_info = dict(roles=[])
+    user_info = dict(privileges=[])
     if user_id is not None:
         user = UserModel.query.filter_by(id=user_id).first()
     else:
@@ -15001,7 +15021,7 @@ def get_user_info(user_id=None, email=None):
     if user is None:
         return None
     for role in user.roles:
-        user_info['roles'].append(role.name)
+        user_info['privileges'].append(role.name)
     for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'active'):
         user_info[attrib] = getattr(user, attrib)
     return user_info    
@@ -15044,6 +15064,20 @@ def api_user():
         set_user_info(user_id=current_user.id, **info)
         return ('', 204)
 
+@app.route('/api/user/privileges', methods=['GET'])
+@csrf.exempt
+def api_user_privileges():
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    try:
+        user_info = get_user_info(user_id=current_user.id)
+    except Exception as err:
+        return jsonify_with_status("Error obtaining user information: " + str(err), 400)
+    if user_info is None:
+        return jsonify_with_status('User not found', 404)
+    if request.method == 'GET':
+        return jsonify(user_info['privileges'])
+
 @app.route('/api/user/<user_id>', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt
 def api_user_by_id(user_id):
@@ -15073,6 +15107,84 @@ def api_user_by_id(user_id):
         set_user_info(user_id=user_id, **info)
         return ('', 204)
 
+@app.route('/api/privileges', methods=['GET', 'POST'])
+@csrf.exempt
+def api_privileges(user_id):
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    if request.method == 'GET':
+        return jsonify(get_privilege_list())
+    if request.method == 'POST':
+        if not (current_user.has_role('admin')):
+            return jsonify_with_status("Access denied.", 403)
+        post_data = request.form.copy()
+        if 'privilege' not in post_data:
+            return jsonify_with_status("A privilege must be provided.", 400)
+        try:
+            add_privilege(post_data['privilege'])
+        except Exception as err:
+            return jsonify_with_status(str(err), 400)
+        return ('', 204)
+
+def get_privilege_list():
+    role_names = []
+    for role in Role.query.order_by('name'):
+        role_names.append(role.name)
+    return role_names
+    
+def add_privilege(privilege):
+    if not (current_user.has_role('admin')):
+        raise Exception('You must have admin privileges to call add_privilege().')
+    role_names = get_privilege_list()
+    if privilege in role_names:
+        raise Exception("The given privilege already exists.")
+    db.session.add(Role(name=privilege))
+    db.session.commit()
+    
+@app.route('/api/user/<user_id>/privileges', methods=['GET', 'DELETE', 'POST'])
+@csrf.exempt
+def api_user_by_id_privileges(user_id):
+    if not api_verify(request, roles=['admin']):
+        return jsonify_with_status("Access denied.", 403)
+    try:
+        user_info = get_user_info(user_id=user_id)
+    except Exception as err:
+        return jsonify_with_status("Error obtaining user information: " + str(err), 400)
+    if user_info is None:
+        return jsonify_with_status('User not found', 404)
+    if request.method == 'GET':
+        return jsonify(user_info['privileges'])
+    if request.method in ('DELETE', 'POST'):
+        user = UserModel.query.filter_by(id=user_id).first()
+        if request.method == 'DELETE':
+            role_name = request.args.get('privilege', None)
+            if role_name is None:
+                return jsonify_with_status("A privilege must be provided", 400)
+            role_to_remove = None
+            for role in user.roles:
+                if role.name == role_name:
+                    roles_to_remove = role
+            if roles_to_remove is None:
+                return jsonify_with_status("The user did not already have that privilege.", 400)
+            user.roles.remove(role_to_remove)
+        elif request.method == 'POST':
+            post_data = request.form.copy()
+            role_name = post_data.get('privilege', None)
+            if role_name is None:
+                return jsonify_with_status("A privilege name must be provided", 400)
+            for role in user.roles:
+                if role.name == role_name:
+                    return jsonify_with_status("The user already had that privilege.", 400)
+            role_to_add = None
+            for role in Role.query.order_by('id'):
+                if role.name == role_name:
+                    role_to_add = role
+            if roles_to_add is None:
+                return jsonify_with_status("The specified privilege did not exist.", 400)
+            user.roles.append(role_to_add)
+        db.session.commit()
+        return ('', 204)
+    
 def set_user_info(**kwargs):
     if current_user.is_anonymous:
         raise Exception("You cannot call set_user_info() unless you are logged in")
@@ -15181,6 +15293,26 @@ def api_user_user_id_interviews(user_id):
             user_interviews(user_id=info['user_id'], action='delete', filename=info['filename'], session=info['session'])
         return ('', 204)
 
+@app.route('/api/session/back', methods=['POST'])
+@csrf.exempt
+def api_session_back():
+    post_data = request.form.copy()
+    yaml_filename = post_data.get('i', None)
+    session_id = post_data.get('session', None)
+    secret = str(post_data.get('secret', None))
+    reply_with_question = true_or_false(post_data.get('question', True))
+    if yaml_filename is None or session_id is None:
+        return jsonify_with_status("Parameters i and session are required.", 400)
+    try:
+        data = go_back_in_session(yaml_filename, session_id, secret=secret, return_question=reply_with_question)
+    except Exception as the_err:
+        return jsonify_with_status(str(the_err), 400)
+    if data is None:
+        return ('', 204)
+    if data.get('questionType', None) is 'response':
+        return data['response']
+    return jsonify(**data)
+
 @app.route('/api/session', methods=['GET', 'POST', 'DELETE'])
 @csrf.exempt
 def api_session():
@@ -15204,19 +15336,55 @@ def api_session():
         yaml_filename = post_data.get('i', None)
         session_id = post_data.get('session', None)
         secret = str(post_data.get('secret', None))
+        reply_with_question = true_or_false(post_data.get('question', True))
         if yaml_filename is None or session_id is None:
             return jsonify_with_status("Parameters i and session are required.", 400)
         try:
             variables = json.loads(post_data.get('variables', '{}'))
         except:
             return jsonify_with_status("Malformed variables.", 400)
+        try:
+            file_variables = json.loads(post_data.get('file_variables', '{}'))
+        except:
+            return jsonify_with_status("Malformed list of file_variables.", 400)
         if type(variables) is not dict:
             return jsonify_with_status("Variables data is not a dict.", 400)
+        files = []
+        literal_variables = dict()
+        for filekey in request.files:
+            if filekey not in file_variables:
+                file_variables[filekey] = filekey
+            the_files = request.files.getlist(filekey)
+            files_to_process = []
+            if the_files:
+                for the_file in the_files:
+                    filename = secure_filename(the_file.filename)
+                    file_number = get_new_file_number(session_id, filename, yaml_file_name=yaml_filename)
+                    extension, mimetype = get_ext_and_mimetype(filename)
+                    saved_file = SavedFile(file_number, extension=extension, fix=True)
+                    temp_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.' + extension, delete=False)
+                    the_file.save(temp_file.name)
+                    process_file(saved_file, temp_file.name, mimetype, extension)
+                    files_to_process.append((filename, file_number, mimetype, extension))
+            file_field = file_variables[filekey]
+            if len(files_to_process) > 0:
+                elements = list()
+                indexno = 0
+                for (filename, file_number, mimetype, extension) in files_to_process:
+                    elements.append("docassemble.base.core.DAFile(" + repr(file_field + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
+                    indexno += 1
+                literal_variables[file_field] = "docassemble.base.core.DAFileList(" + repr(file_field) + ", elements=[" + ", ".join(elements) + "])"
+            else:
+                literal_variables[file_field] = "None"
         try:
-            set_session_variables(yaml_filename, session_id, variables, secret=secret)
+            data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables)
         except Exception as the_err:
             return jsonify_with_status(str(the_err), 400)
-        return ('', 204)
+        if data is None:
+            return ('', 204)
+        if data.get('questionType', None) is 'response':
+            return data['response']
+        return jsonify(**data)
     elif request.method == 'DELETE':
         yaml_filename = request.args.get('i', None)
         session_id = request.args.get('session', None)
@@ -15238,7 +15406,36 @@ def get_session_variables(yaml_filename, session_id, secret=None, simplify=True)
         return variables
     return user_dict
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None):
+def go_back_in_session(yaml_filename, session_id, secret=None, return_question=False):
+    obtain_lock(session_id, yaml_filename)
+    try:
+        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+    except:
+        release_lock(session_id, yaml_filename)
+        raise Exception("Unable to decrypt interview dictionary.")
+    if user_dict is None:
+        release_lock(session_id, yaml_filename)
+        raise Exception("Unable to obtain interview dictionary.")
+    if steps == 1:
+        release_lock(session_id, yaml_filename)
+        raise Exception("Cannot go back.")
+    old_user_dict = user_dict
+    steps, user_dict, is_encrypted = fetch_previous_user_dict(session_id, yaml_filename, secret)
+    if user_dict is None:
+        release_lock(session_id, yaml_filename)
+        raise Exception("Unable to obtain interview dictionary.")
+    if return_question:
+        try:
+            data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, old_user_dict=old_user_dict)
+        except Exception as the_err:
+            release_lock(session_id, yaml_filename)
+            raise Exception("Problem getting current question:" + str(the_err))
+        release_lock(session_id, yaml_filename)
+    else:
+        data = None
+    return data
+
+def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None):
     obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
@@ -15254,8 +15451,22 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None):
     except Exception as the_err:
         release_lock(session_id, yaml_filename)
         raise Exception("Problem setting variables:" + str(the_err))
+    if literal_variables is not None:
+        exec('import docassemble.base.core', user_dict)
+        for key, val in literal_variables.iteritems():
+            exec(unicode(key) + ' = ' + val, user_dict)
+    if return_question:
+        try:
+            data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted)
+        except Exception as the_err:
+            release_lock(session_id, yaml_filename)
+            raise Exception("Problem getting current question:" + str(the_err))
+    else:
+        data = None
+    steps += 1
     save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
     release_lock(session_id, yaml_filename)
+    return data
 
 @app.route('/api/session/new', methods=['GET'])
 def api_session_new():
@@ -15270,6 +15481,7 @@ def api_session_new():
         secret = random_string(16)
     else:
         new_secret = False
+    secret = str(secret)
     url_args = dict()
     for argname in request.args:
         if argname in ('i', 'secret', 'key'):
@@ -15296,6 +15508,8 @@ def create_new_interview(yaml_filename, secret, url_args=None, request=None):
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
     try:
         interview.assemble(user_dict, interview_status)
+    except DAErrorMissingVariable as err:
+        pass
     except Exception as e:
         release_lock(session_id, yaml_filename)
         raise Exception("Failure to assemble interview: " + str(e))
@@ -15303,7 +15517,7 @@ def create_new_interview(yaml_filename, secret, url_args=None, request=None):
         encrypted = False
     else:
         encrypted = True
-    save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=encrypted, changed=True, steps=1)
+    save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=encrypted, changed=False, steps=1)
     release_lock(session_id, yaml_filename)
     return (encrypted, session_id)
 
@@ -15322,28 +15536,56 @@ def api_session_question():
         data = get_question_data(yaml_filename, session_id, secret)
     except Exception as err:
         return jsonify_with_status(str(err), 400)
+    if data.get('questionType', None) is 'response':
+        return data['response']
     return jsonify(**data)    
 
-def get_question_data(yaml_filename, session_id, secret):
-    obtain_lock(session_id, yaml_filename)
-    try:
-        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
-    except Exception as err:
-        release_lock(session_id, yaml_filename)
-        raise Exception("Unable to obtain interview dictionary")
+def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=None, steps=None, is_encrypted=None, old_user_dict=None):
+    if use_lock:
+        obtain_lock(session_id, yaml_filename)
+        try:
+            steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+        except Exception as err:
+            release_lock(session_id, yaml_filename)
+            raise Exception("Unable to obtain interview dictionary")
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
     try:
-        interview.assemble(user_dict, interview_status)
+        if old_user_dict is not None:
+            interview.assemble(user_dict, interview_status, old_user_dict)
+        else:
+            interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable as err:
+        if use_lock:
+            save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
+            release_lock(session_id, yaml_filename)
+        return dict(questionType='undefined_variable', variable=err.variable, message_log=docassemble.base.functions.get_message_log())
+    except Exception as e:
+        if use_lock:
+            release_lock(session_id, yaml_filename)
+        raise Exception("Failure to assemble interview: " + str(e))
+    if use_lock:
         save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
         release_lock(session_id, yaml_filename)
-        return dict(questionType='undefined_variable', variable=err.variable.encode('utf8')) #message_log=docassemble.base.functions.get_message_log(), 
-    except Exception as e:
-        release_lock(session_id, yaml_filename)
-        raise Exception("Failure to assemble interview: " + str(e))
-    save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
-    release_lock(session_id, yaml_filename)
+    if interview_status.question.question_type == "response":
+        if hasattr(interview_status.question, 'all_variables'):
+            response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict).encode('utf8'), '200 OK')
+        elif hasattr(interview_status.question, 'binaryresponse'):
+            response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
+        else:
+            response_to_send = make_response(interview_status.questionText.encode('utf8'), '200 OK')
+        response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
+        return dict(questionType='response', response=response_to_send)
+    elif interview_status.question.question_type == "sendfile":
+        if interview_status.question.response_file is not None:
+            the_path = interview_status.question.response_file.path()
+        else:
+            return jsonify_with_status("Could not send file because the response was None", 404)
+        if not os.path.isfile(the_path):
+            return jsonify_with_status("Could not send file because " + str(the_path) + " not found", 404)
+        response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
+        response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        return dict(questionType='response', response=response_to_send)
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language
     else:
@@ -15360,7 +15602,7 @@ def get_question_data(yaml_filename, session_id, secret):
     else:
         allow_going_back = False
     data = dict(browser_title=interview_status.tabtitle, exit_link=interview_status.exit_link, exit_label=interview_status.exit_label, title=interview_status.title, display_title=interview_status.display_title, short_title=interview_status.short_title, lang=interview_language, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log())
-    data.update(interview_status.as_data())
+    data.update(interview_status.as_data(encode=False))
     if interview_status.question.question_type == "review":
         next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
     else:
@@ -15373,6 +15615,12 @@ def get_question_data(yaml_filename, session_id, secret):
         data['next_action'] = next_action_review
     if reload_after and reload_after > 0:
         data['reload_after'] = reload_after
+    for key in data.keys():
+        if key == "_question_name":
+            data['questionName'] = data[key]
+            del data[key]
+        elif key.startswith('_'):
+            del data[key]
     return data
 
 @app.route('/api/session/action', methods=['POST'])
@@ -15408,12 +15656,14 @@ def api_session_action():
     try:
         interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable as err:
+        steps += 1
         save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
         release_lock(session_id, yaml_filename)
         return ('', 204)        
     except Exception as e:
         release_lock(session_id, yaml_filename)
         return jsonify_with_status("Failure to assemble interview: " + str(e), 400)
+    steps += 1
     save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
     release_lock(session_id, yaml_filename)
     if interview_status.question.question_type == "response":
@@ -15955,6 +16205,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          make_user_inactive=make_user_inactive,
                                          get_secret=get_secret,
                                          get_session_variables=get_session_variables,
+                                         go_back_in_session=go_back_in_session,
                                          set_session_variables=set_session_variables,
                                          file_set_attributes=file_set_attributes,
                                          fg_make_png_for_pdf=fg_make_png_for_pdf)
