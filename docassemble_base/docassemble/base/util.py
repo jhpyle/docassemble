@@ -1079,13 +1079,10 @@ class Individual(Person):
             else:
                 return int(self.age)
         if as_of is None:
-            comparator = datetime.datetime.utcnow()
+            comparator = current_datetime()
         else:
-            comparator = dateutil.parser.parse(as_of)
-        if isinstance(self.birthdate, datetime.date) or isinstance(self.birthdate, datetime.datetime):
-            birth_date = self.birthdate
-        else:
-            birth_date = dateutil.parser.parse(self.birthdate)
+            comparator = as_datetime(as_of)
+        birth_date = as_datetime(self.birthdate)
         rd = dateutil.relativedelta.relativedelta(comparator, birth_date)
         if decimals:
             return float(rd.years)
