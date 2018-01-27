@@ -3,10 +3,12 @@
 ## [0.2.23] - 2018-01-25
 ### Added
 - The `/api/session/back` API and the `go_back_in_session()` function.
+- The `/api/privileges` APIs.
 ### Changed
 - The `/api/session` POST API now returns the current question, unless the
   `question` data value is set to `0`.
 - The `/api/session` POST API now accepts file uploads.
+- Changed "roles" to "privileges" in the user-related APIs.
 
 ## [0.2.22] - 2018-01-23
 ### Added

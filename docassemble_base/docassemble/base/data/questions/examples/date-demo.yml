@@ -1,0 +1,28 @@
+metadata:
+  title: Date as object
+  documentation: "https://docassemble.org/docs/fields.html#date"
+  example start: 2
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  When did you file the complaint?
+fields:
+  - Date: date_of_filing
+    datatype: date
+---
+code: |
+  response_deadline = date_of_filing.plus(days=20)
+  christmas = response_deadline.replace(month=12, day=25)
+---
+mandatory: True
+question: |
+  % if christmas > response_deadline:
+  Your response is due
+  ${ int(date_difference(starting=date_of_filing, ending=christmas).weeks) }
+  weeks before Christmas.
+  % else:
+  Your response is due soon after Christmas!
+  % endif

@@ -254,7 +254,7 @@ def custom_login():
         is_json = True
     else:
         is_json = False
-    user_manager =  current_app.user_manager
+    user_manager = current_app.user_manager
     db_adapter = user_manager.db_adapter
 
     safe_next = _get_safe_next_param('next', user_manager.after_login_endpoint)
@@ -461,7 +461,7 @@ import docassemble.webapp.setup
 from docassemble.webapp.app_object import app, csrf, flaskbabel
 from docassemble.webapp.db_object import db
 from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm, MyResendConfirmEmailForm
-from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
+from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation, Role
 from flask_user import UserManager, SQLAlchemyAdapter
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 from docassemble.webapp.users.views import user_profile_page
@@ -4605,6 +4605,7 @@ def index():
         do_append = False
         do_opposite = False
         is_ml = False
+        is_date = False
         test_data = data
         if real_key in known_datatypes:
             #logmessage("real key " + real_key + " is in datatypes: " + known_datatypes[real_key])
@@ -4637,7 +4638,12 @@ def index():
                             field_error[orig_key] = word("You need to enter a valid date.")
                             continue
                         test_data = data
-                data = repr(data)
+                        is_date = True
+                        data = 'docassemble.base.util.as_datetime(' + repr(data) + ')'
+                    else:
+                        data = repr('')
+                else:
+                    data = repr('')
             elif known_datatypes[real_key] == 'integer':
                 if data == '':
                     data = 0
@@ -4705,7 +4711,12 @@ def index():
                             field_error[orig_key] = word("You need to enter a valid date.")
                             continue
                         test_data = data
-                data = repr(data)
+                        is_date = True
+                        data = 'docassemble.base.util.as_datetime(' + repr(data) + ')'
+                    else:
+                        data = repr('')
+                else:
+                    data = repr('')
             elif known_datatypes[orig_key] == 'integer':
                 if data == '':
                     data = 0
@@ -4744,6 +4755,11 @@ def index():
             #else:
                 #continue
                 #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
+        if is_date:
+            try:
+                exec("import docassemble.base.util", user_dict)
+            except Exception as errMess:
+                error_messages.append(("error", "Error: " + str(errMess)))
         if is_ml:
             try:
                 exec("import docassemble.base.util", user_dict)
@@ -13975,11 +13991,12 @@ def _on_password_reset(sender, user, **extra):
 
 @user_registered.connect_via(app)
 def on_register_hook(sender, user, **extra):
-    from docassemble.webapp.users.models import Role
+    #why did I not just import it globally?
+    #from docassemble.webapp.users.models import Role
     user_invite = extra.get('user_invite', None)
-    if user_invite is None:
-        return
-    this_user_role = Role.query.filter_by(id=user_invite.role_id).first()
+    this_user_role = None
+    if user_invite is not None:
+        this_user_role = Role.query.filter_by(id=user_invite.role_id).first()
     if this_user_role is None:
         this_user_role = Role.query.filter_by(name='user').first()
     roles_to_remove = list()
@@ -14689,7 +14706,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 else:
                     try:
                         dateutil.parser.parse(inp)
-                        data = repr(inp)
+                        data = docassemble.base.util.as_datetime(inp)
                     except Exception as the_err:
                         logmessage("do_sms: date validation error was " + str(the_err))
                         special_messages.append('"' + inp + '" ' + word("is not a valid date."))
@@ -15107,13 +15124,23 @@ def api_user_by_id(user_id):
         set_user_info(user_id=user_id, **info)
         return ('', 204)
 
-@app.route('/api/privileges', methods=['GET', 'POST'])
+@app.route('/api/privileges', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt
-def api_privileges(user_id):
+def api_privileges():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
     if request.method == 'GET':
         return jsonify(get_privilege_list())
+    if request.method == 'DELETE':
+        if not (current_user.has_role('admin')):
+            return jsonify_with_status("Access denied.", 403)
+        if 'privilege' not in request.args:
+            return jsonify_with_status("A privilege must be provided.", 400)
+        try:
+            remove_privilege(request.args['privilege'])
+        except Exception as err:
+            return jsonify_with_status(str(err), 400)
+        return ('', 204)
     if request.method == 'POST':
         if not (current_user.has_role('admin')):
             return jsonify_with_status("Access denied.", 403)
@@ -15140,7 +15167,30 @@ def add_privilege(privilege):
         raise Exception("The given privilege already exists.")
     db.session.add(Role(name=privilege))
     db.session.commit()
-    
+
+def remove_privilege(privilege):
+    if not (current_user.has_role('admin')):
+        raise Exception('You must have admin privileges to call remove_privilege().')
+    if privilege in ['user', 'admin', 'developer', 'advocate', 'cron']:
+        raise Exception('The specified privilege is built-in and cannot be deleted.')
+    role = Role.query.filter_by(name=privilege).first()
+    user_role = Role.query.filter_by(name='user').first()
+    if role is None:
+        raise Exception('The privilege did not exist.')
+    for user in db.session.query(UserModel):
+        roles_to_remove = list()
+        for the_role in user.roles:
+            if the_role.name == role.name:
+                roles_to_remove.append(the_role)
+        if len(roles_to_remove) > 0:
+            for the_role in roles_to_remove:
+                user.roles.remove(the_role)
+            if len(user.roles) == 0:
+                user.roles.append(user_role)
+    db.session.commit()
+    db.session.delete(role)
+    db.session.commit()
+
 @app.route('/api/user/<user_id>/privileges', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt
 def api_user_by_id_privileges(user_id):
@@ -15155,35 +15205,63 @@ def api_user_by_id_privileges(user_id):
     if request.method == 'GET':
         return jsonify(user_info['privileges'])
     if request.method in ('DELETE', 'POST'):
-        user = UserModel.query.filter_by(id=user_id).first()
         if request.method == 'DELETE':
             role_name = request.args.get('privilege', None)
             if role_name is None:
                 return jsonify_with_status("A privilege must be provided", 400)
-            role_to_remove = None
-            for role in user.roles:
-                if role.name == role_name:
-                    roles_to_remove = role
-            if roles_to_remove is None:
-                return jsonify_with_status("The user did not already have that privilege.", 400)
-            user.roles.remove(role_to_remove)
+            try:
+                remove_user_privilege(user_id, role_name)
+            except Exception as err:
+                return jsonify_with_status(str(err), 400)
         elif request.method == 'POST':
             post_data = request.form.copy()
             role_name = post_data.get('privilege', None)
             if role_name is None:
                 return jsonify_with_status("A privilege name must be provided", 400)
-            for role in user.roles:
-                if role.name == role_name:
-                    return jsonify_with_status("The user already had that privilege.", 400)
-            role_to_add = None
-            for role in Role.query.order_by('id'):
-                if role.name == role_name:
-                    role_to_add = role
-            if roles_to_add is None:
-                return jsonify_with_status("The specified privilege did not exist.", 400)
-            user.roles.append(role_to_add)
+            try:
+                add_user_privilege(user_id, role_name)
+            except Exception as err:
+                return jsonify_with_status(str(err), 400)
         db.session.commit()
         return ('', 204)
+
+def add_user_privilege(user_id, privilege):
+    if not (current_user.has_role('admin')):
+        raise Exception('You must have admin privileges to call add_privilege().')
+    if privilege not in get_privilege_list():
+        raise Exception('The specified privilege does not exist.')
+    user = UserModel.query.filter_by(id=user_id).first()
+    if user is None:
+        raise Exception("The specified user did not exist")
+    for role in user.roles:
+        if role.name == privilege:
+            raise Exception("The user already had that privilege.")
+    role_to_add = None
+    for role in Role.query.order_by('id'):
+        if role.name == privilege:
+            role_to_add = role
+    if role_to_add is None:
+        raise Exception("The specified privilege did not exist.")
+    user.roles.append(role_to_add)
+
+def remove_user_privilege(user_id, privilege):
+    if not (current_user.has_role('admin')):
+        raise Exception('You must have admin privileges to call add_privilege().')
+    if current_user.id == user_id and privilege == 'admin':
+        raise Exception('You cannot take away the admin privilege from the owner of the API.')
+    if privilege not in get_privilege_list():
+        raise Exception('The specified privilege does not exist.')
+    user = UserModel.query.filter_by(id=user_id).first()
+    if user is None:
+        raise Exception("The specified user did not exist")
+    role_to_remove = None
+    for role in user.roles:
+        if role.name == privilege:
+            role_to_remove = role
+    if role_to_remove is None:
+        raise Exception("The user did not already have that privilege.")
+    user.roles.remove(role_to_remove)
+    db.session.commit()
     
 def set_user_info(**kwargs):
     if current_user.is_anonymous:

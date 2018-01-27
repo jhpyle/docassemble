@@ -121,16 +121,23 @@ def run_python_module(module, arguments=None):
 #     user_id_dict = func
 #     return
 
-def today_default(format='long', timezone=None):
+def today(timezone=None):
     if timezone is None:
         timezone = get_default_timezone()
-    return babel.dates.format_date(pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone)).date(), format=format, locale=this_thread.language)
+    val = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone))
+    return dd(val.replace(hour=0, minute=0, second=0, microsecond=0))
 
-language_functions['today'] = {'*': today_default}
+# def today_default(format='long', timezone=None):
+#     if timezone is None:
+#         timezone = get_default_timezone()
+#     return babel.dates.format_date(pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone)).date(), format=format, locale=this_thread.language)
 
-today = language_function_constructor('today')
-if today.__doc__ is None:
-    today.__doc__ = """Returns today's date in long form according to the current locale."""    
+# language_functions['today'] = {'*': today_default}
+
+# today = language_function_constructor('today')
+
+# if today.__doc__ is None:
+#     today.__doc__ = """Returns today's date in long form according to the current locale."""    
 
 def month_of(the_date, as_word=False):
     """Interprets the_date as a date and returns the month.  
@@ -208,12 +215,57 @@ class DateTimeDelta(object):
     def __str__(self):
         return str(quantity_noun(output.days, word('day')))
 
+class DADateTime(datetime.datetime):
+    def format(self, format='long'):
+        return format_date(self, format=format)
+    def format_date(self, format='long'):
+        return format_date(self, format=format)
+    def format_time(self, format='short'):
+        return format_time(self, format=format)
+    @property
+    def dow(self):
+        return self.isocalendar()[2]
+    @property
+    def week(self):
+        return self.isocalendar()[1]
+    def plus(self, **kwargs):
+        return dd(dt(self) + date_interval(**kwargs))
+    def minus(self, **kwargs):
+        return dd(dt(self) - date_interval(**kwargs))
+    def __str__(self):
+        return format_date(self)    
+    def __unicode__(self):
+        return unicode(self.__str__())
+    def __add__(self, other):
+        if isinstance(other, basestring):
+            return unicode(self) + other
+        val = dt(self) + other
+        if isinstance(val, datetime.date):
+            return dd(val)
+        return val
+    def __radd__(self, other):
+        if isinstance(other, basestring):
+            return other + unicode(self)
+        return dd(dt(self) + other)
+    def __sub__(self, other):
+        val = dt(self) - other
+        if isinstance(val, datetime.date):
+            return dd(val)
+        return val
+    def __rsub__(self, other):
+        val = other - dt(self)
+        if isinstance(val, datetime.date):
+            return dd(val)
+        return val
+
 def current_datetime(timezone=None):
-    """Returns the current time as a datetime.datetime object with a timezone.
-    Uses the default timezone unless another timezone is explicitly provided."""
+    """Returns the current time.  Uses the default timezone unless another
+    timezone is explicitly provided.
+
+    """
     if timezone is None:
         timezone = get_default_timezone()
-    return pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone))
+    return dd(pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone)))
 
 def as_datetime(the_date, timezone=None):
     """Converts the_date to a datetime.datetime object with a timezone.  Uses the
@@ -230,7 +282,15 @@ def as_datetime(the_date, timezone=None):
         new_datetime = new_datetime.astimezone(pytz.timezone(timezone))
     else:
         new_datetime = pytz.timezone(timezone).localize(new_datetime)
-    return new_datetime
+    return dd(new_datetime)
+
+def dd(obj):
+    if isinstance(obj, DADateTime):
+        return obj
+    return DADateTime(obj.year, month=obj.month, day=obj.day, hour=obj.hour, minute=obj.minute, second=obj.second, microsecond=obj.microsecond, tzinfo=obj.tzinfo)
+
+def dt(obj):
+    return datetime.datetime(obj.year, obj.month, obj.day, obj.hour, obj.minute, obj.second, obj.microsecond, obj.tzinfo)
 
 def date_interval(**kwargs):
     """Expresses a date and time interval.  Passes through all arguments 
@@ -398,14 +458,14 @@ def last_access_time(*pargs, **kwargs):
                 if roles is None or role in roles:
                     if max_time is None or max_time < access_time:
                         max_time = access_time
-    return max_time
+    return dd(max_time)
 
 class LatitudeLongitude(DAObject):
     """Represents a GPS location."""
     def init(self, *pargs, **kwargs):
         self.gathered = False
         self.known = False
-        self.description = ""
+        # self.description = ""
         return super(LatitudeLongitude, self).init(*pargs, **kwargs)
     def status(self):
         """Returns True or False depending on whether an attempt has yet been made
@@ -564,7 +624,7 @@ class Address(DAObject):
     """A geographic address."""
     def init(self, *pargs, **kwargs):
         if 'location' not in kwargs:
-            self.location = LatitudeLongitude()
+            self.initializeAttribute('location', LatitudeLongitude)
         if 'geolocated' not in kwargs:
             self.geolocated = False
         if not hasattr(self, 'city_only'):
@@ -594,7 +654,10 @@ class Address(DAObject):
         return output
     def _map_info(self):
         if (self.location.gathered and self.location.known) or self.geolocate():
-            the_info = self.location.description
+            if hasattr(self.location, 'description'):
+                the_info = self.location.description
+            else:
+                the_info = ''
             result = {'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}
             if hasattr(self, 'icon'):
                 result['icon'] = self.icon
@@ -788,7 +851,7 @@ class Event(DAObject):
         if 'address' not in kwargs:
             self.address = City()
         if 'location' not in kwargs:
-            self.location = LatitudeLongitude()
+            self.initializeAttribute('location', LatitudeLongitude)
         return super(Event, self).init(*pargs, **kwargs)
     def __str__(self):
         return str(self.address)
@@ -799,16 +862,16 @@ class Person(DAObject):
         if not hasattr(self, 'name') and 'name' not in kwargs:
             self.name = Name()
         if 'address' not in kwargs:
-            self.address = Address()
+            self.initializeAttribute('address', Address)
         if 'location' not in kwargs:
-            self.location = LatitudeLongitude()
+            self.initializeAttribute('location', LatitudeLongitude)
         if 'name' in kwargs and type(kwargs['name']) in (str, unicode):
             if not hasattr(self, 'name'):
                 self.name = Name()
             self.name.text = kwargs['name']
             del kwargs['name']
-        if 'roles' not in kwargs:
-            self.roles = set()
+        # if 'roles' not in kwargs:
+        #     self.roles = set()
         return super(Person, self).init(*pargs, **kwargs)
     def _map_info(self):
         if not self.location.known:
@@ -819,7 +882,8 @@ class Person(DAObject):
                 the_info = self.name.full()
             else:
                 the_info = capitalize(self.object_name())
-            the_info += " [NEWLINE] " + self.location.description
+            if hasattr(self.location, 'description') and self.location.description != '':
+                the_info += " [NEWLINE] " + self.location.description
             result = {'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}
             if hasattr(self, 'icon'):
                 result['icon'] = self.icon
@@ -1226,7 +1290,8 @@ class Organization(Person):
                         the_info = self.name.full()
                     else:
                         the_info = capitalize(self.object_name())
-                    the_info += " [NEWLINE] " + office.location.description
+                    if hasattr(office.location, 'description') and office.location.description != '':
+                        the_info += " [NEWLINE] " + office.location.description
                     this_response = {'latitude': office.location.latitude, 'longitude': office.location.longitude, 'info': the_info}
                     if hasattr(office, 'icon'):
                         this_response['icon'] = office.icon

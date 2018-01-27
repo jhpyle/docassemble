@@ -22,9 +22,16 @@ fields:
 ---
 event: bg_task
 code: |
+  background_error_action('it_failed')
   # This is where time-consuming code
   # would go.
+  log("Hello world!")
+  a = b / 0
   background_response(553 + action_argument('additional'))
+---
+event: it_failed
+code: |
+  background_response()
 ---
 event: waiting_screen
 question: |

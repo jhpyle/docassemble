@@ -282,6 +282,9 @@ class DAObject(object):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(the_name)
         return the_name
+    def as_json(self):
+        """Returns a JSON representation of the object."""
+        return docassemble.base.functions.safe_json(self)
     def object_possessive(self, target):
         """Returns a possessive phrase based on the instanceName.  E.g., client.object_possessive('fish') returns
         "client's fish." """
