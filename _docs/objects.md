@@ -423,6 +423,14 @@ special pronoun behavior, then the `.pronoun()`,
 by the argument.  For example, `thing.pronoun_possessive('reason')`
 returns `'its reason'`.
 
+<a name="DAObject.as_serializable"></a>The `.as_serializable()` method
+returns a representation of the object and its attributes that uses a
+[Python dict] as the base and other basic data types for the
+attributes, so that the object can be serialized to [JSON].  The
+conversion is not reversible, and much information cannot be
+converted, but this can be a useful way to access information in your
+objects.  See also the [`all_variables()`] function.
+
 ## <a name="DAList"></a>DAList
 
 A `DAList` acts like an ordinary [Python list], except that
@@ -1011,11 +1019,15 @@ To see the values of the attributes for a variable like
 has no effect; you need to use [`.set_attributes()`] to set them.
 
 <a name="DAFile.slurp"></a>The `.slurp()` method reads the contents of
-the file and returns them as a value.
+the file and returns them as a text value.
 
 {% highlight python %}
 contents = the_file.slurp()
 {% endhighlight %}
+
+By default, the `.slurp()` method attempts to automatically decode
+text files using the `utf8` encoding.  To turn off this automatic
+decoding feature, call it with `.slurp(auto_decode=False)`.
 
 <a name="DAFile.readlines"></a>The `.readlines()` method reads the
 contents of the file, line-by-line, and returns the lines as a list.
@@ -2931,6 +2943,123 @@ then you would get an error because `can_practice_in()` is not a valid
 method for `user`, which is only an instance of the [`Individual`] class
 and not an instance of the `Attorney` class.
 
+# <a name="DADateTime"></a>Special date/time class `DADateTime`
+
+When you set a variable with [`datatype: date`], or use one of the
+[date functions] that returns a date, the variable is a special object
+of the class `DADateTime`.  This object is special to **docassemble**,
+but it is not a [`DAObject`].  You cannot create these with an
+[`objects`] block.  (If you want to create one, use
+[`as_datetime()`].)
+
+The [`DADateTime`] object is a subclass of [`datetime.datetime`],
+which is a standard [Python] class for working with dates and times.
+This means that anything that you can do with a [`datetime.datetime`]
+object can also be done with a [`DADateTime`] object.
+
+The [`DADateTime`] object also has some additional functionality that
+the traditional [`datetime.datetime`] object does not have, such as
+the attributes `dow` for day of week and `week` for the week of the
+year.
+
+If `birthday` is defined by `as_datetime('4/1/2018')`, then:
+
+* `birthday.day` is 1
+* `birthday.month` is 4
+* `birthday.year` is 2018
+* `birthday.week` is 13
+* `birthday.dow` is 7 (Sunday)
+* `birthday.hour` is 0
+* `birthday.minute` is 0
+* `birthday.second` is 0
+* `birthday.microsecond` is 0
+
+<a name="DADateTime.plus"></a><a name="DADateTime.minus"></a>The
+[`DADateTime`] object also has methods `.plus()` and `.minus()` that
+allow you to add or subtract periods of time from a date.
+
+* `birthday.plus(weeks=3)` returns a [`DADateTime`] object representing April 29, 2018.
+* `birthday.plus(months=1)` returns a [`DADateTime`] object representing May 1, 2018.
+* `birthday.minus(years=2)` returns a [`DADateTime`] object representing April 1, 2020.
+
+The available keyword arguments to `.plus()` and `.minus()` are:
+
+* `years`
+* `months`
+* `days`
+* `weeks`
+* `hours`
+* `minutes`
+* `seconds`
+* `microseconds`
+
+The `.plus()` and `.minus()` methods use
+[`dateutil.relativedelta.relativedelta`] to calculate dates and times.
+The [`date_interval()`] function can be used to do similar
+calculations.  For example, `birthday.plus(weeks=1)` is equivalent to
+doing `birthday + date_interval(weeks=1)`.
+
+<a name="DADateTime.format"></a><a name="DADateTime.format_date"></a><a name="DADateTime.format_time"></a><a name="DADateTime.format_datetime"></a>The
+[`DADateTime`] object also has methods for formatting dates and times.
+
+* `birthday.format()` is `'April 1, 2018'`.
+* `birthday.format_date()` is `'April 1, 2018'` (identical to `.format()`)
+* `birthday.format_date('MMM')` is `'Apr'`
+* `birthday.format_time()` is `'12:00 AM'`
+* `birthday.format_time('h:mm a z')` is `'12:00 AM EST'`, or whatever the
+  current time zone is.
+* `current_datetime().format_time('h:mm')` returns the current time,
+  formatted like `'12:00'`.
+* `current_datetime().format_datetime()` returns the current time,
+  formatted like `'January 1, 2018 at 12:00:00 AM EST'`.
+
+These functions have the same effect as the [`format_date()`],
+[`format_time()`], and [`format_datetime()`] functions.  In fact,
+`birthday.format_date('long')` simply calls `format_date(birthday,
+format='long')`.  See the documentation for the [date functions] for
+details.
+
+When a [`DADateTime`] is converted to text, for example when it is
+included in a [Mako] template with `${ birthday }`, the text
+conversion is done using [`format_date()`].
+
+<a name="DADateTime.replace"></a>The `.replace()` method returns a new
+[`DADateTime`] object that is the same as the original object, excep
+with edited components.  For example, `birthdate.replace(year=2018)`
+will return the date of a person's birthday in 2018.  The available
+parameters are `year`, `month`, `day`, `hour` (0 to 23), `minute`,
+`second`, and `microsecond`.  See [`datetime.datetime.replace()`].
+
+<a name="DADateTime.replace_time"></a>A method that is similar to
+`.replace()` is `.replace_time()`, which returns a [`DADateTime`]
+object with all of the time-related values set to those of a given
+[`datetime.time`] object.  If you ask the user a question and you use
+a field with [`datatype: time`], the resulting variable is a
+[`datetime.time`] object.  You can combine [`datatype: date`] and
+[`datatype: time`] objects using `.replace_time()`:
+
+{% include side-by-side.html demo="date-and-time-fields" %}
+
+<a name="DADateTime.time"></a>If you only want to use the time portion
+of a [`DADateTime`], use the `.time()` method, which returns a
+[`datetime.time`] object containing only the time-related information
+of the original [`DADateTime`] object.  See
+[`datetime.datetime.time()`].
+
+[`datetime.time`]: https://docs.python.org/2/library/datetime.html#datetime.time
+[`datetime.datetime.time()`]: https://docs.python.org/2/library/datetime.html#datetime.datetime.time
+[`datetime.datetime.replace()`]: https://docs.python.org/2/library/datetime.html#datetime.datetime.replace
+[`date_interval()`]: {{ site.baseurl }}/docs/functions.html#date_interval
+[date functions]: {{ site.baseurl }}/docs/functions.html#date functions
+[`dateutil.relativedelta.relativedelta`]: http://dateutil.readthedocs.io/en/stable/relativedelta.html
+[`format_date()`]: {{ site.baseurl }}/docs/functions.html#format_date
+[`format_time()`]: {{ site.baseurl }}/docs/functions.html#format_time
+[`format_datetime()`]: {{ site.baseurl }}/docs/functions.html#format_datetime
+[`as_datetime()`]: {{ site.baseurl }}/docs/functions.html#as_datetime
+[`datetime.datetime`]: https://docs.python.org/2/library/datetime.html#datetime-objects
+[`DADateTime`]: #DADateTime
+[`datatype: date`]: {{ site.baseurl }}/docs/fields.html#date
+[`datatype: time`]: {{ site.baseurl }}/docs/fields.html#time
 [AttributeError]: https://docs.python.org/2/library/exceptions.html#exceptions.AttributeError
 [Documents]: {{ site.baseurl }}/docs/documents.html
 [Flask-Mail]: https://pythonhosted.org/Flask-Mail/
@@ -3100,3 +3229,4 @@ and not an instance of the `Attorney` class.
 [Google Places API]: https://developers.google.com/places/
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`google maps api key`]: {{ site.baseurl }}/docs/config.html#google
+[`all_variables()`]: {{ site.baseurl }}/docs/functions.html#all_variables

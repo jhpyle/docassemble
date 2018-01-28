@@ -136,6 +136,14 @@ would use the [`defined()` function]:
 If you want to use the [`<%def>`] construct of [Mako], see the
 [`def` initial block].
 
+## <a name="formatting"></a>Formatting variables
+
+When the variable you insert with `${ ... }` is a number, the way that
+it is formatted may not be to your liking.  There are a variety of
+ways to format numbers in [Python].
+
+{% include side-by-side.html demo="number-formatting" %}
+
 # <a name="inserting images"></a>Inserting images
 
 To insert an image that is located in the `static` folder of a custom

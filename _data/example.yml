@@ -1248,21 +1248,10 @@
   ---
   event: cron_hourly
   code: |
-    counter += 0
-  ---
-  mandatory: True
-  question: |
-    The value of the counter is
-    ${ counter }.
-  subqueston: |
-    Every hour, the counter will
-    increase by one.
-
-    No, I do not expect you to wait
-    long enough to see the counter
-    increase!
-  buttons:
-    - Refresh: refresh
+    counter += 1
+    if counter > 48:
+      command('exit')
+    background_response()
 "css": |-
   question: |
     Do you want to build a snowman?
@@ -1536,6 +1525,37 @@
   \  for id in records:\n    fruit_summary += \"* \" + str(records[id]) + \"\\n\"\n\
   ---\nmandatory: True\nquestion: |\n  Contents of database\nsubquestion: |\n  The\
   \ following fruits have\n  been reported:\n  \n  ${ fruit_summary }"
+"date-and-time-fields": |-
+  question: |
+    When is your appointment?
+  fields:
+    - Date: appt_date
+      datatype: date
+    - Time: appt_time
+      datatype: time
+  ---
+  code: |
+    appt_datetime = appt_date.replace_time(appt_time)
+"date-demo": |-
+  question: |
+    When did you file the complaint?
+  fields:
+    - Date: date_of_filing
+      datatype: date
+  ---
+  code: |
+    response_deadline = date_of_filing.plus(days=20)
+    christmas = response_deadline.replace(month=12, day=25)
+  ---
+  mandatory: True
+  question: |
+    % if christmas > response_deadline:
+    Your response is due
+    ${ int(date_difference(starting=date_of_filing, ending=christmas).weeks) }
+    weeks before Christmas.
+    % else:
+    Your response is due soon after Christmas!
+    % endif
 "date-difference": |-
   code: |
     birthday = as_datetime('5/17/2016')
@@ -1584,6 +1604,12 @@
 
     The day of week as a word is
     ${ dow_of(some_date, as_word=True) }.
+"datetime-field": |-
+  question: |
+    When is your appointment?
+  fields:
+    - Date and time: target_variable
+      datatype: datetime
 "dead-end": |-
   mandatory: True
   code: |
@@ -5724,6 +5750,31 @@
       datatype: integer
     - Ounces of gold: gold_ounces
       datatype: number
+"number-formatting": |-
+  code: |
+    monthly_income = 43143.26/12
+  ---
+  question: |
+    Your monthly income
+  subquestion: |
+    Your monthly income is
+    ${ monthly_income }
+    dollars per month.
+
+    But it would be better to say
+    your monthly income is
+    ${ '%.2f' % monthly_income }
+    dollars per month, or
+    ${ '{:.2f}'.format(monthly_income) }
+    dollars per month, or
+    ${ '{:,.2f}'.format(monthly_income) }
+    dollars per month, or
+    ${ int(monthly_income) }
+    dollars per month, or
+    best of all,
+    ${ currency(monthly_income) }
+    per month.
+  mandatory: True
 "object": |-
   objects:
     protagonist: Individual
@@ -6815,6 +6866,16 @@
     zombie pigman: |
       A harmless creature who carries a gold
       sword.
+"questionless": |-
+  mandatory: True
+  code: |
+    json_response({'final': True, 'inhabitants': inhabitant_count})
+  ---
+  code: |
+    if favorite_number == 42 and user_agrees_to_waive_penalties:
+      inhabitant_count = 2
+    else:
+      inhabitant_count = 2000 + favorite_number * 45
 "quote_paragraphs": |-
   mandatory: True
   question: |
@@ -6925,8 +6986,8 @@
     ${ file_from_redis }
 "refresh": |-
   question: |
-    The current date is
-    ${ format_date(current_datetime()) }.
+    The current time is
+    ${ current_datetime().format_time() }.
   buttons:
     - Tell me again: refresh
   mandatory: True
@@ -8276,6 +8337,12 @@
       hint: e.g., eggplant, turnips
     - Fruit: other_target_variable
       hint: e.g., apples, oranges
+"time-field": |-
+  question: |
+    What time is your appointment?
+  fields:
+    - Time: target_variable
+      datatype: time
 "timezone-list": |-
   question: |
     What is your time zone?
@@ -8767,6 +8834,16 @@
   mandatory: True
   question: |
     You sound ${ mood }.
+"questionless": |-
+  mandatory: True
+  code: |
+    json_response({'final': True, 'inhabitants': inhabitant_count})
+  ---
+  code: |
+    if favorite_number == 42 and user_agrees_to_waive_penalties:
+      inhabitant_count = 2
+    else:
+      inhabitant_count = 2000 + favorite_number * 45
 "random-forest": |-
   mandatory: True
   code: |

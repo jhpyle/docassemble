@@ -93,7 +93,7 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key
+ - `key`: the API key.
  - `include_inactive` (optional): set to `1` if inactive users should
    be included in the list.
 
@@ -116,14 +116,14 @@ Body of response: a [JSON] list of objects with the following keys:
  - `id`: the integer ID of the user. 
  - `language`: user's language code.
  - `last_name`: user's last name.
- - `organization`: user's organization 
- - `roles`: list of the user's privileges (e.g., `'admin'`, `'developer'`).
+ - `organization`: user's organization.
+ - `privileges`: list of the user's privileges (e.g., `'admin'`, `'developer'`).
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
  - `subdivisionthird`: user's municipality.
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
 
-## <a name="user"></a>Information about the user
+## <a name="user"></a>Retrieve information about the user
 
 Description: Provides information about the user who is the owner of
 the API key.
@@ -134,7 +134,7 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key
+ - `key`: the API key.
 
 Required privileges: none.
 
@@ -152,11 +152,43 @@ the API owner:
  - `language`: user's language code.
  - `last_name`: user's last name.
  - `organization`: user's organization 
- - `roles`: list of the user's privileges (e.g., `'admin'`, `'developer'`).
+ - `privileges`: list of the user's privileges (e.g., `'admin'`, `'developer'`).
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
  - `subdivisionthird`: user's municipality.
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
+
+## <a name="user_post"></a>Set information about the user
+
+Description: Sets information the user who is the owner of
+the API key.
+
+Path: `/api/user`
+
+Method: [POST]
+
+Form data:
+
+ - `key`: the API key.
+ - `first_name` (optional): the user's first name.
+ - `last_name` (optional): the user's last name.
+ - `country` (optional): the user's country code (e.g., `US`).
+ - `subdivisionfirst` (optional): the user's state.
+ - `subdivisionsecond` (optional): the user's county.
+ - `subdivisionthird` (optional): the user's municipality.
+ - `organization` (optional): the user's organization 
+ - `timezone` (optional): the user's time zone (e.g. `'America/New_York'`).
+ - `language` (optional): the user's language code (e.g., `en`).
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate.
+
+Response on success: [204]
+
+Body of response: empty.
+
+This method can be used to edit the profile of the user who owns the
+API key.
 
 ## <a name="user_user_id"></a>Information about a given user
 
@@ -170,7 +202,7 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key
+ - `key`: the API key.
 
 Required privileges: `admin`, unless the API owner's user ID is the
 same as `user_id`.
@@ -187,14 +219,14 @@ Response on success: [200]
 
 Body of response: a [JSON] object with the following keys describing
 the user with a user ID equal to the `user_id`:
- - `country`: user's country code.
+ - `country`: user's country code (e.g., `US`).
  - `email`: user's e-mail address.
  - `first_name`: user's first name.
  - `id`: the integer ID of the user. 
- - `language`: user's language code.
+ - `language`: user's language code (e.g., `en`).
  - `last_name`: user's last name.
  - `organization`: user's organization 
- - `roles`: list of the user's privileges (e.g., `'admin'`, `'developer'`).
+ - `privileges`: list of the user's privileges (e.g., `'admin'`, `'developer'`).
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
  - `subdivisionthird`: user's municipality.
@@ -213,7 +245,7 @@ Method: [DELETE]
 
 Parameters:
 
- - `key`: the API key
+ - `key`: the API key.
 
 Required privileges: `admin`
 
@@ -237,9 +269,18 @@ Example: `/api/user/22`
 
 Method: [POST]
 
-Parameters:
+Form data:
 
- - `key`: the API key
+ - `key`: the API key.
+ - `country` (optional): user's country code (e.g., `US`).
+ - `first_name` (optional): user's first name.
+ - `language` (optional): user's language code (e.g., `en`).
+ - `last_name` (optional): user's last name.
+ - `organization` (optional): user's organization 
+ - `subdivisionfirst` (optional): user's state.
+ - `subdivisionsecond` (optional): user's county.
+ - `subdivisionthird` (optional): user's municipality.
+ - `timezone` (optional): user's time zone (e.g. `'America/New_York'`).
 
 Required privileges: `admin`
 
@@ -247,7 +288,123 @@ Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "User ID must be an integer" if the user_id parameter cannot be
    interpreted as an integer.
+ - [400] "Error obtaining user information" if there was a problem
+   retrieving information about the user.
  - [404] "User not found" if the user ID did not exist.
+ - [400] "You cannot call set_user_info() unless you are an
+   administrator" if the API is called by a user without `admin` privileges.
+
+Response on success: [204]
+
+Body of response: empty.
+
+## <a name="privileges"></a>List available privileges
+
+Description: Returns a list of names of privileges that exist in the
+system.
+
+Path: `/api/privileges`
+
+Method: [GET]
+
+Parameters:
+
+ - `key`: the API key.
+
+Required privileges: none.
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate.
+
+Response on success: [200]
+
+Body of response: a [JSON] list of role names.
+
+## <a name="privileges_post"></a>Add a role to the list of available privileges
+
+Description: Given a role name, adds the name to the list of available privileges.
+
+Path: `/api/privileges`
+
+Method: [POST]
+
+Form data:
+
+ - `key`: the API key.
+ - `privilege`: the name of the privilege to be added to the list.
+
+Required privileges: `admin`.
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "A privilege name must be provided" if the `privilege` data value
+   is missing.
+ - [400] "The given privilege already exists" if a privilege with the
+   same name as that provided in the `privilege` data value already.
+
+Response on success: [204]
+
+Body of response: empty.
+
+## <a name="user_privilege_add"></a>Give a user a privilege
+
+Description: Give a user a privilege that the user with the given
+`user_id` does not already have.
+
+Path: `/api/user/<user_id>/privileges`
+
+Example: `/api/user/22/privileges`
+
+Method: [POST]
+
+Form data:
+
+ - `key`: the API key.
+ - `privilege`: the name of the privilege to be given to the user.
+
+Required privileges: `admin`.
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "A privilege name must be provided" if the `privilege` data value
+   is missing.
+ - [404] "User not found" if the user ID did not exist.
+ - [400] "The specified privilege does not exist" if the privilege was
+   not on the list of existing privileges.
+ - [400] "The user already had that privilege" if the user already had
+   the given privilege.
+
+Response on success: [204]
+
+Body of response: empty.
+
+## <a name="user_privilege_remove"></a>Take a privilege away from a user
+
+Description: Take away a privilege that the user with the given
+`user_id` has.
+
+Path: `/api/user/<user_id>/privileges`
+
+Example: `/api/user/22/privileges`
+
+Method: [DELETE]
+
+Form data:
+
+ - `key`: the API key.
+ - `privilege`: the name of the privilege to be taken away from the user.
+
+Required privileges: `admin`.
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "A privilege name must be provided" if the `privilege` data value
+   is missing.
+ - [404] "User not found" if the user ID did not exist.
+ - [400] "The specified privilege does not exist" if the privilege was
+   not on the list of existing privileges.
+ - [400] "The user did not already have that privilege" if the user
+   did not already have the given privilege.
 
 Response on success: [204]
 

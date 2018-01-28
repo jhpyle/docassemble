@@ -652,12 +652,39 @@ input box depends on the browser.
 
 {% include side-by-side.html demo="date-field" %}
 
-Note that while input validation is applied, the resulting variable
-will be plain text, not a special [Python] date object.  For more
-information about working with date variables, see the documentation
-for the [date functions].  These functions are flexible and will work
-correctly if you give them dates as text, as long as a date can be
-discerned from the text.
+Validation is applied to ensure that the date can be parsed by
+[`dateutil.parser.parse`].
+
+Starting with version 0.2.23, the variable resulting from 
+`datatype: date` is a special [Python] object of the class
+[`DADateTime`], which is a subclass of the standard [Python] class
+[`datetime.datetime`].  So if the name of the date variable is
+`date_of_filing`, then you can do things like:
+
+{% include side-by-side.html demo="date-demo" %}
+
+Note that the field on the screen only asks for a date, but
+[`DADateTime`] represents both a date and a time.  The time portion of
+the [`DADateTime`] object will be set to midnight of the date.  If you
+want a [`DADateTime`] with a time other than midnight, you can use the
+[`.replace_time()`] or [`.replace()`] methods of [`DADateTime`] to
+generate a new object with the same date but a different time.
+
+Before version 0.2.23, however, the variable that results from
+`datatype: date` is simply a plain text string.  This means you will
+need to use the [`as_datetime()`] function to convert this string to
+an object if you want to be able to use the comparison operators `<`
+and `>`.
+
+For more information about working with date variables, see
+the documentation for the [date functions].  These functions are
+generally very flexible about formats, so you can pass a string like
+`'12/25/2018'` or a date object, and the function will produce the
+correct result either way.
+
+In particular, if you want to format a date variable for inclusion in
+a document or a question, you will probably want to use the
+[`.format_date()`] method or the [`format_date()`] function.
 
 If you set a [`default`] value for a date field, write the date in the
 format YYYY-MM-DD.  Many browsers have built-in "date pickers" that
@@ -665,6 +692,52 @@ expect dates to be in this format.  See [Mozilla's documentation] of
 the date input field.  If the browser uses a date picker, then your
 interview will see text values in the form YYYY-MM-DD, but on other
 browsers, like [Firefox], the format may be some other format.
+
+## <a name="time"></a>Times
+
+`datatype: time` provides an input box for times.  The style of the
+input box depends on the browser.
+
+Validation is applied to ensure that the time can be parsed by
+[`dateutil.parser.parse`].
+
+{% include side-by-side.html demo="time-field" %}
+
+The resulting variable will be an object of type [`datetime.time`].
+
+If you want to format a time variable for inclusion in a document or a
+question, see the [`.strftime()`] method or the [`format_time()`]
+function.
+
+If you want to gather both a date and a time from a user, and combine
+the values together into a single [`DADateTime`] object, you can do so
+with the [`.replace_time()`] method.  For example:
+
+{% include side-by-side.html demo="date-and-time-fields" %}
+
+If you want to format a date and time for inclusion in a document or a
+question, see the [`.format_datetime()`] method or the
+[`format_datetime()`] function.
+
+## <a name="datetime"></a>Combined dates and times
+
+`datatype: datetime` provides an input box for dates and times
+together in one field.  The style of the input box depends on the
+browser.  Note: not all browsers have a "widget" for combined date and
+times, and users might be confused if they are presented with a plain
+text box.  For this reason, use of `datatype: datetime` is not
+recommended until browser support for the
+[`datetime-local`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/datetime-local)
+becomes more widespread.
+
+Validation is applied to ensure that the time can be parsed by
+[`dateutil.parser.parse`].
+
+{% include side-by-side.html demo="datetime-field" %}
+
+The resulting variable will be an object of type [`DADateTime`].  The
+object can be formatted using the [`.format_datetime()`] method or the
+[`format_datetime()`] function.
 
 ## <a name="email"></a>E-mail addresses
 
@@ -1604,3 +1677,17 @@ why this needs to be done manually as opposed to automatically:
 [`google maps api key`]: {{ site.baseurl }}/docs/config.html#google
 [Place Autocomplete]: https://developers.google.com/places/web-service/autocomplete
 [Google Places API]: https://developers.google.com/places/
+[`datetime.datetime`]: https://docs.python.org/2/library/datetime.html#datetime-objects
+[`datetime.time`]: https://docs.python.org/2/library/datetime.html#datetime.time
+[`DADateTime`]: {{ site.baseurl }}/docs/objects.html#DADateTime
+[`as_datetime()`]: {{ site.baseurl }}/docs/functions.html#as_datetime
+[`dateutil.parser.parse`]: http://dateutil.readthedocs.io/en/stable/parser.html#dateutil.parser.parse
+[`.replace_time()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.replace_time
+[`.replace()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.replace
+[`.format_datetime()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_datetime
+[`.format_date()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_date
+[`.format_time()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_time
+[`format_date()`]: {{ site.baseurl }}/docs/functions.html#format_date
+[`format_time()`]: {{ site.baseurl }}/docs/functions.html#format_time
+[`format_timedate()`]: {{ site.baseurl }}/docs/functions.html#format_time
+[`.strftime()`]: https://docs.python.org/2/library/datetime.html#datetime.time.strftime

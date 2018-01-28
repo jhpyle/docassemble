@@ -350,9 +350,9 @@ interview in the form of a simplified [Python dictionary].
 {% include side-by-side.html demo="all_variables" %}
 
 The resulting [Python dictionary] is suitable for conversion to [JSON]
-or other formats.  Each [object] is converted to a
-[Python dictionary].  Each [`datetime`] object is converted to its
-`isoformat()`.  Other objects are converted to `None`.
+or other formats.  Each [object] is converted to a [Python
+dictionary].  Each [`datetime`] or [`DADateTime`] object is converted
+to its `isoformat()`.  Other objects are converted to `None`.
 
 If you want the raw [Python] dictionary, you can call
 `all_variables(simplify=False)`.  However, you should never
@@ -1639,8 +1639,12 @@ attributes describing the current user:
 * `subdivision_second` (e.g., county)
 * `subdivision_third` (e.g., municipality)
 * `organization` (e.g., company or non-profit organization)
+* `session` the session ID of the current interview session
+* `filename` the filename of the current interview session
 
-These attributes are set by the user on the [Profile page].
+All of these attributes, with the exception of `session` and
+`filename`, are set by the user on the [Profile page].  They can also
+be set by the [`set_user_info()`] function.
 
 For example:
 
@@ -1900,7 +1904,7 @@ access times.  These functions are particularly useful in
 
 ## <a name="last_access_time"></a>last_access_time()
 
-`last_access_time()` returns a [`datetime`] object containing the last
+`last_access_time()` returns a [`DADateTime`] object containing the last
 time the interview was accessed by a user other than the special
 [cron user].  The time is expressed in [UTC time] without a time zone.
 
@@ -1972,41 +1976,66 @@ number.
 
 ## <a name="format_date"></a>format_date()
 
-The `format_date()` function takes as input a date, which could be
-written in any format, and returns the date formatted appropriately
-for the current language.
+The `format_date()` function takes as input a date and returns the
+date formatted appropriately for the current language.  It can be
+given a piece of text containing a time, a [`DADateTime`] object, a
+[`datetime.datetime`] object, or a [`datetime.time`] object.
 
 For example:
 
+* `format_date(today())` returns the current date, formatted like `January 1, 2018`.
 * `format_date("10/31/2016")` returns `October 31, 2016`.
 * `format_date("2016-04-01")` returns `April 1, 2016`.
-* `format_date("March 3, 2016")` returns `March 3, 2016`.
+* `format_date('April 5, 2014')` returns `April 5, 2014`.
+* `format_date('April 5, 2014', format='long')` returns `April 5, 2014`.
 * `format_date('April 5, 2014', format='full')` returns `Saturday, April 5, 2014`.
 * `format_date('April 5, 2014', format='EEEE')` returns `Saturday`.
+* `format_date('April 5, 2014', format='yyyy')` returns `2014`.
+* `format_date('April 5, 2014', format='yy')` returns `14`.
 * `format_date('April 5, 2014', format='MMMM')` returns `April`.
 * `format_date('April 5, 2014', format='MMM')` returns `Apr`.
+* `format_date('April 5, 2014', format='d')` returns `5`.
+* `format_date('April 5, 2014', format='dd')` returns `05`.
 * `format_date('April 5, 2014', format='E')` returns `Sat`.
-* `format_date('April 5, 2014', format='e')` returns `6` (numbers range from
-  1 to 7).
+* `format_date('April 5, 2014', format='e')` returns `6` (numbers
+  range from 1 to 7).
+* `format_date('April 5, 2014', format='EEEE, MMMM d, yyyy')` returns
+  `Saturday, April 5, 2014`.
 * `format_date('April 5, 2014', format='short')` returns `4/5/14`.
 * `format_date('April 5, 2014', format='M/d/yyyy')` returns `4/5/2014`.
 * `format_date('April 5, 2014', format='MM/dd/yyyy')` returns
   `04/05/2014`.
+* `format_date('April 5, 2014', format='yyyy-MM-dd')` returns
+  `2014-04-05`.
 
-For more information about how to specify date formats, see the
-documentation for
-[babel.dates](http://babel.pocoo.org/en/latest/api/dates.html).  The
-`format` argument, which defaults to `long`, is passed directly to the
-`babel.dates.format_date()` function.  The patterns used in date
-formatting are based on [Unicode Technical Standard #35].
+The date formatting is provided by the
+[babel.dates](http://babel.pocoo.org/en/latest/api/dates.html#date-fields)
+package, which has good support for language and locale variation.
+The `format` argument, which defaults to `long`, is passed directly to
+the `babel.dates.format_date()` function.
+
+The
+[patterns](http://babel.pocoo.org/en/latest/dates.html#date-fields)
+used in date formatting by `babel.dates.format_date()` are based on
+[Unicode Technical Standard #35].
+
+The result will be different depending on the current language.  For
+example, if you run `set_language('es')`, then
+`format_date('4/5/2014')` returns `5 de abril de 2014`.  If you run
+`set_language('fr')`, then `format_date('4/5/2014')` returns `5 avril
+2014`.
 
 ## <a name="format_time"></a>format_time()
 
 The `format_time()` function works just like [`format_date()`], except
-it returns a time, rather than a date.
+it returns a time, rather than a date.  It can be given a piece of
+text containing a time, a [`DADateTime`] object, a
+[`datetime.datetime`] object, or a [`datetime.time`] object.
 
 For example:
 
+* `format_time(current_datetime())` returns the current time,
+  formatted like `12:00 AM`.
 * `format_time("04:01:23")` returns `4:00 AM`.
 * `format_time("04:01:23", format='h')` returns `4`.
 * `format_time("04:01:23", format='hh')` returns `04`.
@@ -2014,31 +2043,71 @@ For example:
 * `format_time("04:01:23", format='mm')` returns `01`.
 * `format_time("04:01:23", format='ss')` returns `23`.
 * `format_time("04:01:23", format='a')` returns `AM`.
+* `format_time("04:01:23", format='z')` returns `EST`, or whatever the
+  current time zone is.
+* `format_time("04:01:23", format='zzzz')` returns `Eastern Standard
+  time`, or whatever the current time zone is.
+* `format_time("04:01:23", format='h:mm a')` returns `4:01 AM`.
 
-For more information about how to specify time formats, see the
-documentation for
-[babel.dates](http://babel.pocoo.org/en/latest/api/dates.html).  The
-`format` argument, which defaults to `short`, is passed directly to
-the `babel.dates.format_time()` function.  The patterns used in time
-formatting are based on [Unicode Technical Standard #35].
+The time formatting is provided by the
+[babel.dates](http://babel.pocoo.org/en/latest/api/dates.html#time-fields)
+package.  The `format` argument, which defaults to `short`, is passed
+directly to the `babel.dates.format_time()` function.
+
+The
+[patterns](http://babel.pocoo.org/en/latest/dates.html#time-fields)
+used in time formatting are based on [Unicode Technical Standard #35].
+
+## <a name="format_datetime"></a>format_datetime()
+
+The `format_datetime()` function works like a combination of
+[`format_date()`] and [`format_time()`].  It is different only in that
+it allows date and time to be joined in the same output.
+
+* `format_datetime('4/5/2014 07:30')` returns `April 5, 2014 at
+  07:30:00 AM EST`.
+* `format_datetime('4/5/2014 07:30', 'h:mm in MMMM')` returns `'7:30 in
+  April'`.
 
 ## <a name="today"></a>today()
 
 {% include side-by-side.html demo="today" %}
 
-Returns today's date in long form according to the current locale
-(e.g., `March 31, 2016`).  It is like `format_date()` in that it
-accepts the optional keyword argument `format`.  It also takes an
-optional keyword argument `timezone`, which refers to one of the time
-zone names in [`timezone_list()`].
+Returns a [`DADateTime`] object representing today's date at midnight.
+It takes an optional keyword argument `timezone`, which refers to one
+of the time zone names in [`timezone_list()`].  If the `timezone` is
+not supplied, the default time zone will be used.
 
-For example:
+Since the result is a [`DADateTime`] object, if `today()` is included
+in a [Mako] template, the result will be equivalent to calling
+[`format_date()`] on the object.
 
-* `today(format='M/d/yyyy')`
-* `today(timezone='US/Eastern')`
+So this:
 
-If the `timezone` is not supplied, the default time zone will be
-used.
+{% highlight text %}
+Today's date is ${ today() }.
+{% endhighlight %}
+
+becomes, for example:
+
+> Today's date is August 1, 2018.
+
+The fact that the object is a [`DADateTime`] object means you can use
+methods on it.  For example, you can write things like `Your term
+paper is due in a week, so make sure you give it to me by ${
+today().plus(weeks=1) }!`
+
+The `today()` function also takes an optional keyword parameter
+`format`.  If a `format` is provided, then `today()` returns text, not
+an object.  So this:
+
+{% highlight text %}
+Today's date is ${ today(format='M/d/YYYY') }.
+{% endhighlight %}
+
+becomes, for example:
+
+> Today's date is 8/1/2018.
 
 ## <a name="timezone_list"></a>timezone_list()
 
@@ -2063,16 +2132,26 @@ set using the [`timezone` configuration].
 
 {% include side-by-side.html demo="as-datetime" %}
 
-The `as_datetime()` function expresses a date as a [`datetime`]
+The `as_datetime()` function expresses a date as a [`DADateTime`]
 object with a time zone.  It takes an optional keyword argument,
 `timezone`, which will override the default time zone.
+
+* `as_datetime('12/25/2018')` returns midnight on Christmas.
+* `as_datetime('12/25/2018 07:30 AM')` returns 7:30 a.m. on Christmas.
+* `as_datetime('07:30 AM')` returns 7:30 a.m. on the current day.
+
+In combination with the [`.time()`] method of [`DADateTime`], this
+function can be used to create objects of type [`datetime.time`].
+
+* `as_datetime('07:30 AM').time()` returns a [`datetime.time`] object
+  representing 7:30 a.m.
 
 ## <a name="current_datetime"></a>current_datetime()
 
 {% include side-by-side.html demo="current-datetime" %}
 
 The `current_datetime()` function returns the current date and time as
-a [`datetime`] object.  It takes an optional keyword argument,
+a [`DADateTime`] object.  It takes an optional keyword argument,
 `timezone`, which will override the default time zone.
 
 ## <a name="date_difference"></a>date_difference()
@@ -2900,8 +2979,8 @@ supported in the [API].)
 
 The [`set_user_info()`] function writes information to user profiles.
 
-It accepts the following keyword parameters, all of which are
-optional:
+It accepts the following keyword parameters, all of which
+are optional:
 
  - `country`: user's country code.
  - `first_name`: user's first name.
@@ -2914,8 +2993,9 @@ optional:
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
 
 The current user's profile will be updated with the values of the
-parameters.  Note that the `user_id`, `email`, and `role` settings
-cannot be changed with this function.
+parameters.  Note that the `user_id` and `email` attributes cannot be
+changed using this function; these attributes are used only for
+selecting the user whose information is going to be changed.
 
 This function will only work if the user running the interview that
 calls the function is logged in.
@@ -2943,12 +3023,22 @@ set_user_info(email='jsmith@example.com', organization='Example, Inc.')
 {% endhighlight %}
 
 Users with `admin` privileges can disable user accounts by setting the
-`active` parameter to `False` (or enable a disabled account by setting
-`active` to `True`.
+`active` keyword parameter to `False` (or enable a disabled account by
+setting `active` to `True`.
+
+In addition, users with `admin` privileges can change the privileges
+of a user by setting the `privileges` keyword parameter to the list of
+privilege names that the user should have.
+
+{% highlight python %}
+set_user_info(user_id=22, privileges=['user', 'trainer'])
+{% endhighlight %}
 
 For an [API] version of this function, see the [POST method of
-`/api/user/<user_id>`] and the [DELETE method of
-`/api/user/<user_id>`].  (Changing accounts by e-mail address is
+`/api/user/<user_id>`], the [DELETE method of
+`/api/user/<user_id>`], the [POST method of
+`/api/user/<user_id>/privileges`], and the [DELETE method of
+`/api/user/<user_id>/privileges`]  (Changing accounts by e-mail address is
 not supported in the [API].)
 
 ## <a name="get_user_secret"></a>get_user_secret()
@@ -3038,12 +3128,49 @@ defense['latches'] = False
 client.phone_number = u'202-555-3434'
 {% endhighlight %}
 
+Note that if you pass [`DAFile`], [`DAFileList`], or
+[`DAFileCollection`] objects from one interview to another, the other
+interview will not be able to read the files unless the
+[`.set_attributes()`] method has been used to either change the
+`session` and `filename` to match the destination interview, or the
+`private` attribute has been set to `False`.  Note that if the
+`session` and `filename` are changed, then the first interview will no
+longer be able to access the file.  Note also that if `private` is set
+to `False`, then the file will be accessible on the internet from a
+URL.
+
 For an [API] version of this function, see the [POST method of `/api/session`].
 
 ## <a name="go_back_in_session"></a>go_back_in_session()
 
+The [`go_back_in_session()`] function causes the effect of clicking
+the "back" button in an interview session.  It has two required
+arguments: the interview filename and the session ID.  It also accepts
+an optional keyword argument `secret`, which is the encryption key to
+use to decrypt the interview dictionary, if it is encrypted.
+
+{% highlight python %}
+go_back_in_session(filename, session_id, secret)
+{% endhighlight %}
 
 For an [API] version of this function, see the [POST method of `/api/session/back`].
+
+## <a name="manage_privileges"></a>manage_privileges()
+
+The [`manage_privileges()`] function allows a user with `admin`
+privileges to list, add, or remove privilege types from the list of
+existing privileges.
+
+* `manage_privileges('list')` returns the list of existing privilege
+  types as an alphabetically sorted list.
+* `manage_privileges('add', 'supervisor')` adds a privilege called
+  `supervisor` to the list of existing privilege types.
+* `manage_privileges('remove', 'supervisor')` removes the privilege called
+  `supervisor` from the list of existing privilege types.  Moreover,
+  if any users have the privilege, the privilege is taken away from
+  the users.
+
+For an [API] version of this function, see [`/api/privileges`].
 
 # <a name="functions"></a>Miscellaneous functions
 
@@ -4937,8 +5064,10 @@ $(document).on('daPageLoad', function(){
 [`need` directive]: {{ site.baseurl }}/docs/logic.html#need
 [PDF templates]: {{ site.baseurl }}/docs/documents.html#pdf template file
 [`yesno()`]: #yesno
-[Unicode Technical Standard #35]: https://unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns
+[Unicode Technical Standard #35]: https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
 [`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
+[`DADateTime`]: {{ site.baseurl }}/docs/objects.html#DADateTime
+[`.time()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.time
 [locale]: #langlocale
 [`metadata` initial block]: {{ site.baseurl }}/docs/initial.html#metadata
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
@@ -4987,6 +5116,8 @@ $(document).on('daPageLoad', function(){
 [GET method of `/api/session`]: {{ site.baseurl }}/docs/api.html#session_get
 [POST method of `/api/session`]: {{ site.baseurl }}/docs/api.html#session_post
 [POST method of `/api/session/back`]: {{ site.baseurl }}/docs/api.html#session_back
+[POST method of `/api/user/<user_id>/privileges`]: {{ site.baseurl }}/docs/api.html#user_privilege_add
+[DELETE method of `/api/user/<user_id>/privileges`]: {{ site.baseurl }}/docs/api.html#user_privilege_remove
 [`get_user_list()`]: #get_user_list
 [`get_user_secret()`]: #get_user_secret
 [`get_session_variables()`]: #get_session_variables
@@ -4994,4 +5125,9 @@ $(document).on('daPageLoad', function(){
 [API]: {{ site.baseurl }}/docs/api.html
 [`get_user_info()`]: #get_user_info
 [`set_user_info()`]: #set_user_info
+[`go_back_in_session()`]: #go_back_in_session
+[`manage_privileges()`]: #manage_privileges
 [Google Drive synchronization]: {{ site.baseurl }}/docs/playground.html#google drive
+[`/api/privileges`]: {{ site.baseurl }}/docs/api.html#privileges
+[`.set_attributes()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_attributes
+[`datetime.time`]: https://docs.python.org/2/library/datetime.html#datetime.time

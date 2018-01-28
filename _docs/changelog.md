@@ -4,14 +4,31 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.2.23](https://github.com/jhpyle/docassemble/releases/tag/v0.2.23) - 2018-01-23
+## [0.2.23](https://github.com/jhpyle/docassemble/releases/tag/v0.2.23) - 2018-01-28
 
 ### Added
+- The `DADateTime` class.
+- The `time` and `datetime` `datatype`s for fields.
+- The `format_datetime()` function.
 - The `/api/session/back` API and the `go_back_in_session()` function.
+- The `/api/privileges` and `/api/user/<user_id>/privileges` APIs, and
+  the `manage_privileges()` function.
+- The `.as_serializable()` method of the `DAObject`.
 
 ### Changed
 - The `/api/session` POST API now returns the current question, unless the
   `question` data value is set to `0`.
+- The `/api/session` POST API now accepts file uploads.
+- Changed the name "roles" to the name "privileges" in the
+  user-related APIs.
+- The `set_user_info()` function can now be used to change user
+  privileges.
+- Fields with `datatype: date` will now set a variable of type
+  `DADateTime`, rather than a plain text variable.
+- The `today()` now returns a `DADateTime` object if it is called
+  without a `format` parameter.
+- The JavaScript for the `show if` and `hide if` functionality now
+  animates the showing and hiding of fields.
 
 ## [0.2.22](https://github.com/jhpyle/docassemble/releases/tag/v0.2.22) - 2018-01-23
 
