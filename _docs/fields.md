@@ -1684,10 +1684,10 @@ why this needs to be done manually as opposed to automatically:
 [`dateutil.parser.parse`]: http://dateutil.readthedocs.io/en/stable/parser.html#dateutil.parser.parse
 [`.replace_time()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.replace_time
 [`.replace()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.replace
-[`.format_datetime()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_datetime
 [`.format_date()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_date
 [`.format_time()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_time
+[`.format_datetime()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_datetime
 [`format_date()`]: {{ site.baseurl }}/docs/functions.html#format_date
 [`format_time()`]: {{ site.baseurl }}/docs/functions.html#format_time
-[`format_timedate()`]: {{ site.baseurl }}/docs/functions.html#format_time
+[`format_datetime()`]: {{ site.baseurl }}/docs/functions.html#format_datetime
 [`.strftime()`]: https://docs.python.org/2/library/datetime.html#datetime.time.strftime

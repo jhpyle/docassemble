@@ -888,7 +888,7 @@ following:
       "priority": "info"
     }
   ],
-  ...
+  "etc.": "etc."
 }
 {% endhighlight %}
 
