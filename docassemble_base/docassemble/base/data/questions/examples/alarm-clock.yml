@@ -14,6 +14,10 @@ code: |
   email_sent = False
   multi_user = True
   allow_cron = True
+  counter = 0
+---
+mandatory: True
+code: |
   email
   raw_wakeup_time
   timezone
@@ -56,7 +60,8 @@ code: |
 ---
 event: cron_hourly
 code: |
-  if email_sent:
+  counter += 1
+  if email_sent or counter > 48:
     command('exit')
   if local_wakeup_time >= now:
     response("Not ready to send wakeup call:" + str(local_wakeup_time))

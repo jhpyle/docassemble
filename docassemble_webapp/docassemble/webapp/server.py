@@ -4627,7 +4627,7 @@ def index():
                 else:
                     data = "False"
                     test_data = False
-            elif known_datatypes[real_key] == 'date':
+            elif known_datatypes[real_key] in ('date', 'datetime'):
                 if type(data) in (str, unicode):
                     data = data.strip()
                     if data != '':
@@ -4635,11 +4635,31 @@ def index():
                             dateutil.parser.parse(data)
                         except:
                             validated = False
-                            field_error[orig_key] = word("You need to enter a valid date.")
+                            if known_datatypes[real_key] == 'date':
+                                field_error[orig_key] = word("You need to enter a valid date.")
+                            else:
+                                field_error[orig_key] = word("You need to enter a valid date and time.")
                             continue
                         test_data = data
                         is_date = True
                         data = 'docassemble.base.util.as_datetime(' + repr(data) + ')'
+                    else:
+                        data = repr('')
+                else:
+                    data = repr('')
+            elif known_datatypes[real_key] == 'time':
+                if type(data) in (str, unicode):
+                    data = data.strip()
+                    if data != '':
+                        try:
+                            dateutil.parser.parse(data)
+                        except:
+                            validated = False
+                            field_error[orig_key] = word("You need to enter a valid time.")
+                            continue
+                        test_data = data
+                        is_date = True
+                        data = 'docassemble.base.util.as_datetime(' + repr(data) + ').time()'
                     else:
                         data = repr('')
                 else:
@@ -4700,7 +4720,7 @@ def index():
                 else:
                     data = "False"
                     test_data = False
-            elif known_datatypes[orig_key] == 'date':
+            elif known_datatypes[orig_key] in ('date', 'datetime'):
                 if type(data) in (str, unicode):
                     data = data.strip()
                     if data != '':
@@ -4708,11 +4728,31 @@ def index():
                             dateutil.parser.parse(data)
                         except:
                             validated = False
-                            field_error[orig_key] = word("You need to enter a valid date.")
+                            if known_datatypes[orig_key] == 'date':
+                                field_error[orig_key] = word("You need to enter a valid date.")
+                            else:
+                                field_error[orig_key] = word("You need to enter a valid date and time.")
                             continue
                         test_data = data
                         is_date = True
                         data = 'docassemble.base.util.as_datetime(' + repr(data) + ')'
+                    else:
+                        data = repr('')
+                else:
+                    data = repr('')
+            elif known_datatypes[orig_key] == 'time':
+                if type(data) in (str, unicode):
+                    data = data.strip()
+                    if data != '':
+                        try:
+                            dateutil.parser.parse(data)
+                        except:
+                            validated = False
+                            field_error[orig_key] = word("You need to enter a valid time.")
+                            continue
+                        test_data = data
+                        is_date = True
+                        data = 'docassemble.base.util.as_datetime(' + repr(data) + ').time()'
                     else:
                         data = repr('')
                 else:
@@ -6656,7 +6696,7 @@ def index():
         if (firstInput.length > 0){
           $(firstInput).focus();
           var inputType = $(firstInput).attr('type');
-          if ($(firstInput).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file" && inputType != "range" && inputType != "number" && inputType != "date"){
+          if ($(firstInput).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file" && inputType != "range" && inputType != "number" && inputType != "date" && inputType != "time"){
             var strLength = $(firstInput).val().length * 2;
             if (strLength > 0){
               try {
@@ -14699,7 +14739,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     except:
                         special_messages.append('"' + inp + '" ' + word("is not a whole number."))
                         data = None
-            elif hasattr(field, 'datatype') and field.datatype == 'date':
+            elif hasattr(field, 'datatype') and field.datatype in ('date', 'datetime'):
                 if user_entered_skip and not interview_status.extras['required'][field.number]:
                     data = repr('')
                     skip_it = True
@@ -14709,7 +14749,22 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         data = docassemble.base.util.as_datetime(inp)
                     except Exception as the_err:
                         logmessage("do_sms: date validation error was " + str(the_err))
-                        special_messages.append('"' + inp + '" ' + word("is not a valid date."))
+                        if field.datatype == 'date':
+                            special_messages.append('"' + inp + '" ' + word("is not a valid date."))
+                        else:
+                            special_messages.append('"' + inp + '" ' + word("is not a valid date and time."))
+                        data = None                    
+            elif hasattr(field, 'datatype') and field.datatype == 'time':
+                if user_entered_skip and not interview_status.extras['required'][field.number]:
+                    data = repr('')
+                    skip_it = True
+                else:
+                    try:
+                        dateutil.parser.parse(inp)
+                        data = docassemble.base.util.as_datetime(inp).time()
+                    except Exception as the_err:
+                        logmessage("do_sms: time validation error was " + str(the_err))
+                        special_messages.append('"' + inp + '" ' + word("is not a valid time."))
                         data = None                    
             elif hasattr(field, 'datatype') and field.datatype == 'range':
                 if user_entered_skip and not interview_status.extras['required'][field.number]:
@@ -15130,12 +15185,12 @@ def api_privileges():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
     if request.method == 'GET':
-        return jsonify(get_privilege_list())
+        return jsonify(get_privileges_list())
     if request.method == 'DELETE':
         if not (current_user.has_role('admin')):
             return jsonify_with_status("Access denied.", 403)
         if 'privilege' not in request.args:
-            return jsonify_with_status("A privilege must be provided.", 400)
+            return jsonify_with_status("A privilege name must be provided.", 400)
         try:
             remove_privilege(request.args['privilege'])
         except Exception as err:
@@ -15146,14 +15201,16 @@ def api_privileges():
             return jsonify_with_status("Access denied.", 403)
         post_data = request.form.copy()
         if 'privilege' not in post_data:
-            return jsonify_with_status("A privilege must be provided.", 400)
+            return jsonify_with_status("A privilege name must be provided.", 400)
         try:
             add_privilege(post_data['privilege'])
         except Exception as err:
             return jsonify_with_status(str(err), 400)
         return ('', 204)
 
-def get_privilege_list():
+def get_privileges_list():
+    if not (current_user.has_role('admin')):
+        raise Exception('You must have admin privileges to call get_privileges_list().')
     role_names = []
     for role in Role.query.order_by('name'):
         role_names.append(role.name)
@@ -15162,7 +15219,7 @@ def get_privilege_list():
 def add_privilege(privilege):
     if not (current_user.has_role('admin')):
         raise Exception('You must have admin privileges to call add_privilege().')
-    role_names = get_privilege_list()
+    role_names = get_privileges_list()
     if privilege in role_names:
         raise Exception("The given privilege already exists.")
     db.session.add(Role(name=privilege))
@@ -15173,10 +15230,10 @@ def remove_privilege(privilege):
         raise Exception('You must have admin privileges to call remove_privilege().')
     if privilege in ['user', 'admin', 'developer', 'advocate', 'cron']:
         raise Exception('The specified privilege is built-in and cannot be deleted.')
-    role = Role.query.filter_by(name=privilege).first()
     user_role = Role.query.filter_by(name='user').first()
+    role = Role.query.filter_by(name=privilege).first()
     if role is None:
-        raise Exception('The privilege did not exist.')
+        raise Exception('The privilege ' + unicode(privilege) + ' did not exist.')
     for user in db.session.query(UserModel):
         roles_to_remove = list()
         for the_role in user.roles:
@@ -15208,7 +15265,7 @@ def api_user_by_id_privileges(user_id):
         if request.method == 'DELETE':
             role_name = request.args.get('privilege', None)
             if role_name is None:
-                return jsonify_with_status("A privilege must be provided", 400)
+                return jsonify_with_status("A privilege name must be provided", 400)
             try:
                 remove_user_privilege(user_id, role_name)
             except Exception as err:
@@ -15227,8 +15284,8 @@ def api_user_by_id_privileges(user_id):
 
 def add_user_privilege(user_id, privilege):
     if not (current_user.has_role('admin')):
-        raise Exception('You must have admin privileges to call add_privilege().')
-    if privilege not in get_privilege_list():
+        raise Exception('You must have admin privileges to call add_user_privilege().')
+    if privilege not in get_privileges_list():
         raise Exception('The specified privilege does not exist.')
     user = UserModel.query.filter_by(id=user_id).first()
     if user is None:
@@ -15243,13 +15300,14 @@ def add_user_privilege(user_id, privilege):
     if role_to_add is None:
         raise Exception("The specified privilege did not exist.")
     user.roles.append(role_to_add)
+    db.session.commit()
 
 def remove_user_privilege(user_id, privilege):
     if not (current_user.has_role('admin')):
         raise Exception('You must have admin privileges to call add_privilege().')
     if current_user.id == user_id and privilege == 'admin':
-        raise Exception('You cannot take away the admin privilege from the owner of the API.')
-    if privilege not in get_privilege_list():
+        raise Exception('You cannot take away the admin privilege from the current user.')
+    if privilege not in get_privileges_list():
         raise Exception('The specified privilege does not exist.')
     user = UserModel.query.filter_by(id=user_id).first()
     if user is None:
@@ -15289,6 +15347,22 @@ def set_user_info(**kwargs):
             raise Exception("Cannot disable the current user.")
         user.active = kwargs['active']
     db.session.commit()
+    if 'privileges' in kwargs and type(kwargs['privileges']) in (list, tuple):
+        if len(kwargs['privileges']) == 0:
+            raise Exception("Cannot remove all of a user's privileges.")
+        roles_to_add = []
+        roles_to_delete = []
+        role_names = [role.name for role in user.roles]
+        for role in role_names:
+            if role not in kwargs['privileges']:
+                roles_to_delete.append(role)
+        for role in kwargs['privileges']:
+            if role not in role_names:
+                roles_to_add.append(role)
+        for role in roles_to_delete:
+            remove_user_privilege(user.id, role)
+        for role in roles_to_add:
+            add_user_privilege(user.id, role)
     
 @app.route('/api/secret', methods=['GET'])
 def api_get_secret():
@@ -16285,6 +16359,11 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          get_session_variables=get_session_variables,
                                          go_back_in_session=go_back_in_session,
                                          set_session_variables=set_session_variables,
+                                         get_privileges_list=get_privileges_list,
+                                         add_privilege=add_privilege,
+                                         remove_privilege=remove_privilege,
+                                         add_user_privilege=add_user_privilege,
+                                         remove_user_privilege=remove_user_privilege,
                                          file_set_attributes=file_set_attributes,
                                          fg_make_png_for_pdf=fg_make_png_for_pdf)
 #docassemble.base.util.set_user_id_function(user_id_dict)

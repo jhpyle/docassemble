@@ -1,0 +1,35 @@
+metadata:
+  title: Date and time
+  documentation: "https://docassemble.org/docs/fields.html#datetime"
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  When is your appointment?
+fields:
+  - Date and time: target_variable
+    datatype: datetime
+---
+question: Result of question
+subquestion: |
+  When inserted in into a question,
+  `target_variable` looks like
+  ${ target_variable }.
+
+  But `target_variable` is also a
+  special date/time object.
+
+  For example, using the `.format_datetime()`
+  method, the date/time can be expressed as
+  ${ target_variable.format_datetime('h:mm in MMMM') }.
+
+  Using the `.minus()` method, 24 hours
+  before the date/time can be expressed as
+  ${ target_variable.minus(hours=24) }.
+  
+  Toggle "Source" in the navigation bar
+  to see the source code for this screen.
+mandatory: True

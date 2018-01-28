@@ -175,6 +175,7 @@
 ", is attached": Null
 "is not a valid date.": Null
 "is not a valid number.": Null
+"is not a valid time.": Null
 "is not a whole number.": Null
 "is not within the range.": Null
 "is": Null
@@ -432,6 +433,8 @@
 "Type an e-mail address, or type skip.": Null
 "Type a number.": Null
 "Type a number, or type skip.": Null
+"Type a time.": Null
+"Type a time, or type skip.": Null
 "Type a value between": Null
 "Type Ctrl-space to autocomplete.": Null
 "Type ? for additional assistance.": Null
@@ -530,6 +533,7 @@
 "You need to enter a number that is at least": Null
 "You need to enter a number that is at most": Null
 "You need to enter a valid date.": Null
+"You need to enter a valid time.": Null
 "You need to log in before you can access": Null
 "You need to select one.": Null
 "You need to supply a Git URL, upload a file, or supply the name of a package on PyPI.": Null

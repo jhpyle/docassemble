@@ -282,8 +282,8 @@ class DAObject(object):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(the_name)
         return the_name
-    def as_json(self):
-        """Returns a JSON representation of the object."""
+    def as_serializable(self):
+        """Returns a serializable representation of the object."""
         return docassemble.base.functions.safe_json(self)
     def object_possessive(self, target):
         """Returns a possessive phrase based on the instanceName.  E.g., client.object_possessive('fish') returns
@@ -2033,6 +2033,11 @@ class DAFileCollection(DAObject):
             if hasattr(self, ext):
                 return getattr(self, ext).url_for(**kwargs)
         raise Exception("Could not find a file within a DACollection.")
+    def set_attributes(self, **kwargs):
+        """Sets attributes of the file(s) stored on the server.  Takes optional keyword arguments private and persistent, which must be boolean values."""
+        for ext in self._extension_list():
+            if hasattr(self, ext):
+                return getattr(self, ext).set_attributes(**kwargs)
     def show(self, **kwargs):
         """Inserts markup that displays each part of the file collection as an
         image or link.

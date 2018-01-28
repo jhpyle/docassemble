@@ -44,7 +44,7 @@ def privilege_list():
 @roles_required('admin')
 def user_list():
     output = '<ol>';
-    for user in db.session.query(UserModel).order_by(UserModel.last_name, UserModel.first_name, UserModel.email):
+    for user in db.session.query(UserModel).order_by(UserModel.id):
         if user.nickname == 'cron':
             continue
         name_string = ''

@@ -2859,6 +2859,10 @@ class Question:
                             the_func('')
                         elif field.datatype == 'date':
                             the_func('01/01/1970')
+                        elif field.datatype == 'time':
+                            the_func('12:00 AM')
+                        elif field.datatype == 'datetime':
+                            the_func('01/01/1970 12:00 AM')
                         elif field.datatype.startswith('yesno') or field.datatype.startswith('noyes'):
                             the_func(True)
                     else:

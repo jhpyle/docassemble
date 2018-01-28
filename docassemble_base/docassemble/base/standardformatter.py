@@ -347,6 +347,20 @@ def as_sms(status, links=None, menu_items=None):
                 qoutput += "\n" + word('Type a date.')
             else:
                 qoutput += "\n" + word('Type a date, or type skip.')
+        elif hasattr(field, 'datatype') and field.datatype in ['time']:
+            if label:
+                qoutput += "\n" + label + ":" + next_label 
+            if status.extras['required'][field.number]:
+                qoutput += "\n" + word('Type a time.')
+            else:
+                qoutput += "\n" + word('Type a time, or type skip.')
+        elif hasattr(field, 'datatype') and field.datatype in ['datetime']:
+            if label:
+                qoutput += "\n" + label + ":" + next_label 
+            if status.extras['required'][field.number]:
+                qoutput += "\n" + word('Type a date and time.')
+            else:
+                qoutput += "\n" + word('Type a date and time, or type skip.')
         elif hasattr(field, 'datatype') and field.datatype in ['email']:
             if label:
                 qoutput += "\n" + label + ":" + next_label
@@ -845,6 +859,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if field.datatype == 'date':
                     validation_rules['rules'][the_saveas]['date'] = True
                     validation_rules['messages'][the_saveas]['date'] = word("You need to enter a valid date.")
+                if field.datatype == 'time':
+                    validation_rules['rules'][the_saveas]['time'] = True
+                    validation_rules['messages'][the_saveas]['time'] = word("You need to enter a valid time.")
+                if field.datatype == 'datetime':
+                    validation_rules['rules'][the_saveas]['datetime'] = True
+                    validation_rules['messages'][the_saveas]['datetime'] = word("You need to enter a valid date and time.")
                 if field.datatype == 'email':
                     validation_rules['rules'][the_saveas]['email'] = True
                     if status.extras['required'][field.number]:
@@ -1596,6 +1616,10 @@ def input_for(status, field, wide=False, embedded=False):
         extra_class = ' input-embedded'
         if hasattr(field, 'datatype') and field.datatype == 'date':
             extra_class += ' date-embedded'
+        if hasattr(field, 'datatype') and field.datatype == 'time':
+            extra_class += ' time-embedded'
+        if hasattr(field, 'datatype') and field.datatype == 'datetime':
+            extra_class += ' date-embedded'
         if inline_width is not None:
             extra_style = ' style="min-width: ' + unicode(inline_width) + '"'
         else:
@@ -1961,6 +1985,8 @@ def input_for(status, field, wide=False, embedded=False):
             else:
                 defaultstring = ''
             input_type = field.datatype
+            if field.datatype == 'datetime':
+                input_type = 'datetime-local'
             step_string = ''
             if field.datatype in ['integer', 'float', 'currency', 'number']:
                 input_type = 'number'

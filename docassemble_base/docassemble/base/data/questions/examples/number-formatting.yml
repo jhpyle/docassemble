@@ -1,0 +1,33 @@
+metadata:
+  title: Number format
+  example start: 2
+  example end: 3
+  documentation: "https://docassemble.org/docs/markup.html#formatting"
+---
+modules:
+  - docassemble.base.util
+---
+code: |
+  monthly_income = 43143.26/12
+---
+question: |
+  Your monthly income
+subquestion: |
+  Your monthly income is
+  ${ monthly_income }
+  dollars per month.
+
+  But it would be better to say
+  your monthly income is
+  ${ '%.2f' % monthly_income }
+  dollars per month, or
+  ${ '{:.2f}'.format(monthly_income) }
+  dollars per month, or
+  ${ '{:,.2f}'.format(monthly_income) }
+  dollars per month, or
+  ${ int(monthly_income) }
+  dollars per month, or
+  best of all,
+  ${ currency(monthly_income) }
+  per month.
+mandatory: True

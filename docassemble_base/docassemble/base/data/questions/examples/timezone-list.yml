@@ -16,6 +16,7 @@ fields:
 ---
 question: |
   The time in your timezone is
-  ${ today(timezone=user_timezone) }.
+  ${ current_datetime(timezone=user_timezone).format_date('MM/dd/yyyy') } at
+  ${ current_datetime(timezone=user_timezone).format_time('h:mm a') }.
 mandatory: True
   

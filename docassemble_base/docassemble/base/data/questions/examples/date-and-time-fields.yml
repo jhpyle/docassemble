@@ -1,0 +1,28 @@
+metadata:
+  title: Date and time
+  documentation: "https://docassemble.org/docs/fields.html#time"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  When is your appointment?
+fields:
+  - Date: appt_date
+    datatype: date
+  - Time: appt_time
+    datatype: time
+---
+code: |
+  appt_datetime = appt_date.replace_time(appt_time)
+---
+question: Time until your appointment
+subquestion: |
+  Your appointment is on ${ appt_datetime }.
+  
+  There are
+  ${ date_difference(starting=current_datetime(), ending=appt_datetime).minutes }
+  minutes remaining until your appointment.
+mandatory: True

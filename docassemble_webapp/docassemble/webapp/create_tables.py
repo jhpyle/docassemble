@@ -78,6 +78,10 @@ def populate_tables():
     developer_role = get_role(db, 'developer')
     advocate_role = get_role(db, 'advocate')
     trainer_role = get_role(db, 'trainer')
+    for user in UserModel.query.all():
+        if len(user.roles) == 0:
+            user.roles.append(user_role)
+            db.session.commit()
     admin = get_user(db, admin_role, admin_defaults)
     cron = get_user(db, cron_role, cron_defaults)
     if admin.confirmed_at is None:

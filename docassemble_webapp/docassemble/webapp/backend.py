@@ -516,5 +516,9 @@ def file_set_attributes(file_number, **kwargs):
     if 'persistent' in kwargs and kwargs['persistent'] in [True, False] and upload.persistent != kwargs['persistent']:
         upload.persistent = kwargs['persistent']
         changed = True
+    if 'session' in kwargs and type(kwargs['session']) in (str, unicode):
+        upload.key = kwargs['session']
+    if 'filename' in kwargs and type(kwargs['filename']) in (str, unicode):
+        upload.filename = kwargs['filename']
     if changed:
         db.session.commit()

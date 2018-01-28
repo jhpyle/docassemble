@@ -1,8 +1,11 @@
 metadata:
   title: Scheduled task
   documentation: "https://docassemble.org/docs/background.html#scheduled"
-  example start: 1
+  example start: 2
   example end: 3
+---
+modules:
+  - docassemble.base.util
 ---
 mandatory: True
 code: |
@@ -12,18 +15,23 @@ code: |
 ---
 event: cron_hourly
 code: |
-  counter += 0
+  counter += 1
+  if counter > 48:
+    command('exit')
+  background_response()
 ---
 mandatory: True
 question: |
   The value of the counter is
   ${ counter }.
-subqueston: |
+subquestion: |
   Every hour, the counter will
   increase by one.
 
   No, I do not expect you to wait
   long enough to see the counter
   increase!
+
+  `${ user_info().session }`
 buttons:
   - Refresh: refresh
