@@ -2908,13 +2908,13 @@ class Question:
                                 elif key == 'labels':
                                     labels[str(field.number) + '_' + str(field_num)] = val
                         for key, possible_dict in ask_result['extras'].iteritems():
-                            logmessage(repr("key is " + str(key) + " and possible dict is " + repr(possible_dict)))
+                            #logmessage(repr("key is " + str(key) + " and possible dict is " + repr(possible_dict)))
                             if type(possible_dict) is dict:
-                                logmessage("key points to a dict")
+                                #logmessage("key points to a dict")
                                 if key not in extras:
                                     extras[key] = dict()
                                 for field_num, val in possible_dict.iteritems():
-                                    logmessage("Setting " + str(field.number) + '_' + str(field_num))
+                                    #logmessage("Setting " + str(field.number) + '_' + str(field_num))
                                     extras[key][str(field.number) + '_' + str(field_num)] = val
                         for sub_field in the_question.fields:
                             sub_field.number = str(field.number) + '_' + str(sub_field.number)

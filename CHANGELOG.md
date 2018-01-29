@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.25] - 2018-01-29
+### Changed
+- Tweaks to the `interview_url()` function.
+### Fixed
+- Unicode error on interview page after interview decryption failure.
+- Problem with list gathering and `.there_is_another`.
+
 ## [0.2.24] - 2018-01-28
 ### Fixed
 - Problem with missing uid in background tasks.

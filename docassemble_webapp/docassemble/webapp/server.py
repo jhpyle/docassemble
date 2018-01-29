@@ -809,6 +809,9 @@ def get_url_from_file_reference(file_reference, **kwargs):
         return(url_for('user.logout', **kwargs))
     elif file_reference == 'help':
         return('javascript:show_help_tab()');
+    elif file_reference == 'interview':
+        remove_question_package(kwargs)
+        return(url_for('index', **kwargs))
     elif file_reference == 'interviews':
         remove_question_package(kwargs)
         return(url_for('interview_list', **kwargs))
@@ -4296,6 +4299,7 @@ def index():
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
         should_assemble = True
     if should_assemble or something_changed:
+        #logmessage("index: assemble 1")
         interview.assemble(user_dict, interview_status)
         if '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
             logmessage("index: not the same question name: " + post_data['_question_name'] + " versus " + interview_status.question.name)
@@ -4353,9 +4357,11 @@ def index():
             error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
         else:
             if something_changed and key_requires_preassembly.search(file_field) and not should_assemble:
+                #logmessage("index: assemble 2")
                 interview.assemble(user_dict, interview_status)
             initial_string = 'import docassemble.base.core'
             try:
+                #logmessage("index: doing " + initial_string)
                 exec(initial_string, user_dict)
             except Exception as errMess:
                 error_messages.append(("error", "Error: " + str(errMess)))
@@ -4370,7 +4376,7 @@ def index():
                 the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', make_pngs=True, extension='" + str(extension) + "')"
             else:
                 the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ")"
-            #logmessage("Doing " + the_string)
+            #logmessage("0Doing " + the_string)
             try:
                 exec(the_string, user_dict)
                 if not changed:
@@ -4409,10 +4415,12 @@ def index():
         the_question = interview.questions_by_name[post_data['_question_name']]
         if not (should_assemble or something_changed):
             if the_question.validation_code is not None:
+                #logmessage("index: assemble 3")
                 interview.assemble(user_dict, interview_status)
             else:
                 for the_field in the_question.fields:
                     if hasattr(the_field, 'validate'):
+                        #logmessage("index: assemble 4")
                         interview.assemble(user_dict, interview_status)
                         break
     else:
@@ -4430,7 +4438,7 @@ def index():
                 post_data[known_varnames[orig_key]] = post_data[orig_key]
         if key.endswith('.gathered'):
             objname = re.sub(r'\.gathered$', '', key)
-            logmessage("Considering gathered key: " + str(key))
+            #logmessage("Considering gathered key: " + str(key))
             try:
                 eval(objname, user_dict)
             except:
@@ -4541,7 +4549,7 @@ def index():
                     elif datatype == 'object_checkboxes':
                         commands.append(whole_key + ' = docassemble.base.core.DAList(' + repr(whole_key) + ', auto_gather=False, gathered=True)')
                 for command in commands:
-                    # logmessage("Doing " + command)
+                    #logmessage("1Doing " + command)
                     exec(command, user_dict)            
             #logmessage("key is now " + key)
             # match = match_inside_and_outside_brackets.search(key)
@@ -4796,11 +4804,13 @@ def index():
                 #continue
                 #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
         if is_date:
+            #logmessage("index: doing import docassemble.base.util")
             try:
                 exec("import docassemble.base.util", user_dict)
             except Exception as errMess:
                 error_messages.append(("error", "Error: " + str(errMess)))
         if is_ml:
+            #logmessage("index: doing import docassemble.base.util")
             try:
                 exec("import docassemble.base.util", user_dict)
             except Exception as errMess:
@@ -4853,7 +4863,7 @@ def index():
                     field_error[the_key] = str(errstr)
                     validated = False
                     continue
-        # logmessage("Doing " + str(the_string))
+        #logmessage("2Doing " + str(the_string))
         try:
             exec(the_string, user_dict)
             if not changed:
@@ -4862,11 +4872,14 @@ def index():
                 changed = True
         except Exception as errMess:
             error_messages.append(("error", "Error: " + str(errMess)))
-            logmessage("Error: " + str(errMess))
+            try:
+                logmessage("Error: " + str(errMess))
+            except:
+                pass
     if validated:
         for orig_key in empty_fields:
             key = myb64unquote(orig_key)
-            #logmessage("Doing key " + str(key))
+            #logmessage("3Doing empty key " + str(key))
             if empty_fields[orig_key] == 'object_checkboxes':
                 docassemble.base.parse.ensure_object_exists(key, 'object_checkboxes', user_dict)
                 exec(key + '.clear()' , user_dict)
@@ -4906,12 +4919,14 @@ def index():
                 if key_requires_preassembly.search(file_field):
                     should_assemble_now = True
             if not has_invalid_fields:
+                #logmessage("4Doing import docassemble.base.core")
                 initial_string = 'import docassemble.base.core'
                 try:
                     exec(initial_string, user_dict)
                 except Exception as errMess:
                     error_messages.append(("error", "Error: " + str(errMess)))
                 if something_changed and should_assemble_now and not should_assemble:
+                    #logmessage("index: assemble 5")
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
                     orig_file_field = orig_file_field_raw
@@ -4970,7 +4985,7 @@ def index():
                                 the_string = file_field + " = docassemble.base.core.DAFileList(" + repr(file_field) + ", elements=[" + ", ".join(elements) + "])"
                             else:
                                 the_string = file_field + " = None"
-                            #logmessage("0Doing " + the_string)
+                            #logmessage("5Doing " + the_string)
                             try:
                                 exec(the_string, user_dict)
                                 if not changed:
@@ -5003,6 +5018,7 @@ def index():
                 except Exception as errMess:
                     error_messages.append(("error", "Error: " + str(errMess)))
                 if something_changed and should_assemble_now and not should_assemble:
+                    #logmessage("index: assemble 6")
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
                     orig_file_field = orig_file_field_raw
@@ -5049,7 +5065,7 @@ def index():
                                 the_string = file_field + " = docassemble.base.core.DAFileList(" + repr(file_field) + ", elements=[" + ", ".join(elements) + "])"
                             else:
                                 the_string = file_field + " = None"
-                            #logmessage("1Doing " + the_string)
+                            #logmessage("6Doing " + the_string)
                             try:
                                 exec(the_string, user_dict)
                                 if not changed:
@@ -5073,6 +5089,7 @@ def index():
         interview_status.current_info.update(the_next_action)
     #startTime = int(round(time.time() * 1000))
     #g.assembly_start = time.time()
+    #logmessage("index: assemble 7")
     interview.assemble(user_dict, interview_status, old_user_dict)
     #g.assembly_end = time.time()
     #endTime = int(round(time.time() * 1000))
@@ -5104,6 +5121,7 @@ def index():
             session['key_logged'] = True
         steps = 1
         changed = False
+        #logmessage("index: assemble 8")
         interview.assemble(user_dict, interview_status)
     will_save = True
     if interview_status.question.question_type == "refresh":
@@ -7447,7 +7465,7 @@ def interview_start():
 
 @app.route('/start/<dispatch>', methods=['GET'])
 def redirect_to_interview(dispatch):
-    logmessage("redirect_to_interview: the dispatch is " + str(dispatch))
+    #logmessage("redirect_to_interview: the dispatch is " + str(dispatch))
     yaml_filename = daconfig['dispatch'].get(dispatch, None)
     if yaml_filename is None:
         abort(404)
@@ -13824,7 +13842,10 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             except Exception as the_err:
                 if exclude_invalid:
                     continue
-                logmessage("user_interviews: unable to decrypt dictionary.  " + str(the_err.__class__.__name__) + ": " + unicode(the_err))
+                try:
+                    logmessage("user_interviews: unable to decrypt dictionary.  " + str(the_err.__class__.__name__) + ": " + unicode(the_err))
+                except:
+                    logmessage("user_interviews: unable to decrypt dictionary.  " + str(the_err.__class__.__name__))
                 dictionary = fresh_dictionary()
                 dictionary['_internal']['starttime'] = None
                 dictionary['_internal']['modtime'] = None

@@ -2,8 +2,8 @@ Feature: Example interviews
   In order to ensure docassemble is running properly, I want
   to run the example interviews.
   
-  # Scenario: Set up the server
-  #   Given I am using the server "http://localhost"
+  Scenario: Set up the server
+    Given I am using the server "http://localhost"
   
   # Scenario: Test the interview "File upload"
   #   Given I start the interview "docassemble.base:data/questions/examples/file.yml"
@@ -98,10 +98,10 @@ Feature: Example interviews
     And I set "Animal" to "pig"
     When I click the button "Continue"
     Then I should see the phrase "My favorite animal is the pig, too"
-    When I exit by clicking "Exit"
-    And I wait 5 seconds
-    Then I should see "A demonstration of docassemble" as the title of the page
-    And I should see "https://docassemble.org/demo.html" as the URL of the page
+#    When I exit by clicking "Exit"
+#    And I wait 5 seconds
+#    Then I should see "A demonstration of docassemble" as the title of the page
+#    And I should see "https://docassemble.org/demo.html" as the URL of the page
     
   Scenario: Test the interview "Convert to datetime"
     Given I start the interview "docassemble.base:data/questions/examples/as-datetime.yml"
@@ -169,7 +169,7 @@ Feature: Example interviews
     And I set "Number" to "2"
     And I click the button "Continue"
     Then I should see the phrase "Your answer will appear shortly."
-    And I wait 10 seconds
+    And I wait 12 seconds
     Then I should see the phrase "The answer is 555."
     And I click the button "Continue"
     Then I should see the phrase "All done."

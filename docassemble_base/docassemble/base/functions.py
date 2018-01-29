@@ -102,7 +102,7 @@ def set_current_variable(var):
     this_thread.current_variable.append(var)
 
 def pop_current_variable():
-    # logmessage("pop_current_variable: " + str(this_thread.current_variable))
+    #logmessage("pop_current_variable: " + str(this_thread.current_variable))
     if len(this_thread.current_variable):
         var = this_thread.current_variable.pop()
         #logmessage("pop_current_variable: " + str(var))
@@ -122,18 +122,22 @@ def close_files():
     #         os.remove(the_resource)
             
 def set_gathering_mode(mode, instanceName):
+    #logmessage("set_gathering_mode: " + str(instanceName) + " with mode " + str(mode))
     if mode:
         if instanceName not in this_thread.gathering_mode:
+            #logmessage("set_gathering_mode: using " + str(get_current_variable()))
             this_thread.gathering_mode[instanceName] = get_current_variable()
     else:
         del this_thread.gathering_mode[instanceName]
 
 def get_gathering_mode(instanceName):
+    #logmessage("get_gathering_mode: " + str(instanceName))
     if instanceName not in this_thread.gathering_mode:
         return False
     return True
 
 def reset_gathering_mode(*pargs):
+    #logmessage("reset_gathering_mode: " + repr([y for y in pargs]))
     if len(pargs) == 0:
         this_thread.gathering_mode = dict()
         return
@@ -482,19 +486,23 @@ def interview_url(**kwargs):
     variable store.  This is used in multi-user interviews to invite
     additional users to participate."""
     do_local = False
-    if 'local' in kwargs:
-        if kwargs['local']:
+    args = dict()
+    for key, val in kwargs.iteritems():
+        args[key] = val
+    if 'local' in args:
+        if args['local']:
             do_local = True
-        del kwargs['local']
-    args = kwargs
-    if 'session' not in kwargs:
-        args['session'] = this_thread.current_info['session']
-    if 'i' in kwargs:
-        args['from_list'] = 1
+        del args['local']
+    if 'i' in args:
+        if 'session' not in args:
+            args['from_list'] = 1
     else:
         args['i'] = this_thread.current_info['yaml_filename']
+        args['session'] = this_thread.current_info['session']
     if do_local:
-        url = ''
+        url = get_config('root')
+        if url is None:
+            url = '/'
     else:
         url = str(this_thread.internal['url'])
     url += '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))

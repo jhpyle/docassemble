@@ -429,6 +429,7 @@ class DAList(DAObject):
         return
     def reset_gathered(self, recursive=False):
         """Indicates that there is more to be gathered"""
+        #logmessage("reset_gathered on " + self.instanceName)
         if hasattr(self, 'there_is_another'):
             delattr(self, 'there_is_another')
         if hasattr(self, 'gathered'):
@@ -709,6 +710,11 @@ class DAList(DAObject):
         #     if item_object_type is not None and complete_attribute is not None:
         #         getattr(elem, complete_attribute)
         the_length = len(self.elements)
+        if hasattr(self, '_necessary_length'):
+            if self._necessary_length <= the_length:
+                del self._necessary_length
+            elif number is None or number < self._necessary_length:
+                number = self._necessary_length
         if number is not None:
             while the_length < int(number):
                 if item_object_type is not None:
@@ -718,9 +724,13 @@ class DAList(DAObject):
                 #str(self.__getitem__(the_length))
                 # if item_object_type is not None and complete_attribute is not None:
                 #     getattr(self.__getitem__(the_length), complete_attribute)
+            if hasattr(self, '_necessary_length'):
+                del self._necessary_length
         elif minimum != 0:
             while self.there_is_another:
+                #logmessage("gather " + self.instanceName + ": del on there_is_another")
                 del self.there_is_another
+                self._necessary_length = the_length + 1
                 if item_object_type is not None:
                     self.appendObject(item_object_type, **item_object_parameters)
                 self.__getitem__(the_length)
@@ -728,6 +738,8 @@ class DAList(DAObject):
                 #str(self.__getitem__(the_length))
                 # if item_object_type is not None and complete_attribute is not None:
                 #     getattr(self.__getitem__(the_length), complete_attribute)
+        if hasattr(self, '_necessary_length'):
+            del self._necessary_length
         if self.auto_gather:
             self.gathered = True
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
@@ -1075,6 +1087,7 @@ class DADict(DAObject):
                     self.initializeObject(parg, item_object_type, **new_obj_parameters)
     def reset_gathered(self, recursive=False):
         """Indicates that there is more to be gathered"""
+        #logmessage("reset_gathered on " + self.instanceName)
         if hasattr(self, 'there_is_another'):
             delattr(self, 'there_is_another')
         if hasattr(self, 'gathered'):
@@ -1237,11 +1250,13 @@ class DADict(DAObject):
         if item_object_type is None and hasattr(self, 'new_item_name') and self.new_item_name in self.elements:
             delattr(self, 'new_item_name')
             if hasattr(self, 'there_is_another'):
+                #logmessage("0gather " + self.instanceName + ": del on there_is_another")
                 delattr(self, 'there_is_another')
         while (number is not None and len(self.elements) < int(number)) or (minimum is not None and len(self.elements) < int(minimum)) or (self.ask_number is False and minimum != 0 and self.there_is_another):
             if item_object_type is not None:
                 self.initializeObject(self.new_item_name, item_object_type, **new_item_parameters)
                 if hasattr(self, 'there_is_another'):
+                    #logmessage("1gather " + self.instanceName + ": del on there_is_another")
                     delattr(self, 'there_is_another')
                 self._new_item_init_callback()
                 if hasattr(self, 'new_item_name'):
@@ -1253,6 +1268,7 @@ class DADict(DAObject):
                     delattr(self, 'new_item_value')
                     delattr(self, 'new_item_name')
                     if hasattr(self, 'there_is_another'):
+                        #logmessage("2gather " + self.instanceName + ": del on there_is_another")
                         delattr(self, 'there_is_another')
                 else:
                     the_name = self.new_item_name
@@ -1260,8 +1276,10 @@ class DADict(DAObject):
                     if hasattr(self, 'new_item_name'):
                         delattr(self, 'new_item_name')
                     if hasattr(self, 'there_is_another'):
+                        #logmessage("3gather " + self.instanceName + ": del on there_is_another")
                         delattr(self, 'there_is_another')
             if hasattr(self, 'there_is_another'):
+                #logmessage("4gather " + self.instanceName + ": del on there_is_another")
                 delattr(self, 'there_is_another')
         self._validate(item_object_type, complete_attribute, keys=keys)
         if self.auto_gather:
@@ -1472,6 +1490,7 @@ class DASet(DAObject):
         return
     def reset_gathered(self, recursive=False):
         """Indicates that there is more to be gathered"""
+        #logmessage("reset_gathered: " + self.instanceName + ": del on there_is_another")
         if hasattr(self, 'there_is_another'):
             delattr(self, 'there_is_another')
         if hasattr(self, 'gathered'):
@@ -1628,6 +1647,7 @@ class DASet(DAObject):
             for elem in sorted(self.elements):
                 str(elem)
             if hasattr(self, 'there_is_another'):
+                #logmessage("gather: " + self.instanceName + ": del on there_is_another")
                 del self.there_is_another
         if self.auto_gather:
             self.gathered = True
