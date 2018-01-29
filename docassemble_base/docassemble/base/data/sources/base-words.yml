@@ -173,6 +173,7 @@
 "Invite": Null
 ", is already in use by someone else": Null
 ", is attached": Null
+"is not a valid date and time.": Null
 "is not a valid date.": Null
 "is not a valid number.": Null
 "is not a valid time.": Null
@@ -427,6 +428,8 @@
 "Two-factor authentication": Null
 "Type a currency value.": Null
 "Type a currency value, or type skip.": Null
+"Type a date and time.": Null
+"Type a date and time, or type skip.": Null
 "Type a date.": Null
 "Type a date, or type skip.": Null
 "Type an e-mail address.": Null
@@ -532,6 +535,7 @@
 "You need to enter a number.": Null
 "You need to enter a number that is at least": Null
 "You need to enter a number that is at most": Null
+"You need to enter a valid date and time.": Null
 "You need to enter a valid date.": Null
 "You need to enter a valid time.": Null
 "You need to log in before you can access": Null

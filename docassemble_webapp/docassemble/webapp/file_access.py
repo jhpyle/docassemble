@@ -197,7 +197,7 @@ def get_info_from_file_number(file_number, privileged=False, filename=None):
     if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
         privileged = True
     else:
-        if has_request_context():
+        if has_request_context() and 'uid' in session:
             uid = session['uid']
         else:
             uid = docassemble.base.functions.get_uid()

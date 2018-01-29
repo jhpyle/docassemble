@@ -1,0 +1,14 @@
+mandatory: True
+question: All done
+attachment:
+  docx template file: template_test.docx
+---
+template: some_template
+content: |
+  Hello world!
+
+  I am a paragraph.
+
+  I am a paragraph with some **bold** text.
+
+  That's all.

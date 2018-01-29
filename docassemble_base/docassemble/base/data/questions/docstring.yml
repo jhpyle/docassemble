@@ -44,6 +44,12 @@ track_location:
     using the GPS features of the browser.
   type: bool
   show: True
+allow_cron:
+  doc: |
+    This is a special variable that can be set during an interview.  If
+    True, the scheduled tasks system will be enabled for the interview.
+  type: bool
+  show: True
 multi_user:
   doc: |
     This is a special variable that can be set during an interview.  If

@@ -60,7 +60,7 @@ def delete_record(key, id):
 
 def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     if uid is None:
-        if has_request_context():
+        if has_request_context() and 'uid' in session:
             uid = session.get('uid', None)
         else:
             uid = docassemble.base.functions.get_uid()
@@ -211,7 +211,7 @@ def can_access_file_number(file_number, uid=None):
     if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
         return True
     if uid is None:
-        if has_request_context():
+        if has_request_context() and 'uid' in session:
             uid = session.get('uid', None)
         else:
             uid = docassemble.base.functions.get_uid()

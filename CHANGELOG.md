@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.24] - 2018-01-28
+### Fixed
+- Problem with missing uid in background tasks.
+
 ## [0.2.23] - 2018-01-28
 ### Added
 - The `DADateTime` class.

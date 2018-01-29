@@ -4,6 +4,7 @@ import copy
 import time
 import pytz
 import yaml
+import collections
 from PIL import Image, ImageEnhance
 from twilio.rest import Client as TwilioRestClient
 import pycountry
