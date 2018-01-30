@@ -201,7 +201,7 @@ def format_date(the_date, format='long'):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
-        return babel.dates.format_datetime(date, format=format, locale=get_language())
+        return babel.dates.format_date(date, format=format, locale=get_language())
     except:
         return word("Bad date")
 
