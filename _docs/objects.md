@@ -1982,6 +1982,14 @@ consisting of the city, state, and zip code.
 The `.on_one_line()` method returns the address, consisting of
 the city, state, and zip code, as a single line of text.
 
+It takes two optional keyword parameters:
+
+* `include_unit` - Default value is `False`.  Set to `True` if you want
+  the unit number to be included.
+* `omit_default_country` - Default value is `True`.  Set to `False` if
+  you want the country to be included.  Normally, the country is
+  included only if it is different from the default country.
+
 ### <a name="address autocomplete"></a>Address autocomplete
 
 If you have defined a [`google maps api key`] in the [Configuration],

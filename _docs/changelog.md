@@ -4,6 +4,25 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.26](https://github.com/jhpyle/docassemble/releases/tag/v0.2.26) - 2018-01-29
+
+### Fixed
+- Problem where `format_date()` was acting like `format_datetime()`.
+
+## [0.2.25](https://github.com/jhpyle/docassemble/releases/tag/v0.2.25) - 2018-01-29
+
+### Changed
+- Tweaks to the `interview_url()` function.
+
+### Fixed
+- Unicode error on interview page after interview decryption failure.
+- Problem with list gathering and `.there_is_another`.
+
+## [0.2.24](https://github.com/jhpyle/docassemble/releases/tag/v0.2.24) - 2018-01-28
+
+### Fixed
+- Problem with missing uid in background tasks.
+
 ## [0.2.23](https://github.com/jhpyle/docassemble/releases/tag/v0.2.23) - 2018-01-28
 
 ### Added
