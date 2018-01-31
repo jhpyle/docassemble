@@ -21,6 +21,8 @@ elif daconfig.get('allow demo', False):
     PREVENT_DEMO = False
 else:
     PREVENT_DEMO = True
+
+PACKAGE_PROTECTION = daconfig.get('package protection', True)
     
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 request_active = True
@@ -1887,6 +1889,10 @@ def _endpoint_url(endpoint):
     return url
 
 def user_can_edit_package(pkgname=None, giturl=None):
+    if not PACKAGE_PROTECTION:
+        if pkgname in ('docassemble.base', 'docassemble.demo', 'docassemble.webapp'):
+            return False
+        return True
     if pkgname is not None:
         results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(and_(Package.name == pkgname, Package.active == True))
         if results.count() == 0:
@@ -4246,9 +4252,9 @@ def index():
     #             return(response)
     if '_checkboxes' in post_data:
         checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
-        for checkbox_field in checkbox_fields:
+        for checkbox_field, checkbox_value in checkbox_fields.iteritems():
             if checkbox_field not in post_data:
-                post_data.add(checkbox_field, 'False')
+                post_data.add(checkbox_field, checkbox_value)
     if '_empties' in post_data:
         empty_fields = json.loads(myb64unquote(post_data['_empties']))
         for empty_field in empty_fields:
@@ -9621,6 +9627,8 @@ def create_playground_package():
     branch = request.args.get('branch', None)
     if branch is not None:
         branch = branch.strip()
+    if branch in ('', 'None'):
+        branch = None
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
@@ -9790,7 +9798,7 @@ def create_playground_package():
                 if ssh_url is None:
                     raise DAError("create_playground_package: could not obtain ssh_url for package")
                 output = ''
-                if branch and branch != 'None':
+                if branch:
                     branch_option = '-b ' + str(branch) + ' '
                 else:
                     branch_option = ''
@@ -11465,7 +11473,7 @@ def playground_packages():
                 the_file = ''
     if the_file != '' and not user_can_edit_package(pkgname='docassemble.' + the_file):
         flash(word('Sorry, that package name,') + ' ' + the_file + word(', is already in use by someone else'), 'error')
-        the_file = ''
+        validated = False
     if request.method == 'GET' and the_file in editable_files:
         session['playgroundpackages'] = the_file
     if the_file == '' and len(file_list['playgroundpackages']) and not is_new:
@@ -11671,7 +11679,9 @@ def playground_packages():
         readme_text = ''
         setup_py = ''
         branch = request.args.get('branch', None)
-        if branch and branch != 'None':
+        if branch in ('', 'None'):
+            branch = None
+        if branch:
             branch_option = '-b ' + branch + ' '
         else:
             branch_option = ''
@@ -11707,7 +11717,7 @@ def playground_packages():
                     raise DAError("playground_packages: error running git clone.  " + output)
             else:
                 try:
-                    if branch is not None and branch != 'None':
+                    if branch is not None:
                         output += subprocess.check_output(['git', 'clone', '-b', branch, github_url], cwd=directory, stderr=subprocess.STDOUT)
                     else:
                         output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT)
@@ -11879,6 +11889,18 @@ def playground_packages():
                 if form.github.data:
                     return redirect(url_for('create_playground_package', package=the_file, github='1', commit_message=form.commit_message.data, branch=form.github_branch.data))
                 the_time = formatted_current_time()
+                # existing_package = Package.query.filter_by(name='docassemble.' + the_file, active=True).order_by(Package.id.desc()).first()
+                # if existing_package is None:
+                #     package_auth = PackageAuth(user_id=current_user.id)
+                #     package_entry = Package(name='docassemble.' + the_file, package_auth=package_auth, upload=file_number, type='zip')
+                #     db.session.add(package_auth)
+                #     db.session.add(package_entry)
+                #     #sys.stderr.write("Ok, did the commit\n")
+                # else:
+                #     existing_package.upload = file_number
+                #     existing_package.active = True
+                #     existing_package.version += 1
+                # db.session.commit()                
                 flash(word('The package information was saved.'), 'success')                
     form.original_file_name.data = the_file
     form.file_name.data = the_file

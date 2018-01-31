@@ -680,7 +680,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     elif status.question.question_type == "fields":
         enctype_string = ""
         fieldlist = list()
-        checkboxes = list()
+        checkboxes = dict()
         files = list()
         hiddens = dict()
         ml_info = dict()
@@ -890,7 +890,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if field.datatype == 'combobox':
                     validation_rules['ignore'] = list()
                 if field.datatype in ['boolean', 'threestate']:
-                    checkboxes.append(field.saveas)
+                    if field.sign > 0:
+                        checkboxes[field.saveas] = 'False'
+                    else:
+                        checkboxes[field.saveas] = 'True'
                 elif field.datatype in ['checkboxes', 'object_checkboxes']:
                     if field.choicetype in ['compute', 'manual']:
                         pairlist = list(status.selectcompute[field.number])
@@ -900,7 +903,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if pair['key'] is not None:
-                            checkboxes.append(safeid(from_safeid(field.saveas) + "[" + myb64quote(pair['key']) + "]"))
+                            checkboxes[safeid(from_safeid(field.saveas) + "[" + myb64quote(pair['key']) + "]")] = 'False'
             if hasattr(field, 'saveas') and field.saveas in status.embedded:
                 continue
             if hasattr(field, 'label'):
@@ -1858,7 +1861,7 @@ def input_for(status, field, wide=False, embedded=False):
                     uncheck = ' uncheckable'
                 if defaultvalue in ('False', 'false', 'FALSE', 'no', 'No', 'NO', 'Off', 'off', 'OFF', 'Null', 'null', 'NULL'):
                     defaultvalue = False
-                if defaultvalue:
+                if (defaultvalue and field.sign > 0) or (defaultvalue is False and field.sign < 0):
                     docheck = ' checked'
                 else:
                     docheck = ''

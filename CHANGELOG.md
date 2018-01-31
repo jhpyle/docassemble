@@ -1,5 +1,24 @@
 # Change Log
 
+## [0.2.27] - 2018-01-31
+### Added
+- The `start_time()` function.
+- The `package protection` configuration option.
+### Changed
+- The `last_access_time()` now returns the last access time as a
+  datetime object with a time zone; previously the object was "naive"
+  with respect to time zone.
+### Fixed
+- Problem with time zone of `last_access_time()`.
+- Problem with branch name of new GitHub repository.
+- Problem with `as_datetime()` converting times to midnight when the
+  argument is already a datetime object.
+- Problem with `noyes` and `noyeswide` checkbox fields.
+
+## [0.2.26] - 2018-01-29
+### Fixed
+- Problem where `format_date()` was acting like `format_datetime()`.
+
 ## [0.2.25] - 2018-01-29
 ### Changed
 - Tweaks to the `interview_url()` function.
