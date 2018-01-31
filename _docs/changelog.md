@@ -4,6 +4,23 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.27](https://github.com/jhpyle/docassemble/releases/tag/v0.2.27) - 2018-01-31
+
+### Added
+- The `start_time()` function.
+- The `package protection` configuration option.
+
+### Changed
+- The `last_access_time()` now returns the last access time as a
+  datetime object with a time zone; previously the object was "naive"
+  with respect to time zone.
+
+### Fixed
+- Problem with branch name of new GitHub repository.
+- Problem with `as_datetime()` converting times to midnight when the
+  argument is already a datetime object.
+- Problem with `noyes` and `noyeswide` checkbox fields.
+
 ## [0.2.26](https://github.com/jhpyle/docassemble/releases/tag/v0.2.26) - 2018-01-29
 
 ### Fixed

@@ -1902,11 +1902,27 @@ was accessed.  The following functions retrieve information about
 access times.  These functions are particularly useful in
 [scheduled tasks].
 
+## <a name="start_time"></a>start_time()
+
+`start_time()` returns a [`DADateTime`] object representing the time
+the interview was started.
+
+The time is expressed in the [UTC] time zone.  If you would
+like to localize the time to a particular time zone, you can set the
+optional keyword parameter `timezone` (e.g., to `'America/New_York'`).
+
 ## <a name="last_access_time"></a>last_access_time()
 
 `last_access_time()` returns a [`DADateTime`] object containing the last
 time the interview was accessed by a user other than the special
-[cron user].  The time is expressed in [UTC time] without a time zone.
+[cron user].
+
+The time is expressed in the [UTC] time zone.  (Note: before version
+0.2.27, the object returned was a [UTC] datetime without a time zone;
+as of 0.2.27, the object returned is [UTC] with a time zone).  If you
+would like to localize the time to a particular time zone, you can set
+the optional keyword parameter `timezone` (e.g., to
+`'America/New_York'`).
 
 Optionally, a role name or a list of role names can be provided.  In
 this case, the function will return the latest access time by any user
@@ -1927,6 +1943,11 @@ keyword argument `include_cron` equal to `True`:
 * `last_access_time(include_cron=True)`: returns the last time any
   user, including the [cron user] if applicable, accessed the
   interview.
+
+The `last_access_time()` function takes an optional keyword argument
+`timezone`.  If `timezone` is provided (e.g.,
+`timezone='America/New_York'`), the [`DADateTime`] object will be
+expressed in the given time zone.
 
 ## <a name="last_access_days"></a>last_access_days()
 
@@ -2075,8 +2096,9 @@ it allows date and time to be joined in the same output.
 
 Returns a [`DADateTime`] object representing today's date at midnight.
 It takes an optional keyword argument `timezone`, which refers to one
-of the time zone names in [`timezone_list()`].  If the `timezone` is
-not supplied, the default time zone will be used.
+of the time zone names in [`timezone_list()`] (e.g.,
+`'America/New_York'`).  If the `timezone` is not supplied, the default
+time zone will be used.
 
 Since the result is a [`DADateTime`] object, if `today()` is included
 in a [Mako] template, the result will be equivalent to calling
@@ -2124,9 +2146,10 @@ Note that the items in this list are strings, like `America/New_York`.
 
 {% include side-by-side.html demo="get-default-timezone" %}
 
-The `get_default_timezone()` function returns the default timezone.
-This is the time zone of the server, unless the default timezone is
-set using the [`timezone` configuration].
+The `get_default_timezone()` function returns the default timezone
+(e.g., `'America/New_York'`).  This is the time zone of the server,
+unless the default timezone is set using the [`timezone`
+configuration].
 
 ## <a name="as_datetime"></a>as_datetime()
 
@@ -2139,6 +2162,8 @@ object with a time zone.  It takes an optional keyword argument,
 * `as_datetime('12/25/2018')` returns midnight on Christmas.
 * `as_datetime('12/25/2018 07:30 AM')` returns 7:30 a.m. on Christmas.
 * `as_datetime('07:30 AM')` returns 7:30 a.m. on the current day.
+* `as_datetime('07:30 AM', timezone='America/New_York')` returns 7:30
+  a.m. on the east coast.
 
 In combination with the [`.time()`] method of [`DADateTime`], this
 function can be used to create objects of type [`datetime.time`].
@@ -2152,7 +2177,8 @@ function can be used to create objects of type [`datetime.time`].
 
 The `current_datetime()` function returns the current date and time as
 a [`DADateTime`] object.  It takes an optional keyword argument,
-`timezone`, which will override the default time zone.
+`timezone` (e.g., `'America/New_York'`), which will override the
+default time zone.
 
 ## <a name="date_difference"></a>date_difference()
 
@@ -2182,7 +2208,8 @@ ending='1/3/2015')`, then:
 
 Dates without time zones are localized into the default time zone
 before the calculation takes place.  You can supply the optional
-keyword argument `timezone` to use a different time zone.
+keyword argument `timezone` (e.g., `'America/New_York'`) to use a
+different time zone.
 
 ## <a name="date_interval"></a>date_interval()
 

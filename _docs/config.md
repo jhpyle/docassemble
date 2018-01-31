@@ -116,6 +116,17 @@ to allow users to run these interviews, you can set `allow demo` to `True`.
 allow demo: True
 {% endhighlight %}
 
+## <a name="package protection"></a>Allowing developers to install the same package
+
+By default, users with `developer` [privileges] have ownership over
+the packages they directly install, and other developers cannot create
+packages by the same name.  If you want to allow developers to work on
+the same packages, set the `package protection` directive to `False`.
+
+{% highlight yaml %}
+package protection: False
+{% endhighlight %}
+
 ## <a name="root"></a>Path to web application
 
 Set the `root` directive if you have configured **docassemble** to run
