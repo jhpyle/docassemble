@@ -9,7 +9,6 @@
   datetime object with a time zone; previously the object was "naive"
   with respect to time zone.
 ### Fixed
-- Problem with time zone of `last_access_time()`.
 - Problem with branch name of new GitHub repository.
 - Problem with `as_datetime()` converting times to midnight when the
   argument is already a datetime object.
