@@ -1682,6 +1682,40 @@ def ordinal_number_default(i):
         language_to_use = 'en'
     return ordinal_functions[language_to_use](i)
 
+def salutation_default(indiv, with_name=False, with_name_and_punctuation=False):
+    """Returns Mr., Ms., etc. for an individual."""
+    used_gender = False
+    if hasattr(indiv, 'salutation_to_use') and indiv.salutation_to_use is not None:
+        salut = indiv.salutation_to_use
+    elif hasattr(indiv, 'is_doctor') and indiv.is_doctor:
+        salut = 'Dr.'
+    elif hasattr(indiv, 'is_judge') and indiv.is_judge:
+        salut = 'Judge'
+    elif hasattr(indiv, 'name') and hasattr(indiv.name, 'suffix') and indiv.name.suffix in ('MD', 'PhD'):
+        salut = 'Dr.'
+    elif hasattr(indiv, 'name') and hasattr(indiv.name, 'suffix') and indiv.name.suffix == 'J':
+        salut = 'Judge'
+    elif indiv.gender == 'female':
+        used_gender = True
+        salut = 'Ms.'
+    else:
+        used_gender = True
+        salut = 'Mr.'
+    if with_name_and_punctuation or with_name:
+        if used_gender and indiv.gender not in ('male', 'female'):
+            salut_and_name = indiv.name.full()
+        else:
+            salut_and_name = salut + ' ' + indiv.name.last
+        if with_name_and_punctuation:
+            if hasattr(indiv, 'is_friendly') and indiv.is_friendly:
+                punct = ','
+            else:
+                punct = ':'
+            return salut_and_name + punct
+        elif with_name:
+            return salut_and_name
+    return salut
+
 def ordinal_default(j, **kwargs):
     """Returns the "first," "second," "third," etc. for a given number, which is expected to
     be an index starting with zero.  ordinal(0) returns "first."  For a more literal ordinal 
@@ -1972,6 +2006,9 @@ language_functions = {
     },
     'title_case': {
         '*': titlecase.titlecase
+    },
+    'salutation': {
+        '*': salutation_default
     }
 }
 
@@ -2030,6 +2067,7 @@ capitalize = language_function_constructor('capitalize')
 title_case = language_function_constructor('title_case')
 ordinal_number = language_function_constructor('ordinal_number')
 ordinal = language_function_constructor('ordinal')
+salutation = language_function_constructor('salutation')
 
 if verb_past.__doc__ is None:
     verb_past.__doc__ = """Given a verb, returns the past tense of the verb."""

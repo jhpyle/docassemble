@@ -2765,13 +2765,13 @@ class Question:
                         to_exclude = unpack_list(to_exclude)
                         selectcompute[field.number] = list()
                         for candidate in field.selections['values']:
-                            new_item = dict(key=item['key'].text(user_dict), label=item['label'].text(user_dict))
-                            if 'image' in item:
-                                new_item['image'] = item['image']
-                            if 'help' in item:
-                                new_item['help'] = item['help'].text(user_dict)
-                            if 'default' in item:
-                                new_item['default'] = item['default']
+                            new_item = dict(key=candidate['key'].text(user_dict), label=candidate['label'].text(user_dict))
+                            if 'image' in candidate:
+                                new_item['image'] = candidate['image']
+                            if 'help' in candidate:
+                                new_item['help'] = candidate['help'].text(user_dict)
+                            if 'default' in candidate:
+                                new_item['default'] = candidate['default']
                             if new_item['key'] not in to_exclude:
                                 selectcompute[field.number].append(new_item)
                     else:

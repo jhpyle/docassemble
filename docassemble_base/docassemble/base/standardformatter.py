@@ -601,7 +601,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
         output += '                <div class="btn-toolbar">\n                  <button class="btn btn-primary ' + BUTTON_CLASS + ' " name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_CLASS + ' btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.no() + '</button>'
         if status.question.question_type == 'yesnomaybe':
-            output += '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + status.question.maybe() + '</button>'
+            output += '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + markdown_to_html(status.question.maybe(), trim=True, do_terms=False) + '</button>'
         output += '\n                </div>\n'
         #output += question_name_tag(status.question)
         if (status.underText):

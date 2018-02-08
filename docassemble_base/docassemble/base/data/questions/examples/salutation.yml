@@ -2,7 +2,7 @@ metadata:
   title: Salutation
   documentation: "https://docassemble.org/docs/objects.html#Individual.salutation"
   example start: 3
-  example end: 4
+  example end: 3
 ---
 modules:
   - docassemble.base.util
@@ -19,11 +19,45 @@ content: |
   I hope this letter finds you well.
 
   Blah, blah, blah.
+
+  Dear
+  ${ client.salutation(with_name=True) }:
+
+  I hope this letter finds you well.
+
+  Blah, blah, blah.
+
+  Dear
+  ${ client.salutation(with_name_and_punctuation=True) }
+
+  I hope this letter finds you well.
+
+  Blah, blah, blah.
 ---
-code: |
-  client.name.first = "John"
-  client.name.last = "Smith"
-  client.gender = "male"
+question: |
+  Tell me about the client.
+fields:
+  - First Name: client.name.first
+  - Middle Name: client.name.middle
+    required: False
+  - Last Name: client.name.last
+  - Suffix: client.name.suffix
+    choices:
+      - Jr
+      - Sr
+      - II
+      - III
+      - MD
+      - Esq
+      - PhD
+      - J
+    required: False
+  - Gender: client.gender
+    datatype: radio
+    choices:
+      Male: male
+      Female: female
+      Other: other
 ---
 mandatory: True
 question: |

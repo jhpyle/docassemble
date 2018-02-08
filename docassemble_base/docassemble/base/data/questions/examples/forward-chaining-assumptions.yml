@@ -15,7 +15,7 @@ yesno: x.chirps
 ---
 generic object: DAObject
 question: |
-  Does ${ x } sings?
+  Does ${ x } sing?
 yesno: x.sings
 ---
 generic object: DAObject

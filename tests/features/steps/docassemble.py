@@ -90,10 +90,28 @@ def click_button(step, button_name):
     world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
     world.browser.wait_for_it()
 
+@step('I click the "([^"]+)" button')
+def click_button_post(step, choice):
+    do_wait()
+    world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
+    world.browser.wait_for_it()
+
 @step('I click the link "([^"]+)"')
 def click_link(step, link_name):
     do_wait()
     world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+    world.browser.wait_for_it()
+
+@step('I go to the help screen')
+def click_help_tab(step):
+    do_wait()
+    world.browser.find_element_by_id('helptoggle').click()
+    world.browser.wait_for_it()
+
+@step('I go back to the question screen')
+def click_back_to_question_button(step):
+    do_wait()
+    world.browser.find_element_by_id('backToQuestion').click()
     world.browser.wait_for_it()
 
 @step('I click the second link "([^"]+)"')
@@ -108,6 +126,14 @@ def see_phrase(step, phrase):
 
 @step('I should not see the phrase "([^"]+)"')
 def not_see_phrase(step, phrase):
+    assert not world.browser.text_present(phrase)
+
+@step("I should see the phrase '([^']+)'")
+def see_phrase_sq(step, phrase):
+    assert world.browser.text_present(phrase)
+
+@step("I should not see the phrase '([^']+)'")
+def not_see_phrase_sq(step, phrase):
     assert not world.browser.text_present(phrase)
 
 @step('I set "([^"]+)" to "([^"]*)"')
@@ -166,6 +192,25 @@ def set_mc_option_under(step, option, label):
         
 @step('I click the "([^"]+)" option')
 def set_mc_option(step, choice):
+    try:
+        span_elem = world.browser.find_element_by_xpath('//span[text()="' + choice + '"]')
+    except NoSuchElementException:
+        span_elem = world.browser.find_element_by_xpath('//span[text()[contains(.,"' + choice + '")]]')
+    label_elem = span_elem.find_element_by_xpath("..")
+    label_elem.click()
+
+@step('I click the option "([^"]+)" under "([^"]+)"')
+def set_mc_option_under_pre(step, option, label):
+    div = world.browser.find_element_by_xpath('//label[text()="' + label + '"]/following-sibling::div')
+    try:
+        span = div.find_element_by_xpath('.//span[text()="' + option + '"]')
+    except:
+        span = div.find_element_by_xpath('.//span[text()[contains(.,"' + option + '")]]')
+    option_label = span.find_element_by_xpath("..")
+    option_label.click()
+        
+@step('I click the option "([^"]+)"')
+def set_mc_option_pre(step, choice):
     try:
         span_elem = world.browser.find_element_by_xpath('//span[text()="' + choice + '"]')
     except NoSuchElementException:

@@ -813,6 +813,9 @@ class DAList(DAObject):
     def __unicode__(self):
         self._trigger_gather()
         return unicode(self.__str__())
+    def __repr__(self):
+        self._trigger_gather()
+        return repr(self.elements)
     def union(self, other_set):
         """Returns a Python set consisting of the elements of current list,
         considered as a set, combined with the elements of the other_set.
@@ -1401,6 +1404,9 @@ class DADict(DAObject):
         return self.comma_and_list()
     def __unicode__(self):
         return unicode(self.__str__())
+    def __repr__(self):
+        self._trigger_gather()
+        return repr(self.elements)
     def union(self, other_set):
         """Returns a Python set consisting of the keys of the current dict,
         considered as a set, combined with the elements of the other_set.
@@ -1717,6 +1723,9 @@ class DASet(DAObject):
     def __unicode__(self):
         self._trigger_gather()
         return unicode(self.__str__())
+    def __repr__(self):
+        self._trigger_gather()
+        return repr(self.elements)
     def union(self, other_set):
         """Returns a Python set consisting of the elements of current set
         combined with the elements of the other_set.

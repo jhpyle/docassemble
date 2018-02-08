@@ -1851,20 +1851,20 @@ def delete_session_for_interview():
     return
 
 def delete_session():
-    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next'):
+    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next'):
         if key in session:
             del session[key]
     return
 
 def backup_session():
     backup = dict()
-    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next'):
+    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next'):
         if key in session:
             backup[key] = session[key]
     return backup
 
 def restore_session(backup):
-    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_state', 'github_next'):
+    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next'):
         if key in backup:
             session[key] = backup[key]
 
@@ -1955,6 +1955,8 @@ def install_zip_package(packagename, file_number):
 
 def install_git_package(packagename, giturl, branch=None):
     #logmessage("install_git_package: " + packagename + " " + str(giturl))
+    if branch is None or str(branch).lower().strip() in ('none', ''):
+        branch = 'master'
     if Package.query.filter_by(name=packagename).first() is None and Package.query.filter_by(giturl=giturl).first() is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git', upload=None, limitation=None, gitbranch=branch)
@@ -3319,10 +3321,10 @@ def github_configure():
     storage = RedisCredStorage(app='github')
     credentials = storage.get()
     if not credentials or credentials.invalid:
-        session['github_state'] = random_string(16)
-        session['github_next'] = 'configure'
+        state_string = random_string(16)
+        session['github_next'] = json.dumps(dict(state=state_string, path='github_configure', arguments=request.args))
         flow = get_github_flow()
-        uri = flow.step1_get_authorize_url(state=session['github_state'])
+        uri = flow.step1_get_authorize_url(state=state_string)
         return redirect(uri)
     http = credentials.authorize(httplib2.Http())
     found = False
@@ -3381,10 +3383,10 @@ def github_unconfigure():
     storage = RedisCredStorage(app='github')
     credentials = storage.get()
     if not credentials or credentials.invalid:
-        session['github_state'] = random_string(16)
-        session['github_next'] = 'unconfigure'
+        state_string = random_string(16)
+        session['github_next'] = json.dumps(dict(state=state_string, path='github_unconfigure', arguments=request.args))
         flow = get_github_flow()
-        uri = flow.step1_get_authorize_url(state=session['github_state'])
+        uri = flow.step1_get_authorize_url(state=state_string)
         return redirect(uri)
     http = credentials.authorize(httplib2.Http())
     found = False
@@ -3425,17 +3427,20 @@ def github_unconfigure():
 def github_oauth_callback():
     failed = False
     if not app.config['USE_GITHUB']:
-        logmessage('start_github_oauth: server does not use github')
+        logmessage('github_oauth_callback: server does not use github')
         failed = True
-    elif 'github_state' not in session or 'github_next' not in session:
-        logmessage('start_github_oauth: github_state or github_next not in session')
+    elif 'github_next' not in session:
+        logmessage('github_oauth_callback: github_next not in session')
         failed = True
-    elif 'code' not in request.args or 'state' not in request.args:
-        logmessage('start_github_oauth: code and state not in args')
-        failed = True
-    elif request.args['state'] != session['github_state']:
-        logmessage('start_github_oauth: state did not match')
-        failed = True
+    if failed is False:
+        github_next = json.loads(session['github_next'])
+        del session['github_next']
+        if 'code' not in request.args or 'state' not in request.args:
+            logmessage('github_oauth_callback: code and state not in args')
+            failed = True
+        elif request.args['state'] != github_next['state']:
+            logmessage('github_oauth_callback: state did not match')
+            failed = True
     if failed:
         r.delete('da:github:userid:' + str(current_user.id))
         r.delete('da:using_github:userid:' + str(current_user.id))
@@ -3444,44 +3449,7 @@ def github_oauth_callback():
     credentials = flow.step2_exchange(request.args['code'])
     storage = RedisCredStorage(app='github')
     storage.put(credentials)
-    next_page = session['github_next']
-    del session['github_state']
-    del session['github_next']
-    if next_page == 'configure':
-        return redirect(url_for('github_configure'))
-    elif next_page == 'unconfigure':
-        return redirect(url_for('github_unconfigure'))
-    elif next_page.startswith('package:'):
-        return redirect(url_for('create_playground_package', package=re.sub(r'^package:', '', next_page), github='1', commit_message=re.sub(r'^package:[^:]*:', '', next_page)))
-    elif next_page.startswith('playgroundpackages:'):
-        return redirect(url_for('playground_packages', file=re.sub(r'^playgroundpackages:', '', next_page)))
-    logmessage('start_github_oauth: unknown next page ' + str(next_page))
-    r.delete('da:github:userid:' + str(current_user.id))
-    r.delete('da:using_github:userid:' + str(current_user.id))
-    abort(404)
-
-    # resp, content = http.request("https://api.github.com/user", "GET")
-    # if int(resp['status']) >= 200 and int(resp['status']) < 300:
-    #     user_info = json.loads(content)
-    # else:
-    #     raise DAError("Could not get information about the GitHub user")
-    # github_user_name = user_info.get('login', None)
-    # if github_user_name is None:
-    #     raise DAError("Could not get the GitHub user name")
-    # logmessage("GitHub user name is " + str(github_user_name))
-    #headers = {'Content-Type': 'application/json'}
-    #body = json.dumps(dict())
-    # resp, content = http.request("https://api.github.com/user/repos", "GET")
-    # if int(resp['status']) >= 200 and int(resp['status']) < 300:
-    #     repositories = json.loads(content)
-    #     for repository in repositories:
-            #name
-            #full_name
-            #html_url
-            #ssh_url
-            
-#    else:
-#        raise DAError("Could not get information about the GitHub user's repositories: " + str(resp['status']) + " content: " + str(content))
+    return redirect(github_next['path'], **github_next['arguments'])
 
 @app.route('/user/google-sign-in')
 def google_page():
@@ -6821,7 +6789,7 @@ def index():
               }
               else{
                 //console.log("Showing2!");
-                $(showIfDiv).hide('show');
+                $(showIfDiv).show(speed);
                 //$(showIfDiv).removeClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
@@ -9650,10 +9618,10 @@ def create_playground_package():
         storage = RedisCredStorage(app='github')
         credentials = storage.get()
         if not credentials or credentials.invalid:
-            session['github_state'] = random_string(16)
-            session['github_next'] = 'package:' + str(current_package) + ':' + str(commit_message)
+            state_string = random_string(16)
+            session['github_next'] = json.dumps(dict(state=state_string, path='create_playground_package', arguments=request.args))
             flow = get_github_flow()
-            uri = flow.step1_get_authorize_url(state=session['github_state'])
+            uri = flow.step1_get_authorize_url(state=state_string)
             return redirect(uri)
         http = credentials.authorize(httplib2.Http())
         resp, content = http.request("https://api.github.com/user", "GET")
@@ -9672,25 +9640,11 @@ def create_playground_package():
         if github_user_name is None or github_email is None:
             raise DAError("create_playground_package: login and/or email not present in user info from GitHub")
         all_repositories = dict()
-        resp, content = http.request("https://api.github.com/user/repos", "GET")
-        if int(resp['status']) != 200:
-            raise DAError("create_playground_package: could not get information about repositories")
-        else:
-            repositories = json.loads(content)
-            for repository in repositories:
-                all_repositories[repository['name']] = repository
-            while True:
-                next_link = get_next_link(resp)
-                if next_link:
-                    resp, content = http.request(next_link, "GET")
-                    if int(resp['status']) != 200:
-                        raise DAError("create_playground_package: could not get additional information about repositories")
-                    else:
-                        repositories = json.loads(content)
-                        for repository in repositories:
-                            all_repositories[repository['name']] = repository
-                else:
-                    break
+        repositories = get_user_repositories(http)
+        for repository in repositories:
+            if repository['name'] in all_repositories and repository['owner']['login'] == github_user_name:
+                continue
+            all_repositories[repository['name']] = repository
     area = dict()
     area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
     file_list = dict()
@@ -9888,9 +9842,9 @@ def create_playground_package():
                 time.sleep(3.0)
                 shutil.rmtree(directory)
                 if branch:
-                    return redirect(url_for('playground_packages', pull='1', github_url=ssh_url, branch=branch))
+                    return redirect(url_for('playground_packages', pull='1', github_url=ssh_url, branch=branch, show_message='0'))
                 else:
-                    return redirect(url_for('playground_packages', pull='1', github_url=ssh_url))
+                    return redirect(url_for('playground_packages', pull='1', github_url=ssh_url, show_message='0'))
                 #return redirect(url_for('playground_packages', file=current_package))
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(session.get('uid', None), nice_name)
@@ -10184,20 +10138,22 @@ class Fruit(DAObject):
             saved_file.save()
             saved_file.finalize()
             shutil.rmtree(directory)
-            existing_package = Package.query.filter_by(name='docassemble.' + pkgname, active=True).order_by(Package.id.desc()).first()
-            if existing_package is None:
-                package_auth = PackageAuth(user_id=current_user.id)
-                package_entry = Package(name='docassemble.' + pkgname, package_auth=package_auth, upload=file_number, type='zip')
-                db.session.add(package_auth)
-                db.session.add(package_entry)
-                #sys.stderr.write("Ok, did the commit\n")
-            else:
-                existing_package.upload = file_number
-                existing_package.active = True
-                existing_package.version += 1
-            db.session.commit()
+            # do not edit the package table just because a package is created without being installed
+            # existing_package = Package.query.filter_by(name='docassemble.' + pkgname, active=True).order_by(Package.id.desc()).first()
+            # if existing_package is None:
+            #     package_auth = PackageAuth(user_id=current_user.id)
+            #     package_entry = Package(name='docassemble.' + pkgname, package_auth=package_auth, upload=file_number, type='zip')
+            #     db.session.add(package_auth)
+            #     db.session.add(package_entry)
+            #     #sys.stderr.write("Ok, did the commit\n")
+            # else:
+            #     existing_package.upload = file_number
+            #     existing_package.active = True
+            #     existing_package.version += 1
+            # db.session.commit()
             response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+            flash(word("Package created"), 'success')
             return response
     return render_template('pages/create_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, tab_title=word('Create Package'), page_title=word('Create Package')), 200
 
@@ -11379,6 +11335,63 @@ def get_git_branches():
         return jsonify(dict(success=False, reason=str(err)))
     return jsonify(dict(success=False))
 
+def get_user_repositories(http):
+    repositories = list()
+    resp, content = http.request("https://api.github.com/user/repos", "GET")
+    if int(resp['status']) == 200:
+        repositories.extend(json.loads(content))
+        while True:
+            next_link = get_next_link(resp)
+            if next_link:
+                resp, content = http.request(next_link, "GET")
+                if int(resp['status']) != 200:
+                    raise DAError("get_user_repositories: could not get information from next URL")
+                else:
+                    repositories.extend(json.loads(content))
+            else:
+                break
+    else:
+        raise DAError("playground_packages: could not get information about repositories")
+    return repositories
+
+def get_orgs_info(http):
+    orgs_info = list()
+    resp, content = http.request("https://api.github.com/user/orgs", "GET")
+    if int(resp['status']) == 200:
+        orgs_info.extend(json.loads(content))
+        while True:
+            next_link = get_next_link(resp)
+            if next_link:
+                resp, content = http.request(next_link, "GET")
+                if int(resp['status']) != 200:
+                    raise DAError("get_orgs_info: could not get additional information about organizations")
+                else:
+                    orgs_info.extend(json.loads(content))
+            else:
+                break
+    else:
+        raise DAError("get_orgs_info: failed to get orgs using https://api.github.com/user/orgs")
+    return orgs_info
+
+def get_branch_info(http, full_name):
+    branch_info = list()
+    resp, content = http.request("https://api.github.com/repos/" + str(full_name) + '/branches', "GET")
+    if int(resp['status']) == 200:
+        branch_info.extend(json.loads(content))
+        while True:
+            next_link = get_next_link(resp)
+            if next_link:
+                resp, content = http.request(next_link, "GET")
+                if int(resp['status']) != 200:
+                    raise DAError("get_branch_info: could not get additional information from next URL")
+                else:
+                    branch_info.extend(json.loads(content))
+            else:
+                break
+    else:
+        logmessage("get_branch_info: could not get info from https://api.github.com/repos/" + str(full_name) + '/branches')
+    return branch_info
+
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -11403,6 +11416,7 @@ def playground_packages():
         can_publish_to_github = r.get('da:using_github:userid:' + str(current_user.id))
     else:
         can_publish_to_github = None
+    show_message = true_or_false(request.args.get('show_message', True))
     github_message = None
     pypi_message = None
     pypi_version = None        
@@ -11494,10 +11508,10 @@ def playground_packages():
             credentials = storage.get()
             if not credentials or credentials.invalid:
                 if form.github.data:
-                    session['github_state'] = random_string(16)
-                    session['github_next'] = 'playgroundpackages:' + the_file
+                    state_string = random_string(16)
+                    session['github_next'] = json.dumps(dict(state=state_string, path='playground_packages', arguments=request.args))
                     flow = get_github_flow()
-                    uri = flow.step1_get_authorize_url(state=session['github_state'])
+                    uri = flow.step1_get_authorize_url(state=state_string)
                     return redirect(uri)
                 else:
                     raise Exception('GitHub integration expired.')
@@ -11518,6 +11532,7 @@ def playground_packages():
                         github_email = info[0]['email']
             if github_user_name is None or github_email is None:
                 raise DAError("playground_packages: login not present in user info from GitHub")
+            found = False
             resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name, "GET")
             if int(resp['status']) == 200:
                 repo_info = json.loads(content)
@@ -11525,43 +11540,47 @@ def playground_packages():
                 github_ssh = repo_info['ssh_url']
                 if repo_info['private']:
                     github_use_ssh = True
-                github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on GitHub") + '</a>.'
+                github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on GitHub account") + '</a>.'
                 if github_author_name:
                     github_message += "  " + word("The author is") + " " + github_author_name + "."
                 on_github = True
-                resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name + '/branches', "GET")
-                if int(resp['status']) == 200:
-                    branch_info = json.loads(content)
-                else:
-                    logmessage("could not get branch info " + "https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name + '/branches')
-            else:
-                github_message = word('This package is not yet published on GitHub.')
-                resp, content = http.request("https://api.github.com/user/orgs", "GET")
-                if int(resp['status']) == 200:
-                    orgs_info = json.loads(content)
-                    for org_info in orgs_info:
-                        resp, content = http.request("https://api.github.com/repos/" + str(org_info['login']) + "/" + github_package_name, "GET")
-                        if int(resp['status']) == 200:
-                            repo_info = json.loads(content)
-                            github_http = repo_info['html_url']
-                            github_ssh = repo_info['ssh_url']
-                            if repo_info['private']:
-                                github_use_ssh = True
-                            github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on GitHub") + '</a>.'
-                            if github_author_name:
-                                github_message += "  " + word("The author is") + " " + github_author_name + "."
-                            on_github = True
-                            resp, content = http.request("https://api.github.com/repos/" + str(org_info['login']) + "/" + github_package_name + '/branches', "GET")
-                            if int(resp['status']) == 200:
-                                branch_info = json.loads(content)
-                            else:
-                                logmessage("could not get branch info " + "https://api.github.com/repos/" + str(org_info['login']) + "/" + github_package_name + '/branches')
-                            break
-                else:
-                    logmessage("Failed to get orgs using " + "https://api.github.com/user/orgs")
+                branch_info = get_branch_info(http, repo_info['full_name'])
+                found = True
+            if found is False:
+                repositories = get_user_repositories(http)
+                for repo_info in repositories:
+                    if repo_info['name'] != github_package_name:
+                        continue
+                    github_http = repo_info['html_url']
+                    github_ssh = repo_info['ssh_url']
+                    if repo_info['private']:
+                        github_use_ssh = True
+                    github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on your GitHub account") + '</a>.'
+                    on_github = True
+                    branch_info = get_branch_info(http, repo_info['full_name'])
+                    found = True
+                    break
+            if found is False:
+                orgs_info = get_orgs_info(http)
+                for org_info in orgs_info:
+                    resp, content = http.request("https://api.github.com/repos/" + str(org_info['login']) + "/" + github_package_name, "GET")
+                    if int(resp['status']) == 200:
+                        repo_info = json.loads(content)
+                        github_http = repo_info['html_url']
+                        github_ssh = repo_info['ssh_url']
+                        if repo_info['private']:
+                            github_use_ssh = True
+                        github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on your GitHub account") + '</a>.'
+                        on_github = True
+                        branch_info = get_branch_info(http, repo_info['full_name'])
+                        found = True
+                        break
+            if found is False:
+                github_message = word('This package is not yet published on your GitHub account.')
         except Exception as e:
             logmessage('playground_packages: GitHub error.  ' + str(e))
-            github_message = word('Unable to determine if the package is published on GitHub.')
+            on_github = None
+            github_message = word('Unable to determine if the package is published on your GitHub account.')
     github_url_from_file = None
     pypi_package_from_file = None
     if request.method == 'GET' and the_file != '':
@@ -11670,7 +11689,8 @@ def playground_packages():
                     zippath.close()
                 #except Exception as errMess:
                     #flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
-        flash(word("The package was unpacked into the Playground."), 'success')
+        if show_message:
+            flash(word("The package was unpacked into the Playground."), 'success')
         if need_to_restart:
             return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file)))
         return redirect(url_for('playground_packages', file=the_file))
@@ -11828,7 +11848,8 @@ def playground_packages():
         for key in r.keys('da:interviewsource:playground' + str(current_user.id) + ':*'):
             r.incr(key)
         the_file = package_name
-        flash(word("The package was unpacked into the Playground."), 'success')
+        if show_message:
+            flash(word("The package was unpacked into the Playground."), 'success')
         #shutil.rmtree(directory)
         if need_to_restart:
             return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file)))
@@ -11900,8 +11921,9 @@ def playground_packages():
                 #     existing_package.upload = file_number
                 #     existing_package.active = True
                 #     existing_package.version += 1
-                # db.session.commit()                
-                flash(word('The package information was saved.'), 'success')                
+                # db.session.commit()
+                if show_message:
+                    flash(word('The package information was saved.'), 'success')                
     form.original_file_name.data = the_file
     form.file_name.data = the_file
     if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
@@ -11970,8 +11992,6 @@ def playground_packages():
             pypi_message = Markup(pypi_message)
     else:
         pypi_message = None
-    if github_message is not None:
-        github_message = Markup(github_message)
     extra_js = '\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    '
     extra_js += kbLoad
     extra_js += """<script>
@@ -12031,6 +12051,10 @@ def playground_packages():
         the_pypi_package_name = pypi_package_from_file
     else:
         the_pypi_package_name = None
+    if github_message is not None and github_url_from_file is not None and github_url_from_file != github_http and github_url_from_file != github_ssh:
+        github_message += '  ' + word("This package was originally pulled from") + ' <a target="_blank" href="' + github_as_http(github_url_from_file) + '">' + word('a GitHub repository') + '</a>.'
+    if github_message is not None:
+        github_message = Markup(github_message)
     branch = old_info.get('github_branch', None)
     if branch is not None:
         branch = branch.strip()
@@ -12046,6 +12070,11 @@ def playground_packages():
     form.github_branch.choices = branch_choices
     default_branch = branch if branch else 'master'
     return render_template('pages/playgroundpackages.html', branch=default_branch, version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, pypi_package_name=the_pypi_package_name, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+
+def github_as_http(url):
+    if url.startswith('http'):
+        return url
+    return re.sub('^[^@]+@([^:]+):(.*)\.git$', r'https://\1/\2', url)
 
 def copy_if_different(source, destination):
     if (not os.path.isfile(destination)) or filecmp.cmp(source, destination) is False:
@@ -15089,7 +15118,7 @@ def jsonify_with_status(data, code):
     return resp
 
 def true_or_false(text):
-    if text is False or text == 0 or str(text).lower() in ('0', 'false', 'f'):
+    if text is False or text == 0 or str(text).lower().strip() in ('0', 'false', 'f'):
         return False
     return True
 

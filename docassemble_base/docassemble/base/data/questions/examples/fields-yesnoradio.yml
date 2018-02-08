@@ -17,4 +17,7 @@ subquestion: |
   % if likes_apricots:
   You like apricots.
   % endif
+  % if dislikes_pineapple:
+  You do not like pineapple.
+  % endif
 mandatory: True
