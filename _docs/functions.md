@@ -1870,7 +1870,7 @@ then the [Python locale] will be changed to `fr_FR.utf8`.
 Running `update_locale()` is necessary in order to affect the behavior
 of functions like [`currency()`] and [`currency_symbol()`].
 
-Note that changes to the locale are not thread-safe.  This means that
+Note that changes to the locale are not [thread-safe].  This means that
 there is a risk that between the time **docassemble** runs
 `update_locale()` and the time it runs [`currency_symbol()`], another
 user on the same server may cause **docassemble** to run
@@ -2387,6 +2387,37 @@ These functions behave differently according to the language and
 locale.  You can write functions for different languages, or reprogram
 the default functions, by calling
 `docassemble.base.util.update_language_function()`.
+
+For example, suppose you had a Spanish linguistic package that you
+wanted to use for writing possessives.  You could include the
+following in a [Python module] that you include in your interview:
+
+{% highlight python %}
+import docassemble.base.util
+from special.spanish.package import spanish_possessify
+
+def possessify_es(a, b, **kwargs):
+    return spanish_possessify(a, b)
+
+docassemble.base.util.update_language_function('es', 'possessify', possessify_es)
+{% endhighlight %}
+
+This means that whenever the current language is Spanish, the function
+`possessify_es` should be substituted for the default function.  The
+first argument is the name of the language, the second argument is the
+name of the standard language function, and the third argument is a
+reference to your function.
+
+If you want to override the default function, use `'*'` as the
+language.  This will be used if no language-specific function exists.
+
+Unfortunately, updates to language functions are not [thread-safe].
+If you call `update_language_function()` in a module, you should
+include that module in all of the interviews on your server that use
+any of the functions you are modifying.  Otherwise, your users may see
+inconsistent or unexpected results.
+
+Listed below are some of the language functions that can be customized.
 
 ## <a name="capitalize"></a>capitalize()
 
@@ -5158,3 +5189,4 @@ $(document).on('daPageLoad', function(){
 [`/api/privileges`]: {{ site.baseurl }}/docs/api.html#privileges
 [`.set_attributes()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_attributes
 [`datetime.time`]: https://docs.python.org/2/library/datetime.html#datetime.time
+[thread-safe]: https://en.wikipedia.org/wiki/Thread_safety

@@ -2924,12 +2924,27 @@
       datatype: checkboxes
       choices:
         - Apples: apple
-          help: red
         - Peaches: peach
-          help: peachy
         - Pears: pear
-          help: gritty
     - "What is your favorite fruit overall?": favorite_fruit
+  ---
+  question: |
+    Thank you for your thoughts.
+  subquestion: |
+    % if likes_fruit['apple']:
+    You like apples.
+    % endif
+    % if likes_fruit['peach']:
+    You like peaches.
+    % endif
+    % if likes_fruit['pear']:
+    You like pears.
+    % endif
+    Your favorite, though, is ${ favorite_fruit }.
+
+    In Python, `likes_fruit` is
+    `${ repr(likes_fruit) }`.
+  mandatory: True
 "fields-checkboxes-code": |-
   question: |
     Please tell me what you think.
@@ -7161,11 +7176,20 @@
     I hope this letter finds you well.
 
     Blah, blah, blah.
-  ---
-  code: |
-    client.name.first = "John"
-    client.name.last = "Smith"
-    client.gender = "male"
+
+    Dear
+    ${ client.salutation(with_name=True) }:
+
+    I hope this letter finds you well.
+
+    Blah, blah, blah.
+
+    Dear
+    ${ client.salutation(with_name_and_punctuation=True) }
+
+    I hope this letter finds you well.
+
+    Blah, blah, blah.
 "sample-function": |-
   modules:
     - .test

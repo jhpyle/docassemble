@@ -262,7 +262,7 @@ The [`object_name()`] method is multi-lingual-friendly.  By using
 `docassemble.base.util.update_word_collection()`, you can provide
 non-English translations for words that come from variable names, such
 as "turnip," "park," and "front gate."  By using
-`docassemble.base.util.update_language_function()`, you can define a
+[`docassemble.base.util.update_language_function()`], you can define a
 non-English version of the `a_in_the_b()` function, which
 [`object_name()`] uses to convert an attribute name like
 `park.front_gate` into "front gate in the park."  (It calls
@@ -1704,9 +1704,86 @@ If the individual's name is "Adam Smith," this returns "Adam Smith's."
 ### <a name="Individual.salutation"></a>`.salutation()`
 
 Depending on the `gender` attribute, the `.salutation()` method
-returns "Mr." or "Ms."
+returns "Mr." or "Ms."  This can be helpful when writing letters.
 
 {% include side-by-side.html demo="salutation" %}
+
+The function takes some optional keyword arguments:
+
+* `client.salutation()` returns `Mr.`
+* `client.salutation(with_name=True)` returns `Mr. Jones`
+* `client.salutation(with_name_and_punctuation=True)` returns `Mr. Jones:`
+
+This function relies on a few attributes, which it looks for but does
+not assume exist:
+
+* <a name="Individual.salutation_to_use"></a>If `.salutation_to_use`
+  is set, `.salutation()` uses its value as the salutation instead of
+  `'Mr.'` or `'Ms.'`.
+* <a name="Individual.is_doctor"></a>If `.is_doctor` is set to a true
+  value, the salutation "Dr." is used.
+* <a name="Individual.is_judge"></a>If `.is_judge` is set to a true
+  value, the salutation "Judge" is used.
+* If `.name.suffix` is `'MD'` or `'PhD'`, the salutation "Dr." is used.
+* If `.name.suffix` is `'J'`, the salutation "Judge" is used.
+* <a name="Individual.is_friendly"></a>If `.is_friendly` is set to a
+  true value, a comma will be used in place of a colon when
+  `with_name_and_punctuation` is true.
+
+The operation of this function can be customized with
+[`docassemble.base.util.update_language_function()`].  Use the
+function name `'salutation'` and provide a function that takes an
+object of class [`Individual`] as an argument.  For reference, here is
+the default function (from [`docassemble.base.functions`]):
+
+{% highlight python %}
+def salutation_default(indiv, with_name=False, with_name_and_punctuation=False):
+    """Returns Mr., Ms., etc. for an individual."""
+    used_gender = False
+    if hasattr(indiv, 'salutation_to_use') and indiv.salutation_to_use is not None:
+        salut = indiv.salutation_to_use
+    elif hasattr(indiv, 'is_doctor') and indiv.is_doctor:
+        salut = 'Dr.'
+    elif hasattr(indiv, 'is_judge') and indiv.is_judge:
+        salut = 'Judge'
+    elif hasattr(indiv, 'name') and hasattr(indiv.name, 'suffix') and indiv.name.suffix in ('MD', 'PhD'):
+        salut = 'Dr.'
+    elif hasattr(indiv, 'name') and hasattr(indiv.name, 'suffix') and indiv.name.suffix == 'J':
+        salut = 'Judge'
+    elif indiv.gender == 'female':
+        used_gender = True
+        salut = 'Ms.'
+    else:
+        used_gender = True
+        salut = 'Mr.'
+    if with_name_and_punctuation or with_name:
+        if used_gender and indiv.gender not in ('male', 'female'):
+            salut_and_name = indiv.name.full()
+        else:
+            salut_and_name = salut + ' ' + indiv.name.last
+        if with_name_and_punctuation:
+            if hasattr(indiv, 'is_friendly') and indiv.is_friendly:
+                punct = ','
+            else:
+                punct = ':'
+            return salut_and_name + punct
+        elif with_name:
+            return salut_and_name
+    return salut
+{% endhighlight %}
+
+If you wanted a simpler function, you could include something like
+this in a [Python] module that you include in your interview:
+
+{% highlight python %}
+def my_salutation(indiv):
+    if indiv.is_powerful:
+        return "Your excellency"
+    else:
+        return "Hey you"
+
+docassemble.base.util.update_language_function('*', 'salutation', my_salutation)
+{% endhighlight %}
 
 ### <a name="Individual.pronoun_possessive"></a>`.pronoun_possessive()`
 
@@ -3238,3 +3315,7 @@ of the original [`DADateTime`] object.  See
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`google maps api key`]: {{ site.baseurl }}/docs/config.html#google
 [`all_variables()`]: {{ site.baseurl }}/docs/functions.html#all_variables
+[translation system]: {{ site.baseurl }}/docs/functions.html#translation
+[`docassemble.base.util.update_language_function()`]: {{ site.baseurl }}/docs/functions.html#linguistic
+[`docassemble.base.functions`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/functions.py
+

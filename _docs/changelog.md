@@ -4,6 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.28](https://github.com/jhpyle/docassemble/releases/tag/v0.2.28) - 
+
+### Changed
+- The `repr()` of a `DAList`, `DADict`, or `DASet` is the `repr()` of
+  its elements, and `repr()` triggers the gathering process.
+- The `.salutation()` method of the `Individual` object now uses the
+  optional attributes `.salutation_to_use` and `.is_doctor`.
+
+### Fixed
+- Problem with `exclude` on a manual list of choices.
+- Lack of curly quote in "I don't know" button.
+- JavaScript error affecting `hide if` functionality, introduced in 0.2.23.
+
 ## [0.2.27](https://github.com/jhpyle/docassemble/releases/tag/v0.2.27) - 2018-01-31
 
 ### Added
