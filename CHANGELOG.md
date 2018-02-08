@@ -1,6 +1,8 @@
 # Change Log
 
-## [0.2.28] - 
+## [0.2.28] - 2018-02-08
+### Added
+- The `enable remember me` configuration directive.
 ### Changed
 - The `repr()` of a `DAList`, `DADict`, or `DASet` is the `repr()` of
   its elements, and `repr()` triggers the gathering process.
@@ -8,8 +10,9 @@
   optional attributes `.salutation_to_use` and `.is_doctor`.
 ### Fixed
 - Problem with `exclude` on a manual list of choices.
-- Lack of curly quote in "I don't know" button.
-- JavaScript error affecting `hide if` functionality, introduced in 0.2.23.
+- Lack of curly quote in "I don't know" buttons.
+- JavaScript error introduced in 0.2.23 that interfered with `hide if`
+  functionality.
 
 ## [0.2.27] - 2018-01-31
 ### Added

@@ -24,4 +24,4 @@ subquestion: |
   % endif
 ---
 code: |
-  day_of_month = format_time(current_datetime(), format='M')
+  day_of_month = format_date(current_datetime(), format='d')
