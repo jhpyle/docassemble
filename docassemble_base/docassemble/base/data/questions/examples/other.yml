@@ -12,7 +12,7 @@ fields:
       - Toyota
       - Mazda
       - Other
-  - Other: car_make
+  - Other make: car_make
     show if:
       variable: car_make
       is: Other

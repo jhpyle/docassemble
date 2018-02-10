@@ -19,4 +19,4 @@ subquestion: |
   % endif
 ---
 code: |
-  day_of_month = format_date(current_datetime(), format='d')
+  day_of_month = today().day

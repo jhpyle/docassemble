@@ -15,6 +15,9 @@ fields:
 ---
 question: Result of question
 subquestion: |
+  target_variable is:
+  "${ target_variable }"
+  
   other_target_variable is:
   "${ other_target_variable }"
 mandatory: True

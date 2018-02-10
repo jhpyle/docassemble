@@ -28,5 +28,5 @@ subquestion: |
   % endif
 ---
 code: |
-  month_of_year = format_date(current_datetime(), format='M')
-  day_of_month = format_date(current_datetime(), format='d')
+  month_of_year = today().month
+  day_of_month = today().day

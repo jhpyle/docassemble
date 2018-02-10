@@ -9,6 +9,7 @@ from random import randint
 import time
 import os
 import re
+import sys
 
 def do_wait():
     if world.wait_seconds > 0:
@@ -99,6 +100,17 @@ def click_button_post(step, choice):
 @step('I click the link "([^"]+)"')
 def click_link(step, link_name):
     do_wait()
+    world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+    world.browser.wait_for_it()
+
+@step('I select "([^"]+)" from the menu')
+def menu_select(step, link_name):
+    do_wait()
+    try:
+        world.browser.find_element_by_css_selector('#mobile-toggler').click()
+    except:
+        world.browser.find_element_by_css_selector('a.dropdown-toggle').click()
+    time.sleep(0.5)
     world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
     world.browser.wait_for_it()
 

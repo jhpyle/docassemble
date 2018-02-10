@@ -4365,6 +4365,8 @@ class Interview:
                         the_iterable = eval(row, user_dict)
                         if not hasattr(the_iterable, '__iter__'):
                             raise DAError("Error in processing table " + from_safeid(question.fields[0].saveas) + ": row value is not iterable")
+                        if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and type(the_iterable.elements) in (list, dict) and docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
+                            the_iterable = the_iterable._validated_elements()
                         indexno = 0
                         contents = list()
                         for item in the_iterable:

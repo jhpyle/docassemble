@@ -645,6 +645,23 @@ class DAList(DAObject):
         """Returns the number of elements in the list, spelling out the number if ten 
         or below.  Forces the gathering of the elements if necessary."""
         return nice_number(self.number())
+    def _validated_elements(self, complete_attribute=None):
+        if complete_attribute is None and hasattr(self, 'complete_attribute'):
+            complete_attribute = self.complete_attribute
+        items = list()
+        for item in self.elements:
+            if item is None:
+                continue
+            if complete_attribute is not None:
+                if not hasattr(item, complete_attribute):
+                    continue
+            else:
+                try:
+                    str(item)
+                except:
+                    continue
+            items.append(item)
+        return items
     def _validate(self, item_object_type, complete_attribute):
         if self.ask_object_type:
             for indexno in range(len(self.elements)):
@@ -1192,6 +1209,23 @@ class DADict(DAObject):
         """Returns the number of keys in the dictionary, spelling out the number if ten 
         or below.  Forces the gathering of the dictionary items if necessary."""
         return nice_number(self.number())
+    def _validated_elements(self, complete_attribute=None):
+        if complete_attribute is None and hasattr(self, 'complete_attribute'):
+            complete_attribute = self.complete_attribute
+        items = list()
+        for key, val in self.elements.iteritems():
+            if val is None:
+                continue
+            if complete_attribute is not None:
+                if not hasattr(val, complete_attribute):
+                    continue
+            else:
+                try:
+                    str(val)
+                except:
+                    continue
+            items[key] = val
+        return items
     def _validate(self, item_object_type, complete_attribute, keys=None):
         if keys is None:
             keys = sorted(self.elements.keys())

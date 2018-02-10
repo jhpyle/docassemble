@@ -12,4 +12,4 @@ question: |
 question: |
   What is your favorite vegetable?
 fields:
-  - Fruit: favorite_vegetable
+  - Vegetable: favorite_vegetable
