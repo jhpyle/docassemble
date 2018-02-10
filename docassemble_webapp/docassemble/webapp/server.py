@@ -15729,7 +15729,10 @@ def create_new_interview(yaml_filename, secret, url_args=None, request=None):
         for key, val in url_args.iteritems():
             exec("url_args['" + key + "'] = " + repr(val.encode('unicode_escape')), user_dict)
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
+    ci = current_info(yaml=yaml_filename, req=request)
+    ci['session'] = session_id
+    ci['encrypted'] = True
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     try:
         interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable as err:
@@ -15773,7 +15776,10 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             release_lock(session_id, yaml_filename)
             raise Exception("Unable to obtain interview dictionary")
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
+    ci = current_info(yaml=yaml_filename, req=request)
+    ci['session'] = session_id
+    ci['encrypted'] = is_encrypted
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     try:
         if old_user_dict is not None:
             interview.assemble(user_dict, interview_status, old_user_dict)
@@ -15876,7 +15882,10 @@ def api_session_action():
         release_lock(session_id, yaml_filename)
         return jsonify_with_status("Unable to obtain interview dictionary.", 400)
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=action, arguments=arguments)))
+    ci = current_info(yaml=yaml_filename, req=request, action=dict(action=action, arguments=arguments))
+    ci['session'] = session_id
+    ci['encrypted'] = is_encrypted
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     try:
         interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable as err:
