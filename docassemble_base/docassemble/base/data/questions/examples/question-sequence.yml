@@ -7,10 +7,10 @@ metadata:
 ---
 mandatory: True
 question: |
-  Lets think about apples
+  Let's think about apples.
 fields:
   - "Are apples good?": question_one_a
-    datatype: yesno
+    datatype: yesnoradio
   - "Your favorite variety": question_one_b
 ---
 mandatory: True

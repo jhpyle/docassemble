@@ -512,7 +512,7 @@ class RandomForestMachineLearner(MachineLearner):
                     elif type(val) is float and learners[self.group_id]['indep_type'][key] is int:
                         learners[self.group_id]['indep_type'][key] = float
                     else:
-                        raise Exception("RandomForestMachineLearner: independent variable type for key " + repr(key) + " was not consistent")
+                        raise Exception("RandomForestMachineLearner: the independent variable type for key " + repr(key) + " was not consistent.  Stored was " + str(learners[self.group_id]['indep_type'][key]) + " and type was " + str(type(val)))
             else:
                 raise Exception("RandomForestMachineLearner: independent variable key " + repr(key) + " was not recognized")
             if type(val) is unicode:

@@ -55,7 +55,7 @@ fields:
     required: False
 ---
 question: |
-  What the subject of your complaint?
+  What is the subject of your complaint?
 field: subject_matter
 choices:
   - world peace

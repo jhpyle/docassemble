@@ -84,6 +84,31 @@ a.nohover:hover {
     text-decoration: none !important;
 }
 
+@media (min-width: 992px) and (max-width: 1199px) {
+    div.danavcontainer {
+	padding-right: 2%;
+	padding-left: 2%;
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+    div.danavcontainer {
+	padding-right: 5%;
+	padding-left: 5%;
+    }
+}
+
+@media (min-width: 1400px) {
+    div.danavcontainer {
+	padding-right: 15%;
+	padding-left: 15%;
+    }
+}
+
+.btn-da {
+    margin-bottom: 5px;
+}
+
 button.btn-da-custom {
     width: 8em;
     height: 8em;
@@ -182,7 +207,7 @@ a.sourceactive {
 }
 
 .daclear {
-    clear:both;
+    clear: both;
 }
 
 .daactive {
@@ -921,12 +946,12 @@ img.da-sig-spinner {
     z-index: 2000;
 }
 
-@media (min-width: 850px) {
-    img.da-sig-spinner {
-	left: 409px;
-	margin-left: 0px;
-    }
-}
+/* @media (min-width: 850px) { */
+/*     img.da-sig-spinner { */
+/* 	left: 409px; */
+/* 	margin-left: 0px; */
+/*     } */
+/* } */
 
 .fullwidth + label {
     width: 100%;
@@ -1375,12 +1400,19 @@ div.danavbar {
     overflow: hidden;
 }
 
+@media (min-width: 768px) and (max-width: 991px) {
+    div.danavbar {
+	padding-left: 15px;
+    }
+}
+
 @media (min-width: 768px) {
     div.danavbar {
 	margin-left: -15px !important;
 	padding-left: 15px;
     }
 }
+
 .dabrand:focus,
 .dabrand:hover {
     color: #9d9d9d !important;

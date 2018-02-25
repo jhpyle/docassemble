@@ -16,8 +16,8 @@ code: |
 mandatory: True
 question: |
   You currently have
-  ${ nice_number(number_of_slices) }
-  ${ noun_plural('slice', number_of_slices) }
+  ${ nice_number(number_of_pieces) }
+  ${ noun_plural('piece', number_of_pieces) }
   of
   ${ noun_singular(favorite_fruit) }.
 subquestion: |
@@ -29,7 +29,7 @@ subquestion: |
   You can also change the 
   [fruit](${ url_action('favorite_fruit') })
   and the
-  [number of slices](${ url_action('number_of_slices') }).
+  [number of pieces](${ url_action('number_of_pieces') }).
 ---
 question: |
   What is your favorite fruit?
@@ -37,9 +37,9 @@ fields:
   - Fruit: favorite_fruit
 ---
 question: |
-  How many slices of ${ noun_singular(favorite_fruit) }
+  How many pieces of ${ noun_singular(favorite_fruit) }
   do you have?
 fields:
-  - Slices: number_of_slices
+  - Pieces: number_of_pieces
     datatype: integer
     min: 0

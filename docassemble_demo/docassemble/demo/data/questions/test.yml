@@ -92,7 +92,7 @@ fields:
       #### Politics
 
       Tell me about your political views.
-  - no label: political views
+  - no label: political_views
     default: I have no political views
   - Political preference: political_party
     datatype: radio

@@ -43,7 +43,7 @@ fields:
     required: False
 ---
 question: |
-  What the subject of the letter?
+  What is the subject of the letter?
 field: subject_of_letter
 choices:
   - Sales of oranges in Q4 2016

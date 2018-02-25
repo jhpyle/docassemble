@@ -1,0 +1,46 @@
+metadata:
+  title: Back button inside question
+  short title: Question back button
+  example start: 1
+  example end: 1
+  documentation: "https://docassemble.org/docs/initial.html#question back button"
+---
+features:
+  question back button: True
+  navigation back button: False
+---
+question: Are you doing well?
+subquestion: |
+  To see the back button, click
+  one of these buttons to go to
+  the next screen.
+yesno: user_is_well
+---
+question: Is the sky blue?
+yesno: sky_is_blue
+---
+question: Done with the interview.
+subquestion: |
+  % if user_is_well:
+  I am glad you are doing well.
+    % if sky_is_blue:
+  Enjoy the sunshine!  
+    % endif
+  % else:
+  I am sorry to hear that you are
+  not well!
+    % if sky_is_blue:
+  At least the sky is blue.
+    % endif
+  % endif
+subquestion: |
+  % if user_is_well:
+    % if sky_is_blue:
+  Enjoy the sunshine!  
+    % endif
+  % else:
+    % if sky_is_blue:
+  At least the sky is blue.
+    % endif
+  % endif
+mandatory: True

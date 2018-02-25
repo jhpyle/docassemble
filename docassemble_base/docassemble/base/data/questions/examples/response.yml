@@ -11,5 +11,5 @@ imports:
 ---
 mandatory: True
 code: |
-  data = dict(fruit='apple', slices=2)
+  data = dict(fruit='apple', pieces=2)
   response(json.dumps(data), content_type="application/json")

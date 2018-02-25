@@ -50,8 +50,6 @@ code: |
 code: |
   button_list = [{True: 'Next', 'image': the_file}]
 ---
-need:
-  - email_sent
 field: menu_selection
 question: |
   Your document

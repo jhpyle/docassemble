@@ -496,7 +496,7 @@ def help_wrap(content, helptext):
     else:
         return '<div class="choicewithhelp"><div><div>' + content + '</div><div class="choicehelp"><a data-container="body" data-toggle="popover" data-placement="left" data-content=' + noquote(markdown_to_html(helptext, trim=True, do_terms=False)) + '><i class="glyphicon glyphicon-question-sign"></i></a></div></div></div>'
 
-def as_html(status, url_for, debug, root, validation_rules, field_error, the_progress_bar):
+def as_html(status, url_for, debug, root, validation_rules, field_error, the_progress_bar, steps):
     decorations = list()
     uses_audio_video = False
     audio_text = ''
@@ -515,6 +515,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         continue_label = word('Continue')        
     # if status.question.script is not None:
     #     status.extra_scripts.append(status.question.script)
+    if status.question.interview.question_back_button and status.question.can_go_back and steps > 1:
+        back_button = '\n                  <button class="btn btn-default ' + BUTTON_CLASS + ' " id="questionbackbutton" title="' + word("Go back to the previous question") + '"><i class="glyphicon glyphicon-chevron-left dalarge"></i>' + status.question.back() + '</button>'
+    else:
+        back_button = ''
     if status.audiovideo is not None:
         uses_audio_video = True
         audio_urls = get_audio_urls(status.audiovideo)
@@ -555,7 +559,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     else:
         decoration_text = ''
     master_output = ""
-    master_output += '          <section role="tabpanel" id="question" class="tab-pane active col-lg-6 col-md-7 col-sm-9">\n'
+    master_output += '          <section role="tabpanel" id="question" class="tab-pane active col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10">\n'
     output = ""
     if the_progress_bar:
         if status.question.question_type == "signature":
@@ -599,7 +603,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if video_text:
             output += indent_by(video_text, 12)
         output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
-        output += '                <div class="btn-toolbar">\n                  <button class="btn btn-primary ' + BUTTON_CLASS + ' " name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_CLASS + ' btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.no() + '</button>'
+        output += '                <div class="btn-toolbar">' + back_button + '\n                  <button class="btn btn-primary ' + BUTTON_CLASS + ' " name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_CLASS + ' btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.no() + '</button>'
         if status.question.question_type == 'yesnomaybe':
             output += '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + markdown_to_html(status.question.maybe(), trim=True, do_terms=False) + '</button>'
         output += '\n                </div>\n'
@@ -622,7 +626,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if video_text:
             output += indent_by(video_text, 12)
         output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
-        output += '                <div class="btn-toolbar">\n                  <button class="btn btn-primary ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_CLASS + ' btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.no() + '</button>'
+        output += '                <div class="btn-toolbar">' + back_button + '\n                  <button class="btn btn-primary ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_CLASS + ' btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.no() + '</button>'
         if status.question.question_type == 'noyesmaybe':
             output += '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + status.question.maybe() + '</button>'
         output += '\n                </div>\n'
@@ -672,7 +676,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             resume_button_label = markdown_to_html(status.continueLabel, trim=True, do_terms=False)
         else:
             resume_button_label = word('Resume')
-        output += '                <div class="form-actions"><button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + resume_button_label + '</button></div>\n'
+        output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + resume_button_label + '</button></div></div>\n'
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
@@ -947,7 +951,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             #status.extra_scripts.append(init_string)
             #status.extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '                <div class="form-actions"><button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button></div>\n'
+        output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button></div></div>\n'
         #output += question_name_tag(status.question)
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
@@ -967,7 +971,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if video_text:
             output += indent_by(video_text, 12)
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '                <div class="form-actions"><button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True">' + continue_label + '</button></div>\n'
+        output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True">' + continue_label + '</button></div></div>\n'
         #output += question_name_tag(status.question)
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
@@ -1087,10 +1091,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
             output += '                <div id="errorcontainer" style="display:none"></div>\n'
             output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-            output += '                <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>\n'
+            output += '                <div class="btn-toolbar">' + back_button + '\n'
+            output += '                  <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>\n'
+            output += '                </div>\n'
         else:
             #output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
-            output += '                <div class="btn-toolbar">\n'
+            output += '                <div class="btn-toolbar">' + back_button + '\n'
             if hasattr(status.question.fields[0], 'saveas'):
                 btn_class = ' btn-primary'
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
@@ -1170,6 +1176,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
+        output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
+        output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '</div></div>\n'
     else:
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST">\n              <fieldset>\n'
         output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
@@ -1178,7 +1186,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if video_text:
             output += indent_by(video_text, 12)
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '                <div class="form-actions"><button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button></div>\n'
+        output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button></div></div>\n'
         #output += question_name_tag(status.question)
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
@@ -1327,7 +1335,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         status.screen_reader_text['question'] = unicode(output)
     master_output += output
     master_output += '          </section>\n'
-    master_output += '          <section role="tabpanel" id="help" class="tab-pane col-lg-6 col-md-7 col-sm-9">\n'
+    master_output += '          <section role="tabpanel" id="help" class="tab-pane col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10">\n'
     output = '<div><a id="backToQuestion" data-toggle="tab" data-target="#question" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
     output += """
 <div id="daPhoneMessage" class="row invisible">

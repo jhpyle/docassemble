@@ -1,0 +1,17 @@
+metadata:
+  title: Define variable
+  documentation: "https://docassemble.org/docs/functions.html#define"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+code: |
+  define('favorite_fruit', 'apple')
+---
+question: Summary
+subquestion: |
+  Your favorite fruit is
+  ${ favorite_fruit }.
+mandatory: True

@@ -1732,7 +1732,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
         inverse = 'navbar-default '
     navbar = """\
     <div class="navbar """ + inverse + """navbar-fixed-top">
-      <div class="container-fluid">
+      <div class="container-fluid danavcontainer">
         <div class="navbar-header danavbar">
 """
     navbar += """\
@@ -1744,12 +1744,14 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
           </button>
 """
     if status.question.can_go_back and steps > 1:
-        navbar += """\
+        if status.question.interview.navigation_back_button:
+            navbar += """\
           <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon backbuttoncolor navbar-btn" type="submit" title=""" + '"' + word("Go back to the previous question") + '"' + """><i class="glyphicon glyphicon-chevron-left dalarge"></i><span class="dalargefix">""" + word('Back') + """</span></button></form></span>
 """
-    #navbar += """\
-    #      <a class="invisible" id="questionlabel" data-target="#question" data-toggle="tab">""" + word('Question') + """</a>
-#"""
+        else:
+            navbar += """\
+          <form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"></form>
+"""
     help_message = word("Help is available")
     extra_help_message = word("Help is available for this question")
     phone_message = word("Phone help is available")
@@ -6483,7 +6485,7 @@ def index():
       }
       function showSpinner(){
         if ($("#question").length > 0){
-          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-lg-6 col-md-8 col-sm-10"><img class="da-spinner" src=""" + '"' + str(url_for('static', filename='app/loader.gif')) + '"' + """></div></div></div></div>').appendTo("body");
+          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10"><img class="da-spinner" src=""" + '"' + str(url_for('static', filename='app/loader.gif')) + '"' + """></div></div></div></div>').appendTo("body");
         }
         else{
           var newImg = document.createElement('img');
@@ -6604,6 +6606,11 @@ def index():
         if (daPhoneAvailable){
           $("#daPhoneAvailable").removeClass("invisible");
         }
+        $("#questionbackbutton").on('click', function(event){
+          event.preventDefault();
+          $("#backbutton").submit();
+          return false;
+        });
         $("#backbutton").on('submit', function(event){
           if (daShowingHelp){
             event.preventDefault();
@@ -7040,7 +7047,7 @@ def index():
         the_progress_bar = progress_bar(user_dict['_internal']['progress'])
     else:
         the_progress_bar = None
-    content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules, the_field_errors, the_progress_bar)
+    content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules, the_field_errors, the_progress_bar, steps - user_dict['_internal']['steps_offset'])
     if debug_mode:
         readability = dict()
         for question_type in ('question', 'help'):
@@ -7115,10 +7122,11 @@ def index():
         output += navigation_bar(user_dict['nav'], interview_status.question.interview)
     output += '        <div class="tab-content">\n'
     output += content + "        </div>"
-    if debug_mode:
-        output += '\n        <div class="col-md-4" style="display: none" id="readability">' + readability_report + '</div>'
     output += "\n      </div>\n"
     if debug_mode:
+        output += '      <div class="row">' + "\n"
+        output += '        <div class="col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10" style="display: none" id="readability">' + readability_report + '</div>'
+        output += '      </div>' + "\n"
         output += '      <div class="row">' + "\n"
         output += '        <div id="source" class="col-md-12 collapse">' + "\n"
         #output += '          <h3>' + word('SMS version') + '</h3>' + "\n"
@@ -13720,7 +13728,7 @@ def train():
         for record in db.session.query(MachineLearning.id, MachineLearning.group_id, MachineLearning.key, MachineLearning.info, MachineLearning.independent, MachineLearning.dependent, MachineLearning.create_time, MachineLearning.modtime, MachineLearning.active).filter(and_(MachineLearning.group_id == group_id_to_use, show_cond)):
             new_entry = dict(id=record.id, group_id=record.group_id, key=record.key, independent=pickle.loads(codecs.decode(record.independent, 'base64')) if record.independent is not None else None, dependent=pickle.loads(codecs.decode(record.dependent, 'base64')) if record.dependent is not None else None, info=pickle.loads(codecs.decode(record.info, 'base64')) if record.info is not None else None, create_type=record.create_time, modtime=record.modtime, active=MachineLearning.active)
             if isinstance(new_entry['independent'], DADict) or type(new_entry['independent']) is dict:
-                new_entry['independent_display'] = '<div class="mldatacontainer">' + '<br>'.join(['<span class="mldatakey">' + unicode(key) + '</span>: <span class="mldatavalue">' + unicode(val) + '</span>' for key, val in new_entry['independent'].iteritems()]) + '</div>'
+                new_entry['independent_display'] = '<div class="mldatacontainer">' + '<br>'.join(['<span class="mldatakey">' + unicode(key) + '</span>: <span class="mldatavalue">' + unicode(val) + ' (' + str(val.__class__.__name__) + ')</span>' for key, val in new_entry['independent'].iteritems()]) + '</div>'
                 new_entry['type'] = 'data'
             else:
                 new_entry['type'] = 'text'
@@ -16550,6 +16558,10 @@ with app.app_context():
     if 'global javascript' in daconfig:
         for fileref in daconfig['global javascript']:
             global_js += "\n" + '    <script src="' + get_url_from_file_reference(fileref) + '"></script>';
+    if 'raw global css' in daconfig:
+        global_css += "\n" + daconfig['raw global css']
+    if 'raw global javascript' in daconfig:
+        global_js += "\n" + daconfig['raw global javascript']
     app.config['GLOBAL_CSS'] = global_css
     app.config['GLOBAL_JS'] = global_js
     app.config['PARTS'] = page_parts

@@ -8,9 +8,7 @@ mandatory: True
 question: |
   The pie
 subquestion: |
-  <button id="run" class="btn btn-primary">
-    Run
-  </button>
+  <button id="run" class="btn btn-primary">Run</button>
 
   <span id="resultsArea"></span>
 script: |

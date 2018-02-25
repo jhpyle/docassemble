@@ -20,10 +20,9 @@ mandatory: True
 code: |
   need(welcome_screen, map_shown)
 ---
-sets: map_shown
+event: map_shown
 question: Map of you and your enemy
-field: foobar
-under: |
+subquestion: |
   ${ map_of(user, enemy) }
 ---
 field: welcome_screen

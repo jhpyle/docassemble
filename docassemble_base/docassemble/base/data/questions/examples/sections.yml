@@ -15,6 +15,7 @@ sections:
 ---
 features:
   navigation: True
+  progress bar: True
 ---
 modules:
   docassemble.base.util

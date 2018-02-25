@@ -98,12 +98,12 @@ fields:
 question: |
   What is the name of your panda?
 fields:
-  - Mouse Name: panda_name
+  - Panda Name: panda_name
 ---
 question: |
   What is the name of your pumpkin?
 fields:
-  - Mouse Name: pumpkin_name
+  - Pumpkin Name: pumpkin_name
 ---
 mandatory: True
 question: |

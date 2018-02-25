@@ -5,6 +5,7 @@ import os
 import pyPdf
 import tempfile
 import urllib
+import urllib2
 import mimetypes
 from PIL import Image
 import xml.etree.ElementTree as ET
@@ -91,26 +92,35 @@ def get_info_from_file_reference(file_reference, **kwargs):
             result['fullpath'] = None
         has_info = True
     elif re.search(r'^https?://', str(file_reference)):
-        #logmessage(str(file_reference) + " is a URL")
+        #logmessage("get_info_from_file_reference: " + str(file_reference) + " is a URL")
         possible_filename = re.sub(r'.*/', '', file_reference)
         if possible_filename == '':
             possible_filename = 'index.html'
         if re.search(r'\.', possible_filename):
             (possible_ext, possible_mimetype) = get_ext_and_mimetype(possible_filename)
+            #logmessage("get_info_from_file_reference: starting with " + str(possible_ext) + " and " + str(possible_mimetype))
         else:
             possible_ext = 'txt'
             possible_mimetype = 'text/plain'
         result = dict()
-        (local_filename, headers) = urllib.urlretrieve(file_reference)
-        result['fullpath'] = local_filename
+        temp_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.' + possible_ext, delete=False)
+        req = urllib2.Request(file_reference, headers={'User-Agent' : docassemble.base.config.daconfig.get('user agent', 'Python-urllib/2.7')})
+        response = urllib2.urlopen(req)
+        temp_file.write(response.read())
+        #(local_filename, headers) = urllib.urlretrieve(file_reference)
+        result['fullpath'] = temp_file.name
         try:
-            result['mimetype'] = headers.gettype()
+            #result['mimetype'] = headers.gettype()
+            result['mimetype'] = response.headers['Content-Type']
+            #logmessage("get_info_from_file_reference: mimetype is " + str(result['mimetype']))
         except Exception as errmess:
             logmessage("get_info_from_file_reference: could not get mimetype from headers")
             result['mimetype'] = possible_mimetype
             result['extension'] = possible_ext
         if 'extension' not in result:
+            #logmessage("get_info_from_file_reference: extension not in result")
             result['extension'] = re.sub(r'^\.', '', mimetypes.guess_extension(result['mimetype']))
+            #logmessage("get_info_from_file_reference: extension is " + str(result['extension']))
         if re.search(r'\.', possible_filename):
             result['filename'] = possible_filename
         else:
@@ -118,7 +128,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
         path_parts = os.path.splitext(result['fullpath'])
         result['path'] = path_parts[0]
         has_info = True
-        #logmessage("Downloaded to " + result['tempfile'].name)
+        #logmessage("get_info_from_file_reference: downloaded to " + str(result['fullpath']))
     else:
         #logmessage(str(file_reference) + " is not a URL")
         result = dict()

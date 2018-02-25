@@ -1725,7 +1725,7 @@ def ordinal_default(j, **kwargs):
         return capitalize(result)
     return result
 
-def nice_number_default(num):
+def nice_number_default(num, capitalize=False):
     """Returns the number as a word in the current language."""
     if this_thread.language in nice_numbers:
         language_to_use = this_thread.language
@@ -1736,16 +1736,24 @@ def nice_number_default(num):
     if int(float(num)) == float(num):
         num = int(float(num))
     if unicode(num) in nice_numbers[language_to_use]:
-        return nice_numbers[language_to_use][unicode(num)]
-    if type(num) is int:
+        the_word = nice_numbers[language_to_use][unicode(num)]
+        if capitalize:
+            return capitalize_function(the_word)
+        else:
+            return the_word
+    elif type(num) is int:
         return unicode(locale.format("%d", num, grouping=True))
     else:
         return unicode(locale.format("%.2f", float(num), grouping=True)).rstrip('0')
 
-def quantity_noun_default(num, noun, as_integer=True):
+def quantity_noun_default(num, noun, as_integer=True, capitalize=False):
     if as_integer:
         num = int(round(num))
-    return nice_number(num) + " " + noun_plural(noun, num)
+    result = nice_number(num) + " " + noun_plural(noun, num)
+    if capitalize:
+        return capitalize_function(result)
+    else:
+        return result
 
 def capitalize_default(a):
     if a and (type(a) is str or type(a) is unicode) and len(a) > 1:
@@ -2064,6 +2072,7 @@ comma_and_list = language_function_constructor('comma_and_list')
 nice_number = language_function_constructor('nice_number')
 quantity_noun = language_function_constructor('quantity_noun')
 capitalize = language_function_constructor('capitalize')
+capitalize_function = capitalize
 title_case = language_function_constructor('title_case')
 ordinal_number = language_function_constructor('ordinal_number')
 ordinal = language_function_constructor('ordinal')
@@ -2453,7 +2462,21 @@ def dispatch(var):
         undefine(var)
     undefine(var)
     return True
-    
+
+def define(var, val):
+    """Sets the given variable, expressed as a string, to the given value."""
+    if type(var) not in [str, unicode]:
+        raise Exception("define() must be given a string as the variable name")
+    user_dict = get_user_dict()
+    if user_dict is None:
+        raise Exception("define: could not find interview answers")
+    # Trigger exceptions for the left hand side before creating __define_val
+    exec(var + " = None", user_dict)
+    user_dict['__define_val'] = val
+    exec(var + " = __define_val", user_dict)
+    if '__define_val' in user_dict:
+        del user_dict['__define_val']
+
 def defined(var):
     """Returns true if the variable has already been defined.  Otherwise, returns false."""
     if type(var) not in [str, unicode]:

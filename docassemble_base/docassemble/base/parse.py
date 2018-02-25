@@ -934,8 +934,12 @@ class Question:
                 if type(data['features']['table width']) is not int:
                     raise DAError("Table width in features must be an integer." + self.idebug(data))
                 self.interview.table_width = data['features']['table width']
-            if 'progress bar' in data['features'] and data['features']['progress bar']:
-                self.interview.use_progress_bar = True
+            if 'progress bar' in data['features']:
+                self.interview.use_progress_bar = True if data['features']['progress bar'] else False
+            if 'question back button' in data['features']:
+                self.interview.question_back_button = True if data['features']['question back button'] else False
+            if 'navigation back button' in data['features']:
+                self.interview.navigation_back_button = True if data['features']['navigation back button'] else False
             if 'go full screen' in data['features'] and data['features']['go full screen']:
                 self.interview.force_fullscreen = data['features']['go full screen']
             if 'navigation' in data['features'] and data['features']['navigation']:
@@ -2324,6 +2328,8 @@ class Question:
                 self.names_used.add(item)
     def yes(self):
         return word("Yes")
+    def back(self):
+        return word("Back")
     def no(self):
         return word("No")
     def maybe(self):
@@ -3566,6 +3572,8 @@ class Interview:
         self.default_role = None
         self.title = None
         self.use_progress_bar = False
+        self.question_back_button = False
+        self.navigation_back_button = True
         self.force_fullscreen = False
         self.use_pdf_a = get_config('pdf/a', False)
         self.loop_limit = get_config('loop limit', 500)

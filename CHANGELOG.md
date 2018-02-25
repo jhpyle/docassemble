@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.2.29] - 2018-02-25
+### Added
+- The `define()` function.
+- The features `question back button` and `navigation back button`.
+- The `raw global css` and `raw global javascript` configuration
+  directives.
+### Changed
+- Main content block for page is now centered on desktop.
+### Fixed
+- Problem with calling background action from code triggered by the API.
+- Problem with including a table while gathering the rows of the table.
+
 ## [0.2.28] - 2018-02-08
 ### Added
 - The `enable remember me` configuration directive.

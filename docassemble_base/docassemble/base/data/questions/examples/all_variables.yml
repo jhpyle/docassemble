@@ -11,7 +11,7 @@ modules:
 mandatory: True
 code: |
   favorite_fruit
-  number_of_slices  
+  number_of_pieces  
 ---
 mandatory: True
 question: |
@@ -27,9 +27,9 @@ fields:
   - Fruit: favorite_fruit
 ---
 question: |
-  How many slices of ${ noun_singular(favorite_fruit) }
+  How many pieces of ${ noun_singular(favorite_fruit) }
   do you have?
 fields:
-  - Slices: number_of_slices
+  - Pieces: number_of_pieces
     datatype: integer
     min: 0

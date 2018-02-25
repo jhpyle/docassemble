@@ -27,15 +27,15 @@ do
 	convert $tempfile -resize 650x9999 -trim docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "markdown" -o "$file" = "allow-emailing-true" -o "$file" = "allow-emailing-false" -o "$file" = "markdown-demo" -o "$file" = "document-links" -o "$file" = "document-links-limited" ]
     then
-	convert $tempfile -crop 650x999+13+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -crop 650x999+170+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "inverse-navbar" ]
     then
 	convert $tempfile -crop 1005x260+0+0 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "fields" -o "$file" = "attachment-code" -o "$file" = "attachment-simple" -o "$file" = "document-markup" -o "$file" = "document-variable-name" -o "$file" = "document-cache-invalidate" ]
     then
-	convert $tempfile -crop 650x1999+13+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -crop 650x1999+170+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     else
-	convert $tempfile -crop 650x630+13+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -crop 650x630+170+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     fi
 done
 if [ -d ~/gh-pages-da ]

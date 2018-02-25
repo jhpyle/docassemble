@@ -2,8 +2,8 @@
 include:
   - basic-questions.yml
 ---
-import:
-  - .change_suffix
+imports:
+  - docassemble.demo.change_suffix
 ---
 mandatory: True
 objects:

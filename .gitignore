@@ -29,6 +29,7 @@ taskdefinition.json
 TODO.md
 testpubsub.py
 docassemble_webapp/docassemble/webapp/templates/pages/twiliotest.html
+docassemble_demo/docassemble/demo/data/questions/testfillsig.yml
 send
 save-db-schema-html.sh
 audit.py

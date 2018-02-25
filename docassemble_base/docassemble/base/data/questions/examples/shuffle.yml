@@ -6,7 +6,7 @@ question: |
   For which of the following obscure
   candidates do you wish to vote?
 fields:
-  - Type: candidate
+  - Candidate: candidate
     datatype: radio
     shuffle: True
     choices:

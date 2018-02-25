@@ -45,7 +45,7 @@
     left: 0px; 
     right: 0px;
     height: 42px;
-    padding:2px;    
+    padding: 2px;    
 }
 .sigtitle {
     line-height: 26px;
@@ -75,9 +75,9 @@
     border-width: 1px;
 }
 .sigpalette-case {
-    width:260px;
-    margin:auto;
-    text-align:center;
+    width: 260px;
+    margin: auto;
+    text-align: center;
 }
 .sigtoppart {
     text-align: center;
@@ -90,10 +90,11 @@
 }
 .sigbottompart {
     text-align: center;
-    padding-top:6px;
+    padding-top: 6px;
 }
 .sigpage {
     width: 100%;
+    max-width: 550px;
 }
 .dasignature > .navbar {
     display: none;
@@ -119,10 +120,10 @@
 	display: none;
     }
     .sigpage{
-	width: 744px;
+	width: 550px;
     }
     .siginnerheader{
-	width: 744px;
+	width: 550px;
     }
     .sigtoppart {
 	text-align: left;

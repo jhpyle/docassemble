@@ -91,16 +91,16 @@ function saveCanvas(){
 function newCanvas(){
   //console.log("running newCanvas");
   var cwidth = $(window).width() - theBorders;
-  if (cwidth > 744 ){
-    cwidth = 744;
+  if (cwidth > 550 ){
+    cwidth = 550;
   }
   var cheight = cwidth*aspectRatio;
   var otherHeights = $("#sigtoppart").outerHeight(true) + $("#sigbottompart").outerHeight(true);
   if (cheight > $(window).height()-otherHeights){
     cheight = $(window).height()-otherHeights;
   }
-  if (cheight > 372){
-    cheight = 372;
+  if (cheight > 275){
+    cheight = 275;
   }
   $("#sigcontent").height(cheight);
   var canvas = '<canvas id="sigcanvas" width="'+(cwidth)+'px" height="'+(cheight)+'px"></canvas>';

@@ -85,16 +85,58 @@ def start_interview(step, interview_name):
     world.browser.get(world.da_path + "/?i=" + interview_name + '&reset=1')
     world.browser.wait_for_it()
 
+@step('I click the back button')
+def click_back_button(step):
+    do_wait()
+    world.browser.find_element_by_css_selector('button.dabackicon').click()
+    world.browser.wait_for_it()
+
+@step('I click the question back button')
+def click_question_back_button(step):
+    do_wait()
+    world.browser.find_element_by_id('questionbackbutton').click()
+    world.browser.wait_for_it()
+
 @step('I click the button "([^"]+)"')
 def click_button(step, button_name):
     do_wait()
-    world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
+    success = False
+    try:
+        world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
+        success = True
+    except:
+       pass
+    if not success:
+       for elem in world.browser.find_elements_by_xpath('//a[text()="' + button_name + '"]'):
+           try:
+               elem.click()
+               success = True
+           except:
+               pass
+           if success:
+               break
+    assert success
     world.browser.wait_for_it()
 
 @step('I click the "([^"]+)" button')
 def click_button_post(step, choice):
     do_wait()
-    world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
+    success = False
+    try:
+        world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
+        success = True
+    except:
+        pass
+    if not success:
+        for elem in world.browser.find_elements_by_xpath('//a[text()="' + button_name + '"]'):
+            try:
+                elem.click()
+                success = True
+            except:
+                pass
+            if success:
+                break
+    assert success
     world.browser.wait_for_it()
 
 @step('I click the link "([^"]+)"')
@@ -150,7 +192,10 @@ def not_see_phrase_sq(step, phrase):
 
 @step('I set "([^"]+)" to "([^"]*)"')
 def set_field(step, label, value):
-    elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+    try:
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+    except:
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])/parent::label').get_attribute("for"))
     try:
         elem.clear()
     except:
@@ -191,6 +236,16 @@ def set_text_box(step, value):
     except:
         pass
     elem.send_keys(value)
+
+@step('I set text box ([0-9]+) to "([^"]*)"')
+def set_text_box(step, num, value):
+    num = int(num) - 1
+    elems = world.browser.find_elements_by_xpath("//input[contains(@alt, 'Input box')]")
+    try:
+        elems[num].clear()
+    except:
+        pass
+    elems[num].send_keys(value)
 
 @step('I click the "([^"]+)" option under "([^"]+)"')
 def set_mc_option_under(step, option, label):

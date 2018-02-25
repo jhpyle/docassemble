@@ -2,7 +2,7 @@
 {%- set tab_title = get_part('start page tab title', word('Interviews')) %}
 {%- set extra_css = get_part('start page extra css') %}
 {%- set extra_js = get_part('start page extra javascript') %}
-{%- extends 'base_templates/flask_wide_base.html' %}
+{%- extends 'flask_user/public_base.html' %}
 
 {%- block content %}
           <h1 class="dastartpage">{{ get_part('start page heading', word('Available interviews')) }}</h1>

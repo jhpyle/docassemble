@@ -308,6 +308,7 @@ Individual.pronoun_objective: "https://docassemble.org/docs/objects.html#Individ
 Individual.pronoun_subjective: "https://docassemble.org/docs/objects.html#Individual.pronoun_subjective"
 Individual.yourself_or_name: "https://docassemble.org/docs/objects.html#Individual.yourself_or_name"
 defined: "https://docassemble.org/docs/functions.html#defined"
+define: "https://docassemble.org/docs/functions.html#define"
 value: "https://docassemble.org/docs/functions.html#value"
 from_b64_json: "https://docassemble.org/docs/functions.html#from_b64_json"
 get_config: "https://docassemble.org/docs/config.html#get_config"
