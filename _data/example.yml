@@ -1641,6 +1641,15 @@
   \ types of fruit in the\n  world.\n  \n  ${ explain(\"Peaches\") }\n  ${ explain(\"\
   Oranges\") }\n  ${ deride(\"Strawberries\") }\nusedefs:\n - my_explanation\nmandatory:\
   \ True"
+"define": |-
+  code: |
+    define('favorite_fruit', 'apple')
+  ---
+  question: Summary
+  subquestion: |
+    Your favorite fruit is
+    ${ favorite_fruit }.
+  mandatory: True
 "defined": |-
   question: Summary
   subquestion: |
@@ -3417,14 +3426,14 @@
   ---\ncode: |\n  email_sent = send_email(to=email_address,\n    body=\"Here is your\
   \ document\",\n    subject=\"Your document\",\n    attachments=the_file)\n---\n\
   code: |\n  (the_path, the_mimetype) = path_and_mimetype(the_file)\n---\ncode: |\n\
-  \  button_list = [{True: 'Next', 'image': the_file}]\n---\nneed:\n  - email_sent\n\
-  field: menu_selection\nquestion: |\n  Your document\nsubquestion: |\n  ### As image\n\
-  \  ${ the_file.show(width='1em') }\n\n  ${ the_file }\n\n  ### As path\n  \n  `${\
-  \ the_file.path() }`\n\n  ### As url\n  \n  `${ the_file.url_for() }`\n\n  ### As\
-  \ external url\n  \n  `${ the_file.url_for(_external=True) }`\n\n  ### From url_of()\n\
-  \n  `${ url_of(the_file) }`\n\n  ### From path_and_mimetype()\n\n  `${ the_path\
-  \ }`\n\n  `${ the_mimetype }`\nbuttons:\n  code: button_list\n---\nmandatory: True\n\
-  need:\n  - menu_selection\nquestion: |\n  All done\nbuttons:\n  - Restart: restart"
+  \  button_list = [{True: 'Next', 'image': the_file}]\n---\nfield: menu_selection\n\
+  question: |\n  Your document\nsubquestion: |\n  ### As image\n  ${ the_file.show(width='1em')\
+  \ }\n\n  ${ the_file }\n\n  ### As path\n  \n  `${ the_file.path() }`\n\n  ### As\
+  \ url\n  \n  `${ the_file.url_for() }`\n\n  ### As external url\n  \n  `${ the_file.url_for(_external=True)\
+  \ }`\n\n  ### From url_of()\n\n  `${ url_of(the_file) }`\n\n  ### From path_and_mimetype()\n\
+  \n  `${ the_path }`\n\n  `${ the_mimetype }`\nbuttons:\n  code: button_list\n---\n\
+  mandatory: True\nneed:\n  - menu_selection\nquestion: |\n  All done\nbuttons:\n\
+  \  - Restart: restart"
 "fix-punctuation": |-
   mandatory: true
   question: |
@@ -4881,9 +4890,7 @@
   question: |
     The pie
   subquestion: |
-    <button id="run" class="btn btn-primary">
-      Run
-    </button>
+    <button id="run" class="btn btn-primary">Run</button>
 
     <span id="resultsArea"></span>
   script: |
@@ -5281,16 +5288,6 @@
   \                  'label': 'Vegetables'}, \n                 {'url': interview_url(i='docassemble.demo:data/questions/interview-about-flowers.yml'),\n\
   \                  'label': 'Flowers'} ]\n---\nmandatory: True\nquestion: |\n  Select\
   \ an option from the\n  menu in the upper right."
-"menu-system": |-
-  objects:
-    -  client: Individual
-    -  client.people: PartyList
-    -  client.people[i].photo: DAFileList
-    -  client.things: DAList
-    -  client.things[i].heirs: PartyList
-    -  client.things[i].photo: DAFileList
-    -  client.assets: DAList
-    -  client.assets[i].photo: DAFileList
 "message": |-
   code: |
     message("The interview is over.", "Better luck next time!")
@@ -5558,13 +5555,34 @@
     ${ favorite_color } car!
     % endif
 "nested-for-loop": |-
+  objects:
+    - person: PartyList.using(minimum_number=1, complete_attribute='complete')
+    - person[i].child: ChildList.using(complete_attribute='complete')
+    - person[i].child[j].allergy: DAList
+  ---
   mandatory: True
+  question: |
+    Information retrieved
+  subquestion: |
+    The people are:
+
+    % for item in person:
+    * ${ item }
+    % endfor
+  buttons:
+    - Restart: restart
+  ---
   code: |
-    for the_person in person.elements:
-        for the_child in the_person.child.elements:
-            the_child.allergy.gather()
-        the_person.child.gather()
-    person.gather(minimum=1)
+    person[i].name.first
+    person[i].name.last
+    person[i].child.gather()
+    person[i].complete = True
+  ---
+  code: |
+    person[i].child[j].name.first
+    person[i].child[j].name.last
+    person[i].child[j].allergy.gather()
+    person[i].child[j].complete = True
 "nested-gather": |-
   modules:
     - docassemble.base.legal
@@ -6323,7 +6341,7 @@
         - Toyota
         - Mazda
         - Other
-    - Other: car_make
+    - Other make: car_make
       show if:
         variable: car_make
         is: Other
@@ -6816,6 +6834,10 @@
     zombie pigman: |
       A harmless creature who carries a gold
       sword.
+"question-back-button": |-
+  features:
+    question back button: True
+    navigation back button: False
 "question-library": |-
   question: |
     Interested in going to the dance tonight?
@@ -6829,10 +6851,10 @@
 "question-sequence": |-
   mandatory: True
   question: |
-    Lets think about apples
+    Let's think about apples.
   fields:
     - "Are apples good?": question_one_a
-      datatype: yesno
+      datatype: yesnoradio
     - "Your favorite variety": question_one_b
   ---
   mandatory: True
@@ -7030,7 +7052,7 @@
 "response": |-
   mandatory: True
   code: |
-    data = dict(fruit='apple', slices=2)
+    data = dict(fruit='apple', pieces=2)
     response(json.dumps(data), content_type="application/json")
 "response-hello": |-
   mandatory: True
@@ -7038,13 +7060,13 @@
     response("Hello, world!")
 "response-json": "objects:\n  - user: Individual\n---\nmandatory: True\ncode: |\n\
   \  multi_user = True\n---\nevent: query_fruit\ncode: |\n  data = dict(fruit=favorite_fruit,\
-  \ slices=number_of_slices)\n  json_response(data)\n---\nmandatory: True\nquestion:\
-  \ |\n  You currently have\n  ${ nice_number(number_of_slices) }\n  ${ noun_plural('slice',\
-  \ number_of_slices) }\n  of\n  ${ noun_singular(favorite_fruit) }.\nsubquestion:\
+  \ pieces=number_of_pieces)\n  json_response(data)\n---\nmandatory: True\nquestion:\
+  \ |\n  You currently have\n  ${ nice_number(number_of_pieces) }\n  ${ noun_plural('piece',\
+  \ number_of_pieces) }\n  of\n  ${ noun_singular(favorite_fruit) }.\nsubquestion:\
   \ |\n  Use\n  [this link](${ interview_url_action('query_fruit') })\n  to query\
   \ the information from\n  another application.\n\n  You can also change the \n \
-  \ [fruit](${ url_action('favorite_fruit') })\n  and the\n  [number of slices](${\
-  \ url_action('number_of_slices') })."
+  \ [fruit](${ url_action('favorite_fruit') })\n  and the\n  [number of pieces](${\
+  \ url_action('number_of_pieces') })."
 "response-svg": |-
   sets: all_done
   code: |
@@ -7339,36 +7361,36 @@
     </script>
 "sections": "sections:\n  - Introduction\n  - About you:\n    - Contact info\n   \
   \ - Demographics\n  - Preferences\n  - Conclusion\n---\nfeatures:\n  navigation:\
-  \ True\n---\nmodules:\n  docassemble.base.util\n---\nmandatory: True\ncode: |\n\
-  \  menu_items = [ action_menu_item('Roadmap', 'road_map') ]\n---\ninitial: True\n\
-  code: |\n  if returning_user(minutes=0.5):\n    welcome_back\n---\nmandatory: True\n\
-  question: |\n  Welcome to the interview\nsubquestion: |\n  If you are not on a\n\
-  \  smartphone-sized device,\n  you should see a navigation\n  bar to the left.\n\
-  field: sees_nav_bar\n---\nmandatory: True\nquestion: |\n  I am going to ask you\
-  \ some\n  questions about yourself.\nfield: intro_to_about_you\nsection: About you\n\
-  ---\nmandatory: True\nquestion: |\n  What is your name?\nfields:\n  - First Name:\
-  \ first_name\n  - Last Name: last_name\nsection: Contact info\n---\nmandatory: True\n\
-  question: |\n  What is your e-mail address?\nfields:\n  - E-mail: email_address\n\
-  \    datatype: email\n---\nmandatory: True\nquestion: |\n  What is your gender?\n\
-  field: gender\nchoices:\n  - Male\n  - Female\n  - Something else\nsection: Demographics\n\
-  ---\nmandatory: True\nquestion: |\n  What kind of belly button\n  do you have?\n\
-  subquestion: |\n  To see what a user would\n  see after returning to\n  the interview\
-  \ after a period\n  of absence, try waiting\n  thirty seconds, then\n  [click into\
-  \ the\n  interview](${ interview_url(local=True) }).\n\n  In addition, there is\
-  \ a similar\n  screen available on the Menu in the\n  upper-right, under \"Roadmap.\"\
-  \nfield: belly_button\nchoices:\n  - Innie\n  - Outie\n---\nmandatory: True\nquestion:\
-  \ |\n  What is your favorite fruit?\nfields:\n  - Favorite fruit: favorite_fruit\n\
-  section: Preferences\n---\nmandatory: True\nquestion: |\n  What is your favorite\
-  \ vegetable?\nfields:\n  - Favorite vegetable: favorite_vegetable\n---\nmandatory:\
-  \ True\nquestion: Thank you.\nsubquestion: |\n  ${ first_name },\n\n  Your answers\
-  \ mean a lot to me.\n  \n  I am going to go eat some\n  ${ favorite_vegetable }\n\
-  \  now.\nsection: Conclusion\n---\nevent: welcome_back\nquestion: |\n  Welcome back!\n\
-  subquestion: |\n  You are currently in the\n  **${ nav.get_section(display=True)\
-  \ }**\n  section.\n\n  ${ nav }\n\n  Press \"Continue\" to pick up\n  where you\
-  \ left off.\nbuttons:\n  Continue: continue\n---\nevent: road_map\nquestion: |\n\
-  \  Roadmap\nsubquestion: |\n  You are currently in the\n  **${ nav.get_section(display=True)\
-  \ }**\n  section.\n\n  ${ nav }\n\n  Press \"Continue\" to resume the\n  interview.\n\
-  buttons:\n  Continue: continue"
+  \ True\n  progress bar: True\n---\nmodules:\n  docassemble.base.util\n---\nmandatory:\
+  \ True\ncode: |\n  menu_items = [ action_menu_item('Roadmap', 'road_map') ]\n---\n\
+  initial: True\ncode: |\n  if returning_user(minutes=0.5):\n    welcome_back\n---\n\
+  mandatory: True\nquestion: |\n  Welcome to the interview\nsubquestion: |\n  If you\
+  \ are not on a\n  smartphone-sized device,\n  you should see a navigation\n  bar\
+  \ to the left.\nfield: sees_nav_bar\n---\nmandatory: True\nquestion: |\n  I am going\
+  \ to ask you some\n  questions about yourself.\nfield: intro_to_about_you\nsection:\
+  \ About you\n---\nmandatory: True\nquestion: |\n  What is your name?\nfields:\n\
+  \  - First Name: first_name\n  - Last Name: last_name\nsection: Contact info\n---\n\
+  mandatory: True\nquestion: |\n  What is your e-mail address?\nfields:\n  - E-mail:\
+  \ email_address\n    datatype: email\n---\nmandatory: True\nquestion: |\n  What\
+  \ is your gender?\nfield: gender\nchoices:\n  - Male\n  - Female\n  - Something\
+  \ else\nsection: Demographics\n---\nmandatory: True\nquestion: |\n  What kind of\
+  \ belly button\n  do you have?\nsubquestion: |\n  To see what a user would\n  see\
+  \ after returning to\n  the interview after a period\n  of absence, try waiting\n\
+  \  thirty seconds, then\n  [click into the\n  interview](${ interview_url(local=True)\
+  \ }).\n\n  In addition, there is a similar\n  screen available on the Menu in the\n\
+  \  upper-right, under \"Roadmap.\"\nfield: belly_button\nchoices:\n  - Innie\n \
+  \ - Outie\n---\nmandatory: True\nquestion: |\n  What is your favorite fruit?\nfields:\n\
+  \  - Favorite fruit: favorite_fruit\nsection: Preferences\n---\nmandatory: True\n\
+  question: |\n  What is your favorite vegetable?\nfields:\n  - Favorite vegetable:\
+  \ favorite_vegetable\n---\nmandatory: True\nquestion: Thank you.\nsubquestion: |\n\
+  \  ${ first_name },\n\n  Your answers mean a lot to me.\n  \n  I am going to go\
+  \ eat some\n  ${ favorite_vegetable }\n  now.\nsection: Conclusion\n---\nevent:\
+  \ welcome_back\nquestion: |\n  Welcome back!\nsubquestion: |\n  You are currently\
+  \ in the\n  **${ nav.get_section(display=True) }**\n  section.\n\n  ${ nav }\n\n\
+  \  Press \"Continue\" to pick up\n  where you left off.\nbuttons:\n  Continue: continue\n\
+  ---\nevent: road_map\nquestion: |\n  Roadmap\nsubquestion: |\n  You are currently\
+  \ in the\n  **${ nav.get_section(display=True) }**\n  section.\n\n  ${ nav }\n\n\
+  \  Press \"Continue\" to resume the\n  interview.\nbuttons:\n  Continue: continue"
 "sections-keywords": "sections:\n  - intro: Introduction\n  - about: About you\n \
   \   subsections:\n      - contact: Contact info\n      - demographic: Demographics\n\
   \  - prefs: Preferences\n  - conclusion: Conclusion\n---\nfeatures:\n  navigation:\
@@ -7719,7 +7741,7 @@
     For which of the following obscure
     candidates do you wish to vote?
   fields:
-    - Type: candidate
+    - Candidate: candidate
       datatype: radio
       shuffle: True
       choices:
@@ -7816,8 +7838,8 @@
     Sorry to hear that!
     % endif
 "someone-already-mentioned-bad": |-
-  import:
-    - .change_suffix
+  imports:
+    - docassemble.demo.change_suffix
 "someone-already-mentioned2": |-
   mandatory: True
   objects:
@@ -8299,9 +8321,6 @@
   fields:
     - First Name: x[i].name.first
     - Last Name: x[i].name.last
-"testmessage": |-
-  modules:
-    - docassemble.base.util
 "text-box-field": |-
   question: |
     Tell me the story of your life.
@@ -8586,11 +8605,11 @@
   mandatory: True
 "variables_as_json": "mandatory: True\ncode: |\n  multi_user = True\n---\nevent: query_variables\n\
   code: |\n  variables_as_json()\n---\nmandatory: True\nquestion: |\n  You currently\
-  \ have\n  ${ nice_number(number_of_slices) }\n  ${ noun_plural('slice', number_of_slices)\
+  \ have\n  ${ nice_number(number_of_pieces) }\n  ${ noun_plural('piece', number_of_pieces)\
   \ }\n  of\n  ${ noun_singular(favorite_fruit) }.\nsubquestion: |\n  Use\n  [this\
   \ link](${ interview_url_action('query_variables') })\n  to query the information\
   \ from\n  another application.\n\n  You can also change the \n  [fruit](${ url_action('favorite_fruit')\
-  \ })\n  and the\n  [number of slices](${ url_action('number_of_slices') })."
+  \ })\n  and the\n  [number of pieces](${ url_action('number_of_pieces') })."
 "video": |-
   field: ready_to_proceed
   question: |
@@ -9108,10 +9127,9 @@
   code: |
     need(welcome_screen, map_shown)
   ---
-  sets: map_shown
+  event: map_shown
   question: Map of you and your enemy
-  field: foobar
-  under: |
+  subquestion: |
     ${ map_of(user, enemy) }
 "validation-code": |-
   question: |

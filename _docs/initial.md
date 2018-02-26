@@ -686,6 +686,28 @@ Note that the section list is not shown on small devices, such as
 smartphones.  To show a smartphone user a list of sections, you can
 use the [`nav.show_sections()`] function.
 
+## <a name="question back button"></a><a name="navigation back button"></a>Back button style
+
+By default, there is a "Back" button located in the upper-left corner
+of the page.  (However, the "Back" button is not present when the user
+is on the first page of an interview, or the [`prevent_going_back()`]
+function has been used, or the [`prevent going back`] modifier is in
+use.)
+
+Whether this back button is present can be controlled using the
+`navigation back button` feature.  This will hide the "Back" button:
+
+{% highlight yaml %}
+features:
+  navigation back button: False
+{% endhighlight %}
+
+You can also place a "Back" button inside the body of a question, next
+to the other buttons on the screen, by setting the `question back button`
+feature to `True` (the default is `False`).
+
+{% include side-by-side.html demo="question-back-button" %}
+
 ## <a name="hide standard menu"></a>Hiding the standard menu items
 
 By default, the menu in the corner provides logged-in users with the
@@ -1032,3 +1054,5 @@ features:
 [`menu_items` special variable]: {{ site.baseurl}}/docs/special.html#menu_items
 [background tasks]: {{ site.baseurl}}/docs/background.html#background
 [`word()`]: {{ site.baseurl}}/docs/functions.html#word
+[`prevent_going_back()`]: {{ site.baseurl}}/docs/functions.html#prevent_going_back
+[`prevent going back`]: {{ site.baseurl}}/docs/modifiers.html#prevent going back

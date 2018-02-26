@@ -61,6 +61,8 @@ variable.  If you don't, it is as if you are referring to the variable.
 The `value()` function returns the value of a variable, where the name
 of the variable is given as a string.
 
+{% include side-by-side.html demo="value" %}
+
 These two code blocks effectively do the exact same thing:
 
 {% highlight yaml %}
@@ -79,9 +81,26 @@ code: |
 
 Note that `value(meaning_of_life)` and `value("meaning_of_life")` are
 entirely different.  The first will treat the value of the
-`meaning_of_life` variable as a variable name.  So if
-`meaning_of_life` is "chocolate," `value(meaning_of_life)` will
+`meaning_of_life` variable as a variable name.  So if you set
+`meaning_of_life = 'chocolate'`, then `value(meaning_of_life)` will
 attempt to find the value of the variable `chocolate`.
+
+## <a name="define"></a>define()
+
+The `define()` function defines a variable.  The first argument is the
+name of the variable (as a string) and the second argument is the
+value you want the variable to have.  Running
+`define('meaning_of_life', 42)` has the same effect as running
+`meaning_of_life = 42`.
+
+{% include side-by-side.html demo="define" %}
+
+Note that the second argument is the value itself.  If you wanted to
+do the equivalent of `my_favorite_fruit = your_favorite_fruit`, it
+would be incorrect to do `define('my_favorite_fruit',
+'your_favorite_fruit')`; you should instead do
+`define('my_favorite_fruit', your_favorite_fruit)` or
+`define('my_favorite_fruit', value('your_favorite_fruit'))`.
 
 ## <a name="undefine"></a>undefine()
 

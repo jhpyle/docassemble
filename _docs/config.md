@@ -441,7 +441,7 @@ mimics the style of the standard start page:
 
 {% include side-by-side.html demo="list-interview" %}
 
-## <a name="global css"></a><a name="global javascript"></a>CSS and Javascript customization
+## <a name="global css"></a><a name="global javascript"></a><a name="raw global css"></a><a name="raw global javascript"></a>CSS and Javascript customization
 
 You can use the [`javascript` features setting] and the
 [`css` features setting] to modify the [Javascript] and [CSS] for a
@@ -468,8 +468,34 @@ global css:
   - docassemble.midwest:data/static/look_and_feel.css
 {% endhighlight %}
 
+You can also refer to files on the internet:
+
+{% highlight yaml %}
+global css: https://example.com/css/site_style.css
+global javascript: https://example.com/js/tracker.js
+{% endhighlight %}
+
 These [Javascript] and [CSS] files are loaded after the other
 [Javascript] and [CSS] files on the page.
+
+Note that the [`global css`] and [`global javascript`] directives can
+only refer to file names; if you want to write raw `<link>`, `<meta>`,
+or `<script>` content, you can use the `raw global css` and `raw
+global javascript` directives:
+
+{% highlight yaml %}
+raw global css: |
+  <meta property="og:title" content="Child Custody Interview" />
+raw global javascript: |
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-77777777-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+{% endhighlight %}
 
 ## <a name="bootstrap theme"></a>Bootstrap theme
 
@@ -1141,6 +1167,16 @@ can set the `retype password` directive to `False`.
 
 {% highlight yaml %}
 retype password: False
+{% endhighlight %}
+
+## <a name="enable remember me"></a>Controlling whether the "remember me" feature is available
+
+By default, users can click the "Remember me" checkbox when they log
+in, so that they do not have to log in when they come back to the
+site.  To disable this feature, set `enable remember me` to `False`.
+
+{% highlight yaml %}
+enable remember me: False
 {% endhighlight %}
 
 ## <a name="password complexity"></a>Controlling password complexity
@@ -2385,3 +2421,4 @@ and Facebook API keys.
 [check in]: {{ site.baseurl }}/docs/background.html#check in
 [SMTP]: https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol
 [HTTP]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
+[JSON]: https://en.wikipedia.org/wiki/JSON

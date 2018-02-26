@@ -4,7 +4,25 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.2.28](https://github.com/jhpyle/docassemble/releases/tag/v0.2.28) - 
+## [0.2.29](https://github.com/jhpyle/docassemble/releases/tag/v0.2.29) - 2018-02-25
+
+### Added
+- The `define()` function.
+- The features `question back button` and `navigation back button`.
+- The `raw global css` and `raw global javascript` configuration
+  directives.
+
+### Changed
+- Main content block for page is now centered on desktop.
+
+### Fixed
+- Problem with calling background action from code triggered by the API.
+- Problem with including a table while gathering the rows of the table.
+
+## [0.2.28](https://github.com/jhpyle/docassemble/releases/tag/v0.2.28) - 2018-02-08
+
+### Added
+- The `enable remember me` configuration directive.
 
 ### Changed
 - The `repr()` of a `DAList`, `DADict`, or `DASet` is the `repr()` of
@@ -14,8 +32,9 @@ short_title: Change Log
 
 ### Fixed
 - Problem with `exclude` on a manual list of choices.
-- Lack of curly quote in "I don't know" button.
-- JavaScript error affecting `hide if` functionality, introduced in 0.2.23.
+- Lack of curly quote in "I don't know" buttons.
+- JavaScript error introduced in 0.2.23 that interfered with `hide if`
+  functionality.
 
 ## [0.2.27](https://github.com/jhpyle/docassemble/releases/tag/v0.2.27) - 2018-01-31
 

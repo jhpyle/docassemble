@@ -27,20 +27,20 @@ objects:
 question: |
   Who is the first party?
 fields:
-  First Name: first_party.name.first
-  Last Name: first_party.name.last
+  - First Name: first_party.name.first
+  - Last Name: first_party.name.last
 ---
 question: |
   Who is the second party?
 fields:
-  First Name: second_party.name.first
-  Last Name: second_party.name.last
+  - First Name: second_party.name.first
+  - Last Name: second_party.name.last
 ---
 question: |
   Who is the third party?
 fields:
-  First Name: third_party.name.first
-  Last Name: third_party.name.last
+  - First Name: third_party.name.first
+  - Last Name: third_party.name.last
 ---
 {% endhighlight %}
 
