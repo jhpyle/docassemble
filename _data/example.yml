@@ -7357,7 +7357,7 @@
     <script>
       setTimeout(function(){
         $("#beg").html("Pretty please?");
-      }, 1000);
+      }, 3000);
     </script>
 "sections": "sections:\n  - Introduction\n  - About you:\n    - Contact info\n   \
   \ - Demographics\n  - Preferences\n  - Conclusion\n---\nfeatures:\n  navigation:\
