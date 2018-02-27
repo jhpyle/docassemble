@@ -504,7 +504,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     datatypes = dict()
     varnames = dict()
     onchange = list()
-    autocomplete_id = False    
+    autocomplete_id = False
+    if status.question.interview.use_navigation:
+        grid_class = "col-lg-6 col-md-9 col-sm-9"
+    else:
+        grid_class = "col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10"
     if 'script' in status.extras and status.extras['script'] is not None:
         status.extra_scripts.append(status.extras['script'])
     if 'css' in status.extras and status.extras['css'] is not None:
@@ -559,7 +563,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     else:
         decoration_text = ''
     master_output = ""
-    master_output += '          <section role="tabpanel" id="question" class="tab-pane active col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10">\n'
+    master_output += '          <section role="tabpanel" id="question" class="tab-pane active ' + grid_class + '">\n'
     output = ""
     if the_progress_bar:
         if status.question.question_type == "signature":
@@ -840,22 +844,26 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                             validation_rules['messages'][the_saveas][key] = word("You cannot type more than") + " " + str(status.extras[key][field.number]) + " " + word("characters")
             if hasattr(field, 'datatype'):
                 if field.datatype in ('checkboxes', 'object_checkboxes') and hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
-                    #validation_rules['rules'][the_saveas]['checkboxgroup'] = dict(name=the_saveas, foobar=2)
-                    #validation_rules['messages'][the_saveas]['checkboxgroup'] = word("You need to select one.")
-                    if 'groups' not in validation_rules:
-                        validation_rules['groups'] = dict()
-                    if field.choicetype in ['compute', 'manual']:
-                        pairlist = list(status.selectcompute[field.number])
-                    else:
-                        raise Exception("Unknown choicetype " + field.choicetype)
-                    name_list = [safeid(from_safeid(the_saveas) + "[" + myb64quote(pairlist[indexno]['key']) + "]") for indexno in range(len(pairlist))]
-                    for the_name in name_list:
-                        validation_rules['rules'][the_name] = dict(require_from_group=[1, '.dafield' + str(field.number)])
-                        validation_rules['messages'][the_name] = dict(require_from_group=word("Please select one."))
-                    validation_rules['rules']['_ignore' + str(field.number)] = dict(require_from_group=[1, '.dafield' + str(field.number)])
-                    validation_rules['messages']['_ignore' + str(field.number)] = dict(require_from_group=word("Please select one."))
-                    validation_rules['groups'][the_saveas] = " ".join(name_list + ['_ignore' + str(field.number)])
+                    validation_rules['rules']['_ignore' + str(field.number)] = dict(checkbox=[str(field.number)])
+                    #validation_rules['messages']['_ignore' + str(field.number)] = dict(checkbox=word("Please select one."))
                     validation_rules['ignore'] = None
+                # if field.datatype in ('checkboxes', 'object_checkboxes') and hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
+                #     #validation_rules['rules'][the_saveas]['checkboxgroup'] = dict(name=the_saveas, foobar=2)
+                #     #validation_rules['messages'][the_saveas]['checkboxgroup'] = word("You need to select one.")
+                #     if 'groups' not in validation_rules:
+                #         validation_rules['groups'] = dict()
+                #     if field.choicetype in ['compute', 'manual']:
+                #         pairlist = list(status.selectcompute[field.number])
+                #     else:
+                #         raise Exception("Unknown choicetype " + field.choicetype)
+                #     name_list = [safeid(from_safeid(the_saveas) + "[" + myb64quote(pairlist[indexno]['key']) + "]") for indexno in range(len(pairlist))]
+                #     for the_name in name_list:
+                #         validation_rules['rules'][the_name] = dict(require_from_group=[1, '.dafield' + str(field.number)])
+                #         validation_rules['messages'][the_name] = dict(require_from_group=word("Please select one."))
+                #     validation_rules['rules']['_ignore' + str(field.number)] = dict(require_from_group=[1, '.dafield' + str(field.number)])
+                #     validation_rules['messages']['_ignore' + str(field.number)] = dict(require_from_group=word("Please select one."))
+                #     validation_rules['groups'][the_saveas] = " ".join(name_list + ['_ignore' + str(field.number)])
+                #     validation_rules['ignore'] = None
                 if hasattr(field, 'inputtype') and field.inputtype in ['yesnoradio', 'noyesradio']:
                     validation_rules['ignore'] = None
                 if field.datatype in ['radio', 'object_radio']:
@@ -1335,7 +1343,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         status.screen_reader_text['question'] = unicode(output)
     master_output += output
     master_output += '          </section>\n'
-    master_output += '          <section role="tabpanel" id="help" class="tab-pane col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10">\n'
+    master_output += '          <section role="tabpanel" id="help" class="tab-pane ' + grid_class + '">\n'
     output = '<div><a id="backToQuestion" data-toggle="tab" data-target="#question" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
     output += """
 <div id="daPhoneMessage" class="row invisible">
@@ -1593,6 +1601,17 @@ def add_validation(extra_scripts, validation_rules, field_error):
       return false;
     }
   }, """ + json.dumps(word("Please check at least one.")) + """);
+  $.validator.addMethod('checkbox', function(value, element, params){
+    if ($(element).attr('name') != '_ignore' + params[0]){
+      return true;
+    }
+    if ($('.dafield' + params[0] + ':checked').length > 0){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }, """ + json.dumps(word("Please select one.")) + """);
   validation_rules.submitHandler = daValidationHandler;
   if ($("#daform").length > 0){
     //console.log("Running validator")

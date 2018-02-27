@@ -140,30 +140,36 @@ input.labelauty[disabled] + label
 /* Add a background to (un)checked images */
 input.labelauty + label > span.labelauty-unchecked-image
 {
-	background-image: url( images/input-unchecked.png );
+    background-image: url( images/input-unchecked.png );
+    background-size: 16px 16px;
 }
 
 input.labelauty + label > span.labelauty-checked-image
 {
-	background-image: url( images/input-checked.png );
+    background-image: url( images/input-checked.svg );
+    background-size: 16px 16px;
 }
 
 input.labelauty.checkbox-icon + label > span.labelauty-unchecked-image
 {
-	background-image: url( images/checkbox-unchecked.png );
+    background-image: url( images/checkbox-unchecked.svg );
+    background-size: 16px 16px;
 }
 
 input.labelauty.checkbox-icon + label > span.labelauty-checked-image
 {
-	background-image: url( images/checkbox-checked.png );
+    background-image: url( images/checkbox-checked.svg );
+    background-size: 16px 16px;
 }
 
 input.labelauty.radio-icon + label > span.labelauty-unchecked-image
 {
-	background-image: url( images/radio-unchecked.png );
+    background-image: url( images/radio-unchecked.svg );
+    background-size: 16px 16px;
 }
 
 input.labelauty.radio-icon + label > span.labelauty-checked-image
 {
-	background-image: url( images/radio-checked.png );
+    background-image: url( images/radio-checked.svg );
+    background-size: 16px 16px;
 }

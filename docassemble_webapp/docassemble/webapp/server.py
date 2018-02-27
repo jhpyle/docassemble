@@ -1538,7 +1538,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_ul_class=None, show_links
             the_section = the_sections[0]
     max_section = the_section
     if wrapper:
-        output = '<div role="navigation" class="col-sm-3 col-md-3 col-lg-2 hidden-xs danavdiv">' + "\n" + '  <ul class="nav nav-pills nav-stacked danav">' + "\n"
+        output = '<div role="navigation" class="col-lg-offset-2 col-lg-2 col-md-3 col-sm-3 hidden-xs danavdiv">' + "\n" + '  <ul class="nav nav-pills nav-stacked danav">' + "\n"
     else:
         output = ''
     section_reached = False
@@ -5369,12 +5369,12 @@ def index():
       }
       preloadImage('""" + str(url_for('static', filename='app/loader.gif')) + """');
       preloadImage('""" + str(url_for('static', filename='app/chat.ico')) + """');
-      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/checkbox-unchecked.png')) + """');
-      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/input-unchecked.png')) + """');
-      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/checkbox-checked.png')) + """');
-      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/input-checked.png')) + """');
-      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/radio-unchecked.png')) + """');
-      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/radio-checked.png')) + """');
+      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/checkbox-unchecked.svg')) + """');
+      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/input-unchecked.svg')) + """');
+      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/checkbox-checked.svg')) + """');
+      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/input-checked.svg')) + """');
+      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/radio-unchecked.svg')) + """');
+      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/radio-checked.svg')) + """');
       preloadImage('""" + str(url_for('static', filename='bootstrap-fileinput/img/loading-sm.gif')) + """');
       preloadImage('""" + str(url_for('static', filename='bootstrap-fileinput/img/loading.gif')) + """');
       function show_help_tab(){
@@ -6485,7 +6485,7 @@ def index():
       }
       function showSpinner(){
         if ($("#question").length > 0){
-          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10"><img class="da-spinner" src=""" + '"' + str(url_for('static', filename='app/loader.gif')) + '"' + """></div></div></div></div>').appendTo("body");
+          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-centered"><img class="da-spinner" src=""" + '"' + str(url_for('static', filename='app/loader.gif')) + '"' + """></div></div></div></div>').appendTo("body");
         }
         else{
           var newImg = document.createElement('img');

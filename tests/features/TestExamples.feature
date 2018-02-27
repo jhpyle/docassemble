@@ -3550,7 +3550,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/script.yml"
     Then I should see the phrase "Do you want to build a snowman?"
     And I should not see the phrase "Pretty please?"
-    And I wait 2 seconds
+    And I wait 4 seconds
     Then I should see the phrase "Pretty please?"
     And I click the button "Yes"
     Then I should see the phrase "Great! Too bad there is no snow."

@@ -2952,7 +2952,7 @@ class Question:
                     except:
                         if hasattr(field, 'default'):
                             if isinstance(field.default, TextObject):
-                                defaults[field.number] = field.default.text(user_dict)
+                                defaults[field.number] = field.default.text(user_dict).strip()
                             else:
                                 defaults[field.number] = field.default
                         elif hasattr(field, 'extras') and 'default' in field.extras:

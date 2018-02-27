@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.30] - 2018-02-27
+### Changed
+- SVG instead of PNG for images in checkboxes and radio buttons.
+### Fixed
+- Page layout when side navigation bar in use.
+- Slow submit time when many checkboxes are used.
+
 ## [0.2.29] - 2018-02-25
 ### Added
 - The `define()` function.

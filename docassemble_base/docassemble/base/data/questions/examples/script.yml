@@ -13,7 +13,7 @@ script: |
   <script>
     setTimeout(function(){
       $("#beg").html("Pretty please?");
-    }, 1000);
+    }, 3000);
   </script>
 ---
 mandatory: True
