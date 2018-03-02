@@ -4079,7 +4079,7 @@ The first argument, which is required, is the name of the module.
 This can be expressed in a few ways.  If it is the name of a file
 ending in .py, it is assumed to be a module in the same package as the
 interview file.  Or, if you are using the [Playground], it is assumed
-to be a file in the [Modules folder].  The module file is executed as
+to be a file in the [modules folder].  The module file is executed as
 you would execute a module file by using `python modulename.py` from
 the command line.  If the first argument is the name of a module, that
 module will be run, much as you would execute a module by using `python
@@ -4716,6 +4716,89 @@ modules:
 ---
 {% endhighlight %}
 
+# <a name="google sheets example"></a>Example module: using Google Sheets
+
+Go to the [Google Developers Console] and create a "service
+account."  Download a [JSON] (not p12) credential file for the service
+account.  Note the e-mail address of the service account.
+
+Go to [Google Sheets], pick a spreadsheet that you want to use, and
+share it with the e-mail address of the service account, just like you
+were sharing it with a real person.
+
+Go to the [Configuration] and create a new configuration directive
+called, e.g., `google docs credentials`.  Set it to the contents of
+the [JSON] file you downloaded.  The directive will look something
+like this:
+
+{% highlight yaml %}
+google docs credentials: |
+  {
+    "type": "service_account",
+    "project_id": "redacted",
+    "private_key_id": "redacted",
+    "private_key": "-----BEGIN PRIVATE KEY-----REDACTED-----END PRIVATE KEY-----\n",
+    "client_email": "googledocs@redacted.iam.gserviceaccount.com",
+    "client_id": "redacted",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://accounts.google.com/o/oauth2/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/googledocs%40redacted.iam.gserviceaccount.com"
+  }
+{% endhighlight %}
+
+Next, go to the [modules folder] of the [Playground] and add a new
+module called `google_sheets.py`.  Set the contents to:
+
+{% highlight python %}
+import gspread
+import json
+from docassemble.base.util import get_config
+from oauth2client.service_account import ServiceAccountCredentials
+credential_info = json.loads(get_config('google docs credentials'), strict=False)
+scope = ['https://spreadsheets.google.com/feeds']
+__all__ = ['read_sheet']
+
+def read_sheet(sheet_name, worksheet_index):
+  creds = ServiceAccountCredentials.from_json_keyfile_dict(credential_info, scope)
+  client = gspread.authorize(creds)
+  sheet = client.open(sheet_name).get_worksheet(worksheet_index)
+  return sheet.get_all_records()
+{% endhighlight %}
+
+You might need to change the reference to `'google docs credentials'`
+to something else if you used a different name for the [JSON] crededials
+in your [Configuration].
+
+Go to Package Management and make sure that the `oauth2client`
+and `gspread` packages are installed.  If they are not installed,
+install them from PyPI.
+
+Go to the [Playground] and create an interview that references the
+`google_sheets` module and the `read_sheet` function.
+
+{% highlight yaml %}
+modules:
+  - .google_sheets
+---
+mandatory: True
+question: |
+  List of countries
+subquestion: |
+  % for row in read_sheet("Country Data", 0):
+  * ${ row['name'] } is at ${ row['longitude'] } longitude.
+  % endfor
+{% endhighlight %}
+
+In this example, a Google Sheet called "Country Data" has been shared
+with the "service account" that owns the credentials in `google docs
+credentials`.  The first worksheet in the spreadsheet (index 0)
+contains a table with headings for `name` and `longitude`, among other
+columns.  The `read_sheet` function returns a list of dictionaries
+representing the contents of the table.
+
+For more information, see the documentation for the [gspread] module.
+
 # <a name="javascript"></a>Javascript functions
 
 If you know how to program in [Javascript], you can include
@@ -5129,7 +5212,6 @@ $(document).on('daPageLoad', function(){
 [referer header]: https://en.wikipedia.org/wiki/HTTP_referer
 [`exitpage`]: {{ site.baseurl }}/docs/config.html#exitpage
 [JSON interface]: {{ site.baseurl }}/docs/frontend.html
-[Modules folder]: {{ site.baseurl }}/docs/playground.html#modules
 [`hello.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/hello.py
 [relative module name]: https://docs.python.org/2.5/whatsnew/pep-328.html
 [`unittest` framework]: https://docs.python.org/2/library/unittest.html
@@ -5209,3 +5291,6 @@ $(document).on('daPageLoad', function(){
 [`.set_attributes()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_attributes
 [`datetime.time`]: https://docs.python.org/2/library/datetime.html#datetime.time
 [thread-safe]: https://en.wikipedia.org/wiki/Thread_safety
+[gspread]: https://gspread.readthedocs.io/en/latest/
+[Google Developers Console]: https://console.developers.google.com/
+[Google Sheets]: https://sheets.google.com
