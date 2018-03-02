@@ -756,7 +756,10 @@ enabled:
 
 {% include side-by-side.html demo="question-help-button" %}
 
-Note that when a "label"
+Note that when `question help button` is enabled, the label for the
+help tab in the navigation bar always defaults to "Help" or to the
+`label` of the [`interview help`], and it is not highlighted yellow
+when question-specific help is available.
 
 ## <a name="hide standard menu"></a>Hiding the standard menu items
 
