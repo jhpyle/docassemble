@@ -1,15 +1,15 @@
 # Change Log
 
-## [0.2.31] - 2018-03-01
+## [0.2.31] - 2018-03-02
 ### Added
 - Configuration directives `use font awesome` and `default icons`.
 - CSS support for Material Icons.
 - The `question help button` feature.
 - Ability to `label` the help tab.
 ### Fixed
-- Error when reviving SMS session where answers had been deleted
-- Bugs when delivering media files using SMS interface.
 - Reference to non-existent image file during image preloading.
+- Error when reviving SMS session for which answers had been deleted.
+- SMS interface bugs related to signatures and attachments.
 
 ## [0.2.30] - 2018-02-27
 ### Changed

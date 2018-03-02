@@ -25,5 +25,5 @@ question: |
 subquestion: |
   You are seeking
   ${ currency(damages_sought) }
-  in damages
+  in damages.
 mandatory: True
