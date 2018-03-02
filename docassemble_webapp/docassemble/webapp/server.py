@@ -14616,9 +14616,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 temp_image_file = tempfile.NamedTemporaryFile(suffix='.' + extension)
                 image = Image.new("RGBA", (200, 50))
                 image.save(temp_image_file.name, 'PNG')
-                saved_file = save_numbered_file(filename, temp_image_file.name, yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
+                (file_number, extension, mimetype) = save_numbered_file(filename, temp_image_file.name, yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
                 if inp_lower == word('x'):
-                    the_string = saveas + " = docassemble.base.core.DAFile('" + saveas + "', filename='" + str(filename) + "', number=" + str(saved_file.file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+                    the_string = saveas + " = docassemble.base.core.DAFile('" + saveas + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
                     logmessage("do_sms: doing import docassemble.base.core")
                     logmessage("do_sms: doing signature: " + the_string)
                     try:
