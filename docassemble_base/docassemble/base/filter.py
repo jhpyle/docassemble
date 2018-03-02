@@ -28,7 +28,7 @@ noquote_match = re.compile(r'"')
 lt_match = re.compile(r'<')
 gt_match = re.compile(r'>')
 amp_match = re.compile(r'&')
-emoji_match = re.compile(r':([^ ]+):')
+emoji_match = re.compile(r':([^\s]+):')
 extension_match = re.compile(r'\.[a-z]+$')
 map_match = re.compile(r'\[MAP ([^\]]+)\]', flags=re.DOTALL)
 code_match = re.compile(r'<code>')
@@ -506,7 +506,7 @@ def pdf_filter(text, metadata=None, question=None):
     text = re.sub(r'\[BORDER\] *(.+?)\n *\n', border_pdf, text, flags=re.MULTILINE | re.DOTALL)
     return(text)
 
-def html_filter(text, status=None, question=None, embedder=None):
+def html_filter(text, status=None, question=None, embedder=None, default_image_width=None):
     if question is None and status is not None:
         question = status.question
     text = text + "\n\n"
@@ -519,7 +519,7 @@ def html_filter(text, status=None, question=None, embedder=None):
     text = re.sub(r'\[TARGET ([^\]]+)\]', target_html, text)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, emoji=True, question=question), text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, question=question), text)
-    text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_url_string(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_url_string(x, question=question, default_image_width=default_image_width), text)
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_url_string, text)
     text = re.sub(r'\[QR ([^,\]]+)\]', qr_url_string, text)
     if map_match.search(text):
@@ -834,12 +834,15 @@ def pixels_in(length):
     logmessage("Could not read " + str(length) + "\n")
     return(300)
 
-def image_url_string(match, emoji=False, question=None, playground=False):
+def image_url_string(match, emoji=False, question=None, playground=False, default_image_width=None):
     file_reference = match.group(1)
     try:
         width = match.group(2)
     except:
-        width = "300px"
+        if default_image_width is not None:
+            width = default_image_width
+        else:
+            width = "300px"
     if width == "full":
         width = "300px"    
     file_info = server.file_finder(file_reference, question=question)
@@ -1022,14 +1025,19 @@ def rtf_two_col(match):
     return table_text + '[MANUALSKIP]'
 
 def emoji_html(text, status=None, images=None):
+    #logmessage("Got to emoji_html")
     if images is None:
         images = status.question.interview.images
     if text in images:
         if status is not None and images[text].attribution is not None:
             status.attributions.add(images[text].attribution)
         return("[EMOJI " + images[text].get_reference() + ', 1em]')
-    else:
-        return(":" + str(text) + ":")
+    icons_setting = docassemble.base.functions.get_config('default icons', None)
+    if icons_setting == 'font awesome':
+        return('<i class="' + docassemble.base.functions.get_config('font awesome prefix', 'fas') + ' fa-' + str(text) + '"></i>')
+    elif icons_setting == 'material icons':
+        return('<i class="material-icons">' + str(text) + '</i>')
+    return(":" + str(text) + ":")
 
 def emoji_insert(text, status=None, images=None):
     if images is None:
@@ -1061,7 +1069,7 @@ def link_rewriter(m, status):
     status.linkcounter += 1
     return '<a data-linknum="' + str(status.linkcounter) + '" ' + action_data + target + js_data + 'href="' + m.group(1) + '"'
 
-def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None, divclass=None, embedder=None):
+def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None, divclass=None, embedder=None, default_image_width=None):
     a = unicode(a)
     if question is None and status is not None:
         question = status.question
@@ -1084,9 +1092,9 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
                     #logmessage("Searching for term " + term + " in " + a + "\n")
                     a = question.interview.autoterms[question.language][term]['re'].sub(r'[[\1]]', a)
                     #logmessage("string is now " + str(a) + "\n")
-    if status is not None and len(question.interview.images) > 0:
+    if status is not None and question.interview.scan_for_emojis:
         a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status)), a)
-    a = html_filter(unicode(a), status=status, question=question, embedder=embedder)
+    a = html_filter(unicode(a), status=status, question=question, embedder=embedder, default_image_width=default_image_width)
     #logmessage("before: " + a)
     if use_pandoc:
         converter = MyPandoc()
@@ -1145,7 +1153,7 @@ def noquote(string):
 def add_terms(termname, terms, status=None):
     lower_termname = termname.lower()
     if lower_termname in terms:
-        return('<a class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, do_terms=False, status=status)) + '>' + unicode(termname) + '</a>')
+        return('<a class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, default_image_width='100%', do_terms=False, status=status)) + '>' + unicode(termname) + '</a>')
     else:
         #logmessage(lower_termname + " is not in terms dictionary\n")
         return '[[' + termname + ']]'

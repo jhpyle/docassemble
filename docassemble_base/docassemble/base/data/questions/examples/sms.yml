@@ -22,4 +22,6 @@ question: |
   % else:
   Sorry to hear that!
   % endif
-
+attachment:
+  content: |
+    Hello world!

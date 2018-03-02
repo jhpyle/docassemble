@@ -1,0 +1,14 @@
+metadata:
+  title: Material icons
+  documentation: "https://docassemble.org/docs/config.html#material icons"
+  example start: 1
+  example end: 1
+---
+mandatory: True
+decoration: portrait
+question: |
+  Eligibility
+subquestion: |
+  You are eligible for :local_hospital:
+  health insurance for yourself and
+  your :child_care: children.

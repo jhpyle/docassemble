@@ -250,6 +250,8 @@ def load(**kwargs):
         elif daconfig['checkin interval'] > 0 and daconfig['checkin interval'] < 1000:
             sys.stderr.write("checkin interval must be at least 1000, if not 0.\n")
             del daconfig['checkin interval']
+    if daconfig.get('default icons', None) == 'font awesome':
+        daconfig['use font awesome'] = True
     if 'mail' not in daconfig:
         daconfig['mail'] = dict()
     if 'dispatch' not in daconfig:

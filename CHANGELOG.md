@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.2.31] - 2018-03-01
+### Added
+- Configuration directives `use font awesome` and `default icons`.
+- CSS support for Material Icons.
+- The `question help button` feature.
+- Ability to `label` the help tab.
+### Fixed
+- Error when reviving SMS session where answers had been deleted
+- Bugs when delivering media files using SMS interface.
+- Reference to non-existent image file during image preloading.
+
 ## [0.2.30] - 2018-02-27
 ### Changed
 - SVG instead of PNG for images in checkboxes and radio buttons.

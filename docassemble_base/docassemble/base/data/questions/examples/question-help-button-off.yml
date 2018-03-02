@@ -1,0 +1,55 @@
+metadata:
+  title: Question help button enabled
+  short title: Help button
+  documentation: "https://docassemble.org/docs/initial.html#question help button"
+  example start: 1
+  example end: 5
+---
+features:
+  question help button: False
+---
+interview help:
+  label: More info
+  heading: About this interview
+  content: |
+    This is an interview about fruit.
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+help:
+  label: Huh?
+  heading: What is a fruit?
+  content: |
+    A fruit is a fleshy edible
+    part of a plant that has
+    seeds.
+---
+question: |
+  What is your favorite color?
+fields:
+  - Color: favorite_color
+help:
+  heading: What is a color?
+  content: |
+    Every photon has a frequency, which
+    determines its color.
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Vegetable: favorite_vegetable
+---
+mandatory: True
+question: All done
+subquestion: |
+  Your favorite fruit is
+  ${ favorite_fruit }.
+
+  Your favorite color is
+  ${ favorite_color }.
+
+  Your favorite vegetable is
+  ${ favorite_vegetable }.
+  

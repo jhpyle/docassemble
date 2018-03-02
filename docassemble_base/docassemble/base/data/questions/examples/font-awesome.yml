@@ -1,0 +1,15 @@
+metadata:
+  title: Font Awesome
+  documentation: "https://docassemble.org/docs/config.html#font awesome"
+  example start: 1
+  example end: 1
+---
+mandatory: True
+decoration: chart-bar
+question: |
+  Third quarter metrics
+subquestion: |
+  We are making more money than we
+  did in the second quarter.
+
+  So you can sleep well tonight! :bed:

@@ -361,7 +361,7 @@ class InterviewStatus(object):
         self.tracker = tracker
     def as_data(self, encode=True):
         result = dict()
-        for param in ('questionText', 'subquestionText', 'underText', 'continueLabel'):
+        for param in ('questionText', 'subquestionText', 'underText', 'continueLabel', 'helpLabel'):
             if hasattr(self, param) and getattr(self, param) is not None:
                 result[param] = getattr(self, param).rstrip()
         if hasattr(self, 'audiovideo') and self.audiovideo is not None:
@@ -408,6 +408,9 @@ class InterviewStatus(object):
                         if the_url is not None and the_image.attribution is not None:
                             result['decoration_url'] = the_url
                             self.attributions.add(the_image.attribution)
+                        break
+                    elif get_config('default icons', None) in ('material icons', 'font awesome'):
+                        result['decoration_name'] = decoration['image']
                         break
         if len(self.attachments) > 0:
             result['attachments'] = list()
@@ -903,6 +906,7 @@ class Question:
         self.reload_after = None
         self.undertext = None
         self.continuelabel = None
+        self.helplabel = None
         self.progress = None
         self.section = None
         self.script = None
@@ -938,6 +942,8 @@ class Question:
                 self.interview.use_progress_bar = True if data['features']['progress bar'] else False
             if 'question back button' in data['features']:
                 self.interview.question_back_button = True if data['features']['question back button'] else False
+            if 'question help button' in data['features']:
+                self.interview.question_help_button = True if data['features']['question help button'] else False
             if 'navigation back button' in data['features']:
                 self.interview.navigation_back_button = True if data['features']['navigation back button'] else False
             if 'go full screen' in data['features'] and data['features']['go full screen']:
@@ -1263,6 +1269,8 @@ class Question:
             elif type(data['interview help']) is not dict:
                 data['interview help'] = {'content': unicode(data['interview help'])}
             audiovideo = list()
+            if 'label' in data['interview help']:
+                data['interview help']['label'] = unicode(data['interview help']['label'])
             if 'audio' in data['interview help']:
                 if type(data['interview help']['audio']) is not list:
                     the_list = [data['interview help']['audio']]
@@ -1298,9 +1306,16 @@ class Question:
                     raise DAError("Help content must be text, not a list or a dictionary." + self.idebug(data))
             else:
                 raise DAError("No content section was found in an interview help section." + self.idebug(data))
+            if 'label' in data['interview help']:
+                if type(data['interview help']['label']) not in (dict, list):
+                    help_label = TextObject(definitions + unicode(data['interview help']['label']), names_used=self.mako_names)
+                else:
+                    raise DAError("Help label must be text, not a list or a dictionary." + self.idebug(data))
+            else:
+                help_label = None
             if self.language not in self.interview.helptext:
                 self.interview.helptext[self.language] = list()
-            self.interview.helptext[self.language].append({'content': help_content, 'heading': help_heading, 'audiovideo': audiovideo})
+            self.interview.helptext[self.language].append({'content': help_content, 'heading': help_heading, 'audiovideo': audiovideo, 'label': help_label, 'from': 'interview'})
         if 'generic object' in data:
             self.is_generic = True
             #self.is_generic_list = False
@@ -1558,6 +1573,8 @@ class Question:
         if 'help' in data:
             if type(data['help']) is dict:
                 for key, value in data['help'].iteritems():
+                    if key == 'label':
+                        self.helplabel = TextObject(definitions + unicode(value), names_used=self.mako_names)
                     if key == 'audio':
                         if type(value) is not list:
                             the_list = [value]
@@ -2328,12 +2345,14 @@ class Question:
                 self.names_used.add(item)
     def yes(self):
         return word("Yes")
-    def back(self):
-        return word("Back")
     def no(self):
         return word("No")
     def maybe(self):
         return word("I don't know")
+    def back(self):
+        return word("Back")
+    def help(self):
+        return word("Help")
     def process_attachment_code(self, sourcecode):
         try:
             self.compute_attachment = compile(sourcecode, '<expression>', 'eval')
@@ -2616,13 +2635,17 @@ class Question:
         else:
             continuelabel = None
         if self.helptext is not None:
+            if self.helplabel is not None:
+                helplabel = self.helplabel.text(user_dict)
+            else:
+                helplabel = None
             if self.audiovideo is not None and 'help' in self.audiovideo:
                 the_audio_video = process_audio_video_list(self.audiovideo['help'], user_dict)
             else:
                 the_audio_video = None
             help_content = self.helptext.text(user_dict)
             if re.search(r'[^\s]', help_content) or the_audio_video is not None:
-                help_text_list = [{'heading': None, 'content': help_content, 'audiovideo': the_audio_video}]
+                help_text_list = [{'heading': None, 'content': help_content, 'audiovideo': the_audio_video, 'label': helplabel, 'from': 'question'}]
             else:
                 help_text_list = list()
         else:
@@ -3573,6 +3596,7 @@ class Interview:
         self.title = None
         self.use_progress_bar = False
         self.question_back_button = False
+        self.question_help_button = False
         self.navigation_back_button = True
         self.force_fullscreen = False
         self.use_pdf_a = get_config('pdf/a', False)
@@ -3747,6 +3771,10 @@ class Interview:
                     self.orderings_by_question[question_b][question_a] = mode
         #logmessage(repr(self.orderings_by_question))
         self.sorter = self.make_sorter()
+        if len(self.images) > 0 or get_config('default icons', None) in ('material icons', 'font awesome'):
+            self.scan_for_emojis = True
+        else:
+            self.scan_for_emojis = False
     def make_sorter(self):
         lookup_dict = self.orderings_by_question
         class K(object):
@@ -3797,6 +3825,11 @@ class Interview:
         if language in self.helptext:
             for source in self.helptext[language]:
                 help_item = dict()
+                help_item['from'] = source['from']
+                if source['label'] is None:
+                    help_item['label'] = None
+                else:
+                    help_item['label'] = source['label'].text(user_dict)
                 if source['heading'] is None:
                     help_item['heading'] = None
                 else:
@@ -4166,7 +4199,7 @@ class Interview:
         docassemble.base.functions.close_files()
         if debug:
             interview_status.seeking.append({'done': True, 'time': time.time()})
-        return(pickleable_objects(user_dict))
+        #return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, old_user_dict, interview_status, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())
         questions_tried = kwargs.get('questions_tried', dict())

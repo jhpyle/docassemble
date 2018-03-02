@@ -1368,6 +1368,8 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootst
     output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/interview.css') + '" rel="stylesheet">'
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
+    if daconfig.get('use font awesome', False):
+        output += '\n    <script defer src="' + url_for('static', filename='fontawesome/js/fontawesome-all.min.js') + '"></script>'
     return output
 
 def process_file(saved_file, orig_file, mimetype, extension, initial=True):
@@ -1753,6 +1755,15 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
           <form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"></form>
 """
     help_message = word("Help is available")
+    help_label = None
+    for help_section in status.helpText:
+        if status.question.interview.question_help_button and help_section['from'] == 'question':
+            continue
+        if help_section['label']:
+            help_label = help_section['label']
+            break
+    if help_label is None:
+        help_label = status.question.help()
     extra_help_message = word("Help is available for this question")
     phone_message = word("Phone help is available")
     chat_message = word("Live chat is available")
@@ -1763,10 +1774,10 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
         source_button = ''
     navbar += '          ' + source_button + '<ul role="tablist" class="nav navbar-nav navbar-tabs mynavbar-right tabbuttons"><li class="invisible"><a id="questionlabel" data-target="#question">' + word('Question') + '</a></li>'
     if len(status.helpText):
-        if status.question.helptext is None:
-            navbar += '<li><a role="tab" class="pointer no-outline" data-target="#help" id="helptoggle" title="' + help_message + '">' + word('Help') + '</a></li>'
+        if status.question.helptext is None or status.question.interview.question_help_button:
+            navbar += '<li><a role="tab" class="pointer no-outline" data-target="#help" id="helptoggle" title="' + help_message + '">' + help_label + '</a></li>'
         else:
-            navbar += '<li><a role="tab" class="pointer no-outline" data-target="#help" id="helptoggle" title="' + extra_help_message + '"><span class="daactivetext">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></span></a></li>'
+            navbar += '<li><a role="tab" class="pointer no-outline" data-target="#help" id="helptoggle" title="' + extra_help_message + '"><span class="daactivetext">' + help_label + ' <i class="glyphicon glyphicon-star"></i></span></a></li>'
     navbar += '<li class="invisible" id="daPhoneAvailable"><a data-target="#help" title="' + phone_message + '" class="pointer navbar-icon"><i class="glyphicon glyphicon-earphone chat-active"></i></a></li><li class="invisible" id="daChatAvailable"><a data-target="#help" title="' + chat_message + '" class="pointer navbar-icon" ><i class="glyphicon glyphicon-comment"></i></a></li></ul>'
     navbar += """
           <a id="pagetitle" class="navbar-brand pointer"><span class="hidden-xs">""" + status.display_title + """</span><span class="visible-xs-block">""" + status.display_short_title + """</span></a>
@@ -5370,7 +5381,7 @@ def index():
       preloadImage('""" + str(url_for('static', filename='app/loader.gif')) + """');
       preloadImage('""" + str(url_for('static', filename='app/chat.ico')) + """');
       preloadImage('""" + str(url_for('static', filename='labelauty/source/images/checkbox-unchecked.svg')) + """');
-      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/input-unchecked.svg')) + """');
+      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/input-unchecked.png')) + """');
       preloadImage('""" + str(url_for('static', filename='labelauty/source/images/checkbox-checked.svg')) + """');
       preloadImage('""" + str(url_for('static', filename='labelauty/source/images/input-checked.svg')) + """');
       preloadImage('""" + str(url_for('static', filename='labelauty/source/images/radio-unchecked.svg')) + """');
@@ -6606,6 +6617,11 @@ def index():
         if (daPhoneAvailable){
           $("#daPhoneAvailable").removeClass("invisible");
         }
+        $("#questionhelpbutton").on('click', function(event){
+          event.preventDefault();
+          $('#helptoggle').tab('show');
+          return false;
+        });
         $("#questionbackbutton").on('click', function(event){
           event.preventDefault();
           $("#backbutton").submit();
@@ -14374,43 +14390,48 @@ def do_sms(form, base_url, url_root, config='default', save=True):
     #logmessage("do_sms: received >" + inp + "<")
     key = 'da:sms:client:' + form["From"] + ':server:' + tconfig['number']
     #logmessage("Searching for " + key)
-    sess_contents = r.get(key)
-    if sess_contents is None:
-        #logmessage("do_sms: received input '" + str(inp) + "' from new user")
-        yaml_filename = tconfig.get('default interview', default_yaml_filename)
-        if 'dispatch' in tconfig and type(tconfig['dispatch']) is dict:
-            if inp.lower() in tconfig['dispatch']:
-                yaml_filename = tconfig['dispatch'][inp.lower()]
-                #logmessage("do_sms: using interview from dispatch: " + str(yaml_filename))
-        if yaml_filename is None:
-            #logmessage("do_sms: request to sms ignored because no interview could be determined")
+    for try_num in (0, 1):
+        sess_contents = r.get(key)
+        if sess_contents is None:
+            #logmessage("do_sms: received input '" + str(inp) + "' from new user")
+            yaml_filename = tconfig.get('default interview', default_yaml_filename)
+            if 'dispatch' in tconfig and type(tconfig['dispatch']) is dict:
+                if inp.lower() in tconfig['dispatch']:
+                    yaml_filename = tconfig['dispatch'][inp.lower()]
+                    #logmessage("do_sms: using interview from dispatch: " + str(yaml_filename))
+            if yaml_filename is None:
+                #logmessage("do_sms: request to sms ignored because no interview could be determined")
+                return resp
+            if (not DEBUG) and (yaml_filename.startswith('docassemble.base') or yaml_filename.startswith('docassemble.demo')):
+                raise Exception("do_sms: not authorized to run interviews in docassemble.base or docassemble.demo")
+            secret = random_string(16)
+            uid = get_unique_name(yaml_filename, secret)
+            new_temp_user = TempUser()
+            db.session.add(new_temp_user)
+            db.session.commit()
+            sess_info = dict(yaml_filename=yaml_filename, uid=uid, secret=secret, number=form["From"], encrypted=True, tempuser=new_temp_user.id, user_id=None)
+            r.set(key, pickle.dumps(sess_info))
+            accepting_input = False
+        else:
+            try:        
+                sess_info = pickle.loads(sess_contents)
+            except:
+                logmessage("do_sms: unable to decode session information")
+                return resp
+            accepting_input = True
+        if inp.lower() in (word('exit'), word('quit')):
+            logmessage("do_sms: exiting")
+            if save:
+                reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
+            r.delete(key)
             return resp
-        if (not DEBUG) and (yaml_filename.startswith('docassemble.base') or yaml_filename.startswith('docassemble.demo')):
-            raise Exception("do_sms: not authorized to run interviews in docassemble.base or docassemble.demo")
-        secret = random_string(16)
-        uid = get_unique_name(yaml_filename, secret)
-        new_temp_user = TempUser()
-        db.session.add(new_temp_user)
-        db.session.commit()
-        sess_info = dict(yaml_filename=yaml_filename, uid=uid, secret=secret, number=form["From"], encrypted=True, tempuser=new_temp_user.id, user_id=None)
-        r.set(key, pickle.dumps(sess_info))
-        accepting_input = False
-    else:
-        try:        
-            sess_info = pickle.loads(sess_contents)
-        except:
-            logmessage("do_sms: unable to decode session information")
-            return resp
-        accepting_input = True
-    if inp.lower() in (word('exit'), word('quit')):
-        logmessage("do_sms: exiting")
-        if save:
-            reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
-        r.delete(key)
-        return resp
-    session['uid'] = sess_info['uid']
-    obtain_lock(sess_info['uid'], sess_info['yaml_filename'])
-    steps, user_dict, is_encrypted = fetch_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
+        session['uid'] = sess_info['uid']
+        obtain_lock(sess_info['uid'], sess_info['yaml_filename'])
+        steps, user_dict, is_encrypted = fetch_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
+        if user_dict is None:
+            r.delete(key)
+            continue
+        break
     encrypted = sess_info['encrypted']
     action = None
     action_performed = False
@@ -15041,9 +15062,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                             break
                         if doc_format not in ('pdf', 'rtf'):
                             continue
-                        filename = attachment['filename'] + '.' + extension_of_doc_format[doc_format]
-                        saved_file = save_numbered_file(filename, attachment['file'][doc_format], yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
-                        url = re.sub(r'/$', r'', url_root) + url_for('serve_stored_file', uid=sess_info['uid'], number=saved_file.file_number, filename=attachment['filename'], extension=extension_of_doc_format[doc_format])
+                        filename = attachment['filename'] + '.' + docassemble.base.parse.extension_of_doc_format[doc_format]
+                        #saved_file = save_numbered_file(filename, attachment['file'][doc_format], yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
+                        url = re.sub(r'/$', r'', url_root) + url_for('serve_stored_file', uid=sess_info['uid'], number=attachment['file'][doc_format], filename=attachment['filename'], extension=docassemble.base.parse.extension_of_doc_format[doc_format])
                         #logmessage('sms: url is ' + str(url))
                         m.media(url)
                         media_count += 1

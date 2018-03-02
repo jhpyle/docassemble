@@ -1,0 +1,32 @@
+metadata:
+  title: Help with question
+  documentation: "https://docassemble.org/docs/modifiers.html#help"
+---
+question: |
+  How much money do you wish
+  to seek in damages?
+fields:
+  - Money: damages_sought
+    datatype: currency
+help:
+  label: |
+    More info
+  content: |
+    If you are not sure how much
+    money to seek in damages, just ask
+    for a million dollars, since you
+    want ${ defendant } to suffer.
+---
+modules:
+  - docassemble.base.util
+---
+code: |
+  defendant = "Dastardly Defendant"
+---
+question: |
+  Thank you.
+subquestion: |
+  You are seeking
+  ${ currency(damages_sought) }
+  in damages
+mandatory: True
