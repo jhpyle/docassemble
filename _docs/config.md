@@ -259,14 +259,14 @@ to note about this example:
 * The part between `<style>` and `</style>` is optional and simply
   demonstrates how the list of interviews can be styled.  The [CSS]
   commands could also be put in a separate [CSS] file.
-* The part that retrieves the interview list is the [Javascript] call
+* The part that retrieves the interview list is the [JavaScript] call
   to [`$.get()`], which is between `<script type="text/javascript">` and
   `</script>`.  The part that plugs the [HTML] into the screen is the
   call to [`.html()`].
 * [jQuery] needs to be loaded before the call to `$.get()`.  [jQuery]
   is very common on web sites, so it may already be loaded on your
   site.
-* The [Javascript] code is wrapped in a call to
+* The [JavaScript] code is wrapped in a call to
   [`$( document ).ready`].  This may not be necessary on your site,
   but it can help avoid the potential problem where call to
   [`.html()`] takes place before the `<div id="interviews"></div>`
@@ -350,7 +350,7 @@ start page title:
   es: Herramientas disponibles
 {% endhighlight %}
 
-If you want to include the same [CSS] or [Javascript] files in every
+If you want to include the same [CSS] or [JavaScript] files in every
 page of the site, including administrative pages and interview pages,
 you can use the [`global css`] and [`global javascript`] directives.
 
@@ -382,9 +382,9 @@ you want, you can replace the entire body of the page using these
 templates.  However, if you do so, you may wish to include 
 `{% raw %}{{ extra_css }}{% endraw %}` in the `<head>` and 
 `{% raw %}{{ extra_js }}{% endraw %}` at the end of the `<body>`.
-On the interviews page, there is a bit of [Javascript] that 
+On the interviews page, there is a bit of [JavaScript] that 
 asks the user "are you sure?" before deleting all of the interview.
-The start page does not use [Javascript].
+The start page does not use [JavaScript].
 
 You can also customize these pages using [CSS].  The
 [HTML] elements in the standard template use some classes do nothing;
@@ -444,12 +444,12 @@ mimics the style of the standard start page:
 ## <a name="global css"></a><a name="global javascript"></a><a name="raw global css"></a><a name="raw global javascript"></a>CSS and Javascript customization
 
 You can use the [`javascript` features setting] and the
-[`css` features setting] to modify the [Javascript] and [CSS] for a
+[`css` features setting] to modify the [JavaScript] and [CSS] for a
 particular interview.
 
 By using `global javascript` and `global css`, you can apply
-[Javascript] and [CSS] on a more global level.  These directives allow
-you to include [Javascript] and [CSS] files in every interview and
+[JavaScript] and [CSS] on a more global level.  These directives allow
+you to include [JavaScript] and [CSS] files in every interview and
 also in the [start page] and the page showing the list of interviews.
 The directive should refer to files located in the "static" directory
 of a package:
@@ -459,7 +459,7 @@ global css: docassemble.missouri:data/static/missouri.css
 global javascript: docassemble.missouri:data/static/missouri.js
 {% endhighlight %}
 
-If you have more than one [CSS] file or more than one [Javascript]
+If you have more than one [CSS] file or more than one [JavaScript]
 file, you can use these directives to refer to a list of files:
 
 {% highlight yaml %}
@@ -475,8 +475,8 @@ global css: https://example.com/css/site_style.css
 global javascript: https://example.com/js/tracker.js
 {% endhighlight %}
 
-These [Javascript] and [CSS] files are loaded after the other
-[Javascript] and [CSS] files on the page.
+These [JavaScript] and [CSS] files are loaded after the other
+[JavaScript] and [CSS] files on the page.
 
 Note that the [`global css`] and [`global javascript`] directives can
 only refer to file names; if you want to write raw `<link>`, `<meta>`,
@@ -577,6 +577,63 @@ button size: normal
 {% endhighlight %}
 
 The default value is `large`.
+
+## <a name="default icons"></a><a name="use font awesome"></a>Using standard sets of icons
+
+If you set the `use font awesome` directive to `True`, then [Font
+Awesome] will be enabled on all pages. **docassemble** includes the
+free version (5.0.7) of [Font Awesome].  When `use font awesome` is
+`True`, [Font Awesome] will be enabled in the web app, in interviews
+as well as in administrative pages.  This allows you to refer to [Font
+Awesome] icons using raw HTML.
+
+{% highlight yaml %}
+use font awesome: True
+{% endhighlight %}
+
+In addition, **docassemble** allows you to use Google's [Material
+Icons] in your raw HTML.  Since the [Material Icons] are just a font,
+they are enabled by default and there is no configuration directive to
+enable the use of [Material Icons].
+
+You can also use [Font Awesome] or [Material Icons] for [decorations]
+and [inline icons], without writing any raw [HTML].
+
+By default, when you include [decorations], or you [include inline
+icons], you can only refer to image files that you [have predefined].  An
+inline image reference that does not have a corresponding predefined
+image will appear literally (e.g., `:cow:`).  However, if you set the
+`default icons` configuration directive to `font awesome`, then
+references to any images that you have not predefined will be treated
+as references to icons in the [Font Awesome] collection.
+
+{% highlight yaml %}
+default icons: font awesome
+{% endhighlight %}
+
+Then you can have an interview like this:
+
+{% include side-by-side.html demo="font-awesome" %}
+
+Alternatively, you can use the [Material Icons] for icon references
+that are not predefined image files:
+
+{% highlight yaml %}
+default icons: material icons
+{% endhighlight %}
+
+Note that when you set `default icons`, no validation is performed to
+ensure that the image you reference actually exists in [Font Awesome]
+or the [Material Icons].
+
+When `default icons` is set to `font awesome`, the "solid" style of
+the icons ([CSS] class `fas`) is used by default.  To use a different
+style, set the `font awesome prefix` directive.  For example, to use
+the "brand" style, you can use:
+
+{% highlight yaml %}
+font awesome prefix: fab
+{% endhighlight %}
 
 ## <a name="favicon"></a>Custom favicon in browser tab
 
@@ -1485,7 +1542,7 @@ google:
 If you use both geocoding and Google Maps, you will probably want to
 use a separate `google maps api key` because you can secure it
 differently.  Note that the [`map_of()`] feature puts its API key in
-the [Javascript] source, and the contact with Google's server will
+the [JavaScript] source, and the contact with Google's server will
 come from the user's computer.  By contrast, when you use the
 [`.geolocate()`] method, the contact with Google's server comes from
 your server.  Thus, you may wish to secure the `api key` using IP
@@ -2378,7 +2435,7 @@ and Facebook API keys.
 [`interviews.html`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/templates/pages/interviews.html
 [`start.html`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/templates/pages/start.html
 [HTML]: https://en.wikipedia.org/wiki/HTML
-[Javascript]: https://en.wikipedia.org/wiki/JavaScript
+[JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [`javascript` features setting]: {{ site.baseurl }}/docs/initial.html#javascript
 [`css` features setting]: {{ site.baseurl }}/docs/initial.html#css
@@ -2422,3 +2479,8 @@ and Facebook API keys.
 [SMTP]: https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol
 [HTTP]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
 [JSON]: https://en.wikipedia.org/wiki/JSON
+[include inline icons]: {{ site.baseurl }}/docs/markup.html#emoji
+[inline icons]: {{ site.baseurl }}/docs/markup.html#emoji
+[have predefined]: {{ site.baseurl }}/docs/initial.html#im
+[Font Awesome]: https://fontawesome.com
+[Material Icons]: https://material.io/icons/

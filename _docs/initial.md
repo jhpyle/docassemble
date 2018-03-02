@@ -493,6 +493,30 @@ You can also add video to help text using the `video` declaration.
 See the [modifiers] section for an explanation of how audio and video
 file references work.
 
+You can also provide a `label` as part of the `interview help`.  This
+label will be used instead of the word "Help" in the navigation bar as
+a label for the "Help" tab.
+
+{% highlight yaml %}
+---
+interview help:
+  label: More info
+  heading: More information about this web site
+  content: |
+    If you are not sure what the right answer is, provide
+    your best guess.
+    
+    You are answering these questions under the pains and
+    penalties of perjury.  Your answers will be 
+    shared with the special prosecutor.
+---
+{% endhighlight %}
+
+Note that if you provide question-specific [`help`], and you include a
+`label` as part of that help, that label will override the default
+label provided in the `interview help` (except if [`question help
+button`] is enabled).
+
 # <a name="def"></a>Mako functions: `def`
 
 {% highlight yaml %}
@@ -707,6 +731,32 @@ to the other buttons on the screen, by setting the `question back button`
 feature to `True` (the default is `False`).
 
 {% include side-by-side.html demo="question-back-button" %}
+
+## <a name="question help button"></a>Help tab style
+
+When [`interview help`] is available, or the [`help`] modifier is
+present on a question, the "Help" tab will be present in the
+navigation bar.  When the [`help`] modifier is present, the "Help" tab
+is highlighted yellow and marked with a yellow star.  When the user
+presses the help tab, the help screen will be shown.
+
+If you set the `question help button` to `True`, users will be able to
+access the help screen by pressing a "Help" button located within the
+body of the question, to the right of the other buttons on the page.
+When `question help button` is `True`, the "Help" tab will not be
+highlighted yellow.
+
+Here is an interview in which the `question help button` is not
+enabled (which is the default).
+
+{% include side-by-side.html demo="question-help-button-off" %}
+
+Here is the same interview, with the `question help button` feature
+enabled:
+
+{% include side-by-side.html demo="question-help-button" %}
+
+Note that when a "label"
 
 ## <a name="hide standard menu"></a>Hiding the standard menu items
 
@@ -1056,3 +1106,6 @@ features:
 [`word()`]: {{ site.baseurl}}/docs/functions.html#word
 [`prevent_going_back()`]: {{ site.baseurl}}/docs/functions.html#prevent_going_back
 [`prevent going back`]: {{ site.baseurl}}/docs/modifiers.html#prevent going back
+[`interview help`]: #interview help
+[`help`]: {{ site.baseurl}}/docs/modifiers.html#help
+[`question help button`]: #question help button

@@ -209,6 +209,35 @@ This works within PDF and RTF documents as well as within questions.
 
 {% include side-by-side.html demo="emoji-inline" %}
 
+By default, if an "emoji-style" reference refers to an image that has
+not been defined in an [`image sets`] or [`images`] block, users will see
+the literal reference (e.g., `:cow:`).  However, if you set the
+[`use font awesome`] directive in the [Configuration] to `True`, then
+any reference to an image not defined with [`image sets`] or [`images`]
+will be treated as the name of a [Font Awesome] icon.
+
+{% include side-by-side.html demo="font-awesome" %}
+
+As explained in the [Configuration], only one "style" of icon (by
+default, the "solid" style) can be used at one time.  If you need to
+use a different "style" for a particular icon, or you want to apply
+additional formatting to an icon, you can include the raw [HTML] for
+the icon.  For example:
+
+{% highlight yaml %}
+---
+question: |
+  Social media usage
+subquestion: |
+  Do you use <i class="fab fa-facebook-f"></i>?
+yesno: user_is_on_facebook
+---
+{% endhighlight %}
+
+Note that while ordinary inline icon references work in documents as
+well as on the web, [Font Awesome] references only work in questions,
+not in documents.
+
 # <a name="audio and video"></a>Inserting audio and video
 
 In addition to using the [`audio`] and [`video`]<span></span> [modifiers], you can
@@ -364,6 +393,7 @@ information about this feature, see the section on
 [`subquestion`]: {{ site.baseurl }}/docs/questions.html#subquestion
 [`interview help`]: {{ site.baseurl }}/docs/initial.html#interview help
 [`show()`]: {{ site.baseurl }}/docs/objects.html#DAFile.show
+[`images`]: {{ site.baseurl }}/docs/initial.html#images
 [`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
 [`audio`]: {{ site.baseurl }}/docs/modifiers.html#audio
 [`video`]: {{ site.baseurl }}/docs/modifiers.html#video
@@ -383,3 +413,8 @@ information about this feature, see the section on
 [`def` initial block]: {{ site.baseurl }}/docs/initial.html#def
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [signature field]: {{ site.baseurl }}/docs/fields.html#signature
+[Font Awesome]: https://fontawesome.com
+[`use font awesome`]: {{ site.baseurl}}/docs/config.html#use font awesome
+[Configuration]: {{ site.baseurl}}/docs/config.html
+[HTML]: https://en.wikipedia.org/wiki/HTML
+[JavaScript]: https://en.wikipedia.org/wiki/JavaScript

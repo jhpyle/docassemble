@@ -4,6 +4,28 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.31](https://github.com/jhpyle/docassemble/releases/tag/v0.2.31) - 2018-03-02
+
+### Added
+- Configuration directives `use font awesome` and `default icons`.
+- CSS support for Material Icons.
+- The `question help button` feature.
+- Ability to `label` the help tab.
+
+### Fixed
+- Reference to non-existent image file during image preloading.
+- Error when reviving SMS session for which answers had been deleted.
+- SMS interface bugs related to signatures and attachments.
+
+## [0.2.30](https://github.com/jhpyle/docassemble/releases/tag/v0.2.30) - 2018-02-27
+
+### Changed
+- SVG instead of PNG for images in checkboxes and radio buttons.
+
+### Fixed
+- Page layout when side navigation bar in use.
+- Slow submit time when many checkboxes are used.
+
 ## [0.2.29](https://github.com/jhpyle/docassemble/releases/tag/v0.2.29) - 2018-02-25
 
 ### Added

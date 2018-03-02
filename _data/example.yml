@@ -3530,6 +3530,16 @@
   \ Ut turpis arcu,\n      sagittis vitae odio vel, gravida cursus urna. Suspendisse\n\
   \      dignissim tortor id iaculis tincidunt. Nulla\n      facilisi. Suspendisse\
   \ lacinia nisl interdum, egestas turpis non,\n      fringilla felis."
+"font-awesome": |-
+  mandatory: True
+  decoration: chart-bar
+  question: |
+    Third quarter metrics
+  subquestion: |
+    We are making more money than we
+    did in the second quarter.
+
+    So you can sleep well tonight! :bed:
 "for_fruit": |-
   code: |
     fruit_list = ['peaches', 'pears', 'apricots']
@@ -4522,6 +4532,21 @@
       want ${ defendant } to suffer.
     audio: |
       message_re_damages.mp3
+"help-damages-label": |-
+  question: |
+    How much money do you wish
+    to seek in damages?
+  fields:
+    - Money: damages_sought
+      datatype: currency
+  help:
+    label: |
+      More info
+    content: |
+      If you are not sure how much
+      money to seek in damages, just ask
+      for a million dollars, since you
+      want ${ defendant } to suffer.
 "hideif-boolean": |-
   question: |
     Please fill in the following information.
@@ -5278,6 +5303,15 @@
     Here is a
     [link to a web site](http://google.com).
   mandatory: true
+"material-icons": |-
+  mandatory: True
+  decoration: portrait
+  question: |
+    Eligibility
+  subquestion: |
+    You are eligible for :local_hospital:
+    health insurance for yourself and
+    your :child_care: children.
 "menu-item": "mandatory: True\ncode: |\n  menu_items = [ action_menu_item('Visit Cow',\
   \ 'see_cow') ]\n---\nevent: see_cow\nquestion: |\n  Moo!\nsubquestion: |\n  [FILE\
   \ cow.jpg]\n  \n  Cow illustration designed by\n  [Freepik](http://www.freepik.com/free-photos-vectors/animal)\n\
@@ -6838,6 +6872,78 @@
   features:
     question back button: True
     navigation back button: False
+"question-help-button": |-
+  features:
+    question help button: True
+  ---
+  interview help:
+    label: More info
+    heading: About this interview
+    content: |
+      This is an interview about fruit.
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+  help:
+    label: Huh?
+    heading: What is a fruit?
+    content: |
+      A fruit is a fleshy edible
+      part of a plant that has
+      seeds.
+  ---
+  question: |
+    What is your favorite color?
+  fields:
+    - Color: favorite_color
+  help:
+    heading: What is a color?
+    content: |
+      Every photon has a frequency, which
+      determines its color.
+  ---
+  question: |
+    What is your favorite vegetable?
+  fields:
+    - Vegetable: favorite_vegetable
+"question-help-button-off": |-
+  features:
+    question help button: False
+  ---
+  interview help:
+    label: More info
+    heading: About this interview
+    content: |
+      This is an interview about fruit.
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+  help:
+    label: Huh?
+    heading: What is a fruit?
+    content: |
+      A fruit is a fleshy edible
+      part of a plant that has
+      seeds.
+  ---
+  question: |
+    What is your favorite color?
+  fields:
+    - Color: favorite_color
+  help:
+    heading: What is a color?
+    content: |
+      Every photon has a frequency, which
+      determines its color.
+  ---
+  question: |
+    What is your favorite vegetable?
+  fields:
+    - Vegetable: favorite_vegetable
 "question-library": |-
   question: |
     Interested in going to the dance tonight?
@@ -7837,6 +7943,11 @@
     % else:
     Sorry to hear that!
     % endif
+  attachment:
+    content: |
+      Hello world!
+    valid formats:
+      - pdf
 "someone-already-mentioned-bad": |-
   imports:
     - docassemble.demo.change_suffix

@@ -171,13 +171,46 @@ You can add audio to your help text:
 
 You can also add video to help text using the `video` declaration.
 
+When [`interview help`] is available but question-specific `help` is
+not available, the help tab is merely labeled "Help."  When
+question-specific help is available, the help tab is bright yellow and
+is marked with a star.  If you want the label to be something other
+than "Help", you can add a `label` inside the `help` statement:
+
+{% include side-by-side.html demo="help-damages-label" %}
+
+If the [`question help button`] feature is enabled, and
+question-specific `help` is available, a "Help" button will be
+available on the button bar, which when pressed will show the help
+tab.  The button label is "Help" by default, but if a `label` is
+provided to the question-specific `help`, the button will bear this
+label instead.  When a help button is present, the help tab in the
+navigation bar will always be labeled "Help," and it will never be
+highlighted in yellow.
+
+The default label "Help" can be changed on a per-interview basis.  If
+you set an [`interview help`] initial block and provide a `label` as
+part of it, the value of this `label` will be used instead of "Help"
+as the name of the "Help" tab in the navigation bar.
+
 # <a name="decoration"></a>Adding images to question: `decoration`
 
 {% include side-by-side.html demo="decoration" %}
 
 The `decoration` modifier adds an icon to the right of the
 [`question`] text.  In the example above, `kids` has been defined in
-an [image sets] or [images] block.
+an [`image sets`] or [`images`] block.
+
+By default, if a `decoration` modifier refers to an image that has not
+been defined in an [`image sets`] or [`images`] block, users will see an
+error message.  However, if you set the [`use font awesome`] directive
+in the [Configuration] to `True`, then any reference to an image not
+defined with [`image sets`] or [`images`] will be treated as the name of a
+[Font Awesome] icon.
+
+{% include side-by-side.html demo="font-awesome" %}
+
+This method also works with [inline icons].
 
 # <a name="script"></a>Adding [Javascript]: `script`
 
@@ -767,8 +800,8 @@ by **docassemble**, so it can contain any valid [YAML].
 [`prevent_going_back()` function]: {{ site.baseurl }}/docs/functions.html#prevent_going_back
 [special variables]: {{ site.baseurl }}/docs/special.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
-[image sets]: {{ site.baseurl }}/docs/initial.html#image sets
-[images]: {{ site.baseurl }}/docs/initial.html#images
+[`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
+[`images`]: {{ site.baseurl }}/docs/initial.html#images
 [default language]: {{ site.baseurl }}/docs/initial.html#default language
 [progress bar]: {{ site.baseurl }}/docs/initial.html#features
 [navigation bar]: {{ site.baseurl }}/docs/initial.html#navigation bar
@@ -799,3 +832,7 @@ by **docassemble**, so it can contain any valid [YAML].
 [Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [`get_progress()`]: {{ site.baseurl}}/docs/functions.html#get_progress
 [`set_progress()`]: {{ site.baseurl}}/docs/functions.html#set_progress
+[Font Awesome]: https://fontawesome.com
+[`use font awesome`]: {{ site.baseurl}}/docs/config.html#use font awesome
+[Configuration]: {{ site.baseurl}}/docs/config.html
+[inline icons]: {{ site.baseurl}}/docs/markup.html#emoji
