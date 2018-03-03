@@ -29,7 +29,7 @@
             {%- if user_manager.enable_retype_password %}
             {{ render_field(form.retype_password, tabindex=270) }}
             {%- endif %}
-            {{ myrender_hidden_field(form.social_id, value=random_social()) }}
+            {{ myrender_hidden_field(form.social_id, value=user_manager.random_social()) }}
             <br>
             {{ get_part('register page submit') }}<div class="form-actions">
               {{ render_submit_field(form.submit, tabindex=280) }}

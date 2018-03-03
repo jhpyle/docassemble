@@ -258,10 +258,16 @@ def user_add():
             flash(word("A user with that e-mail has already registered"), "error")
             return redirect(url_for('user_add'))
         user_auth = UserAuthModel(password=app.user_manager.hash_password(add_form.password.data))
+        while True:
+            new_social = 'local$' + random_alphanumeric(32)
+            existing_user = UserModel.query.filter_by(social_id=new_social).first()
+            if existing_user:
+                continue
+            break
         the_user = UserModel(
             active=True,
             nickname=re.sub(r'@.*', '', add_form.email.data),
-            social_id='local$' + random_alphanumeric(32),
+            social_id=new_social,
             email=add_form.email.data,
             user_auth=user_auth,
             first_name = add_form.first_name.data,

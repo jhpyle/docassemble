@@ -1,13 +1,18 @@
 import sys
 import re
-from flask_user.forms import RegisterForm, LoginForm, password_validator
+from flask_user.forms import RegisterForm, LoginForm, password_validator, unique_email_validator
 from flask_wtf import FlaskForm
 from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, PasswordField, validators
 from wtforms.validators import DataRequired, Email, Optional
 from wtforms.widgets import PasswordInput
-
 from docassemble.base.functions import word
 from docassemble.base.config import daconfig
+
+try:
+    import ldap
+except ImportError:
+    daconfig['ldap login']['enable'] = False
+    pass
 
 def fix_nickname(form, field):
     field.data = form.first_name.data + ' ' + form.last_name.data
@@ -23,7 +28,38 @@ class MySignInForm(LoginForm):
         failed_attempts = r.get(key)
         if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
             abort(404)
-        result = super(MySignInForm, self).validate()
+        if daconfig['ldap login'].get('enable', False):
+            ldap_server = daconfig['ldap login'].get('server', 'localhost').strip()
+            username = self.email.data
+            password = self.password.data
+            connect = ldap.open(ldap_server)
+            try:
+                connect.simple_bind_s(username, password)
+                connect.unbind_s()
+                from flask import current_app
+                user_manager = current_app.user_manager
+                user, user_email = user_manager.find_user_by_email(self.email.data)
+                if not user:
+                    from docassemble.base.generate_key import random_alphanumeric
+                    from docassemble.webapp.db_object import db
+                    from docassemble.webapp.users.models import UserModel, Role
+                    while True:
+                        new_social = 'ldap$' + random_alphanumeric(32)
+                        existing_user = UserModel.query.filter_by(social_id=new_social).first()
+                        if existing_user:
+                            continue
+                        break
+                    user = UserModel(social_id=new_social, email=self.email.data, nickname='', active=True)
+                    user_role = Role.query.filter_by(name='user').first()
+                    user.roles.append(user_role)
+                    db.session.add(user)
+                    db.session.commit()
+                result = True
+            except ldap.LDAPError:
+                connect.unbind_s()
+                result = super(MySignInForm, self).validate()
+        else:
+            result = super(MySignInForm, self).validate()
         if result is False:
             r.incr(key)
             r.expire(key, daconfig['ban period'])
@@ -31,11 +67,29 @@ class MySignInForm(LoginForm):
             r.delete(key)
         return result
 
+def da_unique_email_validator(form, field):
+    if daconfig['ldap login'].get('enable', False) and daconfig['ldap login'].get('base dn', None) is not None and daconfig['ldap login'].get('bind email', None) is not None and daconfig['ldap login'].get('bind password', None) is not None:
+        ldap_server = daconfig['ldap login'].get('server', 'localhost').strip()
+        base_dn = daconfig['ldap login']['base dn'].strip()
+        search_filter = daconfig['ldap login'].get('search pattern', "mail=%s") % (form.email.data,)
+        connect = ldap.open(ldap_server)
+        try:
+            connect.simple_bind_s(daconfig['ldap login']['bind email'], daconfig['ldap login']['bind password'])
+            if len(connect.search_s(base_dn, ldap.SCOPE_SUBTREE, search_filter)) > 0:
+                raise ValidationError(word("This Email is already in use. Please try another one."))
+        except ldap.LDAPError:
+            pass
+    return unique_email_validator(form, field)
+
 class MyRegisterForm(RegisterForm):
     first_name = StringField(word('First name'))
     last_name = StringField(word('Last name'))
     social_id = StringField(word('Social ID'))
     nickname = StringField(word('Nickname'), [fix_nickname])
+    email = StringField(word('Email'), validators=[
+        validators.DataRequired(word('Email is required')),
+        validators.Email(word('Invalid Email')),
+        da_unique_email_validator])
 
 def length_two(form, field):
     if len(field.data) != 2:

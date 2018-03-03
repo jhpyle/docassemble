@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.32] - 2018-03-03
+### Added
+- The `ldap login` configuration directive.  Using this feature will
+  require running a new instance, as the `libsasl2-dev` `libldap2-dev`
+  packages are required dependencies of the `python-ldap` Python
+  module.
+
 ## [0.2.31] - 2018-03-02
 ### Added
 - Configuration directives `use font awesome` and `default icons`.

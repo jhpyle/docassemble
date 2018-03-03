@@ -256,6 +256,8 @@ def load(**kwargs):
         daconfig['mail'] = dict()
     if 'dispatch' not in daconfig:
         daconfig['dispatch'] = dict()
+    if 'ldap login' not in daconfig or type(daconfig['ldap login']) is not dict:
+        daconfig['ldap login'] = dict()
     return
 
 def default_config():

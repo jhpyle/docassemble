@@ -286,7 +286,7 @@ def custom_login():
                 user, user_email = user_manager.find_user_by_email(login_form.username.data)
         else:
             user, user_email = user_manager.find_user_by_email(login_form.email.data)
-
+        #if not user and daconfig['ldap login'].get('enabled', False):
         if user:
             safe_next = user_manager.make_safe_url_function(login_form.next.data)
             safe_next = login_form.next.data
@@ -7305,17 +7305,13 @@ def utility_processor():
             return the_user.email
         else:
             return re.sub(r'.*\$', '', the_user.social_id)
-    #def word(text):
-    #    return docassemble.base.functions.word(text)
-    def random_social():
-        return 'local$' + random_alphanumeric(32)
     if 'language' in session:
         docassemble.base.functions.set_language(session['language'])
     else:
         docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
     def in_debug():
         return DEBUG
-    return dict(random_social=random_social, word=docassemble.base.functions.word, in_debug=in_debug, user_designator=user_designator, get_part=get_part)
+    return dict(word=docassemble.base.functions.word, in_debug=in_debug, user_designator=user_designator, get_part=get_part)
 
 @app.route('/speakfile', methods=['GET'])
 def speak_file():
@@ -16566,7 +16562,18 @@ docassemble.base.util.set_random_forest_machine_learner(docassemble.webapp.machi
 docassemble.base.util.set_machine_learning_entry(docassemble.webapp.machinelearning.MachineLearningEntry)
 
 from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog
+
+def random_social():
+    while True:
+        new_social = 'local$' + random_alphanumeric(32)
+        existing_user = UserModel.query.filter_by(social_id=new_social).first()
+        if existing_user:
+            continue
+        break
+    return new_social
+
 with app.app_context():
+    app.user_manager.random_social = random_social
     if 'bootstrap theme' in daconfig and daconfig['bootstrap theme']:
         app.config['BOOTSTRAP_THEME'] = get_url_from_file_reference(daconfig['bootstrap theme'])
         app.config['BOOTSTRAP_THEME_DEFAULT'] = False

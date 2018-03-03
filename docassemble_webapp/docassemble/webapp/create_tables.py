@@ -33,6 +33,12 @@ def get_role(db, name):
     return the_role
 
 def get_user(db, role, defaults):
+    while True:
+        new_social = 'local$' + random_alphanumeric(32)
+        existing_user = UserModel.query.filter_by(social_id=new_social).first()
+        if existing_user:
+            continue
+        break
     the_user = UserModel.query.filter_by(nickname=defaults['nickname']).first()
     if the_user:
         return the_user
@@ -40,7 +46,7 @@ def get_user(db, role, defaults):
     the_user = UserModel(
         active=defaults.get('active', True),
         nickname=defaults['nickname'],
-        social_id='local$' + random_alphanumeric(32),
+        social_id=new_social,
         email=defaults['email'],
         user_auth=user_auth,
         first_name = defaults.get('first_name', ''),
