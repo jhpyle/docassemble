@@ -6069,6 +6069,17 @@ def index():
         script.defer = true;
         head.appendChild(script);
       }
+      $(document).on('keyup', function(e){
+        if (e.which == 13 && $("#daform button").length == 1){
+          var tag = $( document.activeElement ).prop("tagName");
+          if (tag != "INPUT" && tag != "TEXTAREA"){
+            e.preventDefault();
+            e.stopPropagation();
+            $("#daform button").click();
+            return false;
+          }
+        }
+      });
       function daProcessAjax(data, form, doScroll){
         daInformedChanged = false;
         if (dadisable != null){
