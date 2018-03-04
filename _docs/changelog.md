@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.33](https://github.com/jhpyle/docassemble/releases/tag/v0.2.33) - 2018-03-04
+
+### Fixed
+- Problem with using Upgrade button.
+
 ## [0.2.32](https://github.com/jhpyle/docassemble/releases/tag/v0.2.32) - 2018-03-04
 
 ### Added
