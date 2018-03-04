@@ -22,6 +22,7 @@ import docassemble.base.util
 import docassemble.base.functions
 import cPickle as pickle
 import codecs
+from sqlalchemy import or_, and_
 #import docassemble.webapp.worker
 
 set_request_active(False)
@@ -34,18 +35,18 @@ def get_cron_user():
     sys.exit("Cron user not found")
 
 def clear_old_interviews():
-    sys.stderr.write("clear_old_interviews: starting\n")
+    #sys.stderr.write("clear_old_interviews: starting\n")
     interview_delete_days = docassemble.base.config.daconfig.get('interview delete days', 90)
     if interview_delete_days == 0:
         return
     stale = list()
     nowtime = datetime.datetime.utcnow()
-    sys.stderr.write("clear_old_interviews: days is " + str(interview_delete_days) + "\n")
-    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).subquery()
-    results = db.session.query(UserDict.dictionary, UserDict.key, UserDict.user_id, UserDict.filename, UserDict.modtime, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno).order_by(UserDict.indexno)
+    #sys.stderr.write("clear_old_interviews: days is " + str(interview_delete_days) + "\n")
+    subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).subquery()
+    results = db.session.query(UserDict.key, UserDict.filename, UserDict.modtime, subq.c.count).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename)).order_by(UserDict.indexno)
     for record in results:
         delta = nowtime - record.modtime
-        sys.stderr.write("clear_old_interviews: delta days is " + str(delta.days) + "\n")
+        #sys.stderr.write("clear_old_interviews: delta days is " + str(delta.days) + "\n")
         if delta.days > interview_delete_days:
             stale.append(dict(key=record.key, filename=record.filename))
     for item in stale:

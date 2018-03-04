@@ -94,7 +94,9 @@
 "E-mail address is required": Null
 "E-mail address": Null
 "E-mail is required": Null
+"Email is required": Null
 "E-mail": Null
+"Email": Null
 "E-mail these documents": Null
 "E-mail this document": Null
 "E-mail was sent to": Null
@@ -169,6 +171,7 @@
 "in the": Null
 "Invalid e-mail address": Null
 "Invalid E-mail": Null
+"Invalid Email": Null
 "Invalid phone number.": Null
 "Invitation has been sent.": Null
 "Invite": Null
@@ -412,6 +415,7 @@
 "The version on PyPI is": Null
 "Third subdivision": Null
 "This account uses two-factor authentication.": Null
+"This Email is already in use. Please try another one.": Null
 "This field is required.": Null
 "This image file does not exist": Null
 "This package is not yet published on PyPI.": Null
