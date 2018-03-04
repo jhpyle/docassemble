@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.2.32] - 2018-03-03
+## [0.2.32] - 2018-03-04
 ### Added
 - The `ldap login` configuration directive.  Using this feature will
   require a system upgrade (running a new instance), as the
