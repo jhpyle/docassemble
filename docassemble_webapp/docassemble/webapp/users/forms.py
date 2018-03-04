@@ -11,8 +11,9 @@ from docassemble.base.config import daconfig
 try:
     import ldap
 except ImportError:
+    if 'ldap login' not in daconfig:
+        daconfig['ldap login'] = dict()
     daconfig['ldap login']['enable'] = False
-    pass
 
 def fix_nickname(form, field):
     field.data = form.first_name.data + ' ' + form.last_name.data

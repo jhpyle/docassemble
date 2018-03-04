@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.33] - 2018-03-04
+### Fixed
+- Problem with using Upgrade button.
+
 ## [0.2.32] - 2018-03-04
 ### Added
 - The `ldap login` configuration directive.  Using this feature will
