@@ -1328,6 +1328,66 @@ never need to confirm that user's e-mail.
 Before you enable this feature, make sure you have a working
 [email configuration](#mail).
 
+## <a name="ldap login"></a>LDAP login
+
+If you want to connect the **docassemble** login system to a local [LDAP]
+([Active Directory]) server, add an `ldap login` section to the
+Configuration.
+
+At a minimum, the following directives must be set:
+
+{% highlight yaml %}
+ldap login:
+  enable: True
+  server: 192.168.1.124
+{% endhighlight %}
+
+If `ldap login` is enabled, then when a user tries to log in, the
+user's e-mail address and password will be checked against the [LDAP]
+server.  If authentication succeeds, **docassemble** will check to see
+if a user with that e-mail address already exists in the
+**docassemble** login system.  If so, the user will be logged in as
+that user.  If the user does not already exist, then a user with that
+e-mail address will be created in the **docassemble** login system and
+will be logged in as that user.
+
+If the password does not authenticate, then the login process will
+proceed as normal; if a user already exists in the **docassemble**
+login system with that username and password, the user will be logged
+in as that user.
+
+Thus, the [LDAP] login system can coexist with the standard
+**docassemble** login system.
+
+You can also set the `base dn`, `bind email`, and `bind password`
+directives:
+
+{% highlight yaml %}
+ldap login:
+  enable: True
+  server: 192.168.1.124
+  base dn: "ou=users,dc=example,dc=com"
+  bind email: "jsmith@example.com"
+  bind password: "xxsecretxx"
+{% endhighlight %}
+
+If these additional directives are set, then when a user tries to
+register on the **docassemble** system, an error message will be
+generated if the e-mail address exists on the [LDAP] server.  The
+`bind email` and `bind password` are necessary so that **docassemble**
+can connect to the [LDAP] server and run a search for the e-mail
+address in question.  When it does so, it searches within the `base
+dn` for an entry with the attribute `mail`.  If one or more entries
+are found, the error message is raised.  If your server uses a
+different attribute for the e-mail address, you can set the directive
+`search pattern` under `ldap login`.  By default, `search pattern` is
+set to `mail=%s`.  (The `%s` is replaced with the e-mail address when
+the search is run.)
+
+You may wish to [disable registration] entirely when using `ldap
+login`.  In that case, it is not necessary to set the `base dn`, `bind
+email`, and `bind password` directives.
+
 ## <a name="xsendfile"></a>Support for xsendfile
 
 If your web server is not configured to support X-SENDFILE headers,
@@ -2484,3 +2544,6 @@ and Facebook API keys.
 [have predefined]: {{ site.baseurl }}/docs/initial.html#im
 [Font Awesome]: https://fontawesome.com
 [Material Icons]: https://material.io/icons/
+[disable registration]: #allow registration
+[LDAP]: https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol
+[Active Directory]: https://en.wikipedia.org/wiki/Active_Directory

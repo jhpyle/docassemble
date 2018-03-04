@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.32](https://github.com/jhpyle/docassemble/releases/tag/v0.2.32) - 2018-03-04
+
+### Added
+- The `ldap login` configuration directive.  Using this feature will
+  require a system upgrade (running a new instance), as the
+  `libsasl2-dev` `libldap2-dev` Debian packages are required
+  dependencies of the `python-ldap` Python module.
+
 ## [0.2.31](https://github.com/jhpyle/docassemble/releases/tag/v0.2.31) - 2018-03-02
 
 ### Added
