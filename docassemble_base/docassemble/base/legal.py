@@ -42,7 +42,9 @@ class Court(DAObject):
             self.jurisdiction = list()
         return super(Court, self).init(*pargs, **kwargs)
     def __str__(self):
-        return(self.name)
+        return unicode(self).encode('utf-8')
+    def __unicode__(self):
+        return(unicode(self.name))
     def in_the_court(self, **kwargs):
         """Returns the top line of the first page of a pleading filed in the
         court.
@@ -73,8 +75,10 @@ class Case(DAObject):
         self.state = None
         self.action_type = 'plaintiff defendant'
         return super(Case, self).init(*pargs, **kwargs)
+    def __unicode__(self):
+        return unicode(self.case_id)
     def __str__(self):
-        return str(self.case_id)
+        return unicode(self).encode('utf-8')
     def set_action_type(self, the_value):
         """Initializes attributes for the different types of parties in the
         case.
@@ -206,8 +210,10 @@ class Document(DAObject):
     """This is a base class for different types of documents."""
     def init(self, *pargs, **kwargs):
         return super(Document, self).init(*pargs, **kwargs)
+    def __unicode__(self):
+        return unicode(self.title)
     def __str__(self):
-        return str(self.title)
+        return unicode(self).encode('utf-8')
 
 class LegalFiling(Document):
     """Represents a document filed in court."""

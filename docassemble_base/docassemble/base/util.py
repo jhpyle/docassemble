@@ -229,7 +229,7 @@ def format_time(the_time, format='short'):
 
 class DateTimeDelta(object):
     def __str__(self):
-        return str(quantity_noun(output.days, word('day')))
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(quantity_noun(output.days, word('day')))
 
@@ -255,7 +255,7 @@ class DADateTime(datetime.datetime):
     def minus(self, **kwargs):
         return dd(dt(self) - date_interval(**kwargs))
     def __str__(self):
-        return format_date(self)    
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(format_date(self))
     def __add__(self, other):
@@ -530,11 +530,7 @@ class LatitudeLongitude(DAObject):
             self.description = unicode(self)
         return
     def __str__(self):
-        if hasattr(self, 'latitude') and hasattr(self, 'longitude'):
-            return str(self.latitude) + ', ' + str(self.longitude)
-        elif hasattr(self, 'error'):
-            return str(self.error)
-        return 'Unknown'
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         if hasattr(self, 'latitude') and hasattr(self, 'longitude'):
             return unicode(self.latitude) + ', ' + unicode(self.longitude)
@@ -603,7 +599,7 @@ class Name(DAObject):
         """Returns True if the name has been defined.  Otherwise, returns False."""
         return hasattr(self, 'text')
     def __str__(self):
-        return(str(self.full()))
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return(unicode(self.full()))
 #    def __repr__(self):
@@ -672,7 +668,7 @@ class Address(DAObject):
             self.city_only = False
         return super(Address, self).init(*pargs, **kwargs)
     def __str__(self):
-        return(str(self.block()))
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return(unicode(self.block()))
     def on_one_line(self, include_unit=False, omit_default_country=True):
@@ -885,7 +881,7 @@ class Thing(DAObject):
     def __unicode__(self):
         return unicode(self.name.full())
     def __str__(self):
-        return str(self.name.full())
+        return unicode(self).encode('utf-8')
 
 class Event(DAObject):
     """A DAObject with pre-set attributes address, which is a City, and
@@ -899,7 +895,7 @@ class Event(DAObject):
             self.initializeAttribute('location', LatitudeLongitude)
         return super(Event, self).init(*pargs, **kwargs)
     def __str__(self):
-        return str(self.address)
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.address)
     
@@ -949,7 +945,7 @@ class Person(DAObject):
         else:
             return super(Person, self).__setattr__(attrname, value)
     def __str__(self):
-        return str(self.name.full())
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.name.full())
     def pronoun_objective(self, **kwargs):
@@ -1242,7 +1238,7 @@ class FinancialList(DADict):
             del self.new_item_value
         return super(FinancialList, self)._new_item_init_callback()
     def __str__(self):
-        return str(self.total())
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.total())
     
@@ -1287,7 +1283,7 @@ class Value(DAObject):
             return 0
         return (Decimal(self.value))
     def __str__(self):
-        return str(self.amount())
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.amount())
 
@@ -1912,7 +1908,7 @@ class DAModel(DAObject):
             self.predict()
         return super(DAModel, self).init(*pargs, **kwargs)
     def __str__(self):
-        return str(self.prediction)
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.prediction)
     def predict(self):

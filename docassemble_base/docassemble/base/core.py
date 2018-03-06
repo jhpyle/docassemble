@@ -343,9 +343,7 @@ class DAObject(object):
             return getattr(self, name)
         return None
     def __str__(self):
-        if hasattr(self, 'name'):
-            return str(self.name)
-        return self.object_name()
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         if hasattr(self, 'name'):
             return unicode(self.name)
@@ -827,8 +825,7 @@ class DAList(DAObject):
             #sys.stderr.write("Assuming it is there!\n")
             return self.elements[index]
     def __str__(self):
-        self._trigger_gather()
-        return self.comma_and_list()
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         self._trigger_gather()
         return unicode(self.comma_and_list())
@@ -1437,7 +1434,7 @@ class DADict(DAObject):
         self._trigger_gather()
         return self.elements.__hash__(the_object)
     def __str__(self):
-        return self.comma_and_list()
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.comma_and_list())
     def __repr__(self):
@@ -1754,8 +1751,7 @@ class DASet(DAObject):
             return self.elements - other.elements
         return self.elements - other
     def __str__(self):
-        self._trigger_gather()
-        return self.comma_and_list()
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         self._trigger_gather()
         return unicode(self.comma_and_list())
@@ -1861,7 +1857,7 @@ class DAFile(DAObject):
         #else:
         self.extension = re.sub(r'^\.', '', mimetypes.guess_extension(mimetype))
     def __str__(self):
-        return self.show()
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.show())
     def initialize(self, **kwargs):
@@ -2113,7 +2109,7 @@ class DAFileCollection(DAObject):
                 return the_file
         return " ".join(the_files)
     def __str__(self):
-        return " ".join([str(getattr(self, ext)) for ext in self._extension_list() if hasattr(self, ext)])
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return " ".join([unicode(getattr(self, ext)) for ext in self._extension_list() if hasattr(self, ext)])
 
@@ -2123,7 +2119,7 @@ class DAFileList(DAList):
 
     """
     def __str__(self):
-        return self.show()
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.show())
     def show(self, width=None):
@@ -2185,7 +2181,7 @@ class DAStaticFile(DAObject):
         the_args['_question'] = docassemble.base.functions.this_thread.current_question
         return server.url_finder(self.filename, **the_args)
     def __str__(self):
-        return self.show()
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.show())
                 
@@ -2227,17 +2223,17 @@ class DAEmailRecipient(DAObject):
         return(unicode(self.address))
     def exists(self):
         return hasattr(self, 'address')
-    def __unicode__(self):
-        return unicode(self.__str__())
     def __str__(self):
+        return unicode(self).encode('utf-8')
+    def __unicode__(self):
         if hasattr(self, 'name'):
-            name = self.name
+            name = unicode(self.name)
         else:
-            name = ''
+            name = u''
         if hasattr(self, 'empty') and self.empty:
-            return ''
+            return u''
         if self.address == '' and name == '':
-            return 'EMAIL NOT DEFINED'
+            return u'EMAIL NOT DEFINED'
         if self.address == '' and name != '':
             return name
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
@@ -2252,7 +2248,9 @@ class DAEmail(DAObject):
 
     """
     def __str__(self):
-        return("This is an e-mail")
+        return unicode(self).encode('utf-8')
+    def __unicode__(self):
+        return(u'This is an e-mail')
 
 class DATemplate(DAObject):
     """The class used for Markdown templates.  A template block saves to
@@ -2274,14 +2272,14 @@ class DATemplate(DAObject):
                     self.decorations.append(decoration)
     def show(self, **kwargs):
         """Displays the contents of the template."""
-        return unicode(self.__str__())
-    def __str__(self):
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
-            return docassemble.base.filter.docx_template_filter(self.content)
-        return(self.content)
+        return unicode(self)
     def __unicode__(self):
-        return unicode(self.__str__())
-
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+            return unicode(docassemble.base.filter.docx_template_filter(self.content))
+        return(unicode(self.content))
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+    
 def selections(*pargs, **kwargs):
     """Packs a list of objects in the appropriate format for including
     as code in a multiple-choice field."""
