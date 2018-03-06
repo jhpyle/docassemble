@@ -3665,13 +3665,26 @@ class Interview:
                         tags.add(tag)
             return tags
     def get_title(self, user_dict):
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'))
         if not hasattr(self, 'default_title'):
             self.default_title = dict()
             for metadata in self.metadata:
                 for title_name, title_abb in mapping:
                     if metadata.get(title_name, None) is not None:
-                        self.default_title[title_abb] = unicode(metadata[title_name]).strip()
+                        if type(metadata[title_name]) is dict:
+                            value = metadata[title_name].get(get_language(), None)
+                            if value is not None:
+                                self.default_title[title_abb] = unicode(value).strip()
+                            else:
+                                value = metadata[title_name].get('*', None)
+                                if value is not None:
+                                    self.default_title[title_abb] = unicode(value).strip()
+                                else:
+                                    value = metadata[title_name].get(docassemble.base.functions.server.default_language, None)
+                                    if value is not None:
+                                        self.default_title[title_abb] = unicode(value).strip()
+                        else:
+                            self.default_title[title_abb] = unicode(metadata[title_name]).strip()
         title = dict()
         for title_name, title_abb in mapping:
             if '_internal' in user_dict and title_name in user_dict['_internal'] and user_dict['_internal'][title_name] is not None:

@@ -617,12 +617,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     elif status.question.question_type in ["yesno", "yesnomaybe"]:
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
+        output += status.pre
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" method="POST">\n              <fieldset>\n'
         output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
+        output += status.submit
         output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
         output += '                <div class="btn-toolbar">' + back_button + '\n                  <button class="btn btn-primary ' + BUTTON_CLASS + ' " name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_CLASS + ' btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.no() + '</button>'
         if status.question.question_type == 'yesnomaybe':
@@ -641,12 +643,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     elif status.question.question_type in ["noyes", "noyesmaybe"]:
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
+        output += status.pre
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" method="POST">\n              <fieldset>\n'
         output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
+        output += status.submit
         output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
         output += '                <div class="btn-toolbar">' + back_button + '\n                  <button class="btn btn-primary ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_CLASS + ' btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.no() + '</button>'
         if status.question.question_type == 'noyesmaybe':
@@ -687,6 +691,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 fieldlist.append('                <div class="form-group"><div class="col-md-12"><a class="review-action" data-action="' + str(field.action) + '">' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a></div></div>\n')
                 if field.number in status.helptexts:
                     fieldlist.append('                <div class="row"><div class="col-md-12">' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
+        output += status.pre
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST">\n              <fieldset>\n'
         output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
@@ -699,6 +704,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             resume_button_label = markdown_to_html(status.continueLabel, trim=True, do_terms=False, status=status)
         else:
             resume_button_label = word('Resume')
+        output += status.submit
+        output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
         output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + resume_button_label + '</button>' + help_button + '</div></div>\n'
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
@@ -948,6 +955,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     fieldlist.append('                <div class="form-group' + req_tag + '"><label for="' + escape_id(label_saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
             if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras:
                 fieldlist.append('                </div>\n')
+        output += status.pre
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n              <fieldset>\n'
         output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
@@ -977,6 +985,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             #status.extra_scripts.append('<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + init_string)
             #status.extra_scripts.append(init_string)
             #status.extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
+        output += status.submit
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '</div></div>\n'
         #output += question_name_tag(status.question)
@@ -991,12 +1000,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     elif status.question.question_type == "settrue":
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = "boolean"
+        output += status.pre
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" method="POST">\n              <fieldset>\n'
         output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
+        output += status.submit
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True">' + continue_label + '</button>' + help_button + '</div></div>\n'
         #output += question_name_tag(status.question)
@@ -1017,6 +1028,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             defaultvalue = None
         if hasattr(status.question.fields[0], 'datatype'):
             datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
+        output += status.pre
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" method="POST">\n              <fieldset>\n'
         output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
@@ -1117,11 +1129,13 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': True}
                 validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
             output += '                <div id="errorcontainer" style="display:none"></div>\n'
+            output += status.submit
             output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
             output += '                <div class="btn-toolbar">' + back_button + '\n'
             output += '                  <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>\n'
             output += '                </div>\n'
         else:
+            output += status.submit
             #output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
             output += '                <div class="btn-toolbar">' + back_button + '\n'
             if hasattr(status.question.fields[0], 'saveas'):
@@ -1199,21 +1213,25 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         status.varnames = varnames
         output += '              </fieldset>\n            </form>\n'
     elif status.question.question_type == 'deadend':
+        output += status.pre
         output += indent_by(audio_text, 12) + '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         if back_button != '' or help_button != '':
+            output += status.submit
             output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
             output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + help_button + '</div></div>\n'
     else:
+        output += status.pre
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST">\n              <fieldset>\n'
         output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
+        output += status.submit
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '</div></div>\n'
         #output += question_name_tag(status.question)
@@ -1356,6 +1374,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
     if status.question.question_type != "signature":
+        output += status.post
         if len(status.attributions):
             output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
         for attribution in sorted(status.attributions):

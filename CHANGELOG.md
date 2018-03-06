@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.2.34] - 2018-03-06
+### Added
+- The `main page pre`, `main page submit`, and `main page post`
+  configuration directives.
+- The `pre`, `submit`, and `post` metadata items.
+### Changed
+- Pressing enter has effect of pressing Continue, even on pages
+  without input elements.
+### Fixed
+- Issue with unicode attributes referenced by certain object methods.
+
 ## [0.2.33] - 2018-03-04
 ### Fixed
 - Problem with using Upgrade button.

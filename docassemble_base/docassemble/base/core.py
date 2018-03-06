@@ -344,10 +344,12 @@ class DAObject(object):
         return None
     def __str__(self):
         if hasattr(self, 'name'):
-            return unicode(self.name)
+            return str(self.name)
         return self.object_name()
     def __unicode__(self):
-        return unicode(self.__str__())
+        if hasattr(self, 'name'):
+            return unicode(self.name)
+        return unicode(self.object_name())
     def __dir__(self):
         return self.attrList
     def pronoun_possessive(self, target, **kwargs):
@@ -829,7 +831,7 @@ class DAList(DAObject):
         return self.comma_and_list()
     def __unicode__(self):
         self._trigger_gather()
-        return unicode(self.__str__())
+        return unicode(self.comma_and_list())
     def __repr__(self):
         self._trigger_gather()
         return repr(self.elements)
@@ -1437,7 +1439,7 @@ class DADict(DAObject):
     def __str__(self):
         return self.comma_and_list()
     def __unicode__(self):
-        return unicode(self.__str__())
+        return unicode(self.comma_and_list())
     def __repr__(self):
         self._trigger_gather()
         return repr(self.elements)
@@ -1756,7 +1758,7 @@ class DASet(DAObject):
         return self.comma_and_list()
     def __unicode__(self):
         self._trigger_gather()
-        return unicode(self.__str__())
+        return unicode(self.comma_and_list())
     def __repr__(self):
         self._trigger_gather()
         return repr(self.elements)
@@ -1861,7 +1863,7 @@ class DAFile(DAObject):
     def __str__(self):
         return self.show()
     def __unicode__(self):
-        return unicode(self.__str__())
+        return unicode(self.show())
     def initialize(self, **kwargs):
         """Creates the file on the system if it does not already exist, and ensures that the file is ready to be used."""
         #logmessage("initialize")
@@ -2123,7 +2125,7 @@ class DAFileList(DAList):
     def __str__(self):
         return self.show()
     def __unicode__(self):
-        return unicode(self.__str__())
+        return unicode(self.show())
     def show(self, width=None):
         """Inserts markup that displays each element in the list as an image.
         Takes an optional keyword argument width.
@@ -2185,7 +2187,7 @@ class DAStaticFile(DAObject):
     def __str__(self):
         return self.show()
     def __unicode__(self):
-        return unicode(self.__str__())
+        return unicode(self.show())
                 
 class DAEmailRecipientList(DAList):
     """Represents a list of DAEmailRecipient objects."""
@@ -2225,6 +2227,8 @@ class DAEmailRecipient(DAObject):
         return(str(self.address))
     def exists(self):
         return hasattr(self, 'address')
+    def __unicode__(self):
+        return unicode(self.__str__())
     def __str__(self):
         if hasattr(self, 'name'):
             name = self.name

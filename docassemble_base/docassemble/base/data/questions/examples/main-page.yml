@@ -1,0 +1,40 @@
+metadata:
+  title: HTML in main page
+  documentation: "https://docassemble.org/docs/initial.html#metadata"
+  example start: 1
+  example end: 1
+---
+metadata:
+  pre: |
+    <p><a href="https://example.com/buy"
+    style="color: red; text-decoration: underline;">
+    Click here to buy now!</a></p>
+  submit: |
+    <p style="font-size: 9px">You click
+    this button under the pains and
+    penalties of perjury.  By clicking,
+    you agree to comply with the terms
+    and conditions of this site, which
+    are available for inspection at
+    2311 Business Center Road, Lansing,
+    MI, 93483</p>
+  post: |
+    <p style="color: green;">Need
+    help? Call 888-555-3933 now!!!</p>
+---
+question: |
+  What is your name?
+fields:
+  - First Name: first_name
+  - Last Name: last_name
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+mandatory: True
+question: |
+  Thank you, ${ first_name } ${ last_name }.
+subquestion: |
+  Your favorite fruit is ${ favorite_fruit }

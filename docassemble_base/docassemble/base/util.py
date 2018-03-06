@@ -230,6 +230,8 @@ def format_time(the_time, format='short'):
 class DateTimeDelta(object):
     def __str__(self):
         return str(quantity_noun(output.days, word('day')))
+    def __unicode__(self):
+        return unicode(quantity_noun(output.days, word('day')))
 
 class DADateTime(datetime.datetime):
     def format(self, format='long'):
@@ -255,7 +257,7 @@ class DADateTime(datetime.datetime):
     def __str__(self):
         return format_date(self)    
     def __unicode__(self):
-        return unicode(self.__str__())
+        return unicode(format_date(self))
     def __add__(self, other):
         if isinstance(other, basestring):
             return unicode(self) + other
@@ -533,6 +535,12 @@ class LatitudeLongitude(DAObject):
         elif hasattr(self, 'error'):
             return str(self.error)
         return 'Unknown'
+    def __unicode__(self):
+        if hasattr(self, 'latitude') and hasattr(self, 'longitude'):
+            return unicode(self.latitude) + ', ' + unicode(self.longitude)
+        elif hasattr(self, 'error'):
+            return unicode(self.error)
+        return u'Unknown'
 
 class RoleChangeTracker(DAObject):
     """Used within an interview to facilitate changes in the active role
@@ -596,6 +604,8 @@ class Name(DAObject):
         return hasattr(self, 'text')
     def __str__(self):
         return(str(self.full()))
+    def __unicode__(self):
+        return(unicode(self.full()))
 #    def __repr__(self):
 #        return(repr(self.full()))
 
@@ -663,6 +673,8 @@ class Address(DAObject):
         return super(Address, self).init(*pargs, **kwargs)
     def __str__(self):
         return(str(self.block()))
+    def __unicode__(self):
+        return(unicode(self.block()))
     def on_one_line(self, include_unit=False, omit_default_country=True):
         """Returns a one-line address.  Primarily used internally for geolocation."""
         output = ""
@@ -870,6 +882,8 @@ class Thing(DAObject):
             self.name.text = value
         else:
             return super(Thing, self).__setattr__(attrname, value)
+    def __unicode__(self):
+        return unicode(self.name.full())
     def __str__(self):
         return str(self.name.full())
 
@@ -886,6 +900,8 @@ class Event(DAObject):
         return super(Event, self).init(*pargs, **kwargs)
     def __str__(self):
         return str(self.address)
+    def __unicode__(self):
+        return unicode(self.address)
     
 class Person(DAObject):
     """Represents a legal or natural person."""
@@ -934,6 +950,8 @@ class Person(DAObject):
             return super(Person, self).__setattr__(attrname, value)
     def __str__(self):
         return str(self.name.full())
+    def __unicode__(self):
+        return unicode(self.name.full())
     def pronoun_objective(self, **kwargs):
         """Returns "it" or "It" depending on the value of the optional
         keyword argument "capitalize." """
@@ -1225,6 +1243,8 @@ class FinancialList(DADict):
         return super(FinancialList, self)._new_item_init_callback()
     def __str__(self):
         return str(self.total())
+    def __unicode__(self):
+        return unicode(self.total())
     
 class PeriodicFinancialList(FinancialList):
     """Represents a set of currency items, each of which has an associated period."""
@@ -1268,6 +1288,8 @@ class Value(DAObject):
         return (Decimal(self.value))
     def __str__(self):
         return str(self.amount())
+    def __unicode__(self):
+        return unicode(self.amount())
 
 class PeriodicValue(Value):
     """Represents a value in a PeriodicFinancialList."""
@@ -1891,6 +1913,8 @@ class DAModel(DAObject):
         return super(DAModel, self).init(*pargs, **kwargs)
     def __str__(self):
         return str(self.prediction)
+    def __unicode__(self):
+        return unicode(self.prediction)
     def predict(self):
         if self.use_for_training:
             self.entry_id = self.learner.save_for_classification(self.text, key=self.key)

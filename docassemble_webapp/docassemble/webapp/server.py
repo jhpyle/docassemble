@@ -668,7 +668,28 @@ for page_key in ('login page', 'register page', 'interview page', 'start page', 
                     page_parts[key][lang] = Markup(val)
             else:
                 page_parts[key] = {'*': Markup(unicode(daconfig[key]))}
-                
+
+main_page_parts = dict()
+lang_list = set()
+for key in ('main page pre', 'main page submit', 'main page post'):
+    if key in daconfig and type(daconfig[key]) is dict:
+        for lang in daconfig[key]:
+            lang_list.add(lang)
+lang_list.add(DEFAULT_LANGUAGE)
+lang_list.add('*')
+for lang in lang_list:
+    main_page_parts[lang] = dict()
+for key in ('main page pre', 'main page submit', 'main page post'):
+    for lang in lang_list:
+        if key in daconfig:
+            if type(daconfig[key]) is dict:
+                main_page_parts[lang][key] = daconfig[key].get(lang, daconfig[key].get('*', ''))
+            else:
+                main_page_parts[lang][key] = daconfig[key]
+        else:
+            main_page_parts[lang][key] = ''
+del lang_list
+
 def get_sms_session(phone_number, config='default'):
     sess_info = None
     if twilio_config is None:
@@ -7016,13 +7037,18 @@ def index():
     else:
         interview_language = DEFAULT_LANGUAGE
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error', 'debug': False}
-    interview_status.exit_link = interview_status.question.interview.get_title(user_dict).get('exit link', 'exit')
-    interview_status.exit_label = interview_status.question.interview.get_title(user_dict).get('exit label', 'Exit')
-    interview_status.title = interview_status.question.interview.get_title(user_dict).get('full', default_title)
-    interview_status.display_title = interview_status.question.interview.get_title(user_dict).get('logo', interview_status.title)
-    interview_status.tabtitle = interview_status.question.interview.get_title(user_dict).get('tab', interview_status.title)
-    interview_status.short_title = interview_status.question.interview.get_title(user_dict).get('short', interview_status.question.interview.get_title(user_dict).get('full', default_short_title))
-    interview_status.display_short_title = interview_status.question.interview.get_title(user_dict).get('logo', interview_status.short_title)
+    title_info = interview_status.question.interview.get_title(user_dict)
+    interview_status.exit_link = title_info.get('exit link', 'exit')
+    interview_status.exit_label = title_info.get('exit label', 'Exit')
+    interview_status.title = title_info.get('full', default_title)
+    interview_status.display_title = title_info.get('logo', interview_status.title)
+    interview_status.tabtitle = title_info.get('tab', interview_status.title)
+    interview_status.short_title = title_info.get('short', title_info.get('full', default_short_title))
+    interview_status.display_short_title = title_info.get('logo', interview_status.short_title)
+    the_main_page_parts = main_page_parts.get(interview_language, main_page_parts.get('*'))
+    interview_status.pre = title_info.get('pre', the_main_page_parts['main page pre'])
+    interview_status.post = title_info.get('post', the_main_page_parts['main page post'])
+    interview_status.submit = title_info.get('submit', the_main_page_parts['main page submit'])
     bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
     if not is_ajax:
         standard_header_start = standard_html_start(interview_language=interview_language, debug=debug_mode, bootstrap_theme=bootstrap_theme)
@@ -13980,6 +14006,9 @@ def interview_list():
         is_json = True
     else:
         is_json = False
+    if 'lang' in request.form:
+        session['language'] = request.form['lang']
+        docassemble.base.functions.set_language(session['language'])
     tag = request.args.get('tag', None)
     if 'newsecret' in session:
         #logmessage("interview_list: fixing cookie")
@@ -15856,13 +15885,18 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         interview_language = interview_status.question.language
     else:
         interview_language = DEFAULT_LANGUAGE
-    interview_status.exit_link = interview_status.question.interview.get_title(user_dict).get('exit link', 'exit')
-    interview_status.exit_label = interview_status.question.interview.get_title(user_dict).get('exit label', 'Exit')
-    interview_status.title = interview_status.question.interview.get_title(user_dict).get('full', default_title)
-    interview_status.display_title = interview_status.question.interview.get_title(user_dict).get('logo', interview_status.title)
-    interview_status.tabtitle = interview_status.question.interview.get_title(user_dict).get('tab', interview_status.title)
-    interview_status.short_title = interview_status.question.interview.get_title(user_dict).get('short', interview_status.question.interview.get_title(user_dict).get('full', default_short_title))
-    interview_status.display_short_title = interview_status.question.interview.get_title(user_dict).get('logo', interview_status.short_title)
+    title_info = interview_status.question.interview.get_title(user_dict)
+    interview_status.exit_link = title_info.get('exit link', 'exit')
+    interview_status.exit_label = title_info.get('exit label', 'Exit')
+    interview_status.title = title_info.get('full', default_title)
+    interview_status.display_title = title_info.get('logo', interview_status.title)
+    interview_status.tabtitle = title_info.get('tab', interview_status.title)
+    interview_status.short_title = title_info.get('short', title_info.get('full', default_short_title))
+    interview_status.display_short_title = title_info.get('logo', interview_status.short_title)
+    the_main_page_parts = main_page_parts.get(interview_language, main_page_parts.get('*'))
+    interview_status.pre = title_info.get('pre', the_main_page_parts['main page pre'])
+    interview_status.post = title_info.get('post', the_main_page_parts['main page post'])
+    interview_status.submit = title_info.get('submit', the_main_page_parts['main page submit'])
     if interview_status.question.can_go_back and (steps - user_dict['_internal']['steps_offset']) > 1:
         allow_going_back = True
     else:
