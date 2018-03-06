@@ -199,7 +199,7 @@ class DAObject(object):
                 thename = get_unique_name()
                 self.has_nonrandom_instance_name = False
             del frame
-        self.instanceName = str(thename)
+        self.instanceName = unicode(thename)
         self.attrList = list()
         self.init(*pargs, **kwargs)
     def _set_instance_name_for_function(self):
@@ -245,7 +245,7 @@ class DAObject(object):
         return
     def set_random_instance_name(self):
         """Sets the instanceName attribute to a random value."""
-        self.instanceName = str(get_unique_name())
+        self.instanceName = unicode(get_unique_name())
         self.has_nonrandom_instance_name = False
     def _set_instance_name_recursively(self, thename):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
@@ -659,7 +659,7 @@ class DAList(DAObject):
                     continue
             else:
                 try:
-                    str(item)
+                    unicode(item)
                 except:
                     continue
             items.append(item)
@@ -680,14 +680,14 @@ class DAList(DAObject):
                 if complete_attribute is not None:
                     getattr(self.elements[indexno], complete_attribute)
                 else:
-                    str(self.elements[indexno])
+                    unicode(self.elements[indexno])
             if hasattr(self, 'new_object_type'):
                 delattr(self, 'new_object_type')
         for elem in self.elements:
             if item_object_type is not None and complete_attribute is not None:
                 getattr(elem, complete_attribute)
             else:
-                str(elem)
+                unicode(elem)
     def gather(self, number=None, item_object_type=None, minimum=None, complete_attribute=None):
         """Causes the elements of the list to be gathered and named.  Returns True."""
         #sys.stderr.write("Gather\n")
@@ -1223,7 +1223,7 @@ class DADict(DAObject):
                     continue
             else:
                 try:
-                    str(val)
+                    unicode(val)
                 except:
                     continue
             items[key] = val
@@ -1253,7 +1253,7 @@ class DADict(DAObject):
             if item_object_type is not None and complete_attribute is not None:
                 getattr(elem, complete_attribute)
             else:
-                str(elem)
+                unicode(elem)
     def gather(self, item_object_type=None, number=None, minimum=None, complete_attribute=None, keys=None):
         """Causes the dictionary items to be gathered and named.  Returns True."""
         if hasattr(self, 'gathered') and self.gathered:
@@ -1334,7 +1334,7 @@ class DADict(DAObject):
             if self.object_type is not None and self.complete_attribute is not None:
                 getattr(elem, self.complete_attribute)
             else:
-                str(elem)
+                unicode(elem)
         return
     def comma_and_list(self, **kwargs):
         """Returns the keys of the list, separated by commas, with 
@@ -1670,7 +1670,7 @@ class DASet(DAObject):
             return True
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         for elem in sorted(self.elements):
-            str(elem)
+            unicode(elem)
         if number is None and self.ask_number:
             number = self.target_number
         if minimum is None:
@@ -1687,7 +1687,7 @@ class DASet(DAObject):
             self.add(self.new_item)
             del self.new_item
             for elem in sorted(self.elements):
-                str(elem)
+                unicode(elem)
             if hasattr(self, 'there_is_another'):
                 #logmessage("gather: " + self.instanceName + ": del on there_is_another")
                 del self.there_is_another
@@ -2224,7 +2224,7 @@ class DAEmailRecipient(DAObject):
             return ''
         if include_name is True or (include_name is not False and self.name is not None and self.name != ''):
             return('"' + nodoublequote(self.name) + '" <' + str(self.address) + '>')
-        return(str(self.address))
+        return(unicode(self.address))
     def exists(self):
         return hasattr(self, 'address')
     def __unicode__(self):
@@ -2308,7 +2308,7 @@ def selections(*pargs, **kwargs):
                     default_value = True
                 else:
                     default_value = False
-                output.append({myb64quote(subarg.instanceName): str(subarg), 'default': default_value})
+                output.append({myb64quote(subarg.instanceName): unicode(subarg), 'default': default_value})
                 seen.add(subarg)
     return output
 
