@@ -11,6 +11,10 @@ short_title: Change Log
   configuration directives.
 - The `pre`, `submit`, and `post` metadata items.
 
+### Changed
+- Pressing enter has effect of pressing Continue, even on pages
+  without input elements.
+
 ### Fixed
 - Issue with unicode attributes referenced by certain object methods.
 
