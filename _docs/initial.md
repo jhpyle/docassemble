@@ -32,7 +32,7 @@ in place of the `title` when the size of the screen is small.
 
 If a `logo` is defined, it will be displayed in the navigation bar in
 the web app in place of the `title` and `short title`.  The content of
-the `logo` should be raw HTML.  If you include an image, you should
+the `logo` should be raw [HTML].  If you include an image, you should
 size it to be about 20 pixels in height.
 
 If a `tab title` is provided, it will be displayed as the title
@@ -68,6 +68,15 @@ If you set `unlisted: True` for an interview that has an entry in the
 exempted from display in the interview list available at `/list`.  For
 more information about this, see the documentation for the
 [`dispatch`] configuration directive.
+
+<a name="pre"></a><a name="submit"></a><a name="post"></a>The
+[`metadata`] block also accepts the directives `pre`, `submit`, and
+`post`.  You can use these to provide raw [HTML] that will be inserted
+into the page before the [`question`] heading, before the buttons, and
+after the buttons, respectively.  You can also set server-wide
+defaults for these values using the [`main page pre`], [`main page
+submit`], and [`main page post`] directives in the [Configuration].
+You can also customize these values with the [`set_title()`] function.
 
 # <a name="objects"></a>Creating `objects`
 
@@ -1112,3 +1121,8 @@ features:
 [`interview help`]: #interview help
 [`help`]: {{ site.baseurl}}/docs/modifiers.html#help
 [`question help button`]: #question help button
+[`main page pre`]: {{ site.baseurl }}/docs/config.html#main page pre
+[`main page submit`]: {{ site.baseurl }}/docs/config.html#main page submit
+[`main page post`]: {{ site.baseurl }}/docs/config.html#main page post
+[`metadata`]: #metadata
+[`set_title()`]: {{ site.baseurl}}/docs/functions.html#set_title

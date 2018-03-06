@@ -301,6 +301,7 @@ The available page names are:
   forget their password.
 * `404 page`: the page users see when they try to visit a URL that
   does not exist on the server.
+* `main page`: the pages of interviews.  (This one is special; see below.)
 
 The aspects of the page that can be manipulated are:
 
@@ -353,6 +354,18 @@ start page title:
 If you want to include the same [CSS] or [JavaScript] files in every
 page of the site, including administrative pages and interview pages,
 you can use the [`global css`] and [`global javascript`] directives.
+
+<a name="main page pre"></a><a name="main page submit"></a><a
+name="main page post"></a>The `main page` directive is special because
+it relates to actual interviews, which are different from
+administrative pages.  The only directives that work with the `main
+page` prefix are `main page pre`, `main page submit`, `main page
+post`.  You can use these if you want special [HTML] content to appear
+on the page before the main question heading, before the buttons,
+and/or after the buttons, respectively.  These values set global
+defaults for the server.  They can be overridden for specific
+interviews using the [`metadata`] directives [`pre`], [`submit`], and
+[`post`].
 
 <a name="start page template"></a><a name="interview page template"></a>
 There are two pages that you can customize even more extensively:
@@ -2547,3 +2560,6 @@ and Facebook API keys.
 [disable registration]: #allow registration
 [LDAP]: https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol
 [Active Directory]: https://en.wikipedia.org/wiki/Active_Directory
+[`pre`]: {{ site.baseurl }}/docs/initial.html#pre
+[`submit`]: {{ site.baseurl }}/docs/initial.html#submit
+[`post`]: {{ site.baseurl }}/docs/initial.html#post

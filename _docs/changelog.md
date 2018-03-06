@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.34](https://github.com/jhpyle/docassemble/releases/tag/v0.2.34) - 2018-03-06
+
+### Added
+- The `main page pre`, `main page submit`, and `main page post`
+  configuration directives.
+- The `pre`, `submit`, and `post` metadata items.
+
+### Fixed
+- Issue with unicode attributes referenced by certain object methods.
+
 ## [0.2.33](https://github.com/jhpyle/docassemble/releases/tag/v0.2.33) - 2018-03-04
 
 ### Fixed
