@@ -1,6 +1,8 @@
 # Change Log
 
 ## [0.2.35] - 2018-03-06
+### Changed
+- Replaced Package Management with the former "Update a Package."
 ### Fixed
 - Issues with unicode.
 
