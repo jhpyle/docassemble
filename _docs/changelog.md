@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.35](https://github.com/jhpyle/docassemble/releases/tag/v0.2.35) - 2018-03-06
+
+### Changed
+- Replaced Package Management with the former "Update a Package."
+
+### Fixed
+- Issues with unicode.
+
 ## [0.2.34](https://github.com/jhpyle/docassemble/releases/tag/v0.2.34) - 2018-03-06
 
 ### Added
@@ -16,7 +24,7 @@ short_title: Change Log
   without input elements.
 
 ### Fixed
-- Issue with unicode attributes referenced by certain object methods.
+- Issues with unicode.
 
 ## [0.2.33](https://github.com/jhpyle/docassemble/releases/tag/v0.2.33) - 2018-03-04
 

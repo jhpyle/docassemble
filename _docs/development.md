@@ -57,9 +57,7 @@ current version of **docassemble** on the [PyPI page] or the
 [GitHub page].
 
 Most **docassemble** software upgrades can be accomplished by going to
-"Package Management" from the menu, selecting "Update a package," and
-clicking the "Update" button next to the package called
-"docassemble.webapp."
+"Package Management" from the menu and clicking the "Upgrade" button.
 
 However, sometimes new versions of the **docassemble** software
 require an update to the whole system.  You will see a notification on
@@ -191,9 +189,9 @@ On your development server, you will make sure your interviews run as
 intended, and then you will put your interview into a [package] and
 save that package somewhere: on [PyPI], on [Github], or in a ZIP file.
 You will then install that [package] on the production server by
-logging into the production server as an administrator, going to
-"Package Management" from the menu, then selecting "Update a package."
-Your users will access the interviews at links like
+logging into the production server as an administrator and going to
+"Package Management" from the menu.  Your users will access the
+interviews at links like
 `https://docassemble.example.com?i=docassemble.bankruptcy:data/questions/chapter7.yml`,
 where `docassemble.example.com` is the address of your production
 server, `docassemble.bankruptcy` is the name of your [package], and
@@ -385,8 +383,8 @@ developers as well, since interviews can be uploaded as
    "PyPI" button to upload the package to [PyPI] as
    `docassemble.bankruptcy`.
 2. Developer Two, using a different **docassemble** server, goes to
-   "Package Management" from the menu, selects "Update a package," and
-   installs the `docassemble.bankruptcy` package from [PyPI].
+   "Package Management" from the menu and installs the
+   `docassemble.bankruptcy` package from [PyPI].
 4. Developer Two then develops an interview file that makes reference
    to files in the `docassemble.bankruptcy` package.  For example, the
    interview might [`include`] the file
@@ -399,11 +397,10 @@ developers as well, since interviews can be uploaded as
 4. Developer Two then presses the "PyPI" button to upload the package
    to [PyPI] as `docassemble.debtconsult`.
 5. Months later, Developer Three, using yet another **docassemble**
-   server, goes to "Package Management" from the menu, selects "Update
-   a package," and installs the `docassemble.debtconsult` package from
-   [PyPI].  This will cause the latest versions of both
-   `docassemble.bankruptcy` and `docassemble.debtconsult` to be
-   installed.
+   server, goes to "Package Management" from the menu and installs the
+   `docassemble.debtconsult` package from [PyPI].  This will cause the
+   latest versions of both `docassemble.bankruptcy` and
+   `docassemble.debtconsult` to be installed.
 
 In order to facilitate collaboration, Developer One should prepare
 interview files in a "modular" way, putting general purpose [`question`]s
@@ -438,10 +435,10 @@ For example, you could do:
 git clone https://e8cc02bec7061de98ba4851263638d7483f63d41:x-oauth-basic@github.com/johnsmith/docassemble-missouri-familylaw
 {% endhighlight %}
 
-Within docassemble, you can go to "Package Management" -> "Update a
-package" and enter this URL into the "GitHub URL".  This will install
-the package on your server.  Any time you wanted to update the
-package, you could visit the link
+Within docassemble, you can go to "Package Management" and enter this
+URL into the "GitHub URL".  This will install the package on your
+server.  Any time you wanted to update the package, you could visit
+the link
 `/updatepackage?action=update&package=docassemble.missouri-family-law`
 on your server.
 

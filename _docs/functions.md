@@ -4718,9 +4718,16 @@ modules:
 
 # <a name="google sheets example"></a>Example module: using Google Sheets
 
-Go to the [Google Developers Console] and create a "service
-account."  Download a [JSON] (not p12) credential file for the service
-account.  Note the e-mail address of the service account.
+This section explains an example of what you might do with a module:
+integrate with [Google Sheets].
+
+In order for your site to communicate with [Google Sheets], you will
+need to create an account on the [Google Developers Console] and
+create an "app."  Within this app, you will need to create a "service
+account."  (More information is available on the internet about what a
+"service account" is and how you create one.)  When you create the
+service account, you will be provided with "credential"download a [JSON] (not p12) credential file for the
+service account.  Note the e-mail address of the service account.
 
 Go to [Google Sheets], pick a spreadsheet that you want to use, and
 share it with the e-mail address of the service account, just like you

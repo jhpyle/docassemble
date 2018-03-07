@@ -123,28 +123,10 @@ The fourth block uses [`modules`] to import [Python] names from the
 
 # Creating your own packages
 
-## On-line
-
 You can create your own **docassemble** package on-line using the
 [Packages area] of the [Playground].  This allows you to download a
 package as a ZIP file that contains resources from various "folders"
 in the [Playground].
-
-## Off-line
-
-To create your own **docassemble** package off-line, start by downloading a
-**docassemble** package template from your **docassemble** server.
-
-1. On the menu in the upper right hand corner, select Package Management.
-2. Click "Create a package."
-3. Enter a name for the package, such as `baseball` and click "Get template."
-4. Save the resulting .zip file to your computer.
-
-Then you will have a ZIP file called
-`docassemble-baseball.zip`, which contains a directory
-`docassemble-baseball`.  You can extract this directory to
-a convenient location on your computer, so that you can make changes
-to the files and/or add files of your own.
 
 # Dependencies
 
@@ -196,7 +178,7 @@ package, this is all handled for you.
 You can install a **docassemble** extension package, or any other
 [Python] package, using the **docassemble** web application.
 
-From the menu, go to Package Management.  Then click "Update a package."
+From the menu, go to Package Management.
 
 **docassemble** installs packages using the [pip] package manager.
 This installation process may take a long time.  A log of the output
@@ -214,10 +196,9 @@ For example, the [GitHub] URL of the `docassemble-baseball`
 package may be `https://github.com/jhpyle/docassemble-baseball`.  (No
 such package actually exists.)
 2. In the **docassemble** web app, go to Package Management.
-3. Click "Update a package."
-4. Enter `https://github.com/jhpyle/docassemble-baseball`
+3. Enter `https://github.com/jhpyle/docassemble-baseball`
    into the "GitHub URL" field.
-5. Click "Update."
+4. Click "Update."
 
 ![GitHub Install]({{ site.baseurl }}/img/github-install.png){: .maybe-full-width }
 
@@ -231,9 +212,8 @@ turn contains `setup.py`, a subdirectory called `docassemble`, and
 other files.
 
 1. In the **docassemble** web app, go back to Package Management.
-2. Click "Update a package."
-3. Under "Zip File," upload the `.zip` file you want to install.
-4. Click "Update."
+2. Under "Zip File," upload the `.zip` file you want to install.
+3. Click "Update."
 
 ![Zip Install]({{ site.baseurl }}/img/zip-install.png){: .maybe-full-width }
 
@@ -247,10 +227,9 @@ the `docassemble-baseball` package:
 1. Make sure the `docassemble-baseball` package exists on [PyPI]
    (note: it doesn't; it is just a fictional package).
 2. In the **docassemble** web app, go to Package Management.
-3. Click "Update a package."
-4. Type `docassemble.baseball` into the "Package on PyPI"
+3. Type `docassemble.baseball` into the "Package on PyPI"
    field.
-5. Click "Update."
+4. Click "Update."
 
 ![PyPI Install]({{ site.baseurl }}/img/pypi-install.png){: .maybe-full-width }
 
@@ -268,7 +247,7 @@ site).
 
 To upgrade a package that you installed from a [GitHub] URL or from
 [PyPI], you can press the "Update" button next to the package name on
-the "Update a package" screen.  You will only see these Update buttons
+the "Package Management" screen.  You will only see these Update buttons
 if you are an administrator or if you are the person who caused the
 packages to be installed.  Also, the "Update" buttons will not appear
 if the package was installed using a ZIP file.
@@ -322,7 +301,7 @@ You can click on the link to see what the package looks like on [PyPI].
 ![PyPi Page]({{ site.baseurl }}/img/playground-packages-on-pypi.png){: .maybe-full-width }
 
 Now, on the **docassemble** menu (of this server or another server),
-you can go to Package Management -> Update a Package, and
+you can go to Package Management and
 [install the package](#pypi_install) by typing in
 "docassemble.baseball" into the "Package on PyPI" field.
 
@@ -383,8 +362,7 @@ a commit (containing a `LICENSE` file only) and then the addition of
 the files of your package caused a second commit.
 
 Once your package is on [GitHub], then on the **docassemble** menu,
-you can go to Package Management -> Update a Package and [install
-the package](#github_install) using its [GitHub] URL.
+you can go to Package Management and [install the package](#github_install) using its [GitHub] URL.
 
 ![GitHub Install]({{ site.baseurl }}/img/github-install.png){: .maybe-full-width }
 

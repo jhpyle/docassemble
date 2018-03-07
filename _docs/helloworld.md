@@ -485,7 +485,7 @@ If you click the link, you can see what the package looks like on the
 ![PyPI page]({{ site.baseurl }}/img/pypi-helloworld-page.png){: .maybe-full-width }
 
 Now, on the **docassemble** menu (of this server or another server),
-you can go to Package Management -> Update a Package, and [install]
+you can go to Package Management and [install]
 the package by specifying a "Package on PyPI."
 
 ![PyPI Install]({{ site.baseurl }}/img/update-package-pypi.png)
@@ -555,8 +555,8 @@ If you click the link, you can see what the package looks like on [GitHub]:
 
 ![GitHub Repository]({{ site.baseurl }}/img/github-helloworld-repository.png){: .maybe-full-width }
 
-Now, on the **docassemble** menu, you can go to Package Management ->
-Update a Package, and [install] the package using its [GitHub] URL.
+Now, on the **docassemble** menu, you can go to Package Management and
+[install] the package using its [GitHub] URL.
 
 ![GitHub Install]({{ site.baseurl }}/img/update-package-github.png)
 
