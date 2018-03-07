@@ -1835,6 +1835,8 @@ class Question:
                 if type(content_file) is not str:
                     raise DAError('A content file must be specified as text or a list of text filenames' + self.idebug(data))
                 file_to_read = docassemble.base.functions.package_template_filename(content_file, package=self.package)
+                if get_mimetype(file_to_read) != 'text/markdown':
+                    raise DAError('The content file ' + str(target['content file']) + ' is not a markdown file ' + str(file_to_read) + self.idebug(data))
                 if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
                     with open(file_to_read, 'rU') as the_file:
                         data['content'] += the_file.read().decode('utf8')

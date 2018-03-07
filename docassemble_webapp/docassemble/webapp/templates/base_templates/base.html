@@ -51,7 +51,7 @@
                 <li><a href="{{ url_for('train') }}">{{ word('Train') }}</a></li>
                 {%- endif %}
                 {%- if current_user.has_roles(['admin', 'developer']) %}
-                <li><a href="{{ url_for('package_page') }}">{{ word('Package Management') }}</a></li>
+                <li><a href="{{ url_for('update_package') }}">{{ word('Package Management') }}</a></li>
                 <li><a href="{{ url_for('logs') }}">{{ word('Logs') }}</a></li>
                 <li><a href="{{ url_for('playground_page') }}">{{ word('Playground') }}</a></li>
                 <li><a href="{{ url_for('utilities') }}">{{ word('Utilities') }}</a></li>

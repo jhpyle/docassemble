@@ -146,6 +146,8 @@ class DAFieldList(DAList):
         self.gathered = True
         return super(DAFieldList, self).init(**kwargs)
     def __str__(self):
+        return unicode(self).encode('utf-8')
+    def __unicode__(self):
         return docassemble.base.functions.comma_and_list(map(lambda x: '`' + x.variable + '`', self.elements))
 
 class DAQuestion(DAObject):
@@ -264,6 +266,10 @@ class DAQuestion(DAObject):
             content += "metadata:\n"
             content += "  title: " + oneline(self.title) + "\n"
             content += "  short title: " + oneline(self.short_title) + "\n"
+        elif self.type == 'modules':
+            content += "modules:\n"
+            for module in self.modules:
+                content += " - " + str(module) + "\n"
         elif self.type == 'images':
             content += "images:\n"
             for key, value in self.interview.decorations.iteritems():

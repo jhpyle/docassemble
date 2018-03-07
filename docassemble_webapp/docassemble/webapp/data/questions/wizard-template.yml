@@ -11,6 +11,7 @@ objects:
   - interview: DAInterview
   - main_code: DAQuestion
   - metadata: DAQuestion
+  - modules: DAQuestion
   - decorations: DAQuestion
   - attachments: DAAttachmentList
 ---
@@ -165,6 +166,16 @@ code: |
   metadata.title = interview.title
   metadata.short_title = interview.short_title
   interview.blocks.append(metadata)
+---
+mandatory: True
+code: |
+  interview.demonstrate()
+  if using_modules:
+    modules.type = 'modules'
+    modules.interview = interview
+    modules.file_name = interview.file_name
+    modules.modules = ['docassemble.base.util']
+    interview.blocks.append(modules)
 ---
 mandatory: True
 code: |
@@ -545,3 +556,21 @@ subquestion: |
   [Documents]: https://docassemble.org/docs/documents.html
   [Templates section]: ${ url_of('playgroundtemplate') }
 field: splash_screen
+---
+question: |
+  Do you want to use **docassemble** functions and
+  objects in your interview?
+subquestion: |
+  If you say yes, a `modules` block will be added to your interview.
+  This block will make all of the functions and objects of the
+  `docassemble.base.util` Python module available for use in your
+  interview.
+
+  The block will have the same effect as running this Python
+  statement:
+
+  ```from docassemble.base.util import *```
+  
+  If you are not sure what any of this means, feel free to
+  say "No" here.
+yesno: using_modules

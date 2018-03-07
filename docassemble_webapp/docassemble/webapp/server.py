@@ -1845,7 +1845,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
                 if current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
                     navbar +='<li><a href="' + url_for('train') + '">' + word('Train') + '</a></li>'
                 if current_user.has_role('admin', 'developer'):
-                    navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
+                    navbar +='<li><a href="' + url_for('update_package') + '">' + word('Package Management') + '</a></li>'
                     navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
                     navbar +='<li><a href="' + url_for('playground_page') + '">' + word('Playground') + '</a></li>'
                     navbar +='<li><a href="' + url_for('utilities') + '">' + word('Utilities') + '</a></li>'
@@ -9606,7 +9606,7 @@ def update_package():
         $("#giturl").on('change', get_branches);
       });
     </script>"""
-    return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, package_list=package_list, tab_title=word('Update Package'), page_title=word('Update Package'), extra_js=Markup(extra_js)), 200
+    return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, package_list=package_list, tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js)), 200
 
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():
@@ -13026,13 +13026,13 @@ $( document ).ready(function() {
 #         output += "      exampleData[" + str(repr(key)) + "] = " + str(json.dumps(val)) + "\n"
 #     return output
 
-@app.route('/packages', methods=['GET', 'POST'])
-@login_required
-@roles_required(['admin', 'developer'])
-def package_page():
-    if request.method == 'GET' and needs_to_change_password():
-        return redirect(url_for('user.change_password', next=url_for('interview_list')))
-    return render_template('pages/packages.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Package Management"), page_title=word("Package Management")), 200
+# @app.route('/packages', methods=['GET', 'POST'])
+# @login_required
+# @roles_required(['admin', 'developer'])
+# def package_page():
+#     if request.method == 'GET' and needs_to_change_password():
+#         return redirect(url_for('user.change_password', next=url_for('interview_list')))
+#     return render_template('pages/packages.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Package Management"), page_title=word("Package Management")), 200
 
 @app.errorhandler(404)
 def page_not_found_error(the_error):
@@ -16244,7 +16244,7 @@ def retrieve_email(email_id):
 
 class AddressEmail(object):
     def __str__(self):
-        return str(self.address)
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.address)
 

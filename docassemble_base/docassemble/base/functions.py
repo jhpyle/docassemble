@@ -71,14 +71,14 @@ class ReturnValue(object):
         for key, value in kwargs.iteritems():
             if key not in ['extra', 'value']:
                 setattr(self, key, value)
-    def __str__(self):
-        if hasattr(self, 'ok') and self.ok and hasattr(self, 'content'):
-            return self.content
-        if hasattr(self, 'error_message'):
-            return str(self.error_message)
-        return str(self.value)
     def __unicode__(self):
-        return unicode(self.__str__())
+        if hasattr(self, 'ok') and self.ok and hasattr(self, 'content'):
+            return unicode(self.content)
+        if hasattr(self, 'error_message'):
+            return unicode(self.error_message)
+        return unicode(self.value)
+    def __str__(self):
+        return unicode(self).encode('utf-8')
 
 def get_current_variable():
     if len(this_thread.current_variable):
@@ -370,9 +370,9 @@ class TheUser:
             return self.first_name
         return word("Unnamed User")
     def __str__(self):
-        return self.name()
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
-        return unicode(self.__str__())
+        return unicode(self.name())
 
 def user_info():
     """Returns an object with information from the user profile.  Keys 
@@ -566,7 +566,7 @@ class DATagsSet():
     def __hash__(self, the_object):
         return this_thread.internal['tags'].__hash__(the_object)
     def __str__(self):
-        return str(this_thread.internal['tags'])
+        return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(this_thread.internal['tags'])
     def union(self, other_set):
@@ -682,11 +682,11 @@ class DANav(object):
         self.sections = None
         self.current = None
 
-    def __str__(self):
+    def __unicode__(self):
         return self.show_sections(style='inline')
     
-    def __unicode__(self):
-        return unicode(self.__str__())
+    def __str__(self):
+        return unicode(self).encode('utf-8')
 
     def set_section(self, section):
         """Sets the current section in the navigation."""
