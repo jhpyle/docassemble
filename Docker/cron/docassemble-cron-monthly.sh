@@ -1,10 +1,11 @@
 #! /bin/bash
 
-export DA_CONFIG_FILE=/usr/share/docassemble/config/config.yml
+export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
+export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/local}/bin/activate"
+export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
-source /usr/share/docassemble/local/bin/activate
-source /dev/stdin < <(su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
+source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
-    /usr/share/docassemble/webapp/run-cron.sh cron_monthly
+    ${DA_ROOT}/webapp/run-cron.sh cron_monthly
 fi

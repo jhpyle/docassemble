@@ -1,12 +1,13 @@
 #! /bin/bash
 
 export HOME=/root
-export DA_ACTIVATE="${DA_PYTHON:-/usr/share/docassemble/local}/bin/activate"
+export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
+export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/local}/bin/activate"
 echo "Activating with ${DA_ACTIVATE}"
 source $DA_ACTIVATE
 
-export DA_CONFIG_FILE_DIST="${DA_CONFIG_FILE_DIST:-/usr/share/docassemble/config/config.yml.dist}"
-export DA_CONFIG_FILE="${DA_CONFIG:-/usr/share/docassemble/config/config.yml}"
+export DA_CONFIG_FILE_DIST="${DA_CONFIG_FILE_DIST:-${DA_ROOT}/config/config.yml.dist}"
+export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 
 if pg_isready -q; then
@@ -158,8 +159,8 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
 	s3cmd -q sync s3://${S3BUCKET}/apache/ /etc/apache2/sites-available/
     fi
     if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/log) ]]; then
-	s3cmd -q sync s3://${S3BUCKET}/log/ ${LOGDIRECTORY:-/usr/share/docassemble/log}/
-	chown -R www-data.www-data ${LOGDIRECTORY:-/usr/share/docassemble/log}
+	s3cmd -q sync s3://${S3BUCKET}/log/ ${LOGDIRECTORY:-${DA_ROOT}/log}/
+	chown -R www-data.www-data ${LOGDIRECTORY:-${DA_ROOT}/log}
     fi
     if [[ $(s3cmd ls s3://${S3BUCKET}/config.yml) ]]; then
 	rm -f $DA_CONFIG_FILE
@@ -197,10 +198,10 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	    if ! [[ $the_file =~ /$ ]]; then
 	        target_file=`basename $the_file`
   		echo "Copying log file $the_file" >&2
-	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${the_file}" "${LOGDIRECTORY:-/usr/share/docassemble/log}/${target_file}"
+	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${the_file}" "${LOGDIRECTORY:-${DA_ROOT}/log}/${target_file}"
 	    fi
 	done
-	chown -R www-data.www-data ${LOGDIRECTORY:-/usr/share/docassemble/log}
+	chown -R www-data.www-data ${LOGDIRECTORY:-${DA_ROOT}/log}
     fi
     if [[ $(python -m docassemble.webapp.list-cloud config.yml) ]]; then
 	rm -f $DA_CONFIG_FILE
@@ -214,32 +215,32 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	chown redis.redis "/var/lib/redis/dump.rdb"
     fi
 else
-    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ -f /usr/share/docassemble/backup/letsencrypt.tar.gz ]; then
+    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ -f ${DA_ROOT}/backup/letsencrypt.tar.gz ]; then
 	cd /
-	tar -xf /usr/share/docassemble/backup/letsencrypt.tar.gz
+	tar -xf ${DA_ROOT}/backup/letsencrypt.tar.gz
     fi
-    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ -d /usr/share/docassemble/backup/apache ]; then
-	rsync -auv /usr/share/docassemble/backup/apache/ /etc/apache2/sites-available/
+    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ -d ${DA_ROOT}/backup/apache ]; then
+	rsync -auv ${DA_ROOT}/backup/apache/ /etc/apache2/sites-available/
     fi
-    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ -d /usr/share/docassemble/backup/apachelogs ]; then
-	rsync -auv /usr/share/docassemble/backup/apachelogs/ /var/log/apache2/
+    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ -d ${DA_ROOT}/backup/apachelogs ]; then
+	rsync -auv ${DA_ROOT}/backup/apachelogs/ /var/log/apache2/
 	chown root.adm /var/log/apache2/*
 	chmod 640 /var/log/apache2/*
     fi
-    if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [ -d /usr/share/docassemble/backup/log ]; then
-	rsync -auv /usr/share/docassemble/backup/log/ ${LOGDIRECTORY:-/usr/share/docassemble}/log/
-	chown -R www-data.www-data /usr/share/docassemble/log
+    if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [ -d ${DA_ROOT}/backup/log ]; then
+	rsync -auv ${DA_ROOT}/backup/log/ ${LOGDIRECTORY:-${DA_ROOT}}/log/
+	chown -R www-data.www-data ${DA_ROOT}/log
     fi
-    if [ -f /usr/share/docassemble/backup/config.yml ]; then
-	cp /usr/share/docassemble/backup/config.yml $DA_CONFIG_FILE
+    if [ -f ${DA_ROOT}/backup/config.yml ]; then
+	cp ${DA_ROOT}/backup/config.yml $DA_CONFIG_FILE
 	chown www-data.www-data $DA_CONFIG_FILE
     fi
-    if [ -d /usr/share/docassemble/backup/files ]; then
-	rsync -auv /usr/share/docassemble/backup/files /usr/share/docassemble/
-	chown -R www-data.www-data /usr/share/docassemble/files
+    if [ -d ${DA_ROOT}/backup/files ]; then
+	rsync -auv ${DA_ROOT}/backup/files ${DA_ROOT}/
+	chown -R www-data.www-data ${DA_ROOT}/files
     fi
-    if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ -f /usr/share/docassemble/backup/redis.rdb ] && [ "$REDISRUNNING" = false ]; then
-	cp /usr/share/docassemble/backup/redis.rdb /var/lib/redis/dump.rdb
+    if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ -f ${DA_ROOT}/backup/redis.rdb ] && [ "$REDISRUNNING" = false ]; then
+	cp ${DA_ROOT}/backup/redis.rdb /var/lib/redis/dump.rdb
 	chown redis.redis "/var/lib/redis/dump.rdb"
     fi
 fi
@@ -297,20 +298,20 @@ if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s3cmd ls s3://${S3BUCKET}/config
 fi
 
 if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s3cmd ls s3://${S3BUCKET}/files) ]]; then
-    if [ -d /usr/share/docassemble/files ]; then
-	for the_file in $(ls /usr/share/docassemble/files); do
+    if [ -d ${DA_ROOT}/files ]; then
+	for the_file in $(ls ${DA_ROOT}/files); do
 	    if [[ $the_file =~ ^[0-9]+ ]]; then
-		for sub_file in $(find /usr/share/docassemble/files/$the_file -type f); do
-		    file_number=${sub_file#/usr/share/docassemble/files/}
+		for sub_file in $(find ${DA_ROOT}/files/$the_file -type f); do
+		    file_number=${sub_file#${DA_ROOT}/files/}
 		    file_number=${file_number:0:15}
-		    file_directory=/usr/share/docassemble/files/$file_number
+		    file_directory=${DA_ROOT}/files/$file_number
 		    target_file=${sub_file#${file_directory}}
 		    file_number=${file_number//\//}
 		    file_number=$((16#$file_number))
 		    s3cmd -q put $sub_file s3://${S3BUCKET}/files/$file_number/$target_file
 		done
 	    else
-	       s3cmd -q sync /usr/share/docassemble/files/$the_file/ s3://${S3BUCKET}/$the_file/
+	       s3cmd -q sync ${DA_ROOT}/files/$the_file/ s3://${S3BUCKET}/$the_file/
 	    fi
 	done
     fi
@@ -332,21 +333,21 @@ fi
 # echo "19.5"
 
 if [ "${AZUREENABLE:-false}" == "true" ] && [[ ! $(python -m docassemble.webapp.list-cloud files) ]]; then
-    if [ -d /usr/share/docassemble/files ]; then
-	for the_file in $(ls /usr/share/docassemble/files); do
+    if [ -d ${DA_ROOT}/files ]; then
+	for the_file in $(ls ${DA_ROOT}/files); do
 	    if [[ $the_file =~ ^[0-9]+ ]]; then
-		for sub_file in $(find /usr/share/docassemble/files/$the_file -type f); do
-		    file_number=${sub_file#/usr/share/docassemble/files/}
+		for sub_file in $(find ${DA_ROOT}/files/$the_file -type f); do
+		    file_number=${sub_file#${DA_ROOT}/files/}
 		    file_number=${file_number:0:15}
-		    file_directory=/usr/share/docassemble/files/$file_number/
+		    file_directory=${DA_ROOT}/files/$file_number/
 		    target_file=${sub_file#${file_directory}}
 		    file_number=${file_number//\//}
 		    file_number=$((16#$file_number))
 		    echo blob-cmd -f cp $sub_file "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/files/$file_number/$target_file"
 		done
 	    else
-		for sub_file in $(find /usr/share/docassemble/files/$the_file -type f); do
-		    target_file=${sub_file#/usr/share/docassemble/files/}
+		for sub_file in $(find ${DA_ROOT}/files/$the_file -type f); do
+		    target_file=${sub_file#${DA_ROOT}/files/}
 		    echo blob-cmd -f cp $sub_file "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$target_file"
 		done
 	    fi
@@ -379,22 +380,22 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     rm -f /etc/apache2/sites-available/default-ssl.conf
     if [ "${DAHOSTNAME:-none}" != "none" ]; then
 	if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ]; then
-	    cp /usr/share/docassemble/config/docassemble-ssl.conf.dist /etc/apache2/sites-available/docassemble-ssl.conf
+	    cp ${DA_ROOT}/config/docassemble-ssl.conf.dist /etc/apache2/sites-available/docassemble-ssl.conf
 	    rm -f /etc/letsencrypt/da_using_lets_encrypt
 	fi
 	if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ]; then
-	    cp /usr/share/docassemble/config/docassemble-http.conf.dist /etc/apache2/sites-available/docassemble-http.conf
+	    cp ${DA_ROOT}/config/docassemble-http.conf.dist /etc/apache2/sites-available/docassemble-http.conf
 	    rm -f /etc/letsencrypt/da_using_lets_encrypt
 	fi
 	if [ ! -f /etc/apache2/sites-available/docassemble-log.conf ]; then
-	    cp /usr/share/docassemble/config/docassemble-log.conf.dist /etc/apache2/sites-available/docassemble-log.conf
+	    cp ${DA_ROOT}/config/docassemble-log.conf.dist /etc/apache2/sites-available/docassemble-log.conf
 	fi
 	if [ ! -f /etc/apache2/sites-available/docassemble-redirect.conf ]; then
-	    cp /usr/share/docassemble/config/docassemble-redirect.conf.dist /etc/apache2/sites-available/docassemble-redirect.conf
+	    cp ${DA_ROOT}/config/docassemble-redirect.conf.dist /etc/apache2/sites-available/docassemble-redirect.conf
 	fi
     else
 	if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ]; then
-	    cp /usr/share/docassemble/config/docassemble-http.conf.dist /etc/apache2/sites-available/docassemble-http.conf || exit 1
+	    cp ${DA_ROOT}/config/docassemble-http.conf.dist /etc/apache2/sites-available/docassemble-http.conf || exit 1
 	fi
     fi
     a2ensite docassemble-http
@@ -471,7 +472,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
 	    fi
 	done
     else
-	PGBACKUPDIR=/usr/share/docassemble/backup/postgres
+	PGBACKUPDIR=${DA_ROOT}/backup/postgres
     fi
     if [ -d $PGBACKUPDIR ]; then
 	echo "Postgres database backup directory is $PGBACKUPDIR" >&2
@@ -501,8 +502,8 @@ fi
 
 echo "31" >&2
 
-if [ -f /etc/syslog-ng/syslog-ng.conf ] && [ ! -f /usr/share/docassemble/webapp/syslog-ng-orig.conf ]; then
-    cp /etc/syslog-ng/syslog-ng.conf /usr/share/docassemble/webapp/syslog-ng-orig.conf
+if [ -f /etc/syslog-ng/syslog-ng.conf ] && [ ! -f ${DA_ROOT}/webapp/syslog-ng-orig.conf ]; then
+    cp /etc/syslog-ng/syslog-ng.conf ${DA_ROOT}/webapp/syslog-ng-orig.conf
 fi
 
 # echo "32" >&2
@@ -523,8 +524,8 @@ fi
 
 # echo "34" >&2
 
-if [ "$OTHERLOGSERVER" = false ] && [ -f ${LOGDIRECTORY:-/usr/share/docassemble/log}/docassemble.log ]; then
-    chown www-data.www-data ${LOGDIRECTORY:-/usr/share/docassemble/log}/docassemble.log
+if [ "$OTHERLOGSERVER" = false ] && [ -f ${LOGDIRECTORY:-${DA_ROOT}/log}/docassemble.log ]; then
+    chown www-data.www-data ${LOGDIRECTORY:-${DA_ROOT}/log}/docassemble.log
 fi
 
 # echo "35" >&2
@@ -532,11 +533,11 @@ fi
 if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
     if [ -d /etc/syslog-ng ]; then
 	if [ "$OTHERLOGSERVER" = true ]; then
-	    cp /usr/share/docassemble/webapp/syslog-ng-docker.conf /etc/syslog-ng/syslog-ng.conf
-	    cp /usr/share/docassemble/webapp/docassemble-syslog-ng.conf /etc/syslog-ng/conf.d/docassemble.conf
+	    cp ${DA_ROOT}/webapp/syslog-ng-docker.conf /etc/syslog-ng/syslog-ng.conf
+	    cp ${DA_ROOT}/webapp/docassemble-syslog-ng.conf /etc/syslog-ng/conf.d/docassemble.conf
 	else
 	    rm -f /etc/syslog-ng/conf.d/docassemble.conf
-	    cp /usr/share/docassemble/webapp/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
+	    cp ${DA_ROOT}/webapp/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
 	fi
 	supervisorctl --serverurl http://localhost:9001 start syslogng
     fi
@@ -580,20 +581,20 @@ fi
 
 echo "42" >&2
 
-if [ ! -f /usr/share/docassemble/certs/apache.key ] && [ -f /usr/share/docassemble/certs/apache.key.orig ]; then
-    mv /usr/share/docassemble/certs/apache.key.orig /usr/share/docassemble/certs/apache.key
+if [ ! -f ${DA_ROOT}/certs/apache.key ] && [ -f ${DA_ROOT}/certs/apache.key.orig ]; then
+    mv ${DA_ROOT}/certs/apache.key.orig ${DA_ROOT}/certs/apache.key
 fi
-if [ ! -f /usr/share/docassemble/certs/apache.crt ] && [ -f /usr/share/docassemble/certs/apache.crt.orig ]; then
-    mv /usr/share/docassemble/certs/apache.crt.orig /usr/share/docassemble/certs/apache.crt
+if [ ! -f ${DA_ROOT}/certs/apache.crt ] && [ -f ${DA_ROOT}/certs/apache.crt.orig ]; then
+    mv ${DA_ROOT}/certs/apache.crt.orig ${DA_ROOT}/certs/apache.crt
 fi
-if [ ! -f /usr/share/docassemble/certs/apache.ca.pem ] && [ -f /usr/share/docassemble/certs/apache.ca.pem.orig ]; then
-    mv /usr/share/docassemble/certs/apache.ca.pem.orig /usr/share/docassemble/certs/apache.ca.pem
+if [ ! -f ${DA_ROOT}/certs/apache.ca.pem ] && [ -f ${DA_ROOT}/certs/apache.ca.pem.orig ]; then
+    mv ${DA_ROOT}/certs/apache.ca.pem.orig ${DA_ROOT}/certs/apache.ca.pem
 fi
-if [ ! -f /usr/share/docassemble/certs/exim.key ] && [ -f /usr/share/docassemble/certs/exim.key.orig ]; then
-    mv /usr/share/docassemble/certs/exim.key.orig /usr/share/docassemble/certs/exim.key
+if [ ! -f ${DA_ROOT}/certs/exim.key ] && [ -f ${DA_ROOT}/certs/exim.key.orig ]; then
+    mv ${DA_ROOT}/certs/exim.key.orig ${DA_ROOT}/certs/exim.key
 fi
-if [ ! -f /usr/share/docassemble/certs/exim.crt ] && [ -f /usr/share/docassemble/certs/exim.crt.orig ]; then
-    mv /usr/share/docassemble/certs/exim.crt.orig /usr/share/docassemble/certs/exim.crt
+if [ ! -f ${DA_ROOT}/certs/exim.crt ] && [ -f ${DA_ROOT}/certs/exim.crt.orig ]; then
+    mv ${DA_ROOT}/certs/exim.crt.orig ${DA_ROOT}/certs/exim.crt
 fi
 python -m docassemble.webapp.install_certs $DA_CONFIG_FILE || exit 1
 
@@ -625,7 +626,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	a2dismod remoteip
 	a2disconf docassemble-behindlb
     fi
-    echo -e "# This file is automatically generated\nWSGIPythonHome ${DA_PYTHON:-/usr/share/docassemble/local}\nTimeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}" > /etc/apache2/conf-available/docassemble.conf
+    echo -e "# This file is automatically generated\nWSGIPythonHome ${DA_PYTHON:-${DA_ROOT}/local}\nTimeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}" > /etc/apache2/conf-available/docassemble.conf
     if [ -n "${CROSSSITEDOMAIN}" ]; then
 	echo "Define DACROSSSITEDOMAIN ${CROSSSITEDOMAIN}" >> /etc/apache2/conf-available/docassemble.conf
     fi
@@ -639,7 +640,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	a2enmod ssl
 	a2ensite docassemble-ssl
 	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
-	    cd /usr/share/docassemble/letsencrypt 
+	    cd ${DA_ROOT}/letsencrypt 
 	    if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
 		./letsencrypt-auto renew
 	    else
@@ -685,12 +686,12 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
     else
 	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
 	    cd /
-	    rm -f /usr/share/docassemble/backup/letsencrypt.tar.gz
-	    tar -zcf /usr/share/docassemble/backup/letsencrypt.tar.gz etc/letsencrypt
+	    rm -f ${DA_ROOT}/backup/letsencrypt.tar.gz
+	    tar -zcf ${DA_ROOT}/backup/letsencrypt.tar.gz etc/letsencrypt
 	fi
-	rm -rf /usr/share/docassemble/backup/apache
-	mkdir -p /usr/share/docassemble/backup/apache
-	rsync -auv /etc/apache2/sites-available/ /usr/share/docassemble/backup/apache/
+	rm -rf ${DA_ROOT}/backup/apache
+	mkdir -p ${DA_ROOT}/backup/apache
+	rsync -auv /etc/apache2/sites-available/ ${DA_ROOT}/backup/apache/
     fi
 fi
 
@@ -736,7 +737,7 @@ echo "49" >&2
 
 if [ "$CRONRUNNING" = false ]; then
     if ! grep -q '^CONTAINERROLE' /etc/crontab; then
-	bash -c "set | grep '^CONTAINERROLE'; cat /etc/crontab" > /tmp/crontab && cat /tmp/crontab > /etc/crontab && rm -f /tmp/crontab
+	bash -c "set | grep -e '^CONTAINERROLE' -e '^DA_PYTHON' -e '^DA_CONFIG' -e '^DA_ROOT'; cat /etc/crontab" > /tmp/crontab && cat /tmp/crontab > /etc/crontab && rm -f /tmp/crontab
     fi
     supervisorctl --serverurl http://localhost:9001 start cron
 fi
@@ -745,7 +746,7 @@ echo "50" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|mail):.* && ($DBTYPE = "postgresql" || $DBTYPE = "mysql") ]]; then
     if [ "${DBTYPE}" = "postgresql" ]; then
-	cp /usr/share/docassemble/config/exim4-router-postgresql /etc/exim4/dbrouter
+	cp ${DA_ROOT}/config/exim4-router-postgresql /etc/exim4/dbrouter
 	if [ "${DBHOST:-null}" != "null" ]; then
             echo -n 'hide pgsql_servers = '${DBHOST} > /etc/exim4/dbinfo
 	else
@@ -757,7 +758,7 @@ if [[ $CONTAINERROLE =~ .*:(all|mail):.* && ($DBTYPE = "postgresql" || $DBTYPE =
 	echo '/'${DBNAME}'/'${DBUSER}'/'${DBPASSWORD} >> /etc/exim4/dbinfo
     fi
     if [ "$DBTYPE" = "mysql" ]; then
-	cp /usr/share/docassemble/config/exim4-router-mysql /etc/exim4/dbrouter
+	cp ${DA_ROOT}/config/exim4-router-mysql /etc/exim4/dbrouter
 	if [ "${DBHOST:-null}" != "null" ]; then
             echo -n 'hide mysql_servers = '${DBHOST} > /etc/exim4/dbinfo
 	else
@@ -804,28 +805,28 @@ function deregister {
     if [ "${S3ENABLE:-false}" == "true" ]; then
 	su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_deregister" www-data 
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
-	    s3cmd -q sync /usr/share/docassemble/log/ s3://${S3BUCKET}/log/
+	    s3cmd -q sync ${DA_ROOT}/log/ s3://${S3BUCKET}/log/
 	fi
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_deregister" www-data 
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
-	    for the_file in $(find /usr/share/docassemble/log -type f | cut -c 28-); do
+	    for the_file in $(find ${DA_ROOT}/log -type f | cut -c 28-); do
 		echo "Saving log file $the_file" >&2
-		blob-cmd -f cp "/usr/share/docassemble/log/$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/$target_file" 
+		blob-cmd -f cp "${DA_ROOT}/log/$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/$target_file" 
 	    done
 	fi
     else
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
-	    rm -rf /usr/share/docassemble/backup/log
-	    rsync -auv /usr/share/docassemble/log /usr/share/docassemble/backup/
-	    rm -rf /usr/share/docassemble/backup/apachelogs
-	    mkdir -p /usr/share/docassemble/backup/apachelogs
-	    rsync -auv /var/log/apache2/ /usr/share/docassemble/backup/apachelogs/
+	    rm -rf ${DA_ROOT}/backup/log
+	    rsync -auv ${DA_ROOT}/log ${DA_ROOT}/backup/
+	    rm -rf ${DA_ROOT}/backup/apachelogs
+	    mkdir -p ${DA_ROOT}/backup/apachelogs
+	    rsync -auv /var/log/apache2/ ${DA_ROOT}/backup/apachelogs/
 	fi
-	rm -f /usr/share/docassemble/backup/config.yml
-	cp /usr/share/docassemble/config/config.yml /usr/share/docassemble/backup/config.yml
-	rm -rf /usr/share/docassemble/backup/files
-	rsync -auv /usr/share/docassemble/files /usr/share/docassemble/backup/
+	rm -f ${DA_ROOT}/backup/config.yml
+	cp $DA_CONFIG_FILE ${DA_ROOT}/backup/config.yml
+	rm -rf ${DA_ROOT}/backup/files
+	rsync -auv ${DA_ROOT}/files ${DA_ROOT}/backup/
     fi
     echo "finished shutting down initialize" >&2
     kill %1

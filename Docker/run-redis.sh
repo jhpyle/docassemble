@@ -1,8 +1,9 @@
 #!/bin/bash
 
-export DA_ACTIVATE="${DA_PYTHON:-/usr/share/docassemble/local}/bin/activate"
-
-source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config" www-data)
+export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
+export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/local}/bin/activate"
+export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
+source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
 
 if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
     export S3ENABLE=true
@@ -29,7 +30,7 @@ function stopfunc {
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	blob-cmd -f cp "/var/lib/redis/dump.rdb" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/redis.rdb"
     else
-	cp /var/lib/redis/dump.rdb /usr/share/docassemble/backup/redis.rdb
+	cp /var/lib/redis/dump.rdb ${DA_ROOT}/backup/redis.rdb
     fi
     exit 0
 }

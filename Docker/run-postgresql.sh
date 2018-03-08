@@ -1,7 +1,8 @@
 #!/bin/bash
 
-export DA_ACTIVATE="${DA_PYTHON:-/usr/share/docassemble/local}/bin/activate"
-export DA_CONFIG_FILE="${DA_CONFIG:-/usr/share/docassemble/config/config.yml}"
+export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
+export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/local}/bin/activate"
+export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
 source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
 
 PGVERSION=`pg_config --version | sed 's/PostgreSQL \([0-9][0-9]*\.[0-9][0-9]*\).*/\1/'`
@@ -10,14 +11,10 @@ if [[ $PGVERSION == 10* ]]; then
     PGVERSION=10
 fi
 
-export DA_ACTIVATE="${DA_PYTHON:-/usr/share/docassemble/local}/bin/activate"
-
 chown -R postgres.postgres /etc/postgresql
 chown -R postgres.postgres /var/lib/postgresql
 chown -R postgres.postgres /var/run/postgresql
 chown -R postgres.postgres /var/log/postgresql
-
-source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config" www-data)
 
 if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
     export S3ENABLE=true
@@ -42,7 +39,7 @@ function stopfunc {
     if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
 	PGBACKUPDIR=`mktemp -d`
     else
-	PGBACKUPDIR=/usr/share/docassemble/backup/postgres
+	PGBACKUPDIR=${DA_ROOT}/backup/postgres
 	mkdir -p $PGBACKUPDIR
     fi
     chown postgres.postgres "$PGBACKUPDIR"
