@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.36] - 2018-03-07
+### Fixed
+- Cron jobs and environment variables
+
 ## [0.2.35] - 2018-03-06
 ### Changed
 - Replaced Package Management with the former "Update a Package."

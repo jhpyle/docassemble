@@ -1949,7 +1949,7 @@ def get_pdf_paths(target, paths):
     elif isinstance(target, DAFile) or isinstance(target, DAStaticFile):
         paths.append(target.path())
 
-def include_docx_template(template_file):
+def include_docx_template(template_file, **kwargs):
     """Include the contents of one docx file inside another docx file."""
     if this_thread.evaluation_context is None:
         return 'ERROR: not in a docx file'

@@ -3,6 +3,7 @@
 export DA_CONFIG_FILE=/usr/share/docassemble/config/config.yml
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 source /usr/share/docassemble/local/bin/activate
+source /dev/stdin < <(su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
 
 for old_dir in $( find /tmp -maxdepth 1 -type d -mmin +60 -path "/tmp/SavedFile*" ); do
     rm -rf "$old_dir"
@@ -10,7 +11,7 @@ done
 
 for old_dir in $( find /tmp -maxdepth 1 -type f -mmin +60 -path "/tmp/datemp*" ); do
     rm -rf "$old_dir"
-done	       
+done
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     /usr/share/docassemble/webapp/run-cron.sh cron_hourly

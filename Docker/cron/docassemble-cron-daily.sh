@@ -27,31 +27,31 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     if [ "${USEHTTPS:-false}" == "true" ]; then
 	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
 	    if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
-		supervisorctl --serverurl http://localhost:9001 stop apache2
+		/usr/bin/supervisorctl --serverurl http://localhost:9001 stop apache2
 		cd /usr/share/docassemble/letsencrypt
 		./letsencrypt-auto renew
 		/etc/init.d/apache2 stop
-		supervisorctl --serverurl http://localhost:9001 start apache2
+		/usr/bin/supervisorctl --serverurl http://localhost:9001 start apache2
 		if [ "${S3ENABLE:-false}" == "true" ]; then
 		    cd /
 		    if [ "${USELETSENCRYPT:-none}" != "none" ]; then
 			rm -f /tmp/letsencrypt.tar.gz
-			tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-			s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz
+			/bin/tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+			/usr/bin/s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz
 		    fi
-		    s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
+		    /usr/bin/s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
 		fi
 		if [ "${AZUREENABLE:-false}" == "true" ]; then
-		    blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
+		    /usr/bin/blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 		    cd /
 		    if [ "${USELETSENCRYPT:-none}" != "none" ]; then
 			rm -f /tmp/letsencrypt.tar.gz
-			tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-			blob-cmd -f cp /tmp/letsencrypt.tar.gz 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/letsencrypt.tar.gz'
+			/bin/tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+			/usr/bin/blob-cmd -f cp /tmp/letsencrypt.tar.gz 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/letsencrypt.tar.gz'
 		    fi
-		    for the_file in $( find /etc/apache2/sites-available/ -type f ); do
+		    for the_file in $( /usr/bin/find /etc/apache2/sites-available/ -type f ); do
 			target_file=`basename $the_file`
-			blob-cmd -f cp "$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/apache/'"$target_file"
+			/usr/bin/blob-cmd -f cp "$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/apache/'"$target_file"
 		    done
 		fi
 		if [ ! -f /etc/ssl/docassemble/exim.crt ] && [ ! -f /etc/ssl/docassemble/exim.key ]; then
@@ -61,8 +61,8 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 		    chown root.Debian-exim /etc/exim4/exim.key
 		    chmod 640 /etc/exim4/exim.crt
 		    chmod 640 /etc/exim4/exim.key
-		    supervisorctl --serverurl http://localhost:9001 stop exim4
-		    supervisorctl --serverurl http://localhost:9001 start exim4
+		    /usr/bin/supervisorctl --serverurl http://localhost:9001 stop exim4
+		    /usr/bin/supervisorctl --serverurl http://localhost:9001 start exim4
 		fi
 	    fi
 	fi
@@ -74,29 +74,29 @@ BACKUPDIR=/usr/share/docassemble/backup/$MONTHDAY
 rm -rf $BACKUPDIR
 mkdir -p $BACKUPDIR
 if [[ $CONTAINERROLE =~ .*:(all|web|celery|log|cron):.* ]]; then
-    rsync -au /usr/share/docassemble/files $BACKUPDIR/
-    rsync -au /usr/share/docassemble/config $BACKUPDIR/
-    rsync -au --exclude '*/worker.log*' /usr/share/docassemble/log $BACKUPDIR/
+    /usr/bin/rsync -au /usr/share/docassemble/files $BACKUPDIR/
+    /usr/bin/rsync -au /usr/share/docassemble/config $BACKUPDIR/
+    /usr/bin/rsync -au --exclude '*/worker.log*' /usr/share/docassemble/log $BACKUPDIR/
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     PGBACKUPDIR=`mktemp -d`
     chown postgres.postgres "$PGBACKUPDIR"
-    su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
-    rsync -au "$PGBACKUPDIR/" $BACKUPDIR/postgres
+    su postgres -c '/usr/bin/psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"/usr/bin/pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
+    /usr/bin/rsync -au "$PGBACKUPDIR/" $BACKUPDIR/postgres
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	s3cmd sync "$PGBACKUPDIR/" s3://${S3BUCKET}/postgres/
+	/usr/bin/s3cmd sync "$PGBACKUPDIR/" s3://${S3BUCKET}/postgres/
     fi
     if [ "${AZUREENABLE:-false}" == "true" ]; then
 	for the_file in $( find "$PGBACKUPDIR/" -type f ); do
-	    target_file=`basename $the_file`	    
-	    blob-cmd -f cp "$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}"/postgres/$target_file"
+	    target_file=`/usr/bin/basename $the_file`	    
+	    /usr/bin/blob-cmd -f cp "$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}"/postgres/$target_file"
 	done
     fi
     rm -rf "$PGBACKUPDIR"
 fi
 if [ "${AZUREENABLE:-false}" == "false" ]; then
-   rm -rf `find /usr/share/docassemble/backup -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +14 -print`
+   rm -rf `/usr/bin/find /usr/share/docassemble/backup -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +14 -print`
 fi
 if [ "${S3ENABLE:-false}" == "true" ]; then
     if [ "${EC2:-false}" == "true" ]; then

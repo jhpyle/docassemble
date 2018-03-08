@@ -735,7 +735,10 @@ su -c "source $DA_ACTIVATE && python -m docassemble.webapp.register $DA_CONFIG_F
 echo "49" >&2
 
 if [ "$CRONRUNNING" = false ]; then
-   supervisorctl --serverurl http://localhost:9001 start cron
+    if ! grep -q '^CONTAINERROLE' /etc/crontab; then
+	bash -c "set | grep '^CONTAINERROLE'; cat /etc/crontab" > /tmp/crontab && cat /tmp/crontab > /etc/crontab && rm -f /tmp/crontab
+    fi
+    supervisorctl --serverurl http://localhost:9001 start cron
 fi
 
 echo "50" >&2
