@@ -13,7 +13,7 @@ that communicate with a central server.  For information about how to
 install **docassemble** in a multi-server arrangement on
 [EC2 Container Service] ("[ECS]"), see the [scalability] section.
 
-# Choosing where to run Docker
+# <a name="where"></a>Choosing where to run Docker
 
 [Docker] can be run on a Windows PC, a Mac, an on-site Linux machinne,
 or a Linux-based virtual machine in the cloud.  Since **docassemble**
@@ -90,7 +90,7 @@ To get a command line on a Mac, launch the [Terminal] application.
 To get a command line on a virtual machine in the cloud, follow your
 provider's instructions for using [SSH] to connect to your machine.
 
-## Starting
+## <a name="starting"></a>Starting
 
 From the command line, simply type in:
 
@@ -136,7 +136,7 @@ runs, the container uses about 10GB of hard drive space.  The
 [docassemble repository] on [GitHub].  It is rebuilt every time the
 minor version of **docassemble** increases.
 
-## Shutting down
+## <a name="shutdown"></a>Shutting down
 
 Shut down the container by running:
 
@@ -166,7 +166,7 @@ initialization.
 To see a list of stopped containers, run `docker ps -a`.  To remove a
 container, run `docker rm <containerid>`.
 
-## Troubleshooting
+## <a name="troubleshooting"></a>Troubleshooting
 
 You should not need to access the running container in order to get
 **docassemble** to work, and all the log files you need will hopefully
@@ -502,7 +502,7 @@ container for the new configuration to take effect.
   directive.  If `DASECRETKEY` is not set, a random secret key will be
   generated.
 
-## Changing the configuration
+## <a name="configuration"></a>Changing the configuration
 
 If you already have an existing **docassemble** installation and you
 want to `run` a new [Docker] container using it, but you want to
@@ -820,7 +820,7 @@ To change the [Redis] server that **docassemble** uses, edit the
 To change the [RabbitMQ] server that **docassemble** uses, edit the
 [`RABBITMQ`]<span></span> [configuration option].
 
-## Port opening
+## <a name="ports"></a>Port opening
 
 Note that for every service that a [Docker] container provides,
 appropriate ports need to be forwarded from the [Docker] host machine
@@ -882,7 +882,7 @@ A preferable way to share files is with [Amazon S3] or
 [using S3] and [using Azure blob storage] sections for instructions on
 setting this up.
 
-## Configuration file
+## <a name="config file"></a>Configuration file
 
 Note that when you use the cloud ([S3](#persistent s3) or
 [Azure blob storage](#persistent azure)) for [data storage],
@@ -1367,7 +1367,7 @@ Or push it to [Docker Hub]:
 docker push yourdockerhubusername/mydocassemble
 {% endhighlight %}
 
-# Upgrading docassemble when using Docker
+# <a name="upgrading"></a>Upgrading docassemble when using Docker
 
 As new versions of **docassemble** become available, you can obtain
 the latest version by running this within the "docassemble" directory:
@@ -1384,9 +1384,11 @@ When you are using [Docker] to run **docassemble**, you can upgrade
 jhpyle/docassemble`, then running [`docker stop`] and [`docker rm`] on
 your **docassemble** container, followed by [`docker run`].  Note,
 however, that [`docker rm`] will delete all of the data on the server
-unless you are using a [data storage] system.
+unless you are using a [data storage] system.  Also, you will probably
+also want to run [`docker rmi`] before pulling a new image so that you
+do not run out of space.  (See the [next section](#cleanup).)
 
-# Cleaning up after Docker
+# <a name="cleanup"></a>Cleaning up after Docker
 
 If you run `docker pull` to retrieve new versions of **docassemble**,
 or you build your own **docassemble** images more than once, you may
@@ -1404,9 +1406,9 @@ docker rm $(docker ps -a -q)
 docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
 {% endhighlight %}
 
-The last line, which deletes images, frees up the most disk space.
-However, it may be necessary to remove the containers first, as the
-containers depend on the images.
+The last line, which deletes images, frees up the most disk space.  It
+is usually necessary to remove the containers first (the [`docker rm`]
+line), as the containers depend on the images.
 
 [Redis]: http://redis.io/
 [Docker installation instructions for Windows]: https://docs.docker.com/engine/installation/windows/
@@ -1539,6 +1541,7 @@ containers depend on the images.
 [data storage]: #data storage
 [`docker stop`]: https://docs.docker.com/engine/reference/commandline/stop/
 [`docker rm`]: https://docs.docker.com/engine/reference/commandline/rm/
+[`docker rmi`]: https://docs.docker.com/engine/reference/commandline/rmi/
 [`docker run`]: https://docs.docker.com/engine/reference/commandline/run/
 [`docker build`]: https://docs.docker.com/engine/reference/commandline/build/
 [`docker ps`]: https://docs.docker.com/engine/reference/commandline/ps/
