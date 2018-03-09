@@ -1353,6 +1353,28 @@
       This is a complaint.
 
       Blah, blah, blah
+"dalink": |-
+  objects:
+    - the_link: DALink
+  ---
+  question: |
+    Tell me about a hyperlink.
+  fields:
+    - URL: the_link.url
+      hint: https://google.com
+    - Anchor text: the_link.anchor_text
+      hint: Google
+  ---
+  mandatory: True
+  question: |
+    Hyperlinks
+  subquestion: |
+    You can find all the information
+    you need at ${ the_link }.
+  attachment:
+    name: Hyperlink demonstration
+    filename: hyperlink_demo
+    docx template file: dalink.docx
 "dalist": |-
   modules:
     - docassemble.base.legal

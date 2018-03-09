@@ -1346,6 +1346,23 @@ template that refers to variables that you decide you don't actually
 want to use.  If your interview simply sets those variables to
 `DAEmpty`, your template will not trigger an error.
 
+## <a name="DALink"></a>DALink
+
+The `DALink` class represents a [hyperlink] to a [URL].  It has two
+properties:
+
+* `url`: the [URL] to which the link points.
+* `anchor_text`: the text of the link that the user sees.
+
+In most circumstances, it is not necessary to use a `DALink` to
+represent a [hyperlink] because you can use [Markdown] to indicate a
+hyperlink.  However, when you are creating a document from a [`docx
+template file`], [Markdown] syntax is not available.  When a `DALink`
+object is used within a [`docx template file`], an actual .docx
+hyperlink is inserted into the document.
+
+{% include side-by-side.html demo="dalink" %}
+
 ## <a name="DARedis"></a>DARedis
 
 The `DARedis` class facilitates the use of [Redis] for in-memory
@@ -3318,4 +3335,6 @@ of the original [`DADateTime`] object.  See
 [translation system]: {{ site.baseurl }}/docs/functions.html#translation
 [`docassemble.base.util.update_language_function()`]: {{ site.baseurl }}/docs/functions.html#linguistic
 [`docassemble.base.functions`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/functions.py
-
+[hyperlink]: https://en.wikipedia.org/wiki/Hyperlink
+[URL]: https://en.wikipedia.org/wiki/URL
+[`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
