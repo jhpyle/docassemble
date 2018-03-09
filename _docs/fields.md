@@ -776,6 +776,11 @@ provided, the default of which is 1.
 
 {% include side-by-side.html demo="range" %}
 
+You can also include an optional `scale`, which you can set to
+`logarithmic`.
+
+{% include side-by-side.html demo="range-log" %}
+
 ## <a name="file"></a><a name="files"></a>File uploads
 
 Using the `file` or `files` datatypes within a `fields` list, you can

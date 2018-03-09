@@ -7100,6 +7100,19 @@
       datatype: range
       min: 1
       max: 10
+"range-log": |-
+  question: |
+    What is the airspeed velocity,
+    in miles per hour, of an
+    unladen swallow?
+  fields:
+    - Velocity: velocity
+      datatype: range
+      min: 1
+      max: 10000
+      step: 10
+      default: 10
+      scale: logarithmic
 "read-qr": |-
   question: |
     Please upload a file (or files) with
@@ -9222,6 +9235,7 @@
     - Suffix: gardener.name.suffix
       required: False
       code: name_suffix()
+"subdoc-params": ""
 "subdocument": |-
   mandatory: True
   question: |
