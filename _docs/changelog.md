@@ -10,6 +10,10 @@ short_title: Change Log
 - The `DALink` object type, which allows hyperlinks to be inserted
   into .docx files.
 
+### Changed
+- The `showif()` and `showifdef()` functions can now be configured to
+  return a default value other than the empty string.
+
 ### Fixed
 - Cron jobs and environment variables.  This requires a system reset.
 
