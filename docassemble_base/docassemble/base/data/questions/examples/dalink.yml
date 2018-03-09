@@ -1,0 +1,30 @@
+metadata:
+  title: Hyperlink
+  documentation: "https://docassemble.org/docs/objects.html#DALink"
+  example start: 2
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - the_link: DALink
+---
+question: |
+  Tell me about a hyperlink.
+fields:
+  - URL: the_link.url
+    hint: https://google.com
+  - Anchor text: the_link.anchor_text
+    hint: Google
+---
+mandatory: True
+question: |
+  Hyperlinks
+subquestion: |
+  You can find all the information
+  you need at ${ the_link }.
+attachment:
+  name: Hyperlink demonstration
+  filename: hyperlink_demo
+  docx template file: dalink.docx

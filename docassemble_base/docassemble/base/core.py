@@ -13,13 +13,14 @@ import mimetypes
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article, force_gather
 import docassemble.base.functions
 import docassemble.base.file_docx
+from docassemble.base.file_docx import InlineHyperlink
 from docassemble.webapp.files import SavedFile
 from docxtpl import InlineImage
 import tempfile
 import time
 import stat
 
-__all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty']
+__all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink']
 
 unique_names = set()
 
@@ -2039,16 +2040,16 @@ class DAFile(DAObject):
         """
         #logmessage("show")
         if not self.ok:
-            return('')
+            return(u'')
         if hasattr(self, 'number') and hasattr(self, 'extension') and self.extension == 'pdf' and wait:
             self.page_path(1, 'page')
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.docx_template, width=width)
         else:
             if width is not None:
-                return('[FILE ' + str(self.number) + ', ' + str(width) + ']')
+                return(u'[FILE ' + unicode(self.number) + u', ' + unicode(width) + u']')
             else:
-                return('[FILE ' + str(self.number) + ']')
+                return(u'[FILE ' + unicode(self.number) + u']')
     def url_for(self, **kwargs):
         """Returns a URL to the file."""
         return server.url_finder(self, **kwargs)
@@ -2107,7 +2108,7 @@ class DAFileCollection(DAObject):
         for the_file in the_files:
             if isinstance(the_file, InlineImage):
                 return the_file
-        return " ".join(the_files)
+        return u' '.join(the_files)
     def __str__(self):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
@@ -2434,3 +2435,15 @@ def recurse_obj(the_object, recursive=True):
             else:
                 return the_object
     return the_object
+
+class DALink(DAObject):
+    """An object type Represents a hyperlink to a URL."""
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+    def __unicode__(self):
+        return unicode(self.show())
+    def show(self):
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+            return docassemble.base.file_docx.create_hyperlink(self.url, self.anchor_text, docassemble.base.functions.this_thread.docx_template)
+        else:
+            return '[%s](%s)' % (self.anchor_text, self.url)

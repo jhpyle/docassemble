@@ -2937,23 +2937,23 @@ def split(text, breaks, index):
         return parts[int(float(index))]
     return ''
 
-def showif(var, condition):
+def showif(var, condition, alternative=''):
     """Returns the variable indicated by the variable name if the
-    condition is true, but otherwise returns empty text.
+    condition is true, but otherwise returns empty text, or other alternative text.
 
     """
     if condition:
         return value(var)
-    return ''
+    return alternative
 
-def showifdef(var):
+def showifdef(var, alternative=''):
     """Returns the variable indicated by the variable name if it is
-    defined, but otherwise returns empty text.
+    defined, but otherwise returns empty text, or other alternative text.
 
     """
     if defined(var):
         return value(var)
-    return ''
+    return alternative
 
 def log(message, priority='log'):
     """Log a message to the server or the browser."""

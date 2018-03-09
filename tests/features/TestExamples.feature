@@ -5609,3 +5609,13 @@ Feature: Example interviews
     And I should see the phrase "Click here to buy now!"
     And I should see the phrase "Need help? Call 888-555-3933 now!!!"
     And I should not see the phrase "You click this button under the pains and penalties of perjury"
+
+  Scenario: Test the interview "Hyperlink"
+    Given I start the interview "docassemble.base:data/questions/examples/dalink.yml"
+    Then I should see the phrase "Tell me about a hyperlink."
+    And I set "URL" to "https://docassemble.org"
+    And I set "Anchor text" to "Docassemble"
+    And I click the button "Continue"
+    Then I should see the phrase "Hyperlinks"
+    And I should see the phrase "Hyperlink demonstration"
+    And I should see the phrase "You can find all the information you need at Docassemble."

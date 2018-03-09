@@ -9,7 +9,7 @@
     <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Open another log file')}}">
       <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{{ current_file }}<span class="caret"></span>
     </a>
-    <ul class="dropdown-menu">
+    <ul class="dropdown-menu heightlim">
       {% for file in files %}{% if file == current_file %}<li class="active">
         <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
         </a>

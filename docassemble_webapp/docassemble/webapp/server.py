@@ -2699,7 +2699,8 @@ def call_sync():
     args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'sync']
     result = call(args)
     if result == 0:
-        logmessage("call_sync: sent message to " + hostname)
+        pass
+        #logmessage("call_sync: sent message to " + hostname)
     else:
         logmessage("call_sync: call to supervisorctl on " + hostname + " was not successful")
         abort(404)

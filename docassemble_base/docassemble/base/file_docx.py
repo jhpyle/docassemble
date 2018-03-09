@@ -1,6 +1,7 @@
 import re
 from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document
 from docx.shared import Mm, Inches, Pt
+import docx.opc.constants
 from docassemble.base.functions import server
 import docassemble.base.filter
 from types import NoneType
@@ -57,3 +58,19 @@ def transform_for_docx(text, question, tpl, width=None):
             return '[FILE NOT FOUND]'
         return InlineImage(tpl, file_info['fullpath'], Inches(2))
     return docassemble.base.filter.docx_template_filter(text)
+
+def create_hyperlink(url, anchor_text, tpl):
+    return InlineHyperlink(tpl, url, anchor_text)
+
+class InlineHyperlink(object):
+    def __init__(self, tpl, url, anchor_text):
+        self.tpl = tpl
+        self.url = url
+        self.anchor_text = anchor_text
+    def _insert_link(self):
+        ref = self.tpl.docx._part.relate_to(self.url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
+        return '</w:t></w:r><w:hyperlink r:id="%s"><w:r><w:rPr><w:rStyle w:val="InternetLink"/></w:rPr><w:t>%s</w:t></w:r></w:hyperlink><w:r><w:rPr></w:rPr><w:t xml:space="preserve">' % (ref, self.anchor_text)
+    def __unicode__(self):
+        return self._insert_link()
+    def __str__(self):
+        return self._insert_link()

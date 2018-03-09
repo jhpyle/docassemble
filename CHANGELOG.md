@@ -1,8 +1,11 @@
 # Change Log
 
-## [0.2.36] - 2018-03-07
+## [0.2.36] - 2018-03-08
+### Added
+- The `DALink` object type, which allows hyperlinks to be inserted
+  into .docx files.
 ### Fixed
-- Cron jobs and environment variables
+- Cron jobs and environment variables.  This requires a system reset.
 
 ## [0.2.35] - 2018-03-06
 ### Changed
