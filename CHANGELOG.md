@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.2.37] - 2018-03-08
+## [0.2.37] - 2018-03-10
 ### Added
 - Example for `user_logged_in()`.
 - Example for appending a row to a Google Sheet.
