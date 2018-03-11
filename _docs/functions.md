@@ -1627,6 +1627,26 @@ code: |
 The `user_logged_in()` function returns `True` if the user is logged
 in, and otherwise returns `False`.
 
+You can use this function to ensure that the user is logged in before
+the user can use your interview:
+
+{% include side-by-side.html demo="user-logged-in" %}
+
+This function uses the [`initial`] modifier in combination with the
+[`url_of()`] function and the [`interview_url()`] function.
+
+The code block should be [`initial`], so that it runs every time a
+user accesses the interview.  If the block is merely [`mandatory`],
+there are some circumstances (albeit rare circumstances) when a user
+who is not logged in could access the interview.
+
+The [`command()`] function redirects the browser to the given `url`.
+You could set the `url` to the result of `url_of('login')`, but then
+when the user logs in, the user will not be redirected back to the
+same interview again.  Thus the `next` parameter is set to a URL for
+the interview.  The URL returned by [`interview_url()`] takes the user
+back to the original interview session.
+
 ## <a name="user_privileges"></a>user_privileges()
 
 The `user_privileges()` function returns the user's privileges as a
@@ -4555,9 +4575,13 @@ The `include_docx_template()` function can be called from within a
 
 {% include demo-side-by-side.html demo="subdocument" %}
 
-The file `main_document.docx` looks like this:
+The file [`main_document.docx`] looks like this:
 
 ![include_docx_template]({{ site.baseurl }}/img/include_docx_template.png)
+
+The file [`sub_document.docx`] looks like this:
+
+![include_docx_template_sub]({{ site.baseurl }}/img/include_docx_template_sub.png)
 
 Note that it is important to use the `p` form of [Jinja2] markup, or
 else the contents of the included document will not be visible.  The
@@ -4570,6 +4594,63 @@ that exists in the templates folder of the current package.  You can
 also refer to templates in other packages using a full package
 filename reference, such as
 `docassemble.demo:data/templates/sub_document.docx`.
+
+The `include_docx_template()` function also accepts optional keyword
+parameters.  These values become variables that you can use in
+[Jinja2] inside the .docx file you are including.  This can be useful
+if you have a "sub-document" that you want to include multiple times,
+but you want to use different variable values each time you include
+the "sub-document."
+
+Here is an example:
+
+{% include demo-side-by-side.html demo="subdoc-params" %}
+
+The file [`main_doc_params.docx`] looks like this:
+
+![include_docx_template_param]({{ site.baseurl }}/img/include_docx_template_param.png)
+
+The file [`sub_doc_params.docx`] looks like this:
+
+![include_docx_template_param_sub]({{ site.baseurl }}/img/include_docx_template_param_sub.png)
+
+In this example, the variables `grantor`, `grantee`, and `stuff` are
+set by the keyword parameters of the `include_docx_template()`
+function.  Note that in your sub-document you can still refer to
+ordinary interview variables in addition to variables created by
+keyword parameters; in this example, the sub-document references the
+variable `planet`, which is set by the interview.
+
+The effect of including keyword parameters is to insert [Jinja2] `set`
+commands at the start of the included document.  For example, the
+first call to `include_docx_template()` might result in the following:
+
+{% highlight text %}
+{% raw %}{%p set grantor = father %}{% endraw %}
+{% raw %}{%p set grantee = mother %}{% endraw %}
+{% raw %}{%p set stuff = 'toadstools' %}{% endraw %}
+{% endhighlight %}
+
+Nobody ever actually sees these `set` statements; they are inserted
+and evaluated behind the scenes.
+
+Note that if the values of any of your keyword arguments are objects
+other than [`DAObject`]s, they will be converted to their [`repr()`]
+representation _before being included_.  This means that there may be
+some objects that you cannot pass through to your sub-documents.
+
+When a `docx template file` document contains a call to
+`include_docx_template()`, the document is assembled in multiple
+"passes."  On the first pass, all of the [Jinja2] is evaluated.  The
+effect of `include_docx_template()` is to insert any `set` statements
+based on keyword parameters, along the verbatim contents of the file.
+Then, on the second pass, any remaining [Jinja2] code is evaluated;
+this would be any [Jinja2] code contained in sub-documents, as well as
+the `set` statements included by `include_docx_template()`.  If any of
+the sub-documents contain calls to `include_docx_template()`, a third
+pass will be done, and so on, until the document is fully assembled.
+(The number of passes is limited to 10 in order to protect against
+accidentally creating an infinite loop of document inclusion.)
 
 ## <a name="raw"></a>raw()
 
@@ -4732,20 +4813,26 @@ modules:
 
 # <a name="google sheets example"></a>Example module: using Google Sheets
 
-This section explains an example of what you might do with a module:
-integrate with [Google Sheets].
+This section explains an example of something you might do with a
+module: integrate with [Google Sheets].
 
 In order for your site to communicate with [Google Sheets], you will
 need to create an account on the [Google Developers Console] and
 create an "app."  Within this app, you will need to create a "service
 account."  (More information is available on the internet about what a
 "service account" is and how you create one.)  When you create the
-service account, you will be provided with "credential"download a [JSON] (not p12) credential file for the
-service account.  Note the e-mail address of the service account.
+service account, you will be provided with "credentials."  Download
+the [JSON] (not p12) credential file for the service account.  Also
+make a note of the e-mail address of the service account.
 
 Go to [Google Sheets], pick a spreadsheet that you want to use, and
 share it with the e-mail address of the service account, just like you
-were sharing it with a real person.
+were sharing it with a real person.  (When you share the spreadsheet
+with this e-mail address, you will get an e-mail notification from
+Google about an undeliverable e-mail.  This is because Google will try
+to e-mail the service account, but the service account does not
+actually have an e-mail account.  To avoid getting this e-mail, click
+the "Advanced" link on the sharing screen and uncheck "Notify people.")
 
 Go to the [Configuration] and create a new configuration directive
 called, e.g., `google docs credentials`.  Set it to the contents of
@@ -4791,10 +4878,6 @@ You might need to change the reference to `'google docs credentials'`
 to something else if you used a different name for the [JSON] crededials
 in your [Configuration].
 
-Go to Package Management and make sure that the `oauth2client`
-and `gspread` packages are installed.  If they are not installed,
-install them from PyPI.
-
 Go to the [Playground] and create an interview that references the
 `google_sheets` module and the `read_sheet` function.
 
@@ -4811,14 +4894,65 @@ subquestion: |
   % endfor
 {% endhighlight %}
 
-In this example, a Google Sheet called "Country Data" has been shared
+In this example, a [Google Sheet] called "Country Data" has been shared
 with the "service account" that owns the credentials in `google docs
 credentials`.  The first worksheet in the spreadsheet (index 0)
 contains a table with headings for `name` and `longitude`, among other
 columns.  The `read_sheet` function returns a list of dictionaries
 representing the contents of the table.
 
-For more information, see the documentation for the [gspread] module.
+For more information on using [Google Sheets] from [Python], see the
+documentation for the [gspread] module.
+
+# <a name="google sheets example two"></a>Example module: storing data in a Google Sheet
+
+The following example interview extends the system developed in the
+previous section by adding functionality for writing data to the
+worksheet.  This interview asks the interviewee some questions
+and then stores the results in a [Google Sheet], much like [Google
+Forms] would.
+
+{% include demo-side-by-side.html demo="google-sheet" %}
+
+This interview uses a [Google Sheet] called [Fruits and veggies] (you
+can view it at that link), which has been shared with the "service
+account" referenced in the `google docs credentials` directive of the
+[Configuration] on the demo.docassemble.org server.
+
+You can [try out this interview] and then look at the [Fruits and
+veggies] spreadsheet to see your answers along with the answers of
+other people who have tested the interview.
+
+There is a single [`mandatory`] block in this interview: a [`code`]
+block that first requires a definition of
+`data_stored_in_google_sheet`, and then seeks a definition of
+`final_screen_shown`.
+
+The variable `data_stored_in_google_sheet` is defined by a [`code`]
+block that calls `append_to_sheet()`, which is a function defined in
+the [`google_sheets` module].  This module is in the same [Python]
+package as the interview (`docassemble.demo`).  (The [`google_sheets`
+module] is based on the [Python] module described in the previous
+section.)
+
+The `append_to_sheet()` function is very similar to the `read_sheet()`
+function described in the previous section.
+
+{% highlight python %}
+def append_to_sheet(sheet_name, vals, worksheet_index=0):
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(credential_info, scope)
+    client = gspread.authorize(creds)
+    sheet = client.open(sheet_name).get_worksheet(worksheet_index)
+    sheet.append_row(vals)
+{% endhighlight %}
+
+There is a handy method in [gspread] called `append_row()`, which adds
+a row to the end of a spreadsheet.  If you use a method like this
+yourself, please note in [Google Sheets], spreadsheets by default have
+several hundred rows, so if you append data to them, you might not see
+the data that you have appended unless you scroll all the way down.
+It is recommended that you delete all of these extraneous rows before
+you use [gspread]'s `append_row()` method to write to a spreadsheet.
 
 # <a name="javascript"></a>Javascript functions
 
@@ -5115,6 +5249,7 @@ $(document).on('daPageLoad', function(){
 [`response()`]: #response
 [`command()`]: #command
 [`message()`]: #message
+[`url_of()`]: #url_of
 [Python Imaging Library]: http://www.pythonware.com/products/pil/
 [URL arguments]: {{ site.baseurl }}/docs/special.html#url_args
 [Celery]: http://www.celeryproject.org/
@@ -5315,3 +5450,13 @@ $(document).on('daPageLoad', function(){
 [gspread]: https://gspread.readthedocs.io/en/latest/
 [Google Developers Console]: https://console.developers.google.com/
 [Google Sheets]: https://sheets.google.com
+[Google Forms]: https://docs.google.com/forms
+[Google Sheet]: https://sheets.google.com
+[Fruits and veggies]: https://docs.google.com/spreadsheets/d/1Lrm75Rq-C4wrftZnmwLJaKh_VPP3xe1iYfDP95e-UMs/edit?usp=sharing
+[`google_sheets` module]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/google_sheets.py
+[try out this interview]: https://demo.docassemble.org/?i=docassemble.demo:data/questions/google-sheet.yml
+[`main_document.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/main_document.docx
+[`sub_document.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/sub_document.docx
+[`main_doc_params.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/main_doc_params.docx
+[`sub_doc_params.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/sub_doc_params.docx
+[`repr()`]: https://docs.python.org/2/library/functions.html#repr

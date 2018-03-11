@@ -8749,6 +8749,11 @@
     ${ trustee } will safeguard the assets of the estate on behalf of
     ${ grantee }.
     % endif
+"user-logged-in": |-
+  initial: True
+  code: |
+    if not user_logged_in():
+      command('leave', url=url_of('login', next=interview_url()))
 "valid-formats": |-
   question: Your document is ready.
   attachment:
@@ -8918,6 +8923,46 @@
 "fish-example": "code: |\n  fishes = objects_from_file(\"fishes.yml\")\n---\nmandatory:\
   \ true\nquestion: |\n  Fish summary\nsubquestion: |\n  % for fish in fishes:\n \
   \ ${ fish } has\n  ${ fish.scales } scales.\n  \n  % endfor"
+"google-sheet": |-
+  modules:
+    - .google_sheets
+  ---
+  mandatory: True
+  code: |
+    data_stored_in_google_sheet
+    final_screen_shown
+  ---
+  code: |
+    append_to_sheet('Fruits and veggies', [user_name, favorite_fruit, favorite_vegetable])
+    data_stored_in_google_sheet = True
+  ---
+  event: final_screen_shown
+  question: |
+    Thank you for your input!
+  subquestion: |
+    % if favorite_vegetable in ('turnips', 'brussel sprouts'):
+    Although I disagree with your
+    vegetable preferences!
+    % endif
+  ---
+  question: |
+    What is your first name?
+  subquestion: |
+    Note: This interview will store
+    your answers in a public Google
+    Sheet.
+  fields:
+    - Name: user_name
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+  ---
+  question: |
+    What is your favorite vegetable?
+  fields:
+    - Vegetable: favorite_vegetable
 "multi-user": "modules:\n  - docassemble.base.util\n---\nobjects:\n  firstparty: Individual\n\
   \  secondparty: Individual\n---\ninitial: true\ncode: |\n  multi_user = True\n \
   \ if user_logged_in():\n    if not defined('firstparty.email'):\n      firstparty.email\
@@ -9235,7 +9280,14 @@
     - Suffix: gardener.name.suffix
       required: False
       code: name_suffix()
-"subdoc-params": ""
+"subdoc-params": |-
+  mandatory: True
+  question: |
+    Here is your document.
+  attachment:
+    name: A document
+    filename: final_document
+    docx template file: main_doc_params.docx
 "subdocument": |-
   mandatory: True
   question: |

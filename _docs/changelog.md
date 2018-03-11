@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.37](https://github.com/jhpyle/docassemble/releases/tag/v0.2.37) - 2018-03-10
+
+### Added
+- Example for `user_logged_in()`.
+- Example for appending a row to a Google Sheet.
+- The `scale` option for the `range` datatype.
+
+### Changed
+- The `include_docx_template()` function accepts keyword parameters.
+  This has the effect of including Jinja2 `set` commands at the
+  beginning of the included sub-document.
+
+### Fixed
+- Error when registering.
+
 ## [0.2.36](https://github.com/jhpyle/docassemble/releases/tag/v0.2.36) - 2018-03-08
 
 ### Added
