@@ -80,7 +80,7 @@ box-shadow: $shadow;
   min-height: 100%;
   background-color: black;
   text-align: center;
-  background-image: url("/img/background.jpg");
+  background-image: url("/img/chicago.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   /* -webkit-box-shadow: inset 0 0 100px rgba(255,255,255,.5);
@@ -122,7 +122,8 @@ box-shadow: $shadow;
 
 /* Padding for spacing */
 .over-image {
-  text-shadow: black 0.1em 0.1em 0.2em;
+  /* text-shadow: black 0.1em 0.1em 0.2em;*/
+  text-shadow: 0em 0em 1em black;
 }
 
 .box-over-image {
@@ -376,9 +377,9 @@ div.col-md-5 > figure > pre {
 .bgcolor {
     background-color: #fff;
     color: #000;
-    min-height: 100%;
+    /* min-height: 100%; */
     width: 100%;
-    display: table;
+    /* display: table; */
     padding: 0 10px 0 10px;
 }
 
@@ -394,6 +395,7 @@ div.col-md-5 > figure > pre {
     height: 100%;
     text-align: center;
     padding: 0;
+    position: relative;
 }
 
 .bgimg-2 {
@@ -418,7 +420,7 @@ div.col-md-5 > figure > pre {
 	background-size: cover;
     }
     .bgimg-1 {
-	background-image: url("/img/background.jpg");
+	background-image: url("/img/chicago.jpg");
     }
     .bgimg-2 {
 	background-image: url("/img/background3.jpg");
@@ -451,6 +453,30 @@ div.col-md-5 > figure > pre {
 .caption {
     display: table-cell;
     vertical-align: middle;
+    padding: 0;
+}
+
+.daalert {
+    display: none;
+}
+
+@media (min-width: 992px) {
+    .daalert {
+	display: block;
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	width: 20%;
+	font-size: 16px;
+	color: white;
+	margin-top: 50px;
+	border-radius: 10px;
+	padding: 10px;
+	background: rgba(0, 0, 0, 0.75);
+    }
+    .caption .lead {
+	padding: 0px 20% 0px 20%;
+    }
 }
 
 .centered {

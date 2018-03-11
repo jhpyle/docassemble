@@ -4,6 +4,11 @@ title: Docassemble
 short_title: Docassemble
 ---
 <div class="bgimg-1">
+  <div class="daalert">
+    <p style="font-size: 20px;">Save the date!</p>
+    <p><strong>Docacon 2018</strong>, a one-day docassemble conference, will be held in Chicago on <strong>June 22, 2018</strong>.</p>
+    <p><a target="_blank" href="https://twitter.com/search?q=%23docacon18">#docacon18</a></p>
+  </div>
   <div class="caption">
     <img class="logo-image over-image" src="{{ '/img/docassemble-white.png' | prepend: site.baseurl }}">
     <h1 class="cover-heading centered over-image">{{ site.title }}</h1>
@@ -14,7 +19,7 @@ short_title: Docassemble
   </div>
 </div>
 <div id="pagetwo" class="bgcolor">
-  <div class="caption">
+  <div class="">
     {% capture about %}{% include_relative subdocs/about.md %}{% endcapture %}
     {{ about | markdownify }}
     <div class="container-fluid centered">
@@ -145,7 +150,7 @@ short_title: Docassemble
   </div>
 </div>
 <div id="pagefour" class="bgcolor">
-  <div class="caption">
+  <div class="">
     <div class="container-fluid centered">
       <div class="col-md-4 centered">
         <a href="https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml" target="_blank"><img class="centerimage" src="{{ site.baseurl }}/img/interview-on-mobile-phone.png"></a>
@@ -164,7 +169,7 @@ short_title: Docassemble
   </div>
 </div>
 <div id="pagesix" class="bgcolor">
-  <div class="caption">
+  <div class="">
     {% capture abouttwo %}{% include_relative subdocs/abouttwo.md %}{% endcapture %}
     {{ abouttwo | markdownify }}
   </div>
@@ -177,13 +182,13 @@ short_title: Docassemble
   </div>
 </div>
 <div id="pageeight" class="bgcolor">
-  <div class="caption">
+  <div class="">
     {% capture aboutthree %}{% include_relative subdocs/aboutthree.md %}{% endcapture %}
     {{ aboutthree | markdownify }}
   </div>
 </div>
 <div id="pagenine" class="bgcolortwo">
-  <div class="caption centered padbuttons">
+  <div class="centered padbuttons">
     <a class="btn btn-primary btn-lg" href="https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml" target="_blank">Run the demo</a>
     <a class="btn btn-success btn-lg" href="{{ site.baseurl }}/docs.html" target="_blank">Read the documentation</a>
     <a class="btn btn-info btn-lg" href="{{ site.baseurl }}/docs/docker.html" target="_blank">Deploy</a>

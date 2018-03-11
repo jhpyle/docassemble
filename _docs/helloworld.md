@@ -24,7 +24,9 @@ are:
    * **E-mail**: admin@admin.com
    * **Password**: password
 
-Then, from the menu, select [Playground].
+Then, from the menu, select [Playground].  The [Playground] is a
+"sandbox" area where you can develop interviews and test them, all
+inside the web browser.
 
 ![Playground]({{ site.baseurl }}/img/menu-selection-playground.png)
 
@@ -357,10 +359,36 @@ Now, when you run the interview, you can see that the image
 For more ideas about how you can extend your interview, check out the
 examples area of the [Playground].
 
+# <a name="testing"></a>Testing your interview
+
+Any time you develop an interview, you will want to test it on
+multiple devices, and ask other people to test it out and give you
+feedback.
+
+The "Save and Run" button is not the only way to start using an
+interview in your [Playground].  Any interview in the [Playground] can
+be started by visiting its hyperlink.  To get this hyperlink,
+right-click on the "<i class="glyphicon glyphicon-link"
+aria-hidden="true"></i> Share" button and copy the URL to your
+clipboard.  You can share this URL with other people, or bookmark it
+in your browser.  When people visit this URL, they will start an
+interview.  (Note that this only works if the server you are using is
+accessible to the user's device; if you are using a personal computer,
+your computer's firewall might prevent other people from accessing
+you).
+
 # <a name="packaging"></a>Packaging your interview
 
-Let's bundle the interview into a package so that we can
-share it with other developers or post it on [GitHub].
+So far, we have been running our interview from the [Playground],
+which is a testing area where we can test things, break things, and
+"play" around with different possibilities.  If our interview has
+reached a point where it is flawless and we want to put it into
+"production" to that users can use it, we need to move it out of the
+[Playground] and install it in a more "permanent" place.
+
+To do this, we bundle our interview into a "package."  Packages can be
+installed on the same system, or another system, or they can be shared
+with other developers or post it on [GitHub].
 
 Go to the Folders menu and select "Packages."
 
@@ -409,9 +437,38 @@ following buttons at the top of the screen.
 
 ![Buttons]({{ site.baseurl }}/img/playground-packages-buttons-top.png)
 
-Click the ![Download]({{ site.baseurl
-}}/img/playground-packages-button-download.png) button to download the
-package as a ZIP file called `docassemble-helloworld.zip`.
+Click the ![Install]({{ site.baseurl
+}}/img/playground-packages-button-install.png) button.  This will take
+a snapshot of your package, bundle it all up into a [Python] package,
+and install that [Python] package on the computer.
+
+Now, users can run the interview using a different URL.  If your
+server is `interview.example.com`, users will be able to run the
+interview by visiting a URL like:
+
+> https://interview.example.com/?i=docassemble.helloworld:data/questions/hello.yml
+
+Previously, the URL to your interview ended with something like
+`?i=docassemble.playground1:hello.yml`.  That is a link to the
+"bleeding edge" version of your interview as it exists in the
+[Playground].  The link that ends with
+`?i=docassemble.helloworld:data/questions/hello.yml` is a link to the
+snapshot that you installed.  This will be a "stable" version of your
+interview.
+
+You can then continue to make changes to the [Playground] version,
+while your users are using the snapshot that you installed.  When you
+have made further modifications and you have a new version you want to
+make available again, you can just click the "Install" button again.
+
+For serious deployments of interviews, [it is recommended] that you use
+separate "development" and "production" servers.
+
+Another thing you can do from the "Packages" folder is click the
+![Download]({{ site.baseurl
+}}/img/playground-packages-button-download.png) button.  This will
+download the package as a ZIP file called
+`docassemble-helloworld.zip`.
 
 If you unpack the contents of the ZIP file, you will have a folder
 called `docassemble-helloworld`.  You can make changes to the files,
@@ -425,9 +482,12 @@ ZIP file.
 
 ## <a name="pypi"></a>Storing on PyPI
 
-You can share your package on [PyPI], the central repository for
-[Python] software, so that other people can install your package on
-their servers.
+A **docassemble** package is really just a regular [Python] package.
+It follows all of the conventions of [Python] software package
+distribution.  As a result, you can share your package on [PyPI], the
+central repository for [Python] software.  This means that other
+people can install your package on their servers, just as they would
+install any [Python] software.
 
 This section of the tutorial will explain how to upload the
 `docassemble.helloworld` package to [PyPI], but keep in mind that if
@@ -606,3 +666,4 @@ the [GitHub subsection] of the [packages] section.
 [create one]: https://github.com/join
 [GitHub integration]: {{ site.baseurl }}/docs/packages.html#github
 [privileges]: {{ site.baseurl }}/docs/users.html
+[it is recommended]: {{ site.baseurl }}/docs/development.html

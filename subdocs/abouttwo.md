@@ -50,12 +50,18 @@ else:
 ## Support is available
 
 Although **docassemble** has extensive [documentation], you may have
-questions about how to use it.  To get help from the community of
-developers and other users, you can submit questions to the
-[docassemble mailing list] or chat in real time with other users on
-the [**docassemble** Slack group].  If you find a bug, you can
-[submit an issue on GitHub].
+questions about how to use it.  To [get help] from the community of
+developers and other users, you can chat in real time with
+knowledgeable developers on the [**docassemble** Slack group].  If you
+find a bug, you can [submit an issue on GitHub].  You can also [e-mail
+the developer].
 
+In-person training will be available at [Docacon 2018], a one-day
+**docassemble** conference to be held on June 22, 2018 in Chicago,
+Illinois.
+
+[Docacon 2018]: https://twitter.com/search?q=%23docacon18
+[get help]: {{ site.baseurl }}/docs/support.html
 [documentation]: {{ site.baseurl }}/docs.html
 [submit an issue on GitHub]: https://github.com/jhpyle/docassemble/issues
 [docassemble mailing list]: https://mail.python.org/mm3/mailman3/lists/docassemble.python.org/

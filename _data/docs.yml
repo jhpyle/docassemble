@@ -29,16 +29,17 @@
     - sms
     - api
     - frontend
+- title: Users
+  docs:
+    - users
+    - livehelp
 - title: Development
   docs:
     - development
     - playground
     - packages
     - errors
-- title: Users
-  docs:
-    - users
-    - livehelp
+    - support
 - title: Administration
   docs:
     - installation
