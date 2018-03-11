@@ -1048,7 +1048,9 @@ def encrypt_session(secret, user_code=None, filename=None):
         db.session.commit()
     return
 
-def substitute_secret(oldsecret, newsecret):
+def substitute_secret(oldsecret, newsecret, user=None):
+    if user is None:
+        user = current_user
     #logmessage("substitute_secret: " + repr(oldsecret) + " and " + repr(newsecret))
     if oldsecret == 'None' or oldsecret == newsecret:
         #logmessage("substitute_secret: returning new secret without doing anything")
@@ -1058,9 +1060,9 @@ def substitute_secret(oldsecret, newsecret):
     to_do = set()
     if 'i' in session and user_code is not None:
         to_do.add((session['i'], user_code))
-    for the_record in db.session.query(UserDict.filename, UserDict.key).filter_by(user_id=current_user.id).group_by(UserDict.filename, UserDict.key).all():
+    for the_record in db.session.query(UserDict.filename, UserDict.key).filter_by(user_id=user.id).group_by(UserDict.filename, UserDict.key).all():
         to_do.add((the_record.filename, the_record.key))
-    for the_record in db.session.query(UserDictKeys.filename, UserDictKeys.key).filter_by(user_id=current_user.id).group_by(UserDictKeys.filename, UserDictKeys.key).all():
+    for the_record in db.session.query(UserDictKeys.filename, UserDictKeys.key).filter_by(user_id=user.id).group_by(UserDictKeys.filename, UserDictKeys.key).all():
         to_do.add((the_record.filename, the_record.key))
     if user_code:
         for the_record in db.session.query(UserDict.filename).filter_by(key=user_code).group_by(UserDict.filename).all():
@@ -1450,7 +1452,9 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
     #    make_image_files(saved_file.path)
     saved_file.finalize()
     
-def save_user_dict_key(user_code, filename, priors=False):
+def save_user_dict_key(user_code, filename, priors=False, user=None):
+    if user is None:
+        user = current_user
     #logmessage("save_user_dict_key: called")
     interview_list = set([filename])
     found = set()
@@ -1460,11 +1464,11 @@ def save_user_dict_key(user_code, filename, priors=False):
             #     logmessage("Other interview found: " + the_record.filename)
             interview_list.add(the_record.filename)
     for filename_to_search in interview_list:
-        the_record = UserDictKeys.query.filter_by(key=user_code, filename=filename_to_search, user_id=current_user.id).first()
+        the_record = UserDictKeys.query.filter_by(key=user_code, filename=filename_to_search, user_id=user.id).first()
         if the_record:
             found.add(filename_to_search)
     for filename_to_save in (interview_list - found):
-        new_record = UserDictKeys(key=user_code, filename=filename_to_save, user_id=current_user.id)
+        new_record = UserDictKeys(key=user_code, filename=filename_to_save, user_id=user.id)
         db.session.add(new_record)
         db.session.commit()
     return
@@ -14105,8 +14109,10 @@ def valid_date_key(x):
         return datetime.datetime.now()
     return x['dict']['_internal']['starttime']
     
-def fix_secret():
+def fix_secret(user=None):
     #logmessage("fix_secret starting")
+    if user is None:
+        user = current_user
     password = request.form.get('password', request.form.get('new_password', None))
     if password is not None:
         secret = str(request.cookies.get('secret', None))
@@ -14114,7 +14120,7 @@ def fix_secret():
         if secret == 'None' or secret != newsecret:
             #logmessage("fix_secret: calling substitute_secret with " + str(secret) + ' and ' + str(newsecret))
             #logmessage("fix_secret: setting newsecret session")
-            session['newsecret'] = substitute_secret(str(secret), newsecret)
+            session['newsecret'] = substitute_secret(str(secret), newsecret, user=user)
         # else:
         #     logmessage("fix_secret: secrets are the same")
     else:
@@ -14122,9 +14128,9 @@ def fix_secret():
 
 def login_or_register(sender, user, **extra):
     #logmessage("login or register!")
-    fix_secret()
+    fix_secret(user=user)
     if 'i' in session and 'uid' in session:
-        save_user_dict_key(session['uid'], session['i'], priors=True)
+        save_user_dict_key(session['uid'], session['i'], priors=True, user=user)
         session['key_logged'] = True
     if 'tempuser' in session:
         changed = False

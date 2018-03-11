@@ -1,0 +1,25 @@
+metadata:
+  title: Require user to log in
+  short title: Log in
+  documentation: "https://docassemble.org/docs/functions.html#user_logged_in"
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+initial: True
+code: |
+  if not user_logged_in():
+    command('leave', url=url_of('login', next=interview_url()))
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+mandatory: True
+question: |
+  Your favorite fruit is
+  ${ favorite_fruit }.
+  

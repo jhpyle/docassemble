@@ -441,7 +441,7 @@ class InterviewStatus(object):
                 the_field['disable_others'] = True
             if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                 the_field['uncheck_others'] = True
-            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'inline width'):
+            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline width'):
                 if hasattr(field, 'extras') and key in field.extras and key in self.extras:
                     the_field[key] = self.extras[key][field.number]
             if hasattr(field, 'saveas') and field.saveas in self.embedded:
@@ -2046,7 +2046,7 @@ class Question:
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras']['note'] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
-                            elif key in ('min', 'max', 'minlength', 'maxlength', 'step', 'inline width'):
+                            elif key in ('min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width'):
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
@@ -2707,7 +2707,7 @@ class Question:
                     except:
                         continue
                 if hasattr(field, 'extras'):
-                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'inline width'): # 'script', 'css', 
+                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width'): # 'script', 'css', 
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
@@ -2952,7 +2952,7 @@ class Question:
                         if 'sub_fields' not in extras:
                             extras['sub_fields'] = dict()
                         extras['sub_fields'][field.number] = the_question.fields
-                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'inline width', 'ml_group'): # , 'textresponse', 'content_type' #'script', 'css', 
+                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline width', 'ml_group'): # , 'textresponse', 'content_type' #'script', 'css', 
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
@@ -3190,7 +3190,7 @@ class Question:
                             while True:
                                 old_count = docassemble.base.functions.this_thread.docx_include_count
                                 the_template.render(result['field_data'], jinja_env=Environment(undefined=StrictUndefined))
-                                if docassemble.base.functions.this_thread.docx_include_count > old_count:
+                                if docassemble.base.functions.this_thread.docx_include_count > old_count and old_count < 10:
                                     new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                                     the_template.save(new_template_file.name)
                                     the_template = docassemble.base.file_docx.DocxTemplate(new_template_file.name)

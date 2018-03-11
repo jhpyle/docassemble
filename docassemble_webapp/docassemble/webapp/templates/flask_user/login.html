@@ -18,7 +18,11 @@
                 </div>
                 <div class="col-xs-6 text-right">
                   {%- if user_manager.enable_register and not user_manager.require_invitation %}
+                  {%- if 'next' in request.args %}
+                  <a href="{{ url_for('user.register', next=request.args['next']) }}" tabindex='190'>
+                  {%- else %}
                   <a href="{{ url_for('user.register') }}" tabindex='190'>
+                  {%- endif %}
                     {{ word("New here?  Register.") }}
                   </a>
                   {%- endif %}

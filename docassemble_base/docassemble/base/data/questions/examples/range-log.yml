@@ -1,0 +1,25 @@
+metadata:
+  title: Logarithmic range slider
+  short title: Log range
+  documentation: "https://docassemble.org/docs/fields.html#range"
+---
+question: |
+  What is the airspeed velocity,
+  in miles per hour, of an
+  unladen swallow?
+fields:
+  - Velocity: velocity
+    datatype: range
+    min: 1
+    max: 10000
+    step: 10
+    default: 10
+    scale: logarithmic
+---
+question: |
+  % if velocity > 100:
+  You're crazy.
+  % else:
+  That's probably about right.
+  % endif
+mandatory: True

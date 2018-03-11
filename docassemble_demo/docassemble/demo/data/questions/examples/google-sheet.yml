@@ -1,0 +1,46 @@
+metadata:
+  title: Store data in Google Sheet
+  short title: Google Sheet
+  documentation: "https://docassemble.org/docs/functions.html#google sheets example two"
+  example start: 1
+  example end: 7
+---
+modules:
+  - .google_sheets
+---
+mandatory: True
+code: |
+  data_stored_in_google_sheet
+  final_screen_shown
+---
+code: |
+  append_to_sheet('Fruits and veggies', [user_name, favorite_fruit, favorite_vegetable])
+  data_stored_in_google_sheet = True
+---
+event: final_screen_shown
+question: |
+  Thank you for your input!
+subquestion: |
+  % if favorite_vegetable in ('turnips', 'brussel sprouts'):
+  Although I disagree with your
+  vegetable preferences!
+  % endif
+---
+question: |
+  What is your first name?
+subquestion: |
+  Note: This interview will store
+  your answers in a public Google
+  Sheet.
+fields:
+  - Name: user_name
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Vegetable: favorite_vegetable

@@ -1957,5 +1957,14 @@ def include_docx_template(template_file, **kwargs):
     sd = this_thread.docx_template.new_subdoc()
     sd.subdocx = docassemble.base.file_docx.Document(template_path)
     sd.subdocx._part = sd.docx._part
+    first_paragraph = sd.subdocx.paragraphs[0]
+    for key, val in kwargs.iteritems():
+        if isinstance(val, DAObject):
+            the_repr = val.instanceName
+        elif type(val) is unicode:
+            the_repr = repr(str(val))
+        else:
+            the_repr = repr(val)
+        first_paragraph.insert_paragraph_before("{%%p set %s = %s %%}" % (key, the_repr))
     this_thread.docx_include_count += 1
     return sd

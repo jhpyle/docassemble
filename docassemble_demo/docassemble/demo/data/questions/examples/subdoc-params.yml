@@ -1,0 +1,60 @@
+metadata:
+  title: .docx include with parameters
+  short title: Sub documents
+  documentation: "https://docassemble.org/docs/functions.html#include_docx_template"
+  example start: 5
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+question: |
+  Including one .docx file in another .docx file
+  with different variables each time
+subquestion: |
+  This interview will fill fields in
+  a .docx template, demonstrating how
+  one document can be included in 
+  another document multiple times
+  with different variables.
+  
+  You can download the [main document]
+  and the [sub document] to see how
+  this works.
+
+  [main document]: ${ url_of('main_doc_params.docx') }
+  [sub document]: ${ url_of('sub_doc_params.docx') }
+field: intro
+---
+objects:
+  - mother: Individual
+  - father: Individual
+  - son: Individual
+  - daughter: Individual
+---
+question: |
+  Give me some information
+fields:
+  - "A planet name": planet
+    default: Pluto
+  - "Mother's name": mother.name.first
+    default: Mom
+  - "Father's name": father.name.first
+    default: Dad
+  - "Son's name": son.name.first
+    default: Jimmy
+  - "Daughter's name": daughter.name.first
+    default: Sarah
+  - "Name of a thing": present_one
+    default: toadstools
+  - "Name of another thing": present_two
+    default: carpets
+---
+mandatory: True
+question: |
+  Here is your document.
+attachment:
+  name: A document
+  filename: final_document
+  docx template file: main_doc_params.docx

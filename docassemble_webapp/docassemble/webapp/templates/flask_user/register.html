@@ -8,7 +8,11 @@
           <h1>{{ get_part('register page heading', word('Register')) }}</h1>
 {{ get_part('register page pre') }}
           {%- if user_manager.enable_register %}
-          <p>{{ word("Already registered?") }} <a href="{{ url_for('user.login', next=url_for('index')) }}" tabindex='290'>{{ word("Sign in.") }}</a></p>
+          {%- if 'next' in request.args %}
+<p>{{ word("Already registered?") }} <a href="{{ url_for('user.login', next=request.args['next']) }}" tabindex='290'>{{ word("Sign in.") }}</a></p>
+          {%- else %}
+<p>{{ word("Already registered?") }} <a href="{{ url_for('user.login', next=url_for('index')) }}" tabindex='290'>{{ word("Sign in.") }}</a></p>
+          {%- endif %}
           {%- endif %}
           <form action="" method="POST" novalidate formnovalidate class="form" role="form">
             {{ form.hidden_tag() }}

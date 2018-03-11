@@ -1,5 +1,5 @@
 import re
-from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document
+from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document, Subdoc
 from docx.shared import Mm, Inches, Pt
 import docx.opc.constants
 from docassemble.base.functions import server
