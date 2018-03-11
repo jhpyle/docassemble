@@ -5454,7 +5454,7 @@ $(document).on('daPageLoad', function(){
 [Google Sheet]: https://sheets.google.com
 [Fruits and veggies]: https://docs.google.com/spreadsheets/d/1Lrm75Rq-C4wrftZnmwLJaKh_VPP3xe1iYfDP95e-UMs/edit?usp=sharing
 [`google_sheets` module]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/google_sheets.py
-[try out this interview]: https://demo.docassemble.org/?i=docassemble.demo:data/questions/google-sheet.yml
+[try out this interview]: https://demo.docassemble.org/?i=docassemble.demo:data/questions/examples/google-sheet.yml
 [`main_document.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/main_document.docx
 [`sub_document.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/sub_document.docx
 [`main_doc_params.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/main_doc_params.docx
