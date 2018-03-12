@@ -305,8 +305,9 @@ Once that "Target Group" is created, create a second "Target Group"
 called `websocket` with the same settings.  Then, once the `websocket`
 "Target Group" is created, do Actions -> Edit Attributes on it, and
 under "Stickiness," select "Enable load balancer generated cookie
-stickiness."  Keep other settings at their defaults.  Then click
-"Create."
+stickiness."  Keep other settings at their defaults.  The "stickiness"
+duration should be 1 day or more (this should be long compared to the
+typical session duration).  Then click "Create."
 
 Finally, create a third "Target Group" called `http-redirect`.  Set
 the "Protocol" to HTTP, set the "Port" to 8081, and set the "VPC" to
