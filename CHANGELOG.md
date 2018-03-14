@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.2.38] - 2018-03-13
+## [0.2.38] - 2018-03-14
 ### Added
 - The `show interviews link` configuration directive.
 ### Changed
