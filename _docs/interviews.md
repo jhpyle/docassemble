@@ -146,13 +146,19 @@ Here, the interview file name is
 and then within that package, look for the file `questions.yml`
 located in the subdirectory `data/questions`.
 
-You can make your own packages in the [Playground] and then install
+You can make your own [packages] in the [Playground] and then install
 them on the same server or a different server.  If the name of your
 server is `interview.example.come`, the name of your package is
 `docassemble.mypackage`, and the name of your interview file is
 `myinterview.yml`, your users can access the interview at:
 
 > https://interview.example.com/?i=docassemble.mypackage:data/questions/myinterview.yml
+
+Note that while you are using an interview, the URL in the location
+bar will change.  It will end with `#page1`, then `#page2`, then
+`#page3`, etc., as the interview progresses.  These tags have no
+effect except to allow the user to click the browser's back button in
+order to go back one screen.
 
 There is also a special page of the site, located at `/list`, which
 displays a [list of interviews] available on your server.
@@ -478,6 +484,7 @@ For more information about [YAML], see the [YAML specification].
 [graphical user interface]: https://en.wikipedia.org/wiki/Graphical_user_interface
 [GitHub]: https://github.com/
 [package]: {{ site.baseurl }}/docs/packages.html
+[packages]: {{ site.baseurl }}/docs/packages.html
 [playground]: {{ site.baseurl }}/docs/playground.html
 [demonstration page]: {{ site.baseurl }}/demo.html
 [tutorial]: {{ site.baseurl }}/docs/helloworld.html

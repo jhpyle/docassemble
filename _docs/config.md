@@ -1308,6 +1308,15 @@ they will see a "Change Password" link.
 show profile link: False
 {% endhighlight %}
 
+## <a name="show interviews link"></a>Hiding the "my interviews" link
+
+If the `show interviews link` directive is set to `False`, logged-in
+users will not see a "My Interviews" link in the web app menu.
+
+{% highlight yaml %}
+show interviews link: False
+{% endhighlight %}
+
 ## <a name="allow registration"></a>Invitation-only registration
 
 If the `allow registration` directive is set to `False`, users will

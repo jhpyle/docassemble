@@ -4,27 +4,107 @@ title: Package management
 short_title: Packages
 ---
 
-# How **docassemble** uses packages
+# <a name="how"></a>How **docassemble** uses packages
 
 **docassemble** interviews can be packaged into [Python packages] that
-are installed on a server.  The [Python package] can also include:
+bundle together:
 
-* [Python modules], which include any [classes] and other code that you might
-write to go along with your interviews;
+* [YAML] files representing interview files that start interviews, or
+  [YAML] files that are [`include`]d in other files;
+* Any [document templates] that your interviews use;
 * Static content (images, downloadable files) that you want to include
-with your interview;
-* Data files ([translations], [machine learning] training data) on which
-  your interview depends; and
-* Any [document templates] you created.
+  with your interview;
+* [Python modules], which include any [classes] and other code that
+  you might write to go along with your interviews; and
+* Data files ([translations], [machine learning] training data) on
+  which your interview depends.
 
-A package containing **docassemble** code needs to be a subpackage of
-the `docassemble` package.  The `docassemble` package itself is just a
-shell (a [namespace package]) that contains subpackages.  These
+A [Python package] also contains metadata such as author information,
+a brief description, and a list of other [Python packages] on which the
+package depends.  It also contains a "README" file, typically styled
+with [Markdown], which describes the package in detail.
+
+A package containing **docassemble** interviews must be a [subpackage]
+of the `docassemble` package.  In practice, this means that the
+official package name with `docassemble.`; e.g.,
+`docassemble.missourifamilylaw`.  The `docassemble` package itself is
+just a shell (a [namespace package]) that contains subpackages.  These
 subpackages include **docassemble**'s core components
 (`docassemble.base`, `docassemble.webapp`) as well as user-created
-packages.
+packages (e.g., `docassemble.missourifamilylaw`).
 
-# Anatomy of a docassemble package
+# <a name="playground"></a>Using the Playground to make packages
+
+One of the features of the **docassemble** web application is the
+[Playground], a browser-based development platform for authoring and
+testing interviews.  This is a "sandbox" in which you can make changes
+to an interview and immediately test the effect of those changes.  You
+can use the [Playground] to create a variety of resources (interview
+files, template files, static files, data files) and then [build
+packages] out particular resources.
+
+Every interview that you run on **docassemble** is part of a package.
+When you are running an interview in the [Playground], the package is
+called `docassemble.playground1` or something similar; the `1` at the
+end is the user ID of the person who is using the [Playground].
+
+Packages like `docassemble.playground1` should be considered temporary
+and should only be used for development and testing.  When you want
+your users to actually use your interview, you should move your
+interview out of the [Playground] and into a package with an
+appropriate name.
+
+Suppose you have an interview file called `custody.yml`, which you are
+developing in the [Playground].  When you right click the "<i
+class="glyphicon glyphicon-link" aria-hidden="true"></i> Share"
+button, and copy the link URL, or you look at your browser location
+bar when you are testing the interview, you will see that the URL for
+the interview contains`?i=docassemble.playground1:custody.yml`.  This
+means that the interview (`i`) is in the `docassemble.playground1`
+package and is called `custody.yml`.  This link always runs the
+version of your interview that is current in the [Playground].  So if
+you make a change that accidentally introduces a bug, anyone who uses
+the interview will see an error message.
+
+When you have actual users, you want to be able to make "upgrades" to
+your interviews without causing users to see error messages.  You need
+to have a distinction between your "development" version and your
+"production" version.  Here is a workflow for accomplishing this:
+
+1. Develop your `custody.yml` interview in the [Playground] and keep
+   improving it until it is ready for use by users.
+2. In the ["Packages" folder] of the [Playground], create a package
+   called, e.g., `johnsmithlaw`.  Give it a version number like 0.0.1.
+   Include within the package the `custody.yml` interview file and any
+   other resources on which `custody.yml` depends.
+3. This will create a [Python package] called
+   `docassemble.johnsmithlaw`.
+4. In the ["Packages" folder] of the [Playground], click the "Install"
+   button.  This will install the `docassemble.johnsmithlaw` package
+   on your server.
+5. Your users can now access your interview at a URL that ends with
+   `/?i=docassemble.johnsmithlaw:data/questions/custody.yml`.
+6. Now you can continue making changes to the `custody.yml` interview
+   in the [Playground], and even if you break something, your users
+   will not get an error, because they will be using the installed
+   version of the package, not the version in your [Playground].
+7. When the new version of your interview is ready, you can go to the
+   ["Packages" folder] and press "Install" again.
+8. Your users will still use the same URL to access the interview (one
+   that ends with
+   `/?i=docassemble.johnsmithlaw:data/questions/custody.yml`), but now
+   they will be using the new version of your interview.
+
+For more information, see [how you run a **docassemble** interview],
+the [Playground], the [packaging your interview] section of the [hello
+world] example, and the [development workflows] section.
+
+From the ["Packages" folder], you can also press "<i class="glyphicon
+glyphicon-download" aria-hidden="true"></i> Download" to obtain a ZIP
+file of the [Python] package.  If you open this file, you can see what
+the structure of a **docassemble** extension package looks like.
+
+# <a name="anatomy"></a>Anatomy of a docassemble package
 
 Here is the file structure of a (fictional) **docassemble** package
 called `docassemble.baseball`.
@@ -33,7 +113,7 @@ called `docassemble.baseball`.
 docassemble-baseball
 |-- docassemble
 |   |-- baseball
-|   |   |-- baseball-stats.py
+|   |   |-- baseballstats.py
 |   |   |-- data
 |   |   |   |-- questions
 |   |   |   |   |-- baseball-questions.yml
@@ -53,10 +133,11 @@ docassemble-baseball
 `-- setup.py
 {% endhighlight %}
 
-The package is known as `docassemble.baseball` in [Python], but the
-name `docassemble-baseball`, replacing the dot with a hyphen, is
-sometimes used.  There are reasons for using the hyphen -- in certain
-contexts, the dot is considered an invalid character.
+The package is known as `docassemble.baseball` within [Python] code,
+but the name `docassemble-baseball`, replacing the dot with a hyphen,
+is used in other contexts, such as when referring to a package
+published on the [PyPI] site, or a folder on your system that
+contains the source code of the package.
 
 There are a lot of subdirectories (this is the nature of
 [namespace packages]).  There are reasons for all of these
@@ -70,16 +151,28 @@ package is a subpackage of `docassemble`.
 because when packages within the `docassemble` [namespace package] are
 installed on a system, [Python] needs them to be in a subdirectory
 under a directory called `docassemble`.
-4. Within `baseball`, you have `baseball-stats.py`, which contains
+4. Within `baseball`, you have `baseballstats.py`, which contains
 [Python] code.  The `__init.py__` file is necessary for declaring
 `baseball` to be a package; you never have to edit that file.
 5. There is also a `data` directory with subdirectories `questions`,
 `static`, `sources`, and `templates`.  These are for [interviews],
 [static files], [data files], and [document templates].
 
+Note that in the [Playground], there is a ["Modules" folder] along
+with a ["Templates" folder], a ["Static" folder], etc., but in a
+[Python] package, there is no `docassemble/baseball/data/modules`
+folder, even though there is a `docassemble/baseball/data/templates`
+folder and a `docassemble/baseball/data/static` folder.  The modules
+files (`.py` files) are located in a different place: directly under
+`docassemble/baseball`.  Since the main purpose of a [Python] package
+is to store [Python] modules, modules files are the "main attraction"
+and everything else is just associated "data."  A [Python module]
+known as `docassemble.baseball.baseballstats` must be located in the
+subdirectory `docassemble/baseball/`.  (That is how [Python] works.)
+
 When installed on the server, the interview `hitters.yml` can be run
 by going to a link like
-`https://example.com?i=docassemble.baseball:hitters.yml`.
+`https://example.com?i=docassemble.baseball:data/questions/hitters.yml`.
 
 In your own interviews, you can include resources from this package by
 writing things like the following:
@@ -104,7 +197,7 @@ attachment:
     content file: docassemble.baseball:game-summary.md
 ---
 modules:
-  - docassemble.baseball.baseball-stats
+  - docassemble.baseball.baseballstats
 {% endhighlight %}
 
 The first block uses [`include`] to incorporate by reference a
@@ -119,16 +212,15 @@ refer to a [Markdown] file in the `data/templates` directory of the
 package.
 
 The fourth block uses [`modules`] to import [Python] names from the
-`baseball-stats.py` file.
+`baseballstats.py` file.
 
-# Creating your own packages
+Since a [Python] package is just a collection of files in a particular
+structure, you can maintain your **docassemble** extension packages
+"offline" (outside of the [Playground]) if you want.  This allows you
+to expand the directory structure beyond what the [Playground]
+supports.
 
-You can create your own **docassemble** package on-line using the
-[Packages area] of the [Playground].  This allows you to download a
-package as a ZIP file that contains resources from various "folders"
-in the [Playground].
-
-# Dependencies
+# <a name="dependencies"></a>Dependencies
 
 If your package uses code from other [Python] packages that are not
 distributed with the standard **docassemble** installation, you will
@@ -142,7 +234,9 @@ errors when they try to use your package.
 
 If you maintain your package in the [Packages area] of the
 [Playground], you can indicate the dependencies of your package by
-selecting them from a multi-select list.
+selecting them from a multi-select list.  (If you the Python package
+you need is not listed, you need to install it on your system using
+"Package Management" on the menu.)
 
 If you maintain your package off-line, you will need to edit the
 `setup.py` file and change the line near the end that begins with
@@ -153,11 +247,12 @@ example:
 install_requires=['docassemble.helloworld', 'kombu'],
 {% endhighlight %}
 
-This line indicates that the package relies on the **docassemble** extension package
-`docassemble.helloworld`, as well as the [Python] package `kombu`.
-When someone tries to install `docassemble.baseball` on their system,
-`docassemble.helloworld` and `kombu` will be installed first, and any
-packages that these packages depend on will also be installed.
+This line indicates that the package relies on the **docassemble**
+extension package `docassemble.helloworld`, as well as the [Python]
+package `kombu`.  When someone tries to install `docassemble.baseball`
+on their system, `docassemble.helloworld` and `kombu` will be
+installed first, and any packages that these packages depend on will
+also be installed.
 
 Note that if your package depends on a package that exists on [GitHub]
 but not on [PyPI], you will also need to add an extra line so that the
@@ -173,12 +268,12 @@ dependency_links=['git+https://github.com/jhpyle/docassemble-helloworld#egg=doca
 If you use the [Packages area] of the [Playground] to maintain your
 package, this is all handled for you.
 
-# Installing a package
+# <a name="installing"></a>Installing a package
 
 You can install a **docassemble** extension package, or any other
 [Python] package, using the **docassemble** web application.
 
-From the menu, go to Package Management.
+From the menu, go to "Package Management."
 
 **docassemble** installs packages using the [pip] package manager.
 This installation process may take a long time.  A log of the output
@@ -224,8 +319,8 @@ central repository for [Python] software.  Anyone can register on
 [PyPI] and upload software to it.  For example, if you want to install
 the `docassemble-baseball` package:
 
-1. Make sure the `docassemble-baseball` package exists on [PyPI]
-   (note: it doesn't; it is just a fictional package).
+1. Make sure the `docassemble-baseball` package does not already exist
+   on [PyPI] (note: it doesn't; it is just a fictional package).
 2. In the **docassemble** web app, go to Package Management.
 3. Type `docassemble.baseball` into the "Package on PyPI"
    field.
@@ -233,15 +328,24 @@ the `docassemble-baseball` package:
 
 ![PyPI Install]({{ site.baseurl }}/img/pypi-install.png){: .maybe-full-width }
 
-# Running interviews from installed packages
+Once a version of a package is installed on [PyPI], it
+exists there permanently.  When you install a version of a package on
+[PyPI], the version will automatically increment.
+
+# <a name="running"></a>Running interviews from installed packages
 
 Once a **docassemble** extension package is installed, you can start
 using its interviews.  For example, if you installed
-`docassemble.baseball`, and there was an interview file in
-that package called `questions.yml`, you would point your browser to
+`docassemble.baseball`, and there was an interview file in that
+package called `questions.yml`, you would point your browser to
 `http://localhost/?i=docassemble.baseball:data/questions/questions.yml`
 (substituting the actual domain and base URL of your **docassemble**
-site).
+site).  Note that a URL like this is different from the URL you see
+when you are running an interview in the [Playground] ([see
+above](#playground)).
+
+For more information about starting **docassemble** interviews, see
+[how you run a **docassemble** interview].
 
 # <a name="updating"></a>Updating Python packages
 
@@ -366,7 +470,7 @@ you can go to Package Management and [install the package](#github_install) usin
 
 ![GitHub Install]({{ site.baseurl }}/img/github-install.png){: .maybe-full-width }
 
-# Best practices for packaging your interviews
+# <a name="bestpractices"></a>Best practices for packaging your interviews
 
 It is a good practice to bundle related interviews in a single
 package.  Think about making it easy for other people to install your
@@ -408,6 +512,7 @@ interviews that might have a very different purpose.
 [GitHub]: https://github.com/
 [WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [Windows application]: https://desktop.github.com/
+[Python module]: https://docs.python.org/2/tutorial/modules.html
 [Python modules]: https://docs.python.org/2/tutorial/modules.html
 [classes]: https://docs.python.org/2/tutorial/classes.html
 [`root`]: {{ site.baseurl }}/docs/config.html#root
@@ -428,8 +533,18 @@ interviews that might have a very different purpose.
 [static files]: {{ site.baseurl }}/docs/playground.html#static
 [data files]: {{ site.baseurl }}/docs/playground.html#sources
 [git]: https://git-scm.com/
+["Modules" folder]: {{ site.baseurl }}/docs/playground.html#modules
 ["Packages" folder]: {{ site.baseurl }}/docs/playground.html#packages
+["Templates" folder]: {{ site.baseurl }}/docs/playground.html#templates
+["Static" folder]: {{ site.baseurl }}/docs/playground.html#static
 [Setting up GitHub integration]: {{ site.baseurl }}/docs/installation.html
 [GitHub section of the configuration]: {{ site.baseurl }}/docs/config.html#github
 [create one]: https://github.com/join
 [`appname`]: {{ site.baseurl }}/docs/config.html#appname
+[build packages]: {{ site.baseurl }}/docs/playground.html#packages
+[subpackage]: https://packaging.python.org/guides/packaging-namespace-packages/
+[how you run a **docassemble** interview]: {{ site.baseurl }}/docs/interviews.html#invocation
+[packaging your interview]: {{ site.baseurl }}/docs/hello.html#packaging
+[hello world]: {{ site.baseurl }}/docs/hello.html
+[development workflows]: {{ site.baseurl }}/docs/development.html
+[PyPI]: 

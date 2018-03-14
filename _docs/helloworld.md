@@ -388,7 +388,7 @@ reached a point where it is flawless and we want to put it into
 
 To do this, we bundle our interview into a "package."  Packages can be
 installed on the same system, or another system, or they can be shared
-with other developers or post it on [GitHub].
+with other developers or posted on [GitHub].
 
 Go to the Folders menu and select "Packages."
 
@@ -477,8 +477,8 @@ revised package on a **docassemble** server using the
 [Package Management] tool.  Or, if you want to edit the revised
 contents of your package in the [Playground] again, click the
 ![Upload]({{ site.baseurl
-}}/img/playground-packages-button-upload.png) button to upload your
-ZIP file.
+}}/img/playground-packages-button-upload.png) button to upload the
+contents of your ZIP file into the [Playground].
 
 ## <a name="pypi"></a>Storing on PyPI
 
