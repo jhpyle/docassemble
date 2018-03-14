@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.2.38] - 2018-03-13
+### Added
+- The `show interviews link` configuration directive.
+### Changed
+- The user profile link in the menu will always be shown if the user
+  has `admin` privileges.
+- Different formatting of user list.
+- Author name and e-mail in "Packages" folder of Playground.
+### Fixed
+- Problem with `show if` not recognizing `False` value of checkbox
+  yes/no field.
+
 ## [0.2.37] - 2018-03-10
 ### Added
 - Example for `user_logged_in()`.

@@ -43,7 +43,7 @@ def privilege_list():
 @login_required
 @roles_required('admin')
 def user_list():
-    output = '<ol>';
+    users = list()
     for user in db.session.query(UserModel).order_by(UserModel.id):
         if user.nickname == 'cron':
             continue
@@ -53,17 +53,18 @@ def user_list():
         if user.last_name:
             name_string += str(user.last_name)
         if name_string:
-            name_string = str(name_string) + ', '
+            name_string = str(name_string)
         active_string = ''
         if user.email is None:
             user_indicator = user.nickname
         else:
             user_indicator = user.email
-        if not user.active:
-            active_string = ' (account disabled)'
-        output += '<li>' + str(name_string) + '<a href="' + url_for('edit_user_profile_page', id=user.id) + '">' + str(user_indicator) + "</a>" + active_string + "</li>"
-    output += '</ol>'
-    return render_template('users/userlist.html', version_warning=None, bodyclass='adminbody', page_title=word('User List'), tab_title=word('User List'), userlist=output)
+        if user.active:
+            is_active = True
+        else:
+            is_active = False
+        users.append(dict(name=name_string, email=user_indicator, active=is_active, id=user.id))
+    return render_template('users/userlist.html', version_warning=None, bodyclass='adminbody', page_title=word('User List'), tab_title=word('User List'), users=users)
 
 @app.route('/privilege/<id>/delete', methods=['GET'])
 @login_required

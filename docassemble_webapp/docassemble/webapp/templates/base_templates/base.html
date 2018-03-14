@@ -60,8 +60,10 @@
                 <li><a href="{{ url_for('config_page') }}">{{ word('Configuration') }}</a></li>
                   {%- endif %}
                 {%- endif %}
+                {%- if config['SHOW_MY_INTERVIEWS'] or current_user.has_roles(['admin']) %}
                 <li><a href="{{ url_for('interview_list') }}">{{ word('My Interviews') }}</a></li>
-                {%- if config['SHOW_PROFILE'] %}
+                {%- endif %}
+                {%- if config['SHOW_PROFILE'] or current_user.has_roles(['admin']) %}
                 <li><a href="{{ url_for('user_profile_page') }}">{{ word('Profile') }}</a></li>
                 {%- else %}
                 <li><a href="{{ url_for('user.change_password') }}">{{ word('Change Password') }}</a></li>

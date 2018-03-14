@@ -510,8 +510,8 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
       version=""" + repr(info['version']) + """,
       description=(""" + repr(info['description']) + """),
-      author=""" + repr(author_info['author name']) + """,
-      author_email=""" + repr(author_info['author email']) + """,
+      author=""" + repr(info['author_name']) + """,
+      author_email=""" + repr(info['author_email']) + """,
       license=""" + repr(info['license']) + """,
       url=""" + repr(info['url']) + """,
       packages=find_packages(),

@@ -866,8 +866,10 @@ Feature: Example interviews
   # Scenario: Test the interview "Exit programmatically"
   #   Given I start the interview "docassemble.base:data/questions/examples/exit.yml"
 
-  # Scenario: Test the interview "Javascript and CSS files"
-  #   Given I start the interview "docassemble.base:data/questions/examples/external_files.yml"
+  Scenario: Test the interview "Javascript and CSS files"
+    Given I start the interview "docassemble.base:data/questions/examples/external_files.yml"
+    Then I should see the phrase "A test of Javascript and CSS"
+    And I should see the phrase "I am purple"
 
   Scenario: Test the interview "Optional override of question"
     Given I start the interview "docassemble.base:data/questions/examples/fallback2.yml"
@@ -3620,6 +3622,16 @@ Feature: Example interviews
     And I click the option "No" under "Do you like fruit?"
     And I click the button "Continue"
     Then I should see the phrase "You do not like fruit."
+
+  Scenario: Test the interview "Conditionally show" with yesno set to False
+    Given I start the interview "docassemble.base:data/questions/examples/showif-boolean-yesno-false.yml"
+    Then I should see the phrase "Please fill in the following information."
+    And I should see the phrase "Why do you not like fruit"
+    And I click the option "I like fruit"
+    And I wait 1 second
+    Then I should not see the phrase "Why do you not like fruit"
+    And I click the button "Continue"
+    Then I should see the phrase "You like fruit."
 
   Scenario: Test the interview "Hide fields"
     Given I start the interview "docassemble.base:data/questions/examples/showif.yml"

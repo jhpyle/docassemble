@@ -1,0 +1,25 @@
+metadata:
+  title: Conditionally show
+  short title: Conditionally show 
+  documentation: "https://docassemble.org/docs/fields.html#show if"
+---
+question: |
+  Please fill in the following information.
+fields:
+  - "I like fruit.": likes_fruit
+    datatype: yesno
+  - "Why do you not like fruit?": fruit_dislike_reason
+    show if:
+      variable: likes_fruit
+      is: False
+---
+question: |
+  % if likes_fruit is True:
+  You like fruit.
+  % else:
+  You do not like fruit.  Your
+  reason is:
+
+  ${ fruit_dislike_reason }
+  % endif
+mandatory: True

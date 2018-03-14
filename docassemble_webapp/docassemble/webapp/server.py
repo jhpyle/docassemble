@@ -1856,11 +1856,12 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
                     if current_user.has_role('admin'):
                         navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
                         navbar +='<li><a href="' + url_for('config_page') + '">' + word('Configuration') + '</a></li>'
-                navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li>'
+                if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
+                    navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li>'
                 if current_user.has_role('admin', 'developer'):
                     navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li>'
                 else:
-                    if app.config['SHOW_PROFILE']:
+                    if app.config['SHOW_PROFILE'] or current_user.has_role('admin'):
                         navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li>'
                     else:
                         navbar += '<li><a href="' + url_for('user.change_password') + '">' + word('Change Password') + '</a></li>'
@@ -6819,6 +6820,10 @@ def index():
             var theVal;
             if ($(this).attr('type') == "checkbox" || $(this).attr('type') == "radio"){
               theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
+              if (typeof(theVal) == 'undefined'){
+                console.log('manually setting checkbox value to False');
+                theVal = 'False';
+              }
             }
             else{
               theVal = $(this).val();
@@ -11525,7 +11530,7 @@ def playground_packages():
             validated = True
         else:
             the_error = ''
-            for attrib in ('original_file_name', 'file_name', 'license', 'description', 'version', 'url', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files', 'readme', 'github_branch', 'commit_message', 'submit', 'download', 'install', 'pypi', 'github', 'cancel', 'delete'):
+            for attrib in ('original_file_name', 'file_name', 'license', 'description', 'author_name', 'author_email', 'version', 'url', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files', 'readme', 'github_branch', 'commit_message', 'submit', 'download', 'install', 'pypi', 'github', 'cancel', 'delete'):
                 the_field = getattr(form, attrib)
                 for error in the_field.errors:
                     the_error += str(error)
@@ -11602,7 +11607,7 @@ def playground_packages():
                 github_ssh = repo_info['ssh_url']
                 if repo_info['private']:
                     github_use_ssh = True
-                github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on GitHub account") + '</a>.'
+                github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on GitHub") + '</a>.'
                 if github_author_name:
                     github_message += "  " + word("The author is") + " " + github_author_name + "."
                 on_github = True
@@ -11654,7 +11659,7 @@ def playground_packages():
                 if type(old_info) is dict:
                     github_url_from_file = old_info.get('github_url', None)
                     pypi_package_from_file = old_info.get('pypi_package_name', None)
-                    for field in ('license', 'description', 'version', 'url', 'readme'):
+                    for field in ('license', 'description', 'author_name', 'author_email', 'version', 'url', 'readme'):
                         if field in old_info:
                             form[field].data = old_info[field]
                         else:
@@ -11737,7 +11742,7 @@ def playground_packages():
                                     inner_item = re.sub(r'^u?"+', '', inner_item)
                                     the_list.append(inner_item)
                                 extracted[m.group(1)] = the_list
-                        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
+                        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
                         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
                         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
                         with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w') as fp:
@@ -11891,7 +11896,7 @@ def playground_packages():
                     inner_item = re.sub(r'^u?"+', '', inner_item)
                     the_list.append(inner_item)
                 extracted[m.group(1)] = the_list
-        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, github_branch=branch, pypi_package_name=pypi_package)
+        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, github_branch=branch, pypi_package_name=pypi_package)
         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
         #output += "info_dict is set\n"
         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
@@ -11940,7 +11945,7 @@ def playground_packages():
                     pypi_message = word('This package is not yet published on PyPI.')
     if request.method == 'POST' and validated:
         new_info = dict()
-        for field in ('license', 'description', 'version', 'url', 'readme', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
+        for field in ('license', 'description', 'author_name', 'author_email', 'version', 'url', 'readme', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
             new_info[field] = form[field].data
         #logmessage("found " + str(new_info))
         if form.submit.data or form.download.data or form.install.data or form.pypi.data or form.github.data:
@@ -12131,6 +12136,10 @@ def playground_packages():
         form.github_branch.data = 'master'
     form.github_branch.choices = branch_choices
     default_branch = branch if branch else 'master'
+    if form.author_name.data in ('', None) and current_user.first_name and current_user.last_name:
+        form.author_name.data = current_user.first_name + " " + current_user.last_name
+    if form.author_email.data in ('', None) and current_user.email:
+        form.author_email.data = current_user.email
     return render_template('pages/playgroundpackages.html', branch=default_branch, version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, pypi_package_name=the_pypi_package_name, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
 
 def github_as_http(url):

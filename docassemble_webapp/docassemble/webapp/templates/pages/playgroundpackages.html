@@ -89,6 +89,8 @@
               {{ render_field(form.file_name) }}
               {{ render_field(form.version) }}
               {{ render_field(form.license) }}
+              {{ render_field(form.author_name) }}
+              {{ render_field(form.author_email) }}
               {{ render_field(form.description) }}
               {{ render_field(form.url) }}
               <h2>{{ form.dependencies.label }}</h2>
@@ -141,9 +143,9 @@
               </div>
               {%- endif %}
               <div class="form-actions">
-                {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS']) }}
+                {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS'], title=word('Save your changes to the package information')) }}
                 {%- if current_file != '' %}
-                {{ render_submit_field(form.install, class="btn btn-success " + config['BUTTON_CLASS']) }}
+                {{ render_submit_field(form.install, class="btn btn-success " + config['BUTTON_CLASS'], title=word('Install package on this server')) }}
                 {%- if can_publish_to_pypi %}
                 {{ render_submit_field(form.pypi, id="daPyPI", class="btn btn-warning " + config['BUTTON_CLASS'], title=word('Publish on PyPI')) }}
                 {%- endif %}
@@ -151,7 +153,7 @@
                 {{ render_submit_field(form.github, id="daGitHub", class="btn btn-warning " + config['BUTTON_CLASS'], title=word('Push a commit to GitHub')) }}
                 {{ render_submit_field(form.cancel, id="daCancel", class="btn btn-default " + config['BUTTON_CLASS'], style="display:none") }}
                 {%- endif %}
-                {{ render_submit_field(form.delete, id="daDelete", class="btn btn-default " + config['BUTTON_CLASS']) }}
+                {{ render_submit_field(form.delete, id="daDelete", class="btn btn-default " + config['BUTTON_CLASS'], title=word('Delete this package from the Playground')) }}
                 {%- else %}
                 <a class="btn btn-default {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_packages') }}">{{ word('Cancel') }}</a>
                 {%- endif %}

@@ -4,8 +4,33 @@
 
 <h1>{{ word('User List') }}</h1>
 
-<p><a href="{{ url_for('privilege_list') }}">{{ word('Edit Privileges') }}</a> | <a href="{{ url_for('user_add') }}">{{ word('Add a user') }}</a> | <a href="{{ url_for('invite') }}">{{ word('Invite a user') }}</a></p>
+<p><a href="{{ url_for('user_add') }}">{{ word('Add a user') }}</a> | <a href="{{ url_for('invite') }}">{{ word('Invite a user') }} </a> | <a href="{{ url_for('privilege_list') }}">{{ word('Edit Privileges') }}</a></p>
 
-{{ userlist|safe }}
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>{{ word('E-mail') }}</th>
+      <th>{{ word('Name') }}</th>
+      <th style="text-align:right;">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for user_info in users %}
+    <tr>
+      {%- if user_info['active'] %}
+      <td>{{ user_info['id'] }}</td>
+      <td>{{ user_info['email'] }}</td>
+      <td>{{ user_info['name'] }}</td>
+      {%- else %}
+      <td class="text-danger">{{ user_info['id'] }}</td>
+      <td class="text-danger">{{ user_info['email'] }} ({{ word('account disabled') }})</td>
+      <td class="text-danger">{{ user_info['name'] }}</td>
+      {%- endif %}
+      <td style="text-align:right;"><a class="label label-success" href="{{ url_for('edit_user_profile_page', id=user_info['id']) }}">{{ word('Edit') }}</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
 
 {% endblock %}
