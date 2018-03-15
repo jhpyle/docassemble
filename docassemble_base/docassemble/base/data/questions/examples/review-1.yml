@@ -1,5 +1,6 @@
 metadata:
   title: Review answers
+  short title: Review
   example start: 4
   example end: 5
   documentation: "https://docassemble.org/docs/fields.html#review"

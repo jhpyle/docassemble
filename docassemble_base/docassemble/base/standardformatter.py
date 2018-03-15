@@ -706,7 +706,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             resume_button_label = word('Resume')
         output += status.submit
         output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
-        output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + resume_button_label + '</button>' + help_button + '</div></div>\n'
+        if hasattr(status.question, 'review_saveas'):
+            output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(safeid(status.question.review_saveas)) + '" value="True">' + continue_label + '</button>' + help_button + '</div></div>\n'
+        else:
+            output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + resume_button_label + '</button>' + help_button + '</div></div>\n'
         if (status.underText):
             output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)

@@ -1752,9 +1752,12 @@ class Question:
                 raise DAError("A field must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['field'])
-            field_data = {'saveas': data['field']}
-            self.fields.append(Field(field_data))
-            self.question_type = 'settrue'
+            if 'review' in data:
+                self.review_saveas = data['field']
+            else:
+                field_data = {'saveas': data['field']}
+                self.fields.append(Field(field_data))
+                self.question_type = 'settrue'
         if 'need' in data:
             if type(data['need']) == str:
                 need_list = [data['need']]
@@ -1835,13 +1838,13 @@ class Question:
                 if type(content_file) is not str:
                     raise DAError('A content file must be specified as text or a list of text filenames' + self.idebug(data))
                 file_to_read = docassemble.base.functions.package_template_filename(content_file, package=self.package)
-                if get_mimetype(file_to_read) != 'text/markdown':
-                    raise DAError('The content file ' + str(target['content file']) + ' is not a markdown file ' + str(file_to_read) + self.idebug(data))
+                #if file_to_read is not None and get_mimetype(file_to_read) != 'text/markdown':
+                #    raise DAError('The content file ' + str(data['content file']) + ' is not a markdown file ' + str(file_to_read) + self.idebug(data))
                 if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
                     with open(file_to_read, 'rU') as the_file:
                         data['content'] += the_file.read().decode('utf8')
                 else:
-                    raise DAError('Unable to read content file ' + str(target['content file']) + ' after trying to find it at ' + str(file_to_read) + self.idebug(data))
+                    raise DAError('Unable to read content file ' + str(data['content file']) + ' after trying to find it at ' + str(file_to_read) + self.idebug(data))
         if 'template' in data and 'content' in data:
             if type(data['template']) in (list, dict):
                 raise DAError("A template must designate a single variable expressed as text." + self.idebug(data))

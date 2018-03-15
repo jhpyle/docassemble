@@ -1,0 +1,52 @@
+metadata:
+  title: Review answers as part of interview
+  short title: Review
+  example start: 4
+  example end: 5
+  documentation: "https://docassemble.org/docs/fields.html#review field"
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Vegetable: vegetable
+---
+question: |
+  What is your favorite fungi?
+fields:
+  - Fungi: fungi
+---
+question: |
+  Revisit your answers
+review:
+  - Revisit fruit: fruit
+    button: |
+      You said your favorite fruit was
+      ${ fruit }.
+  - Revisit vegetable: vegetable
+    button: |
+      You said your favorite vegetable
+      was ${ vegetable }.
+  - Revisit fungus: fungi
+    button: |
+      You said your favorite fungus 
+      was ${ fungi }.
+field: answers_reviewed
+---
+mandatory: True
+code: |
+  fruit
+  vegetable
+  fungi
+  answers_reviewed
+  final_screen
+---
+event: final_screen
+question: All done
+subquestion: |
+  You like ${ fruit }, ${ vegetable }, and ${ fungi }.
+

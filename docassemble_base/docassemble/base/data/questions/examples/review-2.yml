@@ -1,5 +1,6 @@
 metadata:
   title: Review answers
+  short title: Review
   example start: 4
   example end: 4
   documentation: "https://docassemble.org/docs/fields.html#review"
@@ -47,7 +48,7 @@ question: |
 fields:
   - no label: fungi
 ---
-sets: final_screen
+event: final_screen
 question: All done
 subquestion: |
   You like ${ fruit }, ${ vegetable }, and ${ fungi }.
