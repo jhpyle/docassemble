@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.39](https://github.com/jhpyle/docassemble/releases/tag/v0.2.39) - 2018-03-15
+
+### Changed
+- The `review` block can now be used with `field` instead of `event`.
+- Temporarily removed warning about `content file`.
+
+### Fixed
+- Issue with pressing enter causing two screens to submit.
+
 ## [0.2.38](https://github.com/jhpyle/docassemble/releases/tag/v0.2.38) - 2018-03-14
 
 ### Added

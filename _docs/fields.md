@@ -1524,6 +1524,14 @@ display.
 For more information about adding menu items, see the sections on
 [special variables] and [functions].
 
+In the above example, note that the `review` screen identified with
+`event: review_answers`.  For more information about how [`event`]s
+work, [see above](#event).  The interview will show this screen
+whenever it seeks out the definition of the variable `review_answers`.
+Since the screen is displayed based on an [`event`], it can be called as
+many times during your interview as the user likes.  Depending on
+which variables have been defined, the user will see different things.
+
 ### <a name="review customization"></a>Customizing the display of `review` options
 
 You can provide the user with a review of answers and buttons that the
@@ -1549,6 +1557,31 @@ the item will not be shown.  Note: this is not available with the
 
 {% include side-by-side.html demo="review-4" image="review-block-help.png" %}
 
+### <a name="review field"></a>Placing a review block within the interview logic
+
+In the examples above, the `review` block is identified with an
+`event: review_answers`, meaning that the variable `review_answers`
+does not actually get defined, though it gets sought.
+
+As a result, a `review` screen identified with an `event` can only be
+shown when triggered by a user action (e.g., clicking a link,
+selecting an item from the menu), or with [`code`].
+
+If you would like to insert a `review` screen into the normal course
+of an interview, so that it appears to the user one time, you can use
+`field` instead of `event`.
+
+{% include side-by-side.html demo="review-field" %}
+
+In this example, the variable `answers_reviewed` actually gets
+defined; it gets set to `True` when the user clicks "Continue."  It
+works much like a [standard question with a "Continue" button that sets a
+variable to `True`](#field).
+
+The interview flow is set by the [`code`] block.  First the interview
+asks about the user's favorite fruit, vegetable, and fungus, and then
+the `review` screen is shown, and then the final screen is shown.
+
 ### <a name="resume button label"></a>Customizing the Resume button
 
 By default, the `review` block puts a "Resume" button at the bottom of
@@ -1556,6 +1589,10 @@ the screen.  If you want the label on the button to be something other
 than the word "Resume," add a `resume button label` modifier.
 
 {% include side-by-side.html demo="resume-button-label" image="review-block-custom-button.png" %}
+
+However, if `review` is used with `field`, a "Continue" button is
+used.  The "Continue" button can be customized using the modifier
+[`continue button label`].
 
 ### <a name="review auto"></a>Why can't `review` blocks be automatically generated?
 
@@ -1627,6 +1664,7 @@ why this needs to be done manually as opposed to automatically:
 [HTML5]: https://en.wikipedia.org/wiki/HTML5
 [`selections()` function]: {{ site.baseurl }}/docs/functions.html#selections
 [`exclude`]: #exclude
+[`event`]: #event
 [`object`]: #object
 [`object_radio`]: #object_radio
 [`object_checkboxes`]: #object_checkboxes
@@ -1696,3 +1734,4 @@ why this needs to be done manually as opposed to automatically:
 [`format_time()`]: {{ site.baseurl }}/docs/functions.html#format_time
 [`format_datetime()`]: {{ site.baseurl }}/docs/functions.html#format_datetime
 [`.strftime()`]: https://docs.python.org/2/library/datetime.html#datetime.time.strftime
+[`continue button label`]: {{ site.baseurl }}/docs/modifiers.html#continue button label
