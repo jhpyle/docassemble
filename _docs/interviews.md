@@ -250,12 +250,45 @@ user will be logged in and will immediately be directed back to the
 interview they had been using, and they will immediately pick up where
 they left off.
 
-If a user creates an account, and then leaves an interview without
-completing it, and closes their browser, then the next time they start
-the interview, they will start at the beginning again.  Then, if
-they log in, they will be directed to the `/interviews` page, which
-shows a list of interview sessions, including the original session and
-the new session.
+If a logged-inuser leaves an interview without completing it, closes
+their browser, then opens their browser at a later time, and visits
+the interview link again, they will start a new interview session.  If
+they then log in using the menu in the corner, they will be directed
+to the `/interviews` page, where they will see two interview sessions
+listed, including their original session and the session they just
+started.
+
+If your users will only ever need to use a single session of an
+interview, you might want to change the code of your interview so that
+they have a different experience.  For example, you might want to
+start your interview with a multiple-choice question that asks the
+user if they are a new user or a returning user.  If they are a
+returning user.
+
+{% highlight yaml %}
+modules:
+  - docassemble.base.util
+---
+question: |
+  Are you here for the first time, or returning?
+field: user_new_or_returning
+buttons:
+  - First time: new
+  - Returning: returning
+---
+mandatory: True
+code: |
+  if user_new_or_returning == 'returning':
+    command('exit', url=url_of('login'))
+{% endhighlight %}
+
+Running [`command()`] with `'exit'` deletes the current interview
+session.  The `url` keyword parameter redirects the user to a
+particular page.  The function [`url_of()`] with the parameter
+`'login'` returns the URL for the **docassemble** login page.
+
+
+
 
 # <a name="htauthor"></a>How to author your own interviews
 
@@ -525,3 +558,4 @@ For more information about [YAML], see the [YAML specification].
 [`dispatch interview`]: {{ site.baseurl }}/docs/config.html#dispatch interview
 [`interview_menu()`]: {{ site.baseurl }}/docs/functions.html#interview_menu
 [`menu_items` special variable]: {{ site.baseurl }}/docs/special.html#menu_items
+[configured otherwise]: {{ site.baseurl }}/docs/config.html#session list interview

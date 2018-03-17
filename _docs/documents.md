@@ -716,7 +716,7 @@ Instead, if you write:
 
 > 1. {% raw %}{%p if my_var == 'A' %}{% endraw %}
 > 2. The variable is A.
-> 3. {% raw %}{% endif %}{% endraw %}
+> 3. {% raw %}{%p endif %}{% endraw %}
 > 4. item2
 > 5. item3
 
@@ -1067,7 +1067,7 @@ the user a chance to download an assembled document and e-mail it to
 themselves.
 
 Sometimes, you might want to do other things with the document, like
-e-mail it, or post it to a web site.
+e-mail it somewhere (behind the scenes), or post it to a web site.
 
 You can save an assembled document to a variable by adding
 a `variable name` key to an attachment.  For example:
@@ -1239,6 +1239,18 @@ With `language: en`, the output is:
 
 > This customer would like to order fries and a Coke.
 
+# <a name="enable emailing"></a>Enabling the e-mailing of documents
+
+Most internet service providers block e-mail communications as part of
+their efforts to combat [spam], so when you install **docassemble**,
+the e-mail feature probably will not work.
+
+As a result, in most cases you will need to edit your [Configuration]
+in order for e-mailing to work.  The easiest and most effective way to
+enable e-mailing is to use the [Mailgun API] (which is free), but you
+can also use an [external SMTP server] hosted by [Mailgun] or another
+provider.
+
 # <a name="allow emailing"></a>Preventing the user from e-mailing documents
 
 When [`attachments`] are included in a [`question`], the user will be
@@ -1362,3 +1374,8 @@ interview, see the [`cache documents` feature].
 [`noyes()`]: {{ site.baseurl }}/docs/functions.html#noyes
 [pdftk]: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/
 [`include_docx_template()`]: {{ site.baseurl }}/docs/functions.html#include_docx_template
+[spam]: https://en.wikipedia.org/wiki/Email_spam
+[Configuration]: {{ site.baseurl }}/docs/configuration.html
+[external SMTP server]: {{ site.baseurl }}/docs/configuration.html#smtp
+[Mailgun API]: {{ site.baseurl }}/docs/configuration.html#mailgun api
+[Mailgun]: https://www.mailgun.com/

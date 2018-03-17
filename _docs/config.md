@@ -454,6 +454,33 @@ mimics the style of the standard start page:
 
 {% include side-by-side.html demo="list-interview" %}
 
+## <a name="auto resume interview"></a>Automatically resuming or starting an interview
+
+The "My Interviews" page at `/interviews` normally displays a list of
+the user's interview sessions.  By default, users are directed to
+`/interviews` when they log in.
+
+If your server only offers a single interview, for example,
+`docassemble.eviction:data/questions/defend.yml`, you might not want
+your users to look at a list of sessions; you might simply want them
+to resume their existing session, if they have one, or start a new
+session in that interview.
+
+To accomplish this, you can set the following:
+
+{% highlight yaml %}
+auto resume interview: docassemble.eviction:data/questions/defend.yml
+{% endhighlight %}
+
+When this is set, then whenever a user logs in, the user
+will be redirected to their first interview session involving the
+`docassemble.eviction:data/questions/defend.yml` interview.  Or, if
+they have no such session, a new session will 
+
+If you set an `auto resume interview`, you may wish to set [`show
+interviews link`] to `False` if the "My Interviews" menu is not useful
+on your server.
+
 ## <a name="global css"></a><a name="global javascript"></a><a name="raw global css"></a><a name="raw global javascript"></a>CSS and Javascript customization
 
 You can use the [`javascript` features setting] and the
@@ -1308,6 +1335,9 @@ they will see a "Change Password" link.
 show profile link: False
 {% endhighlight %}
 
+Note that users with `admin` privileges will always see the "Profile"
+link.
+
 ## <a name="show interviews link"></a>Hiding the "my interviews" link
 
 If the `show interviews link` directive is set to `False`, logged-in
@@ -1316,6 +1346,9 @@ users will not see a "My Interviews" link in the web app menu.
 {% highlight yaml %}
 show interviews link: False
 {% endhighlight %}
+
+Note that users with `admin` privileges will always see the "My
+Interviews" link.
 
 ## <a name="allow registration"></a>Invitation-only registration
 
