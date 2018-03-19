@@ -1,0 +1,64 @@
+metadata:
+  title: Progress meter
+  example start: 3
+  example end: 5
+  documentation: "https://docassemble.org/docs/modifiers.html#progress"
+---
+modules:
+  - docassemble.base.util
+---
+features:
+  progress bar: True
+---
+mandatory: True
+code: |
+  first_part_done
+  second_part_done
+  final_screen
+---
+code: |
+  user_is_well
+  user_is_bigger_than_a_breadbox
+  ready_for_second_part
+  set_progress(0)
+  first_part_done = True
+---
+code: |
+  user_likes_turnips
+  user_likes_clownfish
+  second_part_done = True
+---
+question: |
+  Are you doing well?
+yesno: user_is_well
+progress: 33
+---
+question: |
+  Are you bigger than a breadbox?
+yesno: user_is_bigger_than_a_breadbox
+progress: 66
+---
+question: |
+  Great!  Are you ready to go on
+  to the next part?
+field: ready_for_second_part
+progress: 100
+---
+question: Do you like turnips?
+yesno: user_likes_turnips
+progress: 50
+---
+question: Do you like clownfish?
+yesno: user_likes_clownfish
+progress: 75
+---
+event: final_screen
+question: Done with the interview.
+subquestion: |
+  % if user_is_well:
+  I am glad you are doing well.
+  % else:
+  I am sorry to hear that you
+  are not doing well!
+  % endif
+progress: 100

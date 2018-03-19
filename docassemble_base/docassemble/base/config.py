@@ -258,6 +258,8 @@ def load(**kwargs):
         daconfig['dispatch'] = dict()
     if 'ldap login' not in daconfig or type(daconfig['ldap login']) is not dict:
         daconfig['ldap login'] = dict()
+    if daconfig.get('auto resume interview', None) is not None:
+        daconfig['show interviews link'] = False
     return
 
 def default_config():

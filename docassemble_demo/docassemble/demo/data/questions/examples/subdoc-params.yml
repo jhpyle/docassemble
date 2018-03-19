@@ -34,7 +34,7 @@ objects:
   - daughter: Individual
 ---
 question: |
-  Give me some information
+  Give me some information.
 fields:
   - "A planet name": planet
     default: Pluto

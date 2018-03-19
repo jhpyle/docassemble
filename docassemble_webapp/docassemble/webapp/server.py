@@ -13937,9 +13937,9 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
     else:
         if filename is not None:
-            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserModel.active == True, UserDictKeys.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
+            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserModel.active == True, UserDictKeys.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted).order_by(UserDictKeys.indexno)
         else:
-            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserModel.active == True).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
+            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserModel.active == True).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted).order_by(UserDictKeys.indexno)
     #logmessage(str(interview_query))
     interviews = list()
     for interview_info in interview_query:
@@ -14072,6 +14072,14 @@ def interview_list():
         exclude_invalid = False
     else:
         exclude_invalid = True
+    resume_interview = request.args.get('resume', None)
+    if resume_interview is None and daconfig.get('auto resume interview', None) is not None and re.search(r'user/(register|sign-in)', str(request.referrer)):
+        resume_interview = daconfig['auto resume interview']
+    if resume_interview is not None:
+        interviews = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=exclude_invalid, filename=resume_interview)
+        if len(interviews):
+            return redirect(url_for('index', i=interviews[0]['filename'], session=interviews[0]['session'], from_list='1'))
+        return redirect(url_for('index', i=resume_interview, from_list='1'))
     interviews = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=exclude_invalid, tag=tag)
     if interviews is None:
         raise Exception("interview_list: could not obtain list of interviews")

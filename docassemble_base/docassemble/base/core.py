@@ -646,7 +646,8 @@ class DAList(DAObject):
         """Returns the number of elements in the list, spelling out the number if ten 
         or below.  Forces the gathering of the elements if necessary."""
         return nice_number(self.number())
-    def _validated_elements(self, complete_attribute=None):
+    def complete_elements(self, complete_attribute=None):
+        """Returns a list of the elements that are complete."""
         if complete_attribute is None and hasattr(self, 'complete_attribute'):
             complete_attribute = self.complete_attribute
         items = list()
@@ -1209,7 +1210,8 @@ class DADict(DAObject):
         """Returns the number of keys in the dictionary, spelling out the number if ten 
         or below.  Forces the gathering of the dictionary items if necessary."""
         return nice_number(self.number())
-    def _validated_elements(self, complete_attribute=None):
+    def complete_elements(self, complete_attribute=None):
+        """Returns a dictionary containing the key/value pairs that are complete."""
         if complete_attribute is None and hasattr(self, 'complete_attribute'):
             complete_attribute = self.complete_attribute
         items = list()

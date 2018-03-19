@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.40] - 2018-03-19
+### Added
+- The `.complete_elements()` method of `DAList` and `DADict`.
+
 ## [0.2.39] - 2018-03-15
 ### Changed
 - The `review` block can now be used with `field` instead of `event`.
