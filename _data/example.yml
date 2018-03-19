@@ -6843,6 +6843,24 @@
 "progress-features": |-
   features:
     progress bar: True
+"progress-multi": |-
+  mandatory: True
+  code: |
+    first_part_done
+    second_part_done
+    final_screen
+  ---
+  code: |
+    user_is_well
+    user_is_bigger_than_a_breadbox
+    ready_for_second_part
+    set_progress(0)
+    first_part_done = True
+  ---
+  code: |
+    user_likes_turnips
+    user_likes_clownfish
+    second_part_done = True
 "pull-down": |-
   question: |
     Describe yourself.
@@ -7347,6 +7365,12 @@
       help: |
         You indicated you liked
         ${ fungi }.
+"review-field": "question: |\n  Revisit your answers\nreview:\n  - Revisit fruit:\
+  \ fruit\n    button: |\n      You said your favorite fruit was\n      ${ fruit }.\n\
+  \  - Revisit vegetable: vegetable\n    button: |\n      You said your favorite vegetable\n\
+  \      was ${ vegetable }.\n  - Revisit fungus: fungi\n    button: |\n      You\
+  \ said your favorite fungus \n      was ${ fungi }.\nfield: answers_reviewed\n---\n\
+  mandatory: True\ncode: |\n  fruit\n  vegetable\n  fungi\n  answers_reviewed\n  final_screen"
 "salutation": |-
   template: letter_to_client
   content: |

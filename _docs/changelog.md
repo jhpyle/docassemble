@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.40](https://github.com/jhpyle/docassemble/releases/tag/v0.2.40) - 2018-03-
+
+
+### Added
+- The `.complete_elements()` method of `DAList` and `DADict`.
+
 ## [0.2.39](https://github.com/jhpyle/docassemble/releases/tag/v0.2.39) - 2018-03-15
 
 ### Changed

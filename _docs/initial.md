@@ -700,8 +700,9 @@ The `features` block sets some optional features of the interview.
 ## <a name="progress bar"></a>Progress bar
 
 The `progress bar` feature controls whether a progress bar is shown
-during the interview.  You can use the [`progress`] modifier to indicate
-the setting of the progress bar.
+during the interview.  You can use the [`progress`] modifier or the
+[`set_progress()`] function to indicate the setting of the progress
+bar.
 
 {% include side-by-side.html demo="progress-features" %}
 
@@ -1126,3 +1127,4 @@ features:
 [`main page post`]: {{ site.baseurl }}/docs/config.html#main page post
 [`metadata`]: #metadata
 [`set_title()`]: {{ site.baseurl}}/docs/functions.html#set_title
+[`set_progress()`]: {{ site.baseurl}}/docs/functions.html#set_progress

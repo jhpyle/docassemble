@@ -259,6 +259,27 @@ something else.
 You can also control the progress meter with the [`get_progress()`]
 and [`set_progress()`] functions.
 
+If the [progress bar] is enabled and the interview encounters a
+question that does not have a `progress` setting, the progress bar
+will advance automatically.  The amount by which the progress bar
+automatically advances gets smaller as the progress
+bar gets closer to 100%.
+
+As a result, you do not need to attach a `progress` setting to every
+question; you can just set `progress` on a few questions, and let the
+automatic advancing mechanism take care of increasing the progress.
+
+If the interview reaches a question with a `progress` setting that is
+less than the current position of the [progress bar], the position of
+the [progress bar] will stay the same.  This ensures that the user
+does not see the [progress bar] go backward.
+
+If you want the [progress bar] to go back or reset, you can use the
+[`set_progress()`] function to force the [progress bar] setting to a
+particular value.  For example:
+
+{% include side-by-side.html demo="progress-multi" %}
+
 # <a name="section"></a>The section navigation bar
 
 A **docassemble** interview can be configured to show a left-hand

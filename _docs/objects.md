@@ -512,6 +512,12 @@ Other methods available on a `DAList` are:
   [Python list] method of the same name.
 * <a name="DAList.clear"></a><a name="DADict.clear"></a><a
   name="DASet.clear"></a>`clear()` - makes the list empty.
+* <a name="DAList.complete_elements"></a><a
+  name="DADict.complete_elements"></a>`complete_elements()` - returns
+  the elements in the list that are "complete."  This is useful when
+  you have a list of objects, and some objects are still in a nascent
+  state, and you only want to use the objects that are "complete."
+  (See the discussion of `.complete_attribute` below.)
 * <a name="DAList.extend"></a>`extend(extension_list)` - adds the
   items in the `extension_list` to the end of the list.  Just like the
   [Python list] method of the same name.
