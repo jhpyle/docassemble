@@ -4020,6 +4020,8 @@ def index():
             if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base') or yaml_filename.startswith('docassemble.demo')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
                 raise DAError("Not authorized")
             show_flash = False
+            if not yaml_filename.startswith('docassemble.playground'):
+                yaml_filename = re.sub(r':([^\/]+)$', r':data/questions/\1', yaml_filename)
             session['i'] = yaml_filename
             if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN:
                 show_flash = True
@@ -14130,7 +14132,7 @@ def fix_secret(user=None):
     #logmessage("fix_secret starting")
     if user is None:
         user = current_user
-    password = request.form.get('password', request.form.get('new_password', None))
+    password = str(request.form.get('password', request.form.get('new_password', None)))
     if password is not None:
         secret = str(request.cookies.get('secret', None))
         newsecret = pad_to_16(MD5Hash(data=password).hexdigest())
