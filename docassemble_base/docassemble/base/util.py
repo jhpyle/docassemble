@@ -680,7 +680,10 @@ class Address(DAObject):
             else:
                 output += unicode(self.address)
             if include_unit and hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-                output += ", " + unicode(self.unit)
+                if re.search(r'^[0-9]', self.unit):
+                    output += ", " + word("Unit") + " " + unicode(self.unit)
+                else:
+                    output += ", " + unicode(self.unit)
             output += ", "
         output += unicode(self.city) + ", " + unicode(self.state)
         if hasattr(self, 'zip') and self.zip:
