@@ -136,15 +136,18 @@ docassemble-baseball
 The package is known as `docassemble.baseball` within [Python] code,
 but the name `docassemble-baseball`, replacing the dot with a hyphen,
 is used in other contexts, such as when referring to a package
-published on the [PyPI] site, or a folder on your system that
-contains the source code of the package.
+published on the [PyPI] site, or a folder on your system that contains
+the source code of the package.
 
 There are a lot of subdirectories (this is the nature of
 [namespace packages]).  There are reasons for all of these
 subdirectories.
 
-1. The top-level directory, `docassemble-baseball`, is
-important because a complete [Python] package should be all in one directory.
+1. The top-level directory, `docassemble-baseball`, is important
+because a complete [Python] package should be all in one directory.
+If you are publishing a package on [GitHub], this directory should be
+the root of the repository; `docassemble-baseball/.git` will contain
+the [git]-related information for the package.
 2. Within that, the `docassemble` directory is necessary so that the
 package is a subpackage of `docassemble`.
 3. Within that, the `baseball` directory is necessary
@@ -152,11 +155,16 @@ because when packages within the `docassemble` [namespace package] are
 installed on a system, [Python] needs them to be in a subdirectory
 under a directory called `docassemble`.
 4. Within `baseball`, you have `baseballstats.py`, which contains
-[Python] code.  The `__init.py__` file is necessary for declaring
-`baseball` to be a package; you never have to edit that file.
+[Python] code.  Files in this directory correspond with files in the
+["Modules" folder] of the [Playground].  The `__init.py__` file is
+necessary for declaring `baseball` to be a package; you never have to
+edit that file.  The `__init.py__` file is empty but its presence is
+still important.
 5. There is also a `data` directory with subdirectories `questions`,
 `static`, `sources`, and `templates`.  These are for [interviews],
-[static files], [data files], and [document templates].
+[static files], [data files], and [document templates].  The
+`questions` directory contains the [YAML] files that are in the main
+part of the [Playground].
 
 Note that in the [Playground], there is a ["Modules" folder] along
 with a ["Templates" folder], a ["Static" folder], etc., but in a
@@ -166,9 +174,10 @@ folder and a `docassemble/baseball/data/static` folder.  The modules
 files (`.py` files) are located in a different place: directly under
 `docassemble/baseball`.  Since the main purpose of a [Python] package
 is to store [Python] modules, modules files are the "main attraction"
-and everything else is just associated "data."  A [Python module]
-known as `docassemble.baseball.baseballstats` must be located in the
-subdirectory `docassemble/baseball/`.  (That is how [Python] works.)
+and everything else is just associated "data."  A [Python module] that
+you refer to as `docassemble.baseball.baseballstats` must be a file
+`baseballstats.py` that is located in the subdirectory
+`docassemble/baseball/`.  (This is how [Python] works.)
 
 When installed on the server, the interview `hitters.yml` can be run
 by going to a link like
