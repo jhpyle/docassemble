@@ -1,7 +1,7 @@
 import os
 import sys
 #import pip.utils.logging
-import pip
+#import pip
 import socket
 import tempfile
 import threading
@@ -139,7 +139,7 @@ def check_for_updates(doing_startup=False):
         if returnval != 0:
             sys.stderr.write("Return value was not good" + "\n")
             ok = False
-        pip._vendor.pkg_resources._initialize_master_working_set()
+        #pip._vendor.pkg_resources._initialize_master_working_set()
         pip_info = get_pip_info(package.name)
         real_name = pip_info['Name']
         sys.stderr.write("check_for_updates: real name of package " + str(package.name) + " is " + str(real_name) + "\n")

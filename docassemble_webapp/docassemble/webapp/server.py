@@ -490,8 +490,8 @@ from dateutil import tz
 import dateutil
 import dateutil.parser
 import time
-import pip.utils.logging
-import pip
+#import pip.utils.logging
+#import pip
 import shutil
 import filecmp
 import codecs
@@ -9486,8 +9486,8 @@ def update_package_ajax():
 def update_package():
     if 'taskwait' in session:
         del session['taskwait']
-    pip.utils.logging._log_state = threading.local()
-    pip.utils.logging._log_state.indentation = 0
+    #pip.utils.logging._log_state = threading.local()
+    #pip.utils.logging._log_state.indentation = 0
     form = UpdatePackageForm(request.form)
     form.gitbranch.choices = [('', "Not applicable")]
     if form.gitbranch.data:

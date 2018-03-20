@@ -1,5 +1,5 @@
 import sys
-import pip
+#import pip
 import re
 import datetime
 #import subprocess
