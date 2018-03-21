@@ -252,7 +252,7 @@ class SavedFile(object):
             return None
         if filename is None:
             filename = self.filename
-        key = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
+        return str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
     def url_for(self, **kwargs):
         if 'ext' in kwargs and kwargs['ext'] is not None:
             extn = kwargs['ext']
