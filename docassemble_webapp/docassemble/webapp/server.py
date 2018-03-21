@@ -15709,6 +15709,45 @@ def api_session():
         user_interviews(action='delete', filename=yaml_filename, session=session_id)
         return ('', 204)
 
+@app.route('/api/file/<file_number>', methods=['GET'])
+def api_file(file_number):
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    if request.method == 'GET':
+        yaml_filename = request.args.get('i', None)
+        session_id = request.args.get('session', None)
+        number = re.sub(r'[^0-9]', '', str(file_number))
+        if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
+            privileged = True
+        else:
+            privileged = False
+        try:
+            file_info = get_info_from_file_number(number, privileged=privileged)
+        except:
+            return ('File not found', 404)
+        if 'path' not in file_info:
+            return ('File not found', 404)
+        else:
+            if 'extension' in request.args:
+                if os.path.isfile(file_info['path'] + '.' + request.args['extension']):
+                    the_path = file_info['path'] + '.' + request.args['extension']
+                    extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + request.args['extension'])
+                else:
+                    return ('File not found', 404)
+            elif 'filename' in request.args:
+                if os.path.isfile(os.path.join(os.path.dirname(file_info['path']), request.args['filename'])):
+                    the_path = os.path.join(os.path.dirname(file_info['path']), request.args['filename'])
+                    extension, mimetype = get_ext_and_mimetype(request.args['filename'])
+                else:
+                    return ('File not found', 404)
+            else:
+                the_path = file_info['path']
+                mimetype = file_info['mimetype']
+            response = send_file(the_path, mimetype=mimetype)
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+            return(response)
+        return ('File not found', 404)
+    
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=str(secret))

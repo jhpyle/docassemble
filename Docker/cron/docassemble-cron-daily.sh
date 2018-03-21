@@ -123,3 +123,10 @@ if [ "${AZUREENABLE:-false}" == "true" ]; then
 	rm -rf ${DA_ROOT}/backup/$the_dir
     done
 fi
+
+if [ "${AZUREENABLE:-false}" == "true" ] || [ "${S3ENABLE:-false}" == "true" ]; then
+    for old_dir in $( find /tmp/files -type d -mmin +1440 -path "/tmp/files/*" ); do
+        rm -rf "$old_dir"
+    done
+fi
+

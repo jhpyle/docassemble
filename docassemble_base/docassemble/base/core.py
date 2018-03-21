@@ -2015,6 +2015,11 @@ class DAFile(DAObject):
                 if os.path.isfile(the_path):
                     return the_path
         return None
+    def cloud_path(self, filename=None):
+        """Returns the path with which the file can be accessed using S3 or Azure Blob Storage, or None if cloud storage is not enabled."""
+        if not hasattr(self, 'number'):
+            raise Exception("Cannot get the cloud path of file without a file number.")
+        return SavedFile(self.number, fix=False).cloud_path(filename)
     def path(self):
         """Returns a path and filename at which the file can be accessed."""
         #logmessage("path")

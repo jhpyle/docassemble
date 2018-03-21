@@ -247,6 +247,12 @@ class SavedFile(object):
                 r.expire(keyname, seconds)
                 break
         return docassemble.base.functions.get_url_root() + '/tempfile/' + code + '/' + kwargs.get('display_filename', self.filename)
+    def cloud_path(self, filename=None):
+        if cloud is None:
+            return None
+        if filename is None:
+            filename = self.filename
+        key = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
     def url_for(self, **kwargs):
         if 'ext' in kwargs and kwargs['ext'] is not None:
             extn = kwargs['ext']

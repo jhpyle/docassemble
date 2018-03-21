@@ -190,6 +190,8 @@ if 'currency symbol' in daconfig:
 import docassemble.webapp.cloud
 cloud = docassemble.webapp.cloud.get_cloud()
 
+docassemble.base.functions.update_server(cloud=cloud)
+
 initial_dict = dict(_internal=dict(progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict(), nav=docassemble.base.functions.DANav())
 #else:
 #    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())

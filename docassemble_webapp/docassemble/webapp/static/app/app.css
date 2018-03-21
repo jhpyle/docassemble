@@ -107,6 +107,7 @@ a.nohover:hover {
 
 .btn-da {
     margin-bottom: 5px;
+    white-space: normal;
 }
 
 button.btn-da-custom {

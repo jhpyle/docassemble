@@ -10,8 +10,8 @@ for old_dir in $( find /tmp -maxdepth 1 -type d -mmin +60 -path "/tmp/SavedFile*
     rm -rf "$old_dir"
 done	       
 
-for old_dir in $( find /tmp -maxdepth 1 -type f -mmin +60 -path "/tmp/datemp*" ); do
-    rm -rf "$old_dir"
+for old_file in $( find /tmp -maxdepth 1 -type f -mmin +60 -path "/tmp/datemp*" ); do
+    rm -f "$old_file"
 done
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
