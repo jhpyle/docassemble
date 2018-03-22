@@ -1021,6 +1021,37 @@ Response on success: [204]
 
 Body of response: empty.
 
+## <a name="session_delete"></a>Delete an interview session
+
+Description: Retrieves a stored file
+
+Path: `/api/file/<file_number>`
+
+Method: [GET]
+
+Parameters:
+
+ - `key`: the API key.
+ - `i`: the filename of the interview.  E.g.,
+   `docassemble.demo:data/questions/questions.yml`.
+ - `session`: the session ID of the interview.
+ - `extension` (optional): a specific file extension to return for the
+   given file.
+ - `filename` (optional): a specific filename to return from the given
+   file's directory.
+
+Required privileges: none.
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Parameters i and session are required" if the `i` parameter
+   and `session` parameters are not included.
+ - [404] "File not found" if the given file could not be located.
+
+Response on success: [200]
+
+Body of response: the contents of the file
+
 # <a name="questionless"></a>Example of usage: questionless interview
 
 One way to use the API is to use **docassemble** as nothing more than

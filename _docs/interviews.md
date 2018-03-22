@@ -287,9 +287,6 @@ session.  The `url` keyword parameter redirects the user to a
 particular page.  The function [`url_of()`] with the parameter
 `'login'` returns the URL for the **docassemble** login page.
 
-
-
-
 # <a name="htauthor"></a>How to author your own interviews
 
 To write and test your own interviews, you will need:
@@ -559,3 +556,5 @@ For more information about [YAML], see the [YAML specification].
 [`interview_menu()`]: {{ site.baseurl }}/docs/functions.html#interview_menu
 [`menu_items` special variable]: {{ site.baseurl }}/docs/special.html#menu_items
 [configured otherwise]: {{ site.baseurl }}/docs/config.html#session list interview
+[`command()`]: {{ site.baseurl }}/docs/functions.html#command
+[`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of

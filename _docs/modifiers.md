@@ -857,3 +857,5 @@ by **docassemble**, so it can contain any valid [YAML].
 [`use font awesome`]: {{ site.baseurl}}/docs/config.html#use font awesome
 [Configuration]: {{ site.baseurl}}/docs/config.html
 [inline icons]: {{ site.baseurl}}/docs/markup.html#emoji
+[`interview help`]: {{ site.baseurl}}/docs/initial.html#interview help
+[`question help button`]: {{ site.baseurl}}/docs/initial.html#question help button

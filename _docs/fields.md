@@ -555,6 +555,11 @@ will be hidden.
 
 {% include side-by-side.html demo="showif-boolean" %}
 
+It is not possible to have "cascading" or "nested" `show if`
+statements on single a screen using the above methods.  That is, a
+`show if` directive cannot refer to a variable that is set by a field
+that has a `show if` directive attached to it.
+
 Under the third method, the field is either shown or not shown on the
 screen when it loads, and it stays that way.  You can use [Python]
 code to control whether the field is shown or not.  Unlike
@@ -567,6 +572,11 @@ The code will be evaluated and if it evaluates to a positive value,
 the field will be shown.
 
 {% include side-by-side.html demo="showif" %}
+
+With all of these methods, if any field is not visible on the screen
+when the user presses the Continue button, no variable will be set to
+anything for that field; it as if the field was never part of the
+`question`.
 
 ### <a name="hide if"></a>`hide if`
 

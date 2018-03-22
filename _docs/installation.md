@@ -1511,3 +1511,4 @@ All of these system administration headaches can be avoided by
 [OAuth]: https://oauth.net/1/
 [alembic]: http://alembic.zzzcomputing.com/en/latest/
 [`github`]: {{ site.baseurl }}/docs/config.html#github
+[`server administrator email`]: {{ site.baseurl }}/docs/config.html#server administrator email

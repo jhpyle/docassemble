@@ -1404,6 +1404,39 @@ after which the data should be removed from [Redis].
 
 {% include side-by-side.html demo="redis-data" %}
 
+## <a name="DACloudStorage"></a>DACloudStorage
+
+The `DACloudStorage` object allows you to access low-level functionality of
+cloud storage using [Amazon S3] or [Azure blob storage], using the
+[boto3] and [azure.storage.blob] libraries, respectively.
+
+Suppose you include the following in your interview:
+
+{% highlight yaml %}
+objects:
+  - cloud: DACloudStorage
+{% endhighlight %}
+
+If you have enabled [`s3`] in your [Configuration], then:
+
+* `cloud.conn` will return a [`boto3.resource('s3')`] object initialized
+  according to the [`s3`] configuration.
+* `cloud.client` will return a [`boto3.client('s3')`] object initialized
+  according to the [`s3`] configuration.
+* `cloud.bucket` will return a [`Bucket`] object for the bucket
+  defined in the [`s3`] configuration.
+* `cloud.bucket_name` will return the name of the bucket defined in
+  the [`s3`] configuration.
+
+If you have enabled [`azure`] in your [Configuration], then:
+
+* `cloud.conn` will return a [`BlockBlobService()`] object initialized
+  according to the [`azure`] configuration.
+* `cloud.container_name` will return the name of the container defined
+  in the [`azure`] configuration.
+  
+If you have not initialized [`s3`] or [`azure`], then `cloud` will be `None`.
+
 # <a name="person classes"></a>Classes for information about people and things
 
 ## <a name="Thing"></a>Thing
@@ -3344,3 +3377,13 @@ of the original [`DADateTime`] object.  See
 [hyperlink]: https://en.wikipedia.org/wiki/Hyperlink
 [URL]: https://en.wikipedia.org/wiki/URL
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
+[boto3]: https://boto3.readthedocs.io/en/latest/
+[azure.storage.blob]: https://docs.microsoft.com/en-us/python/api/overview/azure/storage?view=azure-python
+[`BlockBlobService()`]: https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-python
+[`boto3.resource('s3')`]: http://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.ServiceResource
+[`boto3.client('s3')`]: http://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.Client
+[`Bucket`]: http://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.Bucket
+[`s3`]: {{ site.baseurl }}/docs/config.html#s3
+[`azure`]: {{ site.baseurl }}/docs/config.html#azure
+[Azure blob storage]: {{ site.baseurl }}/docs/docker.html#persistent azure
+[Amazon S3]: https://aws.amazon.com/s3/

@@ -4835,12 +4835,12 @@ actually have an e-mail account.  To avoid getting this e-mail, click
 the "Advanced" link on the sharing screen and uncheck "Notify people.")
 
 Go to the [Configuration] and create a new configuration directive
-called, e.g., `google docs credentials`.  Set it to the contents of
+called, e.g., `google service account credentials`.  Set it to the contents of
 the [JSON] file you downloaded.  The directive will look something
 like this:
 
 {% highlight yaml %}
-google docs credentials: |
+google service account credentials: |
   {
     "type": "service_account",
     "project_id": "redacted",
@@ -4863,7 +4863,7 @@ import gspread
 import json
 from docassemble.base.util import get_config
 from oauth2client.service_account import ServiceAccountCredentials
-credential_info = json.loads(get_config('google docs credentials'), strict=False)
+credential_info = json.loads(get_config('google service account credentials'), strict=False)
 scope = ['https://spreadsheets.google.com/feeds']
 __all__ = ['read_sheet']
 
@@ -4874,7 +4874,7 @@ def read_sheet(sheet_name, worksheet_index):
   return sheet.get_all_records()
 {% endhighlight %}
 
-You might need to change the reference to `'google docs credentials'`
+You might need to change the reference to `'google service account credentials'`
 to something else if you used a different name for the [JSON] crededials
 in your [Configuration].
 
@@ -4894,12 +4894,12 @@ subquestion: |
   % endfor
 {% endhighlight %}
 
-In this example, a [Google Sheet] called "Country Data" has been shared
-with the "service account" that owns the credentials in `google docs
-credentials`.  The first worksheet in the spreadsheet (index 0)
-contains a table with headings for `name` and `longitude`, among other
-columns.  The `read_sheet` function returns a list of dictionaries
-representing the contents of the table.
+In this example, a [Google Sheet] called "Country Data" has been
+shared with the "service account" that owns the credentials in `google
+service account credentials`.  The first worksheet in the spreadsheet
+(index 0) contains a table with headings for `name` and `longitude`,
+among other columns.  The `read_sheet` function returns a list of
+dictionaries representing the contents of the table.
 
 For more information on using [Google Sheets] from [Python], see the
 documentation for the [gspread] module.
@@ -4916,8 +4916,8 @@ Forms] would.
 
 This interview uses a [Google Sheet] called [Fruits and veggies] (you
 can view it at that link), which has been shared with the "service
-account" referenced in the `google docs credentials` directive of the
-[Configuration] on the demo.docassemble.org server.
+account" referenced in the `google service account credentials`
+directive of the [Configuration] on the demo.docassemble.org server.
 
 You can [try out this interview] and then look at the [Fruits and
 veggies] spreadsheet to see your answers along with the answers of
