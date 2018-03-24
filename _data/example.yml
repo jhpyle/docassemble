@@ -1361,7 +1361,7 @@
     Tell me about a hyperlink.
   fields:
     - URL: the_link.url
-      hint: https://google.com
+      hint: "https://google.com"
     - Anchor text: the_link.anchor_text
       hint: Google
   ---
@@ -8957,6 +8957,10 @@
 "fish-example": "code: |\n  fishes = objects_from_file(\"fishes.yml\")\n---\nmandatory:\
   \ true\nquestion: |\n  Fish summary\nsubquestion: |\n  % for fish in fishes:\n \
   \ ${ fish } has\n  ${ fish.scales } scales.\n  \n  % endfor"
+"google-drive": |-
+  modules:
+    - docassemble.base.util
+    - .google_drive
 "google-sheet": |-
   modules:
     - .google_sheets

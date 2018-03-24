@@ -1369,6 +1369,10 @@ hyperlink is inserted into the document.
 
 {% include side-by-side.html demo="dalink" %}
 
+Unfortunately, when [LibreOffice] converts a .docx file to PDF, links
+that include URL parameters (text after the `?`) are misinterpreted as
+links to local files.  This is a [LibreOffice] issue.
+
 ## <a name="DARedis"></a>DARedis
 
 The `DARedis` class facilitates the use of [Redis] for in-memory
@@ -1406,9 +1410,10 @@ after which the data should be removed from [Redis].
 
 ## <a name="DACloudStorage"></a>DACloudStorage
 
-The `DACloudStorage` object allows you to access low-level functionality of
-cloud storage using [Amazon S3] or [Azure blob storage], using the
-[boto3] and [azure.storage.blob] libraries, respectively.
+The `DACloudStorage` object allows you to access low-level
+functionality of cloud storage using [Amazon S3] or [Azure blob
+storage], using the [boto3] and [azure.storage.blob] libraries,
+respectively.
 
 Suppose you include the following in your interview:
 
@@ -1436,6 +1441,338 @@ If you have enabled [`azure`] in your [Configuration], then:
   in the [`azure`] configuration.
   
 If you have not initialized [`s3`] or [`azure`], then `cloud` will be `None`.
+
+For more information on how to use these objects, see the
+documentation for [boto3] and [azure.storage.blob].
+
+The `DACloudStorage` object simply provides a convenient way to obtain
+an authenticated API connection to [Amazon S3] or [Azure blob storage]
+if you are already using one of these systems for [data storage].
+
+If you do not have [`s3`] or [`azure`] configured, you can still use
+the [boto3] and [azure.storage.blob] packages; the only added
+complication is that you have to handle authentication yourself.  You
+can use the [`get_config()`] function to retrieve custom values from
+your [Configuration].
+
+For example, here is a [Python module] that defines a function that
+retrieves a list of object names from an existing [S3 bucket].
+
+{% highlight python %}
+import boto3
+import docassemble.base.util
+
+s3_config = docassemble.base.util.get_config('manual s3 configuration')
+
+def list_keys(prefix):
+    conn = boto3.resource('s3', region_name='us-east-1', aws_access_key_id=s3_config['access key id'], aws_secret_access_key=s3_config['secret access key'])
+    client = boto3.client('s3', region_name='us-east-1', aws_access_key_id=s3_config['access key id'], aws_secret_access_key=s3_config['secret access key'])
+    bucket = conn.Bucket('example-com-data-bucket')
+    output = list()
+    for item in bucket.objects.filter(Prefix=prefix, Delimiter='/'):
+        output.append(item.key)
+    return output
+{% endhighlight %}
+
+This assumes you have a custom directive in your [Configuration] that
+looks like this:
+
+{% highlight yaml %}
+manual s3 configuration:
+  access key id: FWIEJFIJIDGISEJFWOEF
+  secret access key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
+{% endhighlight %}
+
+## <a name="DAGoogleAPI"></a>DAGoogleAPI
+
+The `DAGoogleAPI` object provides convenient access to Google's APIs
+through a Google [service account] that you set up in the [Google
+Developers Console] and enable in the **docassemble** [Configuration].
+
+The `DAGoogleAPI` object can be used with the low-level [Google API]
+and also with higher-level API packages like [gspread] or the [Cloud
+Translation API Client Library].
+
+The benefit of the `DAGoogleAPI` object is that it streamlines the
+process of authenticating to Google's servers.  It also provides a
+standard way to keep [service account] authentication information in
+the [Configuration].
+
+### <a name="DAGoogleAPI setup"></a>Setup process
+
+In order for your site to communicate with Google, you will need to
+create an account on the [Google Developers Console] and create an
+"app."  Within this app, you will need to create a [service account].
+(The instructions for creating a [service account] are not provided
+here; there are sites on the internet that explain it.)
+
+When you create the [service account], you will be provided with
+"credentials."  Download the [JSON] (not p12) credential file for the
+service account.  Also make a note of the e-mail address of the
+service account.
+
+Go to the [Configuration] and create a new configuration directive
+called, e.g., `google service account credentials`.  Set it to the
+contents of the [JSON] file you downloaded.  The directive will look
+something like this:
+
+{% highlight yaml %}
+google service account credentials: |
+  {
+    "type": "service_account",
+    "project_id": "redacted",
+    "private_key_id": "redacted",
+    "private_key": "-----BEGIN PRIVATE KEY-----REDACTED-----END PRIVATE KEY-----\n",
+    "client_email": "googledocs@redacted.iam.gserviceaccount.com",
+    "client_id": "redacted",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://accounts.google.com/o/oauth2/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/googledocs%40redacted.iam.gserviceaccount.com"
+  }
+{% endhighlight %}
+
+Finally, you need to use the [Google Developers Console] to enable the
+APIs that you want to use.  For example, if you want to use the
+[Google Drive API], you need to explicitly enable the [Google Drive
+API] for your app.
+
+### <a name="DAGoogleAPI usage"></a>Usage
+
+Suppose you define `api` to be a `DAGoogleAPI` object:
+
+{% highlight yaml %}
+objects:
+  api: DAGoogleAPI
+{% endhighlight %}
+
+There are two categories of methods available.  The first is for the
+low-level [Google API] available through the
+[`google-api-python-client`] package.  This can be used to control any
+of the [Google API]s.
+
+* `api.api_credentials(scope)` - this returns a
+  [`ServiceAccountCredentials`] object from the
+  [oauth2client.service_account] library, initialized for the given `scope`.
+* `api.http(scope)` - this returns an [`httplib2.Http()`] object that
+  has been modified to send the appropriate credentials to Google.
+* `api.drive_service()` - this returns the result
+  `apiclient.discovery.build()` with the appropriate parameters for
+  the [Google Drive API].
+
+The `scope` can be a single scope like
+`'https://www.googleapis.com/auth/drive'`, or it can be a list of
+scopes, like `['https://www.googleapis.com/auth/cloud-platform',
+'https://www.googleapis.com/auth/cloud-vision']`.  You can browse
+Google's [directory of scopes].
+
+Here is an example of a [Python module] that uses the
+`.drive_service()` method of the [`DAGoogleAPI`] object to provide
+convenience functions for reading and writing to a [Google Drive]
+folder:
+
+{% highlight python %}
+from docassemble.base.util import DAGoogleAPI, DAFile
+import apiclient
+
+api = DAGoogleAPI()
+
+__all__ = ['get_folder_names', 'get_files_in_folder', 'write_file_to_folder', 'download_file']
+
+def get_folder_names():
+    service = api.drive_service()
+    items = list()
+    while True:
+        response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and sharedWithMe").execute()
+        for the_file in response.get('files', []):
+            items.append(the_file)
+        page_token = response.get('nextPageToken', None)
+        if page_token is None:
+            break
+    return [item['name'] for item in items]
+
+def get_folder_id(folder_name):
+    service = api.drive_service()
+    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and sharedWithMe and name='" + unicode(folder_name) + "'").execute()
+    folder_id = None
+    for item in response.get('files', []):
+        folder_id = item['id']
+    return folder_id
+
+def get_file_id(filename, folder_name):
+    folder_id = get_folder_id(folder_name)
+    if folder_id is None:
+        raise Exception("The folder was not found")
+    service = api.drive_service()
+    file_id = None
+    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(folder_id) + "' in parents and name='" + unicode(filename) + "'").execute()
+    for item in response.get('files', []):
+        file_id = item['id']
+    return file_id
+
+def get_files_in_folder(folder_name):
+    folder_id = get_folder_id(folder_name)
+    if folder_id is None:
+        raise Exception("The folder was not found")
+    service = api.drive_service()
+    items = list()
+    while True:
+        response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType!='application/vnd.google-apps.folder' and trashed=false and '" + str(folder_id) + "' in parents").execute()
+        for the_file in response.get('files', []):
+            items.append(the_file)
+        page_token = response.get('nextPageToken', None)
+        if page_token is None:
+            break
+    return [item['name'] for item in items]
+
+def write_file_to_folder(path, mimetype, filename, folder_name):
+    folder_id = get_folder_id(folder_name)
+    if folder_id is None:
+        raise Exception("The folder was not found")
+    service = api.drive_service()
+    file_metadata = { 'name': filename, 'parents': [folder_id] }
+    media = apiclient.http.MediaFileUpload(path, mimetype=mimetype)
+    the_new_file = service.files().create(body=file_metadata,
+                                          media_body=media,
+                                          fields='id').execute()
+    return the_new_file.get('id')
+
+def download_file(filename, folder_name):
+    file_id = get_file_id(filename, folder_name)
+    if file_id is None:
+        raise Exception("The file was not found")
+    the_file = DAFile()
+    the_file.set_random_instance_name()
+    the_file.initialize(filename=filename)
+    service = api.drive_service()
+    with open(the_file.path(), 'wb') as fh:
+        response = service.files().get_media(fileId=file_id)
+        downloader = apiclient.http.MediaIoBaseDownload(fh, response)
+        done = False
+        while done is False:
+            status, done = downloader.next_chunk()
+    the_file.commit()
+    return the_file
+{% endhighlight %}
+
+To use this module, log in to [Google Drive] using a normal Google
+account and create a folder.  Then share that folder with the e-mail
+address of your [service account].  Then, when you call
+`get_folder_names()`, the name of this folder will be part of the list
+that is returned.
+
+Here is an interview that uses this module to access a [Google Drive]
+folder called "DADemo".  It assumes the module is a file called
+`google_drive.py` in the same package as the interview.
+
+{% highlight yaml %}
+modules:
+  - docassemble.base.util
+  - .google_drive
+---
+mandatory: True
+code: |
+  first_screen
+  files_copied_to_google_drive
+  final_screen
+---
+question: |
+  Files in your Google Drive
+subquestion: |
+  % for item in get_files_in_folder('DADemo'):
+  * ${ item } ${ download_file(item, 'DADemo') }
+  % endfor
+field: first_screen
+---
+question: |
+  Please upload a file.
+fields:
+  - File: uploaded_files
+    datatype: files
+---
+code: |
+  for the_file in uploaded_files:
+    (path, mimetype) = path_and_mimetype(the_file)
+    write_file_to_folder(path, mimetype, the_file.filename, 'DADemo')
+  files_copied_to_google_drive = True
+---
+event: final_screen
+question: Names of files in folder
+subquestion: |
+  % for item in get_files_in_folder('DADemo'):
+  * ${ item }
+  % endfor
+{% endhighlight %}
+
+You can use any [Google API], not just the [Google Drive API].  The
+`.drive_service()` method is provided only as a convenience.  You can
+create your own services by running something like:
+
+{% highlight python %}
+import apiclient
+import docassemble.base.util 
+
+api = docassemble.base.util.DAGoogleAPI()
+http = api.http('https://www.googleapis.com/auth/cloud-translation')
+
+service = apiclient.discovery.build('translate', 'v2', http=http)
+{% endhighlight %}
+
+Note that while the `api` object can safely persist in your users'
+interview answers, a variable like `service` cannot be [pickled], so
+if you store it in your interview file, you will get an error.
+Ideally, you should always use Python modules for functions that access APIs,
+so that there is no danger of an error if **docassemble** tries to
+pickle an object that cannot be pickled.
+
+The second category of methods is for [Google Cloud packages] like
+[`google.cloud.storage`] and [`google.cloud.translate`].  If a Google
+service is available both through [`google-api-python-client`] and
+through one of the [Google Cloud packages], the [Google Cloud
+packages] packages are probably preferable because they are newer and
+easier to use.  Most of these packages are not installed in the
+**docassemble** system by default and will need to be installed with
+"Package Management" if you want to use them.  Whatever package name
+Google tells you to use with `pip`, you can type into the "Package on
+PyPI" field in "Package Management."
+
+The methods of the [`DAGoogleAPI`] object that can be used with the
+[Google Cloud packages] include the following:
+
+* `api.cloud_credentials(scope)` - this returns a
+  [`Credentials`] object from the
+  [google.oauth2.service_account] module, initialized for the given
+  `scope`.
+* `api.project_id()` - this returns the ID of the "app" in which the
+  [service account] is configured.  This ID, which is just a text
+  string, is required by some API methods.
+* `google_cloud_storage_client()` - this returns a
+  `google.cloud.storage.Client` object that can be used to access the
+  [Google Cloud Storage] API.
+
+Here is an example of a [Python module] that uses the [Google Cloud
+Storage] API (the [`google.cloud.storage`] Python package):
+
+{% highlight python %}
+import docassemble.base.util
+
+__all__ = ['make_bucket', 'get_bucket', 'make_blob']
+
+api = docassemble.base.util.DAGoogleAPI()
+client = api.google_cloud_storage_client()
+
+def make_bucket(bucket_name):
+  return client.create_bucket(bucket_name)
+  
+def get_bucket(bucket_name):
+  return client.get_bucket(bucket_name)
+
+def make_blob(bucket_name, blob_name, blob_content):
+  bucket = get_bucket(bucket_name)
+  blob = bucket.blob(blob_name)
+  blob.upload_from_string(blob_content)
+  return blob
+{% endhighlight %}
 
 # <a name="person classes"></a>Classes for information about people and things
 
@@ -3387,3 +3724,27 @@ of the original [`DADateTime`] object.  See
 [`azure`]: {{ site.baseurl }}/docs/config.html#azure
 [Azure blob storage]: {{ site.baseurl }}/docs/docker.html#persistent azure
 [Amazon S3]: https://aws.amazon.com/s3/
+[Google API]: https://developers.google.com/api-client-library/python/apis/
+[Google API for Python]: https://developers.google.com/api-client-library/python/
+[service account]: https://cloud.google.com/iam/docs/understanding-service-accounts
+[Google Developers Console]: https://console.developers.google.com/
+[directory of scopes]: https://developers.google.com/identity/protocols/googlescopes
+[Google Drive API]: https://developers.google.com/drive/
+[`httplib2.Http()`]: http://httplib2.readthedocs.io/en/latest/libhttplib2.html#httplib2.Http
+[`ServiceAccountCredentials`]: http://oauth2client.readthedocs.io/en/latest/source/oauth2client.service_account.html#oauth2client.service_account.ServiceAccountCredentials
+[oauth2client.service_account]: http://oauth2client.readthedocs.io/en/latest/source/oauth2client.service_account.html 
+[gspread]: https://gspread.readthedocs.io/en/latest/
+[Cloud Translation API Client Library]: https://cloud.google.com/translate/docs/reference/libraries#client-libraries-install-python
+[`google-api-python-client`]: https://github.com/google/google-api-python-client/
+[Google Cloud packages]: https://cloud.google.com/python/references/libraries
+[google.oauth2.service_account]: http://google-auth.readthedocs.io/en/latest/reference/google.oauth2.service_account.html
+[`Credentials`]: http://google-auth.readthedocs.io/en/latest/reference/google.oauth2.service_account.html#google.oauth2.service_account.Credentials
+[`get_config()`]: {{ site.baseurl }}/docs/functions.html#get_config
+[`DAGoogleAPI`]: #DAGoogleAPI
+[`google.cloud.storage`]: https://cloud.google.com/storage/docs/reference/libraries#client-libraries-install-python
+[`google.cloud.translate`]: https://cloud.google.com/translate/docs/reference/libraries#client-libraries-install-python
+[data storage]: {{ site.baseurl }}/docs/docker.html#data storage
+[S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
+[Google Drive]: https://www.google.com/drive/
+[Google Cloud Storage]: https://cloud.google.com/storage/docs/reference/libraries
+[LibreOffice]: https://www.libreoffice.org/

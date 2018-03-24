@@ -755,14 +755,17 @@ Form data:
  - `session`: the session ID of the interview.
  - `secret` (optional): the encryption key to use with the interview,
    if the interview uses server-side encryption.
- - `variables` (optional): a [JSON] object where the keys are variable names and
-   the values are the values those variables should have.
+ - `variables` (optional): a [JSON] object where the keys are variable
+   names and the values are the values those variables should have.
  - `question` (optional): if set to `0`, then the interview is not
    evaluated after the variables are set and the current question in
    the interview is not returned in response to the request.  You may
    wish to set `question` to `0` if you want to change the interview
    dictionary, but you do not want to trigger any side effects by
    causing the interview to be evaluated.
+ - `delete_variables` (optional): a [JSON] array in which the items
+   are names of variables to be deleted with [`del`].  The deletion
+   of these variables happens after the `variables` are assigned.
  - `file_variables` (optional): if you are uploading one or more
    files, and the name of the `DAFileList` variable cannot be passed
    as the name of the file upload, you can set `file_variables` to a
@@ -784,8 +787,17 @@ Responses on failure:
    locating the interview dictionary.
  - [400] "Unable to decrypt interview dictionary" if there was a problem
    obtaining and decrypting the interview dictionary.
- - [400] "Variables data is not a dict" if the variables dictionary is
-   not a [JSON] object.
+ - [400] "Variables data is not a dict" if `variables` is not a [JSON]
+   object.
+ - [400] "File variables data is not a dict" if `file_variables`
+   is not a [JSON] object.
+ - [400] "Delete variables data is not a list" if `delete_variables`
+   is not a [JSON] array.
+ - [400] "Malformed variables" if `variables` is not valid [JSON].
+ - [400] "Malformed list of file variables" if `file_variables` is not
+   valid [JSON].
+ - [400] "Malformed list of delete variables" if `delete_variables` is
+   not valid [JSON].
  - [400] "Problem setting variables" if there was an error while
    setting variables in the dictionary.
  - [400] "Failure to assemble interview" if the interview generates an
@@ -1184,3 +1196,4 @@ function.
 [`docassemble.demo`]: https://github.com/jhpyle/docassemble/tree/master/docassemble_demo/docassemble/demo
 [`log()`]: {{ site.baseurl }}/docs/functions.html#log
 [`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
+[`del`]: https://docs.python.org/2.0/ref/del.html
