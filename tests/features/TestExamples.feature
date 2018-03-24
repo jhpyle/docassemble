@@ -5683,3 +5683,6 @@ Feature: Example interviews
     Then I should see the phrase "Give me some information."
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
+
+  # Scenario: Test the interview "Get files from Google Drive"
+  #   Given I start the interview "docassemble.demo:data/questions/examples/google-drive.yml"

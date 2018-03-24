@@ -113,7 +113,7 @@
                 <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="580">{{ content }}</textarea>
               </div>
               <div class="form-actions">
-                {{ render_submit_field(formtwo.submit, tabindex=600, class="btn btn-primary " + config['BUTTON_CLASS']) }}
+                {{ render_submit_field(formtwo.submit, tabindex=600, class="btn btn-primary " + config['BUTTON_CLASS'], data={'disable-button': 0}) }}
                 {% if is_new == 'False' %}<a tabindex="610" class="btn btn-default {{ config['BUTTON_CLASS'] }}" href="?section={{ section }}&delete={{ current_file }}">{{ word('Delete') }}</a>{% endif %}
               </div>
             </form>

@@ -551,7 +551,7 @@ from sqlalchemy import or_, and_
 import docassemble.base.parse
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
-import docassemble.webapp.update
+#import docassemble.webapp.update
 from docassemble.base.standardformatter import as_html, as_sms, get_choices_with_abb, is_empty_mc
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.webapp.screenreader import to_text
@@ -10868,7 +10868,7 @@ def view_source():
 
 @app.route('/playgroundstatic/<userid>/<filename>', methods=['GET'])
 def playground_static(userid, filename):
-    filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+    #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundstatic')
     filename = os.path.join(area.directory, filename)
     if os.path.isfile(filename):
@@ -10881,7 +10881,7 @@ def playground_static(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_modules(userid, filename):
-    filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+    #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundmodules')
     filename = os.path.join(area.directory, filename)
     if os.path.isfile(filename):
@@ -10894,7 +10894,7 @@ def playground_modules(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_sources(userid, filename):
-    filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+    filename = re.sub(r'[^A-Za-z0-9\-\_\(\)\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundsources')
     reslt = write_ml_source(area, userid, filename)
     # if reslt:
@@ -10913,7 +10913,7 @@ def playground_sources(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_template(userid, filename):
-    filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+    #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundtemplate')
     filename = os.path.join(area.directory, filename)
     if os.path.isfile(filename):
@@ -10927,7 +10927,7 @@ def playground_template(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_download(userid, filename):
-    filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+    #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playground')
     filename = os.path.join(area.directory, filename)
     if os.path.isfile(filename):
@@ -10988,7 +10988,8 @@ def playground_files():
             active_file = pulldown_files[0]
     area = SavedFile(current_user.id, fix=True, section='playground' + section)
     if request.args.get('delete', False):
-        argument = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', request.args.get('delete'))
+        #argument = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', request.args.get('delete'))
+        argument = request.args.get('delete')
         if argument:
             filename = os.path.join(area.directory, argument)
             if os.path.exists(filename):
@@ -11008,7 +11009,8 @@ def playground_files():
             else:
                 flash(word("File not found: ") + argument, "error")
     if request.args.get('convert', False):
-        argument = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', request.args.get('convert'))
+        #argument = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', request.args.get('convert'))
+        argument = request.args.get('convert')
         if argument:
             filename = os.path.join(area.directory, argument)
             if os.path.exists(filename):
@@ -12668,8 +12670,9 @@ def playground_page():
     #         return jsonify(variables_html=variables_html, vocab_list=vocab_list)
     if request.method == 'POST' and the_file != '' and form.validate():
         if form.delete.data:
-            if os.path.isfile(filename):
-                os.remove(filename)
+            filename_to_del = os.path.join(playground.directory, form.playground_name.data)
+            if os.path.isfile(filename_to_del):
+                os.remove(filename_to_del)
                 flash(word('File deleted.'), 'info')
                 r.delete('da:interviewsource:docassemble.playground' + str(current_user.id) + ':' + the_file)
                 if active_file != the_file:
@@ -12677,10 +12680,10 @@ def playground_page():
                 playground.finalize()
                 if use_gd:
                     try:
-                        trash_gd_file('questions', the_file)
+                        trash_gd_file('questions', form.playground_name.data)
                     except Exception as the_err:
                         logmessage("playground_page: unable to delete file on Google Drive.  " + str(the_err))
-                if 'variablefile' in session and session['variablefile'] == the_file:
+                if 'variablefile' in session and (session['variablefile'] == the_file or session['variablefile'] == form.playground_name.data):
                     del session['variablefile']
                 return redirect(url_for('playground_page'))
             else:
@@ -15662,9 +15665,17 @@ def api_session():
         try:
             file_variables = json.loads(post_data.get('file_variables', '{}'))
         except:
-            return jsonify_with_status("Malformed list of file_variables.", 400)
+            return jsonify_with_status("Malformed list of file variables.", 400)
+        try:
+            del_variables = json.loads(post_data.get('delete_variables', '[]'))
+        except:
+            return jsonify_with_status("Malformed list of delete variables.", 400)
         if type(variables) is not dict:
             return jsonify_with_status("Variables data is not a dict.", 400)
+        if type(file_variables) is not dict:
+            return jsonify_with_status("File variables data is not a dict.", 400)
+        if type(del_variables) is not list:
+            return jsonify_with_status("Delete variables data is not a list.", 400)
         files = []
         literal_variables = dict()
         for filekey in request.files:
@@ -15693,9 +15704,9 @@ def api_session():
             else:
                 literal_variables[file_field] = "None"
         try:
-            data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables)
+            data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables, del_variables=del_variables)
         except Exception as the_err:
-            return jsonify_with_status(str(the_err), 400)
+            return jsonify_with_status(str(the_err), 400)            
         if data is None:
             return ('', 204)
         if data.get('questionType', None) is 'response':
@@ -15790,7 +15801,7 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
         data = None
     return data
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None):
+def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None):
     obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
@@ -15810,6 +15821,13 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         exec('import docassemble.base.core', user_dict)
         for key, val in literal_variables.iteritems():
             exec(unicode(key) + ' = ' + val, user_dict)
+    if del_variables is not None:
+        try:
+            for key in del_variables:
+                exec('del ' + unicode(key), user_dict)
+        except Exception as the_err:
+            release_lock(session_id, yaml_filename)
+            raise Exception("Problem setting variables:" + str(the_err))
     if return_question:
         try:
             data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted)

@@ -1,0 +1,45 @@
+metadata:
+  title: Get files from Google Drive
+  short title: Google Drive
+  documentation: "https://docassemble.org/docs/functions.html#google drive example"
+  example start: 1
+  example end: 1
+---
+modules:
+  - docassemble.base.util
+  - .google_drive
+---
+mandatory: True
+code: |
+  first_screen
+  files_copied_to_google_drive
+  final_screen
+---
+question: |
+  Files in your Google Drive
+subquestion: |
+  % for item in get_files_in_folder('DADemo'):
+  * ${ item } ${ download_file(item, 'DADemo') }
+  % endfor
+field: first_screen
+---
+question: |
+  Please upload a file.
+fields:
+  - File: uploaded_files
+    datatype: files
+---
+code: |
+  for the_file in uploaded_files:
+    (path, mimetype) = path_and_mimetype(the_file)
+    write_file_to_folder(path, mimetype, the_file.filename, 'DADemo')
+  files_copied_to_google_drive = True
+---
+event: final_screen
+question: Names of files in folder
+subquestion: |
+  % for item in get_files_in_folder('DADemo'):
+  * ${ item }
+  % endfor
+
+  

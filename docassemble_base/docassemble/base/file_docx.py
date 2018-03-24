@@ -4,6 +4,7 @@ from docx.shared import Mm, Inches, Pt
 import docx.opc.constants
 from docassemble.base.functions import server
 import docassemble.base.filter
+from xml.sax.saxutils import escape as html_escape
 from types import NoneType
 from docassemble.base.logger import logmessage
 
@@ -69,7 +70,7 @@ class InlineHyperlink(object):
         self.anchor_text = anchor_text
     def _insert_link(self):
         ref = self.tpl.docx._part.relate_to(self.url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
-        return '</w:t></w:r><w:hyperlink r:id="%s"><w:r><w:rPr><w:rStyle w:val="InternetLink"/></w:rPr><w:t>%s</w:t></w:r></w:hyperlink><w:r><w:rPr></w:rPr><w:t xml:space="preserve">' % (ref, self.anchor_text)
+        return '</w:t></w:r><w:hyperlink r:id="%s"><w:r><w:rPr><w:rStyle w:val="InternetLink"/></w:rPr><w:t>%s</w:t></w:r></w:hyperlink><w:r><w:rPr></w:rPr><w:t xml:space="preserve">' % (ref, html_escape(self.anchor_text))
     def __unicode__(self):
         return self._insert_link()
     def __str__(self):

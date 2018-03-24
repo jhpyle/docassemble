@@ -2,7 +2,7 @@ import gspread
 import json
 from docassemble.base.util import get_config
 from oauth2client.service_account import ServiceAccountCredentials
-credential_info = json.loads(get_config('google docs credentials'), strict=False)
+credential_info = json.loads(get_config('google service account credentials'), strict=False)
 scope = ['https://spreadsheets.google.com/feeds']
 __all__ = ['read_sheet', 'append_to_sheet']
 

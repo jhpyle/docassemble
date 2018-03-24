@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.2.41] - 2018-03-24
+### Added
+- The `DACloudStorage` and `DAGoogleAPI` objects.
+- The `/api/file/<file_number>` API.
+- The `delete_variables` option for the POST operation of the `/api/session` API.
+### Changed
+- Less stringent input sanitation so that Playground files with
+  parentheses can be deleted.
+- Labels inside buttons will now wrap.
+### Fixed
+- Escaping of anchor text in `DALink`s.
+
 ## [0.2.40] - 2018-03-19
 ### Added
 - The `.complete_elements()` method of `DAList` and `DADict`.
