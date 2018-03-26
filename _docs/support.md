@@ -23,6 +23,14 @@ In-person training will be available at [Docacon 2018], a one-day
 **docassemble** conference to be held on June 22, 2018 in Chicago,
 Illinois.
 
+# Tutorials
+
+[![flowchart](https://gblsma.github.io/docassemble-MotionTutorial/images/docassemble-workflow.png){: .maybe-full-width }](https://gblsma.github.io/docassemble-MotionTutorial/)
+
+[Quinten Steenhuis] and Rina Padua of [Greater Boston Legal Services]
+developed [a tutorial on developing an interview that automates a Word
+document to create a motion to dismiss](https://gblsma.github.io/docassemble-MotionTutorial/).
+
 # Video guides
 
 This video by [John Gibson](https://www.youtube.com/channel/UC8iZ3ft6Ipg4IYdQtEUtiZw)
@@ -46,3 +54,6 @@ is a good idea to ask a question about the error message first.
 [e-mail the developer]: mailto:jhpyle@gmail.com
 [**docassemble** Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTAzYzY5NWExMzUxNTNhNjUyZjRkMDg0NGE2Yjc2YjI0OGNlMTcwNjhjYzRhMjljZWU0MTI2N2U0MTFlM2ZjNzg
 [Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTAzYzY5NWExMzUxNTNhNjUyZjRkMDg0NGE2Yjc2YjI0OGNlMTcwNjhjYzRhMjljZWU0MTI2N2U0MTFlM2ZjNzg
+[Quinten Steenhuis]: https://www.nonprofittechy.com/blog/
+[Rina Padua]: https://github.com/Rinapadua
+[Greater Boston Legal Services]: https://www.gbls.org/
