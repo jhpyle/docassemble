@@ -99,6 +99,12 @@
 .dasignature > .navbar {
     display: none;
 }
+.dasignature > .daright {
+    display: none;
+}
+.dasignature > .daattributions {
+    display: none;
+}
 .sighidesmall {
     display: none;
 }
@@ -111,6 +117,12 @@
         padding: 70px 0px 0px 0px;
     }
     .dasignature > .navbar {
+        display: block;
+    }
+    .dasignature > .daright {
+        display: block;
+    }
+    .dasignature > .daattributions {
         display: block;
     }
     .sighidesmall {

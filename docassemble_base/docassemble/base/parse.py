@@ -343,7 +343,6 @@ class InterviewStatus(object):
         self.question = question_result['question']
         self.questionText = question_result['question_text']
         self.subquestionText = question_result['subquestion_text']
-        self.underText = question_result['under_text']
         self.continueLabel = question_result['continue_label']
         self.decorations = question_result['decorations']
         self.audiovideo = question_result['audiovideo']
@@ -361,9 +360,12 @@ class InterviewStatus(object):
         self.tracker = tracker
     def as_data(self, encode=True):
         result = dict()
-        for param in ('questionText', 'subquestionText', 'underText', 'continueLabel', 'helpLabel'):
+        for param in ('questionText', 'subquestionText', 'continueLabel', 'helpLabel'):
             if hasattr(self, param) and getattr(self, param) is not None:
                 result[param] = getattr(self, param).rstrip()
+        for param in ('rightText', 'underText'):
+            if param in self.extras:
+                result[param] = self.extras[param].rstrip()
         if hasattr(self, 'audiovideo') and self.audiovideo is not None:
             audio_result = docassemble.base.filter.get_audio_urls(self.audiovideo)
             video_result = docassemble.base.filter.get_video_urls(self.audiovideo)
@@ -904,7 +906,6 @@ class Question:
         self.helptext = None
         self.subcontent = None
         self.reload_after = None
-        self.undertext = None
         self.continuelabel = None
         self.helplabel = None
         self.progress = None
@@ -915,7 +916,6 @@ class Question:
         self.target = None
         self.decorations = None
         self.audiovideo = None
-        self.allow_emailing = True
         self.compute_attachment = None
         self.can_go_back = True
         self.fields_used = set()
@@ -950,6 +950,8 @@ class Question:
                 self.interview.force_fullscreen = data['features']['go full screen']
             if 'navigation' in data['features'] and data['features']['navigation']:
                 self.interview.use_navigation = True
+            if 'centered' in data['features'] and not data['features']['centered']:
+                self.interview.flush_left = True
             if 'maximum image size' in data['features']:
                 self.interview.max_image_size = eval(str(data['features']['maximum image size']))
             if 'cache documents' in data['features']:
@@ -1500,6 +1502,8 @@ class Question:
             self.process_attachment_code(data['attachments code'])
         if 'allow emailing' in data:
             self.allow_emailing = data['allow emailing']
+        if 'allow downloading' in data:
+            self.allow_downloading = data['allow downloading']
         # if 'role' in data:
         #     if type(data['role']) is list:
         #         for rolename in data['role']:
@@ -1511,6 +1515,8 @@ class Question:
         #         raise DAError("A role section must be text or a list." + self.idebug(data))
         if 'progress' in data:
             self.progress = data['progress']
+        if 'zip filename' in data:
+            self.zip_filename = TextObject(definitions + unicode(data['zip filename']), names_used=self.mako_names)
         if 'action' in data:
             self.question_type = 'backgroundresponseaction'
             self.content = TextObject('action')
@@ -1658,6 +1664,8 @@ class Question:
                 self.fields_used.add(data['signature'])
         if 'under' in data:
             self.undertext = TextObject(definitions + unicode(data['under']), names_used=self.mako_names)
+        if 'right' in data:
+            self.righttext = TextObject(definitions + unicode(data['right']), names_used=self.mako_names)
         if 'check in' in data:
             self.interview.uses_action = True
             if type(data['check in']) in (dict, list, set):
@@ -2618,11 +2626,11 @@ class Question:
             subquestion = self.subcontent.text(user_dict)
         else:
             subquestion = None
-        if self.undertext is not None:
-            undertext = self.undertext.text(user_dict)
-        else:
-            undertext = None
         extras = dict()
+        if hasattr(self, 'undertext') and self.undertext is not None:
+            extras['underText'] = self.undertext.text(user_dict)
+        if hasattr(self, 'righttext') and self.righttext is not None:
+            extras['rightText'] = self.righttext.text(user_dict)
         if len(self.terms):
             extras['terms'] = dict()
             for termitem, definition in self.terms.iteritems():
@@ -2690,6 +2698,18 @@ class Question:
                 if int(number) < 4:
                     number = "4"                
                 extras['reload_after'] = number
+        if hasattr(self, 'allow_downloading'):
+            if type(self.allow_downloading) is bool:
+                extras['allow_downloading'] = self.allow_downloading
+            else:
+                extras['allow_downloading'] = eval(self.allow_downloading, user_dict)
+        if hasattr(self, 'allow_emailing'):
+            if type(self.allow_emailing) is bool:
+                extras['allow_emailing'] = self.allow_emailing
+            else:
+                extras['allow_emailing'] = eval(self.allow_emailing, user_dict)
+        if hasattr(self, 'zip_filename'):
+            extras['zip_filename'] = docassemble.base.functions.single_paragraph(self.zip_filename.text(user_dict))
         if self.question_type == 'response':
             extras['content_type'] = self.content_type.text(user_dict)
             # if hasattr(self, 'binaryresponse'):
@@ -3026,7 +3046,7 @@ class Question:
                 # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
-        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought}) #'defined': defined, 
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought}) #'defined': defined, 
     def processed_attachments(self, user_dict, **kwargs):
         seeking_var = kwargs.get('seeking_var', '__novar')
         steps = user_dict['_internal'].get('steps', -1)
@@ -3609,6 +3629,7 @@ class Interview:
         self.recursion_limit = get_config('recursion limit', 500)
         self.cache_documents = True
         self.use_navigation = False
+        self.flush_left = False
         self.max_image_size = get_config('maximum image size', None)
         self.bootstrap_theme = get_config('bootstrap theme', None)
         self.sections = dict()

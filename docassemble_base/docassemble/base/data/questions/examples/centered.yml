@@ -1,0 +1,18 @@
+metadata:
+  title: Centered
+  documentation: "https://docassemble.org/docs/modifiers.html#centered"
+---
+features:
+  centered: False
+---
+question: Are you doing well?
+yesno: user_is_well
+---
+question: Done with the interview.
+subquestion: |
+  % if user_is_well:
+  I am glad you are doing well.
+  % else:
+  I am sorry to hear that!
+  % endif
+mandatory: True

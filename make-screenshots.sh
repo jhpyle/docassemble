@@ -22,10 +22,33 @@ do
     	continue
     fi
     casperjs screenshot.js $file.yml $tempfile $area
-    if [ "$file" = "signature" -o "$file" = "metadata" -o "$file" = "help" -o "$file" = "help-damages" -o "$file" = "help-damages-audio" -o "$file" = "progress" -o "$file" = "progress-features" -o "progress-multi" -o "$file" = "response" -o "$file" = "response-hello" -o "$file" = "menu-item" -o "$file" = "ml-export" -o "$file" = "ml-export-yaml" -o "$file" = "live_chat" -o "$file" = "bootstrap-theme" -o "$file" = "flash" -o "$file" = "log" -o "$file" = "branch-error" -o "$file" = "set-title" -o "$file" = "set-logo-title" -o "$file" = "question-help-button" -o "$file" = "question-help-button-off" ]
+    if [ "$file" = "signature" -o \
+	 "$file" = "metadata" -o \
+         "$file" = "help" -o \
+         "$file" = "help-damages" -o \
+         "$file" = "help-damages-audio" -o \
+         "$file" = "progress" -o \
+         "$file" = "progress-features" -o \
+	 "$file" = "progress-multi" -o \
+         "$file" = "response" -o \
+         "$file" = "response-hello" -o \
+         "$file" = "menu-item" -o \
+         "$file" = "ml-export" -o \
+         "$file" = "ml-export-yaml" -o \
+         "$file" = "live_chat" -o \
+         "$file" = "bootstrap-theme" -o \
+         "$file" = "flash" -o \
+         "$file" = "log" -o \
+         "$file" = "branch-error" -o \
+         "$file" = "set-title" -o \
+         "$file" = "set-logo-title" -o \
+         "$file" = "question-help-button" -o \
+         "$file" = "question-help-button-o \ff" -o \
+         "$file" = "right" -o \
+         "$file" = "centered" ]
     then
 	convert $tempfile -resize 650x9999 -trim docassemble_webapp/docassemble/webapp/static/examples/$file.png
-    elif [ "$file" = "markdown" -o "$file" = "allow-emailing-true" -o "$file" = "allow-emailing-false" -o "$file" = "markdown-demo" -o "$file" = "document-links" -o "$file" = "document-links-limited" ]
+    elif [ "$file" = "markdown" -o "$file" = "allow-emailing-true" -o "$file" = "allow-emailing-false" -o "$file" = "markdown-demo" -o "$file" = "document-links" -o "$file" = "document-links-limited" -o "$file" = "allow-downloading-true" ]
     then
 	convert $tempfile -crop 650x999+170+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "inverse-navbar" ]

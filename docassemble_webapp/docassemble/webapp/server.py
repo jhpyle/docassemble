@@ -1685,7 +1685,7 @@ def progress_bar(progress):
         return('');
     if progress > 100:
         progress = 100
-    return('<div class="row"><div class="progress top-progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div></div>\n')
+    return('<div class="progress top-progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div>\n')
 
 def get_unique_name(filename, secret):
     nowtime = datetime.datetime.utcnow()
@@ -1759,7 +1759,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
         inverse = 'navbar-default '
     navbar = """\
     <div class="navbar """ + inverse + """navbar-fixed-top">
-      <div class="container-fluid danavcontainer">
+      <div class="container danavcontainer">
         <div class="navbar-header danavbar">
 """
     navbar += """\
@@ -4312,7 +4312,7 @@ def index():
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface), tracker=user_dict['_internal']['tracker'])
     #g.interview_status = interview_status
     #g.status_created = time.time()
-    if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
+    if ('_email_attachments' in post_data and '_attachment_email_address' in post_data) or '_download_attachments' in post_data:
         should_assemble = True
     if should_assemble or something_changed:
         #logmessage("index: assemble 1")
@@ -4367,6 +4367,42 @@ def index():
                 flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
         else:
             flash(word("Unable to find documents to e-mail."), 'error')
+    if '_download_attachments' in post_data:
+        success = False
+        if '_attachment_include_editable' in post_data:
+            if post_data['_attachment_include_editable'] == 'True':
+                include_editable = True
+            else:
+                include_editable = False
+            del post_data['_attachment_include_editable']
+        else:
+            include_editable = False
+        del post_data['_download_attachments']
+        if len(interview_status.attachments) > 0:
+            attached_file_count = 0
+            files_to_zip = list()
+            if 'zip_filename' in interview_status.extras and interview_status.extras['zip_filename']:
+                zip_file_name = interview_status.extras['zip_filename']
+            else:
+                zip_file_name = 'file.zip'
+            for the_attachment in interview_status.attachments:
+                file_formats = list()
+                if 'pdf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
+                    file_formats.append('pdf')
+                if include_editable or 'pdf' not in file_formats:
+                    if 'rtf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
+                        file_formats.append('rtf')
+                    if 'docx' in the_attachment['valid_formats']:
+                        file_formats.append('docx')
+                    if 'rtf to docx' in the_attachment['valid_formats']:
+                        file_formats.append('rtf to docx')
+                for the_format in file_formats:
+                    files_to_zip.append(str(the_attachment['file'][the_format]))
+                    attached_file_count += 1
+            the_zip_file = docassemble.base.util.zip_file(*files_to_zip, filename=zip_file_name)
+            response = send_file(the_zip_file.path(), mimetype='application/zip', as_attachment=True, attachment_filename=zip_file_name)
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+            return(response)
     if '_the_image' in post_data:
         file_field = from_safeid(post_data['_save_as']);
         if match_invalid.search(file_field):
@@ -6713,6 +6749,10 @@ def index():
           daSubmitter = this;
           return true;
         });
+        $('#downloadform button[type="submit"]').click(function(){
+          daSubmitter = this;
+          return true;
+        });
         $(".danavdiv a.clickable").click(function(e){
           var the_key = $(this).data('key');
           url_action_perform(the_key, {});
@@ -7186,11 +7226,40 @@ def index():
     if interview_status.question.interview.use_navigation:
         output += navigation_bar(user_dict['nav'], interview_status.question.interview)
     output += '        <div class="tab-content">\n'
-    output += content + "        </div>"
-    output += "\n      </div>\n"
+    output += content + "        </div>\n"
+    if 'rightText' in interview_status.extras:
+        if interview_status.question.interview.use_navigation:
+            output += '        <section id="daright" class="hidden-xs hidden-sm hidden-md col-lg-2 daright">\n'
+        else:
+            if interview_status.question.interview.flush_left:
+                output += '        <section id="daright" class="hidden-xs hidden-sm col-lg-6 col-md-4 daright">\n'
+            else:
+                output += '        <section id="daright" class="hidden-xs hidden-sm col-lg-3 col-md-2 daright">\n'
+        output += docassemble.base.util.markdown_to_html(interview_status.extras['rightText'], trim=False, status=interview_status) + "\n"
+        output += '        </section>\n'
+    output += "      </div>\n"
+    if len(interview_status.attributions):
+        output += '      <div class="row">' + "\n"
+        if interview_status.question.interview.use_navigation:
+            output += '        <div class="col-lg-offset-4 col-md-offset-3 col-sm-offset-3 col-lg-6 col-md-9 col-sm-9 daattributions" id="attributions">\n'
+        else:
+            if interview_status.question.interview.flush_left:
+                output += '        <div class="col-lg-6 col-md-8 col-sm-10 daattributions" id="attributions">\n'
+            else:
+                output += '        <div class="col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10 daattributions" id="attributions">\n'
+        output += '        <br/><br/><br/><br/><br/><br/><br/>\n'
+        for attribution in sorted(interview_status.attributions):
+            output += '        <div><attribution><small>' + docassemble.base.util.markdown_to_html(attribution, status=interview_status, strip_newlines=True) + '</small></attribution></div>\n'
+        output += '      </div>' + "\n"
     if debug_mode:
         output += '      <div class="row">' + "\n"
-        output += '        <div class="col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10" style="display: none" id="readability">' + readability_report + '</div>'
+        if interview_status.question.interview.use_navigation:
+            output += '        <div class="col-lg-offset-4 col-md-offset-3 col-sm-offset-3 col-lg-6 col-md-9 col-sm-9" style="display: none" id="readability">' + readability_report + '</div>'
+        else:
+            if interview_status.question.interview.flush_left:
+                output += '        <div class="col-lg-6 col-md-8 col-sm-10" style="display: none" id="readability">' + readability_report + '</div>'
+            else:
+                output += '        <div class="col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10" style="display: none" id="readability">' + readability_report + '</div>'
         output += '      </div>' + "\n"
         output += '      <div class="row">' + "\n"
         output += '        <div id="source" class="col-md-12 collapse">' + "\n"
@@ -16235,6 +16304,8 @@ def manage_api():
             constraints = []
         if action == 'new':
             argu['title'] = word("New API Key")
+            argu['tab_title'] = argu['title']
+            argu['page_title'] = argu['title']
             info = json.dumps(dict(name=form.name.data, method=form.method.data, constraints=constraints))
             success = False
             for attempt in range(10):
@@ -16249,6 +16320,8 @@ def manage_api():
             argu['description'] = Markup(word("Your new API key, known internally as") + " " + form.name.data + ", " + word("is") + " <code>" + api_key + "</code>.")
         elif action == 'edit':
             argu['title'] = word("Edit API Key")
+            argu['tab_title'] = argu['title']
+            argu['page_title'] = argu['title']
             api_key = form.key.data
             argu['api_key'] = api_key
             rkey = 'da:api:userid:' + str(current_user.id) + ':key:' + str(form.key.data) + ':info'
@@ -16273,9 +16346,13 @@ def manage_api():
         action = 'list'
     if action == 'new':
         argu['title'] = word("New API Key")
+        argu['tab_title'] = argu['title']
+        argu['page_title'] = argu['title']
         argu['mode'] = 'new'
     if api_key is not None and action == 'edit':
         argu['title'] = word("Edit API Key")
+        argu['tab_title'] = argu['title']
+        argu['page_title'] = argu['title']
         argu['api_key'] = api_key
         argu['mode'] = 'edit'
         rkey = 'da:api:userid:' + str(current_user.id) + ':key:' + api_key + ':info'
@@ -16291,6 +16368,8 @@ def manage_api():
                 argu['constraints'] = info.get('constraints')
     if action == 'list':
         argu['title'] = word("API Keys")
+        argu['tab_title'] = argu['title']
+        argu['page_title'] = argu['title']
         argu['mode'] = 'list'
         avail_keys = list()
         for rkey in r.keys('da:api:userid:' + str(current_user.id) + ':key:*:info'):

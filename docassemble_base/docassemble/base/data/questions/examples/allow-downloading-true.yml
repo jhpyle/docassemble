@@ -1,0 +1,24 @@
+metadata:
+  title: Allowing documents to be downloaded
+  documentation: "https://docassemble.org/docs/documents.html#allow downloading"
+  example start: 1
+  example end: 1
+---
+mandatory: True
+question: Your documents are ready.
+allow downloading: True
+attachment:
+  - name: A hello world document
+    filename: Hello_World
+    description: |
+      A document with a classic message
+    content: |
+      Hello, world!
+  - name: |
+      A goodbye cruel world document
+    filename: Goodbye_Cruel_World
+    description: |
+      Another document with a classic
+      message
+    content: |
+      Goodbye, cruel world!

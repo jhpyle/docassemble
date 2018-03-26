@@ -5686,3 +5686,26 @@ Feature: Example interviews
 
   # Scenario: Test the interview "Get files from Google Drive"
   #   Given I start the interview "docassemble.demo:data/questions/examples/google-drive.yml"
+
+  # Scenario: Test the interview "Zip files"
+  #   Given I start the interview "docassemble.base:data/questions/examples/zip-file.yml"
+
+  Scenario: Test the interview "Allowing documents to be downloaded"
+    Given I start the interview "docassemble.base:data/questions/examples/allow-downloading-true.yml"
+    Then I should see the phrase "Your documents are ready."
+    And I should see the phrase "Download all documents as a ZIP file"
+
+  Scenario: Test the interview "Centered"
+    Given I start the interview "docassemble.base:data/questions/examples/centered.yml"
+    Then I should see the phrase "Are you doing well?"
+    And I click the button "Yes"
+    Then I should see the phrase "I am glad you are doing well."
+
+  Scenario: Test the interview "Text to the right of the question"
+    Given I start the interview "docassemble.base:data/questions/examples/right.yml"
+    Then I should see the phrase "What is the airspeed velocity of an unladen swallow?"
+    And I should see the phrase "Note"
+    And I should see the phrase "If you did not catch this movie reference, you need to improve your cultural literacy."
+    And I set "Velocity" to "40 mph"
+    And I click the button "Continue"
+    Then I should see the phrase "The velocity is 40 mph."

@@ -85,24 +85,24 @@ a.nohover:hover {
 }
 
 @media (min-width: 992px) and (max-width: 1199px) {
-    div.danavcontainer {
-	padding-right: 2%;
-	padding-left: 2%;
-    }
+    /* div.danavcontainer { */
+    /* 	padding-right: 2%; */
+    /* 	padding-left: 2%; */
+    /* } */
 }
 
 @media (min-width: 1200px) and (max-width: 1399px) {
-    div.danavcontainer {
-	padding-right: 5%;
-	padding-left: 5%;
-    }
+    /* div.danavcontainer { */
+    /* 	padding-right: 5%; */
+    /* 	padding-left: 5%; */
+    /* } */
 }
 
 @media (min-width: 1400px) {
-    div.danavcontainer {
-	padding-right: 15%;
-	padding-left: 15%;
-    }
+    /* div.danavcontainer { */
+    /* 	padding-right: 15%; */
+    /* 	padding-left: 15%; */
+    /* } */
 }
 
 .btn-da {

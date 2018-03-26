@@ -1,0 +1,23 @@
+metadata:
+  title: Zip files
+  documentation: "https://docassemble.org/docs/functions.html#zip_file"
+  example start: 2
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - coins_picture: DAStaticFile.using(filename='coins36.png')
+---
+question: |
+  Please upload a picture of yourself.
+fields:
+  - Picture: user_picture
+    datatype: file
+---
+mandatory: True
+question: |
+  Here is your ZIP file.
+subquestion: |
+  ${ zip_file(user_picture, {'assets': [coins_picture, 'cow.jpg'] }, filename="Image files.zip") }

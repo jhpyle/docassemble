@@ -28,7 +28,7 @@
   </head>
   <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} pad-for-navbar">
     <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container-fluid{% if userclass %} danavcontainer{% endif %}">
+      <div class="{% if userclass %}container danavcontainer{% else %}container{% endif %}">
         <div class="navbar-header">
           {%- if not (current_user.is_anonymous and request.path == "/user/sign-in") %}
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">

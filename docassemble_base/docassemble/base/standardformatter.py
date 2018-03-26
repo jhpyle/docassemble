@@ -91,8 +91,8 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
 #     if status.subquestionText:
 #         output += '\n      <div class="sigmidpart">\n        ' + markdown_to_html(status.subquestionText) + '\n      </div>'
 #     output += '\n      <div id="sigcontent"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n      <div class="sigbottompart" id="sigbottompart">\n        '
-#     if (status.underText):
-#         output += markdown_to_html(status.underText, trim=True)
+#     if 'underText'status.extras:
+#         output += markdown_to_html(status.extras['underText'], trim=True)
 #     output += "\n      </div>"
 #     output += """
 #       <div class="form-actions sighidesmall sigbuttons">
@@ -294,8 +294,8 @@ def as_sms(status, links=None, menu_items=None):
                 else:
                     qoutput += "\n" + word("Type your selection, or type skip to move on without selecting.")
         elif question.question_type == 'signature':
-            if status.underText:
-                qoutput += "\n__________________________\n" + to_text(markdown_to_html(status.underText, trim=False, status=status, strip_newlines=True), terms, links, status)
+            if 'underText' in status.extras:
+                qoutput += "\n__________________________\n" + to_text(markdown_to_html(status.extras['underText'], trim=False, status=status, strip_newlines=True), terms, links, status)
             qoutput += "\n" + word('Type x to sign your name electronically')
         elif hasattr(field, 'datatype') and field.datatype == 'range':
             max_string = str(float(status.extras['max'][field.number]))
@@ -379,8 +379,8 @@ def as_sms(status, links=None, menu_items=None):
                     qoutput += "\n" + word("Type the") + " " + label + "." + next_label
                 else:
                     qoutput += "\n" + word("Type the") + " " + label + " " + word("or type skip to leave blank.") + next_label
-    if status.underText and question.question_type != 'signature':
-        qoutput += "\n" + to_text(markdown_to_html(status.underText, status=status), terms, links, status)
+    if 'underText' in status.extras and question.question_type != 'signature':
+        qoutput += "\n" + to_text(markdown_to_html(status.extras['underText'], status=status), terms, links, status)
     if 'menu_items' in status.extras and type(status.extras['menu_items']) is list:
         for menu_item in status.extras['menu_items']:
             if type(menu_item) is dict and 'url' in menu_item and 'label' in menu_item:
@@ -513,7 +513,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     if status.question.interview.use_navigation:
         grid_class = "col-lg-6 col-md-9 col-sm-9"
     else:
-        grid_class = "col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10"
+        if status.question.interview.flush_left:
+            grid_class = "col-lg-6 col-md-8 col-sm-10"
+        else:
+            grid_class = "col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10"
     if 'script' in status.extras and status.extras['script'] is not None:
         status.extra_scripts.append(status.extras['script'])
     if 'css' in status.extras and status.extras['css'] is not None:
@@ -601,8 +604,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         else:
             output += '\n              <div class="sigmidpart"></div>'
         output += '\n              <div id="sigcontent"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n              <div class="sigbottompart" id="sigbottompart">\n                '
-        if (status.underText):
-            output += markdown_to_html(status.underText, trim=True, status=status)
+        if 'underText' in status.extras:
+            output += markdown_to_html(status.extras['underText'], trim=True, status=status)
         output += "\n              </div>"
         output += """
               <div class="form-actions sighidesmall sigbuttons">
@@ -632,8 +635,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += help_button
         output += '\n                </div>\n'
         #output += question_name_tag(status.question)
-        if (status.underText):
-            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
+        if 'underText' in status.extras:
+            output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         status.datatypes = datatypes
@@ -657,8 +660,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + status.question.maybe() + '</button>'
         output += help_button
         output += '\n                </div>\n'
-        if (status.underText):
-            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
+        if 'underText' in status.extras:
+            output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         status.datatypes = datatypes
@@ -710,8 +713,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(safeid(status.question.review_saveas)) + '" value="True">' + continue_label + '</button>' + help_button + '</div></div>\n'
         else:
             output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + resume_button_label + '</button>' + help_button + '</div></div>\n'
-        if (status.underText):
-            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
+        if 'underText' in status.extras:
+            output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += '              </fieldset>\n            </form>\n'
     elif status.question.question_type == "fields":
@@ -992,8 +995,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '</div></div>\n'
         #output += question_name_tag(status.question)
-        if (status.underText):
-            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
+        if 'underText' in status.extras:
+            output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         status.datatypes = datatypes
@@ -1014,8 +1017,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True">' + continue_label + '</button>' + help_button + '</div></div>\n'
         #output += question_name_tag(status.question)
-        if (status.underText):
-            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
+        if 'underText' in status.extras:
+            output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         status.datatypes = datatypes
@@ -1207,8 +1210,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += help_button
             output += '                </div>\n'
         #output += question_name_tag(status.question)
-        if (status.underText):
-            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
+        if 'underText' in status.extras:
+            output += markdown_to_html(status['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         status.datatypes = datatypes
@@ -1238,8 +1241,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '                <div class="form-actions"><div class="btn-toolbar">' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '</div></div>\n'
         #output += question_name_tag(status.question)
-        if (status.underText):
-            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
+        if 'underText' in status.extras:
+            output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += '              </fieldset>\n            </form>\n'
     if len(status.attachments) > 0:
@@ -1333,21 +1336,24 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 output += '                </div>\n'
             output += '              </div>\n            </div>\n'
             attachment_index += 1
-        if status.question.allow_emailing:
+        if status.extras.get('allow_emailing', True) or status.extras.get('allow_downloading', False):
             if len(status.attachments) > 1:
                 email_header = word("E-mail these documents")
+                download_header = word("Download all documents as a ZIP file")
             else:
                 email_header = word("E-mail this document")
-            if status.current_info['user']['is_authenticated'] and status.current_info['user']['email']:
-                default_email = status.current_info['user']['email']
-            else:
-                default_email = ''
-            output += """\
-            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                download_header = word("Download this document as a ZIP file")
+            if status.extras.get('allow_emailing', True):
+                if status.current_info['user']['is_authenticated'] and status.current_info['user']['email']:
+                    default_email = status.current_info['user']['email']
+                else:
+                    default_email = ''
+                output += """\
+            <div class="panel-group" id="accordionOne" role="tablist" aria-multiselectable="true">
               <div class="panel panel-default">
                 <div class="panel-heading" role="tab" id="headingOne">
                   <h4 class="panel-title">
-                    <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    <a role="button" data-toggle="collapse" data-parent="#accordionOne" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
                     """ + email_header + """
                     </a>
                   </h4>
@@ -1357,13 +1363,41 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     <form action=\"""" + root + """\" id="emailform" class="form-horizontal" method="POST">
                       <fieldset>
                         <div class="form-group"><label for="_attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input alt=""" + '"' + word ("Input box") + '"' + """ class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address" value=""" + '"' + str(default_email) + '"' + """/></div></div>"""
-            if editable_included:
+                if editable_included:
+                    output += """
+                        <div class="form-group"><div class="col-sm-4"></div><div class="col-sm-8"><input alt=""" + '"' + word ("Check box") + ", " + word('Include ' + editable_name + ' for editing') + '"' + """ type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
                 output += """
-                        <div class="form-group"><div class="col-sm-4"></div><div class="col-sm-8"><input alt="' + word ("Check box") + ", " + word('Include ' + editable_name + ' for editing') + '" type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
-            output += """
                         <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="_email_attachments" value="1"/>'#<input type="hidden" name="_question_number" value="' + str(status.question.number) + '"/>'
-            output += """
+                output += """
                       </fieldset>
+                      <input type="hidden" name="csrf_token" value=""" + '"' + server.generate_csrf() + '"' + """/>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+"""
+            if status.extras.get('allow_downloading', False):
+                output += """
+            <div class="panel-group" id="accordionTwo" role="tablist" aria-multiselectable="true">
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingTwo">
+                  <h4 class="panel-title">
+                    <a role="button" data-toggle="collapse" data-parent="#accordionTwo" href="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+                    """ + download_header + """
+                    </a>
+                  </h4>
+                </div>
+                <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
+                  <div class="panel-body">
+                    <form action=\"""" + root + """\" id="downloadform" class="form-horizontal" method="POST">"""
+                if editable_included:
+                    output += """
+                        <div class="form-group"><div class="col-sm-12"><input alt=""" + '"' + word ("Check box") + ", " + word('Include ' + editable_name + ' for editing') + '"' + """ type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
+                output += """
+                        <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Download All') + '</button></div><input type="hidden" name="_download_attachments" value="1"/>'#<input type="hidden" name="_question_number" value="' + str(status.question.number) + '"/>'
+
+                output += """
                       <input type="hidden" name="csrf_token" value=""" + '"' + server.generate_csrf() + '"' + """/>
                     </form>
                   </div>
@@ -1374,16 +1408,26 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
 #            status.extra_scripts.append("""<script>
 #      $("#emailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + repr(str(word("An e-mail address is required."))) + """, 'email': """ + repr(str(word("You need to enter a complete e-mail address."))) + """}}, 'errorClass': 'da-has-error'});
 #    </script>""")
-        if (status.underText):
-            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
+        if 'underText' in status.extras:
+            output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
     if status.question.question_type != "signature":
         output += status.post
-        if len(status.attributions):
-            output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
-        for attribution in sorted(status.attributions):
-            output += '            <div><attribution><small>' + markdown_to_html(attribution, status=status, strip_newlines=True) + '</small></attribution></div>\n'
+        # if len(status.attributions):
+        #     output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
+        # for attribution in sorted(status.attributions):
+        #     output += '            <div><attribution><small>' + markdown_to_html(attribution, status=status, strip_newlines=True) + '</small></attribution></div>\n'
     if debug or status.using_screen_reader:
         status.screen_reader_text['question'] = unicode(output)
+    if 'rightText' in status.extras:
+        if status.question.interview.use_navigation:
+            output += '            <div id="darightbottom" class="hidden-lg hidden-md daright">\n'
+        else:
+            if status.question.interview.flush_left:
+                output += '            <div id="darightbottom" class="hidden-lg hidden-md daright">\n'
+            else:
+                output += '            <div id="darightbottom" class="hidden-lg hidden-md daright">\n'
+        output += markdown_to_html(status.extras['rightText'], trim=False, status=status) + "\n"
+        output += '            </div>\n'
     master_output += output
     master_output += '          </section>\n'
     master_output += '          <section role="tabpanel" id="help" class="tab-pane ' + grid_class + '">\n'
@@ -1450,10 +1494,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if len(video_urls):
                     output += '            <div>\n' + indent_by(video_control(video_urls), 14) + '            </div>\n'
             output += markdown_to_html(help_section['content'], status=status, indent=12)
-        if len(status.attributions):
-            output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
-        for attribution in sorted(status.attributions):
-            output += '            <div><attribution><small>' + markdown_to_html(attribution, status=status, strip_newlines=True) + '</small></attribution></div>\n'
+        # if len(status.attributions):
+        #     output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
+        # for attribution in sorted(status.attributions):
+        #     output += '            <div><attribution><small>' + markdown_to_html(attribution, status=status, strip_newlines=True) + '</small></attribution></div>\n'
         if debug or status.using_screen_reader:
             status.screen_reader_text['help'] = unicode(output)
     master_output += output
