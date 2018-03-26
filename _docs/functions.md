@@ -4188,6 +4188,27 @@ arguments is a list, it will be unpacked.
 * `password`: if provided, the [PDF] file will be protected.  See the
   documentation for the [`password`] document modifier.
 
+## <a name="zip_file"></a>zip_file()
+
+The `zip_file()` function is like the [`pdf_concatenate()`] function,
+except it returns a [ZIP file] archive of the files.
+
+`zip_file()` has one optional keyword parameter:
+
+* `filename`: if provided, this will be the name of the resulting
+  file.  If not provided, the file will be named `file.zip`.
+
+If you want your zip file to include file structure, you can pass a
+[Python dictionary] as a parameter, and they keys of the dictionary
+will be folder names.
+
+The following example results in a [ZIP file] called "Image files.zip"
+that contains an uploaded file and a folder called `assets` that
+contains two files from the "static" folder of the interview's
+[package].
+
+{% include side-by-side.html demo="zip-file" %}
+
 ## <a name="log"></a>log()
 
 The `log()` function allows you to log a message to the server log, to
@@ -5460,3 +5481,5 @@ $(document).on('daPageLoad', function(){
 [`main_doc_params.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/main_doc_params.docx
 [`sub_doc_params.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/sub_doc_params.docx
 [`repr()`]: https://docs.python.org/2/library/functions.html#repr
+[`pdf_concatenate()`]: #pdf_concatenate
+[ZIP file]: https://en.wikipedia.org/wiki/Zip_(file_format)

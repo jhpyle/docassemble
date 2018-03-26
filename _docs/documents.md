@@ -1265,6 +1265,18 @@ Including `allow emailing: False` will disable this:
 
 {% include side-by-side.html demo="allow-emailing-false" %}
 
+You can also use a [Python] expression instead of `True` or `False`.
+
+# <a name="allow downloading"></a>Allowing the user to download all files at once
+
+If you would like users to be able to download all of the
+[`attachments`] as a single [ZIP file], set `allow downloading` to
+`True`.  By default, this feature is disabled.
+
+{% include side-by-side.html demo="allow-downloading-true" %}
+
+You can also use a [Python] expression instead of `True` or `False`.
+
 # <a name="caching"></a>Document caching and regeneration
 
 Since document assembly can take the server a long time,
@@ -1379,3 +1391,4 @@ interview, see the [`cache documents` feature].
 [external SMTP server]: {{ site.baseurl }}/docs/configuration.html#smtp
 [Mailgun API]: {{ site.baseurl }}/docs/configuration.html#mailgun api
 [Mailgun]: https://www.mailgun.com/
+[ZIP file]: https://en.wikipedia.org/wiki/Zip_(file_format)

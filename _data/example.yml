@@ -201,6 +201,25 @@
   \  true\n  % else:\n  not true\n  % endif\n  that you like at least one fruit."
 "all_variables": "mandatory: True\nquestion: |\n  Interview dictionary\nsubquestion:\
   \ |\n  The variables in the dictionary are:\n    \n  `${ all_variables() }`"
+"allow-downloading-true": |-
+  mandatory: True
+  question: Your documents are ready.
+  allow downloading: True
+  attachment:
+    - name: A hello world document
+      filename: Hello_World
+      description: |
+        A document with a classic message
+      content: |
+        Hello, world!
+    - name: |
+        A goodbye cruel world document
+      filename: Goodbye_Cruel_World
+      description: |
+        Another document with a classic
+        message
+      content: |
+        Goodbye, cruel world!
 "allow-emailing-false": |-
   mandatory: True
   question: Your document is ready.
@@ -226,8 +245,8 @@
         Hello, world!
   allow emailing: False
 "allow-emailing-true": |-
+  mandatory: True
   question: Your document is ready.
-  sets: provide_user_with_document
   attachment:
     - name: A hello world document
       filename: Hello_World
@@ -895,6 +914,9 @@
     favorite color, but ${ color } is
     not your favorite color of eggs.
   sets: all_done
+"centered": |-
+  features:
+    centered: False
 "chat": |-
   interview help: |
     This is the interview help.
@@ -7371,6 +7393,10 @@
   \      was ${ vegetable }.\n  - Revisit fungus: fungi\n    button: |\n      You\
   \ said your favorite fungus \n      was ${ fungi }.\nfield: answers_reviewed\n---\n\
   mandatory: True\ncode: |\n  fruit\n  vegetable\n  fungi\n  answers_reviewed\n  final_screen"
+"right": "features:\n  centered: False\n---\nquestion: |\n  What is the airspeed velocity\
+  \ of an\n  unladen swallow?\nfields:\n  - Velocity: swallow_velocity\nright: |\n\
+  \  ### Note\n    \n  If you did not catch this\n  movie reference, you need to\n\
+  \  improve your cultural literacy."
 "salutation": |-
   template: letter_to_client
   content: |
@@ -7952,6 +7978,8 @@
   signature: target_variable
   under: |
     ${ user }
+  right: |
+    Hi there you monster!
 "signin": |-
   mandatory: True
   code: |
@@ -8942,6 +8970,21 @@
   question: |
     Is Topeka the capital of Kansas?
   yesnomaybe: topeka_is_capital_of_kansas
+"zip-file": |-
+  objects:
+    - coins_picture: DAStaticFile.using(filename='coins36.png')
+  ---
+  question: |
+    Please upload a picture of yourself.
+  fields:
+    - Picture: user_picture
+      datatype: file
+  ---
+  mandatory: True
+  question: |
+    Here is your ZIP file.
+  subquestion: |
+    ${ zip_file(user_picture, {'assets': [coins_picture, 'cow.jpg'] }, filename="Image files.zip") }
 
 "bootstrap-theme": |-
   features:

@@ -42,9 +42,20 @@ explanation is necessary.
 
 # <a name="under"></a>The `under` statement
 
-The optional `under` adds text underneath the buttons.
+The optional `under` statementadds text underneath the buttons.
 
 {% include side-by-side.html demo="under" %}
+
+# <a name="right"></a>The `right` statement
+
+The optional `right` statement adds text on the right-hand side of the
+screen, or below the question on small screens.
+
+{% include side-by-side.html demo="right" %}
+
+If your interview has questions that use the `right` statement, you
+might want to set the [`centered`] feature to `False` so that the text
+on the right is wider.
 
 # Using questions to set variables
 
@@ -296,3 +307,4 @@ more information, see [`event`], [`url_action()`],
 [`command()`]: {{ site.baseurl }}/docs/functions.html#command
 [multiple choice question]: #buttons
 [multiple-choice buttons that run code]: {{ site.baseurl }}/docs/fields.html#code button
+[`centered`]: {{ site.baseurl }}/docs/initial.html#centered

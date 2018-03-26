@@ -1870,12 +1870,21 @@ editors in the [Playground] will emulate [Vim].  This uses the
 ## <a name="external hostname"></a>URL to the site
 
 The `external hostname` is the hostname by which users will access
-**docassemble**.  This variable is only used if **docassemble** is
-running on [Docker].
+**docassemble**.  If users will see `https://docassemble.example.com` in
+the location bar on the web browser, `external hostname` will be
+`docassemble.example.com`.
 
 {% highlight yaml %}
 external hostname: docassemble.example.com
 {% endhighlight %}
+
+This variable is only effective if **docassemble** is running on
+[Docker].  It is typically set by the [`DAHOSTNAME`] environment
+variable when the `docker run` command is run for the first time.
+
+If you change `external hostname`, you need to do a complete restart
+of the system for the change to take effect.  (That is, `docker -t60
+stop <container ID>` followed by `docker start <container ID>`.)
 
 ## <a name="behind https load balancer"></a>When behind a proxy
 
@@ -1886,6 +1895,33 @@ server running HTTPS.  This might be your configuration if you are
 using a [load balancer] or you are running [Docker] on machine that
 [forwards] HTTPS requests to [Docker] on a non-standard [HTTP] port.
 
+This variable is typically set using the [Docker] environment variable
+[`BEHINDHTTPSLOADBALANCER`].
+
+If you change this variable, you need to do a complete restart of the
+system for the change to take effect.  (That is, 
+`docker -t60 stop <container ID>` followed by `docker start <container ID>`.)
+
+## <a name="use lets encrypt"></a><a name="lets encrypt email"></a>Using Let's Encrypt
+
+If you are using [Docker] and you want your server to use [HTTPS] set
+up through [Let's Encrypt], you can set the following in your
+[Configuration].
+
+{% highlight yaml %}
+use https: True
+use lets encrypt: True
+lets encrypt email: jsmith@example.com
+{% endhighlight %}
+
+These variables are typically set through the environment variables
+[`USEHTTPS`], [`USELETSENCRYPT`], and [`LETSENCRYPTEMAIL`] when the
+`docker run` command is run for the first time.  You can change the
+`use https`, `use lets encrypt`, and `lets encrypt email` variables on
+a running server, but they will only be effective if you restart the
+system using `docker -t60 stop <container ID>` followed by 
+`docker start <container ID>`.
+
 ## <a name="cross site domain"></a>Cross-Origin Resource Sharing (CORS)
 
 Set the `cross site domain` directive if you want your [Apache] server
@@ -1895,6 +1931,10 @@ order to permit [Cross-Origin Resource Sharing].  If you set it to
 set it to, e.g., `api.example.com` to limit sharing to a particular
 domain.  This variable is only used if **docassemble** is running on
 [Docker].
+
+If you change this variable, you need to do a complete restart of the
+system for the change to take effect.  (That is, 
+`docker -t60 stop <container ID>` followed by `docker start <container ID>`).
 
 ## <a name="incoming mail domain"></a>E-mail domain of the site
 
@@ -2606,3 +2646,10 @@ and Facebook API keys.
 [`submit`]: {{ site.baseurl }}/docs/initial.html#submit
 [`post`]: {{ site.baseurl }}/docs/initial.html#post
 [`show interviews link`]: #show interviews link
+[`BEHINDHTTPSLOADBALANCER`]: {{ site.baseurl }}/docs/docker.html#BEHINDHTTPSLOADBALANCER
+[`DAHOSTNAME`]: {{ site.baseurl }}/docs/docker.html#DAHOSTNAME
+[Let's Encrypt]: https://letsencrypt.org/
+[Configuration]: {{ site.baseurl }}/docs/config.html
+[`USEHTTPS`]: {{ site.baseurl }}/docs/docker.html#USEHTTPS
+[`USELETSENCRYPT`]: {{ site.baseurl }}/docs/docker.html#USELETSENCRYPT
+[`LETSENCRYPTEMAIL`]: {{ site.baseurl }}/docs/docker.html#LETSENCRYPTEMAIL

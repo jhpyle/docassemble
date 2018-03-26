@@ -697,6 +697,13 @@ For more information about managing training data, see the
 
 The `features` block sets some optional features of the interview.
 
+## <a name="centered"></a>Whether interview is centered
+
+If you do not want your interview to be centered on the screen, set
+`centered` to `False`.
+
+{% include side-by-side.html demo="centered" %}
+
 ## <a name="progress bar"></a>Progress bar
 
 The `progress bar` feature controls whether a progress bar is shown

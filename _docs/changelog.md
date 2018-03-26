@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.42](https://github.com/jhpyle/docassemble/releases/tag/v0.2.42) - 2018-03-25
+
+### Added
+- The `zip_file()` function.
+- The `allow downloading` modifier.
+- The `centered` feature.
+- The `right` question part.
+
+### Changed
+- The `allow emailing` modifier now accepts Python code.
+- Margins in navigation bar.
+
+### Fixed
+- Version of `Flask-User`.
+
 ## [0.2.41](https://github.com/jhpyle/docassemble/releases/tag/v0.2.41) - 2018-03-24
 
 ### Added
