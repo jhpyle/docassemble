@@ -2529,7 +2529,7 @@ class Question:
                 if template_type == 'docx' and type(target[template_type + ' template file']) in (str, unicode):
                     try:
                         docx_template = docassemble.base.file_docx.DocxTemplate(options['docx_template_file'].path())
-                        the_env = Environment()
+                        the_env = Environment(undefined=StrictUndefined)
                         the_xml = docx_template.get_xml()
                         the_xml = docx_template.patch_xml(the_xml)
                         parsed_content = the_env.parse(the_xml)

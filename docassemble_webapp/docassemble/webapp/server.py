@@ -7298,7 +7298,7 @@ def index():
         output += '      </div>' + "\n"
     output += '    </div>'
     if not is_ajax:
-        end_output = scripts + "\n" + indent_by("".join(interview_status.extra_scripts).strip(), 4).rstrip() + global_js + "\n  </body>\n</html>"
+        end_output = scripts + global_js + "\n" + indent_by("".join(interview_status.extra_scripts).strip(), 4).rstrip() + "\n  </body>\n</html>"
     #logmessage(output.encode('utf8'))
     #logmessage("Request time interim: " + str(g.request_time()))
     if 'uid' in session and 'i' in session:
