@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.43](https://github.com/jhpyle/docassemble/releases/tag/v0.2.43) - 2018-03-28
+
+### Changed
+- JavaScript specific to a question now executes after `raw global javascript`.
+
+### Fixed
+- Exception caused by ampersands in docx template field values.
+- Exception caused by unicode in parameters passed to `include_docx_template()`.
+- Place Autocomplete returning `undefined` for some address components.
+
 ## [0.2.42](https://github.com/jhpyle/docassemble/releases/tag/v0.2.42) - 2018-03-25
 
 ### Added
