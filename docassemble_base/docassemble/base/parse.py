@@ -6,6 +6,8 @@ from jinja2.exceptions import TemplateError
 from jinja2.environment import Environment
 from jinja2.environment import Template as JinjaTemplate
 from jinja2 import meta as jinja2meta
+from jinja2.lexer import Token
+from jinja2.ext import Extension
 import ast
 import ruamel.yaml
 import string
@@ -2529,7 +2531,7 @@ class Question:
                 if template_type == 'docx' and type(target[template_type + ' template file']) in (str, unicode):
                     try:
                         docx_template = docassemble.base.file_docx.DocxTemplate(options['docx_template_file'].path())
-                        the_env = Environment(undefined=StrictUndefined)
+                        the_env = custom_jinja_env()
                         the_xml = docx_template.get_xml()
                         the_xml = docx_template.patch_xml(the_xml)
                         parsed_content = the_env.parse(the_xml)
@@ -3212,7 +3214,7 @@ class Question:
                             the_template = result['template']
                             while True:
                                 old_count = docassemble.base.functions.this_thread.docx_include_count
-                                the_template.render(result['field_data'], jinja_env=Environment(undefined=StrictUndefined))
+                                the_template.render(result['field_data'], jinja_env=custom_jinja_env())
                                 if docassemble.base.functions.this_thread.docx_include_count > old_count and old_count < 10:
                                     new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                                     the_template.save(new_template_file.name)
@@ -5109,3 +5111,30 @@ def parse_var_name(var):
     else:
         final_parts = (var, '')
     return dict(valid=True, objects=objects, bracket_objects=bracket_objects, final_parts=final_parts)
+
+class AmpersandExtension(Extension):
+    def filter_stream(self, stream):
+        in_var = False
+        met_pipe = False
+        for token in stream:
+            if token.type == 'variable_begin':
+                in_var = True
+                met_pipe = False
+            if token.type == 'variable_end':
+                in_var = False
+                if not met_pipe:
+                    yield Token(token.lineno, 'pipe', None)
+                    yield Token(token.lineno, 'name', 'ampersand_filter')
+            if in_var and token.type == 'pipe':
+                met_pipe = True
+            yield token
+
+def ampersand_filter(value):
+    if value.__class__.__name__ in ('DAFile', 'DALink'): #, 'InlineImage', 'RichText', 'Listing', 'Document', 'Subdoc'
+        return value
+    return re.sub(r'&(?!#\d{4};|amp;)', '&amp;', unicode(value))
+
+def custom_jinja_env():
+    env = Environment(undefined=StrictUndefined, extensions=[AmpersandExtension])
+    env.filters['ampersand_filter'] = ampersand_filter
+    return env

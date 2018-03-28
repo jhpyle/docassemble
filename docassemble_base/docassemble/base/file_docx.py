@@ -28,7 +28,6 @@ def image_for_docx(number, question, tpl, width=None):
         else:
             the_width = Inches(2)
     else:
-        logmessage("err 2")
         the_width = Inches(2)
     return InlineImage(tpl, file_info['fullpath'], the_width)
 

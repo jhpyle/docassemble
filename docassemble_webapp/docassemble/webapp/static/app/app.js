@@ -373,7 +373,9 @@ function fillInAddress() {
     }                
     if (componentForm[addressType] && id_for_part[componentTrans[addressType]] && typeof(id_for_part[componentTrans[addressType]]) != "undefined" && document.getElementById(id_for_part[componentTrans[addressType]]) != null) {
       var val = place.address_components[i][componentForm[addressType]];
-      document.getElementById(id_for_part[componentTrans[addressType]]).value = val;
+      if (typeof(val) != "undefined"){
+	document.getElementById(id_for_part[componentTrans[addressType]]).value = val;
+      }
     }
   }
   if (typeof(id_for_part['address']) != "undefined" && document.getElementById(id_for_part['address']) != null){

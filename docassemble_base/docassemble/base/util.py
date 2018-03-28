@@ -2010,11 +2010,9 @@ def include_docx_template(template_file, **kwargs):
     for key, val in kwargs.iteritems():
         if isinstance(val, DAObject):
             the_repr = val.instanceName
-        elif type(val) is unicode:
-            the_repr = repr(str(val))
         else:
-            the_repr = repr(val)
-        first_paragraph.insert_paragraph_before("{%%p set %s = %s %%}" % (key, the_repr))
+            the_repr = '"' + re.sub(r'\n', '', unicode(val).encode('utf-8').encode('base64')) + '".decode("base64").decode("utf-8")'
+        first_paragraph.insert_paragraph_before(str("{%%p set %s = %s %%}" % (key, the_repr)))
     this_thread.docx_include_count += 1
     return sd
 
