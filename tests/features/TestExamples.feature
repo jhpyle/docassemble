@@ -5695,6 +5695,11 @@ Feature: Example interviews
     Then I should see the phrase "Your documents are ready."
     And I should see the phrase "Download all documents as a ZIP file"
 
+  Scenario: Test the interview "Allowing documents to be downloaded with special name"
+    Given I start the interview "docassemble.base:data/questions/examples/allow-downloading-true-zip-filename.yml"
+    Then I should see the phrase "Your documents are ready."
+    And I should see the phrase "Download all documents as a ZIP file"
+
   Scenario: Test the interview "Centered"
     Given I start the interview "docassemble.base:data/questions/examples/centered.yml"
     Then I should see the phrase "Are you doing well?"
