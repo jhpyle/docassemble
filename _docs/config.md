@@ -549,16 +549,16 @@ bootstrap theme: docassemble.webapp:data/static/paper.min.css
 You can also refer to files on the internet:
 
 {% highlight yaml %}
-bootstrap theme: https://bootswatch.com/paper/bootstrap.min.css
+bootstrap theme: https://bootswatch.com/3/paper/bootstrap.min.css
 {% endhighlight %}
 
 There are many alternative [Bootstrap] themes available on
-[Bootswatch].  Note that you may need to use apply additional [CSS]
-changes in order to get a [Bootstrap] theme to work with
-**docassemble**.  For example, by default **docassemble** assumes that
-the navigation bar is 50 pixels in height.  But if your theme makes
-the navigation bar 60 pixels tall, you will need to add the following
-styles:
+[Bootswatch].  (Use version 3 themes, not version 4 themes.)  Note
+that you may need to use apply additional [CSS] changes in order to
+get a [Bootstrap] theme to work with **docassemble**.  For example, by
+default **docassemble** assumes that the navigation bar is 50 pixels
+in height.  But if your theme makes the navigation bar 60 pixels tall,
+you will need to add the following styles:
 
 {% highlight css %}
 .pad-for-navbar         { padding-top: 70px; }

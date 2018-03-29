@@ -1277,6 +1277,11 @@ If you would like users to be able to download all of the
 
 You can also use a [Python] expression instead of `True` or `False`.
 
+You can customize the name of the [ZIP file] by setting a `zip
+filename`:
+
+{% include side-by-side.html demo="allow-downloading-zip-filename" %}
+
 # <a name="caching"></a>Document caching and regeneration
 
 Since document assembly can take the server a long time,
