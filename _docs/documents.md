@@ -1280,7 +1280,7 @@ You can also use a [Python] expression instead of `True` or `False`.
 You can customize the name of the [ZIP file] by setting a `zip
 filename`:
 
-{% include side-by-side.html demo="allow-downloading-zip-filename" %}
+{% include side-by-side.html demo="allow-downloading-true-zip-filename" %}
 
 # <a name="caching"></a>Document caching and regeneration
 
