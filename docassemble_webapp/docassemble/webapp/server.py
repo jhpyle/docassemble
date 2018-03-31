@@ -5325,8 +5325,8 @@ def index():
         question_id = interview_status.question.id
     else:
         question_id = None;
-    interview_filename = re.sub(r':.*', '', yaml_filename)
-    interview_package = re.sub(r'.*\/', '', yaml_filename)
+    interview_package = re.sub(r':.*', '', yaml_filename)
+    interview_filename = re.sub(r'.*[:\/]', '', yaml_filename)
     if not is_ajax:
         scripts = standard_scripts()
         if 'google maps api key' in google_config:
