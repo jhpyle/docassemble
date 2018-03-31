@@ -5154,7 +5154,7 @@ def index():
     # if len(interview_status.attachments) > 0:
     #     #logmessage("Updating attachment info")
     #     update_attachment_info(user_code, user_dict, interview_status, secret)
-    if interview_status.question.question_type == "review":
+    if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
         next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
     else:
         next_action_review = None
@@ -5321,6 +5321,10 @@ def index():
         allow_going_back = True
     else:
         allow_going_back = False
+    if hasattr(interview_status.question, 'id'):
+        question_id = interview_status.question.id
+    else:
+        question_id = None;
     if not is_ajax:
         scripts = standard_scripts()
         if 'google maps api key' in google_config:
@@ -5329,8 +5333,26 @@ def index():
             api_key = google_config.get('api key')
         else:
             api_key = None
+        if 'analytics id' in google_config:
+            ga_id = google_config.get('analytics id')
+        else:
+            ga_id = None
         if api_key is not None:
             scripts += "\n" + '    <script src="https://maps.googleapis.com/maps/api/js?key=' + api_key + '&libraries=places"></script>'
+        if ga_id is not None:
+            scripts += """
+    <script async src="https://www.googletagmanager.com/gtag/js?id=""" + ga_id + """"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      function daPageview(){
+        if (daQuestionID != null){ 
+          gtag('config', """ + json.dumps(ga_id) + """, {'page_path': """ + json.dumps(interview_package) + """ + "/" + """ + json.dumps(interview_filename) + """ + "/" + daQuestionID});
+        }
+      }
+    </script>
+"""
         if 'javascript' in interview_status.question.interview.external_files:
             for packageref, fileref in interview_status.question.interview.external_files['javascript']:
                 the_url = get_url_from_file_reference(fileref, _package=packageref)
@@ -5408,6 +5430,8 @@ def index():
         else:
             forceFullScreen = ''
         the_checkin_interval = interview_status.question.interview.options.get('checkin interval', CHECKIN_INTERVAL)
+        interview_filename = re.sub(r':.*', '', yaml_filename)
+        interview_package = re.sub(r'.*\/', '', yaml_filename)
         scripts += """
     <script type="text/javascript" charset="utf-8">
       var map_info = null;
@@ -5435,9 +5459,12 @@ def index():
       var daShowingSpinner = false;
       var daSpinnerTimeout = null;
       var daSubmitter = null;
+      var daUsingGA = """ + ("true" if ga_id is not None else 'false') + """;
       var daDoAction = """ + do_action + """;
+      var daQuestionID = """ + json.dumps(question_id) + """;
       var daNextAction = """ + json.dumps(next_action_review) + """;
       var daCsrf = """ + repr(str(generate_csrf())) + """;
+      var daShowIfInProcess = false;
       var daMessageLog = JSON.parse(atob('""" + safeid(json.dumps(docassemble.base.functions.get_message_log())) + """'));
       function preloadImage(url){
         var img = new Image();
@@ -6167,6 +6194,7 @@ def index():
           daChatPartnerRoles = data.livehelp.partner_roles;
           daSteps = data.steps;
           daAllowGoingBack = data.allow_going_back;
+          daQuestionID = data.id;
           daMessageLog = data.message_log;
           //console.log("daProcessAjax: pushing " + daSteps);
           history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, "#page" + daSteps);
@@ -6832,57 +6860,68 @@ def index():
           event.preventDefault();
           $('#questionlabel').tab('show');
         });
-        //var varlookup = Object();
-        //if ($("input[name='_varnames']").length){
-        //   the_hash = $.parseJSON(atob($("input[name='_varnames']").val()));
-        //   for (var key in the_hash){
-        //     if (the_hash.hasOwnProperty(key)){
-        //       varlookup[the_hash[key]] = key;
-        //     }
-        //   }
-        //}
+        var varlookup = Object();
+        if ($("input[name='_varnames']").length){
+           the_hash = $.parseJSON(atob($("input[name='_varnames']").val()));
+           for (var key in the_hash){
+             if (the_hash.hasOwnProperty(key)){
+               varlookup[the_hash[key]] = key;
+             }
+           }
+        }
+        daShowIfInProcess = true;
         $(".showif").each(function(){
           var showIfSign = $(this).data('showif-sign');
           var showIfVar = $(this).data('showif-var');
           var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          //if ($("input[name='" + showIfVarEscaped + "']").length == 0 && typeof varlookup[showIfVar] != "undefined"){
-          //  console.log("Set showIfVarEscaped " + showIfVar + " to alternate, " + varlookup[showIfVar]);
-          //  showIfVar = varlookup[showIfVar];
-          //  showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          //}
+          if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof varlookup[showIfVar] != "undefined"){
+            //console.log("Set showIfVarEscaped " + showIfVar + " to alternate, " + varlookup[showIfVar]);
+            showIfVar = varlookup[showIfVar];
+            showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          }
           var showIfVal = $(this).data('showif-val');
           var saveAs = $(this).data('saveas');
           var isSame = (saveAs == showIfVar);
           var showIfDiv = this;
+          //console.log("Processing saveAs " + atob(saveAs) + " with showIfVar " + atob(showIfVar));
           var showHideDiv = function(speed){
-            if ($(this).parents(".showif").length !== 0){
-              //console.log("Returning because inside a showif.");
-              return;
-            }
             var theVal;
-            if ($(this).attr('type') == "checkbox" || $(this).attr('type') == "radio"){
+            var showifParents = $(this).parents(".showif");
+            if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
+              theVal = '';
+              //console.log("Setting theVal to blank.");
+            }
+            else if ($(this).attr('type') == "checkbox"){
               theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
               if (typeof(theVal) == 'undefined'){
-                console.log('manually setting checkbox value to False');
+                //console.log('manually setting checkbox value to False');
                 theVal = 'False';
+              }
+            }
+            else if ($(this).attr('type') == "radio"){
+              theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
+              if (typeof(theVal) == 'undefined'){
+                theVal = '';
               }
             }
             else{
               theVal = $(this).val();
             }
-            //console.log("val is " + theVal + " and showIfVal is " + showIfVal)
+            //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + theVal + " and showIfVal is " + showIfVal);
             if(theVal == showIfVal){
               //console.log("They are the same");
               if (showIfSign){
                 //console.log("Showing1!");
                 //$(showIfDiv).removeClass("invisible");
                 $(showIfDiv).show(speed);
+                $(showIfDiv).data('isVisible', '1');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
               else{
                 //console.log("Hiding1!");
                 //$(showIfDiv).addClass("invisible");
                 $(showIfDiv).hide(speed);
+                $(showIfDiv).data('isVisible', '0');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
             }
@@ -6891,15 +6930,27 @@ def index():
               if (showIfSign){
                 //console.log("Hiding2!");
                 $(showIfDiv).hide(speed);
+                $(showIfDiv).data('isVisible', '0');
                 //$(showIfDiv).addClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
               else{
                 //console.log("Showing2!");
                 $(showIfDiv).show(speed);
+                $(showIfDiv).data('isVisible', '1');
                 //$(showIfDiv).removeClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
+            }
+            var daThis = this;
+            if (!daShowIfInProcess){
+              daShowIfInProcess = true;
+              $(":input").each(function(){
+                if (this != daThis){
+                  $(this).trigger('change');
+                }
+              });
+              daShowIfInProcess = false;
             }
           };
           var showHideDivImmediate = function(){
@@ -6908,6 +6959,7 @@ def index():
           var showHideDivFast = function(){
             showHideDiv.apply(this, ['fast']);
           }
+          //console.log("showIfVarEscaped is #" + showIfVarEscaped);
           $("#" + showIfVarEscaped).each(showHideDivImmediate);
           $("#" + showIfVarEscaped).change(showHideDivFast);
           $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
@@ -6915,6 +6967,7 @@ def index():
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
         });
+        daShowIfInProcess = false;
         $("#daSend").click(daSender);
         if (daChatAvailable == 'unavailable'){
           daChatStatus = 'off';
@@ -6991,6 +7044,9 @@ def index():
           checkinInterval = setInterval(daCheckin, checkinSeconds);
         }
         showNotifications();
+        if (daUsingGA){
+          daPageview();
+        }
         $(document).trigger('daPageLoad');
       }
       $(document).ready(function(){
@@ -7315,7 +7371,7 @@ def index():
             inputkey = 'da:input:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
             r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_json:
-        data = dict(browser_title=interview_status.tabtitle, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log())
+        data = dict(browser_title=interview_status.tabtitle, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id=question_id)
         data.update(interview_status.as_data())
         if next_action_review:
             data['next_action'] = next_action_review
@@ -7330,7 +7386,7 @@ def index():
             do_action = interview_status.question.checkin
         else:
             do_action = None
-        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log())
+        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id=question_id)
     else:
         output = start_output + output + end_output
         response = make_response(output.encode('utf8'), '200 OK')
@@ -8109,7 +8165,7 @@ def observer():
               theVal = $(this).val();
             }
             //console.log("val is " + theVal + " and showIfVal is " + showIfVal)
-            if(theVal == showIfVal){
+            if($(this).parent().is(":visible") && theVal == showIfVal){
               //console.log("They are the same");
               if (showIfSign){
                 $(showIfDiv).show(speed);
@@ -8134,6 +8190,16 @@ def observer():
                 //$(showIfDiv).removeClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
+            }
+            var daThis = this;
+            if (!daShowIfInProcess){
+              daShowIfInProcess = true;
+              $(":input").each(function(){
+                if (this != daThis){
+                  $(this).trigger('change');
+                }
+              });
+              daShowIfInProcess = false;
             }
           };
           var showHideDivImmediate = function(){
@@ -16056,7 +16122,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         allow_going_back = False
     data = dict(browser_title=interview_status.tabtitle, exit_link=interview_status.exit_link, exit_label=interview_status.exit_label, title=interview_status.title, display_title=interview_status.display_title, short_title=interview_status.short_title, lang=interview_language, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log())
     data.update(interview_status.as_data(encode=False))
-    if interview_status.question.question_type == "review":
+    if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
         next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
     else:
         next_action_review = None

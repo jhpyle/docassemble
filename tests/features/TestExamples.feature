@@ -3645,6 +3645,30 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "You like apple, turnip, French food, and Cops."
 
+  Scenario: Test the interview "Nested show if"
+    Given I start the interview "docassemble.base:data/questions/examples/showif-nested.yml"
+    Then I should see the phrase "Please fill in the following information."
+    And I should not see the phrase "Do you like apples?"
+    And I should not see the phrase "Why do you like Fuji apples?"
+    And I click the option "Yes" under "Do you like fruit?"
+    And I wait 1 second
+    And I should see the phrase "Do you like apples?"
+    And I should not see the phrase "Why do you like Fuji apples?"
+    And I click the option "Yes" under "Do you like apples?"
+    And I wait 1 second
+    Then I should see the phrase "Why do you like apples?"
+    And I set "Why do you like apples?" to "Because they are sweet."
+    And I should see the phrase "Do you like Fuji apples?"
+    And I click the option "Yes" under "Do you like Fuji apples?"
+    And I wait 1 second
+    Then I should see the phrase "Why do you like Fuji apples?"
+    And I click the option "No" under "Do you like fruit?"
+    And I wait 1 second
+    And I should not see the phrase "Do you like apples?"
+    And I should not see the phrase "Why do you like Fuji apples?"
+    And I click the button "Continue"
+    Then I should see the phrase "You do not like fruit."
+
   Scenario: Test the interview "Shuffle"
     Given I start the interview "docassemble.base:data/questions/examples/shuffle.yml"
     Then I should see the phrase "For which of the following obscure candidates do you wish to vote?"

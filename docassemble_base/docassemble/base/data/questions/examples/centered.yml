@@ -1,6 +1,6 @@
 metadata:
   title: Centered
-  documentation: "https://docassemble.org/docs/modifiers.html#centered"
+  documentation: "https://docassemble.org/docs/initial.html#centered"
 ---
 features:
   centered: False

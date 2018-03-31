@@ -17,8 +17,11 @@ question: |
   % if likes_fruit is True:
   You like fruit.
   % else:
-  You do not like fruit.  Your
-  reason is:
+  You do not like fruit.
+  % endif
+subquestion: |
+  % if not likes_fruit:
+  Your reason is:
 
   ${ fruit_dislike_reason }
   % endif
