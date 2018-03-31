@@ -96,7 +96,8 @@ am unemployed.
 {% endhighlight %}
 
 You may find it easier to read your if/then/else statements when you can
-arrange them vertically in this fashion.
+arrange them vertically in this fashion -- particularly when you have
+nested if/else statements.
 
 If you use the [PDF fill-in field](#pdf template file) method to
 populate fields in a PDF file, you will have total control over
@@ -659,6 +660,24 @@ of these two templating formats.  The biggest difference between the
 formats is that [Mako] uses the syntax `${ variable_name }`, while
 [Jinja2] uses the syntax `{% raw %}{{ variable_name }}{% endraw %}`.
 
+In [Mako], you would write an if/else statement like this:
+
+{% highlight markdown %}
+You may wish to distribute your property to your
+% if user.child.number() > 0:
+heirs.
+% else:
+friends.
+% endif
+{% endhighlight %}
+
+In [Jinja2], you would write:
+
+{% highlight text %}
+You may wish to distribute your property to your 
+{% raw %}{% if user.child.number() > 0 %}heirs.{% else %}friends.{% endraw %}
+{% endhighlight %}
+
 Also, the [`python-docx-template`] package uses a slightly modified
 version of the [Jinja2] syntax to account for the fact that it is
 being used inside of a .docx file.  The standard [Jinja2] way of
@@ -695,8 +714,7 @@ you should use the  `{% raw %}{%p if ... %}{% endraw %}` syntax. Place
 the `{% raw %}{%p if ... %}{% endraw %}` and
 the `{% raw %}{%p endif %}{% endraw %}` statements on their own lines in the list. 
 If you place the `{% raw %}{%p endif %}{% endraw %}` on the same line
-as the
-`{% raw %}{%p if... %}{% endraw %}` line, you may get an error about
+as the `{% raw %}{%p if... %}{% endraw %}` line, you may get an error about
 a missing `endif` statement, since the `p` modifier could cause the 
 `endif` statement to be deleted before it is processed.
 

@@ -1663,6 +1663,70 @@ your server.  Thus, you may wish to secure the `api key` using IP
 addresses, and secure the `google maps api key` using "Referer"
 headers.
 
+## <a name="service account credentials"></a>Google service account credentials
+
+If you want to integrate with [Google Docs] or [Google Drive], you can
+add `service account credentials`, which is a [JSON] object you obtain
+from the [Google Developers Console].
+
+To do this, go on the [Google Developers Console] and create an "app."
+Within this app, create a [service account].  When you create the
+service account, you will be provided with "credentials."  Download
+the [JSON] (not p12) credential file for the service account.
+
+Then, in the configuration, set `service account credentials` under
+[`google`] to the literal contents of the [JSON] file you downloaded.
+(Make sure to provide the necessary indentation so that the [YAML] is
+valid.)
+
+For example:
+
+{% highlight yaml %}
+google:
+  service account credentials: |
+    {
+      "type": "service_account",
+      "project_id": "redacted",
+      "private_key_id": "redacted",
+      "private_key": "-----BEGIN PRIVATE KEY-----REDACTED-----END PRIVATE KEY-----\n",
+      "client_email": "googledocs@redacted.iam.gserviceaccount.com",
+      "client_id": "redacted",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://accounts.google.com/o/oauth2/token",
+      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+      "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/googledocs%40redacted.iam.gserviceaccount.com"
+    }
+{% endhighlight %}
+
+## <a name="google analytics"></a>Google Analytics ID
+
+If you want to use [Google Analytics] on the screens in your interviews,
+you can set `analytics id` within the `google` directive:
+
+{% highlight yaml %}
+google:
+  analytics id: UA-77777777-1
+{% endhighlight %}
+
+When this is configured, [JavaScript] for [Google Analytics] will be
+inserted into your interview pages, and [pageview] events will be sent
+to [Google Analytics] for any `question` that has an `id` defined.
+These [pageview] events will record a view on an artificial path.  For
+example, suppose you have the following question:
+
+{% highlight yaml %}
+id: lead certification
+question: |
+  Does your landlord have a valid lead certification?
+yesno: lead_certification_exists
+{% endhighlight %}
+
+Suppose this question is part of the interview `answer.yml` in the
+package `docassemble.eviction`.  In that case, the `pageview` will
+record a view of the following pseudo-URL on your site:
+
+> /eviction/answer/lead_certification
+
 ## <a name="voicerss"></a>VoiceRSS API key
 
 If the [special variable `speak_text`] is set to `True`, **docassemble**
@@ -2652,3 +2716,9 @@ and Facebook API keys.
 [`USEHTTPS`]: {{ site.baseurl }}/docs/docker.html#USEHTTPS
 [`USELETSENCRYPT`]: {{ site.baseurl }}/docs/docker.html#USELETSENCRYPT
 [`LETSENCRYPTEMAIL`]: {{ site.baseurl }}/docs/docker.html#LETSENCRYPTEMAIL
+[service account]: https://cloud.google.com/iam/docs/understanding-service-accounts
+[Google Developers Console]: https://console.developers.google.com/
+[`google`]: #google
+[Google Docs]: https://docs.google.com
+[Google Analytics]: https://analytics.google.com
+[pageview]: https://developers.google.com/analytics/devguides/collection/analyticsjs/pages#tracking_virtual_pageviews

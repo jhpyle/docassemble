@@ -4855,25 +4855,26 @@ to e-mail the service account, but the service account does not
 actually have an e-mail account.  To avoid getting this e-mail, click
 the "Advanced" link on the sharing screen and uncheck "Notify people.")
 
-Go to the [Configuration] and create a new configuration directive
-called, e.g., `google service account credentials`.  Set it to the contents of
+Go to the [Configuration] and set the [`service account credentials`]
+subdirective under the [`google`] directive.  Set it to the contents of
 the [JSON] file you downloaded.  The directive will look something
 like this:
 
 {% highlight yaml %}
-google service account credentials: |
-  {
-    "type": "service_account",
-    "project_id": "redacted",
-    "private_key_id": "redacted",
-    "private_key": "-----BEGIN PRIVATE KEY-----REDACTED-----END PRIVATE KEY-----\n",
-    "client_email": "googledocs@redacted.iam.gserviceaccount.com",
-    "client_id": "redacted",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://accounts.google.com/o/oauth2/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/googledocs%40redacted.iam.gserviceaccount.com"
-  }
+google:
+  service account credentials: |
+    {
+      "type": "service_account",
+      "project_id": "redacted",
+      "private_key_id": "redacted",
+      "private_key": "-----BEGIN PRIVATE KEY-----REDACTED-----END PRIVATE KEY-----\n",
+      "client_email": "googledocs@redacted.iam.gserviceaccount.com",
+      "client_id": "redacted",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://accounts.google.com/o/oauth2/token",
+      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+      "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/googledocs%40redacted.iam.gserviceaccount.com"
+    }
 {% endhighlight %}
 
 Next, go to the [modules folder] of the [Playground] and add a new
@@ -5414,6 +5415,7 @@ $(document).on('daPageLoad', function(){
 [`flash()`]: #flash
 [Google API key]: {{ site.baseurl }}/docs/config.html#google
 [`google`]: {{ site.baseurl }}/docs/config.html#google
+[`service account credentials`]: {{ site.baseurl }}/docs/config.html#service account credentials
 [configuration]: {{ site.baseurl }}/docs/config.html
 [`encode_name()`]: #encode_name
 [`decode_name()`]: #decode_name

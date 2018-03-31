@@ -4,6 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.44](https://github.com/jhpyle/docassemble/releases/tag/v0.2.44) - 2018-03-31
+
+### Added
+- The `analytics id` subdirective of the `google` Configuration directive.
+
+### Changed
+- Nested `show if`s are supported.
+
+### Fixed
+- Exception caused by mandatory `review` blocks without an `event`,
+  `field`, or `sets`.
+
 ## [0.2.43](https://github.com/jhpyle/docassemble/releases/tag/v0.2.43) - 2018-03-28
 
 ### Changed

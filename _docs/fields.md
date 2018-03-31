@@ -555,10 +555,10 @@ will be hidden.
 
 {% include side-by-side.html demo="showif-boolean" %}
 
-It is not possible to have "cascading" or "nested" `show if`
-statements on single a screen using the above methods.  That is, a
-`show if` directive cannot refer to a variable that is set by a field
-that has a `show if` directive attached to it.
+If a `show if` statement refers to a variable that is itself hidden by a
+`show if`, then the condition is considered to be false.
+
+{% include side-by-side.html demo="showif-nested" %}
 
 Under the third method, the field is either shown or not shown on the
 screen when it loads, and it stays that way.  You can use [Python]

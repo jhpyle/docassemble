@@ -1503,34 +1503,10 @@ the [Configuration].
 In order for your site to communicate with Google, you will need to
 create an account on the [Google Developers Console] and create an
 "app."  Within this app, you will need to create a [service account].
-(The instructions for creating a [service account] are not provided
-here; there are sites on the internet that explain it.)
-
-When you create the [service account], you will be provided with
-"credentials."  Download the [JSON] (not p12) credential file for the
-service account.  Also make a note of the e-mail address of the
-service account.
-
-Go to the [Configuration] and create a new configuration directive
-called, e.g., `google service account credentials`.  Set it to the
-contents of the [JSON] file you downloaded.  The directive will look
-something like this:
-
-{% highlight yaml %}
-google service account credentials: |
-  {
-    "type": "service_account",
-    "project_id": "redacted",
-    "private_key_id": "redacted",
-    "private_key": "-----BEGIN PRIVATE KEY-----REDACTED-----END PRIVATE KEY-----\n",
-    "client_email": "googledocs@redacted.iam.gserviceaccount.com",
-    "client_id": "redacted",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://accounts.google.com/o/oauth2/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/googledocs%40redacted.iam.gserviceaccount.com"
-  }
-{% endhighlight %}
+Then set the [`service account credentials`] directive in the
+[Configuration] to the credentials for this [service account].  For
+more information on how to do this, see the documentation for the
+[`service account credentials`] directive.
 
 Finally, you need to use the [Google Developers Console] to enable the
 APIs that you want to use.  For example, if you want to use the
@@ -3748,3 +3724,4 @@ of the original [`DADateTime`] object.  See
 [Google Drive]: https://www.google.com/drive/
 [Google Cloud Storage]: https://cloud.google.com/storage/docs/reference/libraries
 [LibreOffice]: https://www.libreoffice.org/
+[`service account credentials`]: {{ site.baseurl }}/docs/config.html#service account credentials

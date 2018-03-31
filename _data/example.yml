@@ -7975,6 +7975,26 @@
       show if:
         variable: likes_fruit
         is: False
+"showif-nested": |-
+  question: |
+    Please fill in the following information.
+  fields:
+    - "Do you like fruit?": likes_fruit
+      datatype: yesnoradio
+    - "Do you like apples?": likes_apples
+      datatype: yesnoradio
+      show if: likes_fruit
+    - "Why do you like apples?": reason_for_liking_apples
+      show if: likes_apples
+    - "Why do you hate apples?": reason_for_hating_apples
+      show if:
+        variable: likes_apples
+        is: False
+    - "Do you like Fuji apples?": likes_fuji
+      datatype: yesnoradio
+      show if: likes_apples
+    - "Why do you like Fuji apples?": reason_for_liking_fuji_apples
+      show if: likes_fuji
 "shuffle": |-
   question: |
     For which of the following obscure
