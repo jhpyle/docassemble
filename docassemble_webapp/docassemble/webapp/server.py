@@ -5349,8 +5349,8 @@ def index():
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       function daPageview(){
-        if (daQuestionID != null){ 
-          gtag('config', """ + json.dumps(ga_id) + """, {'page_path': """ + json.dumps(interview_package) + """ + "/" + """ + json.dumps(interview_filename) + """ + "/" + daQuestionID});
+        if (daQuestionID != null){
+          gtag('config', """ + json.dumps(ga_id) + """, {'page_path': """ + json.dumps(interview_package) + """ + "/" + """ + json.dumps(interview_filename) + """ + "/" + daQuestionID.replace(/[^A-Za-z0-9]+/g, '_')});
         }
       }
     </script>
