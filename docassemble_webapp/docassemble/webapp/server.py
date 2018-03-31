@@ -5325,7 +5325,7 @@ def index():
         question_id = interview_status.question.id
     else:
         question_id = None;
-    interview_package = re.sub(r'^docassemble\.', '' re.sub(r':.*', '', yaml_filename))
+    interview_package = re.sub(r'^docassemble\.', '', re.sub(r':.*', '', yaml_filename))
     interview_filename = re.sub(r'\.ya?ml$', '', re.sub(r'.*[:\/]', '', yaml_filename), re.IGNORECASE)
     if not is_ajax:
         scripts = standard_scripts()
