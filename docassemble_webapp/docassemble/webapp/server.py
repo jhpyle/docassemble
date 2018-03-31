@@ -5325,6 +5325,8 @@ def index():
         question_id = interview_status.question.id
     else:
         question_id = None;
+    interview_filename = re.sub(r':.*', '', yaml_filename)
+    interview_package = re.sub(r'.*\/', '', yaml_filename)
     if not is_ajax:
         scripts = standard_scripts()
         if 'google maps api key' in google_config:
@@ -5430,8 +5432,6 @@ def index():
         else:
             forceFullScreen = ''
         the_checkin_interval = interview_status.question.interview.options.get('checkin interval', CHECKIN_INTERVAL)
-        interview_filename = re.sub(r':.*', '', yaml_filename)
-        interview_package = re.sub(r'.*\/', '', yaml_filename)
         scripts += """
     <script type="text/javascript" charset="utf-8">
       var map_info = null;

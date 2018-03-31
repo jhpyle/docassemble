@@ -5,7 +5,8 @@ import google.cloud.storage
 from docassemble.base.util import get_config
 from oauth2client.service_account import ServiceAccountCredentials
 import sys
-credential_json = get_config('google service account credentials')
+credential_json = get_config('google', dict()).get('service account credentials', None)
+
 if credential_json is None:
     credential_info = None
 else:
