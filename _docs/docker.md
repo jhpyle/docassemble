@@ -1369,31 +1369,78 @@ docker push yourdockerhubusername/mydocassemble
 
 # <a name="upgrading"></a>Upgrading docassemble when using Docker
 
-As new versions of **docassemble** become available, you can obtain
-the latest version by running this within the "docassemble" directory:
+New versions of the **docassemble** software are published frequently.
+Most changes only affect the [Python] code.  You can upgrade the
+**docassemble** [Python] packages by going to "Package Management"
+from the menu and clicking the "Upgrade" button.
+
+However, sometimes a "system upgrade" is necessary.  This can happen
+when changes are made to **docassemble**'s underlying operating system
+files.  When it is time for a "system upgrade," you will see a message
+on the [Configuration] screen that says "Your docassemble system needs
+to be upgraded" or "A new docassemble system version is available."
+Performing a "system upgrade" requires retrieving a new
+**docassemble** [Docker] image and running `docker run` to start a new
+container.
+
+The first time you use [`docker run`] to start a container, [Docker]
+will download the image from [Docker Hub], store it on your system,
+and then create a new container from that image.  However, subsequent
+[`docker run`] commands will always use the version of the image that
+is stored on your system, even if a new version is available on
+[Docker Hub].
+
+You can download the latest version of **docassemble** to your system
+by running:
 
 {% highlight bash %}
 docker pull jhpyle/docassemble
 {% endhighlight %}
 
 Then, subsequent [`docker run`] commands will use the latest
-**docassemble** image.
+**docassemble** image.  This means that when you are using [Docker],
+you can upgrade **docassemble** to the newest version by running
+[`docker stop`] and [`docker rm`] on your existing **docassemble**
+container, followed by `docker pull jhpyle/docassemble`, and then
+running whatever [`docker run`] command you use to start a new
+container.
 
-When you are using [Docker] to run **docassemble**, you can upgrade
-**docassemble** to the newest version simply by running `docker pull
-jhpyle/docassemble`, then running [`docker stop`] and [`docker rm`] on
-your **docassemble** container, followed by [`docker run`].  Note,
-however, that [`docker rm`] will delete all of the data on the server
-unless you are using a [data storage] system.  Also, you will probably
-also want to run [`docker rmi`] before pulling a new image so that you
-do not run out of space.  (See the [next section](#cleanup).)
+Note, however, that [`docker rm`] will delete all of the data on the
+server.  This is not a problem if your [`docker run`] command
+instructs **docassemble** to use a [data storage] system; in that case,
+when your new container starts up, it will use the SQL server, files,
+and other information that were backed up when you did [`docker stop`].
+
+Note also that [`docker pull`] may use up a lot of disk space.  This
+is because [Docker] does not automatically delete old versions of
+images, and **docassemble** images are very large.  So if your disk
+space is limited, you probably don't want to run [`docker pull`] until
+you get rid of the old image.  (See the [next section](#cleanup).)
+
+Thus, so long as you are using [data storage], and you aren't running
+any applications other than **docassemble** using Docker, it is
+recommended that you perform a system upgrade by running:
+
+{% highlight bash %}
+docker stop -t60 $(docker ps -a -q)
+docker rm $(docker ps -a -q)
+docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
+docker pull jhpyle/docassemble
+{% endhighlight %}
+
+Then, run whatever `docker run` command you use to launch
+**docassemble**.
+
+Technically, the [`docker pull`] command can be omitted, because
+[`docker run`] will pull the latest image if it cannot be found on the
+system.
 
 # <a name="cleanup"></a>Cleaning up after Docker
 
-If you run `docker pull` to retrieve new versions of **docassemble**,
+If you run [`docker pull`] to retrieve new versions of **docassemble**,
 or you build your own **docassemble** images more than once, you may
 find your disk space being used up.  The full **docassemble** image is
-about 4GB in size, and whenever you run `docker pull` or build a new
+about 4GB in size, and whenever you run [`docker pull`] or build a new
 image, a new image is created -- the old image is not overwritten.
 
 The following three lines will stop all containers, remove all
@@ -1401,7 +1448,7 @@ containers, and then remove all of the images that [Docker] created
 during the build process.
 
 {% highlight bash %}
-docker stop $(docker ps -a -q)
+docker stop -t60 $(docker ps -a -q)
 docker rm $(docker ps -a -q)
 docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
 {% endhighlight %}
@@ -1545,6 +1592,7 @@ line), as the containers depend on the images.
 [`docker run`]: https://docs.docker.com/engine/reference/commandline/run/
 [`docker build`]: https://docs.docker.com/engine/reference/commandline/build/
 [`docker ps`]: https://docs.docker.com/engine/reference/commandline/ps/
+[`docker pull`]: https://docs.docker.com/engine/reference/commandline/pull/
 [`docker volume`]: https://docs.docker.com/engine/reference/commandline/volume/
 [`docker volume inspect`]: https://docs.docker.com/engine/reference/commandline/volume_inspect/
 [Amazon Web Services]: https://aws.amazon.com
@@ -1580,3 +1628,4 @@ line), as the containers depend on the images.
 [e-mail setup]: {{ site.baseurl }}/docs/installation.html#setup_email
 [installation]: {{ site.baseurl }}/docs/installation.html
 [e-mailing the interview]: {{ site.baseurl }}/docs/background.html#email
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
