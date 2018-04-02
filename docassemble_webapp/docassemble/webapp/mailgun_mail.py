@@ -100,34 +100,3 @@ class Mail(_MailMixin):
 
     def __getattr__(self, name):
         return getattr(self.state, name, None)
-
-"""POST https://api.mailgun.net/v3/<domain>/messages.mime
-
->>> import requests
->>> from pprint import pprint
->>> url = 'http://httpbin.org/post'
->>> files = {'file': ('report.csv', 'some,data,to,send\nanother,row,to,send\n')}
->>> response = requests.post(url, data={
-...   'description' :'Some desc',
-...   'release_notes_url':'Someurl.pdf'
-...   }, files=files)
-
->>> url = 'http://httpbin.org/post'
->>> files = {'message': ('report.xls', open('report.xls', 'rb'), 'application/vnd.ms-excel', {'Expires': '0'})}
-
->>> r = requests.post(url, files=files)
->>> r.text
-
-multipart/form-data
-to 	Email address of the recipient(s). Example: "Bob <bob@host.com>". You can use commas to separate multiple recipients. Make sure to include all To, Cc and Bcc recipients of the message.
-message 	MIME string of the message. Make sure to use multipart/form-data to send this as a file upload.
-o:tag 	Tag string. See Tagging for more information.
-o:deliverytime 	Desired time of delivery. See Date Format. Note: Messages can be scheduled for a maximum of 3 days in the future.
-o:dkim 	Enables/disabled DKIM signatures on per-message basis. Pass yes or no
-o:testmode 	Enables sending in test mode. Pass yes if needed. See Sending in Test Mode
-o:tracking 	Toggles tracking on a per-message basis, see Tracking Messages for details. Pass yes or no.
-o:tracking-clicks 	Toggles clicks tracking on a per-message basis. Has higher priority than domain-level setting. Pass yes, no or htmlonly.
-o:tracking-opens 	Toggles opens tracking on a per-message basis. Has higher priority than domain-level setting. Pass yes or no.
-h:X-My-Header 	h: prefix followed by an arbitrary value allows to append a custom MIME header to the message (X-My-Header in this case). For example, h:Reply-To to specify Reply-To address.
-v:my-var 	v: prefix followed by an arbitrary name allows to attach a custom JSON data to the message. See Attaching Data to Messages for more information.
-"""

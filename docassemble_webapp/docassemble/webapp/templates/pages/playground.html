@@ -1,15 +1,15 @@
 {% extends 'base_templates/flask_two_col_base.html' %}
 {% block content %}
 {%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
-<ul class="nav nav-pills navpillssmaller">
-  <li>
-    <a tabindex="1" title="{{ word('Create new interview') }}" href="?new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Add') }}</a>
+<ul class="nav nav-pills">
+  <li class="nav-item">
+    <a class="nav-link" tabindex="1" title="{{ word('Create new interview') }}" href="?new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Add') }}</a>
   </li>
-  <li>
-    <a tabindex="2" title="{{ word('Create interview with wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml') }}"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Wizard') }}</a>
+  <li class="nav-item">
+    <a class="nav-link" tabindex="2" title="{{ word('Create interview with wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml') }}"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Wizard') }}</a>
   </li>
-  <li role="presentation" class="dropdown">
-    <a tabindex="3" class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Items in the Playground other than interviews') }}">
+  <li role="presentation" class="nav-item dropdown">
+    <a tabindex="3" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Items in the Playground other than interviews') }}">
       <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Folders') }}<span class="caret"></span>
     </a>
     <ul class="dropdown-menu">
@@ -20,8 +20,8 @@
       <li><a href="{{ url_for('playground_files', section='modules') }}"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Modules') }}</a></li>
     </ul>
   </li>
-  <li role="presentation" class="dropdown">
-    <a tabindex="4" class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another interview')}}">
+  <li role="presentation" class="nav-item dropdown">
+    <a tabindex="4" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another interview')}}">
       <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
     </a>
     <ul class="dropdown-menu heightlim">
@@ -42,8 +42,8 @@
       {% endif %}
     </ul>
   </li>
-  <li role="presentation">
-    <a tabindex="5" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a YAML file to the Playground') }}">
+  <li class="nav-item" role="presentation">
+    <a class="nav-link" tabindex="5" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a YAML file to the Playground') }}">
       <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
         {{ fileform.hidden_tag() }}
         <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
@@ -58,16 +58,16 @@
     </a>
   </li>
   {% if current_file != '' %}
-  <li role="presentation">
-    <a tabindex="6" href="{{ url_for('playground_download', userid=userid, filename=current_file) }}" title="{{ word('Download the current file') }}">
+  <li class="nav-item" role="presentation">
+    <a class="nav-link" tabindex="6" href="{{ url_for('playground_download', userid=userid, filename=current_file) }}" title="{{ word('Download the current file') }}">
       <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
       {{ word("Download") }}
     </a>
   </li>
   {% endif %}
   {%- if use_gd %}
-  <li role="presentation">
-    <a tabindex="7" href="{{ url_for('sync_with_google_drive', next=url_for('playground_page')) }}" title="{{ word('Sync with Google Drive') }}">
+  <li class="nav-item" role="presentation">
+    <a class="nav-link" tabindex="7" href="{{ url_for('sync_with_google_drive', next=url_for('playground_page')) }}" title="{{ word('Sync with Google Drive') }}">
       <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
       {{ word('GD') }}
     </a>

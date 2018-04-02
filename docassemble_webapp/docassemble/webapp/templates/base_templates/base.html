@@ -11,7 +11,7 @@
     <title>{% if tab_title %}{{ tab_title }}{% else %}{{ config['APP_NAME'] }}{% endif %}</title>
     <link href="{% if config['BOOTSTRAP_THEME'] %}{{ config['BOOTSTRAP_THEME'] }}{% else %}{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}{% endif %}" rel="stylesheet">
     {%- if config['BOOTSTRAP_THEME_DEFAULT'] %}
-    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') }}" rel="stylesheet">
+    {# <link href="{{ url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') }}" rel="stylesheet"> #}
     {%- endif %}
     <link href="{{ url_for('static', filename='app/jasny-bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='app/app.css') }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
@@ -27,57 +27,53 @@
     {%- endif %}
   </head>
   <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} pad-for-navbar">
-    <div class="navbar navbar-inverse navbar-fixed-top">
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
       <div class="{% if userclass %}container danavcontainer{% else %}container{% endif %}">
-        <div class="navbar-header">
-          {%- if not (current_user.is_anonymous and request.path == "/user/sign-in") %}
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          {%- endif %}
-          {% if back_button %}{{ back_button }}{% endif %}<a class="navbar-brand">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>
-        </div>
+        {% if back_button %}{{ back_button }}{% endif %}<a class="navbar-brand" href="#">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>
+        {%- if not (current_user.is_anonymous and request.path == "/user/sign-in") %}
+        <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        {%- endif %}
         <div class="collapse navbar-collapse" id="navbar-collapse">
-          <ul class="nav navbar-nav navbar-right">
+          <ul class="navbar-nav ml-auto">
             {%- if not current_user.is_anonymous %}
-            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ user_designator(current_user) }}<span class="caret"></span></a>
-              <ul class="dropdown-menu">
+            <li class="nav-item dropdown"><a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ user_designator(current_user) }}</a>
+              <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
                 {%- if current_user.has_roles(['admin', 'developer', 'advocate']) %}
-                <li><a href="{{ url_for('monitor') }}">{{ word('Monitor') }}</a></li>
+                <a class="dropdown-item" href="{{ url_for('monitor') }}">{{ word('Monitor') }}</a>
                 {%- endif %}
                 {%- if current_user.has_roles(['admin', 'developer', 'advocate', 'trainer']) %}
-                <li><a href="{{ url_for('train') }}">{{ word('Train') }}</a></li>
+                <a class="dropdown-item" href="{{ url_for('train') }}">{{ word('Train') }}</a>
                 {%- endif %}
                 {%- if current_user.has_roles(['admin', 'developer']) %}
-                <li><a href="{{ url_for('update_package') }}">{{ word('Package Management') }}</a></li>
-                <li><a href="{{ url_for('logs') }}">{{ word('Logs') }}</a></li>
-                <li><a href="{{ url_for('playground_page') }}">{{ word('Playground') }}</a></li>
-                <li><a href="{{ url_for('utilities') }}">{{ word('Utilities') }}</a></li>
+                <a class="dropdown-item" href="{{ url_for('update_package') }}">{{ word('Package Management') }}</a>
+                <a class="dropdown-item" href="{{ url_for('logs') }}">{{ word('Logs') }}</a>
+                <a class="dropdown-item" href="{{ url_for('playground_page') }}">{{ word('Playground') }}</a>
+                <a class="dropdown-item" href="{{ url_for('utilities') }}">{{ word('Utilities') }}</a>
                   {%- if current_user.has_roles(['admin']) %}
-                <li><a href="{{ url_for('user_list') }}">{{ word('User List') }}</a></li>
-                <li><a href="{{ url_for('config_page') }}">{{ word('Configuration') }}</a></li>
+                <a class="dropdown-item" href="{{ url_for('user_list') }}">{{ word('User List') }}</a>
+                <a class="dropdown-item" href="{{ url_for('config_page') }}">{{ word('Configuration') }}</a>
                   {%- endif %}
                 {%- endif %}
                 {%- if config['SHOW_MY_INTERVIEWS'] or current_user.has_roles(['admin']) %}
-                <li><a href="{{ url_for('interview_list') }}">{{ word('My Interviews') }}</a></li>
+                <a class="dropdown-item" href="{{ url_for('interview_list') }}">{{ word('My Interviews') }}</a>
                 {%- endif %}
                 {%- if config['SHOW_PROFILE'] or current_user.has_roles(['admin']) %}
-                <li><a href="{{ url_for('user_profile_page') }}">{{ word('Profile') }}</a></li>
+                <a class="dropdown-item" href="{{ url_for('user_profile_page') }}">{{ word('Profile') }}</a>
                 {%- else %}
-                <li><a href="{{ url_for('user.change_password') }}">{{ word('Change Password') }}</a></li>
+                <a class="dropdown-item" href="{{ url_for('user.change_password') }}">{{ word('Change Password') }}</a>
                 {%- endif %}
-                <li><a href="{{ url_for('user.logout') }}">{{ word('Sign Out') }}</a></li>
-              </ul>
+                <a class="dropdown-item" href="{{ url_for('user.logout') }}">{{ word('Sign Out') }}</a>
+              </div>
             </li>
             {%- elif request.path != "/login" and request.path != "/user/sign-in" and request.url_rule != None %}
-            <li><a href="{{ url_for('user.login', next=url_for(request.url_rule.endpoint)) }}">{{ word('Sign in') }}</a></li>
+            <li><a class="nav-link" href="{{ url_for('user.login', next=url_for(request.url_rule.endpoint)) }}">{{ word('Sign in') }}</a></li>
             {%- endif %}
           </ul>
         </div>
       </div>
-    </div>
+    </nav>
     <div class="container" id="main">
     {%- block top %}{% endblock %}
     {%- block flash_messages %}

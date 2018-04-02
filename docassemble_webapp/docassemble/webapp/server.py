@@ -16825,7 +16825,7 @@ def define_examples():
     pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
 
 if LooseVersion(min_system_version) > LooseVersion(daconfig['system version']):
-    version_warning = word("Your docassemble system needs to be upgraded.")
+    version_warning = word("A new docassemble system version is available.")
 else:
     version_warning = None
 
