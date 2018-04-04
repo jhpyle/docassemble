@@ -1,28 +1,23 @@
 {% extends 'base_templates/flask_wide_base.html' %}
 {% block content %}
 {%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field with context %}
-<!--<h3>{{ word('Logs') }}</h3>-->
-<!--<div class="container-fluid">
-<div class="collapse navbar-collapse">-->
 <ul class="nav nav-pills navpillssmaller">
-  <li class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Open another log file')}}">
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Open another log file')}}">
       <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{{ current_file }}<span class="caret"></span>
     </a>
-    <ul class="dropdown-menu heightlim">
-      {% for file in files %}{% if file == current_file %}<li class="active">
-        <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
-        </a>
-      </li>
-      {% else %}<li>
-        <a href="?file={{ file }}"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
-        </a>
-      </li>
+    <div class="dropdown-menu heightlim">
+      {% for file in files %}{% if file == current_file %}
+      <a class="dropdown-item active" href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
+      </a>
+      {% else %}
+      <a class="dropdown-item" href="?file={{ file }}"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
+      </a>
       {% endif %}{% endfor %}
-    </ul>
+    </div>
   </li>
-  <li>
-    <a title="{{ word('Download this log file') }}"href="{{ url_for('logfile', filename=current_file) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Download') }}</a>
+  <li class="nav-item">
+    <a class="nav-link" title="{{ word('Download this log file') }}"href="{{ url_for('logfile', filename=current_file) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Download') }}</a>
   </li>
 </ul>
 <!-- class="form-inline vspace" -->
@@ -41,8 +36,6 @@
     {{ myrender_hidden_field(form.file_name, value=current_file) }}
   </form>
 </div>
-<!--</div>
-    </div>-->
 <div>
   <pre class="wrappre vspace">{{ content }}</pre>
 </div>

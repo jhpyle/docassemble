@@ -1,6 +1,6 @@
 {
     "name": "bootstrap-fileinput",
-    "version": "4.3.9",
+    "version": "4.4.8",
     "homepage": "https://github.com/kartik-v/bootstrap-fileinput",
     "authors": [
         "Kartik Visweswaran <kartikv2@gmail.com>"
@@ -14,7 +14,6 @@
         "url": "https://github.com/kartik-v/bootstrap-fileinput/issues"
     },
     "keywords": [
-        "bootstrap",
         "file",
         "input",
         "preview",
@@ -26,11 +25,15 @@
         "progress",
         "gallery"
     ],
+    "dependencies": {
+        "jquery": ">= 1.9.0",
+        "bootstrap": ">= 3.0.0"
+    },
     "main": "./js/fileinput.js",
     "style": "./css/fileinput.css",
     "peerDependencies": {
         "jquery": ">= 1.9.0",
-        "bootstrap": "~3"
+        "bootstrap": ">= 3.0.0"
     },
     "license": "BSD-3-Clause"
 }

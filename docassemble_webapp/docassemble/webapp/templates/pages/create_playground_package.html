@@ -6,7 +6,7 @@
 <h1>Create package from Playground</h1>
 
 {%- if package_names.__len__() %}
-<form action="" method="POST" class="form" role="form">
+<form action="" method="POST" role="form">
   {{ form.hidden_tag() }}
   <div class="form-group">
     <label for="{{ form.name.id }}">{{ word("Select a package") }}</label>

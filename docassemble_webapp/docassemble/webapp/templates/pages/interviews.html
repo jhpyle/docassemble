@@ -25,12 +25,12 @@
             <table class="table table-striped dainterviewpage">
               <thead>
                 <tr>
-                  <th>{{ word('Title') }}</th>
+                  <th scope="col">{{ word('Title') }}</th>
                   {%- if tags_used %}
-                  <th>{{ word('Tags') }}</th>
+                  <th scope="col">{{ word('Tags') }}</th>
                   {%- endif %}
-                  <th>{{ word('Started') }}</th>
-                  <th>{{ word('Delete') }}</th>
+                  <th scope="col">{{ word('Started') }}</th>
+                  <th scope="col">{{ word('Delete') }}</th>
                 </tr>
               </thead>
               <tbody>

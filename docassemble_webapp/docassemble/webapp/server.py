@@ -13731,6 +13731,16 @@ def train():
     file_list = dict()
     group_id_list = dict()
     entry_list = list()
+    extra_css = """
+    <link href=""" + '"' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '"' + """ rel="stylesheet">
+"""
+    extra_js = """
+    <script src=""" + '"' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"' + """></script>
+    <script src=""" + '"' + url_for('static', filename='bootstrap-fileinput/themes/fa/theme.min.js') + '"' + """></script>
+    <script>
+      $("#jsonfile").fileinput({theme: "fa"});
+    </script>
+"""
     if current_user.has_role('admin', 'developer'):
         playground_package = 'docassemble.playground' + str(current_user.id)
     else:
@@ -13758,7 +13768,7 @@ def train():
         if playground_package and playground_package not in package_list:
             package_list[playground_package] = 0
         package_list = [(x, package_list[x]) for x in sorted(package_list)]
-        return render_template('pages/train.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_package_list=True, playground_package=playground_package)
+        return render_template('pages/train.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_package_list=True, playground_package=playground_package, extra_js=Markup(extra_js), extra_css=Markup(extra_css))
     if playground_package and the_package == playground_package:
         the_package_display = word("My Playground")
     else:
@@ -13794,7 +13804,7 @@ def train():
                     if short_file_name not in file_list:
                         file_list[short_file_name] = 0
         file_list = [(x, file_list[x]) for x in sorted(file_list)]
-        return render_template('pages/train.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_file_list=True)
+        return render_template('pages/train.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_file_list=True, extra_js=Markup(extra_js), extra_css=Markup(extra_css))
     if the_group_id is None:
         the_prefix = ml_prefix(the_package, the_file)
         the_package_file = docassemble.base.functions.package_data_filename(the_prefix)
@@ -13895,7 +13905,7 @@ def train():
                         if the_saveas not in group_id_list:
                             group_id_list[the_saveas] = 0
         group_id_list = [(x, group_id_list[x]) for x in sorted(group_id_list)]
-        extra_js = """
+        extra_js += """
     <script>
       $( document ).ready(function() {
         $("#showimport").click(function(e){
@@ -13924,7 +13934,7 @@ def train():
         });
       });
     </script>"""        
-        return render_template('pages/train.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_group_id_list=True, package_file_available=package_file_available, the_package_location=the_prefix, uploadform=uploadform)
+        return render_template('pages/train.html', extra_js=Markup(extra_js), extra_css=Markup(extra_css), version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_group_id_list=True, package_file_available=package_file_available, the_package_location=the_prefix, uploadform=uploadform)
     else:
         group_id_to_use = fix_group_id(the_package, the_file, the_group_id)
         model = docassemble.base.util.SimpleTextMachineLearner(group_id=group_id_to_use)
@@ -13996,7 +14006,7 @@ def train():
         else:
             #logmessage("There are no choices")
             choices = None
-        extra_js = """
+        extra_js += """
     <script>
       $( document ).ready(function(){
         $("button.prediction").click(function(){
@@ -14026,7 +14036,7 @@ def train():
         });
       });
     </script>"""
-        return render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True, is_data=is_data)
+        return render_template('pages/train.html', extra_js=Markup(extra_js), extra_css=Markup(extra_css), form=form, version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True, is_data=is_data)
 
 def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True):
     # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))

@@ -4,15 +4,17 @@
 
 <h1>{{ word('User List') }}</h1>
 
-<p><a href="{{ url_for('user_add') }}">{{ word('Add a user') }}</a> | <a href="{{ url_for('invite') }}">{{ word('Invite a user') }} </a> | <a href="{{ url_for('privilege_list') }}">{{ word('Edit Privileges') }}</a></p>
+<a class="btn btn-primary btn-md btn-block" href="{{ url_for('user_add') }}">{{ word('Add a user') }}</a>
+<a class="btn btn-primary btn-md btn-block" href="{{ url_for('invite') }}">{{ word('Invite a user') }} </a>
+<a class="btn btn-primary btn-md btn-block" href="{{ url_for('privilege_list') }}">{{ word('Edit Privileges') }}</a>
 
 <table class="table table-striped">
   <thead>
     <tr>
-      <th>#</th>
-      <th>{{ word('E-mail') }}</th>
-      <th>{{ word('Name') }}</th>
-      <th style="text-align:right;">Actions</th>
+      <th scope="col">#</th>
+      <th scope="col">{{ word('E-mail') }}</th>
+      <th scope="col">{{ word('Name') }}</th>
+      <th scope="col" style="text-align:right;">Actions</th>
     </tr>
   </thead>
   <tbody>

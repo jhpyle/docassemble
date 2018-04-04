@@ -6,6 +6,6 @@
 
 {{ privilegelist|safe }}
 
-<p><a href="{{ url_for('add_privilege') }}">{{ word('Add a new privilege') }}</a></p>
+<a class="btn btn-primary btn-md btn-block" href="{{ url_for('add_privilege') }}">{{ word('Add a new privilege') }}</a>
 
 {% endblock %}

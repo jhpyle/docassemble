@@ -4,7 +4,7 @@
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
           <h1>{{ word('Configuration') }}</h1>
           <p>{{ version }}</p>
-          <form action="" method="POST" class="form" role="form">
+          <form action="" method="POST" role="form">
             {{ form.hidden_tag() }}
             <div class="form-group">
               <textarea rows="24" cols="80" id="config_content" name="config_content" tabindex="70"></textarea>

@@ -7,13 +7,13 @@ bootstrap-fileinput
 [![Packagist Downloads](https://poser.pugx.org/kartik-v/bootstrap-fileinput/downloads)](https://packagist.org/packages/kartik-v/bootstrap-fileinput)
 [![Monthly Downloads](https://poser.pugx.org/kartik-v/bootstrap-fileinput/d/monthly)](https://packagist.org/packages/kartik-v/bootstrap-fileinput)
 
-An enhanced HTML 5 file input for Bootstrap 3.x with file preview for various files, offers multiple selection, and more. The plugin allows you a simple way to setup an advanced file picker/upload control built to work specially with Bootstrap CSS3 styles. It enhances the file input functionality further, by offering support to preview a wide variety of files i.e. images, text, html, video, audio, flash, and objects. In addition, it includes AJAX based uploads, dragging &amp; dropping files, viewing upload progress, and selectively previewing, adding, or deleting files.
+An enhanced HTML 5 file input for Bootstrap 3.x and 4.x with file preview for various files, offers multiple selection, and more. The plugin allows you a simple way to setup an advanced file picker/upload control built to work specially with Bootstrap CSS3 styles. It enhances the file input functionality further, by offering support to preview a wide variety of files i.e. images, text, html, video, audio, flash, and objects. In addition, it includes AJAX based uploads, dragging &amp; dropping files, viewing upload progress, and selectively previewing, adding, or deleting files.
 
-![Krajee Default Theme](https://lh3.googleusercontent.com/-e_E3qNVdEMg/WKvYxZ3W-CI/AAAAAAAAAWs/KJIdNxDpLR8pkqiflpmMAS3KMFkQIab3QCJoC/w530-h430-p-rw/BootstrapFileInput-01.jpg)
+![Krajee Default Theme](https://lh3.googleusercontent.com/8m5BKa-o2_W63OuL-NJtAYOxelboHccfsDojxdqhmVCxY49LTiSVK8rOywzup2EDJlXcda_SsKkMVA=w1366-h768-rw-no)
 
 > NOTE: An alternative new [Krajee Explorer Theme](http://plugins.krajee.com/file-krajee-explorer-demo) (preview shown below) for `bootstrap-fileinput` has been released and available since v4.3.7. For more theming options and suggestions refer the [theming demos](http://plugins.krajee.com/file-theme-demo).
 
-![Krajee Explorer Theme](https://lh3.googleusercontent.com/-cQpItvVFhjY/WKvb0ARaI-I/AAAAAAAAAXA/moGMDgujK8EnYEyDnBReRgt_xw-V4JQ8wCJoC/w530-h318-p-rw/BootstrapFileInput-02.jpg)
+![Krajee Explorer Theme](https://lh3.googleusercontent.com/eKMw_la1h6Z0y1Vk0SU3fsWVpmUoqg_HS-ZEZ1U2-1e8s6fgFZqoGbXcRjIXbYLkLi6Ns17-nb2yOg=w1366-h768-rw-no)
 
 ## Documentation and Demo
 
@@ -27,7 +27,7 @@ View the [plugin documentation](http://plugins.krajee.com/file-input) and [plugi
 4. With release 4.0, AJAX uploads are supported. AJAX uploads require that the browser support HTML5 FormData and XHR2 (XMLHttpRequest 2). Most modern browsers support FormData and XHR2. The plugin will automatically degrade to normal form based submission for browsers not supporting AJAX uploads
 
 > NOTE: 
-> - The latest version of the plugin is v4.3.9 (_under development_). Refer the [CHANGE LOG](https://github.com/kartik-v/bootstrap-fileinput/blob/master/CHANGE.md) for details. 
+> - The latest version of the plugin is v4.4.8 (_under development_). Bootstrap 4.x is supported in addition to Bootstrap 3.x since release v4.4.4. Refer the [CHANGE LOG](https://github.com/kartik-v/bootstrap-fileinput/blob/master/CHANGE.md) for details. 
 > - You can use the [sass branch](https://github.com/kartik-v/bootstrap-fileinput/tree/sass) for installation using `bootstrap-sass` dependency.
 The [master branch](https://github.com/kartik-v/bootstrap-fileinput/tree/master) can be used for installation using plain `bootstrap` dependency.
 
@@ -58,36 +58,40 @@ You can also manually install the plugin easily to your project. Just download t
 Step 1: Load the following assets in your header. 
 
 ```html
-<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-<link href="path/to/css/fileinput.min.css" media="all" rel="stylesheet" type="text/css" />
-<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<!-- canvas-to-blob.min.js is only needed if you wish to resize images before upload.
-     This must be loaded before fileinput.min.js -->
-<script src="path/to/js/plugins/canvas-to-blob.min.js" type="text/javascript"></script>
-<!-- sortable.min.js is only needed if you wish to sort / rearrange files in initial preview.
-     This must be loaded before fileinput.min.js -->
-<script src="path/to/js/plugins/sortable.min.js" type="text/javascript"></script>
-<!-- purify.min.js is only needed if you wish to purify HTML content in your preview for HTML files.
-     This must be loaded before fileinput.min.js -->
-<script src="path/to/js/plugins/purify.min.js" type="text/javascript"></script>
+<!-- bootstrap 4.x is supported. You can also use the bootstrap css 3.3.x versions -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/4.4.8/css/fileinput.min.css" media="all" rel="stylesheet" type="text/css" />
+<!-- if using RTL (Right-To-Left) orientation, load the RTL CSS file after fileinput.css by uncommenting below -->
+<!-- link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/4.4.8/css/fileinput-rtl.min.css" media="all" rel="stylesheet" type="text/css" /-->
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<!-- piexif.min.js is only needed for restoring exif data in resized images and when you 
+    wish to resize images before upload. This must be loaded before fileinput.min.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/4.4.8/js/plugins/piexif.min.js" type="text/javascript"></script>
+<!-- sortable.min.js is only needed if you wish to sort / rearrange files in initial preview. 
+    This must be loaded before fileinput.min.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/4.4.8/js/plugins/sortable.min.js" type="text/javascript"></script>
+<!-- purify.min.js is only needed if you wish to purify HTML content in your preview for 
+    HTML files. This must be loaded before fileinput.min.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/4.4.8/js/plugins/purify.min.js" type="text/javascript"></script>
+<!-- popper.min.js below is needed if you use bootstrap 4.x. You can also use the bootstrap js 
+   3.3.x versions without popper.min.js. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+<!-- bootstrap.min.js below is needed if you wish to zoom and preview file content in a detail modal
+    dialog. bootstrap 4.x is supported. You can also use the bootstrap js 3.3.x versions. -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" type="text/javascript"></script>
 <!-- the main fileinput plugin file -->
-<script src="path/to/js/fileinput.min.js"></script>
-<!-- bootstrap.js below is needed if you wish to zoom and view file content 
-     in a larger detailed modal dialog -->
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" type="text/javascript"></script>
-<!-- optionally if you need a theme like font awesome theme you can include 
-    it as mentioned below -->
-<script src="path/to/themes/fa/theme.js"></script>
-<!-- optionally if you need translation for your language then include 
-    locale file as mentioned below -->
-<script src="path/to/js/locales/<lang>.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/4.4.8/js/fileinput.min.js"></script>
+<!-- optionally if you need a theme like font awesome theme you can include it as mentioned below -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/4.4.8/themes/fa/theme.js"></script>
+<!-- optionally if you need translation for your language then include  locale file as mentioned below -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/4.4.8/js/locales/(lang).js"></script>
 ```
 
 If you noticed, you need to load the `jquery.min.js` and `bootstrap.min.css` in addition to the `fileinput.min.css` and `fileinput.min.js`. The theme file `themes/fa/theme.js` can be optionally included for the font awesome icons styling. The locale file `<lang>.js` can be optionally included for translating for your language if needed.
 
 **Optional Dependent Plugins**
 
-- The `canvas-to-blob.min.js` file is the source for the [JavaScript-Canvas-to-Blob plugin by blueimp](https://github.com/blueimp/JavaScript-Canvas-to-Blob). It is required to be loaded before `fileinput.min.js` if you wish to use the image resize feature of the **bootstrap-fileinput** plugin. 
+- The `piexif.min.js` file is the source for the [Piexifjs plugin by hMatoba](https://github.com/hMatoba/piexifjs). It is required to be loaded before `fileinput.min.js` if you wish to use the image resize feature of the **bootstrap-fileinput** plugin. 
 - The `sortable.min.js` file is the source for the [Sortable plugin by rubaxa](https://github.com/rubaxa/Sortable). It is required to be loaded before `fileinput.min.js` if you wish to sort the thumbnails in the initial preview.
 - The `purify.min.js` file is the source for the [DomPurify plugin by cure53](https://github.com/cure53/DOMPurify). It is required to be loaded before `fileinput.min.js` if you wish to purify your HTML for HTML content preview.
 

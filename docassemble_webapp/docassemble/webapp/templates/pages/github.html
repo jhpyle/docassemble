@@ -6,9 +6,9 @@
 
 <p>{{ description }}</p>
 
-<form action="" method="POST" role="form" class="form">
+<form action="" method="POST" role="form">
   {{ form.hidden_tag() }}
-  <div class="form-actions">
+  <div>
     {% if uses_github %}
     {{ render_submit_field(form.unconfigure, tabindex=100, class="btn btn-danger " + config['BUTTON_CLASS']) }}
     {% else %}

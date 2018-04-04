@@ -1,11 +1,11 @@
 /*!
- * bootstrap-fileinput v4.3.9
+ * bootstrap-fileinput v4.4.8
  * http://plugins.krajee.com/file-input
  *
  * Krajee Explorer theme configuration for bootstrap-fileinput. Load this theme file after loading `fileinput.js`.
  *
  * Author: Kartik Visweswaran
- * Copyright: 2014 - 2017, Kartik Visweswaran, Krajee.com
+ * Copyright: 2014 - 2018, Kartik Visweswaran, Krajee.com
  *
  * Licensed under the BSD 3-Clause
  * https://github.com/kartik-v/bootstrap-fileinput/blob/master/LICENSE.md
@@ -27,12 +27,11 @@
             '    </div>\n' +
             '</div>',
             footer: '<td class="file-details-cell"><div class="explorer-caption" title="{caption}">{caption}</div> ' +
-            '{size}{progress}</td><td class="file-actions-cell">{actions}</td>',
-            actions: '<div class="file-upload-indicator" title="{indicatorTitle}">{indicator}</div>\n' +
-            '{drag}\n' +
+            '{size}{progress}</td><td class="file-actions-cell">{indicator} {actions}</td>',
+            actions: '{drag}\n' +
             '<div class="file-actions">\n' +
             '    <div class="file-footer-buttons">\n' +
-            '        {upload} {delete} {zoom} {other} ' +
+            '        {upload} {download} {delete} {zoom} {other} ' +
             '    </div>\n' +
             '</div>',
             zoomCache: '<tr style="display:none" class="kv-zoom-cache-theme"><td>' +
@@ -40,7 +39,7 @@
         },
         previewMarkupTags: {
             tagBefore1: teTagBef + '>' + teContent,
-            tagBefore2: teTagBef + ' title="{caption}" style="width:{width};height:{height};">' + teContent,
+            tagBefore2: teTagBef + ' title="{caption}">' + teContent,
             tagAfter: '</td>\n{footer}</tr>\n'
         },
         previewSettings: {

@@ -13,10 +13,11 @@
             {%- set field = form.username if user_manager.enable_username else form.email %}
             <div class="form-group {% if field.errors %}has-error{% endif %}">
               <div class="row">
-                <div class="col-xs-6">
+                <div class="col">
                   <label for="{{ field.id }}" class="control-label">{{ word(field.label.text) }}</label>
                 </div>
-                <div class="col-xs-6 text-right">
+                <div class="col">
+                  <div class="text-right">
                   {%- if user_manager.enable_register and not user_manager.require_invitation %}
                   {%- if 'next' in request.args %}
                   <a href="{{ url_for('user.register', next=request.args['next']) }}" tabindex='190'>
@@ -26,6 +27,7 @@
                     {{ word("New here?  Register.") }}
                   </a>
                   {%- endif %}
+                  </div>
                 </div>
               </div>
               {{ field(class_='form-control', type='email', tabindex=110) }}
@@ -38,15 +40,17 @@
             {%- set field = form.password %}
             <div class="form-group {% if field.errors %}has-error{% endif %}">
               <div class="row">
-                <div class="col-xs-6">
+                <div class="col">
                   <label for="{{ field.id }}" class="control-label">{{ word(field.label.text) }}</label>
                 </div>
-                <div class="col-xs-6 text-right">
+                <div class="col">
+                  <div class="text-right">
                   {%- if user_manager.enable_forgot_password %}
                   <a href="{{ url_for('user.forgot_password') }}" tabindex='195'>
                     {{ word("Forgot your Password?") }}
                   </a>
                   {%- endif %}
+                  </div>
                 </div>
               </div>
               {{ field(class_='form-control', tabindex=120) }}

@@ -12,20 +12,17 @@
   {%- endif %}
 </p>
 <h3>{{ word('Packages') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', show_all=show_all) }}"><i class="glyphicon glyphicon-refresh"></i></a></h3>
-<ul class="list-group">
+<div class="list-group">
   {%- for package, count in package_list %}
-  <li class="list-group-item">
-    <span class="badge">{{ count }}</span>
-    {%- if package == '_global' %}
-    <a href="{{ url_for('train', package='_global', file='_global', show_all=show_all) }}">{{ word('Global') }}</a>
-    {%- elif package == playground_package %}
-    <a href="{{ url_for('train', package=package, show_all=show_all) }}">{{ word("My Playground") }}</a>
-    {%- else %}
-    <a href="{{ url_for('train', package=package, show_all=show_all) }}">{{ package }}</a>
-    {%- endif %}
-  </li>
+  {%- if package == '_global' %}
+  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package='_global', file='_global', show_all=show_all) }}">{{ word('Global') }} <span class="badge badge-pill badge-dark float-right">{{ count }}</span></a>
+  {%- elif package == playground_package %}
+  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package=package, show_all=show_all) }}">{{ word("My Playground") }} <span class="badge badge-pill badge-dark float-right">{{ count }}</span></a>
+  {%- else %}
+  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package=package, show_all=show_all) }}">{{ package }} <span class="badge badge-pill badge-dark float-right">{{ count }}</span></a>
+  {%- endif %}
   {%- endfor %}
-</ul>
+</dic>
 {%- endif %}
 {%- if show_file_list %}
 <p>
@@ -39,14 +36,11 @@
 <p>
   <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; {{ the_package_display }}
 </p>
-<ul class="list-group">
+<div class="list-group">
   {%- for file, count in file_list %}
-  <li class="list-group-item">
-    <span class="badge">{{ count }}</span>
-    <a href="{{ url_for('train', package=the_package, file=file, show_all=show_all) }}">{{ file }}</a>
-  </li>
+  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package=the_package, file=file, show_all=show_all) }}">{{ file }} <span class="badge badge-pill badge-dark float-right">{{ count }}</span></a>
 {%- endfor %}
-</ul>
+</div>
 {%- endif %}
 {%- if show_group_id_list %}
 <p>
@@ -63,19 +57,19 @@
   {%- else %}
   <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; <a href="{{ url_for('train', package=the_package, show_all=show_all) }}">{{ the_package_display }}</a> &gt; {{ the_file }}
   {%- endif %}
-  <a class="label label-default mldownload" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="glyphicon glyphicon-download-alt"></i> {{ word('Download') }}</a>
+  <a class="badge badge-secondary mldownload" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="glyphicon glyphicon-download-alt"></i> {{ word('Download') }}</a>
 </p>
 <p>
-  <a class="label label-success" href="#" id="showimport">Show import controls</a>
-  <a class="label label-danger" href="#" id="hideimport" style="display: none">Hide import controls</a>
+  <a class="btn btn-success" href="#" id="showimport">Show import controls</a>
+  <a class="btn btn-danger" href="#" id="hideimport" style="display: none">Hide import controls</a>
 </p>
 <form method="POST" class="form" role="form" enctype="multipart/form-data" id="importcontrols" style="display: none">
   {{ uploadform.hidden_tag() }}
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h3 class="panel-title">{{ word("Import training data from a JSON file") }}</h3>
+  <div class="card">
+    <div class="card-header">
+      {{ word("Import training data from a JSON file") }}
     </div>
-    <div class="panel-body">
+    <div class="card-body">
       {% if package_file_available %}
       <h4>{{ word("What file do you want to import?") }}</h4>
       <div class="radio">
@@ -110,21 +104,18 @@
           <span>{{ word("Erase existing data for each model before importing") }}</span>
         </label>
       </div>
-      <div class="form-actions">
+      <div>
         {{ render_submit_field(uploadform.submit, class="btn btn-primary " + config['BUTTON_CLASS']) }}
       </div>
     </div>
   </div>
 </form>
 {%- if group_id_list|length > 0 %}
-<ul class="list-group">
+<div class="list-group">
   {%- for group_id, count in group_id_list %}
-  <li class="list-group-item">
-    <span class="badge">{{ count }}</span>
-    <a href="{{ url_for('train', package=the_package, file=the_file, group_id=group_id, show_all=show_all) }}">{{ group_id }}</a>
-  </li>
+  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package=the_package, file=the_file, group_id=group_id, show_all=show_all) }}">{{ group_id }} <span class="badge badge-pill badge-dark float-right">{{ count }}</span></a>
   {%- endfor %}
-</ul>
+</div>
 {%- else %}
 <p>No models were found.</p>
 {%- endif %}
@@ -145,18 +136,18 @@
   <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; <a href="{{ url_for('train', package=the_package, show_all=show_all) }}">{{ the_package_display }}</a> &gt; <a href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}">{{ the_file }}</a> &gt; {{ the_group_id }}
   {%- endif %}
 </p>
-<form action="" method="POST" class="form" role="form">
+<form action="" method="POST" role="form">
   {{ form.hidden_tag() }}
   <input id="the_package" name="the_package" type="hidden" value="{{ the_package }}">
   <input id="the_file" name="the_file" type="hidden" value="{{ the_file }}">
   <input id="the_group_id" name="the_group_id" type="hidden" value="{{ the_group_id }}">
   <input id="show_all" name="show_all" type="hidden" value="{{ show_all }}">
   {%- if not is_data %}
-  <div class="panel panel-default">
-    <div class="panel-heading">
+  <div class="card">
+    <div class="card-header">
       {{ word("Manually add a training item") }}
     </div>
-    <div class="panel-body">
+    <div class="card-body">
       <div class="form-group">
         <label for="newindependent">{{ word("Input") }}</label>
         <textarea id="newindependent" name="newindependent" class="form-control"></textarea>
@@ -179,7 +170,7 @@
       </div>
     </div>
   </div>
-  <div class="form-actions">
+  <div>
     {{ render_submit_field(form.submit, tabindex=200, class="btn btn-primary " + config['BUTTON_CLASS']) }}
     {{ render_submit_field(form.cancel, tabindex=210, class="btn btn-default " + config['BUTTON_CLASS']) }}
   </div>
@@ -191,8 +182,8 @@
   <h4>{{ word('Unclassified items in the training set') }}</h4>
   {%- endif %}
   {%- for entry in entry_list %}
-  <div class="panel panel-default">
-    <div class="panel-body">
+  <div class="card">
+    <div class="card-body">
       <div class="form-group">
         <div class="checkbox delete-observation">
           <label>
@@ -220,12 +211,12 @@
         <div>
           {%- for prediction, probability in entry.predictions[0:1] %}
           <button data-id-number="{{ entry.id }}" data-prediction="{{ prediction }}" class="btn btn-success btn-sm prediction" type="button">
-            {{ prediction }} <span class="badge">{{ probability }}</span>
+            {{ prediction }} <span class="badge badge-pill float-right">{{ probability }}</span>
           </button>
           {%- endfor %}
           {%- for prediction, probability in entry.predictions[1:] %}
           <button data-id-number="{{ entry.id }}" data-prediction="{{ prediction }}" class="btn btn-primary btn-sm prediction" type="button">
-            {{ prediction }} <span class="badge">{{ probability }}</span>
+            {{ prediction }} <span class="badge badge-pill float-right">{{ probability }}</span>
           </button>
           {%- endfor %}
         </div>
@@ -251,7 +242,7 @@
     </div>
   </div>
   {%- endfor %}
-  <div class="form-actions">
+  <div>
     {{ render_submit_field(form.submit, tabindex=200, class="btn btn-primary " + config['BUTTON_CLASS']) }}
     {{ render_submit_field(form.cancel, tabindex=210, class="btn btn-default " + config['BUTTON_CLASS']) }}
   </div>

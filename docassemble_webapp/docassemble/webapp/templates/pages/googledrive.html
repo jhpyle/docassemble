@@ -10,7 +10,7 @@
   </div>
 </div>
 {%- endif %}
-<form action="" method="POST" role="form" class="form">
+<form action="" method="POST" role="form">
   {{ form.hidden_tag() }}
   <div class="form-group">
     <label for="{{ form.folder.id }}">{{ word("Linked folder") }}</label>
@@ -20,7 +20,7 @@
       {%- endfor %}
     </select>
   </div>
-  <div class="form-actions">
+  <div>
     {{ render_submit_field(form.submit, tabindex=100) }}
   </div>
 </form>

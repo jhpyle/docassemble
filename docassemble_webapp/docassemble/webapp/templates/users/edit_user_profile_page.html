@@ -5,22 +5,14 @@
 
 <h1>{{ word('Edit User Profile') }}</h1>
 
-{%- if form.uses_mfa.data or form.confirmed_at.data is not none %}
-<ul class="nav nav-pills nav-stacked">
 {%- if form.uses_mfa.data %}
-  <li>
-    <a href="?disable_mfa=1">{{ word('Disable two-factor authentication') }}</a>
-  </li>
+<a class="btn btn-primary btn-md btn-block" href="?disable_mfa=1">{{ word('Disable two-factor authentication') }}</a>
 {%- endif %}
 {%- if form.confirmed_at.data is not none %}
-  <li>
-    <a href="?reset_email_confirmation=1">{{ word('Reset e-mail confirmation') }}</a>
-  </li>
-{%- endif %}
-</ul>
+<a class="btn btn-primary btn-md btn-block" href="?reset_email_confirmation=1">{{ word('Reset e-mail confirmation') }}</a>
 {%- endif %}
 
-<form action="" method="POST" role="form" class="form">
+<form action="" method="POST" role="form">
     {{ form.hidden_tag() }}
     
     {{ render_checkbox_field(form.active) }}
