@@ -3763,7 +3763,13 @@ class Interview:
                     try:
                         logmessage('Interview: error reading YAML file ' + unicode(source.path) + '\n\nDocument source code was:\n\n---\n' + unicode(source_code) + '---\n\nError was:\n\n' + unicode(errMess))
                     except:
-                        logmessage('Interview: error reading YAML file ' + unicode(source.path) + '. Error was:\n\n' + unicode(errMess))
+                        try:
+                            logmessage('Interview: error reading YAML file ' + unicode(source.path) + '. Error was:\n\n' + unicode(errMess))
+                        except:
+                            if isinstance(errMess, ruamel.yaml.error.MarkedYAMLError):
+                                logmessage('Interview: error reading YAML file ' + unicode(source.path) + '. Error type was:\n\n' + errMess.problem)
+                            else:
+                                logmessage('Interview: error reading YAML file ' + unicode(source.path) + '. Error type was:\n\n' + errMess.__class__.__name__)
                     self.success = False
                     pass
             else:
