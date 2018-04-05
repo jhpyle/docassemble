@@ -11,14 +11,14 @@ body.dasignature {
     font-size: 16px;
 }
 
-.form-control {
-    font-size: 16px;
-    padding: 2px 12px;
-}
+/* .form-control { */
+/*     font-size: 16px; */
+/*     padding: 2px 12px; */
+/* } */
 
-textarea.form-control {
-    padding: 6px 12px;
-}
+/* textarea.form-control { */
+/*     padding: 6px 12px; */
+/* } */
 
 body.dainactive {
     background-color: #f2dede;
@@ -1198,9 +1198,9 @@ body.adminbody {
     padding-top: 60px;
 }
 
-.adminbody .form-control {
-    font-size: 14px;
-}
+/* .adminbody .form-control { */
+/*     font-size: 14px; */
+/* } */
 
 svg.mfasvg {
     width: 300px;
