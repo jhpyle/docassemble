@@ -13738,7 +13738,7 @@ def train():
     <script src=""" + '"' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"' + """></script>
     <script src=""" + '"' + url_for('static', filename='bootstrap-fileinput/themes/fa/theme.min.js') + '"' + """></script>
     <script>
-      $("#jsonfile").fileinput({theme: "fa"});
+      $("#jsonfile").fileinput({theme: "fa", showPreview: false});
     </script>
 """
     if current_user.has_role('admin', 'developer'):

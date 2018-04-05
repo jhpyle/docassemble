@@ -1,7 +1,7 @@
 {% extends 'base_templates/page_base_half.html' %}
 
 {% block content %}
-{% from "base_templates/form_macros.html" import render_field, render_file_field_simple, render_submit_field with context %}
+{% from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
 <h2>{{ word('Train machine learning models') }}</h2>
 {%- if show_package_list %}
 <p>
@@ -11,7 +11,7 @@
   <a href="{{ url_for('train', show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3>{{ word('Packages') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', show_all=show_all) }}"><i class="glyphicon glyphicon-refresh"></i></a></h3>
+<h3>{{ word('Packages') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
 <div class="list-group">
   {%- for package, count in package_list %}
   {%- if package == '_global' %}
@@ -32,7 +32,7 @@
   <a href="{{ url_for('train', package=the_package, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3>{{ word('Interviews') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, show_all=show_all) }}"><i class="glyphicon glyphicon-refresh"></i></a></h3>
+<h3>{{ word('Interviews') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
 <p>
   <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; {{ the_package_display }}
 </p>
@@ -50,14 +50,14 @@
   <a href="{{ url_for('train', package=the_package, file=the_file, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3>{{ word('Models') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}"><i class="glyphicon glyphicon-refresh"></i></a></h3>
+<h3>{{ word('Models') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
 <p>
   {%- if the_package == '_global' %}
   <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; {{ word('Global models') }}
   {%- else %}
   <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; <a href="{{ url_for('train', package=the_package, show_all=show_all) }}">{{ the_package_display }}</a> &gt; {{ the_file }}
   {%- endif %}
-  <a class="badge badge-secondary mldownload" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="glyphicon glyphicon-download-alt"></i> {{ word('Download') }}</a>
+  <a class="btn btn-secondary mldownload" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="fas fa-download"></i> {{ word('Download') }}</a>
 </p>
 <p>
   <a class="btn btn-success" href="#" id="showimport">Show import controls</a>
@@ -67,7 +67,7 @@
   {{ uploadform.hidden_tag() }}
   <div class="card">
     <div class="card-header">
-      {{ word("Import training data from a JSON file") }}
+      <h5>{{ word("Import training data from a JSON file") }}</h5>
     </div>
     <div class="card-body">
       {% if package_file_available %}
@@ -89,9 +89,9 @@
       <input id="the_package" name="usepackage" type="hidden" value="no">
       <div id="uploadinput">
       {% endif %}
-        {{ render_file_field_simple(uploadform.jsonfile) }}
+        {{ render_file_field(uploadform.jsonfile) }}
       </div>
-      <h4>{{ word("How would you like the data to be imported?") }}</h4>
+      <h6>{{ word("How would you like the data to be imported?") }}</h6>
       <div class="radio">
         <label>
           <input type="radio" name="importtype" id="importtype" value="merge" checked>
@@ -104,7 +104,7 @@
           <span>{{ word("Erase existing data for each model before importing") }}</span>
         </label>
       </div>
-      <div>
+      <div class="mt-2">
         {{ render_submit_field(uploadform.submit, class="btn btn-primary " + config['BUTTON_CLASS']) }}
       </div>
     </div>
@@ -128,7 +128,7 @@
   <a href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3>{{ word('Items') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all) }}"><i class="glyphicon glyphicon-refresh"></i></a></h3>
+<h3>{{ word('Items') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
 <p>
   {%- if the_package == '_global' %}
   <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; <a href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}">{{ word('Global models') }}</a> &gt; {{ the_group_id }}
@@ -170,7 +170,7 @@
       </div>
     </div>
   </div>
-  <div>
+  <div class="mt-2">
     {{ render_submit_field(form.submit, tabindex=200, class="btn btn-primary " + config['BUTTON_CLASS']) }}
     {{ render_submit_field(form.cancel, tabindex=210, class="btn btn-default " + config['BUTTON_CLASS']) }}
   </div>
@@ -242,7 +242,7 @@
     </div>
   </div>
   {%- endfor %}
-  <div>
+  <div class="mt-2">
     {{ render_submit_field(form.submit, tabindex=200, class="btn btn-primary " + config['BUTTON_CLASS']) }}
     {{ render_submit_field(form.cancel, tabindex=210, class="btn btn-default " + config['BUTTON_CLASS']) }}
   </div>
