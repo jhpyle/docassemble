@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.45] - 2018-04-
+### Fixed
+- Exception raised by Unicode non-breaking spaces in interview files
+
 ## [0.2.44] - 2018-03-31
 ### Added
 - The `analytics id` subdirective of the `google` Configuration directive.

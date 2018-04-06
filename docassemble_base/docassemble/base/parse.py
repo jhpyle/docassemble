@@ -3779,7 +3779,10 @@ class Interview:
                     self.success = False
                     #sys.stderr.write("Error: " + unicode(source_code) + "\n")
                     #unicode(source_code)
-                    raise DAError('Error reading YAML file ' + unicode(source.path) + '\n\nDocument source code was:\n\n---\n' + unicode(source_code) + '---\n\nError was:\n\n' + unicode(errMess))
+                    try:
+                        raise DAError('Error reading YAML file ' + unicode(source.path) + '\n\nDocument source code was:\n\n---\n' + unicode(source_code) + '---\n\nError was:\n\n' + unicode(errMess))
+                    except:
+                        raise DAError('Error reading YAML file ' + unicode(source.path) + '\n\nDocument source code was:\n\n---\n' + unicode(source_code) + '---\n\nError was:\n\n' + unicode(errMess.__class__.__name__))
                 if document is not None:
                     try:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code)
