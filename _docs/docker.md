@@ -13,6 +13,14 @@ that communicate with a central server.  For information about how to
 install **docassemble** in a multi-server arrangement on
 [EC2 Container Service] ("[ECS]"), see the [scalability] section.
 
+If you are not familiar with [Docker] or with hosting web
+applications, you may want to use [Docassemble Toolkit], a support
+service provided by [community.lawyer], a Public Benefit Corporation
+based in Brookyln, New York.  [Docassemble Toolkit] provides an
+encrypted **docassemble** server hosted on [Amazon Web Services].
+This saves you from needing to figure out [Docker], [Let's Encrypt],
+etc.
+
 # <a name="where"></a>Choosing where to run Docker
 
 [Docker] can be run on a Windows PC, a Mac, an on-site Linux machinne,
@@ -1629,3 +1637,5 @@ line), as the containers depend on the images.
 [installation]: {{ site.baseurl }}/docs/installation.html
 [e-mailing the interview]: {{ site.baseurl }}/docs/background.html#email
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[Docassemble Toolkit]: https://community.lawyer/docassemble
+[community.lawyer]: https://community.lawyer/

@@ -329,10 +329,11 @@ create a "Load Balancer."  Select "Application Load Balancer" as the
 type of load balancer.
 
 On the "Configure Load Balancer" page, set the name to
-`docassembleLb`.  Under "Listeners," keep the HTTP listener listening
-to port 80 and click "Add listener" to add a second listener.  Set the
-"Load Balancer Protocol" to HTTPS and set the "Load Balancer Port" to
-port 443.
+`docassembleLb`.  Keep the "Scheme" as "internet-facing" and keep the
+"IP Address Type" set to "ipv4."  Under "Listeners," keep the HTTP
+listener listening to port 80 and click "Add listener" to add a second
+listener.  Set the "Load Balancer Protocol" to HTTPS and set the "Load
+Balancer Port" to port 443.
 
 Under "Availability Zones," make sure your default [VPC] is selected.
 Then select all of the "available subnets" by clicking the plus buttons
@@ -367,11 +368,12 @@ Once the `docassembleLb` load balancer is created, you need to make a
 few manual changes to it.
 
 In the "Load Balancers" section, select the `docassembleLb` load
-balancer, and open the "Listeners" tab.  Click "Edit" next to the HTTP
-listener.  Set the "Default target group" to "http-redirect," if it is
-not selected already.
+balancer, and open the "Listeners" tab.  Select the "HTTP : 80"
+listener and do Actions, Edit.  Set the "Default target group" to
+"http-redirect," if it is not selected already.
 
-Once those changes are saved, edit the "rules" for the HTTPS listener.
+Once those changes are saved, click "View/edit rules" for the "HTTPS :
+443" listener.
 
 There will be one default rule set up, and it will incorrectly say
 that requests should be routed to the `http-redirect` target group.  This
@@ -426,7 +428,7 @@ configuration below.  Edit the [`TIMEZONE`], [`DAHOSTNAME`], and
       "name": "backend",
       "image": "jhpyle/docassemble",
       "cpu": 1,
-      "memory": 900,
+      "memory": 1800,
       "portMappings": [
         {
           "containerPort": 8080,
@@ -534,7 +536,7 @@ configuration below.  Edit the [`S3BUCKET`] environment variable.
       "name": "app",
       "image": "jhpyle/docassemble",
       "cpu": 1,
-      "memory": 900,
+      "memory": 1800,
       "portMappings": [
         {
           "containerPort": 80,
@@ -558,7 +560,7 @@ configuration below.  Edit the [`S3BUCKET`] environment variable.
         {
           "name": "S3BUCKET",
           "value": "docassemble-example-com"
-        }
+        },
       ],
       "mountPoints": []
     }
