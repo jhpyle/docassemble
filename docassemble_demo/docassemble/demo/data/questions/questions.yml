@@ -294,9 +294,8 @@ subquestion: |
   % if interface() == 'web':
   In the navigation bar above, you can click "[Help]" to see the help
   text associated with the interview and with the individual question
-  (if any).  If "Help <i class="glyphicon glyphicon-star"></i>"
-  appears in the navigation bar, that means help text specific to the
-  question is available.
+  (if any).  If "Help :star:" appears in the navigation bar, that
+  means help text specific to the question is available.
 
   Click "Source" to toggle the display of the [YAML] code used to
   generate the question.  (Note: the "Source" tab is available because
@@ -880,10 +879,9 @@ subquestion: |
 
   En la barra de navegación de arriba, puede hacer clic en "Ayuda"
   para ver el texto de ayuda asociado a la entrevista y con la
-  pregunta individual. Si "Ayuda <i class="glyphicon
-  glyphicon-star"></i>" aparece en la barra de navegación, eso
-  significa que el texto de ayuda específica a la cuestión está
-  disponible.
+  pregunta individual. Si "Ayuda :star:" aparece en la barra de 
+  navegación, eso significa que el texto de ayuda específica a la 
+  cuestión está disponible.
 
   Haga clic en "Fuente" para cambiar la visualización del código
   [YAML] utilizado para generar la pregunta.

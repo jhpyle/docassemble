@@ -7,7 +7,11 @@
 <button title="{{ word("Click to change your status to not available") }}" id="daAvailable" class="btn btn-primary">Available for chat</button>
 <button title="{{ word("Click to change your status to available") }}" id="daNotAvailable" class="btn btn-danger">Not available for chat</button>
 </h4>
-<div id="daPhoneInfo" class="input-group col-md-8 invisible"><span class="input-group-addon" title="{{ word('Must be in E.164 format.  U.S. phone numbers begin with +1.') }}">{{ word("Your phone #") }}</span><input class="form-control" id="daPhoneNumber" placeholder="e.g., +12025551212"><span id="daPhoneError" title="{{ word('The phone number is not in E.164 format (e.g. +12025551212)') }}" class="input-group-addon phone-warning invisible"><i class="glyphicon glyphicon-warning-sign"></i></span><span id="daPhoneSaved" class="input-group-addon invisible phone-saved">{{ word('Saved') }}</span></div>
+<div class="form-group">
+  <label for="daPhoneNumber" class="input-group-addon" title="{{ word('Must be in E.164 format.  U.S. phone numbers begin with +1.') }}">{{ word("Your phone #") }}</label>
+  <div id="daPhoneInfo" class="input-group col-md-8 invisible">
+    <input class="form-control" id="daPhoneNumber" placeholder="e.g., +12025551212"><span id="daPhoneError" title="{{ word('The phone number is not in E.164 format (e.g. +12025551212)') }}" class="input-group-addon phone-warning invisible"><i class="fas fa-exclamation-triangle"></i></span><span id="daPhoneSaved" class="input-group-addon invisible phone-saved">{{ word('Saved') }}</span>
+  </div>
 </div>
 <div class="monitorroles" id="monitorroles">
 <h4>{{ word("You are available for the following roles: ") }}</h4>

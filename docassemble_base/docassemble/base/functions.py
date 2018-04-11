@@ -774,7 +774,7 @@ class DANav(object):
             the_class = 'dainline'
             interior_class = 'dainlineinside'
             li_class = "danavli"
-            a_class = "danavlink label label-default label-larger"
+            a_class = "danavlink btn btn-default"
             the_js = """
     <script>
       $("a.danavlink").last().addClass('thelast');

@@ -29,7 +29,7 @@
       <td class="text-danger">{{ user_info['email'] }} ({{ word('account disabled') }})</td>
       <td class="text-danger">{{ user_info['name'] }}</td>
       {%- endif %}
-      <td style="text-align:right;"><a class="label label-success" href="{{ url_for('edit_user_profile_page', id=user_info['id']) }}">{{ word('Edit') }}</a></td>
+      <td style="text-align:right;"><a class="btn btn-success" href="{{ url_for('edit_user_profile_page', id=user_info['id']) }}">{{ word('Edit') }}</a></td>
     </tr>
   {% endfor %}
   </tbody>

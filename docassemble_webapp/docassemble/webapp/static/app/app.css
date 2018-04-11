@@ -84,26 +84,26 @@ a.nohover:hover {
     text-decoration: none !important;
 }
 
-@media (min-width: 992px) and (max-width: 1199px) {
+/* @media (min-width: 992px) and (max-width: 1199px) { */
     /* div.danavcontainer { */
     /* 	padding-right: 2%; */
     /* 	padding-left: 2%; */
     /* } */
-}
+/* } */
 
-@media (min-width: 1200px) and (max-width: 1399px) {
+/* @media (min-width: 1200px) and (max-width: 1399px) { */
     /* div.danavcontainer { */
     /* 	padding-right: 5%; */
     /* 	padding-left: 5%; */
     /* } */
-}
+/* } */
 
-@media (min-width: 1400px) {
+/* @media (min-width: 1400px) { */
     /* div.danavcontainer { */
     /* 	padding-right: 15%; */
     /* 	padding-left: 15%; */
     /* } */
-}
+/* } */
 
 .btn-da {
     margin-bottom: 5px;
@@ -158,17 +158,18 @@ a.sourceactive {
     background-color: #080808;
     background-image: linear-gradient(to bottom, #080808 0px, #0F0F0F 100%);
 }
-.form-group.required .control-label:after {
+
+.form-group.required .col-form-label:after {
     position: absolute;
     content: '*';
     color: red;
     right: 5px;
     top: 5px;
 }
-.form-group.required.greyedout .control-label:after { 
+.form-group.required.greyedout .col-form-label:after { 
     display: none;
 }
-.form-group.greyedout .control-label { 
+.form-group.greyedout .col-form-label { 
     color: #999999;
 }
 .daselect {
@@ -234,10 +235,15 @@ a.sourceactive {
     text-decoration: none;
 }
 
-@media (max-width: 768px) {
-    .dabackicon {
-	margin-left: -10px;
-    }
+/* @include media-breakpoint-up(md) { */
+/* @media (max-width: 768px) { */
+/*     .dabackicon { */
+/* 	margin-left: -10px; */
+/*     } */
+/* } */
+
+.daback {
+    margin-left: 0.1em;
 }
 
 /* .dabackicon:hover { */
@@ -248,14 +254,14 @@ a.sourceactive {
 /*     color: #fff; */
 /* } */
 
-.dalarge {
-    font-size: 1.2em;
-    vertical-align: -0.1em;
-}
+/* .dalarge { */
+/*     font-size: 1.2em; */
+/*     vertical-align: -0.1em; */
+/* } */
 
-.dalargefix {
-    vertical-align: 0.1em;
-}
+/* .dalargefix { */
+/*     vertical-align: 0.1em; */
+/* } */
 
 .datab {
     display: inline-block;
@@ -320,7 +326,8 @@ table.datable {
     margin-right: 0;
 }
 
-@media (max-width: 767px) {
+@include media-breakpoint-down(md) {
+/* @media (max-width: 767px) { */
     .tabbuttons > li > a {
 	padding: 10px 5px 9px 5px;
     }
@@ -667,8 +674,12 @@ div.striping:nth-child(even) {
     background-color: #e7e7e7;
 }
 
-div.fieldpart {
-    padding-top: 10px;
+/* div.fieldpart { */
+/*     padding-top: 8px; */
+/* } */
+
+div.fieldpart > label:first-of-type {
+    margin-top: 0px;
 }
 
 div.topcenter {
@@ -865,7 +876,8 @@ div.top-alert {
     font-weight: normal;
 }
 
-@media (max-width: 767px) {
+@include media-breakpoint-down(md) {
+/* @media (max-width: 767px) { */
     .navbar-nav li .dropdown-menu {
         display: block;
 	position: static;
@@ -956,6 +968,7 @@ img.da-sig-spinner {
 
 .fullwidth + label {
     width: 100%;
+    margin-top: -3px;
 }
 
 .fullheight {
@@ -1329,13 +1342,13 @@ ul.dainline > li > ul > li {
     font-weight: normal;
 }
 
-div.dasections a.label {
+div.dasections a.btn {
     font-size: 18px;
     cursor: text;
     padding: 5px 5px 5px 5px;
 }
 
-div.dasections ul.dainlineinside a.label {
+div.dasections ul.dainlineinside a.btn {
     font-size: 14px;
     margin-top: 2px;
     margin-bottom: 2px;
@@ -1405,18 +1418,18 @@ div.danavbar {
     overflow: hidden;
 }
 
-@media (min-width: 768px) and (max-width: 991px) {
-    div.danavbar {
-	padding-left: 15px;
-    }
-}
+/* @media (min-width: 768px) and (max-width: 991px) { */
+/*     div.danavbar { */
+/* 	padding-left: 15px; */
+/*     } */
+/* } */
 
-@media (min-width: 768px) {
-    div.danavbar {
-	margin-left: -15px !important;
-	padding-left: 15px;
-    }
-}
+/* @media (min-width: 768px) { */
+/*     div.danavbar { */
+/* 	margin-left: -15px !important; */
+/* 	padding-left: 15px; */
+/*     } */
+/* } */
 
 .dabrand:focus,
 .dabrand:hover {
@@ -1569,9 +1582,9 @@ span.dainterviewsubtitle {
 /*     height: 80vh; */
 /* } */
 
-.da-label {
-    line-height: 2.1;
-}
+/* .da-label { */
+/*     line-height: 2.1; */
+/* } */
 
 .playground-back {
     margin: 0;
@@ -1626,4 +1639,10 @@ div.constraintlist a {
     url(MaterialIcons-Regular.woff2) format('woff2'),
     url(MaterialIcons-Regular.woff) format('woff'),
     url(MaterialIcons-Regular.ttf) format('truetype');
+}
+
+.page-header {
+  padding-bottom: 9px;
+  margin: 40px 0 20px;
+  border-bottom: 1px solid #eee;
 }

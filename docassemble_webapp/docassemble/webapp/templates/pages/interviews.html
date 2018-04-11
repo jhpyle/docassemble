@@ -8,14 +8,14 @@
 {{ get_part('interview page pre') }}
             {%- if tag %}
             <p>
-              {{ word('Showing interviews tagged with:') }} <a class="label label-primary da-label" href="?tag={{ tag }}">{{ tag }}</a>.
+              {{ word('Showing interviews tagged with:') }} <a class="badge badge-primary da-label" href="?tag={{ tag }}">{{ tag }}</a>.
               <a href="?">{{ word("Show all") }}</a>
             </p>
             {%- else %}
             {%- if tags_used %}
             <p>
               {{ word('Filter by tag') }}:
-              {% for tag in tags_used %}<a class="label label-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}
+              {% for tag in tags_used %}<a class="badge badge-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}
             </p>
             {%- endif %}
             {%- endif %}
@@ -39,11 +39,11 @@
                   <td>{% if interview['valid'] %}<a href="{{ url_for('index', i=interview['filename'], session=interview['session'], from_list=1) }}">{{ interview['title'] }}</a>{% else %}{{ interview['title'] }}{% endif %}{% if interview['subtitle'] %}<br><span class="text-muted dainterviewsubtitle">{{ interview['subtitle'] }}</span>{% endif %}</td>
                   {%- if tags_used %}
                   <td>
-                    {% for tag in interview['tags'] %}<a class="label label-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}
+                    {% for tag in interview['tags'] %}<a class="badge badge-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}
                   </td>
                   {%- endif %}
                   <td>{{ interview['starttime'] }}</td>
-                  <td><a class="label label-warning" href="{{ url_for('interview_list', action='delete', filename=interview['filename'], session=interview['session']) }}">{{ word('Delete') }}</a></td>
+                  <td><a class="btn btn-sm btn-warning" href="{{ url_for('interview_list', action='delete', filename=interview['filename'], session=interview['session']) }}">{{ word('Delete') }}</a></td>
                 </tr>
               {%- endfor %}
               {%- if numinterviews > 0 %}  
@@ -53,7 +53,7 @@
                   <td>&nbsp;</td>
                   {%- endif %}
                   <td>&nbsp;</td>
-                  <td><a id="delete_all" class="label label-danger" href="{% if tag %}{{ url_for('interview_list', action='delete_all', tag=tag) }}{% else %}{{ url_for('interview_list', action='delete_all') }}{% endif %}">{{ word('Delete All') }}</a></td>
+                  <td><a id="delete_all" class="btn btn-sm btn-danger" href="{% if tag %}{{ url_for('interview_list', action='delete_all', tag=tag) }}{% else %}{{ url_for('interview_list', action='delete_all') }}{% endif %}">{{ word('Delete All') }}</a></td>
                 </tr>
               {%- endif %}
               </tbody>

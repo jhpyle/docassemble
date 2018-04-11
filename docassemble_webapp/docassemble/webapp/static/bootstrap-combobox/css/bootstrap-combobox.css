@@ -14,7 +14,7 @@
   display: none;
 }
 /* :not doesn't work in IE8 */
-.combobox-container:not(.combobox-selected) .glyphicon-remove {
+.combobox-container:not(.combobox-selected) .fa-times {
   display: none;
 }
 .typeahead-long {

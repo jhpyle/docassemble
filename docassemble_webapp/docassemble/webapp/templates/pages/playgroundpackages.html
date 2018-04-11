@@ -14,11 +14,11 @@
             {%- endif %}
             <ul class="nav nav-pills navpillssmaller">
               <li>
-                <a title="{{ word('Create a new package') }}" href="?new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span> {{ word('Add') }}</a>
+                <a title="{{ word('Create a new package') }}" href="?new=1"><span class="fas fa-plus-circle" aria-hidden="true"></span> {{ word('Add') }}</a>
               </li>
               <li role="presentation" class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another package')}}">
-                  <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
+                  <span class="fas fa-briefcase" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<i class="fas fa-caret-down"></i>
                 </a>
                 <ul class="dropdown-menu heightlim">
                   {%- if any_files %}
@@ -26,14 +26,14 @@
                   {%- if file == current_file %}
                   <li class="active">
                     <a href="#">
-                      <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+                      <span class="fas fa-file" aria-hidden="true"></span>
                       {{ file }}
                     </a>
                   </li>
                   {%- else %}
                   <li>
                     <a href="?file={{ file }}">
-                      <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+                      <span class="fas fa-file" aria-hidden="true"></span>
                       {{ file }}
                     </a>
                   </li>
@@ -42,7 +42,7 @@
                   {%- else %}
                   <li class="active">
                     <a href="#">
-                      <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+                      <span class="fas fa-file" aria-hidden="true"></span>
                       {% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
                     </a>
                   </li>
@@ -52,7 +52,7 @@
               {%- if current_file != '' %}
               <li role="presentation">
                 <a tabindex="6" href="{{ url_for('create_playground_package', package=current_file) }}" title="{{ word('Download the current package') }}">
-                  <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                  <span class="fas fa-download" aria-hidden="true"></span>
                   {{ word("Download") }}
                 </a>
               </li>
@@ -62,7 +62,7 @@
                   <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
                     {{ fileform.hidden_tag() }}
                     <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
-                      <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+                      <span class="fas fa-upload" aria-hidden="true"></span>
                       {{ word("Upload") }}
                     </label>
                     <div style="width: 0px; height: 0px; overflow: hidden">
@@ -73,7 +73,7 @@
               </li>
               <li role="presentation">
                 <a tabindex="7" id="daPull" href="{{ url_for('pull_playground_package', github=github_url, branch=branch) if github_url else url_for('pull_playground_package', pypi=pypi_package_name) if pypi_package_name else url_for('pull_playground_package') }}" title="{{ word('Pull a package from GitHub or PyPI into the Playground') }}">
-                  <span class="glyphicon glyphicon-cloud" aria-hidden="true"></span>
+                  <span class="fas fa-cloud-download-alt" aria-hidden="true"></span>
                   {{ word("Pull") }}
                 </a>
               </li>
@@ -167,5 +167,5 @@
 {%- endblock %}
 {%- block bottom %}
       <div class="daspacer-large"></div>
-      <div class="container"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
+      <div class="container"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="fas fa-caret-left"></i> {{ word("Back to playground") }}</a></p></div>
 {%- endblock %}

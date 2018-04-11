@@ -54,7 +54,7 @@ subquestion: |
   
   ${ people_table }
   
-  [<i class="glyphicon glyphicon-plus-sign"></i> Add another person](${ url_action('person_add') })
+  [<i class="fas fa-plus-circle"></i> Add another person](${ url_action('person_add') })
 ---
 table: people_table
 rows: person
@@ -64,8 +64,8 @@ columns:
   - Fruit: |
       row_item.favorite_fruit
   - Action: |
-      '[<i title="Edit" class="glyphicon glyphicon-pencil"></i>](' + url_action(row_item.instanceName + '.review') + ')&nbsp;&nbsp;&nbsp;&nbsp;' + \
-      '[<i title="Remove" class="glyphicon glyphicon-trash"></i>](' + url_action('person_del', item=row_item.instanceName) + ')'
+      '[:pencil-alt:](' + url_action(row_item.instanceName + '.review') + ')&nbsp;&nbsp;&nbsp;&nbsp;' + \
+      '[:trash:](' + url_action('person_del', item=row_item.instanceName) + ')'
 ---
 event: person[i].review
 question: |

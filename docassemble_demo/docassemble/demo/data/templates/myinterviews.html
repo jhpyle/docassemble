@@ -18,14 +18,14 @@
     <tr>
       <td>{% if interview['valid'] %}<a href="{{ url_for('index', i=interview['interview_info'].filename, session=interview['interview_info'].key, from_list=1) }}">{{ interview['title'] }}</a>{% else %}{{ interview['title'] }}{% endif %}</td>
       <td>{{ interview['starttime'] }}</td>
-      <td><a class="label label-warning" href="{{ url_for('interview_list', action='delete', filename=interview['interview_info'].filename, session=interview['interview_info'].key) }}">{{ word('Delete') }}</a></td>
+      <td><a class="btn btn-warning" href="{{ url_for('interview_list', action='delete', filename=interview['interview_info'].filename, session=interview['interview_info'].key) }}">{{ word('Delete') }}</a></td>
     </tr>
   {% endfor %}
   {% if numinterviews > 0 %}  
     <tr>
       <td>&nbsp;</td>
       <td>&nbsp;</td>
-      <td><a id="deleteall" class="label label-danger" href="{{ url_for('interview_list', action='deleteall') }}">{{ word('Delete All') }}</a></td>
+      <td><a id="deleteall" class="btn btn-danger" href="{{ url_for('interview_list', action='deleteall') }}">{{ word('Delete All') }}</a></td>
     </tr>
   {% endif %}
   </tbody>

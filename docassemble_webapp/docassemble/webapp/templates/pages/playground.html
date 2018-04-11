@@ -3,40 +3,40 @@
 {%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
 <ul class="nav nav-pills">
   <li class="nav-item">
-    <a class="nav-link" tabindex="1" title="{{ word('Create new interview') }}" href="?new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Add') }}</a>
+    <a class="nav-link" tabindex="1" title="{{ word('Create new interview') }}" href="?new=1"><span class="fas fa-plus-circle" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Add') }}</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link" tabindex="2" title="{{ word('Create interview with wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml') }}"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Wizard') }}</a>
+    <a class="nav-link" tabindex="2" title="{{ word('Create interview with wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml') }}"><span class="fas fa-pencil-alt" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Wizard') }}</a>
   </li>
   <li role="presentation" class="nav-item dropdown">
     <a tabindex="3" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Items in the Playground other than interviews') }}">
-      <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Folders') }}<span class="caret"></span>
+      <span class="fas fa-folder-open" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Folders') }}<i class="fas fa-caret-down"></i>
     </a>
     <ul class="dropdown-menu">
-      <li><a href="{{ url_for('playground_packages') }}"><span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Packages') }}</a></li>
-      <li><a href="{{ url_for('playground_files', section='template') }}"><span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Templates') }}</a></li>
-      <li><a href="{{ url_for('playground_files', section='static') }}"><span class="glyphicon glyphicon-picture" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Static files') }}</a></li>
-      <li><a href="{{ url_for('playground_files', section='sources') }}"><span class="glyphicon glyphicon-th" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Sources') }}</a></li>
-      <li><a href="{{ url_for('playground_files', section='modules') }}"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Modules') }}</a></li>
+      <li><a href="{{ url_for('playground_packages') }}"><span class="fas fa-briefcase" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Packages') }}</a></li>
+      <li><a href="{{ url_for('playground_files', section='template') }}"><span class="fas fa-file" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Templates') }}</a></li>
+      <li><a href="{{ url_for('playground_files', section='static') }}"><span class="fas fa-image" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Static files') }}</a></li>
+      <li><a href="{{ url_for('playground_files', section='sources') }}"><span class="fas fa-database" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Sources') }}</a></li>
+      <li><a href="{{ url_for('playground_files', section='modules') }}"><span class="fas fa-cogs" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Modules') }}</a></li>
     </ul>
   </li>
   <li role="presentation" class="nav-item dropdown">
     <a tabindex="4" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another interview')}}">
-      <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
+      <span class="fas fa-file" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
     </a>
     <ul class="dropdown-menu heightlim">
       {% if any_files %}
       {% for file in files %}{% if file == current_file %}<li class="active">
-        <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
+        <a href="#"><span class="fas fa-file" aria-hidden="true"></span> {{ file }}
         </a>
       </li>
       {% else %}<li>
-        <a href="?file={{ file }}"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
+        <a href="?file={{ file }}"><span class="fas fa-file" aria-hidden="true"></span> {{ file }}
         </a>
       </li>
       {% endif %}{% endfor %}
       {% else %}<li class="active">
-        <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
+        <a href="#"><span class="fas fa-file" aria-hidden="true"></span> {% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
         </a>
       </li>
       {% endif %}
@@ -47,7 +47,7 @@
       <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
         {{ fileform.hidden_tag() }}
         <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
-          <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+          <span class="fas fa-upload" aria-hidden="true"></span>
           {{ word("Upload") }}
         </label>
         <div style="width: 0px; height: 0px; overflow: hidden">
@@ -60,7 +60,7 @@
   {% if current_file != '' %}
   <li class="nav-item" role="presentation">
     <a class="nav-link" tabindex="6" href="{{ url_for('playground_download', userid=userid, filename=current_file) }}" title="{{ word('Download the current file') }}">
-      <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+      <span class="fas fa-download" aria-hidden="true"></span>
       {{ word("Download") }}
     </a>
   </li>
@@ -68,7 +68,7 @@
   {%- if use_gd %}
   <li class="nav-item" role="presentation">
     <a class="nav-link" tabindex="7" href="{{ url_for('sync_with_google_drive', next=url_for('playground_page')) }}" title="{{ word('Sync with Google Drive') }}">
-      <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+      <span class="fas fa-sync" aria-hidden="true"></span>
       {{ word('GD') }}
     </a>
   </li>
@@ -83,12 +83,12 @@
       {{ render_addon_field(form.playground_name, tabindex=20) }}
     </div>
     <div class="col-lg-6">
-      {{ render_addon_field(form.search_term, tabindex=80, autocomplete="off", extra='<a class="input-group-addon no-outline pointer" id="daSearchPrevious"><i class="glyphicon glyphicon-chevron-left"></i></a><a class="input-group-addon no-outline pointer" id="daSearchNext"><i class="glyphicon glyphicon-chevron-right"></i></a>', extra_class='pull-right') }}
+      {{ render_addon_field(form.search_term, tabindex=80, autocomplete="off", extra='<a class="input-group-addon no-outline pointer" id="daSearchPrevious"><i class="fas fa-chevron-left"></i></a><a class="input-group-addon no-outline pointer" id="daSearchNext"><i class="fas fa-chevron-right"></i></a>', extra_class='pull-right') }}
     </div>
   </div>
   <div class="daspacer"></div>
   <div class="row">
-    <div class="col-lg-12">
+    <div class="col">
       <div class="form-group">
         <textarea rows="34" cols="80" id="playground_content" name="playground_content" tabindex="70">{{ content }}</textarea>
       </div>
@@ -99,7 +99,7 @@
     {% if is_new == 'False' %}<a tabindex="100" id="daRun" target="_blank" href="{{ url_for('playground_redirect') }}" class="btn btn-warning {{ config['BUTTON_CLASS'] }}" >{{ word("Save and Run") }}</a>
     {{ render_submit_field(form.delete, id='daDelete', class="btn btn-default " + config['BUTTON_CLASS'], tabindex="110") }}
     {% if interview_path %}
-    <a tabindex="120" title="Right-click to copy link" class="label label-default example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="glyphicon glyphicon-link"></i> {{ word('Share') }}</a>
+    <a tabindex="120" title="Right-click to copy link" class="btn btn-default example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="fas fa-link"></i> {{ word('Share') }}</a>
     {% endif %}
     {% endif %}
   </div>
@@ -108,7 +108,7 @@
 {% block rightside %}
             <div id="playgroundbox" class="panel panel-info playgroundbox">
               <div class="panel-heading">
-                <h3 class="panel-title">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="label label-primary darunbutton" target="_blank" id="daRunButton">{{ word('Run') }}</a></h3>
+                <h3 class="panel-title">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="btn btn-primary darunbutton" target="_blank" id="daRunButton">{{ word('Run') }}</a></h3>
               </div>
               <div class="panel-body" id="daplaygroundpanel">
                 <table id="daplaygroundtable" class="daplaygroundtable">{{ variables_html }}

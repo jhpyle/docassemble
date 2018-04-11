@@ -24,7 +24,7 @@ code: |
 ---
 reconsider: True
 code: |
-  current_keys = " ".join(map(lambda x: '<a class="mysug label label-primary">' + str(x) + '</a>', ml.dependent_in_use()))
+  current_keys = " ".join(map(lambda x: '<a class="mysug btn btn-primary">' + str(x) + '</a>', ml.dependent_in_use()))
 ---
 question: |
   How should this be classified?

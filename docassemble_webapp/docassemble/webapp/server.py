@@ -652,7 +652,9 @@ if 'oauth' in daconfig:
 else:
     app.config['OAUTH_CREDENTIALS'] = dict()
     
-if daconfig.get('button size', 'large') == 'large':
+if daconfig.get('button size', 'medium') == 'medium':
+    app.config['BUTTON_CLASS'] = 'btn-md btn-da'
+elif daconfig.get('button size', 'medium') == 'large':
     app.config['BUTTON_CLASS'] = 'btn-lg btn-da'
 else:
     app.config['BUTTON_CLASS'] = 'btn-da'
@@ -1381,11 +1383,11 @@ def do_refresh(is_ajax, yaml_filename):
         return redirect(url_for('index', i=yaml_filename))
 
 def standard_scripts():
-    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/app.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-combobox/js/bootstrap-combobox.js') + '"></script>'
+    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js') + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/popper.min.js') + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/tooltip.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/app.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-combobox/js/bootstrap-combobox.js') + '"></script>'
     
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None):
     if bootstrap_theme is None:
-        bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">'
+        bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">' #\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">'
     else:
         bootstrap_part = '\n    <link href="' + bootstrap_theme + '" rel="stylesheet">'
     output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/interview.css') + '" rel="stylesheet">'
@@ -1565,7 +1567,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_ul_class=None, show_links
             the_section = the_sections[0]
     max_section = the_section
     if wrapper:
-        output = '<div role="navigation" class="col-lg-offset-2 col-lg-2 col-md-3 col-sm-3 hidden-xs danavdiv">' + "\n" + '  <ul class="nav nav-pills nav-stacked danav">' + "\n"
+        output = '<div role="navigation" class="offset-lg-2 col-lg-2 col-md-3 col-sm-3 d-none d-sm-block danavdiv">' + "\n" + '  <ul class="nav nav-pills nav-stacked danav">' + "\n"
     else:
         output = ''
     section_reached = False
@@ -1754,30 +1756,28 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
         else:
             inverse = 'navbar-default '
     elif daconfig.get('inverse navbar', True):
-        inverse = 'navbar-inverse '
+        inverse = 'navbar-dark bg-dark '
     else:
         inverse = 'navbar-default '
     navbar = """\
-    <div class="navbar """ + inverse + """navbar-fixed-top">
+    <div class="navbar fixed-top navbar-expand-lg """ + inverse + '"' + """>
       <div class="container danavcontainer">
-        <div class="navbar-header danavbar">
-"""
-    navbar += """\
-          <button id="mobile-toggler" type="button" class="navbar-toggle collapsed mynavbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
 """
     if status.question.can_go_back and steps > 1:
         if status.question.interview.navigation_back_button:
             navbar += """\
-          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon backbuttoncolor navbar-btn" type="submit" title=""" + '"' + word("Go back to the previous question") + '"' + """><i class="glyphicon glyphicon-chevron-left dalarge"></i><span class="dalargefix">""" + word('Back') + """</span></button></form></span>
+        <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon backbuttoncolor navbar-btn" type="submit" title=""" + '"' + word("Go back to the previous question") + '"' + """><i class="fas fa-chevron-left"></i><span class="daback">""" + word('Back') + """</span></button></form></span>
 """
         else:
             navbar += """\
-          <form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"></form>
+        <form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"></form>
+"""
+    navbar += """\
+        <a id="pagetitle" class="navbar-brand pointer" href="#"><span class="d-block d-xs-none">""" + status.display_title + """</span><span class="d-none d-xs-block">""" + status.display_short_title + """</span></a>
+      
+        <button id="mobile-toggler" type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+          <span class="navbar-toggler-icon"></span>
+        </button>
 """
     help_message = word("Help is available")
     help_label = None
@@ -1794,37 +1794,34 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
     chat_message = word("Live chat is available")
     source_message = word("How this question came to be asked")
     if debug_mode:
-        source_button = '<ul role="tablist" class="nav navbar-nav navbar-tabs mynavbar-right hidden-xs"><li><a role="tab" class="no-outline" title=' + repr(str(source_message)) + ' id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li></ul>'
+        source_button = '<ul role="tablist" class="nav navbar-nav navbar-tabs mynavbar-right hidden-xs-down"><li><a role="tab" class="no-outline nav-link" title=' + repr(str(source_message)) + ' id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li></ul>'
     else:
         source_button = ''
-    navbar += '          ' + source_button + '<ul role="tablist" class="nav navbar-nav navbar-tabs mynavbar-right tabbuttons"><li class="invisible"><a id="questionlabel" data-target="#question">' + word('Question') + '</a></li>'
+    navbar += '        ' + source_button + '<ul role="tablist" class="nav navbar-nav navbar-tabs mynavbar-right tabbuttons"><li class="invisible"><a class="nav-link" id="questionlabel" data-target="#question">' + word('Question') + '</a></li>'
     if len(status.helpText):
         if status.question.helptext is None or status.question.interview.question_help_button:
-            navbar += '<li><a role="tab" class="pointer no-outline" data-target="#help" id="helptoggle" title="' + help_message + '">' + help_label + '</a></li>'
+            navbar += '<li class="nav-item"><a role="tab" class="pointer no-outline nav-link" data-target="#help" id="helptoggle" title="' + help_message + '">' + help_label + '</a></li>'
         else:
-            navbar += '<li><a role="tab" class="pointer no-outline" data-target="#help" id="helptoggle" title="' + extra_help_message + '"><span class="daactivetext">' + help_label + ' <i class="glyphicon glyphicon-star"></i></span></a></li>'
-    navbar += '<li class="invisible" id="daPhoneAvailable"><a data-target="#help" title="' + phone_message + '" class="pointer navbar-icon"><i class="glyphicon glyphicon-earphone chat-active"></i></a></li><li class="invisible" id="daChatAvailable"><a data-target="#help" title="' + chat_message + '" class="pointer navbar-icon" ><i class="glyphicon glyphicon-comment"></i></a></li></ul>'
+            navbar += '<li class="nav-item"><a role="tab" class="pointer no-outline nav-link" data-target="#help" id="helptoggle" title="' + extra_help_message + '"><span class="daactivetext">' + help_label + ' <i class="fas fa-star"></i></span></a></li>'
+    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a data-target="#help" title="' + phone_message + '" class="nav-link pointer navbar-icon"><i class="fas fa-phone chat-active"></i></a></li><li class="nav-item invisible" id="daChatAvailable"><a data-target="#help" title="' + chat_message + '" class="nav-link pointer navbar-icon" ><i class="fas fa-comment-alt"></i></a></li></ul>'
     navbar += """
-          <a id="pagetitle" class="navbar-brand pointer"><span class="hidden-xs">""" + status.display_title + """</span><span class="visible-xs-block">""" + status.display_short_title + """</span></a>
-      
-        </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
-          <ul class="nav navbar-nav navbar-right">
+          <ul class="navbar-nav ml-auto">
 """
     if 'menu_items' in status.extras:
         if type(status.extras['menu_items']) is not list:
-            custom_menu += '<li>' + word("Error: menu_items is not a Python list") + '</li>'
+            custom_menu += '<li class="nav-item">' + word("Error: menu_items is not a Python list") + '</li>'
         elif len(status.extras['menu_items']):
             custom_menu = ""
             for menu_item in status.extras['menu_items']:
                 if not (type(menu_item) is dict and 'url' in menu_item and 'label' in menu_item):
-                    custom_menu += '<li>' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
+                    custom_menu += '<li class="nav-item">' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
                 else:
                     match_action = re.search(r'^\?action=([^\&]+)', menu_item['url'])
                     if match_action:
-                        custom_menu += '<li><a data-embaction="' + match_action.group(1) + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a></li>'
+                        custom_menu += '<li class="nav-item"><a class="nav-link" data-embaction="' + match_action.group(1) + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a></li>'
                     else:
-                        custom_menu += '<li><a href="' + menu_item['url'] + '">' + menu_item['label'] + '</a></li>'
+                        custom_menu += '<li class="nav-item><a class="nav-link" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a></li>'
         else:
             custom_menu = False
     else:
@@ -1836,45 +1833,45 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
     if show_login:
         if current_user.is_anonymous:
             if custom_menu:
-                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login') + '">' + sign_in_text + '</a></li></ul></li>'
+                navbar += '            <li class="nav-item dropdown"><a class="nav-link" href="#" class="dropdown-toggle hidden-xs-down" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<i class="fas fa-caret-down"></i></a><div class="dropdown-menu dropdown-menu-right">' + custom_menu + '<a class="dropdown-item" href="' + url_for('user.login') + '">' + sign_in_text + '</a></div></li>'
             else:
-                navbar += '            <li><a href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>'
+                navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>'
         else:
-            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '<span class="caret"></span></a><ul class="dropdown-menu">'
+            navbar += '            <li class="nav-item dropdown"><a class="nav-link" href="#" class="dropdown-toggle hidden-xs-down" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '<i class="fas fa-caret-down"></i></a><div class="dropdown-menu dropdown-menu-right">'
             if custom_menu:
                 navbar += custom_menu
             if not status.question.interview.options.get('hide_standard_menu', False):
                 if current_user.has_role('admin', 'developer', 'advocate'):
-                    navbar +='<li><a href="' + url_for('monitor') + '">' + word('Monitor') + '</a></li>'
+                    navbar +='<a class="dropdown-item" href="' + url_for('monitor') + '">' + word('Monitor') + '</a>'
                 if current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
-                    navbar +='<li><a href="' + url_for('train') + '">' + word('Train') + '</a></li>'
+                    navbar +='<a class="dropdown-item" href="' + url_for('train') + '">' + word('Train') + '</a>'
                 if current_user.has_role('admin', 'developer'):
-                    navbar +='<li><a href="' + url_for('update_package') + '">' + word('Package Management') + '</a></li>'
-                    navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
-                    navbar +='<li><a href="' + url_for('playground_page') + '">' + word('Playground') + '</a></li>'
-                    navbar +='<li><a href="' + url_for('utilities') + '">' + word('Utilities') + '</a></li>'
+                    navbar +='<a class="dropdown-item" href="' + url_for('update_package') + '">' + word('Package Management') + '</a>'
+                    navbar +='<a class="dropdown-item" href="' + url_for('logs') + '">' + word('Logs') + '</a>'
+                    navbar +='<a class="dropdown-item" href="' + url_for('playground_page') + '">' + word('Playground') + '</a>'
+                    navbar +='<a class="dropdown-item" href="' + url_for('utilities') + '">' + word('Utilities') + '</a>'
                     if current_user.has_role('admin'):
-                        navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
-                        navbar +='<li><a href="' + url_for('config_page') + '">' + word('Configuration') + '</a></li>'
+                        navbar +='<a class="dropdown-item" href="' + url_for('user_list') + '">' + word('User List') + '</a>'
+                        navbar +='<a class="dropdown-item" href="' + url_for('config_page') + '">' + word('Configuration') + '</a>'
                 if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
-                    navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li>'
+                    navbar += '<a class="dropdown-item" href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a>'
                 if current_user.has_role('admin', 'developer'):
-                    navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li>'
+                    navbar += '<a class="dropdown-item" href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a>'
                 else:
                     if app.config['SHOW_PROFILE'] or current_user.has_role('admin'):
-                        navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li>'
+                        navbar += '<a class="dropdown-item" href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a>'
                     else:
-                        navbar += '<li><a href="' + url_for('user.change_password') + '">' + word('Change Password') + '</a></li>'
-                navbar += '<li><a href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a></li>'
-            navbar += '</ul></li>'
+                        navbar += '<a class="dropdown-item" href="' + url_for('user.change_password') + '">' + word('Change Password') + '</a>'
+                navbar += '<a class="dropdown-item" href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a>'
+            navbar += '</div></li>'
     else:
         if custom_menu:
-            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu
+            navbar += '            <li class="nav-item dropdown"><a class="nav-link" href="#" class="dropdown-toggle hidden-xs-down" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<i class="fas fa-caret-down"></i></a><div class="dropdown-menu dropdown-menu-right">' + custom_menu
             if not status.question.interview.options.get('hide_standard_menu', False):
-                navbar += '<li><a href="' + url_for(status.exit_link) + '">' + word(status.exit_label) + '</a></li>'
-            navbar += '</ul></li>'
+                navbar += '<a class="dropdown-item" href="' + url_for(status.exit_link) + '">' + word(status.exit_label) + '</a>'
+            navbar += '</div></li>'
         else:
-            navbar += '            <li><a href="' + url_for(status.exit_link) + '">' + word(status.exit_label) + '</a></li>'
+            navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for(status.exit_link) + '">' + word(status.exit_label) + '</a></li>'
     navbar += """
           </ul>
         </div>
@@ -2139,7 +2136,7 @@ def infobutton(title):
         docstring += noquote(title_documentation[title]['doc']) + "<br>"
     if 'url' in title_documentation[title]:
         docstring += "<a target='_blank' href='" + title_documentation[title]['url'] + "'>" + word("View documentation") + "</a>"
-    return '&nbsp;<a class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title="' + word("Help") + '" data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="glyphicon glyphicon-question-sign"></i></a>'
+    return '&nbsp;<a class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title="' + word("Help") + '" data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="fas fa-question-circle"></i></a>'
 
 def search_button(var, field_origins, name_origins, interview_source, all_sources):
     in_this_file = False
@@ -2187,12 +2184,12 @@ def search_button(var, field_origins, name_origins, interview_source, all_source
         classname = 'dasearchthis'
     else:
         classname = 'dasearchother'
-    return '<a class="dasearchicon ' + classname + '" ' + title + 'data-name="' + noquote(var) + '"><i class="glyphicon glyphicon-search"></i></a>'
+    return '<a class="dasearchicon ' + classname + '" ' + title + 'data-name="' + noquote(var) + '"><i class="fas fa-search"></i></a>'
 
 search_key = """
                   <tr><td><h4>""" + word("Note") + """</h4></td></tr>
-                  <tr><td><a class="dasearchicon dasearchthis"><i class="glyphicon glyphicon-search"></i></a> """ + word("means the name is located in this file") + """</td></tr>
-                  <tr><td><a class="dasearchicon dasearchother"><i class="glyphicon glyphicon-search"></i></a> """ + word("means the name may be located in a file included by reference, such as:") + """</td></tr>"""
+                  <tr><td><a class="dasearchicon dasearchthis"><i class="fas fa-search"></i></a> """ + word("means the name is located in this file") + """</td></tr>
+                  <tr><td><a class="dasearchicon dasearchother"><i class="fas fa-search"></i></a> """ + word("means the name may be located in a file included by reference, such as:") + """</td></tr>"""
 
 def find_needed_names(interview, needed_names, the_name=None, the_question=None):
     if the_name is not None:
@@ -2401,7 +2398,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     if len(undefined_names):
         content += '\n                  <tr><td><h4>' + word('Undefined names') + infobutton('undefined') + '</h4></td></tr>'
         for var in sorted(undefined_names):
-            content += '\n                  <tr><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + var + '</a></td></tr>'
+            content += '\n                  <tr><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-danger playground-variable">' + var + '</a></td></tr>'
     if len(names_used):
         content += '\n                  <tr><td><h4>' + word('Variables') + infobutton('variables') + '</h4></td></tr>'
         has_parent = dict()
@@ -2435,21 +2432,21 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             else:
                 class_type = 'primary'
                 title = ''
-            content += '\n                  <tr' + hide_it + '><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="label label-' + class_type + ' playground-variable">' + var + '</a>'
+            content += '\n                  <tr' + hide_it + '><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="btn btn-' + class_type + ' playground-variable">' + var + '</a>'
             if var in has_children:
-                content += '&nbsp;<a class="dashowattributes" role="button" data-name="' + noquote(var) + '" title="' + attr_documentation + '"><i class="glyphicon glyphicon-option-horizontal"></i></a>'
+                content += '&nbsp;<a class="dashowattributes" role="button" data-name="' + noquote(var) + '" title="' + attr_documentation + '"><i class="fas fa-ellipsis-h"></i></a>'
             if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
                 content +='&nbsp;<span data-ref="' + noquote(name_info[var]['type']) + '" class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
             elif var in interview.mlfields:
                 content +='&nbsp;<span data-ref="DAModel" class="daparenthetical">(DAModel)</span>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
             if var in interview.mlfields:
                 if 'ml_group' in interview.mlfields[var] and not interview.mlfields[var]['ml_group'].uses_mako:
                     (ml_package, ml_file, ml_group_id) = get_ml_info(interview.mlfields[var]['ml_group'].original_text, ml_parts[0], ml_parts[1])
-                    content += '&nbsp;<a class="datrain" target="_blank" href="' + url_for('train', package=ml_package, file=ml_file, group_id=ml_group_id) + '" title="' + word("Train") + '"><i class="glyphicon glyphicon-apple"></i></a>'
+                    content += '&nbsp;<a class="datrain" target="_blank" href="' + url_for('train', package=ml_package, file=ml_file, group_id=ml_group_id) + '" title="' + word("Train") + '"><i class="fas fa-graduation-cap"></i></a>'
                 else:
-                    content += '&nbsp;<a class="datrain" target="_blank" href="' + url_for('train', package=ml_parts[0], file=ml_parts[1], group_id=var) + '" title="' + word("Train") + '"><i class="glyphicon glyphicon-apple"></i></a>'
+                    content += '&nbsp;<a class="datrain" target="_blank" href="' + url_for('train', package=ml_parts[0], file=ml_parts[1], group_id=var) + '" title="' + word("Train") + '"><i class="fas fa-graduation-cap"></i></a>'
             content += '</td></tr>'
         if len(all_sources):
             content += search_key
@@ -2462,54 +2459,54 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     if len(functions):
         content += '\n                  <tr><td><h4>' + word('Functions') + infobutton('functions') + '</h4></td></tr>'
         for var in sorted(functions):
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-warning playground-variable">' + name_info[var]['tag'] + '</a>'
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-warning playground-variable">' + name_info[var]['tag'] + '</a>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
             content += '</td></tr>'
     if len(classes):
         content += '\n                  <tr><td><h4>' + word('Classes') + infobutton('classes') + '</h4></td></tr>'
         for var in sorted(classes):
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-info playground-variable">' + name_info[var]['name'] + '</a>'
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-info playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['bases']:
                 content += '&nbsp;<span data-ref="' + noquote(name_info[var]['bases'][0]) + '" class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
             if name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
             if len(name_info[var]['methods']):
-                content += '&nbsp;<a class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title="' + word('Methods') + '"><i class="glyphicon glyphicon-cog"></i></a>'
+                content += '&nbsp;<a class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title="' + word('Methods') + '"><i class="fas fa-cog"></i></a>'
                 content += '<div style="display: none;" id="XMETHODX' + var + '"><table><tbody>'
                 for method_info in name_info[var]['methods']:
-                    content += '<tr><td><a data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="label label-warning playground-variable">' + method_info['tag'] + '</a>'
+                    content += '<tr><td><a data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="btn btn-warning playground-variable">' + method_info['tag'] + '</a>'
                     if method_info['doc']:
-                        content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(method_info['name']) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+                        content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(method_info['name']) + '"><i class="fas fa-info-circle"></i></a>'
                     content += '</td></tr>'
                 content += '</tbody></table></div>'
             content += '</td></tr>'
     if len(modules):
         content += '\n                  <tr><td><h4>' + word('Modules defined') + infobutton('modules') + '</h4></td></tr>'
         for var in sorted(modules):
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-success playground-variable">' + name_info[var]['name'] + '</a>'
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-success playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(var) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(var) + '"><i class="fas fa-info-circle"></i></a>'
             content += '</td></tr>'
     if len(avail_modules):
         content += '\n                  <tr><td><h4>' + word('Modules available in Playground') + infobutton('playground_modules') + '</h4></td></tr>'
         for var in avail_modules:
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="label label-success playground-variable">.' + noquote(var) + '</a>'
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="btn btn-success playground-variable">.' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(templates):
         content += '\n                  <tr><td><h4>' + word('Templates') + infobutton('templates') + '</h4></td></tr>'
         for var in templates:
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-default playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(static):
         content += '\n                  <tr><td><h4>' + word('Static files') + infobutton('static') + '</h4></td></tr>'
         for var in static:
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-default playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(sources):
         content += '\n                  <tr><td><h4>' + word('Source files') + infobutton('sources') + '</h4></td></tr>'
         for var in sources:
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-default playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(interview.images):
         content += '\n                  <tr><td><h4>' + word('Decorations') + infobutton('decorations') + '</h4></td></tr>'
@@ -2521,11 +2518,11 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             content += '\n                  <tr><td>'
             the_ref = get_url_from_file_reference(interview.images[var].get_reference())
             if the_ref is None:
-                content += '<a title="' + word("This image file does not exist") + '" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + noquote(var) + '</a>'
+                content += '<a title="' + word("This image file does not exist") + '" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-danger playground-variable">' + noquote(var) + '</a>'
             else:
                 if show_images:
                     content += '<img class="daimageicon" src="' + the_ref + '">&nbsp;'
-                content += '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
+                content += '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-primary playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     content += "\n                  <tr><td><br><em>" + word("Type Ctrl-space to autocomplete.") + "</em></td><tr>"
     return content, sorted(vocab_set)
@@ -3701,7 +3698,7 @@ def checkin():
                         continue
                     remaining_seconds = r.ttl(call_key)
                     if remaining_seconds > 30:
-                        call_forwarding_message = '<span class="phone-message"><i class="glyphicon glyphicon-earphone"></i> ' + word('To reach an advocate who can assist you, call') + ' <a class="phone-number" href="tel:' + str(forwarding_phone_number) + '">' + str(forwarding_phone_number) + '</a> ' + word("and enter the code") + ' <span class="phone-code">' + str(call_forwarding_code) + '</span>.</span>'
+                        call_forwarding_message = '<span class="phone-message"><i class="fas fa-phone"></i> ' + word('To reach an advocate who can assist you, call') + ' <a class="phone-number" href="tel:' + str(forwarding_phone_number) + '">' + str(forwarding_phone_number) + '</a> ' + word("and enter the code") + ' <span class="phone-code">' + str(call_forwarding_code) + '</span>.</span>'
                         break
         chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         potential_partners = list()
@@ -6801,15 +6798,15 @@ def index():
             $(the_toggle).addClass('available');
           }
           if ($(the_ul).hasClass('notshowing')){
-            $(the_toggle_inner).addClass('glyphicon glyphicon-triangle-right');
+            $(the_toggle_inner).addClass('fas fa-caret-right');
           }
           else{
-            $(the_toggle_inner).addClass('glyphicon glyphicon-triangle-bottom');
+            $(the_toggle_inner).addClass('fas fa-caret-down');
           }
           $(the_toggle).append($(the_toggle_inner));
           $(the_toggle).click(function(){
-            $(the_toggle_inner).toggleClass('glyphicon-triangle-right');
-            $(the_toggle_inner).toggleClass('glyphicon-triangle-bottom');
+            $(the_toggle_inner).toggleClass('fa-caret-right');
+            $(the_toggle_inner).toggleClass('fa-caret-down');
             $(the_ul).toggle();
           });
           $(the_li).append($(the_toggle));
@@ -7281,28 +7278,28 @@ def index():
     output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">' + "\n"
     if interview_status.question.interview.use_navigation:
         output += navigation_bar(user_dict['nav'], interview_status.question.interview)
-    output += '        <div class="tab-content">\n'
+    output += '        <div class="tab-content col">\n'
     output += content + "        </div>\n"
     if 'rightText' in interview_status.extras:
         if interview_status.question.interview.use_navigation:
-            output += '        <section id="daright" class="hidden-xs hidden-sm hidden-md col-lg-2 daright">\n'
+            output += '        <section id="daright" class="hidden-md-down col-lg-2 daright">\n'
         else:
             if interview_status.question.interview.flush_left:
-                output += '        <section id="daright" class="hidden-xs hidden-sm col-lg-6 col-md-4 daright">\n'
+                output += '        <section id="daright" class="hidden-sm-down col-lg-6 col-md-4 daright">\n'
             else:
-                output += '        <section id="daright" class="hidden-xs hidden-sm col-lg-3 col-md-2 daright">\n'
+                output += '        <section id="daright" class="hidden-sm-down col-lg-3 col-md-2 daright">\n'
         output += docassemble.base.util.markdown_to_html(interview_status.extras['rightText'], trim=False, status=interview_status) + "\n"
         output += '        </section>\n'
     output += "      </div>\n"
     if len(interview_status.attributions):
         output += '      <div class="row">' + "\n"
         if interview_status.question.interview.use_navigation:
-            output += '        <div class="col-lg-offset-4 col-md-offset-3 col-sm-offset-3 col-lg-6 col-md-9 col-sm-9 daattributions" id="attributions">\n'
+            output += '        <div class="offset-lg-4 offset-md-3 offset-sm-3 col-lg-6 col-md-9 col-sm-9 daattributions" id="attributions">\n'
         else:
             if interview_status.question.interview.flush_left:
                 output += '        <div class="col-lg-6 col-md-8 col-sm-10 daattributions" id="attributions">\n'
             else:
-                output += '        <div class="col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10 daattributions" id="attributions">\n'
+                output += '        <div class="offset-lg-3 col-lg-6 offset-md-2 col-md-8 offset-sm-1 col-sm-10 daattributions" id="attributions">\n'
         output += '        <br/><br/><br/><br/><br/><br/><br/>\n'
         for attribution in sorted(interview_status.attributions):
             output += '        <div><attribution><small>' + docassemble.base.util.markdown_to_html(attribution, status=interview_status, strip_newlines=True) + '</small></attribution></div>\n'
@@ -7310,12 +7307,12 @@ def index():
     if debug_mode:
         output += '      <div class="row">' + "\n"
         if interview_status.question.interview.use_navigation:
-            output += '        <div class="col-lg-offset-4 col-md-offset-3 col-sm-offset-3 col-lg-6 col-md-9 col-sm-9" style="display: none" id="readability">' + readability_report + '</div>'
+            output += '        <div class="offset-lg-4 offset-md-3 offset-sm-3 col-lg-6 col-md-9 col-sm-9" style="display: none" id="readability">' + readability_report + '</div>'
         else:
             if interview_status.question.interview.flush_left:
                 output += '        <div class="col-lg-6 col-md-8 col-sm-10" style="display: none" id="readability">' + readability_report + '</div>'
             else:
-                output += '        <div class="col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10" style="display: none" id="readability">' + readability_report + '</div>'
+                output += '        <div class="offset-lg-3 col-lg-6 offset-md-2 col-md-8 offset-sm-1 col-sm-10" style="display: none" id="readability">' + readability_report + '</div>'
         output += '      </div>' + "\n"
         output += '      <div class="row">' + "\n"
         output += '        <div id="source" class="col-md-12 collapse">' + "\n"
@@ -8760,7 +8757,7 @@ def monitor():
           var xButton = document.createElement('a');
           var xButtonIcon = document.createElement('i');
           $(xButton).addClass("corner-remove");
-          $(xButtonIcon).addClass("glyphicon glyphicon-remove-circle");
+          $(xButtonIcon).addClass("fas fa-times-circle");
           $(xButtonIcon).appendTo($(xButton));
           $("#listelement" + skey).addClass("list-group-item-danger");
           $("#session" + skey).find("a").remove();
@@ -8918,13 +8915,13 @@ def monitor():
           $(theText).addClass('chat-title-label');
           theText.innerHTML = the_html;
           var statusLabel = document.createElement('span');
-          $(statusLabel).addClass("label label-info chat-status-label");
+          $(statusLabel).addClass("btn btn-info chat-status-label");
           $(statusLabel).html(obj.chatstatus == 'observeonly' ? 'off' : obj.chatstatus);
           $(statusLabel).appendTo($(sessionDiv));
           if (daUsePhone){
             var phoneButton = document.createElement('a');
             var phoneIcon = document.createElement('i');
-            $(phoneIcon).addClass("glyphicon glyphicon-earphone");
+            $(phoneIcon).addClass("fas fa-phone");
             $(phoneIcon).appendTo($(phoneButton));
             $(phoneButton).addClass("label phone");
             $(phoneButton).data('name', 'phone');
@@ -8976,7 +8973,7 @@ def monitor():
             });
           }
           var unblockButton = document.createElement('a');
-          $(unblockButton).addClass("label label-info observebutton");
+          $(unblockButton).addClass("btn btn-info observebutton");
           $(unblockButton).data('name', 'unblock');
           if (!obj.blocked){
               $(unblockButton).addClass("invisible");
@@ -8985,7 +8982,7 @@ def monitor():
           $(unblockButton).attr('href', '#');
           $(unblockButton).appendTo($(sessionDiv));
           var blockButton = document.createElement('a');
-          $(blockButton).addClass("label label-danger observebutton");
+          $(blockButton).addClass("btn btn-danger observebutton");
           if (obj.blocked){
               $(blockButton).addClass("invisible");
           }
@@ -9009,7 +9006,7 @@ def monitor():
               return false;
           });
           var joinButton = document.createElement('a');
-          $(joinButton).addClass("label label-warning observebutton");
+          $(joinButton).addClass("btn btn-warning observebutton");
           $(joinButton).html('""" + word("Join") + """');
           $(joinButton).attr('href', '""" + url_for('visit_interview') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
           $(joinButton).data('name', 'join');
@@ -9017,7 +9014,7 @@ def monitor():
           $(joinButton).appendTo($(sessionDiv));
           if (wants_to_chat){
               var openButton = document.createElement('a');
-              $(openButton).addClass("label label-primary observebutton");
+              $(openButton).addClass("btn btn-primary observebutton");
               $(openButton).attr('href', '""" + url_for('observer') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
               //$(openButton).attr('href', 'about:blank');
               $(openButton).attr('id', 'observe' + key);
@@ -9026,19 +9023,19 @@ def monitor():
               $(openButton).data('name', 'open');
               $(openButton).appendTo($(sessionDiv));
               var stopObservingButton = document.createElement('a');
-              $(stopObservingButton).addClass("label label-default observebutton invisible");
+              $(stopObservingButton).addClass("btn btn-default observebutton invisible");
               $(stopObservingButton).html('""" + word("Stop Observing") + """');
               $(stopObservingButton).attr('href', '#');
               $(stopObservingButton).data('name', 'stopObserving');
               $(stopObservingButton).appendTo($(sessionDiv));
               var controlButton = document.createElement('a');
-              $(controlButton).addClass("label label-info observebutton");
+              $(controlButton).addClass("btn btn-info observebutton");
               $(controlButton).html('""" + word("Control") + """');
               $(controlButton).attr('href', '#');
               $(controlButton).data('name', 'control');
               $(controlButton).appendTo($(sessionDiv));
               var stopControllingButton = document.createElement('a');
-              $(stopControllingButton).addClass("label label-default observebutton invisible");
+              $(stopControllingButton).addClass("btn btn-default observebutton invisible");
               $(stopControllingButton).html('""" + word("Stop Controlling") + """');
               $(stopControllingButton).attr('href', '#');
               $(stopControllingButton).data('name', 'stopControlling');
@@ -11438,8 +11435,8 @@ def playground_files():
         any_files = True
     else:
         any_files = False
-    #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
-    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="backbuttoncolor navbar-btn playground-back" type="submit" title="' + word("Go back to the main Playground page") + '"><i class="glyphicon glyphicon-chevron-left dalarge"></i><span class="dalargefix">' + word('Back') + '</span></a></span>')
+    #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
+    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="backbuttoncolor navbar-btn playground-back" type="submit" title="' + word("Go back to the main Playground page") + '"><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + ('damarkdown' if mode == 'markdown' else mode) + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
 
 @app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
@@ -12191,8 +12188,8 @@ def playground_packages():
         any_files = True
     else:
         any_files = False
-    #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back") + '</a>')
-    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="backbuttoncolor navbar-btn playground-back" type="submit" title="' + word("Go back to the main Playground page") + '"><i class="glyphicon glyphicon-chevron-left dalarge"></i><span class="dalargefix">' + word('Back') + '</span></a></span>')
+    #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
+    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="backbuttoncolor navbar-btn playground-back" type="submit" title="' + word("Go back to the main Playground page") + '"><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     if can_publish_to_pypi:
         if pypi_message is not None:
             pypi_message = Markup(pypi_message)
@@ -16317,7 +16314,7 @@ def manage_api():
         $(new_span).addClass('input-group-addon');
         $(new_span).append(new_a);
         $(new_a).append(new_i);
-        $(new_i).addClass('glyphicon glyphicon-remove');
+        $(new_i).addClass('fas fa-times');
         $(new_a).on('click', function(){remove_constraint(this);});
         $(this).parent().append(new_span);
       }
@@ -16345,7 +16342,7 @@ def manage_api():
       $(new_span).addClass('input-group-addon');
       $(new_span).append(new_a);
       $(new_a).append(new_i);
-      $(new_i).addClass('glyphicon glyphicon-remove');
+      $(new_i).addClass('fas fa-times');
       $(new_a).on('click', function(){remove_constraint(this);});
       $(new_div).append(new_span);
     }
@@ -16829,8 +16826,8 @@ def define_examples():
     data_dict = dict()
     make_example_html(get_examples(), pg_ex['pg_first_id'], example_html, data_dict)
     example_html.append('        </div>')
-    example_html.append('        <div class="col-md-4 example-source-col"><h4>Source<a class="label label-success example-copy">Insert</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">Show context of example</a><a class="example-hider invisible" id="hide-full-example">Hide context of example</a></div></div>')
-    example_html.append('        <div class="col-md-6"><h4>Preview<a target="_blank" class="label label-primary example-documentation example-hidden" id="example-documentation-link">View documentation</a></h4><a href="#" target="_blank" id="example-image-link"><img title="Click to try this interview" class="example_screenshot" id="example-image"></a></div>')
+    example_html.append('        <div class="col-md-4 example-source-col"><h4>Source<a class="btn btn-success example-copy">Insert</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">Show context of example</a><a class="example-hider invisible" id="hide-full-example">Hide context of example</a></div></div>')
+    example_html.append('        <div class="col-md-6"><h4>Preview<a target="_blank" class="btn btn-primary example-documentation example-hidden" id="example-documentation-link">View documentation</a></h4><a href="#" target="_blank" id="example-image-link"><img title="Click to try this interview" class="example_screenshot" id="example-image"></a></div>')
     pg_ex['encoded_data_dict'] = safeid(json.dumps(data_dict))
     pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
 
