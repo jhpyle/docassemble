@@ -6883,11 +6883,13 @@ def index():
             if (the_hash.hasOwnProperty(key)){
               var checkboxName = atob(key);
               var baseName = checkboxName
-              checkboxName = checkboxName.replace(/^.*\[['"](.*)['"]\]/, "$1");
-              baseName = baseName.replace(/^(.*)\[.*/, "$1");
-              varlookup[btoa(baseName + "['" + atob(checkboxName) + "']")] = key;
-              varlookup[btoa(baseName + "[u'" + atob(checkboxName) + "']")] = key;
-              varlookup[btoa(baseName + '["' + atob(checkboxName) + '"]')] = key;
+              checkboxName = checkboxName.replace(/^.*\[['"]([^\]]*)['"]\]$/, "$1");
+              if (checkboxName != baseName){
+                baseName = baseName.replace(/^(.*)\[.*/, "$1");
+                varlookup[btoa(baseName + "['" + atob(checkboxName) + "']")] = key;
+                varlookup[btoa(baseName + "[u'" + atob(checkboxName) + "']")] = key;
+                varlookup[btoa(baseName + '["' + atob(checkboxName) + '"]')] = key;
+              }
             }
           }
         }

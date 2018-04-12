@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.46] - 2018-04-11
+### Fixed
+- Bug in new `show if` code.
+
 ## [0.2.45] - 2018-04-11
 ### Fixed
 - Identification of names of ZIP files uploaded through Package Management.
