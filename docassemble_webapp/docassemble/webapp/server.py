@@ -6699,12 +6699,20 @@ def index():
         });
         $("input.nota-checkbox").click(function(){
           $(this).parent().find('input.non-nota-checkbox').each(function(){
+            var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
+            if (existing_val != false){
+              $(this).trigger('change');
+            }
           });
         });
         $("input.non-nota-checkbox").click(function(){
           $(this).parent().find('input.nota-checkbox').each(function(){
+            var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
+            if (existing_val != false){
+              $(this).trigger('change');
+            }
           });
         });
         $("input.dafile").fileinput();
@@ -6862,12 +6870,26 @@ def index():
         });
         var varlookup = Object();
         if ($("input[name='_varnames']").length){
-           the_hash = $.parseJSON(atob($("input[name='_varnames']").val()));
-           for (var key in the_hash){
-             if (the_hash.hasOwnProperty(key)){
-               varlookup[the_hash[key]] = key;
-             }
-           }
+          the_hash = $.parseJSON(atob($("input[name='_varnames']").val()));
+          for (var key in the_hash){
+            if (the_hash.hasOwnProperty(key)){
+              varlookup[the_hash[key]] = key;
+            }
+          }
+        }
+        if ($("input[name='_checkboxes']").length){
+          the_hash = $.parseJSON(atob($("input[name='_checkboxes']").val()));
+          for (var key in the_hash){
+            if (the_hash.hasOwnProperty(key)){
+              var checkboxName = atob(key);
+              var baseName = checkboxName
+              checkboxName = checkboxName.replace(/^.*\[['"](.*)['"]\]/, "$1");
+              baseName = baseName.replace(/^(.*)\[.*/, "$1");
+              varlookup[btoa(baseName + "['" + atob(checkboxName) + "']")] = key;
+              varlookup[btoa(baseName + "[u'" + atob(checkboxName) + "']")] = key;
+              varlookup[btoa(baseName + '["' + atob(checkboxName) + '"]')] = key;
+            }
+          }
         }
         daShowIfInProcess = true;
         $(".showif").each(function(){
@@ -9615,6 +9637,33 @@ def update_package_ajax():
     else:
         return jsonify(success=True, status='waiting')
 
+def get_package_name_from_zip(zippath):
+    with zipfile.ZipFile(zippath, mode='r') as zf:
+        min_level = 999999
+        setup_py = None
+        for zinfo in zf.infolist():
+            parts = splitall(zinfo.filename)
+            if parts[-1] == 'setup.py':
+                if len(parts) < min_level:
+                    setup_py = zinfo
+                    min_level = len(parts)
+        if setup_py is None:
+            raise Exception("Not a Python package zip file")
+        contents = zf.read(setup_py)
+    contents = re.sub(r'.*setup\(', '', contents, flags=re.DOTALL)
+    extracted = dict()
+    for line in contents.splitlines():
+        m = re.search(r"^ *([a-z_]+) *= *\(?u?'(.*)'", line)
+        if m:
+            extracted[m.group(1)] = m.group(2)
+        m = re.search(r'^ *([a-z_]+) *= *\(?u?"(.*)"', line)
+        if m:
+            extracted[m.group(1)] = m.group(2)
+        m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
+    if 'name' not in extracted:
+        raise Exception("Could not find name of Python package")
+    return extracted['name']    
+    
 @app.route('/updatepackage', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -9656,18 +9705,15 @@ def update_package():
             try:
                 the_file = request.files['zipfile']
                 filename = secure_filename(the_file.filename)
-                pkgname = re.sub(r'\.zip$', r'', filename)
-                pkgname = re.sub(r'docassemble-', 'docassemble.', pkgname)
+                file_number = get_new_file_number(session.get('uid', None), filename)
+                saved_file = SavedFile(file_number, extension='zip', fix=True)
+                file_set_attributes(file_number, private=False, persistent=True)
+                zippath = saved_file.path
+                the_file.save(zippath)
+                saved_file.save()
+                saved_file.finalize()
+                pkgname = get_package_name_from_zip(zippath)
                 if user_can_edit_package(pkgname=pkgname):
-                    file_number = get_new_file_number(session.get('uid', None), filename)
-                    saved_file = SavedFile(file_number, extension='zip', fix=True)
-                    file_set_attributes(file_number, private=False, persistent=True)
-                    zippath = saved_file.path
-                    the_file.save(zippath)
-                    saved_file.save()
-                    saved_file.finalize()
-                    #zippath += '.zip'
-                    #commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user"]
                     install_zip_package(pkgname, file_number)
                     result = docassemble.webapp.worker.update_packages.delay()
                     session['taskwait'] = result.id

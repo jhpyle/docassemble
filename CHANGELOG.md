@@ -1,8 +1,10 @@
 # Change Log
 
-## [0.2.45] - 2018-04-
+## [0.2.45] - 2018-04-11
 ### Fixed
-- Exception raised by Unicode non-breaking spaces in interview files
+- Identification of names of ZIP files uploaded through Package Management.
+- Exception raised by Unicode non-breaking spaces in interview files.
+- The `show if` JavaScript feature now works with checkbox values.
 
 ## [0.2.44] - 2018-03-31
 ### Added
