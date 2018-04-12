@@ -44,11 +44,14 @@
 "characters": Null
 "Check at least one option, or check": Null
 "Checkboxes:": Null
+"Check box": Null
 "Choices:": Null
 "Classes": Null
 "Clear": Null
 "Click here to confirm your e-mail": Null
 "Click here to get help over the phone.": Null
+"Click if you want the user to be able to call you.": Null
+"Click to try this interview": Null
 "Commit message": Null
 "Commit": Null
 "Configuration not updated.": Null
@@ -160,6 +163,7 @@
 "Help": Null
 "Help with this question": Null
 "Here is your document.": Null
+"Hide context of example": Null
 "How question came to be asked": Null
 "How this question came to be asked": Null
 "I am sorry.  The code you entered is invalid or expired.  Goodbye.": Null
@@ -168,6 +172,7 @@
 "Import method": Null
 "Import": Null
 "Input box": Null
+"Insert": Null
 "Install": Null
 "interview answers cannot be decrypted": Null
 "Interview answers cannot be decrypted": Null
@@ -350,6 +355,7 @@
 "Send confirmation email": Null
 "Send": Null
 "Show attributes": Null
+"Show context of example": Null
 "Show variables and values": Null
 "Sign in": Null
 "Sign In": Null
@@ -417,6 +423,7 @@
 "The role could not be deleted.": Null
 "The synchronization was not successful.": Null
 "The synchronization was successful.": Null
+"The user can call you.  Click to cancel.": Null
 "The version on PyPI is": Null
 "Third subdivision": Null
 "This account uses two-factor authentication.": Null

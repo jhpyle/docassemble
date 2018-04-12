@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.47] - 2018-04-12
+### Fixed
+- Problem with quoting glossary terms in HTML.
+
 ## [0.2.46] - 2018-04-11
 ### Fixed
 - Bug in new `show if` code.

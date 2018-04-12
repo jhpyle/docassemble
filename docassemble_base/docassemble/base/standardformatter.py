@@ -23,14 +23,14 @@ else:
 
 def tracker_tag(status):
     output = ''
-    output += '                <input type="hidden" name="csrf_token" value="' + server.generate_csrf() + '"/>\n'
+    output += '                <input type="hidden" name="csrf_token" value=' + json.dumps(server.generate_csrf()) + '/>\n'
     if len(status.next_action):
         output += '                <input type="hidden" name="_next_action" value=' + myb64doublequote(json.dumps(status.next_action)) + '/>\n'
     if status.question.name:
-        output += '                <input type="hidden" name="_question_name" value="' + status.question.name + '"/>\n'
+        output += '                <input type="hidden" name="_question_name" value=' + json.dumps(status.question.name) + '/>\n'
     # if 'orig_action' in status.current_info:
     #     output += '                <input type="hidden" name="_action_context" value=' + myb64doublequote(json.dumps(dict(action=status.current_info['orig_action'], arguments=status.current_info['orig_arguments']))) + '/>\n'
-    output += '                <input type="hidden" name="_tracker" value="' + str(status.tracker) + '"/>\n'
+    output += '                <input type="hidden" name="_tracker" value=' + json.dumps(str(status.tracker)) + '/>\n'
     if 'track_location' in status.extras and status.extras['track_location']:
         output += '                <input type="hidden" id="_track_location" name="_track_location" value=""/>\n'
     return output
@@ -528,7 +528,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     # if status.question.script is not None:
     #     status.extra_scripts.append(status.question.script)
     if status.question.interview.question_back_button and status.question.can_go_back and steps > 1:
-        back_button = '\n                  <button class="btn btn-default ' + BUTTON_CLASS + ' " id="questionbackbutton" title="' + word("Go back to the previous question") + '"><i class="glyphicon glyphicon-chevron-left dalarge"></i>' + status.question.back() + '</button>'
+        back_button = '\n                  <button class="btn btn-default ' + BUTTON_CLASS + ' " id="questionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '"><i class="glyphicon glyphicon-chevron-left dalarge"></i>' + status.question.back() + '</button>'
     else:
         back_button = ''
     if status.question.interview.question_help_button and len(status.helpText) and status.question.helptext is not None:
@@ -1211,7 +1211,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '                </div>\n'
         #output += question_name_tag(status.question)
         if 'underText' in status.extras:
-            output += markdown_to_html(status['underText'], status=status, indent=18, divclass="undertext")
+            output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         status.datatypes = datatypes
@@ -1362,15 +1362,15 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                   <div class="panel-body">
                     <form action=\"""" + root + """\" id="emailform" class="form-horizontal" method="POST">
                       <fieldset>
-                        <div class="form-group"><label for="_attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input alt=""" + '"' + word ("Input box") + '"' + """ class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address" value=""" + '"' + str(default_email) + '"' + """/></div></div>"""
+                        <div class="form-group"><label for="_attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input alt=""" + json.dumps(word("Input box")) + """ class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address" value=""" + '"' + str(default_email) + '"' + """/></div></div>"""
                 if editable_included:
                     output += """
-                        <div class="form-group"><div class="col-sm-4"></div><div class="col-sm-8"><input alt=""" + '"' + word ("Check box") + ", " + word('Include ' + editable_name + ' for editing') + '"' + """ type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
+                        <div class="form-group"><div class="col-sm-4"></div><div class="col-sm-8"><input alt=""" + json.dumps(word ("Check box") + ", " + word('Include ' + editable_name + ' for editing')) + """ type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
                 output += """
                         <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="_email_attachments" value="1"/>'#<input type="hidden" name="_question_number" value="' + str(status.question.number) + '"/>'
                 output += """
                       </fieldset>
-                      <input type="hidden" name="csrf_token" value=""" + '"' + server.generate_csrf() + '"' + """/>
+                      <input type="hidden" name="csrf_token" value=""" + json.dumps(server.generate_csrf()) + """/>
                     </form>
                   </div>
                 </div>
@@ -1393,12 +1393,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     <form action=\"""" + root + """\" id="downloadform" class="form-horizontal" method="POST">"""
                 if editable_included:
                     output += """
-                        <div class="form-group"><div class="col-sm-12"><input alt=""" + '"' + word ("Check box") + ", " + word('Include ' + editable_name + ' for editing') + '"' + """ type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
+                        <div class="form-group"><div class="col-sm-12"><input alt=""" + json.dumps(word("Check box") + ", " + word('Include ' + editable_name + ' for editing')) + """ type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
                 output += """
                         <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Download All') + '</button></div><input type="hidden" name="_download_attachments" value="1"/>'#<input type="hidden" name="_question_number" value="' + str(status.question.number) + '"/>'
 
                 output += """
-                      <input type="hidden" name="csrf_token" value=""" + '"' + server.generate_csrf() + '"' + """/>
+                      <input type="hidden" name="csrf_token" value=""" + json.dumps(server.generate_csrf()) + """/>
                     </form>
                   </div>
                 </div>
@@ -1456,7 +1456,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     <div class="row">
       <div class="col-md-12">
         <div class="input-group">
-            <input type="text" class="form-control" id="daMessage" placeholder=""" + '"' + word("Type your message here.") + '"' + """>
+            <input type="text" class="form-control" id="daMessage" placeholder=""" + json.dumps(word("Type your message here.")) + """>
             <span class="input-group-btn"><button class="btn btn-default" id="daSend" type="button">""" + word("Send") + """</button></span>
         </div>
       </div>
@@ -1580,7 +1580,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     if autocomplete_id:
         status.extra_scripts.append("""
 <script>
-  initAutocomplete(""" + repr(str(autocomplete_id)) + """);
+  initAutocomplete(""" + json.dumps(autocomplete_id) + """);
 </script>
 """)
     if len(status.maps):
@@ -1748,7 +1748,7 @@ def input_for(status, field, wide=False, embedded=False):
         else:
             label_text = 'no label'
         if label_text != 'no label':
-            title_text = ' title="' + label_text + '"'
+            title_text = ' title=' + json.dumps(label_text)
         else:
             title_text = ''
     else:
@@ -1880,7 +1880,7 @@ def input_for(status, field, wide=False, embedded=False):
                     emb_text += 'style="min-width: ' + unicode(inline_width) + '" '
                 label_text = strip_quote(to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), dict(), list(), status).strip())
                 if label_text != 'no label':
-                    emb_text += 'title="' + label_text + '" '
+                    emb_text += 'title=' + json.dumps(label_text) + ' '
             else:
                 output += '<p class="sr-only">' + word('Select box') + '</p>'
                 if hasattr(field, 'datatype') and field.datatype == 'combobox':
@@ -2064,7 +2064,7 @@ def input_for(status, field, wide=False, embedded=False):
             if embedded:
                 output += '<span class="inline-error-wrapper"><input alt="' + word("You can upload a file here") + '" type="file" class="file-embedded" name="' + escape_id(saveas_string) + '"' + title_text + ' id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/></span>'
             else:
-                output += '<input alt="' + word("You can upload a file here") + '" type="file" class="dafile" data-show-upload="false" ' + maximagesize + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
+                output += '<input alt=' + json.dumps(word("You can upload a file here")) + ' type="file" class="dafile" data-show-upload="false" ' + maximagesize + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
             #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
         elif field.datatype == 'range':
             ok = True
@@ -2094,7 +2094,7 @@ def input_for(status, field, wide=False, embedded=False):
         elif field.datatype in ['area', 'mlarea']:
             if embedded:
                 output += '<span class="embed-area-wrapper">'
-            output += '<textarea alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + title_text + ' rows="4" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + '>'
+            output += '<textarea alt=' + json.dumps(word("Input box")) + ' class="form-control' + extra_class + '"' + title_text + ' rows="4" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + '>'
             if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
                 output += defaultvalue
             output += '</textarea>'
