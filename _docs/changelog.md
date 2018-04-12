@@ -4,6 +4,23 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.47](https://github.com/jhpyle/docassemble/releases/tag/v0.2.47) - 2018-04-12
+
+### Fixed
+- Problem with quoting glossary terms in HTML.
+
+## [0.2.46](https://github.com/jhpyle/docassemble/releases/tag/v0.2.46) - 2018-04-11
+
+### Fixed
+- Bug in new `show if` code.
+
+## [0.2.45](https://github.com/jhpyle/docassemble/releases/tag/v0.2.45) - 2018-04-11
+
+### Fixed
+- Identification of names of ZIP files uploaded through Package Management.
+- Exception raised by Unicode non-breaking spaces in interview files.
+- The `show if` JavaScript feature now works with checkbox values.
+
 ## [0.2.44](https://github.com/jhpyle/docassemble/releases/tag/v0.2.44) - 2018-03-31
 
 ### Added
