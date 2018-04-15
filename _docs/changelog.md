@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.48](https://github.com/jhpyle/docassemble/releases/tag/v0.2.48) - 2018-04-14
+
+### Changed
+- The `Address` methods no longer require `.city` to be defined.
+- The `Address` object and the `address autocomplete` feature now
+  use more of the possible address components of addresses returned by
+  the Google APIs.
+
+### Fixed
+- Bug in code for getting temporary URLs to cloud storage.
+
 ## [0.2.47](https://github.com/jhpyle/docassemble/releases/tag/v0.2.47) - 2018-04-12
 
 ### Fixed

@@ -1,7 +1,8 @@
 ---
-layout: page
+layout: docs
 title: A demonstration of docassemble
 short_title: Demo
+order: 10
 ---
 
 # The demonstration

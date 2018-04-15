@@ -11,7 +11,8 @@
               </div>
               <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav ">
-                  {% for thepage in site.pages %}
+                  {% assign sorted_pages = site.pages | sort:"order" %}
+                  {% for thepage in sorted_pages %}
                     {% if thepage.url contains '/search.html' or thepage.url contains '/index.html' or thepage.url == '/' %}
                       {% continue %}
                     {% endif %}
@@ -21,7 +22,6 @@
                   <li><a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.title }}</a></li>
                     {% endif %}
                   {% endfor %}
-                  <li><a href="{{ site.baseurl }}/docs/deploy.html">Deploy</a></li>
                 </ul>
                 <form action="{{ site.baseurl }}/search.html" method="get" accept-charset="UTF-8" class="navbar-form navbar-right dasearchform">
                   <div class="input-group">

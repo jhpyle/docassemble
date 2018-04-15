@@ -560,7 +560,7 @@ configuration below.  Edit the [`S3BUCKET`] environment variable.
         {
           "name": "S3BUCKET",
           "value": "docassemble-example-com"
-        },
+        }
       ],
       "mountPoints": []
     }

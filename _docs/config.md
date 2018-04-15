@@ -2408,6 +2408,21 @@ If no configuration is named `default`, the first configuration will
 be used as the default.  The [call forwarding] feature uses the
 default configuration.
 
+## <a name="user agent"></a>User agent for downloading files
+
+Functions such as [`path_and_mimetype()`] will download files from the
+internet.  When the server downloads the file, it reports its [user
+agent] as `Python-urllib/2.7` by default.  This might cause problems
+for your interviews because some web sites may not want to serve files
+to a user that identifies itself as a "robot."
+
+To use a different [user agent], you can set the `user agent`
+configuration directive.  For example:
+
+{% highlight yaml %}
+user agent: Mozilla/5.0 (X11; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0
+{% endhighlight %}
+
 ## <a name="brute force"></a>Protecting against multiple login attempts
 
 By default, users who unsuccessfully log in are blocked after 10
@@ -2722,3 +2737,5 @@ and Facebook API keys.
 [Google Docs]: https://docs.google.com
 [Google Analytics]: https://analytics.google.com
 [pageview]: https://developers.google.com/analytics/devguides/collection/analyticsjs/pages#tracking_virtual_pageviews
+[`path_and_mimetype()`]: {{ site.baseurl }}/docs/functions.html#path_and_mimetype
+[user agent]: https://en.wikipedia.org/wiki/User_agent

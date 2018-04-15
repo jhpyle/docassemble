@@ -46,6 +46,92 @@
     - Zip: defendant.address.zip
       required: False
     - County: defendant.address.county
+"address-autocomplete-nz": |-
+  question: |
+    What is the address of the adverse
+    party?
+  fields:
+    - Address: defendant.address.address
+      address autocomplete: True
+    - Suburb: defendant.address.sublocality_level_1
+    - City: defendant.address.city
+    - Postal Code: defendant.address.postal_code
+      required: False
+"address-autocomplete-test": |-
+  question: |
+    Test address autocomplete
+  fields:
+    - address: the_address.address
+      address autocomplete: True
+    - note: |
+        The following attribute names are Google Place components.
+    - "administrative_area_&#8203;level_1": the_address.administrative_area_level_1
+      required: False
+    - "administrative_area_&#8203;level_2": the_address.administrative_area_level_2
+      required: False
+    - "administrative_area_&#8203;level_3": the_address.administrative_area_level_3
+      required: False
+    - "administrative_area_&#8203;level_4": the_address.administrative_area_level_4
+      required: False
+    - "administrative_area_&#8203;level_5": the_address.administrative_area_level_5
+      required: False
+    - colloquial_area: the_address.colloquial_area
+      required: False
+    - country: the_address.country
+      required: False
+    - floor: the_address.floor
+      required: False
+    - intersection: the_address.intersection
+      required: False
+    - locality: the_address.locality
+      required: False
+    - neighborhood: the_address.neighborhood
+      required: False
+    - post_box: the_address.post_box
+      required: False
+    - postal_code: the_address.postal_code
+      required: False
+    - postal_code_prefix: the_address.postal_code_prefix
+      required: False
+    - postal_code_suffix: the_address.postal_code_suffix
+      required: False
+    - postal_town: the_address.postal_town
+      required: False
+    - premise: the_address.premise
+      required: False
+    - room: the_address.room
+      required: False
+    - route: the_address.route
+      required: False
+    - suite: the_address.suite
+      required: False
+    - street_number: the_address.street_number
+      required: False
+    - sublocality: the_address.sublocality
+      required: False
+    - sublocality_level_1: the_address.sublocality_level_1
+      required: False
+    - sublocality_level_2: the_address.sublocality_level_2
+      required: False
+    - sublocality_level_3: the_address.sublocality_level_3
+      required: False
+    - sublocality_level_4: the_address.sublocality_level_4
+      required: False
+    - sublocality_level_5: the_address.sublocality_level_5
+      required: False
+    - subpremise: the_address.subpremise
+      required: False
+    - note: |
+        The following attribute names are built in to **docassemble**.
+        They have different names than Google Place component names.
+    - unit: the_address.unit
+      required: False
+    - city: the_address.city
+      required: False
+    - state: the_address.state
+      required: False
+    - zip: the_address.zip
+      required: False
 "age_in_years": |-
   question: |
     What is your date of birth?
@@ -4518,14 +4604,18 @@
   \ False\n  - City: the_address.city\n  - State: the_address.state\n  - Zip: the_address.zip\n\
   \    required: False\n---\nmandatory: True\ncode: |\n  the_address.geolocate()\n\
   ---\nmandatory: True\nquestion: |\n  Information about your address\nsubquestion:\
-  \ |\n  The address you provided is:\n    \n  ${ the_address }\n\n  % if the_address.geolocate_success:\n\
-  \  The normalized version is:\n\n  ${ the_address.norm }\n\n  The long-form normalized\n\
-  \  version is:\n\n  ${ the_address.norm_long }\n\n  The latitude and longitude are\n\
-  \  ${ the_address.location.latitude }\n  and\n  ${ the_address.location.longitude\
-  \ }.\n\n  % if the_address.attr('neighborhood'):\n  The address is located in the\n\
-  \  ${ the_address.neighborhood }\n  neighborhood.\n  % endif\n\n  % if the_address.attr('county'):\n\
-  \  The address is located in\n  ${ the_address.county }.\n  % endif\n\n  ${ map_of(the_address)\
-  \ }\n\n  % else:\n  The address could not be\n  geolocated.\n  % endif"
+  \ |\n  The address you provided is:\n    \n  ${ the_address }\n\n  As JSON, this\
+  \ is:\n\n  ${ indent(json.dumps(the_address.as_serializable(), indent=2)) }\n\n\
+  \  % if the_address.geolocate_success:\n  The normalized version is:\n\n  ${ the_address.norm\
+  \ }\n\n  As JSON, this is:\n\n  ${ indent(json.dumps(the_address.norm.as_serializable(),\
+  \ indent=2)) }\n  \n  The long-form normalized\n  version is:\n\n  ${ the_address.norm_long\
+  \ }\n\n  As JSON, this is:\n\n  ${ indent(json.dumps(the_address.norm_long.as_serializable(),\
+  \ indent=2)) }\n\n  The latitude and longitude are\n  ${ the_address.location.latitude\
+  \ }\n  and\n  ${ the_address.location.longitude }.\n\n  % if the_address.attr('neighborhood'):\n\
+  \  The address is located in the\n  ${ the_address.neighborhood }\n  neighborhood.\n\
+  \  % endif\n\n  % if the_address.attr('county'):\n  The address is located in\n\
+  \  ${ the_address.county }.\n  % endif\n\n  ${ map_of(the_address) }\n\n  % else:\n\
+  \  The address could not be\n  geolocated.\n  % endif"
 "get-default-timezone": |-
   question: |
     The default time zone is
@@ -7453,6 +7543,7 @@
   code: |
     entry = ml.new_entry()
 "save-url-to-file": |-
+  mandatory: True
   objects:
     - logo: DAFile
   ---

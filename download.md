@@ -1,11 +1,17 @@
 ---
-layout: page
+layout: docs
 title: Download docassemble
 short_title: Download
+order: 30
 ---
 
-If you want to run **docassemble**, you should download and run it
-[using Docker].
+If you want to run **docassemble** to test it out, you should download
+and run it [using Docker].
+
+If you want to deploy **docassemble** in the cloud, your best option
+is to [deploy] it using the [Docassemble Toolkit].  If you want to
+deploy it your own way, you can run it [using Docker] on a cloud-based
+virtual machine.
 
 If you are interested in looking at the source code of
 **docassemble**, you can clone the [GitHub repository]:
@@ -37,3 +43,5 @@ recommended.)  For details of how **docassemble** works, see the
 [GitHub repository]: {{ site.github.repository_url }}
 [Python]: https://www.python.org/
 [PyPI]: https://pypi.python.org/pypi
+[Docassemble Toolkit]: https://community.lawyer/docassemble
+[deploy]: {{ site.baseurl }}/deploy.html

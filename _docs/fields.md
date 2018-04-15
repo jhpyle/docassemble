@@ -1184,6 +1184,12 @@ feature, modify the street address (`.address`) field by setting
 For more information on using this feature, see the documentation for
 the [`Address`] object.
 
+This feature can be used internationally with a variety of address
+types.  Here is an example that illustrates all of the possible
+attributes of the [`Address`] object that can be set by [Place Autocomplete].
+
+{% include side-by-side.html demo="address-autocomplete-test" %}
+
 ## <a name="bigexample"></a>A comprehensive example
 
 Here is a lengthy example that illustrates many of these features.

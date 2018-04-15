@@ -42,7 +42,6 @@
     - support
 - title: Administration
   docs:
-    - deploy
     - installation
     - config
     - docker

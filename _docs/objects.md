@@ -2329,7 +2329,7 @@ object representing the GPS coordinates of the address.
 If you refer to an address in a [Mako] template, it returns `.block()`.
 
 <a name="Address.block"></a> The `.block()` method returns a formatted
-address.  The attributes `address`, `city`, and `state` are needed.
+address.  The attribute `city` is needed.
 
 <a name="Address.geolocate"></a>
 The `.geolocate()` method determines the latitude and longitude of the
@@ -2383,19 +2383,49 @@ If you call `.geolocate()` on an [`Address`] object called
   object containing long-form normalized names of the address
   components.  (E.g., "1234 Main Street" instead of "1234 Main St" and
   "California" instead of "CA.")
-  
+
 In addition, the following attributes will be set if the attribute was
 not already set, and if `.geolocate()` was able to successfully
 determine the value by calling the API:
 
 * `myaddress.street_number` - the street number (e.g., `123`).
 * `myaddress.street` - the street name (e.g., `Main St`).
-* `myaddress.neighborhood` - the neighborhood.
 * `myaddress.city` - the city (known as (`locality`).
 * `myaddress.county` - the county (known as `administrative_area_level_2`).
 * `myaddress.state` - the state (known as `administrative_area_level_1`).
-* `myaddress.zip` - the Zip code.
+* `myaddress.zip` - the Zip code (known as `postal_code`).
 * `myaddress.country` - the country (e.g., `US`).
+
+In addition, the following attributes will be set to the "long" form
+of the values returned from the [Google Maps Geocoding API], if applicable:
+
+* `myaddress.administrative_area_level_1`
+* `myaddress.administrative_area_level_2`
+* `myaddress.administrative_area_level_3`
+* `myaddress.administrative_area_level_4`
+* `myaddress.administrative_area_level_5`
+* `myaddress.colloquial_area`
+* `myaddress.floor`
+* `myaddress.intersection`
+* `myaddress.locality`
+* `myaddress.neighborhood`
+* `myaddress.post_box`
+* `myaddress.postal_code`
+* `myaddress.postal_code_prefix`
+* `myaddress.postal_code_suffix`
+* `myaddress.postal_town`
+* `myaddress.premise`
+* `myaddress.room`
+* `myaddress.route`
+* `myaddress.sublocality`
+* `myaddress.sublocality_level_1`
+* `myaddress.sublocality_level_2`
+* `myaddress.sublocality_level_3`
+* `myaddress.sublocality_level_4`
+* `myaddress.sublocality_level_5`
+* `myaddress.subpremise`
+
+Here is an example that illustrates how the `.geolocate()` method works:
 
 {% include side-by-side.html demo="geolocate" %}
 
@@ -2439,27 +2469,29 @@ It takes two optional keyword parameters:
 ### <a name="address autocomplete"></a>Address autocomplete
 
 If you have defined a [`google maps api key`] in the [Configuration],
-you can use the [Place Autocomplete] feature of the
-[Google Places API] to help your users enter addresses.  Address
-suggestions will be provided as the user begins to type.  To use this
-feature, modify the street address (`.address`) field by setting
-`address autocomplete` to `True`.  Then, when the user selects an
-address, the other components of the address will be filled in with
-the values obtained from Google.  This will only work if the address
-components are part of the same `Address` object.  For example, if the
-street address field is `client.address.address`, the other fields
-must be called `client.address.city`, `client.address.state`, etc.
-The only attributes that can be populated include `.city`, `.county`,
-`.state`, `.zip`, and `.country`.  You do not need to include all of
-these attributes; any attributes not included in the front end of the
-page will be ignored.
+you can use the [Place Autocomplete] feature of the [Google Places
+API] to help your users enter addresses.  Address suggestions will be
+provided as the user begins to type.  To use this feature, modify the
+street address (`.address`) field by setting `address autocomplete` to
+`True`.  Then, when the user selects an address, the other components
+of the address will be filled in with the values obtained from Google.
+This will only work if the address components are part of the same
+`Address` object.  For example, if the street address field is
+`client.address.address`, the other fields must be called
+`client.address.city`, `client.address.state`, etc.  You do not need
+to include all of these attributes; any attributes not included in the
+front end of the page will be ignored.
 
-{% include side-by-side.html demo="address-autocomplete" %}
-
-You will need to enable the following APIs:
+For this feature to work, your [`google maps api key`] will need to be
+associated with an app for which the following APIs are enabled:
 
 * Google Places API Web Service
 * Google Maps JavaScript API
+
+Here is an example that illustrates how the address autocomplete
+feature works:
+
+{% include side-by-side.html demo="address-autocomplete" %}
 
 ### <a name="City"></a>City
 

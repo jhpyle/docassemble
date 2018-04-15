@@ -2,6 +2,7 @@
 layout: docs
 title: Documentation of docassemble
 short_title: Documentation
+order: 20
 ---
 
 This documentation is intended more as a reference guide than as a

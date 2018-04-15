@@ -2,6 +2,7 @@
 layout: docs
 title: How to Deploy
 short_title: Deploy
+order: 40
 ---
 
 Since **docassemble** is a web application, for many people the
