@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.49] - 2018-04-15
+### Fixed
+- Use of deprecated flag when calling `pip`.
+
 ## [0.2.48] - 2018-04-14
 ### Changed
 - The `Address` methods no longer require `.city` to be defined.
