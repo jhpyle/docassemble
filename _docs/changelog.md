@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.49](https://github.com/jhpyle/docassemble/releases/tag/v0.2.49) - 2018-04-15
+
+### Fixed
+- Use of deprecated flag when calling `pip`.
+
 ## [0.2.48](https://github.com/jhpyle/docassemble/releases/tag/v0.2.48) - 2018-04-14
 
 ### Changed
