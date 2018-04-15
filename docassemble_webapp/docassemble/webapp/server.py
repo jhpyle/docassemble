@@ -14367,12 +14367,12 @@ def _on_user_login(sender, user, **extra):
 @user_changed_password.connect_via(app)
 def _on_password_change(sender, user, **extra):
     #logmessage("on password change")
-    fix_secret()
+    fix_secret(user=user)
     
 @user_reset_password.connect_via(app)
 def _on_password_reset(sender, user, **extra):
     #logmessage("on password reset")
-    fix_secret()
+    fix_secret(user=user)
 
 @user_registered.connect_via(app)
 def on_register_hook(sender, user, **extra):

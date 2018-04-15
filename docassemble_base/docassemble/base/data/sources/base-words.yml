@@ -137,6 +137,7 @@
 "First name is required": Null
 "First name": Null
 "First subdivision": Null
+"Floor": Null
 "f": Null
 "Folder": Null
 "from": Null
@@ -334,6 +335,7 @@
 "Restart": Null
 "Resume": Null
 "Role": Null
+"Room": Null
 "rtf_message": Null
 "Running in other tab.": Null
 "Save and Run": Null

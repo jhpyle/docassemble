@@ -725,15 +725,28 @@ class Address(DAObject):
                 output += unicode(self.street_number) + " " + unicode(self.street)
             else:
                 output += unicode(self.address)
-            if include_unit and hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-                if re.search(r'^[0-9]', self.unit):
-                    output += ", " + word("Unit") + " " + unicode(self.unit)
-                else:
-                    output += ", " + unicode(self.unit)
+            if include_unit:
+                if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
+                    if re.search(r'^[0-9]', self.unit):
+                        output += ", " + word("Unit") + " " + unicode(self.unit)
+                    else:
+                        output += ", " + unicode(self.unit)
+                elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
+                    output += ", " + word("Floor") + " " + unicode(self.floor)
+                elif hasattr(self, 'room') and self.room != '' and self.room is not None:
+                    output += ", " + word("Room") + " " + unicode(self.room)
             output += ", "
-        output += unicode(self.city) + ", " + unicode(self.state)
+        if hasattr(self, 'sublocality') and self.sublocality:
+            output += unicode(self.sublocality) + ", "
+        if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
+            output += unicode(self.sublocality_level_1) + ", "
+        output += unicode(self.city)
+        if hasattr(self, 'state') and self.state:
+            output += ", " + unicode(self.state)
         if hasattr(self, 'zip') and self.zip:
             output += " " + unicode(self.zip)
+        elif hasattr(self, 'postal_code') and self.postal_code:
+            output += " " + unicode(self.postal_code)
         if hasattr(self, 'country') and self.country:
             if (not omit_default_country) or get_country() != self.country:
                 output += ", " + country_name(self.country)
@@ -793,30 +806,69 @@ class Address(DAObject):
                 self.norm_long.one_line = results.raw['formatted_address']
             if 'address_components' in results.raw:
                 geo_types = {
-                    'street_number': ('street_number', 'short_name'),
-                    'route': ('street', 'short_name'),
-                    'neighborhood': ('neighborhood', 'long_name'),
-                    'locality': ('city', 'long_name'),
-                    'administrative_area_level_2': ('county', 'long_name'),
                     'administrative_area_level_1': ('state', 'short_name'),
+                    'administrative_area_level_2': ('county', 'long_name'),
+                    'administrative_area_level_3': ('administrative_area_level_3', 'long_name'),
+                    'administrative_area_level_4': ('administrative_area_level_4', 'long_name'),
+                    'administrative_area_level_5': ('administrative_area_level_5', 'long_name'),
+                    'colloquial_area': ('colloquial_area', 'long_name'),
+                    'country': ('country', 'short_name'),
+                    'floor': ('floor', 'long_name'),
+                    'intersection': ('intersection', 'long_name'),
+                    'locality': ('city', 'long_name'),
+                    'neighborhood': ('neighborhood', 'long_name'),
+                    'post_box': ('post_box', 'long_name'),
                     'postal_code': ('zip', 'long_name'),
-                    'country': ('country', 'short_name')
+                    'postal_code_prefix': ('postal_code_prefix', 'long_name'),
+                    'postal_code_suffix': ('postal_code_suffix', 'long_name'),
+                    'postal_town': ('postal_town', 'long_name'),
+                    'premise': ('premise', 'long_name'),
+                    'room': ('room', 'long_name'),
+                    'route': ('street', 'short_name'),
+                    'street_number': ('street_number', 'short_name'),
+                    'sublocality': ('sublocality', 'long_name'),
+                    'sublocality_level_1': ('sublocality_level_1', 'long_name'),
+                    'sublocality_level_2': ('sublocality_level_2', 'long_name'),
+                    'sublocality_level_3': ('sublocality_level_3', 'long_name'),
+                    'sublocality_level_4': ('sublocality_level_4', 'long_name'),
+                    'sublocality_level_5': ('sublocality_level_5', 'long_name'),
+                    'subpremise': ('unit', 'long_name'),
                 }
                 for component in results.raw['address_components']:
                     if 'types' in component and 'long_name' in component:
                         for geo_type, addr_type in geo_types.iteritems():
                             if geo_type in component['types'] and ((not hasattr(self, addr_type[0])) or getattr(self, addr_type[0]) == '' or getattr(self, addr_type[0]) is None):
                                 setattr(self, addr_type[0], component[addr_type[1]])
+                        if (not hasattr(self, geo_type)) or getattr(self, geo_type) == '' or getattr(self, geo_type) is None:
+                            setattr(self, geo_type, component['long_name'])
                 geo_types = {
-                    'street_number': 'street_number',
-                    'route': 'street',
-                    'subpremise': 'unit',
-                    'locality': 'city',
                     'administrative_area_level_1': 'state',
                     'administrative_area_level_2': 'county',
+                    'administrative_area_level_3': 'administrative_area_level_3',
+                    'administrative_area_level_4': 'administrative_area_level_4',
+                    'administrative_area_level_5': 'administrative_area_level_5',
+                    'colloquial_area': 'colloquial_area',
+                    'country': 'country',
+                    'floor': 'floor',
+                    'intersection': 'intersection',
+                    'locality': 'city',
                     'neighborhood': 'neighborhood',
+                    'post_box': 'post_box',
                     'postal_code': 'zip',
-                    'country': 'country'
+                    'postal_code_prefix': 'postal_code_prefix',
+                    'postal_code_suffix': 'postal_code_suffix',
+                    'postal_town': 'postal_town',
+                    'premise': 'premise',
+                    'room': 'room',
+                    'route': 'street',
+                    'street_number': 'street_number',
+                    'sublocality': 'sublocality',
+                    'sublocality_level_1': 'sublocality_level_1',
+                    'sublocality_level_2': 'sublocality_level_2',
+                    'sublocality_level_3': 'sublocality_level_3',
+                    'sublocality_level_4': 'sublocality_level_4',
+                    'sublocality_level_5': 'sublocality_level_5',
+                    'subpremise': 'unit'
                 }
                 for component in results.raw['address_components']:
                     if 'types' in component:
@@ -824,8 +876,12 @@ class Address(DAObject):
                             if geo_type in component['types']:
                                 if 'short_name' in component:
                                     setattr(self.norm, addr_type, component['short_name'])
+                                    if addr_type != geo_type:
+                                        setattr(self.norm, geo_type, component['short_name'])
                                 if 'long_name' in component:
                                     setattr(self.norm_long, addr_type, component['long_name'])
+                                    if addr_type != geo_type:
+                                        setattr(self.norm_long, geo_type, component['long_name'])
                 if hasattr(self.norm, 'unit'):
                     self.norm.unit = '#' + unicode(self.norm.unit)
                 if hasattr(self.norm_long, 'unit'):
@@ -883,9 +939,21 @@ class Address(DAObject):
                 output += unicode(self.address) + line_breaker
             if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
                 output += unicode(self.unit) + line_breaker
-        output += unicode(self.city) + ", " + unicode(self.state)
+            elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
+                output += word("Floor") + " " + unicode(self.floor) + line_breaker
+            elif hasattr(self, 'room') and self.room != '' and self.room is not None:
+                output += word("Room") + " " + unicode(self.room) + line_breaker
+        if hasattr(self, 'sublocality') and self.sublocality:
+            output += unicode(self.sublocality) + line_breaker
+        if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
+            output += unicode(self.sublocality_level_1) + line_breaker
+        output += unicode(self.city)
+        if hasattr(self, 'state') and self.state:
+            output += ", " + unicode(self.state)
         if hasattr(self, 'zip'):
             output += " " + unicode(self.zip)
+        elif hasattr(self, 'postal_code') and self.postal_code:
+            output += " " + unicode(self.postal_code)
         return(output)
     def line_one(self):
         """Returns the first line of the address, including the unit 
@@ -898,11 +966,26 @@ class Address(DAObject):
             output = unicode(self.address)
         if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
             output += ", " + unicode(self.unit)
+        elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
+            output += ", " + word("Floor") + " " + unicode(self.floor)
+        elif hasattr(self, 'room') and self.room != '' and self.room is not None:
+            output += ", " + word("Room") + " " + unicode(self.room)
         return(output)
     def line_two(self):
         """Returns the second line of the address, including the city,
         state and zip code."""
-        output = unicode(self.city) + ", " + unicode(self.state) + " " + unicode(self.zip)
+        output = ""
+        if hasattr(self, 'sublocality') and self.sublocality:
+            output += unicode(self.sublocality) + ", "
+        if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
+            output += unicode(self.sublocality_level_1) + ", "
+        output += unicode(self.city)
+        if hasattr(self, 'state') and self.state:
+            output += ", " + unicode(self.state)
+        if hasattr(self, 'zip') and self.zip:
+            output += " " + unicode(self.zip)
+        elif hasattr(self, 'postal_code') and self.postal_code:
+            output += " " + unicode(self.postal_code)
         return(output)
 
 class City(Address):

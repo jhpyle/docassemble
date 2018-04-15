@@ -45,6 +45,7 @@ do
          "$file" = "question-help-button" -o \
          "$file" = "question-help-button-o \ff" -o \
          "$file" = "right" -o \
+	 "$file" = "address-autocomplete-test" -o \
          "$file" = "centered" ]
     then
 	convert $tempfile -resize 650x9999 -trim docassemble_webapp/docassemble/webapp/static/examples/$file.png

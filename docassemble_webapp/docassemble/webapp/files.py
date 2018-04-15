@@ -223,6 +223,7 @@ class SavedFile(object):
             self.save()
         return
     def temp_url_for(self, **kwargs):
+        filename = kwargs.get('filename', self.filename)
         seconds = kwargs.get('seconds', None)
         if type(seconds) is float:
             seconds = int(seconds)
