@@ -40,7 +40,7 @@ use the HTTP and HTTPS ports if it has exclusive use of them.)
 
 # <a name="minimum"></a>Minimum system requirements
 
-A machine running **docassemble** uses about 800-900GB of RAM during
+A machine running **docassemble** uses about 800-900MB of RAM during
 normal operation.  During software updates (running [pip]), the memory
 usage can momentarily be much higher.  Therefore, it is recommended
 that you only run **docassemble** on a machine with at least 2GB of
