@@ -14,8 +14,8 @@
 
 {% if word_box %}
 <h3 class="page-header">{{ word('Draft translation of system phrases') }}</h3>
-<p>{{ word("Here is the start of a YAML file you can import with a 'words' directive.") }} </p>
-<p>{{ word("Copy from here and paste into a YAML file, e.g., in the Sources folder of the Playground.") }}</p>
+<p>{{ word("Here is the start of a YAML file you can import with a 'words' directive in your Configuration.") }} </p>
+<p>{{ word("Copy from here and paste into a YAML file, e.g., in the Sources folder of the Playground or the sources folder of a package.") }}</p>
 {% if uses_null %}
 <p>{{ word("Replace each instance of Null with a quoted translation.") }}</p>
 {% endif %}
@@ -40,7 +40,7 @@
 <form action="{{ url_for('utilities') }}" method="POST" class="form" role="form">
   {{ form.hidden_tag() }}
   <div class="form-group">
-    {{ render_field(form.language, tabindex=110) }}
+    {{ render_field(form.language, tabindex=110, placeholder=language_placeholder) }}
   </div>
   <div class="form-actions">
     {{ render_submit_field(form.language_submit, tabindex=120) }}

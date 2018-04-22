@@ -254,7 +254,7 @@ def load(**kwargs):
         daconfig['use font awesome'] = True
     if 'mail' not in daconfig:
         daconfig['mail'] = dict()
-    if 'dispatch' not in daconfig:
+    if 'dispatch' not in daconfig or type(daconfig['dispatch']) is not dict:
         daconfig['dispatch'] = dict()
     if 'ldap login' not in daconfig or type(daconfig['ldap login']) is not dict:
         daconfig['ldap login'] = dict()

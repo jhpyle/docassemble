@@ -223,6 +223,7 @@ class SavedFile(object):
             self.save()
         return
     def temp_url_for(self, **kwargs):
+        filename = kwargs.get('filename', self.filename)
         seconds = kwargs.get('seconds', None)
         if type(seconds) is float:
             seconds = int(seconds)
@@ -424,7 +425,6 @@ def make_package_dir(pkgname, info, author_info, tz_name, directory=None):
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
     dependencies = ", ".join(map(lambda x: repr(x), sorted(info['dependencies'])))
-    dependency_links = ", ".join(map(lambda x: repr(x), sorted(info['dependency_links'])))
     initpy = """\
 try:
     __import__('pkg_resources').declare_namespace(__name__)
@@ -523,7 +523,6 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
       packages=find_packages(),
       namespace_packages=['docassemble'],
       install_requires=[""" + dependencies + """],
-      dependency_links=[""" + dependency_links + """],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/""" + str(pkgname) + """/', package='docassemble.""" + str(pkgname) + """'),
      )

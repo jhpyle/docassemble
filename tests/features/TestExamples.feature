@@ -4337,7 +4337,7 @@ Feature: Example interviews
     And I set "Work" to "Writing briefs, writing memos, and taking even more cases"
     And I click the button "Continue"
     Then I should see the phrase "It seems that you are fairly content with your current work."
-
+  
   Scenario: Test the interview "Share training sets"
     Given I start the interview "docassemble.demo:data/questions/examples/predict-activity.yml"
     Then I should see the phrase "What kind of work do you do now?"
@@ -4347,14 +4347,14 @@ Feature: Example interviews
     And I set "Work" to "Writing briefs, writing memos, and taking even more cases"
     And I click the button "Continue"
     Then I should see the phrase "It seems that you are fairly content with your current work."
-
+  
   Scenario: Test the interview "Machine Learning"
     Given I start the interview "docassemble.demo:data/questions/examples/predict-happy-sad-area.yml"
     Then I should see the phrase "Describe how you feel."
     And I set the text area to "Lousy"
     And I click the button "Continue"
     Then I should see the phrase "You sound sad."
-
+  
   Scenario: Test the interview "Machine Learning"
     Given I start the interview "docassemble.demo:data/questions/examples/predict-happy-sad.yml"
     Then I should see the phrase "Describe how you feel."
@@ -4989,13 +4989,16 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/server-capabilities.yml"
     Then I should see the phrase "Server capabilities"
 
-  Scenario: Test the interview "Interviews"
-    Given I start the interview "docassemble.base:data/questions/examples/session-interview-redirect.yml"
-    Then I should see the phrase "Sign in"
-
-  Scenario: Test the interview "Interviews"
-    Given I start the interview "docassemble.base:data/questions/examples/session-interview.yml"
-    Then I should see the phrase "Sign in"
+  # UNDO
+  # Scenario: Test the interview "Interviews"
+  #   Given I start the interview "docassemble.base:data/questions/examples/session-interview-redirect.yml"
+  #   And I wait 1 second
+  #   Then I should see the phrase "Sign in"
+  #
+  # Scenario: Test the interview "Interviews"
+  #   Given I start the interview "docassemble.base:data/questions/examples/session-interview.yml"
+  #   And I wait 1 second
+  #   Then I should see the phrase "Sign in"
 
   Scenario: Test the interview "Logo title"
     Given I start the interview "docassemble.base:data/questions/examples/set-logo-title.yml"
@@ -5693,9 +5696,11 @@ Feature: Example interviews
     Then I should see the phrase "All done"
     And I should see the phrase "You like apple, potato, and button mushroom."
 
-  Scenario: Test the interview "Require user to log in"
-    Given I start the interview "docassemble.base:data/questions/examples/user-logged-in.yml"
-    Then I should see the phrase "Sign in"
+  # UNDO
+  # Scenario: Test the interview "Require user to log in"
+  #   Given I start the interview "docassemble.base:data/questions/examples/user-logged-in.yml"
+  #   And I wait 1 second
+  #   Then I should see the phrase "Sign in"
 
   # Scenario: Test the interview "Store data in Google Sheet"
   #   Given I start the interview "docassemble.demo:data/questions/examples/google-sheet.yml"
@@ -5738,3 +5743,10 @@ Feature: Example interviews
     And I set "Velocity" to "40 mph"
     And I click the button "Continue"
     Then I should see the phrase "The velocity is 40 mph."
+
+  # Scenario: Test the interview "Address autocomplete in New Zealand"
+  #   Given I start the interview "docassemble.base:data/questions/examples/address-autocomplete-nz.yml"
+
+  # Scenario: Test the interview "Address autocomplete test"
+  #   Given I start the interview "docassemble.base:data/questions/examples/address-autocomplete-test.yml"
+

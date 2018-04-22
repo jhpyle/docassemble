@@ -35,15 +35,18 @@ for word_file in word_file_list:
     filename = docassemble.base.functions.static_filename_path(word_file)
     if os.path.isfile(filename):
         with open(filename, 'rU') as stream:
-            for document in ruamel.yaml.safe_load_all(stream):
-                if document and type(document) is dict:
-                    for lang, words in document.iteritems():
-                        if type(words) is dict:
-                            docassemble.base.functions.update_word_collection(lang, words)
-                        else:
-                            sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
-                else:
-                    sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
+            try:
+                for document in ruamel.yaml.safe_load_all(stream):
+                    if document and type(document) is dict:
+                        for lang, words in document.iteritems():
+                            if type(words) is dict:
+                                docassemble.base.functions.update_word_collection(lang, words)
+                            else:
+                                sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
+                    else:
+                        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
+            except:
+                sys.stderr.write("Error reading " + str(word_file) + ": yaml could not be processed.\n")
 
 default_playground_yaml = """metadata:
   title: Default playground interview
@@ -843,6 +846,9 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'exit':
         remove_question_package(kwargs)
         return(url_for('exit', **kwargs))
+    elif file_reference == 'dispatch':
+        remove_question_package(kwargs)
+        return(url_for('interview_start', **kwargs))
     elif file_reference == 'interview_list':
         remove_question_package(kwargs)
         return(url_for('interview_list', **kwargs))
@@ -1766,7 +1772,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
     if status.question.can_go_back and steps > 1:
         if status.question.interview.navigation_back_button:
             navbar += """\
-        <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon backbuttoncolor navbar-btn" type="submit" title=""" + '"' + word("Go back to the previous question") + '"' + """><i class="fas fa-chevron-left"></i><span class="daback">""" + word('Back') + """</span></button></form></span>
+        <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon backbuttoncolor navbar-btn" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><i class="fas fa-chevron-left"></i><span class="daback">""" + word('Back') + """</span></button></form></span>
 """
         else:
             navbar += """\
@@ -1794,16 +1800,16 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
     chat_message = word("Live chat is available")
     source_message = word("How this question came to be asked")
     if debug_mode:
-        source_button = '<ul role="tablist" class="nav navbar-nav navbar-tabs mynavbar-right hidden-xs-down"><li><a role="tab" class="no-outline nav-link" title=' + repr(str(source_message)) + ' id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li></ul>'
+        source_button = '<ul role="tablist" class="nav navbar-nav navbar-tabs mynavbar-right hidden-xs-down"><li><a role="tab" class="no-outline nav-link" title=' + json.dumps(source_message) + ' id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li></ul>'
     else:
         source_button = ''
     navbar += '        ' + source_button + '<ul role="tablist" class="nav navbar-nav navbar-tabs mynavbar-right tabbuttons"><li class="invisible"><a class="nav-link" id="questionlabel" data-target="#question">' + word('Question') + '</a></li>'
     if len(status.helpText):
         if status.question.helptext is None or status.question.interview.question_help_button:
-            navbar += '<li class="nav-item"><a role="tab" class="pointer no-outline nav-link" data-target="#help" id="helptoggle" title="' + help_message + '">' + help_label + '</a></li>'
+            navbar += '<li class="nav-item"><a role="tab" class="pointer no-outline nav-link" data-target="#help" id="helptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</a></li>'
         else:
-            navbar += '<li class="nav-item"><a role="tab" class="pointer no-outline nav-link" data-target="#help" id="helptoggle" title="' + extra_help_message + '"><span class="daactivetext">' + help_label + ' <i class="fas fa-star"></i></span></a></li>'
-    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a data-target="#help" title="' + phone_message + '" class="nav-link pointer navbar-icon"><i class="fas fa-phone chat-active"></i></a></li><li class="nav-item invisible" id="daChatAvailable"><a data-target="#help" title="' + chat_message + '" class="nav-link pointer navbar-icon" ><i class="fas fa-comment-alt"></i></a></li></ul>'
+            navbar += '<li class="nav-item"><a role="tab" class="pointer no-outline nav-link" data-target="#help" id="helptoggle" title=' + json.dumps(extra_help_message) + '><span class="daactivetext">' + help_label + ' <i class="fas fa-star"></i></span></a></li>'
+    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a data-target="#help" title=' + json.dumps(phone_message) + ' class="nav-link pointer navbar-icon"><i class="fas fa-phone chat-active"></i></a></li><li class="nav-item invisible" id="daChatAvailable"><a data-target="#help" title=' + json.dumps(chat_message) + ' class="nav-link pointer navbar-icon" ><i class="fas fa-comment-alt"></i></a></li></ul>'
     navbar += """
         <div class="collapse navbar-collapse" id="navbar-collapse">
           <ul class="navbar-nav ml-auto">
@@ -1853,6 +1859,8 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
                     if current_user.has_role('admin'):
                         navbar +='<a class="dropdown-item" href="' + url_for('user_list') + '">' + word('User List') + '</a>'
                         navbar +='<a class="dropdown-item" href="' + url_for('config_page') + '">' + word('Configuration') + '</a>'
+                if app.config['SHOW_DISPATCH']:
+                    navbar += '<a class="dropdown-item" href="' + url_for('interview_start') + '">' + word('Available Interviews') + '</a></li>'
                 if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
                     navbar += '<a class="dropdown-item" href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a>'
                 if current_user.has_role('admin', 'developer'):
@@ -2136,7 +2144,7 @@ def infobutton(title):
         docstring += noquote(title_documentation[title]['doc']) + "<br>"
     if 'url' in title_documentation[title]:
         docstring += "<a target='_blank' href='" + title_documentation[title]['url'] + "'>" + word("View documentation") + "</a>"
-    return '&nbsp;<a class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title="' + word("Help") + '" data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="fas fa-question-circle"></i></a>'
+    return '&nbsp;<a class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title=' + json.dumps(word("Help")) + ' data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="fas fa-question-circle"></i></a>'
 
 def search_button(var, field_origins, name_origins, interview_source, all_sources):
     in_this_file = False
@@ -2422,31 +2430,31 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
                     continue
             if var in documentation_dict or var in base_name_info:
                 class_type = 'info'
-                title = 'title="' + word("Special variable") + '" '
+                title = 'title=' + json.dumps(word("Special variable")) + ' '
             elif var not in fields_used and var not in implicitly_defined and var_trans not in fields_used and var_trans not in implicitly_defined:
                 class_type = 'default'
-                title = 'title="' + word("Possibly not defined") + '" '
+                title = 'title=' + json.dumps(word("Possibly not defined")) + ' '
             elif var not in needed_names:
                 class_type = 'warning'
-                title = 'title="' + word("Possibly not used") + '" '
+                title = 'title=' + json.dumps(word("Possibly not used")) + ' '
             else:
                 class_type = 'primary'
                 title = ''
             content += '\n                  <tr' + hide_it + '><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="btn btn-' + class_type + ' playground-variable">' + var + '</a>'
             if var in has_children:
-                content += '&nbsp;<a class="dashowattributes" role="button" data-name="' + noquote(var) + '" title="' + attr_documentation + '"><i class="fas fa-ellipsis-h"></i></a>'
+                content += '&nbsp;<a class="dashowattributes" role="button" data-name="' + noquote(var) + '" title=' + json.dumps(attr_documentation) + '><i class="fas fa-ellipsis-h"></i></a>'
             if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
                 content +='&nbsp;<span data-ref="' + noquote(name_info[var]['type']) + '" class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
             elif var in interview.mlfields:
                 content +='&nbsp;<span data-ref="DAModel" class="daparenthetical">(DAModel)</span>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
             if var in interview.mlfields:
                 if 'ml_group' in interview.mlfields[var] and not interview.mlfields[var]['ml_group'].uses_mako:
                     (ml_package, ml_file, ml_group_id) = get_ml_info(interview.mlfields[var]['ml_group'].original_text, ml_parts[0], ml_parts[1])
-                    content += '&nbsp;<a class="datrain" target="_blank" href="' + url_for('train', package=ml_package, file=ml_file, group_id=ml_group_id) + '" title="' + word("Train") + '"><i class="fas fa-graduation-cap"></i></a>'
+                    content += '&nbsp;<a class="datrain" target="_blank" href="' + url_for('train', package=ml_package, file=ml_file, group_id=ml_group_id) + '" title=' + json.dumps(word("Train")) + '><i class="fas fa-graduation-cap"></i></a>'
                 else:
-                    content += '&nbsp;<a class="datrain" target="_blank" href="' + url_for('train', package=ml_parts[0], file=ml_parts[1], group_id=var) + '" title="' + word("Train") + '"><i class="fas fa-graduation-cap"></i></a>'
+                    content += '&nbsp;<a class="datrain" target="_blank" href="' + url_for('train', package=ml_parts[0], file=ml_parts[1], group_id=var) + '" title=' + json.dumps(word("Train")) + '><i class="fas fa-graduation-cap"></i></a>'
             content += '</td></tr>'
         if len(all_sources):
             content += search_key
@@ -2461,7 +2469,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         for var in sorted(functions):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-warning playground-variable">' + name_info[var]['tag'] + '</a>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
             content += '</td></tr>'
     if len(classes):
         content += '\n                  <tr><td><h4>' + word('Classes') + infobutton('classes') + '</h4></td></tr>'
@@ -2470,14 +2478,14 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             if name_info[var]['bases']:
                 content += '&nbsp;<span data-ref="' + noquote(name_info[var]['bases'][0]) + '" class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
             if name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
             if len(name_info[var]['methods']):
-                content += '&nbsp;<a class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title="' + word('Methods') + '"><i class="fas fa-cog"></i></a>'
+                content += '&nbsp;<a class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title=' + json.dumps(word('Methods')) + '><i class="fas fa-cog"></i></a>'
                 content += '<div style="display: none;" id="XMETHODX' + var + '"><table><tbody>'
                 for method_info in name_info[var]['methods']:
                     content += '<tr><td><a data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="btn btn-warning playground-variable">' + method_info['tag'] + '</a>'
                     if method_info['doc']:
-                        content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(method_info['name']) + '"><i class="fas fa-info-circle"></i></a>'
+                        content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(method_info['name']) + '"><i class="fas fa-info-circle"></i></a>'
                     content += '</td></tr>'
                 content += '</tbody></table></div>'
             content += '</td></tr>'
@@ -2486,7 +2494,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         for var in sorted(modules):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-success playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(var) + '"><i class="fas fa-info-circle"></i></a>'
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(var) + '"><i class="fas fa-info-circle"></i></a>'
             content += '</td></tr>'
     if len(avail_modules):
         content += '\n                  <tr><td><h4>' + word('Modules available in Playground') + infobutton('playground_modules') + '</h4></td></tr>'
@@ -2518,7 +2526,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             content += '\n                  <tr><td>'
             the_ref = get_url_from_file_reference(interview.images[var].get_reference())
             if the_ref is None:
-                content += '<a title="' + word("This image file does not exist") + '" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-danger playground-variable">' + noquote(var) + '</a>'
+                content += '<a title=' + json.dumps(word("This image file does not exist")) + ' data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-danger playground-variable">' + noquote(var) + '</a>'
             else:
                 if show_images:
                     content += '<img class="daimageicon" src="' + the_ref + '">&nbsp;'
@@ -3502,7 +3510,7 @@ def leave():
     if current_user.is_authenticated:
         flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
         logout_user()
-        delete_session()
+    delete_session()
     response = redirect(exit_page)
     response.set_cookie('visitor_secret', '', expires=0)
     response.set_cookie('secret', '', expires=0)
@@ -5360,7 +5368,7 @@ def index():
                 else:
                     logmessage("index: could not find javascript file " + str(fileref))
         if interview_status.question.checkin is not None:
-            do_action = repr(str(interview_status.question.checkin))
+            do_action = json.dumps(interview_status.question.checkin)
         else:
             do_action = 'null'
         chat_available = user_dict['_internal']['livehelp']['availability']
@@ -5442,11 +5450,11 @@ def index():
       var daAllowGoingBack = """ + ('true' if allow_going_back else 'false') + """;
       var daSteps = """ + str(steps) + """;
       var daIsUser = """ + is_user + """;
-      var daChatStatus = """ + repr(str(chat_status)) + """;
-      var daChatAvailable = """ + repr(str(chat_available)) + """;
+      var daChatStatus = """ + json.dumps(chat_status) + """;
+      var daChatAvailable = """ + json.dumps(chat_available) + """;
       var daChatPartnersAvailable = 0;
       var daPhoneAvailable = false;
-      var daChatMode = """ + repr(str(chat_mode)) + """;
+      var daChatMode = """ + json.dumps(chat_mode) + """;
       var daSendChanges = """ + send_changes + """;
       var daInitialized = false;
       var notYetScrolled = true;
@@ -5460,9 +5468,9 @@ def index():
       var daDoAction = """ + do_action + """;
       var daQuestionID = """ + json.dumps(question_id) + """;
       var daNextAction = """ + json.dumps(next_action_review) + """;
-      var daCsrf = """ + repr(str(generate_csrf())) + """;
+      var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
-      var daMessageLog = JSON.parse(atob('""" + safeid(json.dumps(docassemble.base.functions.get_message_log())) + """'));
+      var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
       function preloadImage(url){
         var img = new Image();
         img.src = url;
@@ -5599,15 +5607,15 @@ def index():
         var waitPeriod = 3000;
         if (subject == 'chat'){
           target = "#daChatAvailable a i";
-          message = """ + repr(str(word("Get help through live chat by clicking here."))) + """;
+          message = """ + json.dumps(word("Get help through live chat by clicking here.")) + """;
         }
         else if (subject == 'chatmessage'){
           target = "#daChatAvailable a i";
-          message = """ + repr(str(word("A chat message has arrived."))) + """;
+          message = """ + json.dumps(word("A chat message has arrived.")) + """;
         }
         else if (subject == 'phone'){
           target = "#daPhoneAvailable a i";
-          message = """ + repr(str(word("Click here to get help over the phone."))) + """;
+          message = """ + json.dumps(word("Click here to get help over the phone.")) + """;
         }
         else{
           return;
@@ -5695,7 +5703,7 @@ def index():
         $("body").addClass("dacontrolled");
         var newDiv = document.createElement('div');
         $(newDiv).addClass("top-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 col-centered");
-        $(newDiv).html(""" + repr(str(word("Your screen is being controlled by an operator."))) + """)
+        $(newDiv).html(""" + json.dumps(word("Your screen is being controlled by an operator.")) + """)
         $(newDiv).attr('id', "controlAlert");
         $(newDiv).css("display", "none");
         $(newDiv).appendTo($("body"));
@@ -5713,7 +5721,7 @@ def index():
         }
         $('input[type="submit"], button[type="submit"]').prop("disabled", false);
         $("body").removeClass("dacontrolled");
-        $("#controlAlert").html(""" + repr(str(word("The operator is no longer controlling your screen."))) + """);
+        $("#controlAlert").html(""" + json.dumps(word("The operator is no longer controlling your screen.")) + """);
         setTimeout(function(){
           $("#controlAlert").slideUp(300, function(){
             $("#controlAlert").remove();
@@ -6500,10 +6508,10 @@ def index():
           if (daChatMode == 'peer' || daChatMode == 'peerhelp'){
             daChatPartnersAvailable += data.num_peers;
             if (data.num_peers == 1){
-              $("#peerMessage").html('<span class="badge btn-info">' + data.num_peers + ' """ + word("other user") + """</span>');
+              $("#peerMessage").html('<span class="badge btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other user")) + """ + '</span>');
             }
             else{
-              $("#peerMessage").html('<span class="badge btn-info">' + data.num_peers + ' """ + word("other users") + """</span>');
+              $("#peerMessage").html('<span class="badge btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other users")) + """ + '</span>');
             }
             $("#peerMessage").removeClass("invisible");
           }
@@ -6512,10 +6520,10 @@ def index():
           }
           if (daChatMode == 'peerhelp' || daChatMode == 'help'){
             if (data.help_available == 1){
-              $("#peerHelpMessage").html('<span class="badge btn-primary">' + data.help_available + ' """ + word("operator") + """</span>');
+              $("#peerHelpMessage").html('<span class="badge btn-primary">' + data.help_available + ' ' + """ + json.dumps(word("operator")) + """ + '</span>');
             }
             else{
-              $("#peerHelpMessage").html('<span class="badge btn-primary">' + data.help_available + ' """ + word("operators") + """</span>');
+              $("#peerHelpMessage").html('<span class="badge btn-primary">' + data.help_available + ' ' + """ + json.dumps(word("operators")) + """ + '</span>');
             }
             $("#peerHelpMessage").removeClass("invisible");
           }
@@ -6601,7 +6609,7 @@ def index():
         }
         else{
           var newImg = document.createElement('img');
-          $(newImg).attr("src", """ + repr(str(url_for('static', filename='app/loader.gif'))) + """);
+          $(newImg).attr("src", """ + json.dumps(url_for('static', filename='app/loader.gif')) + """);
           $(newImg).attr("id", "daSpinner");
           $(newImg).addClass("da-sig-spinner");
           $(newImg).addClass("top-for-navbar");
@@ -6696,17 +6704,25 @@ def index():
         });
         $("input.nota-checkbox").click(function(){
           $(this).parent().find('input.non-nota-checkbox').each(function(){
+            var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
+            if (existing_val != false){
+              $(this).trigger('change');
+            }
           });
         });
         $("input.non-nota-checkbox").click(function(){
           $(this).parent().find('input.nota-checkbox').each(function(){
+            var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
+            if (existing_val != false){
+              $(this).trigger('change');
+            }
           });
         });
         $("input.dafile").fileinput();
         $('.combobox').combobox();
-        $("#emailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + repr(str(word("An e-mail address is required."))) + """, 'email': """ + repr(str(word("You need to enter a complete e-mail address."))) + """}}, 'errorClass': 'da-has-error'});
+        $("#emailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + json.dumps(word("An e-mail address is required.")) + """, 'email': """ + json.dumps(word("You need to enter a complete e-mail address.")) + """}}, 'errorClass': 'da-has-error'});
         $("a[data-embaction]").click(daEmbeddedAction);
         $("a[data-js]").click(daEmbeddedJs);
         $("a.review-action").click(daReviewAction);
@@ -6859,12 +6875,28 @@ def index():
         });
         var varlookup = Object();
         if ($("input[name='_varnames']").length){
-           the_hash = $.parseJSON(atob($("input[name='_varnames']").val()));
-           for (var key in the_hash){
-             if (the_hash.hasOwnProperty(key)){
-               varlookup[the_hash[key]] = key;
-             }
-           }
+          the_hash = $.parseJSON(atob($("input[name='_varnames']").val()));
+          for (var key in the_hash){
+            if (the_hash.hasOwnProperty(key)){
+              varlookup[the_hash[key]] = key;
+            }
+          }
+        }
+        if ($("input[name='_checkboxes']").length){
+          the_hash = $.parseJSON(atob($("input[name='_checkboxes']").val()));
+          for (var key in the_hash){
+            if (the_hash.hasOwnProperty(key)){
+              var checkboxName = atob(key);
+              var baseName = checkboxName
+              checkboxName = checkboxName.replace(/^.*\[['"]([^\]]*)['"]\]$/, "$1");
+              if (checkboxName != baseName){
+                baseName = baseName.replace(/^(.*)\[.*/, "$1");
+                varlookup[btoa(baseName + "['" + atob(checkboxName) + "']")] = key;
+                varlookup[btoa(baseName + "[u'" + atob(checkboxName) + "']")] = key;
+                varlookup[btoa(baseName + '["' + atob(checkboxName) + '"]')] = key;
+              }
+            }
+          }
         }
         daShowIfInProcess = true;
         $(".showif").each(function(){
@@ -7591,8 +7623,10 @@ def interview_menu(absolute_urls=False, start_new=False):
 
 @app.route('/list', methods=['GET'])
 def interview_start():
+    if current_user.is_authenticated:
+        delete_session_for_interview()
     if len(daconfig['dispatch']) == 0:
-        return redirect(url_for('index', reset=1, i=final_default_yaml_filename))
+        return redirect(url_for('index', i=final_default_yaml_filename))
     if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
         is_json = True
     else:
@@ -7858,13 +7892,13 @@ def observer():
       var daShowingHelp = false;
       var daInformedChanged = false;
       var dadisable = null;
-      var daCsrf = """ + repr(str(generate_csrf())) + """;
+      var daCsrf = """ + json.dumps(generate_csrf()) + """;
       window.turnOnControl = function(){
         //console.log("Turning on control");
         daSendChanges = true;
         daNoConnectionCount = 0;
         resetPushChanges();
-        socket.emit('observerStartControl', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """});
+        socket.emit('observerStartControl', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """});
       }
       window.turnOffControl = function(){
         //console.log("Turning off control");
@@ -7875,7 +7909,7 @@ def observer():
         daSendChanges = false;
         daConfirmed = false;
         stopPushChanges();
-        socket.emit('observerStopControl', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """});
+        socket.emit('observerStopControl', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """});
         return;
       }
       function daValidationHandler(form){
@@ -7902,7 +7936,7 @@ def observer():
           return;
         }
         observerChangesInterval = setInterval(pushChanges, """ + str(CHECKIN_INTERVAL) + """);
-        socket.emit('observerChanges', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """, parameters: JSON.stringify($("#daform").serializeArray())});
+        socket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, parameters: JSON.stringify($("#daform").serializeArray())});
       }
       function daProcessAjaxError(xhr, status, error){
         $("body").html(xhr.responseText);
@@ -7960,7 +7994,7 @@ def observer():
         if (observerChangesInterval != null && embeddedJs == null && theId != "backToQuestion" && theId != "helptoggle" && theId != "questionlabel"){
           clearInterval(observerChangesInterval);
         }
-        socket.emit('observerChanges', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """, clicked: skey, parameters: JSON.stringify($("#daform").serializeArray())});
+        socket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, clicked: skey, parameters: JSON.stringify($("#daform").serializeArray())});
         if (embeddedJs != null){
           //console.log("Running the embedded js");
           eval(decodeURIComponent(embeddedJs));
@@ -8244,7 +8278,7 @@ def observer():
         if (typeof socket !== 'undefined') {
             socket.on('connect', function() {
                 //console.log("Connected!");
-                socket.emit('observe', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """});
+                socket.emit('observe', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """});
                 daConnected = true;
             });
             socket.on('terminate', function() {
@@ -8407,8 +8441,8 @@ def monitor():
       var daShowingNotif = false;
       var daUpdatedSessions = Object();
       var daUserid = """ + str(current_user.id) + """;
-      var daPhoneOnMessage = """ + repr(str("The user can call you.  Click to cancel.")) + """;
-      var daPhoneOffMessage = """ + repr(str("Click if you want the user to be able to call you.")) + """;
+      var daPhoneOnMessage = """ + json.dumps(word("The user can call you.  Click to cancel.")) + """;
+      var daPhoneOffMessage = """ + json.dumps(word("Click if you want the user to be able to call you.")) + """;
       var daSessions = Object();
       var daAvailRoles = Object();
       var daChatPartners = Object();
@@ -8418,12 +8452,12 @@ def monitor():
       var daUsePhone = """ + call_forwarding_on + """;
       var daSubscribedRoles = """ + json.dumps(subscribed_roles) + """;
       var daAvailableForChat = """ + daAvailableForChat + """;
-      var daPhoneNumber = """ + repr(str(default_phone_number)) + """;
+      var daPhoneNumber = """ + json.dumps(default_phone_number) + """;
       var daFirstTime = 1;
       var updateMonitorInterval = null;
       var daNotificationsEnabled = false;
       var daControlling = Object();
-      var daBrowserTitle = """ + repr(str(word('Monitor'))) + """;
+      var daBrowserTitle = """ + json.dumps(word('Monitor')) + """;
       window.gotConfirmation = function(key){
           //console.log("Got confirmation in parent for key " + key);
           // daControlling[key] = 2;
@@ -8463,7 +8497,7 @@ def monitor():
           }, 2000);
       }
       window.abortControlling = function(key){
-          topMessage(""" + repr(str(word("That screen is already being controlled by another operator"))) + """);
+          topMessage(""" + json.dumps(word("That screen is already being controlled by another operator")) + """);
           stopControlling(key);
       }
       window.stopControlling = function(key){
@@ -8565,10 +8599,10 @@ def monitor():
           }
           if ($("#listelement" + skey).offset().top > $(window).scrollTop() + $(window).height()){
             if (mode == "chat"){
-              $("#chat-message-below").html(""" + repr(str(word("New message below"))) + """);
+              $("#chat-message-below").html(""" + json.dumps(word("New message below")) + """);
             }
             else{
-              $("#chat-message-below").html(""" + repr(str(word("New conversation below"))) + """);
+              $("#chat-message-below").html(""" + json.dumps(word("New conversation below")) + """);
             }
             //$("#chat-message-below").data('key', key);
             $("#chat-message-below").slideDown();
@@ -8577,10 +8611,10 @@ def monitor():
           }
           else if ($("#listelement" + skey).offset().top + $("#listelement" + skey).height() < $(window).scrollTop() + 32){
             if (mode == "chat"){
-              $("#chat-message-above").html(""" + repr(str(word("New message above"))) + """);
+              $("#chat-message-above").html(""" + json.dumps(word("New message above")) + """);
             }
             else{
-              $("#chat-message-above").html(""" + repr(str(word("New conversation above"))) + """);
+              $("#chat-message-above").html(""" + json.dumps(word("New conversation above")) + """);
             }
             //$("#chat-message-above").data('key', key);
             $("#chat-message-above").slideDown();
@@ -8761,7 +8795,7 @@ def monitor():
           $(xButtonIcon).appendTo($(xButton));
           $("#listelement" + skey).addClass("list-group-item-danger");
           $("#session" + skey).find("a").remove();
-          $("#session" + skey).find("span").first().html('""" + word("offline") + """');
+          $("#session" + skey).find("span").first().html(""" + json.dumps(word("offline")) + """);
           $("#session" + skey).find("span").first().removeClass('label-info');
           $("#session" + skey).find("span").first().addClass('label-danger');
           $(xButton).click(function(){
@@ -8835,7 +8869,7 @@ def monitor():
                 the_html += obj.first_name + ' ' + obj.last_name;
               }
               else{
-                the_html += '""" + word("anonymous visitor") + """ ' + obj.temp_user_id;
+                the_html += """ + json.dumps(word("anonymous visitor") + ' ') + """ + obj.temp_user_id;
               }
           }
           var theListElement;
@@ -8978,7 +9012,7 @@ def monitor():
           if (!obj.blocked){
               $(unblockButton).addClass("invisible");
           }
-          $(unblockButton).html('""" + word("Unblock") + """');
+          $(unblockButton).html(""" + json.dumps(word("Unblock")) + """);
           $(unblockButton).attr('href', '#');
           $(unblockButton).appendTo($(sessionDiv));
           var blockButton = document.createElement('a');
@@ -8986,7 +9020,7 @@ def monitor():
           if (obj.blocked){
               $(blockButton).addClass("invisible");
           }
-          $(blockButton).html('""" + word("Block") + """');
+          $(blockButton).html(""" + json.dumps(word("Block")) + """);
           $(blockButton).attr('href', '#');
           $(blockButton).data('name', 'block');
           $(blockButton).appendTo($(sessionDiv));
@@ -9007,36 +9041,36 @@ def monitor():
           });
           var joinButton = document.createElement('a');
           $(joinButton).addClass("btn btn-warning observebutton");
-          $(joinButton).html('""" + word("Join") + """');
-          $(joinButton).attr('href', '""" + url_for('visit_interview') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
+          $(joinButton).html(""" + json.dumps(word("Join")) + """);
+          $(joinButton).attr('href', """ + json.dumps(url_for('visit_interview') + '?') + """ + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
           $(joinButton).data('name', 'join');
           $(joinButton).attr('target', '_blank');
           $(joinButton).appendTo($(sessionDiv));
           if (wants_to_chat){
               var openButton = document.createElement('a');
               $(openButton).addClass("btn btn-primary observebutton");
-              $(openButton).attr('href', '""" + url_for('observer') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
+              $(openButton).attr('href', """ + json.dumps(url_for('observer') + '?') + """ + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
               //$(openButton).attr('href', 'about:blank');
               $(openButton).attr('id', 'observe' + key);
               $(openButton).attr('target', 'iframe' + key);
-              $(openButton).html('""" + word("Observe") + """');
+              $(openButton).html(""" + json.dumps(word("Observe")) + """);
               $(openButton).data('name', 'open');
               $(openButton).appendTo($(sessionDiv));
               var stopObservingButton = document.createElement('a');
               $(stopObservingButton).addClass("btn btn-default observebutton invisible");
-              $(stopObservingButton).html('""" + word("Stop Observing") + """');
+              $(stopObservingButton).html(""" + json.dumps(word("Stop Observing")) + """);
               $(stopObservingButton).attr('href', '#');
               $(stopObservingButton).data('name', 'stopObserving');
               $(stopObservingButton).appendTo($(sessionDiv));
               var controlButton = document.createElement('a');
               $(controlButton).addClass("btn btn-info observebutton");
-              $(controlButton).html('""" + word("Control") + """');
+              $(controlButton).html(""" + json.dumps(word("Control")) + """);
               $(controlButton).attr('href', '#');
               $(controlButton).data('name', 'control');
               $(controlButton).appendTo($(sessionDiv));
               var stopControllingButton = document.createElement('a');
               $(stopControllingButton).addClass("btn btn-default observebutton invisible");
-              $(stopControllingButton).html('""" + word("Stop Controlling") + """');
+              $(stopControllingButton).html(""" + json.dumps(word("Stop Controlling")) + """);
               $(stopControllingButton).attr('href', '#');
               $(stopControllingButton).data('name', 'stopControlling');
               $(stopControllingButton).appendTo($(sessionDiv));
@@ -9236,7 +9270,7 @@ def monitor():
                   var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
                   //console.log('chatready: ' + key);
                   activateChatArea(key);
-                  notifyOperator(key, "chatready", """ + repr(str(word("New chat connection from"))) + """ + ' ' + data.name)
+                  notifyOperator(key, "chatready", """ + json.dumps(word("New chat connection from")) + """ + ' ' + data.name)
               });
               socket.on('chatstop', function(data) {
                   var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
@@ -9299,7 +9333,7 @@ def monitor():
                         }
                       }
                       if (data.data.hasOwnProperty('temp_user_id')){
-                        notifyOperator(key, "chat", """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.data.temp_user_id + ': ' + data.data.message);
+                        notifyOperator(key, "chat", """ + json.dumps(word("anonymous visitor")) + """ + ' ' + data.data.temp_user_id + ': ' + data.data.message);
                       }
                       else{
                         if (data.data.first_name && data.data.first_name != ''){
@@ -9505,7 +9539,7 @@ def update_package_wait():
       function daRestart(){
         $.ajax({
           type: 'POST',
-          url: """ + repr(str(url_for('restart_ajax'))) + """,
+          url: """ + json.dumps(url_for('restart_ajax')) + """,
           data: 'csrf_token=""" + my_csrf + """&action=restart',
           success: daRestartCallback,
           dataType: 'json'
@@ -9517,13 +9551,13 @@ def update_package_wait():
           if (data.status == 'finished'){
             resultsAreIn = true;
             if (data.ok){
-              $("#notification").html('""" + word("The package update was successful.  The logs are below.") + """');
+              $("#notification").html(""" + json.dumps(word("The package update was successful.  The logs are below.")) + """);
               $("#notification").removeClass("alert-info");
               $("#notification").removeClass("alert-danger");
               $("#notification").addClass("alert-success");
             }
             else{
-              $("#notification").html('""" + word("The package update was not fully successful.  The logs are below.") + """');
+              $("#notification").html(""" + json.dumps(word("The package update was not fully successful.  The logs are below.")) + """);
               $("#notification").removeClass("alert-info");
               $("#notification").removeClass("alert-success");
               $("#notification").addClass("alert-danger");
@@ -9537,7 +9571,7 @@ def update_package_wait():
           }
           else if (data.status == 'failed' && !resultsAreIn){
             resultsAreIn = true;
-            $("#notification").html('""" + word("There was an error updating the packages.") + """');
+            $("#notification").html(""" + json.dumps(word("There was an error updating the packages.")) + """);
             $("#notification").removeClass("alert-info");
             $("#notification").removeClass("alert-success");
             $("#notification").addClass("alert-danger");
@@ -9554,7 +9588,7 @@ def update_package_wait():
           }
         }
         else if (!resultsAreIn){
-          $("#notification").html('""" + word("There was an error.") + """');
+          $("#notification").html(""" + json.dumps(word("There was an error.")) + """);
           $("#notification").removeClass("alert-info");
           $("#notification").removeClass("alert-success");
           $("#notification").addClass("alert-danger");
@@ -9569,7 +9603,7 @@ def update_package_wait():
         }
         $.ajax({
           type: 'POST',
-          url: """ + repr(str(url_for('update_package_ajax'))) + """,
+          url: """ + json.dumps(url_for('update_package_ajax')) + """,
           data: 'csrf_token=""" + my_csrf + """',
           success: daUpdateCallback,
           dataType: 'json'
@@ -9612,6 +9646,33 @@ def update_package_ajax():
     else:
         return jsonify(success=True, status='waiting')
 
+def get_package_name_from_zip(zippath):
+    with zipfile.ZipFile(zippath, mode='r') as zf:
+        min_level = 999999
+        setup_py = None
+        for zinfo in zf.infolist():
+            parts = splitall(zinfo.filename)
+            if parts[-1] == 'setup.py':
+                if len(parts) < min_level:
+                    setup_py = zinfo
+                    min_level = len(parts)
+        if setup_py is None:
+            raise Exception("Not a Python package zip file")
+        contents = zf.read(setup_py)
+    contents = re.sub(r'.*setup\(', '', contents, flags=re.DOTALL)
+    extracted = dict()
+    for line in contents.splitlines():
+        m = re.search(r"^ *([a-z_]+) *= *\(?u?'(.*)'", line)
+        if m:
+            extracted[m.group(1)] = m.group(2)
+        m = re.search(r'^ *([a-z_]+) *= *\(?u?"(.*)"', line)
+        if m:
+            extracted[m.group(1)] = m.group(2)
+        m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
+    if 'name' not in extracted:
+        raise Exception("Could not find name of Python package")
+    return extracted['name']    
+    
 @app.route('/updatepackage', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -9653,18 +9714,15 @@ def update_package():
             try:
                 the_file = request.files['zipfile']
                 filename = secure_filename(the_file.filename)
-                pkgname = re.sub(r'\.zip$', r'', filename)
-                pkgname = re.sub(r'docassemble-', 'docassemble.', pkgname)
+                file_number = get_new_file_number(session.get('uid', None), filename)
+                saved_file = SavedFile(file_number, extension='zip', fix=True)
+                file_set_attributes(file_number, private=False, persistent=True)
+                zippath = saved_file.path
+                the_file.save(zippath)
+                saved_file.save()
+                saved_file.finalize()
+                pkgname = get_package_name_from_zip(zippath)
                 if user_can_edit_package(pkgname=pkgname):
-                    file_number = get_new_file_number(session.get('uid', None), filename)
-                    saved_file = SavedFile(file_number, extension='zip', fix=True)
-                    file_set_attributes(file_number, private=False, persistent=True)
-                    zippath = saved_file.path
-                    the_file.save(zippath)
-                    saved_file.save()
-                    saved_file.finalize()
-                    #zippath += '.zip'
-                    #commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user"]
                     install_zip_package(pkgname, file_number)
                     result = docassemble.webapp.worker.update_packages.delay()
                     session['taskwait'] = result.id
@@ -9715,7 +9773,7 @@ def update_package():
     form.giturl.data = None
     extra_js = """
     <script>
-      var default_branch = """ + repr(str(branch if branch else 'master')) + """;
+      var default_branch = """ + json.dumps(branch if branch else 'master') + """;
       function get_branches(){
         var elem = $("#gitbranch");
         elem.empty();
@@ -9726,7 +9784,7 @@ def update_package():
         if (!github_url){
           return;
         }
-        $.get(""" + repr(str(url_for('get_git_branches'))) + """, { url: github_url }, "json")
+        $.get(""" + json.dumps(url_for('get_git_branches')) + """, { url: github_url }, "json")
         .done(function(data){
           console.log(data);
           if (data.success){
@@ -9882,7 +9940,7 @@ def create_playground_package():
             with open(filename, 'rU') as fp:
                 content = fp.read().decode('utf8')
                 info = yaml.load(content)
-            for field in ('dependencies', 'dependency_links', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
+            for field in ('dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
                 if field not in info:
                     info[field] = list()
             info['dependencies'] = [x for x in info['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
@@ -9900,8 +9958,6 @@ def create_playground_package():
                     #the_package_name = re.sub(r'-', '_', the_package_name)
                     #new_url = existing_package.giturl + '/archive/master.zip'
                     new_url = 'git+' + existing_package.giturl + '#egg=' + existing_package.name + '-' + existing_package.packageversion
-                    if new_url not in info['dependency_links']:
-                        info['dependency_links'].append(str(new_url))
                 else:
                     logmessage("create_playground_package: package " + str(package) + " does not exist")
             info['modtime'] = os.path.getmtime(filename)
@@ -9977,15 +10033,15 @@ def create_playground_package():
                 # except subprocess.CalledProcessError as err:
                 #     output += err.output
                 #     raise DAError("create_playground_package: error running git init.  " + output)
-                output += "Doing git config user.email " + repr(str(github_email)) + "\n"
+                output += "Doing git config user.email " + json.dumps(github_email) + "\n"
                 try:
-                    output += subprocess.check_output(["git", "config", "user.email", repr(str(github_email))], cwd=packagedir, stderr=subprocess.STDOUT)
+                    output += subprocess.check_output(["git", "config", "user.email", json.dumps(github_email)], cwd=packagedir, stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as err:
                     output += err.output
                     raise DAError("create_playground_package: error running git config user.email.  " + output)
-                output += "Doing git config user.name " + repr(str(current_user.first_name) + " " + str(current_user.last_name)) + "\n"
+                output += "Doing git config user.name " + json.dumps(unicode(current_user.first_name) + " " + unicode(current_user.last_name)) + "\n"
                 try:
-                    output += subprocess.check_output(["git", "config", "user.name", repr(str(current_user.first_name) + " " + str(current_user.last_name))], cwd=packagedir, stderr=subprocess.STDOUT)
+                    output += subprocess.check_output(["git", "config", "user.name", json.dumps(unicode(current_user.first_name) + " " + unicode(current_user.last_name))], cwd=packagedir, stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as err:
                     output += err.output
                     raise DAError("create_playground_package: error running git config user.email.  " + output)
@@ -10370,7 +10426,7 @@ def restart_page():
       function daRestart(){
         $.ajax({
           type: 'POST',
-          url: """ + repr(str(url_for('restart_ajax'))) + """,
+          url: """ + json.dumps(url_for('restart_ajax')) + """,
           data: 'csrf_token=""" + generate_csrf() + """&action=restart',
           success: daRestartCallback,
           dataType: 'json'
@@ -10538,7 +10594,7 @@ def gd_sync_wait():
       function daRestart(){
         $.ajax({
           type: 'POST',
-          url: """ + repr(str(url_for('restart_ajax'))) + """,
+          url: """ + json.dumps(url_for('restart_ajax')) + """,
           data: 'csrf_token=""" + my_csrf + """&action=restart',
           success: daRestartCallback,
           dataType: 'json'
@@ -10550,13 +10606,13 @@ def gd_sync_wait():
           if (data.status == 'finished'){
             resultsAreIn = true;
             if (data.ok){
-              $("#notification").html('""" + word("The synchronization was successful.") + """');
+              $("#notification").html(""" + json.dumps(word("The synchronization was successful.")) + """);
               $("#notification").removeClass("alert-info");
               $("#notification").removeClass("alert-danger");
               $("#notification").addClass("alert-success");
             }
             else{
-              $("#notification").html('""" + word("The synchronization was not successful.") + """');
+              $("#notification").html(""" + json.dumps(word("The synchronization was not successful.")) + """);
               $("#notification").removeClass("alert-info");
               $("#notification").removeClass("alert-success");
               $("#notification").addClass("alert-danger");
@@ -10572,7 +10628,7 @@ def gd_sync_wait():
           }
           else if (data.status == 'failed' && !resultsAreIn){
             resultsAreIn = true;
-            $("#notification").html('""" + word("There was an error with the synchronization.") + """');
+            $("#notification").html(""" + json.dumps(word("There was an error with the synchronization.")) + """);
             $("#notification").removeClass("alert-info");
             $("#notification").removeClass("alert-success");
             $("#notification").addClass("alert-danger");
@@ -10589,7 +10645,7 @@ def gd_sync_wait():
           }
         }
         else if (!resultsAreIn){
-          $("#notification").html('""" + word("There was an error.") + """');
+          $("#notification").html(""" + json.dumps(word("There was an error.")) + """);
           $("#notification").removeClass("alert-info");
           $("#notification").removeClass("alert-success");
           $("#notification").addClass("alert-danger");
@@ -10604,7 +10660,7 @@ def gd_sync_wait():
         }
         $.ajax({
           type: 'POST',
-          url: """ + repr(str(url_for('checkin_sync_with_google_drive'))) + """,
+          url: """ + json.dumps(url_for('checkin_sync_with_google_drive')) + """,
           data: 'csrf_token=""" + my_csrf + """',
           success: daSyncCallback,
           dataType: 'json'
@@ -11365,7 +11421,7 @@ def playground_files():
           }
           for (var i = 0; i < existingFiles.length; i++){
             if (newFileName == existingFiles[i]){
-              alert('""" + word("Warning: a file by that name already exists.  If you save, you will overwrite it.") + """');
+              alert(""" + json.dumps(word("Warning: a file by that name already exists.  If you save, you will overwrite it.")) + """);
               return;
             }
           }
@@ -11378,17 +11434,17 @@ def playground_files():
           }
         });
         daTextArea = document.getElementById("file_content");
-        daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: """ + ('{name: "markdown", underscoresBreakWords: false}' if mode == 'markdown' else repr(str(mode))) + """, """ + kbOpt + """tabSize: 2, tabindex: 580, autofocus: false, lineNumbers: true, matchBrackets: true});
+        daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: """ + ('{name: "markdown", underscoresBreakWords: false}' if mode == 'markdown' else json.dumps(mode)) + """, """ + kbOpt + """tabSize: 2, tabindex: 580, autofocus: false, lineNumbers: true, matchBrackets: true});
         $(window).bind("beforeunload", function(){
           daCodeMirror.save();
           $("#formtwo").trigger("checkform.areYouSure");
         });
         $("#daDelete").click(function(event){
-          if (!confirm(""" + repr(str(word("Are you sure that you want to delete this file?"))) + """)){
+          if (!confirm(""" + json.dumps(word("Are you sure that you want to delete this file?")) + """)){
             event.preventDefault();
           }
         });
-        $("#formtwo").areYouSure(""" + repr(str(json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}))) + """);
+        $("#formtwo").areYouSure(""" + json.dumps(json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")})) + """);
         $("#formtwo").bind("submit", function(e){
           daCodeMirror.save();
           $("#formtwo").trigger("reinitialize.areYouSure");
@@ -11436,7 +11492,7 @@ def playground_files():
     else:
         any_files = False
     #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
-    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="backbuttoncolor navbar-btn playground-back" type="submit" title="' + word("Go back to the main Playground page") + '"><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
+    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="backbuttoncolor navbar-btn playground-back" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + ('damarkdown' if mode == 'markdown' else mode) + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
 
 @app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
@@ -11463,7 +11519,7 @@ def pull_playground_package():
     branch = request.args.get('branch')
     extra_js = """
     <script>
-      var default_branch = """ + repr(str(branch if branch else 'master')) + """;
+      var default_branch = """ + json.dumps(branch if branch else 'master') + """;
       function get_branches(){
         var elem = $("#github_branch");
         elem.empty();
@@ -11474,7 +11530,7 @@ def pull_playground_package():
         if (!github_url){
           return;
         }
-        $.get(""" + repr(str(url_for('get_git_branches'))) + """, { url: github_url }, "json")
+        $.get(""" + json.dumps(url_for('get_git_branches')) + """, { url: github_url }, "json")
         .done(function(data){
           console.log(data);
           if (data.success){
@@ -11878,7 +11934,7 @@ def playground_packages():
                                     inner_item = re.sub(r'^u?"+', '', inner_item)
                                     the_list.append(inner_item)
                                 extracted[m.group(1)] = the_list
-                        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
+                        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
                         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
                         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
                         with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w') as fp:
@@ -12032,7 +12088,7 @@ def playground_packages():
                     inner_item = re.sub(r'^u?"+', '', inner_item)
                     the_list.append(inner_item)
                 extracted[m.group(1)] = the_list
-        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, github_branch=branch, pypi_package_name=pypi_package)
+        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, github_branch=branch, pypi_package_name=pypi_package)
         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
         #output += "info_dict is set\n"
         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
@@ -12151,7 +12207,7 @@ def playground_packages():
               $(this).show();
             }
           });
-          $("#daGitHub").html('""" + word("GitHub") + """');
+          $("#daGitHub").html(""" + json.dumps(word("GitHub")) + """);
           $(this).hide();
           event.preventDefault();
           return false;
@@ -12169,7 +12225,7 @@ def playground_packages():
                   $(this).hide();
                 }
               });
-              $(this).html('""" + word("Commit") + """');
+              $(this).html(""" + json.dumps(word("Commit")) + """);
               $("#daCancel").show();
             }
             $("#commit_message").focus();
@@ -12189,7 +12245,7 @@ def playground_packages():
     else:
         any_files = False
     #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
-    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="backbuttoncolor navbar-btn playground-back" type="submit" title="' + word("Go back to the main Playground page") + '"><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
+    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="backbuttoncolor navbar-btn playground-back" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     if can_publish_to_pypi:
         if pypi_message is not None:
             pypi_message = Markup(pypi_message)
@@ -12198,7 +12254,7 @@ def playground_packages():
     extra_js = '\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    '
     extra_js += kbLoad
     extra_js += """<script>
-      var isNew = """ + repr(str(is_new)) + """;
+      var isNew = """ + json.dumps(is_new) + """;
       var existingFiles = """ + json.dumps(files) + """;
       var currentFile = """ + json.dumps(the_file) + """;
       function scrollBottom(){
@@ -12212,7 +12268,7 @@ def playground_packages():
           }
           for (var i = 0; i < existingFiles.length; i++){
             if (newFileName == existingFiles[i]){
-              alert('""" + word("Warning: a package definition by that name already exists.  If you save, you will overwrite it.") + """');
+              alert(""" + json.dumps(word("Warning: a package definition by that name already exists.  If you save, you will overwrite it.")) + """);
               return;
             }
           }
@@ -12922,8 +12978,8 @@ def playground_page():
             active_file = new_active_file
     ajax = """
 var exampleData;
-var originalFileName = """ + repr(str(the_file)) + """;
-var isNew = """ + repr(str(is_new)) + """;
+var originalFileName = """ + json.dumps(the_file) + """;
+var isNew = """ + json.dumps(is_new) + """;
 var vocab = """ + json.dumps(vocab_list) + """;
 var existingFiles = """ + json.dumps(files) + """;
 var currentFile = """ + json.dumps(the_file) + """;
@@ -13008,7 +13064,7 @@ $( document ).ready(function() {
     }
     for (var i = 0; i < existingFiles.length; i++){
       if (newFileName == existingFiles[i] || newFileName + '.yml' == existingFiles[i]){
-        alert('""" + word("Warning: a file by that name already exists.  If you save, you will overwrite it.") + """');
+        alert(""" + json.dumps(word("Warning: a file by that name already exists.  If you save, you will overwrite it.")) + """);
         return;
       }
     }
@@ -13167,7 +13223,7 @@ $( document ).ready(function() {
     else:
         kbOpt = ''
         kbLoad = ''
-    return render_template('pages/playground.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
+    return render_template('pages/playground.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\u00a0\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';
 
@@ -13238,7 +13294,7 @@ def server_error(the_error):
         errmess = '<blockquote>' + errmess + '</blockquote>'
     script = """
     <script>
-      var daMessageLog = JSON.parse(atob('""" + safeid(json.dumps(docassemble.base.functions.get_message_log())) + """'));
+      var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
       function flash(message, priority){
         if (priority == null){
           priority = 'info'
@@ -13440,26 +13496,47 @@ def utilities():
                     use_google_translate = False
             else:
                 use_google_translate = False
+            words_to_translate = list()
             for the_word in base_words:
                 if the_word in existing and existing[the_word] is not None:
                     result[language][the_word] = existing[the_word]
                     continue
+                words_to_translate.append(the_word)
+            chunk_limit = daconfig.get('google translate words at a time', 20)
+            chunks = list()
+            interim_list = list()
+            while len(words_to_translate):
+                the_word = words_to_translate.pop(0)
+                interim_list.append(the_word)
+                if len(interim_list) >= chunk_limit:
+                    chunks.append(interim_list)
+                    interim_list = list()
+            if len(interim_list):
+                chunks.append(interim_list)
+            for chunk in chunks:
                 if use_google_translate:
                     try:
                         resp = service.translations().list(
                             source='en',
                             target=language,
-                            q=[the_word]
+                            q=chunk
                         ).execute()
                     except Exception as errstr:
                         logmessage("utilities: translation failed: " + str(errstr))
                         resp = None
-                    if type(resp) is dict and u'translations' in resp and type(resp[u'translations']) is list and len(resp[u'translations']) and type(resp[u'translations'][0]) is dict and 'translatedText' in resp[u'translations'][0]:
-                        result[language][the_word] = re.sub(r'&#39;', r"'", resp['translations'][0]['translatedText'])
+                    if type(resp) is dict and u'translations' in resp and type(resp[u'translations']) is list and len(resp[u'translations']) == len(chunk):
+                        for index in range(len(chunk)):
+                            if type(resp[u'translations'][index]) is dict and 'translatedText' in resp[u'translations'][index]:
+                                result[language][chunk[index]] = re.sub(r'&#39;', r"'", resp['translations'][index]['translatedText'])
+                            else:
+                                result[language][chunk[index]] = 'XYZNULLXYZ'
+                                uses_null = True
                     else:
                         result[language][the_word] = 'XYZNULLXYZ'
+                        uses_null = True
                 else:
-                    result[language][the_word] = 'XYZNULLXYZ'
+                    for the_word in chunk:
+                        result[language][the_word] = 'XYZNULLXYZ'
                     uses_null = True
             word_box = ruamel.yaml.safe_dump(result, default_flow_style=False, default_style = '"', allow_unicode=True, width=1000).decode('utf8')
             word_box = re.sub(r'"XYZNULLXYZ"', r'Null', word_box)
@@ -13507,7 +13584,7 @@ def utilities():
                         fields_output += "---"
                     else:
                         fields_output = word("Error: no fields could be found in the file")
-    return render_template('pages/utilities.html', version_warning=version_warning, bodyclass='adminbody', extra_css=Markup('\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script>$("#pdfdocxfile").fileinput();</script>'), tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type)
+    return render_template('pages/utilities.html', version_warning=version_warning, bodyclass='adminbody', extra_css=Markup('\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script>$("#pdfdocxfile").fileinput();</script>'), tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type, language_placeholder=word("Type a ISO-639-1 language code; e.g., es, fr, it"))
 
 # @app.route('/save', methods=['GET', 'POST'])
 # def save_for_later():
@@ -14241,7 +14318,7 @@ def interview_list():
     script = """
     <script>
       $("#deleteall").on('click', function(event){
-        if (confirm('""" + word("Are you sure you want to delete all saved interviews?") + """')){
+        if (confirm(""" + json.dumps(word("Are you sure you want to delete all saved interviews?")) + """)){
           return true;
         }
         event.preventDefault();
@@ -14326,12 +14403,12 @@ def _on_user_login(sender, user, **extra):
 @user_changed_password.connect_via(app)
 def _on_password_change(sender, user, **extra):
     #logmessage("on password change")
-    fix_secret()
+    fix_secret(user=user)
     
 @user_reset_password.connect_via(app)
 def _on_password_reset(sender, user, **extra):
     #logmessage("on password reset")
-    fix_secret()
+    fix_secret(user=user)
 
 @user_registered.connect_via(app)
 def on_register_hook(sender, user, **extra):
@@ -15097,8 +15174,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     if data == '':
                         data = '0.0'
                     try:
-                        the_value = eval("float(" + repr(data) + ")", user_dict)
-                        data = "float(" + repr(str(data)) + ")"
+                        the_value = eval("float(" + json.dumps(data) + ")", user_dict)
+                        data = "float(" + json.dumps(data) + ")"
                     except:
                         special_messages.append('"' + inp + '" ' + word("is not a valid number."))
                         data = None
@@ -16327,10 +16404,10 @@ def manage_api():
       $(new_input).addClass('form-control');
       $(new_input).attr('type', 'text');
       if ($("#method").val() == 'ip'){
-        $(new_input).attr('placeholder', """ + repr(str(word('e.g., 56.33.114.49'))) + """);
+        $(new_input).attr('placeholder', """ + json.dumps(word('e.g., 56.33.114.49')) + """);
       }
       else{
-        $(new_input).attr('placeholder', """ + repr(str(word('e.g., *example.com'))) + """);
+        $(new_input).attr('placeholder', """ + json.dumps(word('e.g., *example.com')) + """);
       }
       $(new_input).on('change', fix_constraints);
       $(new_input).on('keyup', fix_constraints);
@@ -16826,8 +16903,8 @@ def define_examples():
     data_dict = dict()
     make_example_html(get_examples(), pg_ex['pg_first_id'], example_html, data_dict)
     example_html.append('        </div>')
-    example_html.append('        <div class="col-md-4 example-source-col"><h4>Source<a class="btn btn-success example-copy">Insert</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">Show context of example</a><a class="example-hider invisible" id="hide-full-example">Hide context of example</a></div></div>')
-    example_html.append('        <div class="col-md-6"><h4>Preview<a target="_blank" class="btn btn-primary example-documentation example-hidden" id="example-documentation-link">View documentation</a></h4><a href="#" target="_blank" id="example-image-link"><img title="Click to try this interview" class="example_screenshot" id="example-image"></a></div>')
+    example_html.append('        <div class="col-md-4 example-source-col"><h4>' + word('Source') + '<a class="btn btn-success example-copy">' + word("Insert") + '</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
+    example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '<a target="_blank" class="btn btn-primary example-documentation example-hidden" id="example-documentation-link">' + word("View documentation") + '</a></h4><a href="#" target="_blank" id="example-image-link"><img title=' + json.dumps(word("Click to try this interview")) + ' class="example_screenshot" id="example-image"></a></div>')
     pg_ex['encoded_data_dict'] = safeid(json.dumps(data_dict))
     pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
 

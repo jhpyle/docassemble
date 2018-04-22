@@ -2,8 +2,11 @@ metadata:
   title: Geolocate address
   short title: Geolocate
   documentation: "https://docassemble.org/docs/objects.html#Address.geolocate"
-  example start: 2
-  example end: 5
+  example start: 3
+  example end: 6
+---
+imports:
+  - json
 ---
 modules:
   - docassemble.base.util
@@ -34,15 +37,27 @@ subquestion: |
     
   ${ the_address }
 
+  As JSON, this is:
+
+  ${ indent(json.dumps(the_address.as_serializable(), indent=2)) }
+
   % if the_address.geolocate_success:
   The normalized version is:
 
   ${ the_address.norm }
 
+  As JSON, this is:
+
+  ${ indent(json.dumps(the_address.norm.as_serializable(), indent=2)) }
+  
   The long-form normalized
   version is:
 
   ${ the_address.norm_long }
+
+  As JSON, this is:
+
+  ${ indent(json.dumps(the_address.norm_long.as_serializable(), indent=2)) }
 
   The latitude and longitude are
   ${ the_address.location.latitude }

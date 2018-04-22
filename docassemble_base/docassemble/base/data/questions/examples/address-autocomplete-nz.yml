@@ -1,0 +1,28 @@
+metadata:
+  title: Address autocomplete in New Zealand
+  short title: NZ Autocomplete
+  example start: 3
+  example end: 3
+  documentation: "https://docassemble.org/docs/objects.html#address autocomplete"
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - defendant: Individual
+---
+question: |
+  What is the address of the adverse
+  party?
+fields:
+  - Address: defendant.address.address
+    address autocomplete: True
+  - Suburb: defendant.address.sublocality_level_1
+  - City: defendant.address.city
+  - Postal Code: defendant.address.postal_code
+    required: False
+---
+mandatory: True
+question: |
+  The adverse party's city is
+  is ${ defendant.address.city }.

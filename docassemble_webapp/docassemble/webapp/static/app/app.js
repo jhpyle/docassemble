@@ -321,9 +321,10 @@ function fillInAddress() {
   var re = new RegExp('^' + base_varname + '\\.(.*)');
   var componentForm = {
     locality: 'long_name',
+    sublocality: 'long_name',
     administrative_area_level_2: 'long_name',
     administrative_area_level_1: 'short_name',
-    country: 'long_name',
+    country: 'short_name',
     postal_code: 'short_name'
   };
   var componentTrans = {
@@ -334,7 +335,7 @@ function fillInAddress() {
     postal_code: 'zip'
   };
 
-  var fields_to_fill = ['address', 'city', 'county', 'state', 'zip'];
+  var fields_to_fill = ['address', 'city', 'county', 'state', 'zip', 'neighborhood', 'sublocality', 'administrative_area_level_3', 'postal_code'];
   var id_for_part = {};
   $("input, select").each(function(){
     var the_id = $(this).attr('id');
@@ -370,16 +371,35 @@ function fillInAddress() {
     }                
     if (addressType == 'route'){
       route = place.address_components[i]['long_name'];
-    }                
-    if (componentForm[addressType] && id_for_part[componentTrans[addressType]] && typeof(id_for_part[componentTrans[addressType]]) != "undefined" && document.getElementById(id_for_part[componentTrans[addressType]]) != null) {
+    }
+    if (componentForm[addressType] && id_for_part[componentTrans[addressType]] && typeof(id_for_part[componentTrans[addressType]]) != "undefined" && document.getElementById(id_for_part[componentTrans[addressType]]) != null){
       var val = place.address_components[i][componentForm[addressType]];
       if (typeof(val) != "undefined"){
 	document.getElementById(id_for_part[componentTrans[addressType]]).value = val;
       }
+      if (componentTrans[addressType] != addressType){
+        val = place.address_components[i]['long_name'];
+        if (typeof(val) != "undefined" && typeof(id_for_part[addressType]) != "undefined" && document.getElementById(id_for_part[addressType]) != null){
+          document.getElementById(id_for_part[addressType]).value = val;
+	}
+      }
+    }
+    else if (id_for_part[addressType] && typeof(id_for_part[addressType]) != "undefined" && document.getElementById(id_for_part[addressType]) != null){
+      var val = place.address_components[i]['long_name'];
+      if (typeof(val) != "undefined"){
+	document.getElementById(id_for_part[addressType]).value = val;
+      }
     }
   }
   if (typeof(id_for_part['address']) != "undefined" && document.getElementById(id_for_part['address']) != null){
-    document.getElementById(id_for_part['address']).value = street_number + " " + route;
+    var the_address = ""
+    if (typeof(street_number) != "undefined"){
+      the_address += street_number + " ";
+    }
+    if (typeof(route) != "undefined"){
+      the_address += route;
+    }
+    document.getElementById(id_for_part['address']).value = the_address;
   }
 }
 

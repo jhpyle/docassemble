@@ -1,5 +1,32 @@
 # Change Log
 
+## [0.2.49] - 2018-04-15
+### Fixed
+- Use of deprecated flag when calling `pip`.
+
+## [0.2.48] - 2018-04-14
+### Changed
+- The `Address` methods no longer require `.city` to be defined.
+- The `Address` object and the `address autocomplete` feature now
+  use more of the possible address components of addresses returned by
+  the Google APIs.
+### Fixed
+- Bug in code for getting temporary URLs to cloud storage.
+
+## [0.2.47] - 2018-04-12
+### Fixed
+- Problem with quoting glossary terms in HTML.
+
+## [0.2.46] - 2018-04-11
+### Fixed
+- Bug in new `show if` code.
+
+## [0.2.45] - 2018-04-11
+### Fixed
+- Identification of names of ZIP files uploaded through Package Management.
+- Exception raised by Unicode non-breaking spaces in interview files.
+- The `show if` JavaScript feature now works with checkbox values.
+
 ## [0.2.44] - 2018-03-31
 ### Added
 - The `analytics id` subdirective of the `google` Configuration directive.

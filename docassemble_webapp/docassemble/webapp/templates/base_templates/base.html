@@ -54,6 +54,9 @@
                 <a class="dropdown-item" href="{{ url_for('config_page') }}">{{ word('Configuration') }}</a>
                   {%- endif %}
                 {%- endif %}
+                {%- if config['SHOW_DISPATCH'] %}
+                <li><a href="{{ url_for('interview_start') }}">{{ word('Available Interviews') }}</a></li>
+                {%- endif %}
                 {%- if config['SHOW_MY_INTERVIEWS'] or current_user.has_roles(['admin']) %}
                 <a class="dropdown-item" href="{{ url_for('interview_list') }}">{{ word('My Interviews') }}</a>
                 {%- endif %}
