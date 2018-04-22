@@ -35,15 +35,18 @@ for word_file in word_file_list:
     filename = docassemble.base.functions.static_filename_path(word_file)
     if os.path.isfile(filename):
         with open(filename, 'rU') as stream:
-            for document in ruamel.yaml.safe_load_all(stream):
-                if document and type(document) is dict:
-                    for lang, words in document.iteritems():
-                        if type(words) is dict:
-                            docassemble.base.functions.update_word_collection(lang, words)
-                        else:
-                            sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
-                else:
-                    sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
+            try:
+                for document in ruamel.yaml.safe_load_all(stream):
+                    if document and type(document) is dict:
+                        for lang, words in document.iteritems():
+                            if type(words) is dict:
+                                docassemble.base.functions.update_word_collection(lang, words)
+                            else:
+                                sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
+                    else:
+                        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
+            except:
+                sys.stderr.write("Error reading " + str(word_file) + ": yaml could not be processed.\n")
 
 default_playground_yaml = """metadata:
   title: Default playground interview
@@ -841,6 +844,9 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'exit':
         remove_question_package(kwargs)
         return(url_for('exit', **kwargs))
+    elif file_reference == 'dispatch':
+        remove_question_package(kwargs)
+        return(url_for('interview_start', **kwargs))
     elif file_reference == 'interview_list':
         remove_question_package(kwargs)
         return(url_for('interview_list', **kwargs))
@@ -1856,6 +1862,8 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
                     if current_user.has_role('admin'):
                         navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
                         navbar +='<li><a href="' + url_for('config_page') + '">' + word('Configuration') + '</a></li>'
+                if app.config['SHOW_DISPATCH']:
+                    navbar += '<li><a href="' + url_for('interview_start') + '">' + word('Available Interviews') + '</a></li>'
                 if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
                     navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li>'
                 if current_user.has_role('admin', 'developer'):
@@ -3505,7 +3513,7 @@ def leave():
     if current_user.is_authenticated:
         flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
         logout_user()
-        delete_session()
+    delete_session()
     response = redirect(exit_page)
     response.set_cookie('visitor_secret', '', expires=0)
     response.set_cookie('secret', '', expires=0)
@@ -7618,8 +7626,10 @@ def interview_menu(absolute_urls=False, start_new=False):
 
 @app.route('/list', methods=['GET'])
 def interview_start():
+    if current_user.is_authenticated:
+        delete_session_for_interview()
     if len(daconfig['dispatch']) == 0:
-        return redirect(url_for('index', reset=1, i=final_default_yaml_filename))
+        return redirect(url_for('index', i=final_default_yaml_filename))
     if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
         is_json = True
     else:
@@ -9933,7 +9943,7 @@ def create_playground_package():
             with open(filename, 'rU') as fp:
                 content = fp.read().decode('utf8')
                 info = yaml.load(content)
-            for field in ('dependencies', 'dependency_links', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
+            for field in ('dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
                 if field not in info:
                     info[field] = list()
             info['dependencies'] = [x for x in info['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
@@ -9951,8 +9961,6 @@ def create_playground_package():
                     #the_package_name = re.sub(r'-', '_', the_package_name)
                     #new_url = existing_package.giturl + '/archive/master.zip'
                     new_url = 'git+' + existing_package.giturl + '#egg=' + existing_package.name + '-' + existing_package.packageversion
-                    if new_url not in info['dependency_links']:
-                        info['dependency_links'].append(str(new_url))
                 else:
                     logmessage("create_playground_package: package " + str(package) + " does not exist")
             info['modtime'] = os.path.getmtime(filename)
@@ -11929,7 +11937,7 @@ def playground_packages():
                                     inner_item = re.sub(r'^u?"+', '', inner_item)
                                     the_list.append(inner_item)
                                 extracted[m.group(1)] = the_list
-                        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
+                        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
                         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
                         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
                         with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w') as fp:
@@ -12083,7 +12091,7 @@ def playground_packages():
                     inner_item = re.sub(r'^u?"+', '', inner_item)
                     the_list.append(inner_item)
                 extracted[m.group(1)] = the_list
-        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), dependency_links=extracted.get('dependency_links', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, github_branch=branch, pypi_package_name=pypi_package)
+        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, github_branch=branch, pypi_package_name=pypi_package)
         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
         #output += "info_dict is set\n"
         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
@@ -13491,26 +13499,47 @@ def utilities():
                     use_google_translate = False
             else:
                 use_google_translate = False
+            words_to_translate = list()
             for the_word in base_words:
                 if the_word in existing and existing[the_word] is not None:
                     result[language][the_word] = existing[the_word]
                     continue
+                words_to_translate.append(the_word)
+            chunk_limit = daconfig.get('google translate words at a time', 20)
+            chunks = list()
+            interim_list = list()
+            while len(words_to_translate):
+                the_word = words_to_translate.pop(0)
+                interim_list.append(the_word)
+                if len(interim_list) >= chunk_limit:
+                    chunks.append(interim_list)
+                    interim_list = list()
+            if len(interim_list):
+                chunks.append(interim_list)
+            for chunk in chunks:
                 if use_google_translate:
                     try:
                         resp = service.translations().list(
                             source='en',
                             target=language,
-                            q=[the_word]
+                            q=chunk
                         ).execute()
                     except Exception as errstr:
                         logmessage("utilities: translation failed: " + str(errstr))
                         resp = None
-                    if type(resp) is dict and u'translations' in resp and type(resp[u'translations']) is list and len(resp[u'translations']) and type(resp[u'translations'][0]) is dict and 'translatedText' in resp[u'translations'][0]:
-                        result[language][the_word] = re.sub(r'&#39;', r"'", resp['translations'][0]['translatedText'])
+                    if type(resp) is dict and u'translations' in resp and type(resp[u'translations']) is list and len(resp[u'translations']) == len(chunk):
+                        for index in range(len(chunk)):
+                            if type(resp[u'translations'][index]) is dict and 'translatedText' in resp[u'translations'][index]:
+                                result[language][chunk[index]] = re.sub(r'&#39;', r"'", resp['translations'][index]['translatedText'])
+                            else:
+                                result[language][chunk[index]] = 'XYZNULLXYZ'
+                                uses_null = True
                     else:
                         result[language][the_word] = 'XYZNULLXYZ'
+                        uses_null = True
                 else:
-                    result[language][the_word] = 'XYZNULLXYZ'
+                    for the_word in chunk:
+                        result[language][the_word] = 'XYZNULLXYZ'
                     uses_null = True
             word_box = ruamel.yaml.safe_dump(result, default_flow_style=False, default_style = '"', allow_unicode=True, width=1000).decode('utf8')
             word_box = re.sub(r'"XYZNULLXYZ"', r'Null', word_box)
@@ -13558,7 +13587,7 @@ def utilities():
                         fields_output += "---"
                     else:
                         fields_output = word("Error: no fields could be found in the file")
-    return render_template('pages/utilities.html', version_warning=version_warning, bodyclass='adminbody', extra_css=Markup('\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script>$("#pdfdocxfile").fileinput();</script>'), tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type)
+    return render_template('pages/utilities.html', version_warning=version_warning, bodyclass='adminbody', extra_css=Markup('\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script>$("#pdfdocxfile").fileinput();</script>'), tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type, language_placeholder=word("Type a ISO-639-1 language code; e.g., es, fr, it"))
 
 # @app.route('/save', methods=['GET', 'POST'])
 # def save_for_later():

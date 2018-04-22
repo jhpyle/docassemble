@@ -273,22 +273,22 @@ def install_package(package):
         #     for zinfo in zf.infolist():
         #         parts = splitall(zinfo.filename)
         #         if parts[-1] == 'setup.py':
-        commands = ['pip', 'install', '--quiet', '--process-dependency-links', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--log-file=' + pip_log.name, '--upgrade', saved_file.path + '.zip']
+        commands = ['pip', 'install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--log-file=' + pip_log.name, '--upgrade', saved_file.path + '.zip']
     elif package.type == 'git' and package.giturl is not None:
         if package.gitbranch is not None:
             branchpart = '@' + str(package.gitbranch)
         else:
             branchpart = ''
         if package.gitsubdir is not None:
-            commands = ['pip', 'install', '--quiet', '--process-dependency-links', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + str(package.giturl) + '.git' + branchpart + '#egg=' + package.name + '&subdirectory=' + str(package.gitsubdir)]
+            commands = ['pip', 'install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + str(package.giturl) + '.git' + branchpart + '#egg=' + package.name + '&subdirectory=' + str(package.gitsubdir)]
         else:
-            commands = ['pip', 'install', '--quiet', '--process-dependency-links', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + str(package.giturl) + '.git' + branchpart + '#egg=' + package.name]
+            commands = ['pip', 'install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + str(package.giturl) + '.git' + branchpart + '#egg=' + package.name]
     elif package.type == 'pip':
         if package.limitation is None:
             limit = ""
         else:
             limit = str(package.limitation)
-        commands = ['pip', 'install', '--quiet', '--process-dependency-links', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, package.name + limit]
+        commands = ['pip', 'install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, package.name + limit]
     else:
         sys.stderr.write("Wrong package type\n")
         return 1, 'Unable to recognize package type: ' + package.name

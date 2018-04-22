@@ -5,6 +5,7 @@ app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
 app.config['SHOW_PROFILE'] = True if daconfig.get('show profile link', True) else False
 app.config['SHOW_MY_INTERVIEWS'] = True if daconfig.get('show interviews link', True) else False
+app.config['SHOW_DISPATCH'] = True if len(daconfig['dispatch']) and daconfig.get('show dispatch link', False) else False
 app.config['MAIL_USERNAME'] = daconfig['mail'].get('username', None)
 app.config['MAIL_PASSWORD'] = daconfig['mail'].get('password', None)
 app.config['MAIL_DEFAULT_SENDER'] = daconfig['mail'].get('default sender', None)
