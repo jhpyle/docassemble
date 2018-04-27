@@ -1,5 +1,6 @@
 metadata:
   title: Allowing documents to be downloaded
+  short title: Download
   documentation: "https://docassemble.org/docs/documents.html#allow downloading"
   example start: 1
   example end: 1

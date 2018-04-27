@@ -44,4 +44,5 @@ copychangelog.sh
 cc-changelog.sh
 tests/ghostdriver.log
 tests/features/Temp.feature
+tests/features/Screenshots.feature
 fix-seq.sql

@@ -3,8 +3,6 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_submit_field, render_multiselect_field %}
 
-<h1>{{ word('Add User') }}</h1>
-
 <form action="" method="POST" role="form">
     {{ form.hidden_tag() }}
     
@@ -21,6 +19,7 @@
     <br>
     <div class="form-actions">
       {{ render_submit_field(form.submit, tabindex=150) }}
+      <a tabindex="160" class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_list') }}">{{ word('Back') }}</a>
     </div>
 </form>
 

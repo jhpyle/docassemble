@@ -11,7 +11,8 @@ import time
 default_path = "http://localhost"
 default_wait_seconds = 0
 use_firefox = False
-use_phantomjs = True
+use_phantomjs = False
+use_headless_chrome = True
 
 class MyFirefox(webdriver.Firefox):
     def loaded(self):
@@ -73,6 +74,11 @@ def setup_browser():
         #world.browser.maximize_window()
     elif use_phantomjs:
         world.browser = MyPhantomJS()
+    elif use_headless_chrome:
+        options = ChromeOptions()
+        options.add_argument("--window-size=1005,9999")
+        options.add_argument("--headless");
+        world.browser = MyChrome(executable_path='../../chromedriver', chrome_options=options)
     else:
         options = ChromeOptions()
         options.add_argument("--start-maximized");

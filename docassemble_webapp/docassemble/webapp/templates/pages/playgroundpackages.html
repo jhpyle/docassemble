@@ -4,66 +4,55 @@
 {%- endblock %}
 {%- block content %}
         <div class="row">
-          <div class="col-sm-8 col-md-7 col-lg-6">
+          <div class="col-sm-9 col-md-7 col-lg-7 col-xl-7">
             {%- if description %}
-            <div class="panel panel-default">
-              <div class="panel-body">
+            <div class="card">
+              <div class="card-body">
                 {{ description }}
               </div>
             </div>
             {%- endif %}
-            <ul class="nav nav-pills navpillssmaller">
-              <li>
-                <a title="{{ word('Create a new package') }}" href="?new=1"><span class="fas fa-plus-circle" aria-hidden="true"></span> {{ word('Add') }}</a>
+            <ul class="nav nav-pills">
+              <li class="nav-item">
+                <a class="nav-link" title="{{ word('Create a new package') }}" href="?new=1"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
               </li>
-              <li role="presentation" class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another package')}}">
-                  <span class="fas fa-briefcase" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<i class="fas fa-caret-down"></i>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another package')}}">
+                  <i class="fas fa-briefcase" aria-hidden="true"></i>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
                 </a>
-                <ul class="dropdown-menu heightlim">
+                <div class="dropdown-menu heightlim">
                   {%- if any_files %}
                   {%- for file in editable_files %}
                   {%- if file == current_file %}
-                  <li class="active">
-                    <a href="#">
-                      <span class="fas fa-file" aria-hidden="true"></span>
-                      {{ file }}
-                    </a>
-                  </li>
+                  <a class="dropdown-item active" href="#">
+                    <i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ file }}
+                  </a>
                   {%- else %}
-                  <li>
-                    <a href="?file={{ file }}">
-                      <span class="fas fa-file" aria-hidden="true"></span>
-                      {{ file }}
-                    </a>
-                  </li>
+                  <a class="dropdown-item" href="?file={{ file }}">
+                    <i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ file }}
+                  </a>
                   {%- endif %}
                   {%- endfor %}
                   {%- else %}
-                  <li class="active">
-                    <a href="#">
-                      <span class="fas fa-file" aria-hidden="true"></span>
-                      {% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
-                    </a>
-                  </li>
+                  <a class="dropdown-item active" href="#">
+                    <i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
+                  </a>
                   {%- endif %}
-                </ul>
+                </div>
               </li>
               {%- if current_file != '' %}
-              <li role="presentation">
-                <a tabindex="6" href="{{ url_for('create_playground_package', package=current_file) }}" title="{{ word('Download the current package') }}">
-                  <span class="fas fa-download" aria-hidden="true"></span>
-                  {{ word("Download") }}
+              <li class="nav-item">
+                <a tabindex="6" class="nav-link" href="{{ url_for('create_playground_package', package=current_file) }}" title="{{ word('Download the current package') }}">
+                  <i class="fas fa-download" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Download") }}
                 </a>
               </li>
               {%- endif %}
-              <li role="presentation">
-                <a tabindex="5" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a package ZIP file to the Playground') }}">
+              <li class="nav-item">
+                <a tabindex="5" class="nav-link" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a package ZIP file to the Playground') }}">
                   <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
                     {{ fileform.hidden_tag() }}
                     <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
-                      <span class="fas fa-upload" aria-hidden="true"></span>
-                      {{ word("Upload") }}
+                      <i class="fas fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Upload") }}
                     </label>
                     <div style="width: 0px; height: 0px; overflow: hidden">
                       <input type="file" name="uploadfile" id="uploadfile"/>
@@ -71,10 +60,9 @@
                   </form>
                 </a>
               </li>
-              <li role="presentation">
-                <a tabindex="7" id="daPull" href="{{ url_for('pull_playground_package', github=github_url, branch=branch) if github_url else url_for('pull_playground_package', pypi=pypi_package_name) if pypi_package_name else url_for('pull_playground_package') }}" title="{{ word('Pull a package from GitHub or PyPI into the Playground') }}">
-                  <span class="fas fa-cloud-download-alt" aria-hidden="true"></span>
-                  {{ word("Pull") }}
+              <li class="nav-item">
+                <a class="nav-link" tabindex="7" id="daPull" href="{{ url_for('pull_playground_package', github=github_url, branch=branch) if github_url else url_for('pull_playground_package', pypi=pypi_package_name) if pypi_package_name else url_for('pull_playground_package') }}" title="{{ word('Pull a package from GitHub or PyPI into the Playground') }}">
+                  <i class="fas fa-cloud-download-alt" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Pull") }}
                 </a>
               </li>
             </ul>
@@ -82,10 +70,9 @@
         </div>
         <form action="{{ url_for('playground_packages') }}" method="POST" class="form" role="form" id="form" autocomplete="off">
           <div class="row">
-            <div class="col-sm-8 col-md-7 col-lg-6">
+            <div class="col-sm-9 col-md-7 col-lg-7 col-xl-7">
               {{ form.hidden_tag() }}
               {{ myrender_hidden_field(form.original_file_name, value=current_file) }}
-              <div class="daspacer"></div>
               {{ render_field(form.file_name) }}
               {{ render_field(form.version) }}
               {{ render_field(form.license) }}
@@ -116,22 +103,22 @@
             </div>
           </div>
           <div class="row">
-            <div class="col-sm-8 col-md-8 col-lg-8">
+            <div class="col-sm-8 col-md-8 col-lg-8 col-xl-8">
               <h2>{{ form.readme.label }}</h2>
               <div class="form-group">
                 <label for="{{ form.readme.id }}">{{ word("The README.md file for the package") }}</label>
                 <textarea rows="24" cols="80" id="{{ form.readme.id }}" name="{{ form.readme.id }}">{{ form.readme.data }}</textarea>
               </div>
               {%- if pypi_message %}
-              <div class="panel panel-default">
-                <div class="panel-body">
+              <div class="card mb-3">
+                <div class="card-body">
                   {{ pypi_message|safe }}
                 </div>
               </div>
               {%- endif %}
               {%- if github_message %}
-              <div class="panel panel-default">
-                <div class="panel-body">
+              <div class="card mb-3">
+                <div class="card-body">
                   {{ github_message|safe }}
                 </div>
               </div>
@@ -151,11 +138,11 @@
                 {%- endif %}
                 {%- if can_publish_to_github %}
                 {{ render_submit_field(form.github, id="daGitHub", class="btn btn-warning " + config['BUTTON_CLASS'], title=word('Push a commit to GitHub')) }}
-                {{ render_submit_field(form.cancel, id="daCancel", class="btn btn-default " + config['BUTTON_CLASS'], style="display:none") }}
+                {{ render_submit_field(form.cancel, id="daCancel", class="btn btn-secondary " + config['BUTTON_CLASS'], style="display:none") }}
                 {%- endif %}
-                {{ render_submit_field(form.delete, id="daDelete", class="btn btn-default " + config['BUTTON_CLASS'], title=word('Delete this package from the Playground')) }}
+                {{ render_submit_field(form.delete, id="daDelete", class="btn btn-danger " + config['BUTTON_CLASS'], title=word('Delete this package from the Playground')) }}
                 {%- else %}
-                <a class="btn btn-default {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_packages') }}">{{ word('Cancel') }}</a>
+                <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_packages') }}">{{ word('Cancel') }}</a>
                 {%- endif %}
               </div>
             </div>
@@ -166,6 +153,5 @@
         {%- endif %}
 {%- endblock %}
 {%- block bottom %}
-      <div class="daspacer-large"></div>
-      <div class="container"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="fas fa-caret-left"></i> {{ word("Back to playground") }}</a></p></div>
+      <div class="mt-2"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to playground") }}</a></p></div>
 {%- endblock %}

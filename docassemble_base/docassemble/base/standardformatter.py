@@ -17,7 +17,7 @@ DECORATION_UNITS = daconfig.get('decoration units', 'em')
 BUTTON_ICON_SIZE = daconfig.get('button icon size', 4.0)
 BUTTON_ICON_UNITS = daconfig.get('button icon units', 'em')
 if daconfig.get('button size', 'medium') == 'medium':
-    BUTTON_CLASS = 'btn-md btn-da'
+    BUTTON_CLASS = 'btn-da'
 elif daconfig.get('button size', 'large') == 'large':
     BUTTON_CLASS = 'btn-lg btn-da'
 else:
@@ -501,7 +501,7 @@ def help_wrap(content, helptext, status):
     if helptext is None:
         return content
     else:
-        return '<div class="choicewithhelp"><div><div>' + content + '</div><div class="choicehelp"><a data-container="body" data-toggle="popover" data-placement="left" data-content=' + noquote(markdown_to_html(helptext, trim=True, status=status, do_terms=False)) + '><i class="fas fa-question-circle"></i></a></div></div></div>'
+        return '<div class="choicewithhelp"><div><div>' + content + '</div><div class="choicehelp"><a tabindex="0" data-container="body" data-toggle="popover" data-placement="left" data-content=' + noquote(markdown_to_html(helptext, trim=True, status=status, do_terms=False)) + '><i class="fas fa-question-circle"></i></a></div></div></div>'
 
 def as_html(status, url_for, debug, root, validation_rules, field_error, the_progress_bar, steps):
     decorations = list()
@@ -513,12 +513,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     onchange = list()
     autocomplete_id = False
     if status.question.interview.use_navigation:
-        grid_class = "col-lg-6 col-md-9 col-sm-9"
+        grid_class = "col-xl-6 col-lg-6 col-md-9"
     else:
         if status.question.interview.flush_left:
-            grid_class = "col-lg-6 col-md-8 col-sm-10"
+            grid_class = "offset-xl-1 col-xl-5 col-lg-6 col-md-8"
         else:
-            grid_class = "offset-lg-3 col-lg-6 offset-md-2 col-md-8 offset-sm-1 col-sm-10"
+            grid_class = "offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8"
     if 'script' in status.extras and status.extras['script'] is not None:
         status.extra_scripts.append(status.extras['script'])
     if 'css' in status.extras and status.extras['css'] is not None:
@@ -530,7 +530,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     # if status.question.script is not None:
     #     status.extra_scripts.append(status.question.script)
     if status.question.interview.question_back_button and status.question.can_go_back and steps > 1:
-        back_button = '\n                  <button class="btn btn-default ' + BUTTON_CLASS + ' " id="questionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '><i class="fas fa-chevron-left"></i>' + status.question.back() + '</button>'
+        back_button = '\n                  <button class="btn btn-secondary ' + BUTTON_CLASS + ' " id="questionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '><i class="fas fa-chevron-left"></i>' + status.question.back() + '</button>'
     else:
         back_button = ''
     if status.question.interview.question_help_button and len(status.helpText) and status.question.helptext is not None:
@@ -538,7 +538,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             help_label = markdown_to_html(status.helpText[0]['label'], trim=True, do_terms=False, status=status)
         else:
             help_label = status.question.help()
-        help_button = '\n                  <button class="btn btn-default ' + BUTTON_CLASS + ' " id="questionhelpbutton">' + help_label + '</button>'
+        help_button = '\n                  <button class="btn btn-secondary ' + BUTTON_CLASS + ' " id="questionhelpbutton">' + help_label + '</button>'
     else:
         help_button = ''
     if status.audiovideo is not None:
@@ -585,40 +585,40 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     else:
         decoration_text = ''
     master_output = ""
-    master_output += '          <section role="tabpanel" id="question" class="tab-pane active ' + grid_class + '">\n'
+    master_output += '          <section id="question" class="tab-pane active ' + grid_class + '">\n'
     output = ""
     if the_progress_bar:
         if status.question.question_type == "signature":
-            the_progress_bar = re.sub(r'class="row"', 'class="d-none d-sm-block"', the_progress_bar)
+            the_progress_bar = re.sub(r'class="row"', 'class="d-none d-md-block"', the_progress_bar)
         output += the_progress_bar
     if status.question.question_type == "signature":
-        output += '            <div class="sigpage" id="sigpage">\n              <div class="sigshowsmallblock sigheader" id="sigheader">\n                <div class="siginnerheader">\n                  <a class="btn btn-sm btn-warning signav-left signavbutton sigclear">' + word('Clear') + '</a>\n                  <a class="btn btn-sm btn-primary signav-right signavbutton sigsave">' + continue_label + '</a>\n                  <div class="sigtitle">'
+        output += '            <div class="sigpage" id="sigpage">\n              <div class="sigshowsmallblock sigheader d-block d-md-none" id="sigheader">\n                <div class="siginnerheader">\n                  <a tabindex="0" class="btn btn-sm btn-warning signav-left signavbutton sigclear">' + word('Clear') + '</a>\n                  <a tabindex="0" class="btn btn-sm btn-primary signav-right signavbutton sigsave">' + continue_label + '</a>\n                  <div class="sigtitle">'
         if status.questionText:
             output += markdown_to_html(status.questionText, trim=True, status=status)
         else:
             output += word('Sign Your Name')
         output += '</div>\n                </div>\n              </div>\n              <div class="sigtoppart" id="sigtoppart">\n                <div id="errormess" class="sigerrormessage signotshowing">' + word("You must sign your name to continue.") + '</div>\n'
         if status.questionText:
-            output += '                <div class="sighidesmall">' + markdown_to_html(status.questionText, trim=True, status=status) + '</div>\n'
+            output += '                <div class="page-header d-none d-md-block"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         output += '              </div>'
         if status.subquestionText:
-            output += '\n              <div class="sigmidpart">\n                ' + markdown_to_html(status.subquestionText, status=status) + '\n              </div>'
+            output += '                <div class="sigmidpart">\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         else:
             output += '\n              <div class="sigmidpart"></div>'
         output += '\n              <div id="sigcontent"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n              <div class="sigbottompart" id="sigbottompart">\n                '
         if 'underText' in status.extras:
-            output += markdown_to_html(status.extras['underText'], trim=True, status=status)
+            output += '                <div class="d-none d-md-block">' + markdown_to_html(status.extras['underText'], trim=False, status=status) + '</div>\n                <div class="d-block d-md-none">' + markdown_to_html(status.extras['underText'], trim=True, status=status) + '</div>'
         output += "\n              </div>"
         output += """
-              <div class="form-actions sighidesmall sigbuttons">
-                <a class="btn btn-primary """ + BUTTON_CLASS + """ sigsave">""" + continue_label + """</a>
-                <a class="btn btn-warning """ + BUTTON_CLASS + """ sigclear">""" + word('Clear') + """</a>
+              <div class="form-actions d-none d-md-block sigbuttons">
+                <a tabindex="0" class="btn btn-primary """ + BUTTON_CLASS + """ sigsave">""" + continue_label + """</a>
+                <a tabindex="0" class="btn btn-warning """ + BUTTON_CLASS + """ sigclear">""" + word('Clear') + """</a>
               </div>
 """
         output += '            </div>\n            <form action="' + root + '" id="dasigform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
         output += tracker_tag(status)
         output += '            </form>\n'
-        output += '            <div class="sigshowsmallblock"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></div>'
+        output += '            <div class="d-block d-md-none"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></div>'
     elif status.question.question_type in ["yesno", "yesnomaybe"]:
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
@@ -690,10 +690,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 # elif field.datatype in ['script', 'css']:
                 #     continue
                 elif field.datatype == 'button' and hasattr(field, 'label') and field.number in status.helptexts:
-                    fieldlist.append('                <div class="row"><div class="col-md-12"><a class="btn btn-success review-action review-action-button" data-action="' + str(field.action) + '">' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
+                    fieldlist.append('                <div class="row"><div class="col-md-12"><a tabindex="0" class="btn btn-success review-action review-action-button" data-action="' + str(field.action) + '">' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
                     continue
             if hasattr(field, 'label'):
-                fieldlist.append('                <div class="form-group row"><div class="col-md-12"><a class="review-action" data-action="' + str(field.action) + '">' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a></div></div>\n')
+                fieldlist.append('                <div class="form-group row"><div class="col-md-12"><a tabindex="0" class="review-action" data-action="' + str(field.action) + '">' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a></div></div>\n')
                 if field.number in status.helptexts:
                     fieldlist.append('                <div class="row"><div class="col-md-12">' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
         output += status.pre
@@ -812,7 +812,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     if field.datatype == 'object_checkboxes':
                         datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
             if field.number in status.helptexts:
-                helptext_start = '<a class="daterm" data-container="body" data-toggle="popover" data-placement="bottom" data-content=' + noquote(status.helptexts[field.number]) + '>' 
+                helptext_start = '<a tabindex="0" class="daterm" data-container="body" data-toggle="popover" data-placement="bottom" data-content=' + noquote(status.helptexts[field.number]) + '>' 
                 helptext_end = '</a>'
             else:
                 helptext_start = ''
@@ -958,9 +958,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
                     fieldlist.append('                <div class="form-group row yesnospacing"><div class="col-md-12">' + input_for(status, field) + '</div></div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
-                    fieldlist.append('                <div class="form-group row yesnospacing' + req_tag +'"><div class="offset-sm-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group row yesnospacing' + req_tag +'"><div class="offset-md-4 col-md-8">' + input_for(status, field) + '</div></div>\n')
                 else:
-                    fieldlist.append('                <div class="form-group row' + req_tag + '"><label for="' + escape_id(label_saveas) + '" class="col-sm-4 col-form-label text-right">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group row' + req_tag + '"><label for="' + escape_id(label_saveas) + '" class="col-md-4 col-form-label datext-right">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-md-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
             if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras:
                 fieldlist.append('                </div>\n')
         output += status.pre
@@ -1155,7 +1155,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     for pair in pairlist:
                         if 'image' in pair:
                             the_icon = '<div>' + icon_html(status, pair['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</div>';
-                            btn_class = ' btn-default btn-da-custom'
+                            btn_class = ' btn-light btn-da-custom'
                         else:
                             the_icon = ''
                         if True or pair['key'] is not None:
@@ -1170,7 +1170,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     for choice in choicelist:
                         if 'image' in choice:
                             the_icon = '<div>' + icon_html(status, choice['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</div>';
-                            btn_class = ' btn-default btn-da-custom'
+                            btn_class = ' btn-light btn-da-custom'
                         else:
                             the_icon = ''
                         if 'help' in choice:
@@ -1185,7 +1185,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     btn_class = ' btn-primary'
                     if 'image' in choice:
                         the_icon = '<div>' + icon_html(status, choice['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</div>'
-                        btn_class = ' btn-default btn-da-custom'
+                        btn_class = ' btn-light btn-da-custom'
                     else:
                         the_icon = ''
                     if 'help' in choice:
@@ -1300,41 +1300,41 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '            <div><h3>' + markdown_to_html(attachment['name'], trim=True, status=status, strip_newlines=True) + '</h3></div>\n'
             if attachment['description']:
                 output += '            <div>' + markdown_to_html(attachment['description'], status=status, strip_newlines=True) + '</div>\n'
-            output += '            <div class="tabbable">\n'
+            output += '            <div>\n'
             if True or show_preview or show_markdown:
-                output += '              <ul class="nav nav-tabs">\n'
+                output += '              <ul class="nav nav-tabs" role="tablist">\n'
                 if show_download:
-                    output += '                <li class="active"><a href="#download' + str(attachment_index) + '" data-toggle="tab">' + word('Download') + '</a></li>\n'
+                    output += '                <li class="nav-item"><a class="nav-link active" id="download-tab' + str(attachment_index) + '" href="#download' + str(attachment_index) + '" data-toggle="tab" role="tab">' + word('Download') + '</a></li>\n'
                 if show_preview:
-                    output += '                <li><a href="#preview' + str(attachment_index) + '" data-toggle="tab">' + word('Preview') + '</a></li>\n'
+                    output += '                <li class="nav-item"><a class="nav-link" id="preview-tab' + str(attachment_index) + '" href="#preview' + str(attachment_index) + '" data-toggle="tab" role="tab">' + word('Preview') + '</a></li>\n'
                 if show_markdown:
-                    output += '                <li><a href="#markdown' + str(attachment_index) + '" data-toggle="tab">' + word('Markdown') + '</a></li>\n'
+                    output += '                <li class="nav-item"><a class="nav-link" id="markdown-tab' + str(attachment_index) + '" href="#markdown' + str(attachment_index) + '" data-toggle="tab" role="tab">' + word('Markdown') + '</a></li>\n'
                 output += '              </ul>\n'
-            output += '              <div class="tab-content col">\n'
+            output += '              <div class="tab-content" id="tabcontent' + str(attachment_index) + '">\n'
             if show_download:
-                output += '                <div class="tab-pane active" id="download' + str(attachment_index) + '">\n'
+                output += '                <div class="tab-pane show active" id="download' + str(attachment_index) + '" role="tabpanel" aria-labelledby="download-tab' + str(attachment_index) + '">\n'
                 if multiple_formats:
                     output += '                  <p>' + word('save_as_multiple') + '</p>\n'
                 #else:
                     #output += '                  <p>' + word('save_as_singular') + '</p>\n'
                 if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                    output += '                  <p><a href="' + server.url_finder(attachment['file']['pdf'], display_filename=attachment['filename'] + '.pdf') + '" target="_blank"><i class="fas fa-print"></i> PDF</a> (' + word('pdf_message') + ')</p>\n'
+                    output += '                  <p><a href="' + server.url_finder(attachment['file']['pdf'], display_filename=attachment['filename'] + '.pdf') + '" target="_blank"><i class="fas fa-print fa-fw"></i> PDF</a> (' + word('pdf_message') + ')</p>\n'
                 if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                    output += '                  <p><a href="' + server.url_finder(attachment['file']['rtf'], display_filename=attachment['filename'] + '.rtf') + '" target="_blank"><i class="fas fa-pencil-alt"></i> RTF</a> (' + word('rtf_message') + ')</p>\n'
+                    output += '                  <p><a href="' + server.url_finder(attachment['file']['rtf'], display_filename=attachment['filename'] + '.rtf') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> RTF</a> (' + word('rtf_message') + ')</p>\n'
                 if 'docx' in attachment['valid_formats']:
-                    output += '                  <p><a href="' + server.url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt"></i> DOCX</a> (' + word('docx_message') + ')</p>\n'
+                    output += '                  <p><a href="' + server.url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('docx_message') + ')</p>\n'
                 if 'rtf to docx' in attachment['valid_formats']:
-                    output += '                  <p><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt"></i> DOCX</a> (' + word('docx_message') + ')</p>\n'
+                    output += '                  <p><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('docx_message') + ')</p>\n'
                 if debug and ('tex' in attachment['valid_formats']):
-                    output += '                  <p><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="fas fa-pencil-alt"></i> LaTeX</a> (' + word('tex_message') + ')</p>\n'
+                    output += '                  <p><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> LaTeX</a> (' + word('tex_message') + ')</p>\n'
                 output += '                </div>\n'
             if show_preview:
-                output += '                <div class="tab-pane" id="preview' + str(attachment_index) + '">\n'
-                output += '                  <blockquote>' + unicode(attachment['content']['html']) + '</blockquote>\n'
+                output += '                <div class="tab-pane" id="preview' + str(attachment_index) + '" role="tabpanel" aria-labelledby="preview-tab' + str(attachment_index) + '">\n'
+                output += '                  <blockquote class="blockquote">' + unicode(attachment['content']['html']) + '</blockquote>\n'
                 output += '                </div>\n'
             if show_markdown:
-                output += '                <div class="tab-pane" id="markdown' + str(attachment_index) + '">\n'
-                output += '                  <pre>' + safe_html(attachment['markdown'][md_format]) + '</pre>\n'
+                output += '                <div class="tab-pane" id="markdown' + str(attachment_index) + '" role="tabpanel" aria-labelledby="markdown-tab' + str(attachment_index) + '">\n'
+                output += '                  <pre class="mb-2 mt-2">' + safe_html(attachment['markdown'][md_format]) + '</pre>\n'
                 output += '                </div>\n'
             output += '              </div>\n            </div>\n'
             attachment_index += 1
@@ -1351,27 +1351,21 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 else:
                     default_email = ''
                 output += """\
-            <div class="panel-group" id="accordionOne" role="tablist" aria-multiselectable="true">
-              <div class="panel panel-default">
-                <div class="panel-heading" role="tab" id="headingOne">
-                  <h4 class="panel-title">
-                    <a role="button" data-toggle="collapse" data-parent="#accordionOne" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                    """ + email_header + """
-                    </a>
-                  </h4>
+            <div id="accordionOne">
+              <div class="card mb-2">
+                <div class="card-header" id="headingOne">
+                  <a role="button" data-toggle="collapse" data-parent="#accordionOne" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">""" + email_header + """</a>
                 </div>
-                <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
-                  <div class="panel-body">
+                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne">
+                  <div class="card-body">
                     <form action=\"""" + root + """\" id="emailform" class="form-horizontal" method="POST">
-                      <fieldset>
-                        <div class="form-group row"><label for="_attachment_email_address" class="col-sm-4 col-form-label text-right">""" + word('E-mail address') + """</label><div class="col-sm-8"><input alt=""" + json.dumps(word("Input box")) + """ class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address" value=""" + '"' + str(default_email) + '"' + """/></div></div>"""
+                      <div class="form-group row"><label for="_attachment_email_address" class="col-md-4 col-form-label datext-right">""" + word('E-mail address') + """</label><div class="col-md-8"><input alt=""" + json.dumps(word("Input box")) + """ class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address" value=""" + '"' + str(default_email) + '"' + """/></div></div>"""
                 if editable_included:
                     output += """
-                        <div class="form-group row"><div class="col-sm-4 col-form-label text-right"></div><div class="col-sm-8"><input alt=""" + json.dumps(word("Check box") + ", " + word('Include ' + editable_name + ' for editing')) + """ type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
+                      <div class="form-group row"><div class="col-md-4 col-form-label datext-right"></div><div class="col-md-8"><input alt=""" + json.dumps(word("Check box") + ", " + word('Include ' + editable_name + ' for editing')) + """ type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
                 output += """
-                        <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="_email_attachments" value="1"/>'#<input type="hidden" name="_question_number" value="' + str(status.question.number) + '"/>'
+                      <button class="btn btn-primary" type="submit">""" + word('Send') + '</button>\n                      <input type="hidden" name="_email_attachments" value="1"/>'
                 output += """
-                      </fieldset>
                       <input type="hidden" name="csrf_token" value=""" + json.dumps(server.generate_csrf()) + """/>
                     </form>
                   </div>
@@ -1381,24 +1375,19 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
 """
             if status.extras.get('allow_downloading', False):
                 output += """
-            <div class="panel-group" id="accordionTwo" role="tablist" aria-multiselectable="true">
-              <div class="panel panel-default">
-                <div class="panel-heading" role="tab" id="headingTwo">
-                  <h4 class="panel-title">
-                    <a role="button" data-toggle="collapse" data-parent="#accordionTwo" href="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
-                    """ + download_header + """
-                    </a>
-                  </h4>
+            <div id="accordionTwo">
+              <div class="card">
+                <div class="card-header" id="headingTwo">
+                  <a role="button" data-toggle="collapse" data-parent="#accordionTwo" href="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">""" + download_header + """</a>
                 </div>
-                <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
-                  <div class="panel-body">
+                <div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo">
+                  <div class="card-body">
                     <form action=\"""" + root + """\" id="downloadform" class="form-horizontal" method="POST">"""
                 if editable_included:
                     output += """
-                        <div class="form-group row"><div class="col-sm-12"><input alt=""" + json.dumps(word("Check box") + ", " + word('Include ' + editable_name + ' for editing')) + """ type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
+                      <div class="form-group row"><div class="col-md-12"><input alt=""" + json.dumps(word("Check box") + ", " + word('Include ' + editable_name + ' for editing')) + """ type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
                 output += """
-                        <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Download All') + '</button></div><input type="hidden" name="_download_attachments" value="1"/>'#<input type="hidden" name="_question_number" value="' + str(status.question.number) + '"/>'
-
+                      <button class="btn btn-primary" type="submit">""" + word('Download All') + '</button>\n                      <input type="hidden" name="_download_attachments" value="1"/>'
                 output += """
                       <input type="hidden" name="csrf_token" value=""" + json.dumps(server.generate_csrf()) + """/>
                     </form>
@@ -1422,18 +1411,18 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         status.screen_reader_text['question'] = unicode(output)
     if 'rightText' in status.extras:
         if status.question.interview.use_navigation:
-            output += '            <div id="darightbottom" class="d-none d-md-block daright">\n'
+            output += '            <div id="darightbottom" class="d-block d-lg-none daright">\n'
         else:
             if status.question.interview.flush_left:
-                output += '            <div id="darightbottom" class="d-none d-md-block daright">\n'
+                output += '            <div id="darightbottom" class="d-block d-lg-none daright">\n'
             else:
-                output += '            <div id="darightbottom" class="d-none d-md-block daright">\n'
+                output += '            <div id="darightbottom" class="d-block d-lg-none daright">\n'
         output += markdown_to_html(status.extras['rightText'], trim=False, status=status) + "\n"
         output += '            </div>\n'
     master_output += output
     master_output += '          </section>\n'
-    master_output += '          <section role="tabpanel" id="help" class="tab-pane ' + grid_class + '">\n'
-    output = '<div><a id="backToQuestion" data-toggle="tab" data-target="#question" href="#question" class="btn btn-info btn-md"><i class="fas fa-caret-left"></i> ' + word("Back to question") + '</a></div>'
+    master_output += '          <section id="help" class="tab-pane ' + grid_class + '">\n'
+    output = '<div class="mt-2 mb-2"><a tabindex="0" id="backToQuestion" class="btn btn-info"><i class="fas fa-caret-left"></i> ' + word("Back to question") + '</a></div>'
     output += """
 <div id="daPhoneMessage" class="row invisible">
   <div class="col-md-12">
@@ -1444,8 +1433,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
 <div id="daChatBox" class="invisible">
   <div class="row">
     <div class="col-md-12 dachatbutton">
-      <a id="daChatOnButton" class="btn btn-success">""" + word("Activate chat") + """</a>
-      <a id="daChatOffButton" class="btn btn-warning">""" + word("Turn off chat") + """</a>
+      <a tabindex="0" id="daChatOnButton" class="btn btn-success">""" + word("Activate chat") + """</a>
+      <a tabindex="0" id="daChatOffButton" class="btn btn-warning">""" + word("Turn off chat") + """</a>
       <h3>""" + word("Live chat") + """</h3>
     </div>
   </div>
@@ -1459,7 +1448,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
       <div class="col-md-12">
         <div class="input-group">
             <input type="text" class="form-control" id="daMessage" placeholder=""" + json.dumps(word("Type your message here.")) + """>
-            <span class="input-group-btn"><button class="btn btn-default" id="daSend" type="button">""" + word("Send") + """</button></span>
+            <span class="input-group-btn"><button class="btn btn-secondary" id="daSend" type="button">""" + word("Send") + """</button></span>
         </div>
       </div>
     </div>
@@ -1523,18 +1512,28 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         element_id = re.sub(r'(:|\.|\[|\]|,|=)', r'\\\\\1', element_id_unescaped)
         the_script = """\
     <script>
-      $("#""" + element_id + """").change(function(){
-        if ($( this ).val() == ""){
-          $("#daform input:not(#""" + element_id + """):not(:hidden)").prop("disabled", false);
-          $("#daform select:not(#""" + element_id + """):not(:hidden)").prop("disabled", false);
-          $("#daform input:not(#""" + element_id + """):not(:hidden)").parent().parent().removeClass("greyedout");
-          $("#daform select:not(#""" + element_id + """):not(:hidden)").parent().parent().removeClass("greyedout");
+      $('[name=""" + '"' + element_id + '"' + """]').change(function(){
+        if ($(this).attr('type') == "checkbox" || $(this).attr('type') == "radio"){
+          theVal = $('[name=""" + '"' + element_id + '"' + """]:checked').val();
         }
         else{
-          $("#daform input:not(#""" + element_id + """):not(:hidden)").prop("disabled", true);
-          $("#daform select:not(#""" + element_id + """):not(:hidden)").prop("disabled", true);
-          $("#daform input:not(#""" + element_id + """):not(:hidden)").parent().parent().addClass("greyedout");
-          $("#daform select:not(#""" + element_id + """):not(:hidden)").parent().parent().addClass("greyedout");
+          theVal = $( this ).val();
+        }
+        if (theVal == null || theVal == ""){
+          $("#daform input:not([name='"""  + element_id  + """']):not(:hidden)").prop("disabled", false);
+          $("#daform select:not([name='"""  + element_id  + """']):not(:hidden)").prop("disabled", false);
+          $("#daform textarea:not([name='"""  + element_id  + """']):not(:hidden)").prop("disabled", false);
+          $("#daform input:not([name='"""  + element_id  + """']):not(:hidden)").parent().parent().removeClass("greyedout");
+          $("#daform select:not([name='"""  + element_id  + """']):not(:hidden)").parent().parent().removeClass("greyedout");
+          $("#daform textarea:not([name='"""  + element_id  + """']):not(:hidden)").parent().parent().removeClass("greyedout");
+        }
+        else{
+          $("#daform input:not([name='"""  + element_id  + """']):not(:hidden)").prop("disabled", true);
+          $("#daform select:not([name='"""  + element_id  + """']):not(:hidden)").prop("disabled", true);
+          $("#daform textarea:not([name='"""  + element_id  + """']):not(:hidden)").prop("disabled", true);
+          $("#daform input:not([name='"""  + element_id  + """']):not(:hidden)").parent().parent().addClass("greyedout");
+          $("#daform select:not([name='"""  + element_id  + """']):not(:hidden)").parent().parent().addClass("greyedout");
+          $("#daform textarea:not([name='"""  + element_id  + """']):not(:hidden)").parent().parent().addClass("greyedout");
         }
       });
     </script>
@@ -2067,7 +2066,7 @@ def input_for(status, field, wide=False, embedded=False):
                 output += '<span class="inline-error-wrapper"><input alt="' + word("You can upload a file here") + '" type="file" class="file-embedded" name="' + escape_id(saveas_string) + '"' + title_text + ' id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/></span>'
             else:
                 output += '<input alt=' + json.dumps(word("You can upload a file here")) + ' type="file" class="dafile" data-show-upload="false" ' + maximagesize + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
-            #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="fas fa-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
+            #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="fas fa-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-secondary btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-secondary fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
         elif field.datatype == 'range':
             ok = True
             for key in ['min', 'max']:

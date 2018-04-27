@@ -1389,14 +1389,14 @@ def do_refresh(is_ajax, yaml_filename):
         return redirect(url_for('index', i=yaml_filename))
 
 def standard_scripts():
-    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js') + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/popper.min.js') + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/tooltip.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/app.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-combobox/js/bootstrap-combobox.js') + '"></script>'
+    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js') + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/popper.min.js') + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/tooltip.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/app.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-combobox/js/bootstrap-combobox.js') + '"></script>'
     
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None):
     if bootstrap_theme is None:
         bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">' #\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">'
     else:
         bootstrap_part = '\n    <link href="' + bootstrap_theme + '" rel="stylesheet">'
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/interview.css') + '" rel="stylesheet">'
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
     if daconfig.get('use font awesome', False):
@@ -1545,13 +1545,11 @@ def test_for_valid_var(varname):
     if not valid_python_var.match(varname):
         raise DAError(varname + " is not a valid name.  A valid name consists only of letters, numbers, and underscores, and begins with a letter.")
 
-def navigation_bar(nav, interview, wrapper=True, inner_ul_class=None, show_links=True, hide_inactive_subs=True, li_class=None, a_class=None, show_nesting=True):
-    if inner_ul_class is None:
-        inner_ul_class = 'nav nav-pills nav-stacked danav danavnested'
+def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_links=True, hide_inactive_subs=True, a_class=None, show_nesting=True, include_arrows=False):
+    if inner_div_class is None:
+        inner_div_class = 'nav flex-column nav-pills danav danavnested'
     if a_class is None:
-        a_class = 'danavlink'
-    if li_class is None:
-        li_class = ''
+        a_class = 'nav-link danavlink'
     #logmessage("navigation_bar: starting: " + str(section))
     the_language = docassemble.base.functions.get_language()
     if the_language not in nav.sections:
@@ -1573,13 +1571,17 @@ def navigation_bar(nav, interview, wrapper=True, inner_ul_class=None, show_links
             the_section = the_sections[0]
     max_section = the_section
     if wrapper:
-        output = '<div role="navigation" class="offset-lg-2 col-lg-2 col-md-3 col-sm-3 d-none d-sm-block danavdiv">' + "\n" + '  <ul class="nav nav-pills nav-stacked danav">' + "\n"
+        output = '<div role="navigation" class="offset-xl-1 col-xl-2 col-lg-3 col-md-3 d-none d-md-block danavdiv">' + "\n" + '  <div class="nav flex-column nav-pills danav">' + "\n"
     else:
         output = ''
     section_reached = False
     indexno = 0
     seen = set()
+    on_first = True
     for x in the_sections:
+        if include_arrows and not on_first:
+            output += '<span class="dainlinearrow"><i class="fas fa-chevron-right"></i></span>'
+        on_first = False
         indexno += 1
         the_key = None
         subitems = None
@@ -1603,16 +1605,18 @@ def navigation_bar(nav, interview, wrapper=True, inner_ul_class=None, show_links
                 else:
                     the_title = value
             else:
-                raise DAError("navigation_bar: too many keys in dict.  " + str(the_sections))
+                raise DAError("navigation_bar: too many keys in dict.  " + unicode(the_sections))
         else:
             the_key = None
             the_title = unicode(x)
         if (the_key is not None and the_section == the_key) or (the_key is None and the_section == the_title):
-            output += '<li role="presentation" class="' + li_class + ' active">'
+            #output += '<li role="presentation" class="' + li_class + ' active">'
             section_reached = True
             currently_active = True
+            active_class = ' active'
         else:
-            output += '<li class="' + li_class + '" role="presentation">'
+            active_class = ''
+            #output += '<li class="' + li_class + '" role="presentation">'
         new_key = the_title if the_key is None else the_key
         seen.add(new_key)
         #logmessage("seen sections are: " + str(seen))
@@ -1622,17 +1626,21 @@ def navigation_bar(nav, interview, wrapper=True, inner_ul_class=None, show_links
             seen_more = False
         if show_links and (seen_more or currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
             #url = docassemble.base.functions.interview_url_action(the_key)
-            output += '<a data-key="' + the_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + '">' + unicode(the_title) + '</a>'
+            output += '<a tabindex="0" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + active_class + '">' + unicode(the_title) + '</a>'
         else:
             if section_reached and not currently_active and not seen_more:
-                output += '<a data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
+                output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
             else:
-                output += '<a data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
+                output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + active_class + ' inactive">' + unicode(the_title) + '</a>'
         suboutput = ''
         if subitems:
             current_is_within = False
             oldindexno = indexno
+            first_sub = True
             for y in subitems:
+                if include_arrows:
+                    suboutput += '<span class="dainlinearrow"><i class="fas fa-chevron-right"></i></span>'
+                first_sub = False
                 indexno += 1
                 sub_currently_active = False
                 if type(y) is dict:
@@ -1641,18 +1649,20 @@ def navigation_bar(nav, interview, wrapper=True, inner_ul_class=None, show_links
                         test_for_valid_var(sub_key)
                         sub_title = y[sub_key]
                     else:
-                        raise DAError("navigation_bar: too many keys in dict.  " + str(the_sections))
+                        raise DAError("navigation_bar: too many keys in dict.  " + unicode(the_sections))
                         continue
                 else:
                     sub_key = None
                     sub_title = unicode(y)
                 if (sub_key is not None and the_section == sub_key) or (sub_key is None and the_section == sub_title):
-                    suboutput += '<li class="' + li_class + ' active" role="presentation">'
+                    #suboutput += '<li class="' + li_class + ' active" role="presentation">'
                     section_reached = True
                     current_is_within = True
                     sub_currently_active = True
+                    sub_active_class = ' active'
                 else:
-                    suboutput += '<li class="' + li_class + '" role="presentation">'
+                    sub_active_class = ''
+                    #suboutput += '<li class="' + li_class + '" role="presentation">'
                 new_sub_key = sub_title if sub_key is None else sub_key
                 seen.add(new_sub_key)
                 #logmessage("sub: seen sections are: " + str(seen))
@@ -1662,27 +1672,27 @@ def navigation_bar(nav, interview, wrapper=True, inner_ul_class=None, show_links
                     seen_more = False
                 if show_links and (seen_more or sub_currently_active or not section_reached) and sub_key is not None and interview is not None and sub_key in interview.questions:
                     #url = docassemble.base.functions.interview_url_action(sub_key)
-                    suboutput += '<a data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + '">' + unicode(sub_title) + '</a>'
+                    suboutput += '<a tabindex="0" data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + sub_active_class + '">' + unicode(sub_title) + '</a>'
                 else:
                     if section_reached and not sub_currently_active and not seen_more:
-                        suboutput += '<a data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(sub_title) + '</a>'
+                        suboutput += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(sub_title) + '</a>'
                     else:
-                        suboutput += '<a data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(sub_title) + '</a>'
-                suboutput += "</li>"
+                        suboutput += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive">' + unicode(sub_title) + '</a>'
+                #suboutput += "</li>"
             if currently_active or current_is_within or hide_inactive_subs is False or show_nesting:
                 if currently_active or current_is_within:
-                    suboutput = '<ul class="' + inner_ul_class + '">' + suboutput
+                    suboutput = '<div class="' + inner_div_class + '">' + suboutput
                 else:
-                    suboutput = '<ul style="display: none;" class="notshowing ' + inner_ul_class + '">' + suboutput
-                suboutput += "</ul>"
+                    suboutput = '<div style="display: none;" class="notshowing ' + inner_div_class + '">' + suboutput
+                suboutput += "</div>"
                 output += suboutput
             else:
                 indexno = oldindexno
-        output += "</li>"
+        #output += "</li>"
     if wrapper:
-        output += "\n</ul>\n</div>\n"
+        output += "\n</div>\n</div>\n"
     if not section_reached:
-        raise DAError("Section \"" + str(the_section) + "\" did not exist.")
+        raise DAError("Section \"" + unicode(the_section) + "\" did not exist.")
     return output        
 
 def progress_bar(progress):
@@ -1693,7 +1703,7 @@ def progress_bar(progress):
         return('');
     if progress > 100:
         progress = 100
-    return('<div class="progress top-progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div>\n')
+    return('<div class="progress mt-2"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div>\n')
 
 def get_unique_name(filename, secret):
     nowtime = datetime.datetime.utcnow()
@@ -1758,15 +1768,15 @@ def release_lock(user_code, filename):
 def make_navbar(status, steps, show_login, chat_info, debug_mode):
     if 'inverse navbar' in status.question.interview.options:
         if status.question.interview.options['inverse navbar']:
-            inverse = 'navbar-inverse '
+            inverse = 'navbar-dark bg-dark '
         else:
-            inverse = 'navbar-default '
+            inverse = 'navbar-light bg-light '
     elif daconfig.get('inverse navbar', True):
         inverse = 'navbar-dark bg-dark '
     else:
-        inverse = 'navbar-default '
+        inverse = 'navbar-light-bg-light '
     navbar = """\
-    <div class="navbar fixed-top navbar-expand-lg """ + inverse + '"' + """>
+    <div class="navbar fixed-top navbar-expand-md """ + inverse + '"' + """>
       <div class="container danavcontainer">
 """
     if status.question.can_go_back and steps > 1:
@@ -1779,11 +1789,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
         <form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"></form>
 """
     navbar += """\
-        <a id="pagetitle" class="navbar-brand pointer" href="#"><span class="d-block d-xs-none">""" + status.display_title + """</span><span class="d-none d-xs-block">""" + status.display_short_title + """</span></a>
-      
-        <button id="mobile-toggler" type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
-          <span class="navbar-toggler-icon"></span>
-        </button>
+        <a id="pagetitle" class="navbar-brand pointer" href="#"><span class="d-none d-md-block">""" + status.display_title + """</span><span class="d-block d-md-none">""" + status.display_short_title + """</span></a>
 """
     help_message = word("Help is available")
     help_label = None
@@ -1800,34 +1806,37 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
     chat_message = word("Live chat is available")
     source_message = word("How this question came to be asked")
     if debug_mode:
-        source_button = '<ul role="tablist" class="nav navbar-nav navbar-tabs mynavbar-right hidden-xs-down"><li><a role="tab" class="no-outline nav-link" title=' + json.dumps(source_message) + ' id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li></ul>'
+        source_button = '<li class="nav-item d-none d-md-block"><a class="no-outline nav-link" title=' + json.dumps(source_message) + ' id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li>'
     else:
         source_button = ''
-    navbar += '        ' + source_button + '<ul role="tablist" class="nav navbar-nav navbar-tabs mynavbar-right tabbuttons"><li class="invisible"><a class="nav-link" id="questionlabel" data-target="#question">' + word('Question') + '</a></li>'
+    navbar += '        <ul class="nav navbar-nav mynavbar-right">' + source_button + '<li class="nav-item invisible"><a class="nav-link" id="questionlabel" data-target="#question">' + word('Question') + '</a></li>'
     if len(status.helpText):
         if status.question.helptext is None or status.question.interview.question_help_button:
-            navbar += '<li class="nav-item"><a role="tab" class="pointer no-outline nav-link" data-target="#help" id="helptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</a></li>'
+            navbar += '<li class="nav-item"><a class="pointer no-outline nav-link helptrigger" data-target="#help" id="helptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</a></li>'
         else:
-            navbar += '<li class="nav-item"><a role="tab" class="pointer no-outline nav-link" data-target="#help" id="helptoggle" title=' + json.dumps(extra_help_message) + '><span class="daactivetext">' + help_label + ' <i class="fas fa-star"></i></span></a></li>'
-    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a data-target="#help" title=' + json.dumps(phone_message) + ' class="nav-link pointer navbar-icon"><i class="fas fa-phone chat-active"></i></a></li><li class="nav-item invisible" id="daChatAvailable"><a data-target="#help" title=' + json.dumps(chat_message) + ' class="nav-link pointer navbar-icon" ><i class="fas fa-comment-alt"></i></a></li></ul>'
+            navbar += '<li class="nav-item"><a class="pointer no-outline nav-link helptrigger" data-target="#help" id="helptoggle" title=' + json.dumps(extra_help_message) + '><span class="daactivetext">' + help_label + ' <i class="fas fa-star"></i></span></a></li>'
+    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a data-target="#help" title=' + json.dumps(phone_message) + ' class="nav-link pointer helptrigger"><i class="fas fa-phone chat-active"></i></a></li><li class="nav-item invisible" id="daChatAvailable"><a data-target="#help" title=' + json.dumps(chat_message) + ' class="nav-link pointer helptrigger" ><i class="fas fa-comment-alt"></i></a></li></ul>'
     navbar += """
+        <button id="mobile-toggler" type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+          <span class="navbar-toggler-icon"></span>
+        </button>
         <div class="collapse navbar-collapse" id="navbar-collapse">
           <ul class="navbar-nav ml-auto">
 """
     if 'menu_items' in status.extras:
         if type(status.extras['menu_items']) is not list:
-            custom_menu += '<li class="nav-item">' + word("Error: menu_items is not a Python list") + '</li>'
+            custom_menu += '<a class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
         elif len(status.extras['menu_items']):
             custom_menu = ""
             for menu_item in status.extras['menu_items']:
                 if not (type(menu_item) is dict and 'url' in menu_item and 'label' in menu_item):
-                    custom_menu += '<li class="nav-item">' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
+                    custom_menu += '<a class="dropdown-item">' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
                 else:
                     match_action = re.search(r'^\?action=([^\&]+)', menu_item['url'])
                     if match_action:
-                        custom_menu += '<li class="nav-item"><a class="nav-link" data-embaction="' + match_action.group(1) + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a></li>'
+                        custom_menu += '<a class="dropdown-item" data-embaction="' + match_action.group(1) + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a>'
                     else:
-                        custom_menu += '<li class="nav-item><a class="nav-link" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a></li>'
+                        custom_menu += '<a class="dropdown-item" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a>'
         else:
             custom_menu = False
     else:
@@ -1839,11 +1848,11 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
     if show_login:
         if current_user.is_anonymous:
             if custom_menu:
-                navbar += '            <li class="nav-item dropdown"><a class="nav-link" href="#" class="dropdown-toggle hidden-xs-down" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<i class="fas fa-caret-down"></i></a><div class="dropdown-menu dropdown-menu-right">' + custom_menu + '<a class="dropdown-item" href="' + url_for('user.login') + '">' + sign_in_text + '</a></div></li>'
+                navbar += '            <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right">' + custom_menu + '<a class="dropdown-item" href="' + url_for('user.login') + '">' + sign_in_text + '</a></div></li>'
             else:
                 navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>'
         else:
-            navbar += '            <li class="nav-item dropdown"><a class="nav-link" href="#" class="dropdown-toggle hidden-xs-down" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '<i class="fas fa-caret-down"></i></a><div class="dropdown-menu dropdown-menu-right">'
+            navbar += '            <li class="nav-item dropdown"><a class="nav-link" href="#" class="dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + ' <i class="fas fa-caret-down"></i></a><div class="dropdown-menu dropdown-menu-right">'
             if custom_menu:
                 navbar += custom_menu
             if not status.question.interview.options.get('hide_standard_menu', False):
@@ -1860,7 +1869,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
                         navbar +='<a class="dropdown-item" href="' + url_for('user_list') + '">' + word('User List') + '</a>'
                         navbar +='<a class="dropdown-item" href="' + url_for('config_page') + '">' + word('Configuration') + '</a>'
                 if app.config['SHOW_DISPATCH']:
-                    navbar += '<a class="dropdown-item" href="' + url_for('interview_start') + '">' + word('Available Interviews') + '</a></li>'
+                    navbar += '<a class="dropdown-item" href="' + url_for('interview_start') + '">' + word('Available Interviews') + '</a>'
                 if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
                     navbar += '<a class="dropdown-item" href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a>'
                 if current_user.has_role('admin', 'developer'):
@@ -1874,7 +1883,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
             navbar += '</div></li>'
     else:
         if custom_menu:
-            navbar += '            <li class="nav-item dropdown"><a class="nav-link" href="#" class="dropdown-toggle hidden-xs-down" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<i class="fas fa-caret-down"></i></a><div class="dropdown-menu dropdown-menu-right">' + custom_menu
+            navbar += '            <li class="nav-item dropdown"><a class="nav-link" href="#" class="dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<i class="fas fa-caret-down"></i></a><div class="dropdown-menu dropdown-menu-right">' + custom_menu
             if not status.question.interview.options.get('hide_standard_menu', False):
                 navbar += '<a class="dropdown-item" href="' + url_for(status.exit_link) + '">' + word(status.exit_label) + '</a>'
             navbar += '</div></li>'
@@ -2111,16 +2120,16 @@ def flash_as_html(message, message_type="info", is_ajax=True):
     return output
 
 def make_example_html(examples, first_id, example_html, data_dict):
-    example_html.append('          <ul class="nav nav-pills nav-stacked example-list example-hidden">\n')
+    example_html.append('          <ul class="nav flex-column nav-pills example-list example-hidden">\n')
     for example in examples:
         if 'list' in example:
-            example_html.append('          <li><a class="example-heading">' + example['title'] + '</a>')
+            example_html.append('          <li class="nav-item"><a tabindex="0" class="nav-link example-heading">' + example['title'] + '</a>')
             make_example_html(example['list'], first_id, example_html, data_dict)
             example_html.append('          </li>')
             continue
         if len(first_id) == 0:
             first_id.append(example['id'])
-        example_html.append('            <li><a class="example-link" data-example="' + example['id'] + '">' + example['title'] + '</a></li>')
+        example_html.append('            <li class="nav-item"><a tabindex="0" class="nav-link example-link" data-example="' + example['id'] + '">' + example['title'] + '</a></li>')
         data_dict[example['id']] = example
     example_html.append('          </ul>')
 
@@ -2406,7 +2415,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     if len(undefined_names):
         content += '\n                  <tr><td><h4>' + word('Undefined names') + infobutton('undefined') + '</h4></td></tr>'
         for var in sorted(undefined_names):
-            content += '\n                  <tr><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-danger playground-variable">' + var + '</a></td></tr>'
+            content += '\n                  <tr><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-danger btn-sm playground-variable">' + var + '</a></td></tr>'
     if len(names_used):
         content += '\n                  <tr><td><h4>' + word('Variables') + infobutton('variables') + '</h4></td></tr>'
         has_parent = dict()
@@ -2440,7 +2449,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             else:
                 class_type = 'primary'
                 title = ''
-            content += '\n                  <tr' + hide_it + '><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="btn btn-' + class_type + ' playground-variable">' + var + '</a>'
+            content += '\n                  <tr' + hide_it + '><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="btn btn-sm btn-' + class_type + ' playground-variable">' + var + '</a>'
             if var in has_children:
                 content += '&nbsp;<a class="dashowattributes" role="button" data-name="' + noquote(var) + '" title=' + json.dumps(attr_documentation) + '><i class="fas fa-ellipsis-h"></i></a>'
             if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
@@ -2467,14 +2476,14 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     if len(functions):
         content += '\n                  <tr><td><h4>' + word('Functions') + infobutton('functions') + '</h4></td></tr>'
         for var in sorted(functions):
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-warning playground-variable">' + name_info[var]['tag'] + '</a>'
+            content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-warning playground-variable">' + name_info[var]['tag'] + '</a>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
                 content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
             content += '</td></tr>'
     if len(classes):
         content += '\n                  <tr><td><h4>' + word('Classes') + infobutton('classes') + '</h4></td></tr>'
         for var in sorted(classes):
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-info playground-variable">' + name_info[var]['name'] + '</a>'
+            content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-info playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['bases']:
                 content += '&nbsp;<span data-ref="' + noquote(name_info[var]['bases'][0]) + '" class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
             if name_info[var]['doc']:
@@ -2483,7 +2492,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
                 content += '&nbsp;<a class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title=' + json.dumps(word('Methods')) + '><i class="fas fa-cog"></i></a>'
                 content += '<div style="display: none;" id="XMETHODX' + var + '"><table><tbody>'
                 for method_info in name_info[var]['methods']:
-                    content += '<tr><td><a data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="btn btn-warning playground-variable">' + method_info['tag'] + '</a>'
+                    content += '<tr><td><a tabindex="0" data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="btn btn-sm btn-warning playground-variable">' + method_info['tag'] + '</a>'
                     if method_info['doc']:
                         content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(method_info['name']) + '"><i class="fas fa-info-circle"></i></a>'
                     content += '</td></tr>'
@@ -2492,29 +2501,29 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     if len(modules):
         content += '\n                  <tr><td><h4>' + word('Modules defined') + infobutton('modules') + '</h4></td></tr>'
         for var in sorted(modules):
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-success playground-variable">' + name_info[var]['name'] + '</a>'
+            content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-success playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['doc']:
                 content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(var) + '"><i class="fas fa-info-circle"></i></a>'
             content += '</td></tr>'
     if len(avail_modules):
         content += '\n                  <tr><td><h4>' + word('Modules available in Playground') + infobutton('playground_modules') + '</h4></td></tr>'
         for var in avail_modules:
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="btn btn-success playground-variable">.' + noquote(var) + '</a>'
+            content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="btn btn-sm btn-success playground-variable">.' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(templates):
         content += '\n                  <tr><td><h4>' + word('Templates') + infobutton('templates') + '</h4></td></tr>'
         for var in templates:
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-default playground-variable">' + noquote(var) + '</a>'
+            content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(static):
         content += '\n                  <tr><td><h4>' + word('Static files') + infobutton('static') + '</h4></td></tr>'
         for var in static:
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-default playground-variable">' + noquote(var) + '</a>'
+            content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(sources):
         content += '\n                  <tr><td><h4>' + word('Source files') + infobutton('sources') + '</h4></td></tr>'
         for var in sources:
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-default playground-variable">' + noquote(var) + '</a>'
+            content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(interview.images):
         content += '\n                  <tr><td><h4>' + word('Decorations') + infobutton('decorations') + '</h4></td></tr>'
@@ -2526,11 +2535,11 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             content += '\n                  <tr><td>'
             the_ref = get_url_from_file_reference(interview.images[var].get_reference())
             if the_ref is None:
-                content += '<a title=' + json.dumps(word("This image file does not exist")) + ' data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-danger playground-variable">' + noquote(var) + '</a>'
+                content += '<a tabindex="0" title=' + json.dumps(word("This image file does not exist")) + ' data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-danger playground-variable">' + noquote(var) + '</a>'
             else:
                 if show_images:
                     content += '<img class="daimageicon" src="' + the_ref + '">&nbsp;'
-                content += '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-primary playground-variable">' + noquote(var) + '</a>'
+                content += '<a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-primary playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     content += "\n                  <tr><td><br><em>" + word("Type Ctrl-space to autocomplete.") + "</em></td><tr>"
     return content, sorted(vocab_set)
@@ -3952,6 +3961,7 @@ def index():
         is_ajax = True
     else:
         is_ajax = False
+    return_fake_html = False
         # if 'newsecret' in session:
         #     logmessage("interview_list: fixing cookie")
         #     response = redirect(url_for('index'))
@@ -5091,6 +5101,8 @@ def index():
                         if the_files:
                             files_to_process = list()
                             for the_file in the_files:
+                                if is_ajax:
+                                    return_fake_html = True
                                 filename = secure_filename(the_file.filename)
                                 file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
                                 extension, mimetype = get_ext_and_mimetype(filename)
@@ -5606,15 +5618,15 @@ def index():
         var message;
         var waitPeriod = 3000;
         if (subject == 'chat'){
-          target = "#daChatAvailable a i";
+          target = "#daChatAvailable a";
           message = """ + json.dumps(word("Get help through live chat by clicking here.")) + """;
         }
         else if (subject == 'chatmessage'){
-          target = "#daChatAvailable a i";
+          target = "#daChatAvailable a";
           message = """ + json.dumps(word("A chat message has arrived.")) + """;
         }
         else if (subject == 'phone'){
-          target = "#daPhoneAvailable a i";
+          target = "#daPhoneAvailable a";
           message = """ + json.dumps(word("Click here to get help over the phone.")) + """;
         }
         else{
@@ -5627,7 +5639,7 @@ def index():
         $(target).popover({"content": message, "placement": "bottom", "trigger": "manual", "container": "body"});
         $(target).popover('show');
         setTimeout(function(){
-          $(target).popover('destroy');
+          $(target).popover('dispose');
           $(target).removeAttr('title');
         }, waitPeriod);
       }
@@ -5912,6 +5924,12 @@ def index():
       var dadisable = null;
       var daChatRoles = """ + json.dumps(user_dict['_internal']['livehelp']['roles']) + """;
       var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['livehelp']['partner_roles']) + """;
+      function unfake_html_response(text){
+        text = text.replace(/^.*ABCDABOUNDARYSTARTABC/, '');
+        text = text.replace(/ABCDABOUNDARYENDABC.*/, '');
+        text = atob(text);
+        return text;
+      }
       function daValidationHandler(form){
         //form.submit();
         //console.log("daValidationHandler");
@@ -5930,7 +5948,7 @@ def index():
           $(".btn-da").each(function(){
             if (this != whichButton){
               $(this).removeClass("btn-primary btn-info btn-warning btn-error");
-              $(this).addClass("btn-default");
+              $(this).addClass("btn-secondary");
             }
           });
           if ($(whichButton).hasClass("btn-success")){
@@ -5938,7 +5956,7 @@ def index():
             $(whichButton).addClass("btn-primary");
           }
           else{
-            $(whichButton).removeClass("btn-primary btn-info btn-warning btn-error btn-default");
+            $(whichButton).removeClass("btn-primary btn-info btn-warning btn-error btn-secondary");
             $(whichButton).addClass("btn-success");
           }
         }
@@ -6080,7 +6098,7 @@ def index():
           $(form).attr("target", "uploadiframe");
           iframe.bind('load', function(){
             setTimeout(function(){
-              daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form, 1);
+              daProcessAjax($.parseJSON(unfake_html_response($("#uploadiframe").contents().text())), form, 1);
             }, 0);
           });
           form.submit();
@@ -6508,10 +6526,10 @@ def index():
           if (daChatMode == 'peer' || daChatMode == 'peerhelp'){
             daChatPartnersAvailable += data.num_peers;
             if (data.num_peers == 1){
-              $("#peerMessage").html('<span class="badge btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other user")) + """ + '</span>');
+              $("#peerMessage").html('<span class="btn btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other user")) + """ + '</span>');
             }
             else{
-              $("#peerMessage").html('<span class="badge btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other users")) + """ + '</span>');
+              $("#peerMessage").html('<span class="btn btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other users")) + """ + '</span>');
             }
             $("#peerMessage").removeClass("invisible");
           }
@@ -6520,10 +6538,10 @@ def index():
           }
           if (daChatMode == 'peerhelp' || daChatMode == 'help'){
             if (data.help_available == 1){
-              $("#peerHelpMessage").html('<span class="badge btn-primary">' + data.help_available + ' ' + """ + json.dumps(word("operator")) + """ + '</span>');
+              $("#peerHelpMessage").html('<span class="badge badge-primary">' + data.help_available + ' ' + """ + json.dumps(word("operator")) + """ + '</span>');
             }
             else{
-              $("#peerHelpMessage").html('<span class="badge btn-primary">' + data.help_available + ' ' + """ + json.dumps(word("operators")) + """ + '</span>');
+              $("#peerHelpMessage").html('<span class="badge badge-primary">' + data.help_available + ' ' + """ + json.dumps(word("operators")) + """ + '</span>');
             }
             $("#peerHelpMessage").removeClass("invisible");
           }
@@ -6659,7 +6677,7 @@ def index():
           hideSpinner();
         }
         notYetScrolled = true;
-        $('.tabbuttons a').click(function(e) {
+        $(".helptrigger").click(function(e) {
           e.preventDefault();
           $(this).tab('show');
         });
@@ -6729,7 +6747,7 @@ def index():
         $("input.input-embedded").on('keyup', adjustInputWidth);
         $("input.input-embedded").each(adjustInputWidth);
         $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
+          $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
         });
         if (daPhoneAvailable){
           $("#daPhoneAvailable").removeClass("invisible");
@@ -6995,6 +7013,22 @@ def index():
           $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+        });
+        $("a.danavlink").last().addClass('thelast');
+        $("a.danavlink").each(function(){
+          if ($(this).hasClass('btn') && !$(this).hasClass('notavailableyet')){
+            var the_a = $(this);
+            var the_delay = 1000 + 250 * parseInt($(this).data('index'));
+            setTimeout(function(){
+              $(the_a).removeClass('btn-secondary');
+              if ($(the_a).hasClass('active')){
+                $(the_a).addClass('btn-success');
+              }
+              else{
+                $(the_a).addClass('btn-warning');
+              }
+            }, the_delay);
+          }
         });
         daShowIfInProcess = false;
         $("#daSend").click(daSender);
@@ -7307,31 +7341,32 @@ def index():
         if len(interview_status.extra_css):
             start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
         start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n'
-    output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">' + "\n"
+    output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
     if interview_status.question.interview.use_navigation:
         output += navigation_bar(user_dict['nav'], interview_status.question.interview)
-    output += '        <div class="tab-content col">\n'
-    output += content + "        </div>\n"
+    #output += '        <div class="tab-content col">\n'
+    output += content
     if 'rightText' in interview_status.extras:
         if interview_status.question.interview.use_navigation:
-            output += '        <section id="daright" class="hidden-md-down col-lg-2 daright">\n'
+            output += '          <section id="daright" class="d-none d-lg-block col-lg-3 col-xl-2 daright">\n'
         else:
             if interview_status.question.interview.flush_left:
-                output += '        <section id="daright" class="hidden-sm-down col-lg-6 col-md-4 daright">\n'
+                output += '          <section id="daright" class="d-none d-lg-block col-lg-6 col-xl-5 daright">\n'
             else:
-                output += '        <section id="daright" class="hidden-sm-down col-lg-3 col-md-2 daright">\n'
+                output += '          <section id="daright" class="d-none d-lg-block col-lg-3 col-xl-3 daright">\n'
         output += docassemble.base.util.markdown_to_html(interview_status.extras['rightText'], trim=False, status=interview_status) + "\n"
-        output += '        </section>\n'
+        output += '          </section>\n'
+    #output += "        </div>\n      </div>\n"
     output += "      </div>\n"
     if len(interview_status.attributions):
         output += '      <div class="row">' + "\n"
         if interview_status.question.interview.use_navigation:
-            output += '        <div class="offset-lg-4 offset-md-3 offset-sm-3 col-lg-6 col-md-9 col-sm-9 daattributions" id="attributions">\n'
+            output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="attributions">\n'
         else:
             if interview_status.question.interview.flush_left:
-                output += '        <div class="col-lg-6 col-md-8 col-sm-10 daattributions" id="attributions">\n'
+                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="attributions">\n'
             else:
-                output += '        <div class="offset-lg-3 col-lg-6 offset-md-2 col-md-8 offset-sm-1 col-sm-10 daattributions" id="attributions">\n'
+                output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="attributions">\n'
         output += '        <br/><br/><br/><br/><br/><br/><br/>\n'
         for attribution in sorted(interview_status.attributions):
             output += '        <div><attribution><small>' + docassemble.base.util.markdown_to_html(attribution, status=interview_status, strip_newlines=True) + '</small></attribution></div>\n'
@@ -7339,12 +7374,12 @@ def index():
     if debug_mode:
         output += '      <div class="row">' + "\n"
         if interview_status.question.interview.use_navigation:
-            output += '        <div class="offset-lg-4 offset-md-3 offset-sm-3 col-lg-6 col-md-9 col-sm-9" style="display: none" id="readability">' + readability_report + '</div>'
+            output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-xl-6 col-lg-6 col-md-9 col-sm-12" style="display: none" id="readability">' + readability_report + '</div>'
         else:
             if interview_status.question.interview.flush_left:
-                output += '        <div class="col-lg-6 col-md-8 col-sm-10" style="display: none" id="readability">' + readability_report + '</div>'
+                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12" style="display: none" id="readability">' + readability_report + '</div>'
             else:
-                output += '        <div class="offset-lg-3 col-lg-6 offset-md-2 col-md-8 offset-sm-1 col-sm-10" style="display: none" id="readability">' + readability_report + '</div>'
+                output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12" style="display: none" id="readability">' + readability_report + '</div>'
         output += '      </div>' + "\n"
         output += '      <div class="row">' + "\n"
         output += '        <div id="source" class="col-md-12 collapse">' + "\n"
@@ -7416,6 +7451,9 @@ def index():
         else:
             do_action = None
         response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id=question_id)
+        if return_fake_html:
+            response.set_data('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Response</title></head><body><pre>ABCDABOUNDARYSTARTABC' + response.get_data().encode('base64') + 'ABCDABOUNDARYENDABC</pre></body></html>')
+            response.headers['Content-type'] = 'text/html; charset=utf-8'
     else:
         output = start_output + output + end_output
         response = make_response(output.encode('utf8'), '200 OK')
@@ -8137,7 +8175,7 @@ def observer():
           }
         });
         $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
+          $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
         });
         $("input.nota-checkbox").click(function(){
           $(this).parent().find('input.non-nota-checkbox').each(function(){
@@ -8151,15 +8189,15 @@ def observer():
         });
         $("input.input-embedded").on('keyup', adjustInputWidth);
         $("input.input-embedded").each(adjustInputWidth);
-        $('.tabbuttons a').click(function(e) {
+        $(".helptrigger").click(function(e) {
           e.preventDefault();
           $(this).tab('show');
         });
-        $('#questionlabel').click(function(e) {
+        $("#questionlabel").click(function(e) {
           e.preventDefault();
           $(this).tab('show');
         });
-        $('#pagetitle').click(function(e) {
+        $("#pagetitle").click(function(e) {
           e.preventDefault();
           $('#questionlabel').tab('show');
         });        
@@ -8670,6 +8708,10 @@ def monitor():
               else{
                   $(".phone").removeClass("invisible");
               }
+              $("#daPhoneSaved").removeClass("invisible");
+              setTimeout(function(){
+                  $("#daPhoneSaved").addClass("invisible");
+              }, 2000);
           }
           else{
               $("#daPhoneNumber").parent().addClass("has-error");
@@ -8677,10 +8719,6 @@ def monitor():
               daPhoneNumber = null;
               $(".phone").addClass("invisible");
           }
-          $("#daPhoneSaved").removeClass("invisible");
-          setTimeout(function(){
-              $("#daPhoneSaved").addClass("invisible");
-          }, 2000);
       }
       function allSessions(uid, yaml_filename){
           //console.log("allSessions");
@@ -8796,8 +8834,8 @@ def monitor():
           $("#listelement" + skey).addClass("list-group-item-danger");
           $("#session" + skey).find("a").remove();
           $("#session" + skey).find("span").first().html(""" + json.dumps(word("offline")) + """);
-          $("#session" + skey).find("span").first().removeClass('label-info');
-          $("#session" + skey).find("span").first().addClass('label-danger');
+          $("#session" + skey).find("span").first().removeClass('btn-info');
+          $("#session" + skey).find("span").first().addClass('btn-danger');
           $(xButton).click(function(){
               $("#listelement" + skey).slideUp(300, function(){
                   $("#listelement" + skey).remove();
@@ -8915,7 +8953,7 @@ def monitor():
               $(theIframeContainer).appendTo($(theListElement));
               var theChatArea = document.createElement('div');
               $(theChatArea).addClass('monitor-chat-area invisible');
-              $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"></ul></div></div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control" disabled><span class="input-group-btn"><button class="btn btn-default" type="button" disabled>""" + word("Send") + """</button></span></div></div></div></form>');
+              $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"></ul></div></div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control" disabled><span class="input-group-btn"><button class="btn btn-secondary" type="button" disabled>""" + word("Send") + """</button></span></div></div></div></form>');
               $(theChatArea).attr('id', 'chatarea' + key);
               var submitter = function(){
                   //console.log("I am the submitter and I am submitting " + key);
@@ -8957,16 +8995,17 @@ def monitor():
             var phoneIcon = document.createElement('i');
             $(phoneIcon).addClass("fas fa-phone");
             $(phoneIcon).appendTo($(phoneButton));
-            $(phoneButton).addClass("label phone");
+            $(phoneButton).addClass("btn phone");
             $(phoneButton).data('name', 'phone');
             if (key in daPhonePartners){
-              $(phoneButton).addClass("phone-on label-success");
+              $(phoneButton).addClass("phone-on btn-success");
               $(phoneButton).attr('title', daPhoneOnMessage);
             }
             else{
-              $(phoneButton).addClass("phone-off label-default");
+              $(phoneButton).addClass("phone-off btn-secondary");
               $(phoneButton).attr('title', daPhoneOffMessage);
             }
+            $(phoneButton).attr('tabindex', 0);
             $(phoneButton).addClass('observebutton')
             $(phoneButton).appendTo($(sessionDiv));
             $(phoneButton).attr('href', '#');
@@ -8976,9 +9015,9 @@ def monitor():
             $(phoneButton).click(function(e){
               if ($(this).hasClass("phone-off") && daPhoneNumber != null){
                 $(this).removeClass("phone-off");
-                $(this).removeClass("label-default");
+                $(this).removeClass("btn-secondary");
                 $(this).addClass("phone-on");
-                $(this).addClass("label-success");
+                $(this).addClass("btn-success");
                 $(this).attr('title', daPhoneOnMessage);
                 daPhonePartners[key] = 1;
                 daNewPhonePartners[key] = 1;
@@ -8989,9 +9028,9 @@ def monitor():
               }
               else{
                 $(this).removeClass("phone-on");
-                $(this).removeClass("label-success");
+                $(this).removeClass("btn-success");
                 $(this).addClass("phone-off");
-                $(this).addClass("label-default");
+                $(this).addClass("btn-secondary");
                 $(this).attr('title', daPhoneOffMessage);
                 if (key in daPhonePartners){
                   delete daPhonePartners[key];
@@ -9057,7 +9096,7 @@ def monitor():
               $(openButton).data('name', 'open');
               $(openButton).appendTo($(sessionDiv));
               var stopObservingButton = document.createElement('a');
-              $(stopObservingButton).addClass("btn btn-default observebutton invisible");
+              $(stopObservingButton).addClass("btn btn-secondary observebutton invisible");
               $(stopObservingButton).html(""" + json.dumps(word("Stop Observing")) + """);
               $(stopObservingButton).attr('href', '#');
               $(stopObservingButton).data('name', 'stopObserving');
@@ -9069,7 +9108,7 @@ def monitor():
               $(controlButton).data('name', 'control');
               $(controlButton).appendTo($(sessionDiv));
               var stopControllingButton = document.createElement('a');
-              $(stopControllingButton).addClass("btn btn-default observebutton invisible");
+              $(stopControllingButton).addClass("btn btn-secondary observebutton invisible");
               $(stopControllingButton).html(""" + json.dumps(word("Stop Controlling")) + """);
               $(stopControllingButton).attr('href', '#');
               $(stopControllingButton).data('name', 'stopControlling');
@@ -9369,8 +9408,10 @@ def monitor():
                       var skey = key.replace(/(:|\.|\[|\]|,|=|\/| )/g, '\\\\$1');
                       if ($("#role" + skey).length == 0){
                           var label = document.createElement('label');
-                          $(label).addClass('checkbox-inline');
+                          $(label).addClass('form-check-label');
+                          $(label).attr('for', "role" + key);
                           var input = document.createElement('input');
+                          $(input).addClass('form-check-input');
                           var text = document.createTextNode(key);
                           $(input).attr('type', 'checkbox');
                           $(input).attr('id', "role" + key);
@@ -9381,8 +9422,8 @@ def monitor():
                               $(input).prop('checked', false);
                           }
                           $(input).val(key);
-                          $(input).appendTo($(label));
                           $(text).appendTo($(label));
+                          $(input).appendTo($("#monitorroles"));
                           $(label).appendTo($("#monitorroles"));
                           $(input).change(function(){
                               var key = $(this).val();
@@ -11474,7 +11515,6 @@ def playground_files():
         });
         daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});
         daCodeMirror.setOption("coverGutterNextToScrollbar", true);
-        $("#uploadfile").fileinput();
         searchReady();
         variablesReady();
         fetchVars(false);""" + extra_command + """
@@ -12567,9 +12607,9 @@ function activateVariables(){
     //console.log("reference is " + reference);
     var target = $('[data-name="' + reference + '"]').first();
     if (target != null){
-      //console.log("scrolltop is now " + $('#daplaygroundpanel').scrollTop());
+      //console.log("scrolltop is now " + $('#daplaygroundcard').scrollTop());
       //console.log("Scrolling to " + target.position().top);
-      $('#daplaygroundpanel').animate({
+      $('#daplaygroundcard').animate({
           scrollTop: target.position().top
       }, 1000);
     }
@@ -13007,11 +13047,11 @@ function activateExample(id, scroll){
   }
   $(".example-list").addClass("example-hidden");
   $(".example-link").removeClass("example-active");
-  $(".example-link").parent().removeClass("active");
+  $(".example-link").removeClass("active");
   $(".example-link").each(function(){
     if ($(this).data("example") == id){
       $(this).addClass("example-active");
-      $(this).parent().addClass("active");
+      $(this).addClass("active");
       $(this).parents(".example-list").removeClass("example-hidden");
       if (scroll){
         setTimeout(function(){
@@ -13117,7 +13157,7 @@ $( document ).ready(function() {
     activateExample(id, false);
   });
 
-  $(".example-copy").on("click", function(){
+  $(".example-copy").on("click", function(event){
     if (daCodeMirror.somethingSelected()){
       daCodeMirror.replaceSelection("");
     }
@@ -13143,6 +13183,8 @@ $( document ).ready(function() {
       daCodeMirror.replaceSelection("---\\n" + exampleData[id]['source'] + "\\n", "around");
     }
     daCodeMirror.focus();
+    event.preventDefault();
+    return false;
   });
 
   $(".example-heading").on("click", function(){
@@ -13291,7 +13333,7 @@ def server_error(the_error):
     if re.search(r'\n', errmess):
         errmess = '<pre>' + errmess + '</pre>'
     else:
-        errmess = '<blockquote>' + errmess + '</blockquote>'
+        errmess = '<blockquote class="blockquote">' + errmess + '</blockquote>'
     script = """
     <script>
       var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
@@ -13584,7 +13626,7 @@ def utilities():
                         fields_output += "---"
                     else:
                         fields_output = word("Error: no fields could be found in the file")
-    return render_template('pages/utilities.html', version_warning=version_warning, bodyclass='adminbody', extra_css=Markup('\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script>$("#pdfdocxfile").fileinput();</script>'), tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type, language_placeholder=word("Type a ISO-639-1 language code; e.g., es, fr, it"))
+    return render_template('pages/utilities.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type, language_placeholder=word("Enter an ISO-639-1 language code (e.g., es, fr, it)"))
 
 # @app.route('/save', methods=['GET', 'POST'])
 # def save_for_later():
@@ -13805,16 +13847,6 @@ def train():
     file_list = dict()
     group_id_list = dict()
     entry_list = list()
-    extra_css = """
-    <link href=""" + '"' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '"' + """ rel="stylesheet">
-"""
-    extra_js = """
-    <script src=""" + '"' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"' + """></script>
-    <script src=""" + '"' + url_for('static', filename='bootstrap-fileinput/themes/fa/theme.min.js') + '"' + """></script>
-    <script>
-      $("#jsonfile").fileinput({theme: "fa", showPreview: false});
-    </script>
-"""
     if current_user.has_role('admin', 'developer'):
         playground_package = 'docassemble.playground' + str(current_user.id)
     else:
@@ -13842,7 +13874,7 @@ def train():
         if playground_package and playground_package not in package_list:
             package_list[playground_package] = 0
         package_list = [(x, package_list[x]) for x in sorted(package_list)]
-        return render_template('pages/train.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_package_list=True, playground_package=playground_package, extra_js=Markup(extra_js), extra_css=Markup(extra_css))
+        return render_template('pages/train.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_package_list=True, playground_package=playground_package)
     if playground_package and the_package == playground_package:
         the_package_display = word("My Playground")
     else:
@@ -13878,7 +13910,7 @@ def train():
                     if short_file_name not in file_list:
                         file_list[short_file_name] = 0
         file_list = [(x, file_list[x]) for x in sorted(file_list)]
-        return render_template('pages/train.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_file_list=True, extra_js=Markup(extra_js), extra_css=Markup(extra_css))
+        return render_template('pages/train.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_file_list=True)
     if the_group_id is None:
         the_prefix = ml_prefix(the_package, the_file)
         the_package_file = docassemble.base.functions.package_data_filename(the_prefix)
@@ -13979,7 +14011,7 @@ def train():
                         if the_saveas not in group_id_list:
                             group_id_list[the_saveas] = 0
         group_id_list = [(x, group_id_list[x]) for x in sorted(group_id_list)]
-        extra_js += """
+        extra_js = """
     <script>
       $( document ).ready(function() {
         $("#showimport").click(function(e){
@@ -14008,7 +14040,7 @@ def train():
         });
       });
     </script>"""        
-        return render_template('pages/train.html', extra_js=Markup(extra_js), extra_css=Markup(extra_css), version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_group_id_list=True, package_file_available=package_file_available, the_package_location=the_prefix, uploadform=uploadform)
+        return render_template('pages/train.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_group_id_list=True, package_file_available=package_file_available, the_package_location=the_prefix, uploadform=uploadform)
     else:
         group_id_to_use = fix_group_id(the_package, the_file, the_group_id)
         model = docassemble.base.util.SimpleTextMachineLearner(group_id=group_id_to_use)
@@ -14080,7 +14112,7 @@ def train():
         else:
             #logmessage("There are no choices")
             choices = None
-        extra_js += """
+        extra_js = """
     <script>
       $( document ).ready(function(){
         $("button.prediction").click(function(){
@@ -14110,7 +14142,7 @@ def train():
         });
       });
     </script>"""
-        return render_template('pages/train.html', extra_js=Markup(extra_js), extra_css=Markup(extra_css), form=form, version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True, is_data=is_data)
+        return render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True, is_data=is_data)
 
 def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True):
     # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))
@@ -16898,13 +16930,13 @@ def define_examples():
     if 'encoded_example_html' in pg_ex:
         return
     example_html = list()
-    example_html.append('        <div class="col-md-2">\n          <h4>Example blocks</h4>')
+    example_html.append('        <div class="col-md-2">\n          <h5 class="mb-1">Example blocks</h5>')
     pg_ex['pg_first_id'] = list()
     data_dict = dict()
     make_example_html(get_examples(), pg_ex['pg_first_id'], example_html, data_dict)
     example_html.append('        </div>')
-    example_html.append('        <div class="col-md-4 example-source-col"><h4>' + word('Source') + '<a class="btn btn-success example-copy">' + word("Insert") + '</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
-    example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '<a target="_blank" class="btn btn-primary example-documentation example-hidden" id="example-documentation-link">' + word("View documentation") + '</a></h4><a href="#" target="_blank" id="example-image-link"><img title=' + json.dumps(word("Click to try this interview")) + ' class="example_screenshot" id="example-image"></a></div>')
+    example_html.append('        <div class="col-md-4 example-source-col"><h5 class="mb-1">' + word('Source') + '<a href="#" tabindex="0" class="badge badge-success example-copy">' + word("Insert") + '</a></h5><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a tabindex="0" class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a tabindex="0" class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
+    example_html.append('        <div class="col-md-6"><h5 class="mb-1">' + word("Preview") + '<a href="#" tabindex="0" target="_blank" class="badge badge-primary example-documentation example-hidden" id="example-documentation-link">' + word("View documentation") + '</a></h5><a href="#" target="_blank" id="example-image-link"><img title=' + json.dumps(word("Click to try this interview")) + ' class="example_screenshot" id="example-image"></a></div>')
     pg_ex['encoded_data_dict'] = safeid(json.dumps(data_dict))
     pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
 

@@ -10,7 +10,7 @@ modules:
 objects:
   - user: Individual
 ---
-question: >-
+question: |
   How old are you?
 fields:
   - Age in years: user.age

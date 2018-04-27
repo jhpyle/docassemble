@@ -79,6 +79,11 @@ def wait_forever(step):
     time.sleep(999999)
     world.browser.wait_for_it()
 
+@step('I launch the interview "([^"]+)"')
+def launch_interview(step, interview_name):
+    world.browser.get(world.da_path + "/?i=" + interview_name + '&reset=1')
+    time.sleep(1)
+
 @step('I start the interview "([^"]+)"')
 def start_interview(step, interview_name):
     do_wait()
@@ -99,6 +104,7 @@ def click_question_back_button(step):
 
 @step('I click the button "([^"]+)"')
 def click_button(step, button_name):
+    world.browser.find_element_by_id('pagetitle').click()
     do_wait()
     success = False
     try:
@@ -299,3 +305,14 @@ def exit_button(step, button_name):
     world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
     time.sleep(1.0)
 
+@step('I save a screenshot to "([^"]+)"')
+def save_screenshot(step, filename):
+    world.browser.get_screenshot_as_file(filename)
+
+@step('I set the window size to ([0-9]+)x([0-9]+)')
+def change_window_size(step, xdimen, ydimen):
+    world.browser.set_window_size(xdimen, ydimen)
+
+@step('I unfocus')
+def unfocus(step):
+    world.browser.find_element_by_id('pagetitle').click()

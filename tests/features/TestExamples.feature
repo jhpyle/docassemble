@@ -2978,6 +2978,7 @@ Feature: Example interviews
     And I set "Collection" to "dominoes"
     And I click the button "Continue"
     Then I should see the phrase "Please sign your name below."
+    And I wait 5 seconds
     And I click inside the signature area
     And I click the button "Continue"    
 
@@ -3168,13 +3169,13 @@ Feature: Example interviews
     And I click the link "creeper"
     And I wait 1 second
     Then I should see the phrase "A tall green creature that explodes if you get too close."
-    And I click the link "creeper"
+    And I unfocus
     And I wait 1 second
     Then I should not see the phrase "A tall green creature that explodes if you get too close."
     And I click the link "zombie pigman"
     And I wait 1 second
     Then I should see the phrase "A harmless creature who carries a gold sword."
-    And I click the link "zombie pigman"
+    And I unfocus
     And I wait 1 second
     Then I should not see the phrase "A harmless creature who carries a gold sword."
     And I click the button "Yes"
@@ -3215,13 +3216,13 @@ Feature: Example interviews
     And I click the link "creeper"
     And I wait 1 second
     Then I should see the phrase "A tall green creature that explodes if you get too close."
-    And I click the link "creeper"
+    And I unfocus
     And I wait 1 second
     Then I should not see the phrase "A tall green creature that explodes if you get too close."
     And I click the link "zombie pigman"
     And I wait 1 second
     Then I should see the phrase "A harmless creature who carries a gold sword."
-    And I click the link "zombie pigman"
+    And I unfocus
     And I wait 1 second
     Then I should not see the phrase "A harmless creature who carries a gold sword."
     And I click the button "No"
@@ -3679,6 +3680,7 @@ Feature: Example interviews
 
   Scenario: Test the interview "Signature"
     Given I start the interview "docassemble.base:data/questions/examples/signature.yml"
+    And I wait 5 seconds
     Then I should see the phrase "Sign your name"
     And I click inside the signature area
     And I click the button "Continue"
@@ -3968,13 +3970,13 @@ Feature: Example interviews
     And I click the link "creeper"
     And I wait 1 second
     Then I should see the phrase "A tall green creature that explodes if you get too close."
-    And I click the link "creeper"
+    And I unfocus
     And I wait 1 second
     Then I should not see the phrase "A tall green creature that explodes if you get too close."
     And I click the link "zombie pigman"
     And I wait 1 second
     Then I should see the phrase "A harmless creature who carries a gold sword."
-    And I click the link "zombie pigman"
+    And I unfocus
     And I wait 1 second
     Then I should not see the phrase "A harmless creature who carries a gold sword."
     And I click the button "No"
@@ -4051,12 +4053,12 @@ Feature: Example interviews
     And I click the link "Vegetable"
     And I wait 1 second
     Then I should see the phrase "A plant."
-    And I click the link "Vegetable"
+    And I unfocus
     And I wait 1 second
     And I click the link "Fruit"
     And I wait 1 second
     Then I should see the phrase "The pulpy, edible seed vessels of certain plants."
-    And I click the link "Fruit"
+    And I unfocus
     And I wait 1 second
     And I set "Vegetable" to "turnip"
     And I set "Fruit" to "orange"
@@ -4105,6 +4107,7 @@ Feature: Example interviews
     And I set "Last Name" to "Smith"
     And I click the button "Continue"
     Then I should see the phrase "Please sign your name below."
+    And I wait 5 seconds
     And I click inside the signature area
     And I click the button "Continue"
     Then I should see the phrase "Where do you live?"
@@ -4661,7 +4664,7 @@ Feature: Example interviews
   Scenario: Test the interview "Date and time"
     Given I start the interview "docassemble.base:data/questions/examples/datetime-field.yml"
     Then I should see the phrase "When is your appointment?"
-    And I set "Date and time" to "2018-05-06 17:00"
+    And I set "Date and time" to "05/06/2018	05:00PM"
     And I click the button "Continue"
     Then I should see the phrase "Result of question"
     And I should see the phrase "When inserted in into a question, target_variable looks like May 6, 2018."
@@ -4703,6 +4706,7 @@ Feature: Example interviews
     And I set "Zip" to "02001"
     And I click the button "Continue"
     Then I should see the phrase "Please sign your name below."
+    And I wait 5 seconds
     And I click inside the signature area
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
@@ -4939,6 +4943,7 @@ Feature: Example interviews
     And I set "Collection" to "turnip seeds"
     And I click the button "Continue"
     Then I should see the phrase "Please sign your name below."
+    And I wait 5 seconds
     And I click inside the signature area
     And I click the button "Continue"
     Then I should see the phrase "Congratulations!"
@@ -5051,7 +5056,7 @@ Feature: Example interviews
   Scenario: Test the interview "Time"
     Given I start the interview "docassemble.base:data/questions/examples/time-field.yml"
     Then I should see the phrase "What time is your appointment?"
-    And I set "Time" to "16:05"
+    And I set "Time" to "04:05PM"
     And I click the button "Continue"
     Then I should see the phrase "Result of question"
     And I should see the phrase "When inserted in into a question, target_variable looks like 16:05:00."

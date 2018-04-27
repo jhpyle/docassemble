@@ -30,7 +30,7 @@
     this.$container = this.setup();
     this.$element = this.$container.find('input[type=text]');
     this.$target = this.$container.find('input[type=hidden]');
-    this.$button = this.$container.find('.dropdown-toggle');
+    this.$button = this.$container.find('.dacomboboxtoggle');
     this.$menu = $(this.options.menu).appendTo('body');
     this.matcher = this.options.matcher || this.matcher;
     this.sorter = this.options.sorter || this.sorter;
@@ -180,7 +180,7 @@
       if (this.options.bsVersion == '2') {
         return '<div class="combobox-container"><input type="hidden" /> <div class="input-append"> <input type="text" autocomplete="off" /> <span class="add-on dropdown-toggle" data-dropdown="dropdown"> <span class="caret"/> <i class="icon-remove"/> </span> </div> </div>'
       } else {
-        return '<div class="combobox-container"> <input type="hidden" /> <div class="input-group"> <input type="text" autocomplete="off" /> <span class="input-group-addon dropdown-toggle" data-dropdown="dropdown"> <span class="caret" /> <span class="fas fa-times" /> </span> </div> </div>'
+        return '<div class="combobox-container"> <input type="hidden" /> <div class="input-group"> <input type="text" autocomplete="off" /> <div class="input-group-append"> <button class="btn btn-outline-secondary dacomboboxtoggle" data-toggle="dropdown" type="button"><span class="fas fa-caret-down"></span><span class="fas fa-times"></span></button> </div> </div>'
       }
     }
 
@@ -214,8 +214,8 @@
       var that = this;
 
       items = $(items).map(function (i, item) {
-        i = $(that.options.item).attr('data-value', item);
-        i.find('a').html(that.highlighter(item));
+        i = $(that.options.item).data('value', item);
+        i.html(that.highlighter(item));
         return i[0];
       })
 
@@ -229,7 +229,7 @@
         , next = active.next();
 
       if (!next.length) {
-        next = $(this.$menu.find('li')[0]);
+        next = $(this.$menu.find('a')[0]);
       }
 
       next.addClass('active');
@@ -240,7 +240,7 @@
         , prev = active.prev();
 
       if (!prev.length) {
-        prev = this.$menu.find('li').last();
+        prev = this.$menu.find('a').last();
       }
 
       prev.addClass('active');
@@ -301,8 +301,8 @@
 
       this.$menu
         .on('click', $.proxy(this.click, this))
-        .on('mouseenter', 'li', $.proxy(this.mouseenter, this))
-        .on('mouseleave', 'li', $.proxy(this.mouseleave, this));
+        .on('mouseenter', 'a', $.proxy(this.mouseenter, this))
+        .on('mouseleave', 'a', $.proxy(this.mouseleave, this));
 
       this.$button
         .on('click', $.proxy(this.toggle, this));
@@ -453,8 +453,8 @@
 
   $.fn.combobox.defaults = {
     bsVersion: '4'
-  , menu: '<ul class="typeahead typeahead-long dropdown-menu"></ul>'
-  , item: '<li><a href="#" class="dropdown-item"></a></li>'
+  , menu: '<div class="typeahead typeahead-long dropdown-menu"></div>'
+  , item: '<a href="#" class="dropdown-item"></a>'
   };
 
   $.fn.combobox.Constructor = Combobox;

@@ -2,13 +2,13 @@
 
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_submit_field %}
-<h1>{{ word("Invite User") }}</h1>
 
 <form action="" method="POST" class="form" role="form">
     {{ form.hidden_tag() }}
     {{ render_field(form.email, tabindex=10) }}
     {{ render_field(form.role_id, tabindex=20) }}
     {{ render_submit_field(form.submit, tabindex=90) }}
+    <a tabindex="100" class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_list') }}">{{ word('Back') }}</a>
 </form>
 
 {% endblock %}

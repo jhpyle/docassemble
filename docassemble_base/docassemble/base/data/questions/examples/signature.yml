@@ -10,8 +10,6 @@ subquestion: |
 signature: target_variable
 under: |
   ${ user }
-right: |
-  Hi there you monster!
 ---
 code: |
   user = "John Doe"

@@ -55,7 +55,7 @@
                   {%- endif %}
                 {%- endif %}
                 {%- if config['SHOW_DISPATCH'] %}
-                <li><a href="{{ url_for('interview_start') }}">{{ word('Available Interviews') }}</a></li>
+                <a class="dropdown-item" href="{{ url_for('interview_start') }}">{{ word('Available Interviews') }}</a>
                 {%- endif %}
                 {%- if config['SHOW_MY_INTERVIEWS'] or current_user.has_roles(['admin']) %}
                 <a class="dropdown-item" href="{{ url_for('interview_list') }}">{{ word('My Interviews') }}</a>
@@ -130,10 +130,10 @@
             }, 1);
             if (this != whichButton){
               $(this).removeClass("btn-primary btn-info btn-warning btn-error btn-success");
-              $(this).addClass("btn-default");
+              $(this).addClass("btn-secondary");
             }
             else{
-              $(whichButton).removeClass("btn-primary btn-info btn-warning btn-error btn-default");
+              $(whichButton).removeClass("btn-primary btn-info btn-warning btn-error btn-secondary");
               $(whichButton).addClass("btn-success");
             }
           });

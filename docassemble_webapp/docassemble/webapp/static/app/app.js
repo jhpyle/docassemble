@@ -11,7 +11,7 @@ var isEmpty;
 
 function daInitializeSignature(){
   aspectRatio = 0.4;
-  theBorders = 24;
+  theBorders = 30;
   waiter = 0;
   waitlimit = 2;
   isEmpty = 1;
@@ -91,8 +91,9 @@ function saveCanvas(){
 function newCanvas(){
   //console.log("running newCanvas");
   var cwidth = $(window).width() - theBorders;
-  if (cwidth > 550 ){
-    cwidth = 550;
+  var contentwidth = $("#sigpage").outerWidth(true);
+  if (cwidth > contentwidth ){
+    cwidth = contentwidth;
   }
   var cheight = cwidth*aspectRatio;
   var otherHeights = $("#sigtoppart").outerHeight(true) + $("#sigbottompart").outerHeight(true);

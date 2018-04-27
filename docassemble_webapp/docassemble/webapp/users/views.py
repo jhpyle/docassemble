@@ -29,14 +29,26 @@ HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 @login_required
 @roles_required('admin')
 def privilege_list():
-    output = '<ol>';
+    output = """\
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">""" + word("Privilege") + """</th>
+          <th scope="col">""" + word("Action") + """</th>
+        </tr>
+      </thead>
+      <tbody>
+"""
     for role in db.session.query(Role).order_by(Role.name):
         if role.name not in ['user', 'admin', 'developer', 'advocate', 'cron']:
-            output += '<li>' + str(role.name) + ' <a href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></li>'
+            output += '        <tr><td>' + str(role.name) + '</td><td><a tabindex="0" class="btn btn-danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
         else:
-            output += '<li>' + str(role.name) + '</li>'
+            output += '        <tr><td>' + str(role.name) + '</td><td>&nbsp;</td></tr>\n'
             
-    output += '</ol>'
+    output += """\
+      </tbody>
+    </table>
+"""
     return render_template('users/rolelist.html', version_warning=None, bodyclass='adminbody', page_title=word('Privileges'), tab_title=word('Privileges'), privilegelist=output)
 
 @app.route('/userlist', methods=['GET', 'POST'])
@@ -241,7 +253,7 @@ def invite():
         flash(word('Invitation has been sent.'), 'success')
         return redirect(next)
 
-    return render_template('flask_user/invite.html', version_warning=None, bodyclass='adminbody', form=invite_form)
+    return render_template('flask_user/invite.html', version_warning=None, bodyclass='adminbody', page_title=word('Invite User'), tab_title=word('Invite User'), form=invite_form)
 
 @app.route('/user/add', methods=['GET', 'POST'])
 @login_required
@@ -287,4 +299,4 @@ def user_add():
         db.session.commit()
         flash(word("The new user has been created"), "success")
         return redirect(url_for('user_list'))
-    return render_template('users/add_user_page.html', version_warning=None, bodyclass='adminbody', form=add_form)
+    return render_template('users/add_user_page.html', version_warning=None, bodyclass='adminbody', page_title=word('Add User'), tab_title=word('Add User'), form=add_form)

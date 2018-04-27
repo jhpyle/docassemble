@@ -1,12 +1,12 @@
 {% extends 'base_templates/page_base_half.html' %}
 
 {% block content %}
-{% from "base_templates/form_macros.html" import render_field, render_file_field_simple, render_select_field, render_submit_field with context %}
+{% from "base_templates/form_macros.html" import render_field, render_file_field, render_select_field, render_submit_field with context %}
 
 <h2>{{ word('Upgrade docassemble') }}</h2>
 
 <div class="form-actions">
-  <a class="btn btn-default {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', action='update', base='1') }}">{{ word('Upgrade') }}</a>
+  <a class="btn btn-primary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', action='update', base='1') }}">{{ word('Upgrade') }}</a>
 </div>
 
 <h2>{{ word('Install or update a package') }}</h2>
@@ -18,7 +18,7 @@
     {{ render_field(form.giturl, tabindex=70, placeholder='https://github.com/username/packagename') }}
     {{ render_select_field(form.gitbranch, tabindex=75) }}
     <h4>{{ word('Or you can upload a:') }}</h4>
-    {{ render_file_field_simple(form.zipfile, tabindex=80) }}
+    {{ render_file_field(form.zipfile, tabindex=80) }}
     <h4>{{ word('Or you can specify a:') }}</h4>
     {{ render_field(form.pippackage, tabindex=90) }}
   </div>
@@ -40,7 +40,7 @@
   {% for package in package_list %}
     <tr>
       <td>{{ package.package.name }}{% if package.package.packageversion %} <span class="text-muted">{{ package.package.packageversion }}</span>{% endif %}{% if package.package.gitbranch %} ({{ package.package.gitbranch }}){% endif %}</td>
-      <td style="text-align:right;">{% if package.can_update %}<a class="btn btn-default btn-xs" href="{{ url_for('update_package', package=package.package.name, action='update') }}">{{ word('Update') }}</a>{% endif %} {% if package.can_uninstall %}<a class="btn btn-warning btn-xs" href="{{ url_for('update_package', package=package.package.name, action='uninstall') }}">{{ word('Uninstall') }}</a>{% endif %}</td>
+      <td style="text-align:right;">{% if package.can_update %}<a class="btn btn-secondary btn-sm" href="{{ url_for('update_package', package=package.package.name, action='update') }}">{{ word('Update') }}</a>{% endif %} {% if package.can_uninstall %}<a class="btn btn-warning btn-sm" href="{{ url_for('update_package', package=package.package.name, action='uninstall') }}">{{ word('Uninstall') }}</a>{% endif %}</td>
     </tr>
 {% endfor %}
   </tbody>

@@ -1,9 +1,11 @@
 "A chat message has arrived.": Null
+"Action": Null
 "Activate chat": Null
 "Active File": Null
 "Active": Null
 "Add": Null
 "Add Privilege": Null
+"Add User": Null
 "Administrator": Null
 "a GitHub repository": Null
 "and enter the code": Null
@@ -111,6 +113,7 @@
 "E-mail this document": Null
 "E-mail was sent to": Null
 "(embedded question, source code not available)": Null
+"Enter an ISO-639-1 language code (e.g., es, fr, it)": Null
 "Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.": Null
 "Enter code": Null
 "Error accessing Google Drive": Null
@@ -188,6 +191,7 @@
 "Invalid phone number.": Null
 "Invitation has been sent.": Null
 "Invite": Null
+"Invite User": Null
 ", is already in use by someone else": Null
 ", is attached": Null
 "is not a valid date and time.": Null
@@ -311,6 +315,7 @@
 "Possibly not used": Null
 "Press one of the following buttons:": Null
 "Preview": Null
+"Privilege": Null
 "Privileges": Null
 "Problem detected.": Null
 "Profile": Null
@@ -444,6 +449,7 @@
 "To reach an advocate who can assist you, call": Null
 "To read the question again, type question.": Null
 "Training data were successfully imported.": Null
+"Train machine learning models": Null
 "Train": Null
 "Translate": Null
 "true": Null

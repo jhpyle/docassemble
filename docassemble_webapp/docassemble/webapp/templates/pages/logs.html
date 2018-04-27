@@ -4,14 +4,14 @@
 <ul class="nav nav-pills navpillssmaller">
   <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Open another log file')}}">
-      <span class="fas fa-file" aria-hidden="true"></span>&nbsp;&nbsp;{{ current_file }}<i class="fas fa-caret-down"></i>
+      <span class="fas fa-file" aria-hidden="true"></span>&nbsp;&nbsp;{{ current_file }}
     </a>
     <div class="dropdown-menu heightlim">
       {% for file in files %}{% if file == current_file %}
-      <a class="dropdown-item active" href="#"><span class="fas fa-file" aria-hidden="true"></span> {{ file }}
+      <a class="dropdown-item active" href="#"><span class="fas fa-file fa-fw" aria-hidden="true"></span> {{ file }}
       </a>
       {% else %}
-      <a class="dropdown-item" href="?file={{ file }}"><span class="fas fa-file" aria-hidden="true"></span> {{ file }}
+      <a class="dropdown-item" href="?file={{ file }}"><span class="fas fa-file fa-fw" aria-hidden="true"></span> {{ file }}
       </a>
       {% endif %}{% endfor %}
     </div>
@@ -20,22 +20,21 @@
     <a class="nav-link" title="{{ word('Download this log file') }}"href="{{ url_for('logfile', filename=current_file) }}"><span class="fas fa-download" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Download') }}</a>
   </li>
 </ul>
-<!-- class="form-inline vspace" -->
-<div class="row">
-  <form action="{{ url_for('logs') }}" method="POST" class="navbar-form navbar-left" role="form" id="form">
-    <div class="form-group">
-      <!--<label class="sr-only" for="filter_string">{{ word('Filter for') }}</label>-->
-      <div class="input-group">
-        <!--<div class="input-group-addon">{{ word('Filter for') }}</div>-->
-        <input type="text" class="form-control" name="filter_string" id="filter_string" value="{{ default_filter_string }}" placeholder="{{ word('Filter for') }}">
-      </div>
+<form action="{{ url_for('logs') }}" method="POST" role="form" id="form">
+  <div class="form-row">
+    <div class="col-auto my-1">
+      <input type="text" class="form-control" name="filter_string" id="filter_string" value="{{ default_filter_string }}" placeholder="{{ word('Filter for') }}">
     </div>
-    <button type="submit" name="{{ form.submit.id }}" class="btn btn-primary" value="{{ form.submit.label.text }}">{{ form.submit.label.text }}</button>
-    <button type="submit" name="{{ form.clear.id }}" class="btn btn-default" value="{{ form.clear.label.text }}">{{ form.clear.label.text }}</button>
-    {{ form.hidden_tag() }}
-    {{ myrender_hidden_field(form.file_name, value=current_file) }}
-  </form>
-</div>
+    <div class="col-auto my-1">
+      <button type="submit" name="{{ form.submit.id }}" class="btn btn-primary" value="{{ form.submit.label.text }}">{{ form.submit.label.text }}</button>
+    </div>
+    <div class="col-auto my-1">
+      <button type="submit" name="{{ form.clear.id }}" class="btn btn-secondary" value="{{ form.clear.label.text }}">{{ form.clear.label.text }}</button>
+    </div>
+  </div>
+  {{ form.hidden_tag() }}
+  {{ myrender_hidden_field(form.file_name, value=current_file) }}
+</form>
 <div>
   <pre class="wrappre vspace">{{ content }}</pre>
 </div>

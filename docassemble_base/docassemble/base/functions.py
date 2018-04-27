@@ -773,39 +773,14 @@ class DANav(object):
         if style == "inline":
             the_class = 'dainline'
             interior_class = 'dainlineinside'
-            li_class = "danavli"
-            a_class = "danavlink btn btn-default"
-            the_js = """
-    <script>
-      $("a.danavlink").last().addClass('thelast');
-      $("a.danavlink").each(function(){
-        if ($(this).hasClass('label') && !$(this).hasClass('notavailableyet')){
-          var the_li = $(this).parent();
-          var the_a = $(this);
-          var the_delay = 1000 + 250 * parseInt($(this).data('index'));
-          setTimeout(function(){
-            $(the_a).addClass('danavlidone');
-            $(the_a).removeClass('label-default');
-            if ($(the_li).hasClass('active')){
-              $(the_a).addClass('label-success');
-            }
-            else{
-              $(the_a).addClass('label-warning');
-            }
-          }, the_delay);
-        }
-      });
-    </script>
-"""
+            a_class = "btn btn-secondary danavlink "
         else:
             the_class = ''
             interior_class = None
-            li_class = None
             a_class = None
-            the_js = None
-        if this_thread.interview_status is not None and the_js is not None:
-           this_thread.interview_status.extra_scripts.append(the_js) 
-        return '  <div class="dasections"><ul class="' + the_class + '">' + "\n" + server.navigation_bar(self, this_thread.interview, wrapper=False, inner_ul_class=interior_class, li_class=li_class, a_class=a_class, show_links=show_links, show_nesting=False) + '  </ul></div>' + "\n"
+        #if this_thread.interview_status is not None and the_js is not None:
+        #   this_thread.interview_status.extra_scripts.append(the_js) 
+        return '  <div class="dasections"><div class="' + the_class + '">' + "\n" + server.navigation_bar(self, this_thread.interview, wrapper=False, inner_div_class=interior_class, a_class=a_class, show_links=show_links, show_nesting=False, include_arrows=True) + '  </div></div>' + "\n"
 
 word_collection = {
     'es': {

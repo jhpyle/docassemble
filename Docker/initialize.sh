@@ -18,8 +18,8 @@ fi
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get clean &> /dev/null
-apt-get -q -y update &> /dev/null
-apt-get -q -y install libsasl2-dev libldap2-dev &> /dev/null
+#apt-get -q -y update &> /dev/null
+#apt-get -q -y install libsasl2-dev libldap2-dev &> /dev/null
 su -c "source $DA_ACTIVATE && pip install python-ldap &> /dev/null" www-data
 
 # echo "1"

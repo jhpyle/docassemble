@@ -2,7 +2,6 @@
 
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
-<h2>{{ word('Train machine learning models') }}</h2>
 {%- if show_package_list %}
 <p>
   {%- if show_all %}
@@ -33,9 +32,16 @@
   {%- endif %}
 </p>
 <h3>{{ word('Interviews') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
-<p>
-  <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; {{ the_package_display }}
-</p>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a>
+    </li>
+    <li class="breadcrumb-item active">
+      {{ the_package_display }}
+    </li>
+  </ol>
+</nav>
 <div class="list-group">
   {%- for file, count in file_list %}
   <a class="list-group-item list-group-item-action" href="{{ url_for('train', package=the_package, file=file, show_all=show_all) }}">{{ file }} <span class="badge badge-pill badge-dark float-right">{{ count }}</span></a>
@@ -51,14 +57,29 @@
   {%- endif %}
 </p>
 <h3>{{ word('Models') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
-<p>
-  {%- if the_package == '_global' %}
-  <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; {{ word('Global models') }}
-  {%- else %}
-  <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; <a href="{{ url_for('train', package=the_package, show_all=show_all) }}">{{ the_package_display }}</a> &gt; {{ the_file }}
-  {%- endif %}
-  <a class="btn btn-secondary mldownload" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="fas fa-download"></i> {{ word('Download') }}</a>
-</p>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+{%- if the_package == '_global' %}
+      <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a>
+    </li>
+    <li class="breadcrumb-item active">
+      {{ word('Global models') }}
+    </li>
+{%- else %}
+      <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a>
+    </li>
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('train', package=the_package, show_all=show_all) }}">{{ the_package_display }}</a>
+    </li>
+    <li class="breadcrumb-item active">
+      {{ the_file }}
+{%- endif %}
+    </li>
+  </ol>
+</nav>
+<a class="btn btn-secondary mldownload" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="fas fa-download"></i> {{ word('Download') }}</a>
+
 <p>
   <a class="btn btn-success" href="#" id="showimport">Show import controls</a>
   <a class="btn btn-danger" href="#" id="hideimport" style="display: none">Hide import controls</a>
@@ -129,13 +150,38 @@
   {%- endif %}
 </p>
 <h3>{{ word('Items') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
-<p>
-  {%- if the_package == '_global' %}
-  <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; <a href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}">{{ word('Global models') }}</a> &gt; {{ the_group_id }}
-  {%- else %}
-  <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a> &gt; <a href="{{ url_for('train', package=the_package, show_all=show_all) }}">{{ the_package_display }}</a> &gt; <a href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}">{{ the_file }}</a> &gt; {{ the_group_id }}
-  {%- endif %}
-</p>
+{%- if the_package == '_global' %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a>
+    </li>
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}">{{ word('Global models') }}</a>
+    </li>
+    <li class="breadcrumb-item active">
+      {{ the_group_id }}
+    </li>
+  </ol>
+</nav>
+{%- else %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a>
+    </li>
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('train', package=the_package, show_all=show_all) }}">{{ the_package_display }}</a>
+    </li>
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}">{{ the_file }}</a>
+    </li>
+    <li class="breadcrumb-item active">
+      {{ the_group_id }}
+    </li>
+  </ol>
+</nav>
+{%- endif %}
 <form action="" method="POST" role="form">
   {{ form.hidden_tag() }}
   <input id="the_package" name="the_package" type="hidden" value="{{ the_package }}">
@@ -144,7 +190,7 @@
   <input id="show_all" name="show_all" type="hidden" value="{{ show_all }}">
   {%- if not is_data %}
   <div class="card">
-    <div class="card-header">
+    <div class="card-header bg-success border-success text-white">
       {{ word("Manually add a training item") }}
     </div>
     <div class="card-body">
@@ -172,7 +218,7 @@
   </div>
   <div class="mt-2">
     {{ render_submit_field(form.submit, tabindex=200, class="btn btn-primary " + config['BUTTON_CLASS']) }}
-    {{ render_submit_field(form.cancel, tabindex=210, class="btn btn-default " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.cancel, tabindex=210, class="btn btn-secondary " + config['BUTTON_CLASS']) }}
   </div>
   {%- endif %}
   {%- if entry_list|length > 0 %}
@@ -182,7 +228,7 @@
   <h4>{{ word('Unclassified items in the training set') }}</h4>
   {%- endif %}
   {%- for entry in entry_list %}
-  <div class="card">
+  <div class="card mb-2">
     <div class="card-body">
       <div class="form-group">
         <div class="checkbox delete-observation">
@@ -192,7 +238,7 @@
         </div>
         <label>{{ word("Input") }}</label>
         {%- if entry.type == 'text' %}
-        <blockquote class="limheight">{{ entry.independent }}</blockquote>
+        <blockquote class="blockquote limheight">{{ entry.independent }}</blockquote>
         {%- else %}
         {{ entry.independent_display|safe }}
         {%- endif %}
@@ -211,12 +257,12 @@
         <div>
           {%- for prediction, probability in entry.predictions[0:1] %}
           <button data-id-number="{{ entry.id }}" data-prediction="{{ prediction }}" class="btn btn-success btn-sm prediction" type="button">
-            {{ prediction }} <span class="badge badge-pill float-right">{{ probability }}</span>
+            {{ prediction }} <span class="badge badge-pill badge-dark">{{ probability }}</span>
           </button>
           {%- endfor %}
           {%- for prediction, probability in entry.predictions[1:] %}
           <button data-id-number="{{ entry.id }}" data-prediction="{{ prediction }}" class="btn btn-primary btn-sm prediction" type="button">
-            {{ prediction }} <span class="badge badge-pill float-right">{{ probability }}</span>
+            {{ prediction }} <span class="badge badge-pill badge-dark">{{ probability }}</span>
           </button>
           {%- endfor %}
         </div>
@@ -244,7 +290,7 @@
   {%- endfor %}
   <div class="mt-2">
     {{ render_submit_field(form.submit, tabindex=200, class="btn btn-primary " + config['BUTTON_CLASS']) }}
-    {{ render_submit_field(form.cancel, tabindex=210, class="btn btn-default " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.cancel, tabindex=210, class="btn btn-secondary " + config['BUTTON_CLASS']) }}
   </div>
   {%- endif %}
 </form>

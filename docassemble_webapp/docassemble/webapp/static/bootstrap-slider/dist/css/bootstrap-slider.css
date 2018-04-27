@@ -195,8 +195,8 @@
 .slider input {
   display: none;
 }
-.slider .tooltip.top {
-  margin-top: -36px;
+.slider .tooltip.tooltip-top {
+  margin-top: -26px;
 }
 .slider .tooltip-inner {
   white-space: nowrap;
@@ -318,4 +318,7 @@
   background-repeat: repeat-x;
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff8ac1ef', endColorstr='#ff82b3de', GradientType=0);
   opacity: 1;
+}
+.tooltip.tooltip-main {
+  margin-top: -40px;
 }

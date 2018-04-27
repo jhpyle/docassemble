@@ -3,17 +3,12 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_submit_field %}
 
-<h1>{{ word('Add Privilege') }}</h1>
-
 <form action="" method="POST" role="form">
-    {{ form.hidden_tag() }}
+  {{ form.hidden_tag() }}
+  {{ render_field(form.name, tabindex=240) }}
+  {{ render_submit_field(form.submit, tabindex=310) }}
+  <a tabindex="320" class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('privilege_list') }}">{{ word('Back') }}</a>
 
-    {{ render_field(form.name, tabindex=240) }}
-
-    <br>
-    <div class="form-actions">
-      {{ render_submit_field(form.submit, tabindex=310) }}
-    </div>
 </form>
 
 {% endblock %}

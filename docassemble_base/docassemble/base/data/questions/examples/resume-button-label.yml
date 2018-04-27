@@ -51,11 +51,6 @@ subquestion: |
 ---
 mandatory: True
 code: |
-  fruit = "apples"
-  vegetable = "potatoes"
----
-mandatory: True
-code: |
   menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
 ---
 mandatory: True

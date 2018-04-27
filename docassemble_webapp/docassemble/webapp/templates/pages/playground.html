@@ -1,75 +1,66 @@
 {% extends 'base_templates/flask_two_col_base.html' %}
 {% block content %}
 {%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
-<ul class="nav nav-pills">
+<ul class="nav nav-pills mt-1 mb-1">
   <li class="nav-item">
-    <a class="nav-link" tabindex="1" title="{{ word('Create new interview') }}" href="?new=1"><span class="fas fa-plus-circle" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Add') }}</a>
+    <a class="nav-link" tabindex="1" title="{{ word('Create new interview') }}" href="?new=1"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link" tabindex="2" title="{{ word('Create interview with wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml') }}"><span class="fas fa-pencil-alt" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Wizard') }}</a>
+    <a class="nav-link" tabindex="2" title="{{ word('Create interview with wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml') }}"><i class="fas fa-magic" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Wizard') }}</a>
   </li>
-  <li role="presentation" class="nav-item dropdown">
+  <li class="nav-item dropdown">
     <a tabindex="3" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Items in the Playground other than interviews') }}">
-      <span class="fas fa-folder-open" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Folders') }}<i class="fas fa-caret-down"></i>
+      <i class="fas fa-folder-open" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Folders') }}
     </a>
-    <ul class="dropdown-menu">
-      <li><a href="{{ url_for('playground_packages') }}"><span class="fas fa-briefcase" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Packages') }}</a></li>
-      <li><a href="{{ url_for('playground_files', section='template') }}"><span class="fas fa-file" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Templates') }}</a></li>
-      <li><a href="{{ url_for('playground_files', section='static') }}"><span class="fas fa-image" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Static files') }}</a></li>
-      <li><a href="{{ url_for('playground_files', section='sources') }}"><span class="fas fa-database" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Sources') }}</a></li>
-      <li><a href="{{ url_for('playground_files', section='modules') }}"><span class="fas fa-cogs" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Modules') }}</a></li>
-    </ul>
+    <div class="dropdown-menu">
+      <a class="dropdown-item" href="{{ url_for('playground_packages') }}"><i class="fas fa-briefcase fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Packages') }}</a>
+      <a class="dropdown-item" href="{{ url_for('playground_files', section='template') }}"><i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Templates') }}</a>
+      <a class="dropdown-item" href="{{ url_for('playground_files', section='static') }}"><i class="fas fa-image fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Static files') }}</a>
+      <a class="dropdown-item" href="{{ url_for('playground_files', section='sources') }}"><i class="fas fa-database fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Sources') }}</a>
+      <a class="dropdown-item" href="{{ url_for('playground_files', section='modules') }}"><i class="fas fa-cogs fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Modules') }}</a>
+    </div>
   </li>
   <li role="presentation" class="nav-item dropdown">
     <a tabindex="4" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another interview')}}">
-      <span class="fas fa-file" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
+      <i class="fas fa-file" aria-hidden="true"></i>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
     </a>
-    <ul class="dropdown-menu heightlim">
-      {% if any_files %}
-      {% for file in files %}{% if file == current_file %}<li class="active">
-        <a href="#"><span class="fas fa-file" aria-hidden="true"></span> {{ file }}
-        </a>
-      </li>
-      {% else %}<li>
-        <a href="?file={{ file }}"><span class="fas fa-file" aria-hidden="true"></span> {{ file }}
-        </a>
-      </li>
-      {% endif %}{% endfor %}
-      {% else %}<li class="active">
-        <a href="#"><span class="fas fa-file" aria-hidden="true"></span> {% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
-        </a>
-      </li>
-      {% endif %}
-    </ul>
+    <div class="dropdown-menu heightlim">
+      {%- if any_files %}
+      {%- for file in files %}{% if file == current_file %}
+      <a class="dropdown-item active" href="#"><i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ file }}</a>
+      {%- else %}
+      <a class="dropdown-item" href="?file={{ file }}"><i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ file }}</a>
+      {%- endif %}
+      {%- endfor %}
+      {%- else %}
+      <a class="dropdown-item active" href="#"><i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}</a>
+      {%- endif %}
+    </div>
   </li>
   <li class="nav-item" role="presentation">
     <a class="nav-link" tabindex="5" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a YAML file to the Playground') }}">
       <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
         {{ fileform.hidden_tag() }}
         <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
-          <span class="fas fa-upload" aria-hidden="true"></span>
-          {{ word("Upload") }}
+          <i class="fas fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Upload") }}
         </label>
         <div style="width: 0px; height: 0px; overflow: hidden">
           <input type="file" name="uploadfile" id="uploadfile"/>
         </div>
-        {# {{ render_file_field(fileform.uploadfile, label_visible=False, tabindex=80, multiple=False) }} #}
       </form>
     </a>
   </li>
-  {% if current_file != '' %}
+  {%- if current_file != '' %}
   <li class="nav-item" role="presentation">
     <a class="nav-link" tabindex="6" href="{{ url_for('playground_download', userid=userid, filename=current_file) }}" title="{{ word('Download the current file') }}">
-      <span class="fas fa-download" aria-hidden="true"></span>
-      {{ word("Download") }}
+      <i class="fas fa-download" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Download") }}
     </a>
   </li>
-  {% endif %}
+  {%- endif %}
   {%- if use_gd %}
   <li class="nav-item" role="presentation">
     <a class="nav-link" tabindex="7" href="{{ url_for('sync_with_google_drive', next=url_for('playground_page')) }}" title="{{ word('Sync with Google Drive') }}">
-      <span class="fas fa-sync" aria-hidden="true"></span>
-      {{ word('GD') }}
+      <i class="fas fa-sync" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('GD') }}
     </a>
   </li>
   {%- endif %}
@@ -77,16 +68,14 @@
 <form action="{{ url_for('playground_page') }}" method="POST" class="form" role="form" id="form" autocomplete="off">
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.original_playground_name, value=current_file) }}
-  {# <div class="daspacer"></div> #}
-  <div class="row">
+  <div class="row mb-1">
     <div class="col-lg-6">
       {{ render_addon_field(form.playground_name, tabindex=20) }}
     </div>
     <div class="col-lg-6">
-      {{ render_addon_field(form.search_term, tabindex=80, autocomplete="off", extra='<a class="input-group-addon no-outline pointer" id="daSearchPrevious"><i class="fas fa-chevron-left"></i></a><a class="input-group-addon no-outline pointer" id="daSearchNext"><i class="fas fa-chevron-right"></i></a>', extra_class='pull-right') }}
+      {{ render_addon_field(form.search_term, tabindex=80, autocomplete="off", extra='<div class="input-group-append"><button title="' + word('Previous result') + '" class="btn btn-outline-secondary no-outline pointer" id="daSearchPrevious"><i class="fas fa-chevron-left"></i></button><button title="' + word('Next result') + '" class="btn btn-outline-secondary no-outline pointer" id="daSearchNext"><i class="fas fa-chevron-right"></i></button></div>', extra_class='pull-right') }}
     </div>
   </div>
-  <div class="daspacer"></div>
   <div class="row">
     <div class="col">
       <div class="form-group">
@@ -97,20 +86,18 @@
   <div class="form-actions">
     {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS'], tabindex="90") }}
     {% if is_new == 'False' %}<a tabindex="100" id="daRun" target="_blank" href="{{ url_for('playground_redirect') }}" class="btn btn-warning {{ config['BUTTON_CLASS'] }}" >{{ word("Save and Run") }}</a>
-    {{ render_submit_field(form.delete, id='daDelete', class="btn btn-default " + config['BUTTON_CLASS'], tabindex="110") }}
+    {{ render_submit_field(form.delete, id='daDelete', class="btn btn-danger " + config['BUTTON_CLASS'], tabindex="110") }}
     {% if interview_path %}
-    <a tabindex="120" title="Right-click to copy link" class="btn btn-default example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="fas fa-link"></i> {{ word('Share') }}</a>
+    <a tabindex="120" title="Right-click to copy link" class="badge badge-secondary example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="fas fa-link"></i>&nbsp;&nbsp;{{ word('Share') }}</a>
     {% endif %}
     {% endif %}
   </div>
 </form>
 {%- endblock %}
 {% block rightside %}
-            <div id="playgroundbox" class="panel panel-info playgroundbox">
-              <div class="panel-heading">
-                <h3 class="panel-title">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="btn btn-primary darunbutton" target="_blank" id="daRunButton">{{ word('Run') }}</a></h3>
-              </div>
-              <div class="panel-body" id="daplaygroundpanel">
+            <div id="playgroundbox" class="card bg-light playgroundbox mt-1">
+              <div class="card-header">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="badge badge-primary larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a></div>
+              <div class="card-body" id="daplaygroundcard">
                 <table id="daplaygroundtable" class="daplaygroundtable">{{ variables_html }}
                 </table>
               </div>
