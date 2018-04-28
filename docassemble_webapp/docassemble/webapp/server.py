@@ -6864,11 +6864,13 @@ def index():
         $(".uncheckothers").on('change', function(){
           if ($(this).is(":checked")){
             $(".uncheckable").prop("checked", false);
+            $(".uncheckable").trigger('change');
           }
         });
         $(".uncheckable").on('change', function(){
           if ($(this).is(":checked")){
             $(".uncheckothers").prop("checked", false);
+            $(".uncheckothers").trigger('change');
           }
         });
         var navMain = $("#navbar-collapse");
@@ -8178,11 +8180,13 @@ def observer():
         $("input.nota-checkbox").click(function(){
           $(this).parent().find('input.non-nota-checkbox').each(function(){
             $(this).prop('checked', false);
+            $(this).trigger('change');
           });
         });
         $("input.non-nota-checkbox").click(function(){
           $(this).parent().find('input.nota-checkbox').each(function(){
             $(this).prop('checked', false);
+            $(this).trigger('change');
           });
         });
         $("input.input-embedded").on('keyup', adjustInputWidth);

@@ -193,12 +193,12 @@
 		  else{
 		    $object.on('change', function(){
  	              if($(this).is(':checked')){
- 			$(element).addClass("btn-primary");
-			$(element).removeClass("btn-light");
+ 			$(this).next().addClass("btn-primary");
+			$(this).next().removeClass("btn-light");
 		      }
 		      else{
-			$(element).removeClass("btn-primary");
-			$(element).addClass("btn-light");
+			$(this).next().removeClass("btn-primary");
+			$(this).next().addClass("btn-light");
 		      }
 		    });		    
 		  }

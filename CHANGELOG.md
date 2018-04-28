@@ -11,6 +11,7 @@
   YAML errors.
 - The `indefinite_article()` function used "a" for any capitalized
   word.
+- Issue where Chrome extensions interfered with file uploads.
 
 ## [0.2.49] - 2018-04-15
 ### Fixed
