@@ -51,7 +51,6 @@ app.config['USER_ENABLE_INVITATION'] = True
 app.config['USER_INVITE_EMAIL_TEMPLATE'] = 'flask_user/emails/invite'
 app.config['FAVICON_MASK_COLOR'] = daconfig.get('favicon mask color', '#698aa7')
 app.config['FAVICON_THEME_COLOR'] = daconfig.get('favicon theme color', '#83b3dd')
-app.config['USE_FONT_AWESOME'] = True if daconfig.get('use font awesome', False) else False
 
 if not daconfig.get('allow registration', True):
     app.config['USER_REQUIRE_INVITATION'] = True
