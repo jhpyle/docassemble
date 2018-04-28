@@ -1034,7 +1034,13 @@ def emoji_html(text, status=None, images=None):
         return("[EMOJI " + images[text].get_reference() + ', 1em]')
     icons_setting = docassemble.base.functions.get_config('default icons', None)
     if icons_setting == 'font awesome':
-        return('<i class="' + docassemble.base.functions.get_config('font awesome prefix', 'fas') + ' fa-' + str(text) + '"></i>')
+        m = re.search(r'^(fa[a-z])-fa-(.*)', text)
+        if m:
+            the_prefix = m.group(1)
+            text = m.group(2)
+        else:
+            the_prefix = docassemble.base.functions.get_config('font awesome prefix', 'fas')
+        return('<i class="' + the_prefix + ' fa-' + str(text) + '"></i>')
     elif icons_setting == 'material icons':
         return('<i class="material-icons">' + str(text) + '</i>')
     return(":" + str(text) + ":")
@@ -1106,6 +1112,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
     else:
         result = docassemble.base.functions.this_thread.markdown.reset().convert(a)
     result = re.sub(r'<table>', r'<table class="table table-striped">', result)
+    result = re.sub(r'<blockquote>', r'<blockquote class="blockquote">', result)
     #result = re.sub(r'<table>', r'<table class="datable">', result)
     result = re.sub(r'<a href="(.*?)"', lambda x: link_rewriter(x, status), result)
     if do_terms and question is not None and term_start.search(result):

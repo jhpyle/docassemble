@@ -2168,7 +2168,7 @@ Feature: Example interviews
 
   Scenario: Test the interview "User language from browser"
     Given I start the interview "docassemble.base:data/questions/examples/language_from_browser.yml"
-    Then I should see the phrase "I think your language code is en."
+    Then I should see the phrase "I think your language code is"
 
   Scenario: Test the interview "Language"
     Given I start the interview "docassemble.base:data/questions/examples/language.yml"
@@ -3359,6 +3359,15 @@ Feature: Example interviews
 
   Scenario: Test the interview "Custom button on review screen"
     Given I start the interview "docassemble.base:data/questions/examples/resume-button-label.yml"
+    Then I should see the phrase "What is your favorite fruit?"
+    And I set the text box to "apples"
+    And I click the button "Continue"
+    Then I should see the phrase "What is your favorite vegetable?"
+    And I set the text box to "potatoes"
+    And I click the button "Continue"
+    And I select "Review Answers" from the menu
+    Then I should see the phrase "You indicated you liked apples."
+    And I click the button "Keep going"
     Then I should see the phrase "What is your favorite fungi?"
     And I set the text box to "button mushrooms"
     And I click the button "Continue"
@@ -4648,7 +4657,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/date-and-time-fields.yml"
     Then I should see the phrase "When is your appointment?"
     And I set "Date" to "03/30/2018"
-    And I set "Time" to "16:05"
+    And I set "Time" to "04:05PM"
     And I click the button "Continue"
     Then I should see the phrase "Time until your appointment"
     And I should see the phrase "Your appointment is on March 30, 2018."
@@ -5018,7 +5027,7 @@ Feature: Example interviews
     And I set "Fruit" to "apple"
     And I click the button "Continue"
     Then I should see "TabTab" as the title of the page
-    And I should see the phrase "I'm Tiny!"
+    And I should see the phrase "Apples rule"
     Then I should see the phrase "The interview titles have been changed."
 
   Scenario: Test the interview "bad interview"
@@ -5755,3 +5764,8 @@ Feature: Example interviews
   # Scenario: Test the interview "Address autocomplete test"
   #   Given I start the interview "docassemble.base:data/questions/examples/address-autocomplete-test.yml"
 
+  # Scenario: Test the interview "Radio buttons within fields"
+  #   Given I start the interview "docassemble.base:data/questions/examples/radio-list-mobile.yml"
+
+  # Scenario: Test the interview "Text to the right of the question"
+  #   Given I start the interview "docassemble.base:data/questions/examples/right-centered.yml"

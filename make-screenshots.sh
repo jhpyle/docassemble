@@ -21,10 +21,10 @@ do
     then
 	continue
     fi
-    if [ -f docassemble_webapp/docassemble/webapp/static/examples/$file.png -a docassemble_webapp/docassemble/webapp/static/examples/$file.png -nt $path ]
-    then
-    	continue
-    fi
+    # if [ -f docassemble_webapp/docassemble/webapp/static/examples/$file.png -a docassemble_webapp/docassemble/webapp/static/examples/$file.png -nt $path ]
+    # then
+    # 	continue
+    # fi
     tempfile=`mktemp /tmp/XXXXXXX.png`
     echo -e -n "\n\n  Scenario: make screenshot for $file\n    Given I launch the interview \"docassemble.${area}:data/questions/examples/${file}.yml\"" >> $featurefile
     if [ "$file" = "signature" -o \
@@ -117,15 +117,15 @@ do
 	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "markdown" -o "$file" = "allow-emailing-true" -o "$file" = "allow-emailing-false" -o "$file" = "markdown-demo" -o "$file" = "document-links" -o "$file" = "document-links-limited" -o "$file" = "allow-downloading-true" ]
     then
-	convert $tempfile -crop 478x999+264+86 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -crop 478x999+264+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "inverse-navbar" ]
     then
 	convert $tempfile -crop 1005x260+0+0 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "fields" -o "$file" = "attachment-code" -o "$file" = "attachment-simple" -o "$file" = "document-markup" -o "$file" = "document-variable-name" -o "$file" = "document-cache-invalidate" -o "$file" = "address-autocomplete-test"  -o "$file" = "address-autocomplete-test" -o "$file" = "table-width" -o "$file" = "document-language" -o "$file" = "allow-downloading-true" -o "$file" = "allow-downloading-true-zip-filename" -o "$file" = "document-docx" -o "$file" = "document-docx-from-rtf" -o "$file" = "document-file" ]
     then
-	convert $tempfile -crop 478x1999+264+86 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -crop 478x1999+264+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     else
-	convert $tempfile -crop 478x630+264+86 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -crop 478x630+264+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     fi
     rm -f $tempfile
 done < $datafile

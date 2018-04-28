@@ -149,7 +149,7 @@ class APIKey(FlaskForm):
             if type(self.name.data) not in (str, unicode) or not re.search(r'[A-Za-z0-9]', self.name.data):
                 self.name.errors.append(word("The name must be filled in."))
                 has_error = True
-            if type(self.method.data) not in (str, unicode) or self.method.data not in ('referer', 'ip'):
+            if type(self.method.data) not in (str, unicode) or self.method.data not in ('referer', 'ip', 'none'):
                 self.name.errors.append(word("You must select an option."))
                 has_error = True
         if has_error:

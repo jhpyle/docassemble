@@ -110,7 +110,7 @@
     this.$element.attr('class', this.$source.attr('class'))
     this.$element.attr('tabindex', this.$source.attr('tabindex'))
     this.$source.removeAttr('tabindex')
-    if (this.$source.attr('disabled')!==undefined)
+    if (this.$source.attr('disabled') !== undefined)
       this.disable();
   }
 
@@ -214,7 +214,7 @@
       var that = this;
 
       items = $(items).map(function (i, item) {
-        i = $(that.options.item).data('value', item);
+        i = $(that.options.item).attr('data-value', item);
         i.html(that.highlighter(item));
         return i[0];
       })
@@ -453,8 +453,9 @@
 
   $.fn.combobox.defaults = {
     bsVersion: '4'
-  , menu: '<div class="typeahead typeahead-long dropdown-menu"></div>'
-  , item: '<a href="#" class="dropdown-item"></a>'
+    , menu: '<div class="typeahead typeahead-long dropdown-menu"></div>'
+    , item: '<a href="#" class="dropdown-item"></a>'
+    , appendId: 'combobox'
   };
 
   $.fn.combobox.Constructor = Combobox;

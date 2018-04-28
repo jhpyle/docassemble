@@ -8,7 +8,9 @@ if credential_json is None:
 else:
     credential_info = json.loads(credential_json, strict=False)
     
-scope = ['https://spreadsheets.google.com/feeds']
+scope = ['https://spreadsheets.google.com/feeds',
+         'https://www.googleapis.com/auth/drive']
+
 __all__ = ['read_sheet', 'append_to_sheet']
 
 def read_sheet(sheet_name, worksheet_index=0):

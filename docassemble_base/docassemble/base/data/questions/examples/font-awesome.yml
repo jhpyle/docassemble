@@ -9,7 +9,8 @@ decoration: chart-bar
 question: |
   Third quarter metrics
 subquestion: |
-  We are making more money than we
-  did in the second quarter.
+  We are making more money
+  :far-fa-money-bill-alt: than
+  we did in the second quarter.
 
   So you can sleep well tonight! :bed:

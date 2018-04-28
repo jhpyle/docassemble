@@ -10,10 +10,7 @@
 {%- endif %}{{ extra_meta }}
     <title>{% if tab_title %}{{ tab_title }}{% else %}{{ config['APP_NAME'] }}{% endif %}</title>
     <link href="{% if config['BOOTSTRAP_THEME'] %}{{ config['BOOTSTRAP_THEME'] }}{% else %}{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}{% endif %}" rel="stylesheet">
-    {%- if config['BOOTSTRAP_THEME_DEFAULT'] %}
-    {# <link href="{{ url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') }}" rel="stylesheet"> #}
-    {%- endif %}
-    <link href="{{ url_for('static', filename='app/jasny-bootstrap.min.css') }}" rel="stylesheet">
+    {#<link href="{{ url_for('static', filename='app/jasny-bootstrap.min.css') }}" rel="stylesheet">#}
     <link href="{{ url_for('static', filename='app/app.css') }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
     <link rel="shortcut icon" href="{{ url_for('favicon') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('apple_touch_icon') }}">
@@ -25,7 +22,7 @@
     <script defer src="{{ url_for('static', filename='fontawesome/js/fontawesome-all.min.js') }}"></script>
   </head>
   <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} pad-for-navbar">
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar fixed-top navbar-expand-md navbar-dark bg-dark">
       <div class="{% if userclass %}container danavcontainer{% else %}container{% endif %}">
         {% if back_button %}{{ back_button }}{% endif %}<a class="navbar-brand" href="#">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>
         {%- if not (current_user.is_anonymous and request.path == "/user/sign-in") %}
@@ -36,7 +33,8 @@
         <div class="collapse navbar-collapse" id="navbar-collapse">
           <ul class="navbar-nav ml-auto">
             {%- if not current_user.is_anonymous %}
-            <li class="nav-item dropdown"><a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ user_designator(current_user) }}</a>
+            <li class="nav-item dropdown show">
+              <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ user_designator(current_user) }}</a>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
                 {%- if current_user.has_roles(['admin', 'developer', 'advocate']) %}
                 <a class="dropdown-item" href="{{ url_for('monitor') }}">{{ word('Monitor') }}</a>
@@ -98,7 +96,7 @@
     <script src="{{ url_for('static', filename='popper/umd/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='popper/umd/tooltip.min.js') }}"></script>
     <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='app/jasny-bootstrap.min.js') }}"></script>
+    {#<script src="{{ url_for('static', filename='app/jasny-bootstrap.min.js') }}"></script>#}
     <script>
       var whichButton = null;
       $( document ).ready(function(){

@@ -7,6 +7,8 @@
  * @license: MIT License
  */
 
+// Edited by Jonathan Pyle, 2018
+
 (function( $ ){
 
 	$.fn.labelauty = function( options )
@@ -165,24 +167,51 @@
 			// Here, we're going to test some control variables and act properly
 			
 			var element = jQuery(create( input_id, aria_label, selected, type, labels_object, use_labels, use_icons ));
-			
-			element.click(function(){
-				if($object.is(':checked')){
-					$(element).attr('aria-checked', false);
-				}else{
-					$(element).attr('aria-checked', true);
-				}
-			});
+
+		  if ($object.is(':checked')){
+		    $(element).addClass("btn-primary");
+		    $(element).removeClass("btn-light");
+		  };
+		  
+                  var the_name = $object.attr('name');
+		  if (type == 'radio'){
+		    $object.on('change', function(){
+		      $('input.labelauty[type="radio"]').each(function(){
+			if ($(this).attr('name') == the_name){
+			  if ($(this).is(':checked')){
+			    $(this).next().addClass("btn-primary");
+			    $(this).next().removeClass("btn-light");
+			  }
+			  else{
+			    $(this).next().removeClass("btn-primary");
+			    $(this).next().addClass("btn-light");
+			  }
+			}
+		      });
+		    });
+		  }
+		  else{
+		    $object.on('change', function(){
+ 	              if($(this).is(':checked')){
+ 			$(element).addClass("btn-primary");
+			$(element).removeClass("btn-light");
+		      }
+		      else{
+			$(element).removeClass("btn-primary");
+			$(element).addClass("btn-light");
+		      }
+		    });		    
+		  }
 			
 			element.keypress(function(event){
 				event.preventDefault();
 				if(event.keyCode === 32 || event.keyCode === 13){		
 					if($object.is(':checked')){
 						$object.prop('checked', false);
-						$(element).attr('aria-checked',false);
+						//$(element).attr('aria-checked',false);
 					}else{
 						$object.prop('checked', true);
-						$(element).attr('aria-checked', true);
+						//$(element).attr('aria-checked', true);
 					}
 				}
 			});
@@ -261,6 +290,13 @@
 			else
 				checked_message = messages_object[1];
 		}
+	  var uncheck_icon;
+	  if (type == 'checkbox'){
+	    uncheck_icon = '<i class="far fa-square fa-fw"></i>';
+	  }
+	  else{
+	    uncheck_icon = '<i class="far fa-circle fa-fw"></i>';
+	  }
 		
 		if(aria_label == null)
 			aria = "";	
@@ -269,25 +305,25 @@
 		
 		if( label == true && icon == true)
 		{
-			block = '<label for="' + input_id + '" ' + aria + '>' +
-						'<span class="labelauty-unchecked-image"></span>' +
+			block = '<label class="btn-light" for="' + input_id + '" ' + aria + '>' +
+						'<span class="labelauty-unchecked-image text-muted">' + uncheck_icon + '</span>' +
 		    '<span class="labelauty-unchecked">' + decode_html(unchecked_message) + '</span>' +
-						'<span class="labelauty-checked-image"></span>' +
+						'<span class="labelauty-checked-image"><i class="fas fa-check fa-fw"></i></span>' +
 		    '<span class="labelauty-checked">' + decode_html(checked_message) + '</span>' +
 					'</label>';
 		}
 		else if( label == true )
 		{
-			block = '<label for="' + input_id + '" ' + aria + '>' +
+			block = '<label class="btn-light" for="' + input_id + '" ' + aria + '>' +
 		    '<span class="labelauty-unchecked">' + decode_html(unchecked_message) + '</span>' +
 		    '<span class="labelauty-checked">' + decode_html(checked_message) + '</span>' +
 				'</label>';
 		}
 		else
 		{
-			block = '<label for="' + input_id + '" ' + aria + '>' +
-						'<span class="labelauty-unchecked-image"></span>' +
-						'<span class="labelauty-checked-image"></span>' +
+			block = '<label class="btn-light" for="' + input_id + '" ' + aria + '>' +
+						'<span class="labelauty-unchecked-image text-muted">' + uncheck_icon + '</span>' +
+						'<span class="labelauty-checked-image"><i class="fas fa-check fa-fw"></i></span>' +
 					'</label>';
 		}
 		

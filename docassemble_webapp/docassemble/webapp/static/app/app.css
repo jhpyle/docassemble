@@ -28,11 +28,11 @@ body.dainactive .form-control{
     background-color: #f2dede;
 }
 
-body.dainactive > .navbar-inverse {
+body.dainactive > .navbar-dark {
     background-image: linear-gradient(to bottom,#883c3c 0,#522 100%);
 }
 
-body.dacontrolled > .navbar-inverse {
+body.dacontrolled > .navbar-dark {
     background-image: linear-gradient(to bottom,#883c3c 0,#522 100%);
 }
 
@@ -224,15 +224,20 @@ a.sourceactive {
     margin-left: -5px;
 }
 
-.backbuttoncolor {
-    color: #539ac7;
-}
-
-.backbuttoncolor:hover,
-.backbuttoncolor:focus {
-    color: #539ac7;
+a.backbuttoncolor:hover, 
+a.backbuttoncolor:focus {
     text-decoration: none;
 }
+
+/* .backbuttoncolor { */
+/*     color: #539ac7; */
+/* } */
+
+/* .backbuttoncolor:hover, */
+/* .backbuttoncolor:focus { */
+/*     color: #539ac7; */
+/*     text-decoration: none; */
+/* } */
 
 @media (min-width: 768px) {
     .datext-right {
@@ -759,7 +764,7 @@ select.playground-select {
 }
 
 iframe.observer {
-    width: 768px;
+    width: 600px;
     height: 432px;
     overflow: auto;
     -moz-transform: scale(0.75, 0.75); 
@@ -900,6 +905,15 @@ div.top-alert {
     font-weight: normal;
 }
 
+@media (max-width: 767px) {
+    .navbar-nav li .dropdown-menu {
+        display: block;
+    }
+    .navbar-nav li .dropdown-toggle {
+	display: none;
+    }
+}    
+
 /* @include media-breakpoint-down(md) { */
 /* /\* @media (max-width: 767px) { *\/ */
 /*     .navbar-nav li .dropdown-menu { */
@@ -958,29 +972,21 @@ div.spinner-container {
     position: fixed;
     left: 0px;
     width: 100%;
+    margin-top: -10px;
 }
 
 .top-for-navbar {
-    top: 60px;
+    top: 66px;
 }
 
-img.da-spinner {
-    position: absolute;
-    width: 32px;
-    height: 32px;
-    top: 0;
-    left: 50%;
-    margin-left: -16px;
+span.da-spinner {
     z-index: 2000;
+    font-size: 40px;
 }
 
 img.da-sig-spinner {
-    position: fixed;
-    width: 32px;
-    height: 32px;
-    left: 50%;
-    margin-left: -16px;
     z-index: 2000;
+    font-size: 40px;
 }
 
 /* @media (min-width: 850px) { */
@@ -1231,7 +1237,7 @@ body.adminbody {
 }
 
 .pad-for-navbar {
-    padding-top: 60px;
+    padding-top: 66px;
 }
 
 /* .adminbody .form-control { */
@@ -1644,6 +1650,10 @@ div.constraintlist a {
     text-decoration: none;
 }
 
+div.constraintlist div + div {
+    margin-top: 2px;
+}
+
 .material-icons {
   font-family: 'Material Icons';
   font-weight: normal;
@@ -1895,3 +1905,7 @@ div.constraintlist a {
 /*   border: transparent 5px solid; */
 /*   border-top: #000 5px solid; */
 /* } */
+
+.to-labelauty {
+    display: none;
+}

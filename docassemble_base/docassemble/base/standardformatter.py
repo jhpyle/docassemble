@@ -1520,20 +1520,20 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
           theVal = $( this ).val();
         }
         if (theVal == null || theVal == ""){
-          $("#daform input:not([name='"""  + element_id  + """']):not(:hidden)").prop("disabled", false);
-          $("#daform select:not([name='"""  + element_id  + """']):not(:hidden)").prop("disabled", false);
-          $("#daform textarea:not([name='"""  + element_id  + """']):not(:hidden)").prop("disabled", false);
-          $("#daform input:not([name='"""  + element_id  + """']):not(:hidden)").parent().parent().removeClass("greyedout");
-          $("#daform select:not([name='"""  + element_id  + """']):not(:hidden)").parent().parent().removeClass("greyedout");
-          $("#daform textarea:not([name='"""  + element_id  + """']):not(:hidden)").parent().parent().removeClass("greyedout");
+          $("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").prop("disabled", false);
+          $("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").prop("disabled", false);
+          $("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])").prop("disabled", false);
+          $("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parent().parent().removeClass("greyedout");
+          $("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parent().parent().removeClass("greyedout");
+          $("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])").parent().parent().removeClass("greyedout");
         }
         else{
-          $("#daform input:not([name='"""  + element_id  + """']):not(:hidden)").prop("disabled", true);
-          $("#daform select:not([name='"""  + element_id  + """']):not(:hidden)").prop("disabled", true);
-          $("#daform textarea:not([name='"""  + element_id  + """']):not(:hidden)").prop("disabled", true);
-          $("#daform input:not([name='"""  + element_id  + """']):not(:hidden)").parent().parent().addClass("greyedout");
-          $("#daform select:not([name='"""  + element_id  + """']):not(:hidden)").parent().parent().addClass("greyedout");
-          $("#daform textarea:not([name='"""  + element_id  + """']):not(:hidden)").parent().parent().addClass("greyedout");
+          $("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").prop("disabled", true);
+          $("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").prop("disabled", true);
+          $("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])").prop("disabled", true);
+          $("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parent().parent().addClass("greyedout");
+          $("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parent().parent().addClass("greyedout");
+          $("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])").parent().parent().addClass("greyedout");
         }
       });
     </script>

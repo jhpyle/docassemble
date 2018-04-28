@@ -3,10 +3,10 @@
 {%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
 <ul class="nav nav-pills mt-1 mb-1">
   <li class="nav-item">
-    <a class="nav-link" tabindex="1" title="{{ word('Create new interview') }}" href="?new=1"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
+    <a class="nav-link" tabindex="1" title="{{ word('Create a new interview') }}" href="?new=1"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link" tabindex="2" title="{{ word('Create interview with wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml') }}"><i class="fas fa-magic" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Wizard') }}</a>
+    <a class="nav-link" tabindex="2" title="{{ word('Create an interview with the wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml') }}"><i class="fas fa-magic" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Wizard') }}</a>
   </li>
   <li class="nav-item dropdown">
     <a tabindex="3" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Items in the Playground other than interviews') }}">

@@ -13,8 +13,8 @@
 }
 
 /* Prevent text and blocks selection */
-input.labelauty + label ::selection { background-color: rgba(255, 255, 255, 0); }
-input.labelauty + label ::-moz-selection { background-color: rgba(255, 255, 255, 0); }
+/* input.labelauty + label ::selection { background-color: rgba(255, 255, 255, 0); } */
+/* input.labelauty + label ::-moz-selection { background-color: rgba(255, 255, 255, 0); } */
 
 /* Hide original checkboxes. They are ugly! */
 input.labelauty { display: none !important; }
@@ -28,9 +28,9 @@ input.labelauty + label
 	display: table;
 	font-size: 16px;
 	padding: 10px;
-	background-color: #efefef;
+	/* background-color: #efefef; */
 	line-height: 1.0;
-	color: #737373;
+	/* color: #737373; */
 	cursor: pointer;
 
 	border-radius: 3px 3px 3px 3px;
@@ -38,10 +38,10 @@ input.labelauty + label
 	-webkit-border-radius: 3px 3px 3px 3px;
 
 
-	transition: background-color 0.25s;
-	-moz-transition: background-color 0.25s;
-	-webkit-transition: background-color 0.25s;
-	-o-transition: background-color 0.25s;
+	/* transition: background-color 0.25s; */
+	/* -moz-transition: background-color 0.25s; */
+	/* -webkit-transition: background-color 0.25s; */
+	/* -o-transition: background-color 0.25s; */
 
 	-moz-user-select: none;
 	-khtml-user-select: none;
@@ -68,13 +68,13 @@ input.labelauty + label > span.labelauty-checked-image
 	width: 16px;
 	height: 16px;
 	vertical-align: bottom;
-	background-repeat: no-repeat;
-	background-position: left center;
+	/* background-repeat: no-repeat; */
+	/* background-position: left center; */
 
-	transition: background-image 0.5s linear;
-	-moz-transition: background-image 0.5s linear;
-	-webkit-transition: background-image 0.5s linear;
-	-o-transition: background-image 0.5s linear;
+	/* transition: background-image 0.5s linear; */
+	/* -moz-transition: background-image 0.5s linear; */
+	/* -webkit-transition: background-image 0.5s linear; */
+	/* -o-transition: background-image 0.5s linear; */
 }
 
 /* When there's a label, add a little margin to the left */
@@ -85,11 +85,11 @@ input.labelauty + label > span.labelauty-checked-image + span.labelauty-checked
 }
 
 /* When not Checked */
-input.labelauty:not(:checked):not([disabled]) + label:hover
-{
-	background-color: #eaeaea;
-	color: #777777;
-}
+/* input.labelauty:not(:checked):not([disabled]) + label:hover */
+/* { */
+/* 	background-color: #eaeaea; */
+/* 	color: #777777; */
+/* } */
 input.labelauty:not(:checked) + label > span.labelauty-checked-image
 {
 	display: none;
@@ -101,16 +101,16 @@ input.labelauty:not(:checked) + label > span.labelauty-checked
 }
 
 /* When Checked */
-input.labelauty:checked + label
-{
-	background-color: #3498db;
-	color: #ffffff;
-}
+/* input.labelauty:checked + label */
+/* { */
+/* 	background-color: #3498db; */
+/* 	color: #ffffff; */
+/* } */
 
-input.labelauty:checked:not([disabled]) + label:hover
-{
-	background-color: #72c5fd;
-}
+/* input.labelauty:checked:not([disabled]) + label:hover */
+/* { */
+/* 	background-color: #72c5fd; */
+/* } */
 input.labelauty:checked + label > span.labelauty-unchecked-image
 {
 	display: none;
@@ -138,38 +138,38 @@ input.labelauty[disabled] + label
 }
 
 /* Add a background to (un)checked images */
-input.labelauty + label > span.labelauty-unchecked-image
-{
-    background-image: url( images/input-unchecked.png );
-    background-size: 16px 16px;
-}
+/* input.labelauty + label > span.labelauty-unchecked-image */
+/* { */
+/*     background-image: url( images/input-unchecked.png ); */
+/*     background-size: 16px 16px; */
+/* } */
 
-input.labelauty + label > span.labelauty-checked-image
-{
-    background-image: url( images/input-checked.svg );
-    background-size: 16px 16px;
-}
+/* input.labelauty + label > span.labelauty-checked-image */
+/* { */
+/*     background-image: url( images/input-checked.svg ); */
+/*     background-size: 16px 16px; */
+/* } */
 
-input.labelauty.checkbox-icon + label > span.labelauty-unchecked-image
-{
-    background-image: url( images/checkbox-unchecked.svg );
-    background-size: 16px 16px;
-}
+/* input.labelauty.checkbox-icon + label > span.labelauty-unchecked-image */
+/* { */
+/*     background-image: url( images/checkbox-unchecked.svg ); */
+/*     background-size: 16px 16px; */
+/* } */
 
-input.labelauty.checkbox-icon + label > span.labelauty-checked-image
-{
-    background-image: url( images/checkbox-checked.svg );
-    background-size: 16px 16px;
-}
+/* input.labelauty.checkbox-icon + label > span.labelauty-checked-image */
+/* { */
+/*     background-image: url( images/checkbox-checked.svg ); */
+/*     background-size: 16px 16px; */
+/* } */
 
-input.labelauty.radio-icon + label > span.labelauty-unchecked-image
-{
-    background-image: url( images/radio-unchecked.svg );
-    background-size: 16px 16px;
-}
+/* input.labelauty.radio-icon + label > span.labelauty-unchecked-image */
+/* { */
+/*     background-image: url( images/radio-unchecked.svg ); */
+/*     background-size: 16px 16px; */
+/* } */
 
-input.labelauty.radio-icon + label > span.labelauty-checked-image
-{
-    background-image: url( images/radio-checked.svg );
-    background-size: 16px 16px;
-}
+/* input.labelauty.radio-icon + label > span.labelauty-checked-image */
+/* { */
+/*     background-image: url( images/radio-checked.svg ); */
+/*     background-size: 16px 16px; */
+/* } */

@@ -656,9 +656,11 @@ else:
     app.config['OAUTH_CREDENTIALS'] = dict()
     
 if daconfig.get('button size', 'medium') == 'medium':
-    app.config['BUTTON_CLASS'] = 'btn-md btn-da'
+    app.config['BUTTON_CLASS'] = 'btn-da'
 elif daconfig.get('button size', 'medium') == 'large':
     app.config['BUTTON_CLASS'] = 'btn-lg btn-da'
+elif daconfig.get('button size', 'medium') == 'small':
+    app.config['BUTTON_CLASS'] = 'btn-sm btn-da'
 else:
     app.config['BUTTON_CLASS'] = 'btn-da'
 
@@ -1389,14 +1391,14 @@ def do_refresh(is_ajax, yaml_filename):
         return redirect(url_for('index', i=yaml_filename))
 
 def standard_scripts():
-    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js') + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/popper.min.js') + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/tooltip.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/app.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-combobox/js/bootstrap-combobox.js') + '"></script>'
+    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js') + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/popper.min.js') + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/tooltip.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/app.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-combobox/js/bootstrap-combobox.js') + '"></script>' #\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>
     
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None):
     if bootstrap_theme is None:
         bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">' #\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">'
     else:
         bootstrap_part = '\n    <link href="' + bootstrap_theme + '" rel="stylesheet">'
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">' + bootstrap_part + '\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">' #'\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
     if daconfig.get('use font awesome', False):
@@ -1777,12 +1779,12 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
         inverse = 'navbar-light-bg-light '
     navbar = """\
     <div class="navbar fixed-top navbar-expand-md """ + inverse + '"' + """>
-      <div class="container danavcontainer">
+      <div class="container danavcontainer justify-content-start">
 """
     if status.question.can_go_back and steps > 1:
         if status.question.interview.navigation_back_button:
             navbar += """\
-        <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon backbuttoncolor navbar-btn" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><i class="fas fa-chevron-left"></i><span class="daback">""" + word('Back') + """</span></button></form></span>
+        <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon text-muted backbuttoncolor" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><i class="fas fa-chevron-left"></i><span class="daback">""" + word('Back') + """</span></button></form></span>
 """
         else:
             navbar += """\
@@ -1809,15 +1811,15 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
         source_button = '<li class="nav-item d-none d-md-block"><a class="no-outline nav-link" title=' + json.dumps(source_message) + ' id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li>'
     else:
         source_button = ''
-    navbar += '        <ul class="nav navbar-nav mynavbar-right">' + source_button + '<li class="nav-item invisible"><a class="nav-link" id="questionlabel" data-target="#question">' + word('Question') + '</a></li>'
+    navbar += '        <ul class="nav navbar-nav mynavbar-right">' + source_button + '<li class="nav-item invisible"><a class="nav-link" tabindex="0" id="questionlabel" data-target="#question">' + word('Question') + '</a></li>'
     if len(status.helpText):
         if status.question.helptext is None or status.question.interview.question_help_button:
-            navbar += '<li class="nav-item"><a class="pointer no-outline nav-link helptrigger" data-target="#help" id="helptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</a></li>'
+            navbar += '<li class="nav-item"><a tabindex="0" class="pointer no-outline nav-link helptrigger" data-target="#help" id="helptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</a></li>'
         else:
-            navbar += '<li class="nav-item"><a class="pointer no-outline nav-link helptrigger" data-target="#help" id="helptoggle" title=' + json.dumps(extra_help_message) + '><span class="daactivetext">' + help_label + ' <i class="fas fa-star"></i></span></a></li>'
-    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a data-target="#help" title=' + json.dumps(phone_message) + ' class="nav-link pointer helptrigger"><i class="fas fa-phone chat-active"></i></a></li><li class="nav-item invisible" id="daChatAvailable"><a data-target="#help" title=' + json.dumps(chat_message) + ' class="nav-link pointer helptrigger" ><i class="fas fa-comment-alt"></i></a></li></ul>'
+            navbar += '<li class="nav-item"><a tabindex="0" class="pointer no-outline nav-link helptrigger" data-target="#help" id="helptoggle" title=' + json.dumps(extra_help_message) + '><span class="daactivetext">' + help_label + ' <i class="fas fa-star"></i></span></a></li>'
+    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a data-target="#help" title=' + json.dumps(phone_message) + ' class="nav-link pointer helptrigger"><i class="fas fa-phone chat-active"></i></a></li><li class="nav-item invisible" id="daChatAvailable"><a tabindex="0" data-target="#help" title=' + json.dumps(chat_message) + ' class="nav-link pointer helptrigger" ><i class="fas fa-comment-alt"></i></a></li></ul>'
     navbar += """
-        <button id="mobile-toggler" type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+        <button id="mobile-toggler" type="button" class="navbar-toggler ml-auto" data-toggle="collapse" data-target="#navbar-collapse">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbar-collapse">
@@ -1825,12 +1827,12 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
 """
     if 'menu_items' in status.extras:
         if type(status.extras['menu_items']) is not list:
-            custom_menu += '<a class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
+            custom_menu += '<a tabindex="0" class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
         elif len(status.extras['menu_items']):
             custom_menu = ""
             for menu_item in status.extras['menu_items']:
                 if not (type(menu_item) is dict and 'url' in menu_item and 'label' in menu_item):
-                    custom_menu += '<a class="dropdown-item">' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
+                    custom_menu += '<a tabindex="0" class="dropdown-item">' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
                 else:
                     match_action = re.search(r'^\?action=([^\&]+)', menu_item['url'])
                     if match_action:
@@ -1852,7 +1854,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
             else:
                 navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>'
         else:
-            navbar += '            <li class="nav-item dropdown"><a class="nav-link" href="#" class="dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + ' <i class="fas fa-caret-down"></i></a><div class="dropdown-menu dropdown-menu-right">'
+            navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-right">'
             if custom_menu:
                 navbar += custom_menu
             if not status.question.interview.options.get('hide_standard_menu', False):
@@ -1883,7 +1885,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
             navbar += '</div></li>'
     else:
         if custom_menu:
-            navbar += '            <li class="nav-item dropdown"><a class="nav-link" href="#" class="dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<i class="fas fa-caret-down"></i></a><div class="dropdown-menu dropdown-menu-right">' + custom_menu
+            navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right">' + custom_menu
             if not status.question.interview.options.get('hide_standard_menu', False):
                 navbar += '<a class="dropdown-item" href="' + url_for(status.exit_link) + '">' + word(status.exit_label) + '</a>'
             navbar += '</div></li>'
@@ -2153,7 +2155,7 @@ def infobutton(title):
         docstring += noquote(title_documentation[title]['doc']) + "<br>"
     if 'url' in title_documentation[title]:
         docstring += "<a target='_blank' href='" + title_documentation[title]['url'] + "'>" + word("View documentation") + "</a>"
-    return '&nbsp;<a class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title=' + json.dumps(word("Help")) + ' data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="fas fa-question-circle"></i></a>'
+    return '&nbsp;<a tabindex="0" class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title=' + json.dumps(word("Help")) + ' data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="fas fa-question-circle"></i></a>'
 
 def search_button(var, field_origins, name_origins, interview_source, all_sources):
     in_this_file = False
@@ -2201,12 +2203,12 @@ def search_button(var, field_origins, name_origins, interview_source, all_source
         classname = 'dasearchthis'
     else:
         classname = 'dasearchother'
-    return '<a class="dasearchicon ' + classname + '" ' + title + 'data-name="' + noquote(var) + '"><i class="fas fa-search"></i></a>'
+    return '<a tabindex="0" class="dasearchicon ' + classname + '" ' + title + 'data-name="' + noquote(var) + '"><i class="fas fa-search"></i></a>'
 
 search_key = """
                   <tr><td><h4>""" + word("Note") + """</h4></td></tr>
-                  <tr><td><a class="dasearchicon dasearchthis"><i class="fas fa-search"></i></a> """ + word("means the name is located in this file") + """</td></tr>
-                  <tr><td><a class="dasearchicon dasearchother"><i class="fas fa-search"></i></a> """ + word("means the name may be located in a file included by reference, such as:") + """</td></tr>"""
+                  <tr><td><a tabindex="0" class="dasearchicon dasearchthis"><i class="fas fa-search"></i></a> """ + word("means the name is located in this file") + """</td></tr>
+                  <tr><td><a tabindex="0" class="dasearchicon dasearchother"><i class="fas fa-search"></i></a> """ + word("means the name may be located in a file included by reference, such as:") + """</td></tr>"""
 
 def find_needed_names(interview, needed_names, the_name=None, the_question=None):
     if the_name is not None:
@@ -2451,13 +2453,13 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
                 title = ''
             content += '\n                  <tr' + hide_it + '><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="btn btn-sm btn-' + class_type + ' playground-variable">' + var + '</a>'
             if var in has_children:
-                content += '&nbsp;<a class="dashowattributes" role="button" data-name="' + noquote(var) + '" title=' + json.dumps(attr_documentation) + '><i class="fas fa-ellipsis-h"></i></a>'
+                content += '&nbsp;<a tabindex="0" class="dashowattributes" role="button" data-name="' + noquote(var) + '" title=' + json.dumps(attr_documentation) + '><i class="fas fa-ellipsis-h"></i></a>'
             if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
                 content +='&nbsp;<span data-ref="' + noquote(name_info[var]['type']) + '" class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
             elif var in interview.mlfields:
                 content +='&nbsp;<span data-ref="DAModel" class="daparenthetical">(DAModel)</span>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
+                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
             if var in interview.mlfields:
                 if 'ml_group' in interview.mlfields[var] and not interview.mlfields[var]['ml_group'].uses_mako:
                     (ml_package, ml_file, ml_group_id) = get_ml_info(interview.mlfields[var]['ml_group'].original_text, ml_parts[0], ml_parts[1])
@@ -2478,7 +2480,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         for var in sorted(functions):
             content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-warning playground-variable">' + name_info[var]['tag'] + '</a>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
+                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
             content += '</td></tr>'
     if len(classes):
         content += '\n                  <tr><td><h4>' + word('Classes') + infobutton('classes') + '</h4></td></tr>'
@@ -2487,14 +2489,14 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             if name_info[var]['bases']:
                 content += '&nbsp;<span data-ref="' + noquote(name_info[var]['bases'][0]) + '" class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
             if name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
+                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
             if len(name_info[var]['methods']):
-                content += '&nbsp;<a class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title=' + json.dumps(word('Methods')) + '><i class="fas fa-cog"></i></a>'
+                content += '&nbsp;<a tabindex="0" class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title=' + json.dumps(word('Methods')) + '><i class="fas fa-cog"></i></a>'
                 content += '<div style="display: none;" id="XMETHODX' + var + '"><table><tbody>'
                 for method_info in name_info[var]['methods']:
                     content += '<tr><td><a tabindex="0" data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="btn btn-sm btn-warning playground-variable">' + method_info['tag'] + '</a>'
                     if method_info['doc']:
-                        content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(method_info['name']) + '"><i class="fas fa-info-circle"></i></a>'
+                        content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(method_info['name']) + '"><i class="fas fa-info-circle"></i></a>'
                     content += '</td></tr>'
                 content += '</tbody></table></div>'
             content += '</td></tr>'
@@ -2503,7 +2505,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         for var in sorted(modules):
             content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-success playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(var) + '"><i class="fas fa-info-circle"></i></a>'
+                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(var) + '"><i class="fas fa-info-circle"></i></a>'
             content += '</td></tr>'
     if len(avail_modules):
         content += '\n                  <tr><td><h4>' + word('Modules available in Playground') + infobutton('playground_modules') + '</h4></td></tr>'
@@ -5454,7 +5456,6 @@ def index():
       var map_info = null;
       var whichButton = null;
       var socket = null;
-      var foobar = null;
       var chatHistory = [];
       var daCheckinCode = null;
       var daCheckingIn = 0;
@@ -5487,16 +5488,7 @@ def index():
         var img = new Image();
         img.src = url;
       }
-      preloadImage('""" + str(url_for('static', filename='app/loader.gif')) + """');
       preloadImage('""" + str(url_for('static', filename='app/chat.ico')) + """');
-      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/checkbox-unchecked.svg')) + """');
-      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/input-unchecked.png')) + """');
-      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/checkbox-checked.svg')) + """');
-      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/input-checked.svg')) + """');
-      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/radio-unchecked.svg')) + """');
-      preloadImage('""" + str(url_for('static', filename='labelauty/source/images/radio-checked.svg')) + """');
-      preloadImage('""" + str(url_for('static', filename='bootstrap-fileinput/img/loading-sm.gif')) + """');
-      preloadImage('""" + str(url_for('static', filename='bootstrap-fileinput/img/loading.gif')) + """');
       function show_help_tab(){
           $('#helptoggle').tab('show');
       }
@@ -5879,6 +5871,7 @@ def index():
                             else{
                                 $(this).prop('checked', false);
                             }
+                            $(this).trigger('change');
                         }
                         else if (type == 'radio'){
                             if (name in valArray){
@@ -5889,6 +5882,7 @@ def index():
                                     $(this).prop('checked', false);
                                 }
                             }
+                            $(this).trigger('change');
                         }
                         else if ($(this).data().hasOwnProperty('sliderMax')){
                             $(this).slider('setValue', parseInt(valArray[name]));
@@ -6623,15 +6617,16 @@ def index():
       }
       function showSpinner(){
         if ($("#question").length > 0){
-          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-centered"><img class="da-spinner" src=""" + '"' + str(url_for('static', filename='app/loader.gif')) + '"' + """></div></div></div></div>').appendTo("body");
+          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"></i></span></div></div></div></div>').appendTo("body");
         }
         else{
-          var newImg = document.createElement('img');
-          $(newImg).attr("src", """ + json.dumps(url_for('static', filename='app/loader.gif')) + """);
-          $(newImg).attr("id", "daSpinner");
-          $(newImg).addClass("da-sig-spinner");
-          $(newImg).addClass("top-for-navbar");
-          $(newImg).appendTo("#sigtoppart");
+          var newSpan = document.createElement('span');
+          var newI = document.createElement('i');
+          $(newI).addClass("fas fa-spinner fa-spin");
+          $(newI).appendTo(newSpan);
+          $(newSpan).attr("id", "daSpinner");
+          $(newSpan).addClass("da-sig-spinner text-muted top-for-navbar");
+          $(newSpan).appendTo("#sigtoppart");
         }
         daShowingSpinner = true;
       }
@@ -6748,6 +6743,11 @@ def index():
         $("input.input-embedded").each(adjustInputWidth);
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
+        });
+        $('[data-toggle="popover"]').on('click', function(event){
+          event.preventDefault();
+          event.stopPropagation();
+          $(this).popover("show");
         });
         if (daPhoneAvailable){
           $("#daPhoneAvailable").removeClass("invisible");
@@ -8400,6 +8400,7 @@ def observer():
                             else{
                                 $(this).prop('checked', false);
                             }
+                            $(this).trigger('change');
                         }
                         else if (type == 'radio'){
                             if (name in valArray){
@@ -8410,6 +8411,7 @@ def observer():
                                     $(this).prop('checked', false);
                                 }
                             }
+                            $(this).trigger('change');
                         }
                         else if ($(this).data().hasOwnProperty('sliderMax')){
                             $(this).slider('setValue', parseInt(valArray[name]));
@@ -8987,7 +8989,7 @@ def monitor():
           $(theText).addClass('chat-title-label');
           theText.innerHTML = the_html;
           var statusLabel = document.createElement('span');
-          $(statusLabel).addClass("btn btn-info chat-status-label");
+          $(statusLabel).addClass("badge badge-info chat-status-label");
           $(statusLabel).html(obj.chatstatus == 'observeonly' ? 'off' : obj.chatstatus);
           $(statusLabel).appendTo($(sessionDiv));
           if (daUsePhone){
@@ -9407,6 +9409,8 @@ def monitor():
                       var key = data.availRoles[i];
                       var skey = key.replace(/(:|\.|\[|\]|,|=|\/| )/g, '\\\\$1');
                       if ($("#role" + skey).length == 0){
+                          var div = document.createElement('div');
+                          $(div).addClass("form-check form-check-inline");
                           var label = document.createElement('label');
                           $(label).addClass('form-check-label');
                           $(label).attr('for', "role" + key);
@@ -9423,8 +9427,9 @@ def monitor():
                           }
                           $(input).val(key);
                           $(text).appendTo($(label));
-                          $(input).appendTo($("#monitorroles"));
-                          $(label).appendTo($("#monitorroles"));
+                          $(input).appendTo($(div));
+                          $(label).appendTo($(div));
+                          $(div).appendTo($("#monitorroles"));
                           $(input).change(function(){
                               var key = $(this).val();
                               //console.log("change to " + key);
@@ -11532,7 +11537,7 @@ def playground_files():
     else:
         any_files = False
     #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
-    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="backbuttoncolor navbar-btn playground-back" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
+    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="playground-back text-muted backbuttoncolor" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + ('damarkdown' if mode == 'markdown' else mode) + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
 
 @app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
@@ -12285,7 +12290,7 @@ def playground_packages():
     else:
         any_files = False
     #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
-    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="backbuttoncolor navbar-btn playground-back" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
+    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="playground-back text-muted backbuttoncolor" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     if can_publish_to_pypi:
         if pypi_message is not None:
             pypi_message = Markup(pypi_message)
@@ -12697,7 +12702,7 @@ function fetchVars(changed){
       if (data.variables_html != null){
         $("#daplaygroundtable").html(data.variables_html);
         $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
+          $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
         });
         activateVariables();
       }
@@ -12715,7 +12720,7 @@ function variablesReady(){
 
 function activatePopovers(){
   $(function () {
-    $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
+    $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
   });
 }
 
@@ -13089,7 +13094,7 @@ function saveCallback(data){
     activateVariables();
     $("#form").trigger("reinitialize.areYouSure");
     $(function () {
-      $('[data-toggle="popover"]').popover({trigger: 'click', html: true});
+      $('[data-toggle="popover"]').popover({trigger: 'focus', html: true});
     });
   }
 }
@@ -16405,9 +16410,16 @@ def manage_api():
     fix_constraints();
   }
   function fix_constraints(){
-    var empty
+    var empty;
     var filled_exist = 0;
     var empty_exist = 0;
+    if ($("#method").val() == 'none'){
+      $(".constraintlist").hide();
+      return;
+    }
+    else{
+      $(".constraintlist").show();
+    }
     $(".constraintlist input").each(function(){
       if ($(this).val() == ''){
         empty_exist = 1;
@@ -16416,23 +16428,25 @@ def manage_api():
         filled_exist = 1;
       }
       if (!($(this).next().length)){
-        var new_span = $('<span>');
-        var new_a = $('<a>');
+        var inner_div = $('<div>');
+        $(inner_div).addClass('input-group-append');
+        var new_button = $('<button>');
         var new_i = $('<i>');
-        $(new_a).addClass('pointer');
-        $(new_span).addClass('input-group-addon');
-        $(new_span).append(new_a);
-        $(new_a).append(new_i);
+        $(new_button).addClass('btn btn-outline-secondary');
         $(new_i).addClass('fas fa-times');
-        $(new_a).on('click', function(){remove_constraint(this);});
-        $(this).parent().append(new_span);
+        $(new_button).append(new_i);
+        $(new_button).on('click', function(){remove_constraint(this);});
+        $(inner_div).append(new_button);
+        $(this).parent().append(inner_div);
       }
     });
     if (empty_exist == 0){
       var new_div = $('<div>');
+      var inner_div = $('<div>');
       var new_input = $('<input>');
       $(new_div).append(new_input);
       $(new_div).addClass('input-group');
+      $(inner_div).addClass('input-group-append');
       $(new_input).addClass('form-control');
       $(new_input).attr('type', 'text');
       if ($("#method").val() == 'ip'){
@@ -16444,16 +16458,14 @@ def manage_api():
       $(new_input).on('change', fix_constraints);
       $(new_input).on('keyup', fix_constraints);
       $(".constraintlist").append(new_div);
-      var new_span = $('<span>');
-      var new_a = $('<a>');
+      var new_button = $('<button>');
       var new_i = $('<i>');
-      $(new_a).addClass('pointer');
-      $(new_span).addClass('input-group-addon');
-      $(new_span).append(new_a);
-      $(new_a).append(new_i);
+      $(new_button).addClass('btn btn-outline-secondary');
       $(new_i).addClass('fas fa-times');
-      $(new_a).on('click', function(){remove_constraint(this);});
-      $(new_div).append(new_span);
+      $(new_button).append(new_i);
+      $(new_button).on('click', function(){remove_constraint(this);});
+      $(inner_div).append(new_button);
+      $(new_div).append(inner_div);
     }
   }
   $( document ).ready(function(){
@@ -16475,7 +16487,7 @@ def manage_api():
   });
 </script>
 """)
-    form.method.choices = [('ip', 'IP Address'), ('referer', 'Referring URL')]
+    form.method.choices = [('ip', 'IP Address'), ('referer', 'Referring URL'), ('none', 'No authentication')]
     if request.method == 'POST' and form.validate():
         action = form.action.data
         try:
@@ -16936,7 +16948,7 @@ def define_examples():
     make_example_html(get_examples(), pg_ex['pg_first_id'], example_html, data_dict)
     example_html.append('        </div>')
     example_html.append('        <div class="col-md-4 example-source-col"><h5 class="mb-1">' + word('Source') + '<a href="#" tabindex="0" class="badge badge-success example-copy">' + word("Insert") + '</a></h5><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a tabindex="0" class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a tabindex="0" class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
-    example_html.append('        <div class="col-md-6"><h5 class="mb-1">' + word("Preview") + '<a href="#" tabindex="0" target="_blank" class="badge badge-primary example-documentation example-hidden" id="example-documentation-link">' + word("View documentation") + '</a></h5><a href="#" target="_blank" id="example-image-link"><img title=' + json.dumps(word("Click to try this interview")) + ' class="example_screenshot" id="example-image"></a></div>')
+    example_html.append('        <div class="col-md-6"><h5 class="mb-1">' + word("Preview") + '<a href="#" target="_blank" class="badge badge-primary example-documentation example-hidden" id="example-documentation-link">' + word("View documentation") + '</a></h5><a href="#" target="_blank" id="example-image-link"><img title=' + json.dumps(word("Click to try this interview")) + ' class="example_screenshot" id="example-image"></a></div>')
     pg_ex['encoded_data_dict'] = safeid(json.dumps(data_dict))
     pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
 
