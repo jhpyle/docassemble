@@ -239,6 +239,12 @@ a.backbuttoncolor:focus {
 /*     text-decoration: none; */
 /* } */
 
+@media (max-width: 767px) {
+    .datext-right {
+	min-height: 1.5rem;
+    }
+}
+
 @media (min-width: 768px) {
     .datext-right {
 	text-align: right !important;
