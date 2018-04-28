@@ -17,14 +17,14 @@ do
     # sleep 1
     # continue
     
-    if [ "$file" = "immediate-file" -o "$file" = "exit-url-referer-fullscreen" -o "$file" = "exit-url-referer-fullscreen-mobile" -o "$file" = "session-interview" -o "$file" = "audio" ]
+    if [ "$file" = "immediate-file" -o "$file" = "exit-url-referer-fullscreen" -o "$file" = "exit-url-referer-fullscreen-mobile" -o "$file" = "session-interview" -o "$file" = "audio" -o "$file" = "help-damages-audio" ]
     then
 	continue
     fi
-    # if [ -f docassemble_webapp/docassemble/webapp/static/examples/$file.png -a docassemble_webapp/docassemble/webapp/static/examples/$file.png -nt $path ]
-    # then
-    # 	continue
-    # fi
+    if [ -f docassemble_webapp/docassemble/webapp/static/examples/$file.png -a docassemble_webapp/docassemble/webapp/static/examples/$file.png -nt $path ]
+    then
+    	continue
+    fi
     tempfile=`mktemp /tmp/XXXXXXX.png`
     echo -e -n "\n\n  Scenario: make screenshot for $file\n    Given I launch the interview \"docassemble.${area}:data/questions/examples/${file}.yml\"" >> $featurefile
     if [ "$file" = "signature" -o \
@@ -84,7 +84,6 @@ do
 	 "$file" = "no-mandatory" -o \
          "$file" = "help" -o \
          "$file" = "help-damages" -o \
-         "$file" = "help-damages-audio" -o \
          "$file" = "progress" -o \
          "$file" = "progress-features" -o \
 	 "$file" = "progress-multi" -o \

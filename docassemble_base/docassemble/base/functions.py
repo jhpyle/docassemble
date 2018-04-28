@@ -1859,7 +1859,7 @@ def noun_singular_en(*pargs, **kwargs):
         return(output)
 
 def indefinite_article_en(*pargs, **kwargs):
-    output = pattern.en.article(*pargs, **kwargs) + " " + unicode(pargs[0])
+    output = pattern.en.article(pargs[0].lower()) + " " + unicode(pargs[0])
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:

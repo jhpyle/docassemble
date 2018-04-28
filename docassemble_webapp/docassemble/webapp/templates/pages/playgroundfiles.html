@@ -12,7 +12,7 @@
           {%- endif %}
           {%- if use_gd %}
           <div>
-            <a tabindex="15" class="btn btn-sm" href="{{ url_for('sync_with_google_drive', next=url_for('playground_files', section=section)) }}"><img src="{{ url_for('static', filename='app/google-drive-logo.png') }}">&nbsp;{{ word('Sync') }}</a>
+            <a tabindex="15" title="{{ word('Sync with Google Drive') }}" class="btn btn-success btn-sm mt-2 mb-2" href="{{ url_for('sync_with_google_drive', next=url_for('playground_files', section=section)) }}"><i class="fab fa-google-drive"></i>&nbsp;{{ word('Sync') }}</a>
           </div>
           {%- endif %}
           {%- if upload_header %}
