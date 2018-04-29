@@ -423,7 +423,7 @@ example, how should the computer read this shopping list?
 {% highlight yaml %}
 - apples
 - bread
-- olive oil
+- olive oil, the good stuff
 - shortening: for cookies
 - flour
 {% endhighlight %}
@@ -431,7 +431,7 @@ example, how should the computer read this shopping list?
 In [Python], this will be interpreted as:
 
 {% highlight python %}
-['apples', 'bread', 'olive oil', {'shortening': 'for cookies'}, 'flour']
+['apples', 'bread', 'olive oil, the good stuff', {'shortening': 'for cookies'}, 'flour']
 {% endhighlight %}
 
 This is a list of apples, bread, olive oil, a dictionary, and flour.
@@ -502,8 +502,53 @@ becomes the following in [Python]:
 {'loopy': 'TRUE', 'smart': False, 'pretty': True, 'energetic': 'false'}
 {% endhighlight %}
 
+One feature of [YAML] that is rarely used, but that you may see, is
+the use of "explicit mapping."  Instead of writing:
 
-Many punctuation marks, including `"`, `'`, `%`, `?`, `~`, `|`, `#`, `>`, `:`, `!`, `:`, `{`, `}`,
+{% highlight yaml %}
+apple: red
+orange: orange
+banana: yellow
+{% endhighlight %}
+
+You can write:
+
+{% highlight yaml %}
+? apple
+: red
+? orange
+: orange
+? banana
+: yellow
+{% endhighlight %}
+
+Both mean the same thing.  You might want to use this technique if
+your labels in a [`fields`] directive are long.  For example, instead
+of writing:
+
+{% highlight yaml %}
+question: |
+  Please answer these questions.
+fields:
+  "Where were you born?": place_of_birth
+  "What were the last words of the first President to fly in a Zeppelin?": words
+{% endhighlight %}
+
+you could write:
+
+{% highlight yaml %}
+question: |
+  Please answer these questions.
+fields:
+  ? Where were you born?
+  : place_of_birth
+  ? |
+    What were the last words of the 
+    first President to fly in a Zeppelin?
+  : words
+{% endhighlight %}
+
+Note that many punctuation marks, including `"`, `'`, `%`, `?`, `~`, `|`, `#`, `>`, `:`, `!`, `:`, `{`, `}`,
 `[`, and `]`, have special meaning in [YAML], so if you use them in
 your text, make sure to use quotation marks or block quotes.
 
@@ -558,3 +603,4 @@ For more information about [YAML], see the [YAML specification].
 [configured otherwise]: {{ site.baseurl }}/docs/config.html#session list interview
 [`command()`]: {{ site.baseurl }}/docs/functions.html#command
 [`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
+[`fields`]: {{ site.baseurl }}/docs/fields.html#fields

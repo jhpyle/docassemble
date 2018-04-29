@@ -1,26 +1,30 @@
-{% assign docs = site.data.docs | map: 'docs' | join: ',' | split: ',' %}
-{% for document in docs %}
-  {% assign document_url = document | prepend:"/docs/" | append:".html" %}
-  {% if document_url == page.url %}
-    <nav style="text-align:center;">
-      <ul class="pagination">
-        {% if forloop.first %}
-	  <li class="disabled"><a href="#" aria-label="Back"><span aria-hidden="true"><span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span> Back </span></a></li>
-        {% else %}
-          {% assign previous = forloop.index0 | minus: 1 %}
-          {% assign previous_page = docs[previous] | prepend:"/docs/" | append:".html" %}
-          <li><a href="{{ previous_page }}" aria-label="Back"><span aria-hidden="true"><span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span> Back</span></a></li>
-        {% endif %}
-        {% if forloop.last %}
-	  <li class="disabled"><a href="#" aria-label="Next"><span aria-hidden="true">Next <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span></span></a></li>
-        {% else %}
-          {% assign next = forloop.index0 | plus: 1 %}
-          {% assign next_page = docs[next] | prepend:"/docs/" | append:".html" %}
-	  <li><a href="{{ next_page }}" aria-label="Next"><span aria-hidden="true">Next <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span></span></a></li>
-        {% endif %}
-      </ul>
-    </nav>
-    <div class="clear"></div>
-    {% break %}
-  {% endif %}
-{% endfor %}
+{%- assign docs = site.data.docs | map: 'docs' | join: ',' | split: ',' %}
+{%- for document in docs %}
+  {%- assign document_url = document | prepend:"/docs/" | append:".html" %}
+  {%- if document_url == page.url %}
+      <div class="row">
+        <div class="col-xs-9 mx-auto">
+          <nav style="text-align:center;" aria-label="Navigation to previous or next section">
+            <ul class="pagination">
+              {%- if forloop.first %}
+                <li class="disabled page-item"><a class="page-link" href="#" aria-label="Back"><i class="fas fa-chevron-left"></i> Back</a></li>
+              {%- else %}
+                {%- assign previous = forloop.index0 | minus: 1 %}
+                {%- assign previous_page = docs[previous] | prepend:"/docs/" | append:".html" %}
+                <li class="page-item"><a class="page-link" href="{{ previous_page }}" aria-label="Back"><i class="fas fa-chevron-left"></i> Back</a></li>
+              {%- endif %}
+              {%- if forloop.last %}
+                <li class="disabled page-item"><a class="page-link" href="#" aria-label="Next">Next <i class="fas fa-chevron-right"></i></a></li>
+              {%- else %}
+                {%- assign next = forloop.index0 | plus: 1 %}
+                {%- assign next_page = docs[next] | prepend:"/docs/" | append:".html" %}
+                <li class="page-item"><a class="page-link" href="{{ next_page }}" aria-label="Next">Next <i class="fas fa-chevron-right"></i></a></li>
+              {%- endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
+      <div class="clear"></div>
+    {%- break %}
+  {%- endif %}
+{%- endfor %}

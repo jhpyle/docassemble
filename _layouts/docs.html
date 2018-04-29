@@ -1,45 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
-{% include head.html %}  <body>
-    {% include header.html %}
+{%- include head.html %}
+  <body>
+{%- include header.html %}
     <div class="container">
-      <div class="row">
-	<div class="col-md-3">
+      <div class="row mt-lg-4">
+	<nav class="col-lg-3">
 	  <div class="sidebar-nav">
-            <div class="navbar navbar-default" role="navigation">
+            <div class="navbar navbar-expand-lg navbar-light flex-row flex-lg-column align-items-start">
               <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-navbar-collapse">
-                  <span class="sr-only">Toggle navigation</span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                </button>
                 <a href="{{ site.baseurl }}/docs.html" class="navbar-brand">Documentation</a>
               </div>
-              <div class="navbar-collapse collapse sidebar-navbar-collapse">
-                <ul class="nav navbar-nav">
-                  {% for section in site.data.docs %}
-                  <li style="padding-left:15px;"><strong>{{ section.title }}</strong></li>
-                  {% include docs_section.html items=section.docs %}
-                  {% endfor %}
+              <button type="button" class="navbar-toggler" data-toggle="collapse" data-target=".sidebar-navbar-collapse">
+                <span class="navbar-toggler-icon"></span>
+              </button>
+              <div class="collapse navbar-collapse sidebar-navbar-collapse">
+                <ul class="flex-column navbar-nav w-100 justify-content-between">
+{%- for section in site.data.docs %}
+                  <li class="nav-item"><strong>{{ section.title }}</strong></li>
+{%- include docs_section.html items=section.docs %}
+{%- endfor %}
                 </ul>
               </div>
             </div>
           </div>
-	</div>
-	<div class="col-md-9">
+	</nav>
+	<div class="col-lg-9">
 	  <header>
 	    <h1 class="page-header">{{ page.title }}</h1>
 	  </header>
 	  <main id="main">
 	  {{ content }}
-	  {% include section_nav.html %}
 	  </main>
+{%- include section_nav.html %}
 	</div>
       </div>
     </div>
     <hr>
-    {% include footer.html %}
-    {% include google-analytics.html %}
+{%- include footer.html %}
+{%- include google-analytics.html %}
   </body>
 </html>

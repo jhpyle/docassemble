@@ -4,6 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.50](https://github.com/jhpyle/docassemble/releases/tag/v0.2.50) - 2018-04-27
+
+### Changed
+- Upgraded to Bootstrap 4.0.0 from Bootstrap 3.3.
+- Use of headless Chrome in lettuce tests.
+
+### Added
+- The `show dispatch link` Configuration directive.
+
+### Fixed
+- Importation of word translations now traps errors.
+
 ## [0.2.49](https://github.com/jhpyle/docassemble/releases/tag/v0.2.49) - 2018-04-15
 
 ### Fixed

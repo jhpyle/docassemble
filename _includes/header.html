@@ -1,38 +1,27 @@
-          <nav class="navbar navbar-default">
-            <div class="container-fluid">
-              <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                  <span class="sr-only">Toggle navigation</span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="{{ site.baseurl }}/">{{ site.title }}</a>
-              </div>
-              <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav ">
-                  {% assign sorted_pages = site.pages | sort:"order" %}
-                  {% for thepage in sorted_pages %}
-                    {% if thepage.url contains '/search.html' or thepage.url contains '/index.html' or thepage.url == '/' %}
-                      {% continue %}
-                    {% endif %}
-                    {% if thepage.short_title %}
-                  <li{% if page.url == thepage.url or (page.url contains 'docs' and thepage.url == '/docs.html') %} class="active"{% endif %}><a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.short_title }}</a>
-                    {% elsif thepage.title %}
-                  <li><a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.title }}</a></li>
-                    {% endif %}
-                  {% endfor %}
-                </ul>
-                <form action="{{ site.baseurl }}/search.html" method="get" accept-charset="UTF-8" class="navbar-form navbar-right dasearchform">
-                  <div class="input-group">
-                    <input type="text" size="18" class="form-control" placeholder="Search for..." name="q">
-                    <span class="input-group-btn">
-                      <button class="btn btn-default" type="submit">
-                        <i class="glyphicon glyphicon-search" aria-hidden="true"></i>
-                      </button>
-                    </span>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </nav>
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{{ site.baseurl }}/">{{ site.title }}</a>
+        <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="navbar-nav mr-auto">
+            {%- assign sorted_pages = site.pages | sort:"order" %}
+            {%- for thepage in sorted_pages %}
+              {%- if thepage.url contains '/search.html' or thepage.url contains '/index.html' or thepage.url == '/' %}
+                {%- continue %}
+              {%- endif %}
+              {%- if thepage.short_title %}
+            <li class="nav-item{% if page.url == thepage.url or (page.url contains 'docs' and thepage.url == '/docs.html') %} active{% endif %}"><a class="nav-link" href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.short_title }}</a>
+              {%- elsif thepage.title %}
+            <li class="nav-item"><a class="nav-link" href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.title }}</a></li>
+              {%- endif %}
+            {%- endfor %}
+          </ul>
+          <form action="{{ site.baseurl }}/search.html" method="get" accept-charset="UTF-8" class="form-inline my-2 my-lg-0 dasearchform">
+            <input type="text" class="form-control mr-sm-2" placeholder="Search for..." name="q"/>
+            <button class="btn btn-outline-secondary my-2 my-sm-0" type="submit">
+              <i class="fas fa-search"></i>
+            </button>
+          </form>
+        </div>
+      </nav>

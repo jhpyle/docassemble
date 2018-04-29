@@ -17,6 +17,16 @@ mailing list is much less active than the [Slack] group, but it will
 allow you to receive important announcements if you don't check the
 [Slack group] every day.
 
+# Help with deployment
+
+Since **docassemble** is a web application, for many people the
+hardest part about using it is figuring out how to deploy it on the
+internet.
+
+If deployment is a barrier, you can use the [Docassemble Toolkit], a
+hosting and support service provided by [community.lawyer], a Public
+Benefit Corporation based in Brookyln, New York.
+
 # Training
 
 In-person training will be available at [Docacon 2018], a one-day
@@ -57,3 +67,5 @@ is a good idea to ask a question about the error message first.
 [Quinten Steenhuis]: https://www.nonprofittechy.com/blog/
 [Rina Padua]: https://github.com/Rinapadua
 [Greater Boston Legal Services]: https://www.gbls.org/
+[Docassemble Toolkit]: https://community.lawyer/docassemble
+[community.lawyer]: https://community.lawyer/

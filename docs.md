@@ -35,7 +35,7 @@ path **docassemble** took to decide to ask that question.
 
 For a narrative version of the sections of the documentation, see the [Overview].
 
-<ul>
+<ul class="interiortoc">
 {% for section in site.data.docs %}
 <li>{{ section.title }}</li>
 <ul>

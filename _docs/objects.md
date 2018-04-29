@@ -215,10 +215,9 @@ suppose you try the following:
 
 This will result in the following error:
 
-> Found a reference to a variable 'long_branch.length' that could not
-> be looked up in the question file or in any of the files
-> incorporated by reference into the question file, despite reaching
-> the very end of the file.
+> There was a reference to a variable 'long_branch.length' that could
+> not be looked up in the question file or in any of the files
+> incorporated by reference into the question file.
 
 You might think, "hey, why doesn't my interview ask the question that
 sets `tree.branch.length`?"  The reason is that `tree.branch` is just

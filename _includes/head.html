@@ -11,24 +11,32 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#698aa7">
     <meta name="theme-color" content="#83b3dd">
-    <link href="{{ '/bootstrap/css/bootstrap.min.css' | prepend: site.baseurl }}" rel="stylesheet">
-    <link href="{{ '/bootstrap/css/bootstrap-theme.min.css' | prepend: site.baseurl }}" rel="stylesheet">
-    <link href="{{ '/css/main.css' | prepend: site.baseurl }}" rel="stylesheet">
+    <link href="{{ '/bootstrap4/css/bootstrap.min.css' | prepend: site.baseurl }}" rel="stylesheet">
+    <link href="{{ '/bootstrap4/css/main.css' | prepend: site.baseurl }}" rel="stylesheet">
     <link href="{{ '/tocmd-generator/css/toc.css' | prepend: site.baseurl }}" rel="stylesheet">
+    <script defer src="{{ '/fontawesome/js/fontawesome-all.min.js' | prepend: site.baseurl }}"></script>
     <title>{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}</title>
-{% if page.description %}    <meta name="description" content="{{ page.description }}">
-{% endif %}    <meta itemprop="name" content="{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}">
-{% if page.description %}  <meta itemprop="description" content="{{ page.description }}">
-{% endif %}    <meta name="twitter:card" content="summary">
+    {%- if page.description %}
+    <meta name="description" content="{{ page.description }}">
+    {%- endif %}
+    <meta itemprop="name" content="{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}">
+    {%- if page.description %}
+    <meta itemprop="description" content="{{ page.description }}">
+    {%- endif %}
+    <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@docassemble">
     <meta name="twitter:title" content="{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}">
-{% if page.description %}    <meta name="twitter:description" content="{{ page.description }}">
-{% endif %}    <meta name="twitter:creator" content="@docassemble">
+    {%- if page.description %}
+    <meta name="twitter:description" content="{{ page.description }}">
+    {%- endif %}
+    <meta name="twitter:creator" content="@docassemble">
     <meta property="og:title" content="{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}" />
     <meta property="og:type" content="article" />
     <meta property="og:url" content="{{ page.url | prepend: site.baseurl | prepend: site.url }}" />
-{% if page.description %}    <meta property="og:description" content="{{ page.description }}" />
-{% endif %}    <meta property="og:site_name" content="Docassemble" />
+    {%- if page.description %}
+    <meta property="og:description" content="{{ page.description }}" />
+    {%- endif %}
+    <meta property="og:site_name" content="Docassemble" />
     <meta property="fb:admins" content="519356657" /> 
     <link rel="canonical" href="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}">
   </head>

@@ -844,11 +844,18 @@ which the server running **docassemble** is compromised.
 You can include keyword arguments to `interview_url()`.  These will be
 passed to the interview as [`url_args`].
 
-The keyword argument `i` is special: you can set this to the name of
-an interview (e.g., `docassemble.demo:data/questions/questions.yml`)
-and this interview will be used instead of the current interview.  In
-this case, the URL functions as a referral to a different interview,
-with a fresh variable store.
+The keyword argument `i` is special, however: you can set this to the
+name of an interview (e.g.,
+`docassemble.demo:data/questions/questions.yml`) and this interview
+will be used instead of the current interview.  In this case, the URL
+functions as a referral to a different interview, with a fresh
+variable store.
+
+The keyword argument `session` is also special: set this to the
+session ID of an interview (e.g., obtained from [`interview_list()`]),
+and also set `i` to the filename of the interview corresponding with
+the session.  Then the link will point not to the current session, but
+to the session indicated by the session ID.
 
 The keyword argument `local` is also special: set this to `True` if
 you want the URL to be relative (i.e., it will start with `?`).  Note
@@ -980,6 +987,8 @@ The `url_of()` function also has a few special uses.
   can change his or her password.
 * `url_of('interviews')` returns a URL to the page listing the
   on-going interviews of a signed-in user.
+* `url_of('dispatch')` returns a URL to the page listing the
+  interviews defined in the [`dispatch`] directive of the [Configuration].
 * `url_of('playground')` returns a URL to the [Playground].
 
 # <a name="qrfunctions"></a>QR code functions
@@ -2523,8 +2532,8 @@ use the locale to determine the symbol.
 
 {% include side-by-side.html demo="indefinite-article" %}
 
-The English language version of this function passes all arguments
-through to the `article()` function of [pattern.en].
+The English language version of this function uses the `article()`
+function of [pattern.en].
 
 `indefinite_article('bean')` returns `a bean` and
 `indefinite_article('apple')` returns `an apple`.
@@ -2884,7 +2893,7 @@ of the variable is only returned if the variable is defined.
 
 ## <a name="interview_list"></a>interview_list()
 
-If the current user is logged in, `interview_list()` returns a list of
+If the current user is logged in, [`interview_list()`] returns a list of
 dictionaries indicating information about the user's interview
 sessions.  This function provides a programmatic version of the screen
 available at `/interviews`.  In addition, the optional keyword
@@ -2973,7 +2982,7 @@ code: |
     del info
 {% endhighlight %}
 
-The `interview_list()` function takes an optional keyword argument
+The [`interview_list()`] function takes an optional keyword argument
 `exclude_invalid`.  If this is set to `False`, a session will be
 included even if there is an error that would prevent the session from
 being resumed.  By default, `exclude_invalid` is `True`, meaning that
@@ -2985,7 +2994,7 @@ the interview answers; so an interview belonging to someone else might
 be not `valid` for you, but `valid` for the user who started that
 interview.
 
-You can also use `interview_list()` to delete interview sessions.  If
+You can also use [`interview_list()`] to delete interview sessions.  If
 you set the optional keyword parameter `action` to `'delete_all'`, all
 of the user's interview sessions will be deleted.  You can delete a
 particular session by setting `action` to `'delete'`, with optional
@@ -4232,24 +4241,25 @@ The options for the `priority` are:
   (typically green).  The message will disappear after a few seconds.
 * `'info'` - like `'success'`, except it uses the "info" [Bootstrap]
   color.  The message will not disappear.
-* `'warning'` - like `'info'`, but uses the "warning" [Bootstrap] color.
-* `'error'` - like `'info'`, but uses the "danger" [Bootstrap] color.
-* `'default'` - like `'info'`, but uses the "default" [Bootstrap] color.
+* Other [Bootstrap] color names besides `'info'` and `'success'`.
+
+The [Bootstrap] color names are as follows:
+
+<div class="card">
+<div class="card-body">
+<div class="alert alert-primary">primary</div>
+<div class="alert alert-secondary">secondary</div>
+<div class="alert alert-success">success</div>
+<div class="alert alert-danger">danger</div>
+<div class="alert alert-warning">warning</div>
+<div class="alert alert-info">info</div>
+<div class="alert alert-light">light</div>
+<div class="alert alert-dark">dark</div>
+</div>
+</div>
 
 You can also use the [Javascript] function [`flash()`] to display
 notifications like this.
-
-The colors look like this:
-
-<div class="panel panel-default">
-<div class="panel-body">
-<div class="alert alert-info">info</div>
-<div class="alert alert-success">success</div>
-<div class="alert alert-warning">warning</div>
-<div class="alert alert-danger">danger</div>
-<div class="alert alert-default">default</div>
-</div>
-</div>
 
 ## <a name="encode_name"></a>encode_name()
 
@@ -4846,6 +4856,8 @@ service account, you will be provided with "credentials."  Download
 the [JSON] (not p12) credential file for the service account.  Also
 make a note of the e-mail address of the service account.
 
+Within the [Google Developers Console], enable the [Google Drive API].
+
 Go to [Google Sheets], pick a spreadsheet that you want to use, and
 share it with the e-mail address of the service account, just like you
 were sharing it with a real person.  (When you share the spreadsheet
@@ -4885,8 +4897,9 @@ import gspread
 import json
 from docassemble.base.util import get_config
 from oauth2client.service_account import ServiceAccountCredentials
-credential_info = json.loads(get_config('google service account credentials'), strict=False)
-scope = ['https://spreadsheets.google.com/feeds']
+credential_info = json.loads(get_config('google').get('service account credentials'), strict=False)
+scope = ['https://spreadsheets.google.com/feeds',
+         'https://www.googleapis.com/auth/drive']
 __all__ = ['read_sheet']
 
 def read_sheet(sheet_name, worksheet_index):
@@ -4896,7 +4909,7 @@ def read_sheet(sheet_name, worksheet_index):
   return sheet.get_all_records()
 {% endhighlight %}
 
-You might need to change the reference to `'google service account credentials'`
+You might need to change the reference to `'google'` and `'service account credentials'`
 to something else if you used a different name for the [JSON] crededials
 in your [Configuration].
 
@@ -4917,11 +4930,12 @@ subquestion: |
 {% endhighlight %}
 
 In this example, a [Google Sheet] called "Country Data" has been
-shared with the "service account" that owns the credentials in `google
-service account credentials`.  The first worksheet in the spreadsheet
-(index 0) contains a table with headings for `name` and `longitude`,
-among other columns.  The `read_sheet` function returns a list of
-dictionaries representing the contents of the table.
+shared with the "service account" that owns the credentials in the
+`service account credentials` subdirective under the `google`
+directive.  The first worksheet in the spreadsheet (index 0) contains
+a table with headings for `name` and `longitude`, among other columns.
+The `read_sheet` function returns a list of dictionaries representing
+the contents of the table.
 
 For more information on using [Google Sheets] from [Python], see the
 documentation for the [gspread] module.
@@ -4938,8 +4952,9 @@ Forms] would.
 
 This interview uses a [Google Sheet] called [Fruits and veggies] (you
 can view it at that link), which has been shared with the "service
-account" referenced in the `google service account credentials`
-directive of the [Configuration] on the demo.docassemble.org server.
+account" referenced in the `service account credentials` subdirective
+under the `google` directive in the [Configuration] on the
+demo.docassemble.org server.
 
 You can [try out this interview] and then look at the [Fruits and
 veggies] spreadsheet to see your answers along with the answers of
@@ -5001,13 +5016,16 @@ the optional priority.
 
 The available priorities are:
 
-<div class="panel panel-default">
-<div class="panel-body">
-<div class="alert alert-info">info</div>
+<div class="card">
+<div class="card-body">
+<div class="alert alert-primary">primary</div>
+<div class="alert alert-secondary">secondary</div>
 <div class="alert alert-success">success</div>
-<div class="alert alert-warning">warning</div>
 <div class="alert alert-danger">danger</div>
-<div class="alert alert-default">default</div>
+<div class="alert alert-warning">warning</div>
+<div class="alert alert-info">info</div>
+<div class="alert alert-light">light</div>
+<div class="alert alert-dark">dark</div>
 </div>
 </div>
 
@@ -5340,7 +5358,7 @@ $(document).on('daPageLoad', function(){
 [User-Agent header]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
 [Accept-Language header]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
 [Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29
-[Bootstrap documentation]: http://getbootstrap.com/css/
+[Bootstrap documentation]: https://getbootstrap.com/docs/4.0/getting-started/introduction/
 [`check in` feature]: {{ site.baseurl }}/docs/background.html#check in
 [Amazon S3]: https://aws.amazon.com/s3/
 [e-mail to interview]: {{ site.baseurl }}/docs/background.html#email
@@ -5411,7 +5429,7 @@ $(document).on('daPageLoad', function(){
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
 [`console.log` JavaScript function]: https://developer.mozilla.org/en-US/docs/Web/API/Console/log
-[Bootstrap alert]: https://getbootstrap.com/docs/3.3/components/#alerts
+[Bootstrap alert]: https://getbootstrap.com/docs/4.0/components/alerts/
 [`flash()`]: #flash
 [Google API key]: {{ site.baseurl }}/docs/config.html#google
 [`google`]: {{ site.baseurl }}/docs/config.html#google
@@ -5485,3 +5503,6 @@ $(document).on('daPageLoad', function(){
 [`repr()`]: https://docs.python.org/2/library/functions.html#repr
 [`pdf_concatenate()`]: #pdf_concatenate
 [ZIP file]: https://en.wikipedia.org/wiki/Zip_(file_format)
+[`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
+[`interview_list()`]: #interview_list
+[Google Drive API]: https://developers.google.com/drive/

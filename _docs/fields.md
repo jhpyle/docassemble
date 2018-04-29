@@ -1517,7 +1517,7 @@ here").
 
 Here is an example of a `review` block that is launched from the menu:
 
-{% include side-by-side.html demo="review-1" image="review-block.png" %}
+{% include side-by-side.html demo="review-1" %}
 
 If you click "Favorite fruit," you are taken to a [`question`] where
 you can edit the value of `fruit`.  This has the same effect as
@@ -1553,7 +1553,7 @@ which variables have been defined, the user will see different things.
 You can provide the user with a review of answers and buttons that the
 user can press to revisit an answer:
 
-{% include side-by-side.html demo="review-2" image="review-block-buttons.png" %}
+{% include side-by-side.html demo="review-2" %}
 
 In addition, the `review` block, like the `fields` block, allows you
 to use `note` and `html` entries.
@@ -1563,7 +1563,7 @@ only be displayed if the variable referenced by the `show if` modifier
 has been defined.  In addition, if any of these entries refer to a
 variable that has not been defined yet, they will be omitted.
 
-{% include side-by-side.html demo="review-3" image="review-block-note.png" %}
+{% include side-by-side.html demo="review-3" %}
 
 The `review` block allows you to add `help` text to an entry, in
 which case the text is shown underneath the hyperlink.  If this text
@@ -1571,7 +1571,7 @@ expects a variable to be defined that has not actually been defined,
 the item will not be shown.  Note: this is not available with the
 `button` display format.
 
-{% include side-by-side.html demo="review-4" image="review-block-help.png" %}
+{% include side-by-side.html demo="review-4" %}
 
 ### <a name="review field"></a>Placing a review block within the interview logic
 
@@ -1604,7 +1604,7 @@ By default, the `review` block puts a "Resume" button at the bottom of
 the screen.  If you want the label on the button to be something other
 than the word "Resume," add a `resume button label` modifier.
 
-{% include side-by-side.html demo="resume-button-label" image="review-block-custom-button.png" %}
+{% include side-by-side.html demo="resume-button-label" %}
 
 However, if `review` is used with `field`, a "Continue" button is
 used.  The "Continue" button can be customized using the modifier

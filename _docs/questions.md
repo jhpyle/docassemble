@@ -51,11 +51,13 @@ The optional `under` statementadds text underneath the buttons.
 The optional `right` statement adds text on the right-hand side of the
 screen, or below the question on small screens.
 
-{% include side-by-side.html demo="right" %}
+{% include side-by-side.html demo="right-centered" %}
 
 If your interview has questions that use the `right` statement, you
 might want to set the [`centered`] feature to `False` so that the text
 on the right is wider.
+
+{% include side-by-side.html demo="right" %}
 
 # Using questions to set variables
 

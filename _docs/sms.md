@@ -10,7 +10,7 @@ While the primary interface for **docassemble** interviews is through
 a web browser, your users can also interact with interviews using text
 messaging (also known as [SMS]).
 
-![sms-example-web]({{ site.baseurl }}/img/sms-example-web.png)
+![sms-example-web]({{ site.baseurl }}/img/examples/radio-list-mobile.png)
 ![sms-example-sms]({{ site.baseurl }}/img/sms-example-sms.png)
 
 Users start by texting a phone number with a keyword representing the

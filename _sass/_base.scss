@@ -18,28 +18,38 @@ box-shadow: $shadow;
 .align-left { text-align: left; }
 .align-center { text-align: center; }
 
+// @media (min-width: 992px) {
+//   .sidebar-nav .navbar .navbar-collapse {
+// 	padding: 0;
+// 	max-height: none;
+//   }
+//   .sidebar-nav .navbar ul {
+// 	float: none;
+//   }
+//   .sidebar-nav .navbar ul:not {
+// 	display: block;
+//   }
+//   .sidebar-nav .navbar li {
+// 	float: none;
+// 	display: block;
+//   }
+//   .sidebar-nav .navbar li a {
+// 	padding-top: 6px;
+// 	padding-left: 30px;
+// 	padding-bottom: 6px;
+//   }
+// }
+// .sidebar-nav .navbar-header{ float: none; }
+
 @media (min-width: 992px) {
-  .sidebar-nav .navbar .navbar-collapse {
-	padding: 0;
-	max-height: none;
-  }
-  .sidebar-nav .navbar ul {
-	float: none;
-  }
-  .sidebar-nav .navbar ul:not {
-	display: block;
-  }
-  .sidebar-nav .navbar li {
-	float: none;
-	display: block;
-  }
-  .sidebar-nav .navbar li a {
-	padding-top: 6px;
-	padding-left: 30px;
-	padding-bottom: 6px;
-  }
+    .sidebar-nav {
+	padding: 0.5rem;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #ddd;
+	border-radius: 0.5rem;			  
+    }
 }
-.sidebar-nav .navbar-header{ float: none; }
 
 %clearfix {
 
@@ -302,7 +312,7 @@ p img {
     }
 
 img.example {
-    padding-bottom: 20px;
+    padding-bottom: 15px;
     margin-bottom: 10px;
     @include box-shadow(0px 0px 6px rgba(0,0,0,.3), inset 0px 0px 0px rgba(255,255,255,.8));
     max-width: 100%;
@@ -575,3 +585,19 @@ div.col-md-5 > figure > pre {
 .daexample .dafull a:hover {
     color: #555;
 }
+
+pre {
+    margin: 0;
+    padding: 9.5px;
+    word-break: break-all;
+    word-wrap: break-word;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+ul.interiortoc a.ml-2 {
+    margin-left: inherit !important;
+    padding: inherit;
+}
+

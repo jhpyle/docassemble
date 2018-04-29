@@ -543,26 +543,26 @@ feel of your site's web interface by substituting a non-standard [CSS]
 file in place of the standard [CSS] file used by [Bootstrap].
 
 {% highlight yaml %}
-bootstrap theme: docassemble.webapp:data/static/paper.min.css
+bootstrap theme: docassemble.demo:data/static/lumen.min.css
 {% endhighlight %}
 
 You can also refer to files on the internet:
 
 {% highlight yaml %}
-bootstrap theme: https://bootswatch.com/3/paper/bootstrap.min.css
+bootstrap theme: https://bootswatch.com/4/minty/bootstrap.min.css
 {% endhighlight %}
 
 There are many alternative [Bootstrap] themes available on
-[Bootswatch].  (Use version 3 themes, not version 4 themes.)  Note
-that you may need to use apply additional [CSS] changes in order to
-get a [Bootstrap] theme to work with **docassemble**.  For example, by
-default **docassemble** assumes that the navigation bar is 50 pixels
-in height.  But if your theme makes the navigation bar 60 pixels tall,
-you will need to add the following styles:
+[Bootswatch].  (Use [Bootstrap] 4 themes, not [Bootstrap] 3 themes.)
+Note that you may need to use apply additional [CSS] changes in order
+to get a [Bootstrap] theme to work with **docassemble**.  For example,
+by default **docassemble** assumes that the navigation bar is 56
+pixels in height.  But if your theme makes the navigation bar 66
+pixels tall, you will need to add the following styles:
 
 {% highlight css %}
-.pad-for-navbar         { padding-top: 70px; }
-.top-for-navbar         { top: 70px;         }
+.pad-for-navbar         { padding-top: 76px; }
+.top-for-navbar         { top: 76px;         }
 {% endhighlight %}
 
 Also, some of the colors that **docassemble** uses in the navigation
@@ -570,9 +570,6 @@ bar might not work well with every theme.  You can override these
 colors with [CSS] like the following:
 
 {% highlight css %}
-.backbuttoncolor        { color: #539ac7;        }
-.backbuttoncolor:hover  { color: #539ac7;
-                          text-decoration: none; }
 span.daactivetext       { color: yellow;         }
 span.daactivetext:hover { color: #ffff99;        }
 i.chat-active           { color: #45bf41;        }
@@ -581,11 +578,11 @@ i.chat-inactive         { color: #4f4f4f;        }
 i.chat-inactive:hover   { color: #5f5f5f;        }
 {% endhighlight %}
 
-These styles refer to the blue back button, the yellow "Help" button
-that appears when question-specific help is available, the green icons
-that appear in the navigation bar when [live help] features are
-available, and the grey color that these icons become when [live help]
-is no longer available.
+These styles refer to the yellow "Help" button that appears when
+question-specific help is available, the green icons that appear in
+the navigation bar when [live help] features are available, and the
+grey color that these icons become when [live help] is no longer
+available.
 
 You can also control the [Bootstrap] theme on a per-interview basis
 with the [`bootstrap theme` feature].  You can also alter [CSS] on a
@@ -593,10 +590,10 @@ per-interview basis using the [`css` features setting].
 
 ## <a name="inverse navbar"></a>Inverted Bootstrap navbar
 
-By default, **docassemble** uses the [inverted navbar] option in
-[Bootstrap] so that the navigation bar stands out from the white
-background.  If you do not want to use the inverted navbar, set the
-`inverse navbar` to `False`.
+By default, **docassemble** uses [Bootstrap]'s "dark" (formerly known
+as "inverted") style of navigation bar so that the navigation bar
+stands out from the white background.  If you do not want to use the
+inverted navbar, set the `inverse navbar` to `False`.
 
 {% highlight yaml %}
 inverse navbar: False
@@ -608,27 +605,28 @@ You can also control this on a per-interview basis with the
 ## <a name="button size"></a>Button size
 
 By default, most buttons in the **docassemble** user interface are
-"large" size [Bootstrap] buttons.  If you want the buttons to be
-"normal" size, set the following in your configuration:
+regular size [Bootstrap] buttons.  If you want the buttons to be
+"large" size, set the following in your configuration:
 
 {% highlight yaml %}
-button size: normal
+button size: large
 {% endhighlight %}
 
-The default value is `large`.
+If you want the buttons to be "small" size, set the following in your configuration:
 
-## <a name="default icons"></a><a name="use font awesome"></a>Using standard sets of icons
+{% highlight yaml %}
+button size: small
+{% endhighlight %}
 
-If you set the `use font awesome` directive to `True`, then [Font
-Awesome] will be enabled on all pages. **docassemble** includes the
+The default value is `medium`.
+
+## <a name="default icons"></a>Using standard sets of icons
+
+[Font Awesome] is enabled on all pages. **docassemble** includes the
 free version (5.0.7) of [Font Awesome].  When `use font awesome` is
 `True`, [Font Awesome] will be enabled in the web app, in interviews
 as well as in administrative pages.  This allows you to refer to [Font
 Awesome] icons using raw HTML.
-
-{% highlight yaml %}
-use font awesome: True
-{% endhighlight %}
 
 In addition, **docassemble** allows you to use Google's [Material
 Icons] in your raw HTML.  Since the [Material Icons] are just a font,
@@ -654,6 +652,21 @@ Then you can have an interview like this:
 
 {% include side-by-side.html demo="font-awesome" %}
 
+The "solid" style of the icons ([CSS] class `fas`) is used by default.
+
+If you want to use icons in a different style, you can add a special
+prefix to your icon reference, writing, e.g., `:far-fa-circle:`
+instead of `:circle:`.  This will result in `<i class="far
+fa-circle"></i>` instead of `<i class="fas fa-circle"></i>`.
+
+To use a different [Font Awesome] style by default, set the `font
+awesome prefix` directive.  For example, to use the "brand" style by
+default, you can use:
+
+{% highlight yaml %}
+font awesome prefix: fab
+{% endhighlight %}
+
 Alternatively, you can use the [Material Icons] for icon references
 that are not predefined image files:
 
@@ -664,15 +677,6 @@ default icons: material icons
 Note that when you set `default icons`, no validation is performed to
 ensure that the image you reference actually exists in [Font Awesome]
 or the [Material Icons].
-
-When `default icons` is set to `font awesome`, the "solid" style of
-the icons ([CSS] class `fas`) is used by default.  To use a different
-style, set the `font awesome prefix` directive.  For example, to use
-the "brand" style, you can use:
-
-{% highlight yaml %}
-font awesome prefix: fab
-{% endhighlight %}
 
 ## <a name="favicon"></a>Custom favicon in browser tab
 
@@ -1349,6 +1353,19 @@ show interviews link: False
 Note that users with `admin` privileges will always see the "My
 Interviews" link.
 
+## <a name="show dispatch link"></a>Showing the "available interviews" link
+
+If the `show dispatch link` directive is set to `True`, and you have
+configured the [`dispatch`] directive, then logged-in users will see
+an "Available Interviews" link in the web app menu, which will direct
+them to the `/list` page of your site.
+
+{% highlight yaml %}
+show dispatch link: True
+{% endhighlight %}
+
+By default, this is not shown in the web app menu.
+
 ## <a name="allow registration"></a>Invitation-only registration
 
 If the `allow registration` directive is set to `False`, users will
@@ -1642,10 +1659,12 @@ This is required for the use of the [`map_of()`] feature.
 
 This will also enable you to use the [Google Maps Geocoding API]
 without limits (see the [`.geolocate()`] method), and will also enable
-the [Google Cloud Translation API].
+the [Google Cloud Translation API] for the feature in Utilities for
+translating system words into other languages.
 
 If you specify a specific `google maps api key`, this key will be used
-for the [`map_of()`] feature instead of the `api key`.
+for the [`map_of()`] feature and the [address autocomplete] feature
+instead of the `api key`.
 
 {% highlight yaml %}
 google:
@@ -1662,6 +1681,17 @@ come from the user's computer.  By contrast, when you use the
 your server.  Thus, you may wish to secure the `api key` using IP
 addresses, and secure the `google maps api key` using "Referer"
 headers.
+
+If you use the [Google Cloud Translation API] for the feature in
+Utilities that translates system phrases into other languages, you can
+control how many phrases are translated in a single request to the
+API.
+
+{% highlight yaml %}
+google translate words at a time: 40
+{% endhighlight %}
+
+The default number is 20.
 
 ## <a name="service account credentials"></a>Google service account credentials
 
@@ -2688,7 +2718,6 @@ and Facebook API keys.
 [`loop limit` and `recursion limit` features]: {{ site.baseurl }}/docs/initial.html#loop limit
 [region name]: http://docs.aws.amazon.com/general/latest/gr/rande.html
 [Bootstrap]: http://getbootstrap.com/
-[inverted navbar]: https://getbootstrap.com/docs/3.3/components/#navbar-inverted
 [Bootswatch]: https://bootswatch.com/
 [live help]: {{ site.baseurl }}/docs/livehelp.html
 [`bootstrap theme` feature]: {{ site.baseurl }}/docs/initial.html#bootstrap theme
@@ -2739,3 +2768,4 @@ and Facebook API keys.
 [pageview]: https://developers.google.com/analytics/devguides/collection/analyticsjs/pages#tracking_virtual_pageviews
 [`path_and_mimetype()`]: {{ site.baseurl }}/docs/functions.html#path_and_mimetype
 [user agent]: https://en.wikipedia.org/wiki/User_agent
+[address autocomplete]: {{ site.baseurl }}/docs/fields.html#address autocomplete
