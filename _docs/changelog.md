@@ -4,17 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.2.50](https://github.com/jhpyle/docassemble/releases/tag/v0.2.50) - 2018-04-27
+## [0.2.50](https://github.com/jhpyle/docassemble/releases/tag/v0.2.50) - 2018-04-28
 
 ### Changed
-- Upgraded to Bootstrap 4.0.0 from Bootstrap 3.3.
-- Use of headless Chrome in lettuce tests.
+- Upgraded user interface from Bootstrap 3.3 to Bootstrap 4.0.0.
+- Headless Chrome now used by default in `lettuce` tests.
 
 ### Added
 - The `show dispatch link` Configuration directive.
 
 ### Fixed
-- Importation of word translations now traps errors.
+- Exception triggered by importation of word translation files with
+  YAML errors.
+- The `indefinite_article()` function used "a" for any capitalized
+  word.
+- Issue where Chrome extensions interfered with file uploads.
 
 ## [0.2.49](https://github.com/jhpyle/docassemble/releases/tag/v0.2.49) - 2018-04-15
 
