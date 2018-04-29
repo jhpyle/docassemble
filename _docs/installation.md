@@ -710,8 +710,8 @@ obtain an `id` and `secret` for use with Facebook's [OAuth2] interface.
   `facebook`.
 * Note also the "App Secret."  You need to set this as the `secret` in
   the [`oauth`] configuration.
-* Under App Domains, put in the domain of your site.  E.g.,
-  `docassemble.example.com`.
+* Under Valid Oauth Redirect URIs, put in the domain of your site followed by /callback/facebook.  E.g.,
+  `https://docassemble.example.com/callback/facebook`.
 * Edit your **docassemble** [configuration] and update the values
   under the `facebook` part of the [`oauth`] directive so that it
   includes the `id` and the `secret` you obtained in the steps above.
