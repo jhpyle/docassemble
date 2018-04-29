@@ -23,6 +23,7 @@ function daInitializeSignature(){
     $(document).on("touchmove", function(event){event.preventDefault();});
   }, 1000);
   $(window).on('resize', function(){resizeCanvas()});
+  $(window).on('orientationchange', function(){resizeCanvas()});
   
   $(".sigpalette").click(function(){
     $(".sigpalette").css("border-color", "#777");
@@ -57,7 +58,7 @@ function resizeCanvas(){
   //var cheight = $(window).height()-($("#sigheader").height() + $("#sigtoppart").height() + $("#sigbottompart").height());
   setTimeout(function(){
     newCanvas();
-  }, 50);
+  }, 200);
   //console.log("I resized");
   return;
   // var cheight = $(window).width()*aspectRatio;
