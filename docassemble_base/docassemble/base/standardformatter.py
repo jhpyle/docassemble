@@ -602,9 +602,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '                <div class="page-header d-none d-md-block"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         output += '              </div>'
         if status.subquestionText:
-            output += '                <div class="sigmidpart">\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
+            output += '                <div id="sigmidpart" class="sigmidpart">\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         else:
-            output += '\n              <div class="sigmidpart"></div>'
+            output += '\n              <div id="sigmidpart" class="sigmidpart"></div>'
         output += '\n              <div id="sigcontent"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n              <div class="sigbottompart" id="sigbottompart">\n                '
         if 'underText' in status.extras:
             output += '                <div class="d-none d-md-block">' + markdown_to_html(status.extras['underText'], trim=False, status=status) + '</div>\n                <div class="d-block d-md-none">' + markdown_to_html(status.extras['underText'], trim=True, status=status) + '</div>'

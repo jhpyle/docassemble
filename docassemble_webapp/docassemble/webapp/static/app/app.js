@@ -22,7 +22,7 @@ function daInitializeSignature(){
     newCanvas();
     $(document).on("touchmove", function(event){event.preventDefault();});
   }, 1000);
-  $(window).resize(function(){resizeCanvas()});
+  $(window).on('resize', function(){resizeCanvas()});
   
   $(".sigpalette").click(function(){
     $(".sigpalette").css("border-color", "#777");
@@ -55,7 +55,9 @@ function daInitializeSignature(){
 
 function resizeCanvas(){
   //var cheight = $(window).height()-($("#sigheader").height() + $("#sigtoppart").height() + $("#sigbottompart").height());
-  newCanvas();
+  setTimeout(function(){
+    newCanvas();
+  }, 50);
   //console.log("I resized");
   return;
   // var cheight = $(window).width()*aspectRatio;
@@ -89,14 +91,16 @@ function saveCanvas(){
 }
 
 function newCanvas(){
-  //console.log("running newCanvas");
+  console.log("running newCanvas");
   var cwidth = $(window).width() - theBorders;
   var contentwidth = $("#sigpage").outerWidth(true);
   if (cwidth > contentwidth ){
     cwidth = contentwidth;
   }
   var cheight = cwidth*aspectRatio;
-  var otherHeights = $("#sigtoppart").outerHeight(true) + $("#sigbottompart").outerHeight(true);
+  var otherHeights = $("#sigheader").outerHeight(true) + $("#sigtoppart").outerHeight(true) + $("#sigmidpart").outerHeight(true) + $("#sigbottompart").outerHeight(true);
+  console.log("height is " + $(window).height());
+  console.log("otherHeights are " + otherHeights);
   if (cheight > $(window).height()-otherHeights){
     cheight = $(window).height()-otherHeights;
   }
