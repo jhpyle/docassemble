@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.52](https://github.com/jhpyle/docassemble/releases/tag/v0.2.52) - 2018-05-01
+
+### Fixed
+- The setup.py file for `docassemble.webapp`.
+
 ## [0.2.51](https://github.com/jhpyle/docassemble/releases/tag/v0.2.51) - 2018-05-01
 
 ### Changed
