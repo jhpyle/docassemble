@@ -2,7 +2,7 @@
 
 ## [0.2.51] - 2018-05-01
 ### Fixed
-- Command line options to `pip`.
+- The setup.py file for `docassemble.webapp`.
 
 ## [0.2.51] - 2018-05-01
 ### Changed
