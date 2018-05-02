@@ -4,6 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.51](https://github.com/jhpyle/docassemble/releases/tag/v0.2.51) - 2018-05-01
+
+### Changed
+- The `advocate` privilege grants access to see user information using
+  the API.
+- The `interview_list()` function and `/api/interviews` API now act
+  upon interviews of anonymous users.
+
+### Fixed
+- Questions not centered on screen when navigation bar in use but empty.
+- Google Places API populating `unit` with `subpremise` and leaving
+  `city` blank.
+
 ## [0.2.50](https://github.com/jhpyle/docassemble/releases/tag/v0.2.50) - 2018-04-28
 
 ### Changed
