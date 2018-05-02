@@ -98,7 +98,8 @@ Parameters:
    be included in the list.
 
 Required privileges:
- - `admin`
+ - `admin` or
+ - `advocate`
 
 Responses on failure: 
  - [403] "Access Denied" if the API key did not authenticate or the
@@ -204,7 +205,7 @@ Parameters:
 
  - `key`: the API key.
 
-Required privileges: `admin`, unless the API owner's user ID is the
+Required privileges: `admin` or `advocate`, or the API owner's user ID is the
 same as `user_id`.
 
 Responses on failure: 
@@ -282,7 +283,8 @@ Form data:
  - `subdivisionthird` (optional): user's municipality.
  - `timezone` (optional): user's time zone (e.g. `'America/New_York'`).
 
-Required privileges: `admin`
+Required privileges: `admin`, or `user_id` is the same as the user ID
+of the API owner.
 
 Responses on failure: 
  - [403] "Access Denied" if the API key did not authenticate.
@@ -308,10 +310,11 @@ Path: `/api/privileges`
 Method: [GET]
 
 Parameters:
+- `key`: the API key.
 
- - `key`: the API key.
-
-Required privileges: none.
+Required privileges:
+- `admin` or
+- `developer`
 
 Responses on failure: 
  - [403] "Access Denied" if the API key did not authenticate.
@@ -434,7 +437,9 @@ Parameters:
  - `include_dictionary` (optional): set to `1` if you want a [JSON]
    version of the interview dictionary to be returned.
 
-Required privileges: `admin`
+Required privileges:
+- `admin` or
+- `advocate`
 
 Responses on failure: 
  - [403] "Access Denied" if the API key did not authenticate.
@@ -550,7 +555,8 @@ Parameters:
  - `tag` (optional): set to a tag if you want to delete only those
    interview sessions with the given tag.
 
-Required privileges: `admin`
+Required privileges: `admin` or `advocate`, or `user_id` is the same
+as the user ID of the API owner.
 
 This works just like the [`/api/interviews`], except it only returns
 interviews belonging to the user with user ID `user_id`.
@@ -563,7 +569,8 @@ Path: `/api/user/<user_id>/interviews`
 
 Method: [DELETE]
 
-Required privileges: `admin`
+Required privileges: `admin` or `advocate`, or `user_id` is the same
+as the user ID of the API owner.
 
 Parameters:
 
