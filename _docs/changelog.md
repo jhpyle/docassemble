@@ -4,10 +4,20 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.53](https://github.com/jhpyle/docassemble/releases/tag/v0.2.53) - 2018-05-02
+
+### Added
+- Support for `long_description` in setup.py files.
+
+### Fixed
+- Update button in `/updatepackage` reverted package to `master`
+  branch.
+
 ## [0.2.52](https://github.com/jhpyle/docassemble/releases/tag/v0.2.52) - 2018-05-01
 
 ### Fixed
-- The setup.py file for `docassemble.webapp`.
+- The setup.py file for `docassemble.webapp` did not depend on
+  particular versions of `docassemble.base` and `docassemble`.
 
 ## [0.2.51](https://github.com/jhpyle/docassemble/releases/tag/v0.2.51) - 2018-05-01
 
