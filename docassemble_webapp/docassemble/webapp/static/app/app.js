@@ -328,6 +328,7 @@ function fillInAddress() {
   var componentForm = {
     locality: 'long_name',
     sublocality: 'long_name',
+    administrative_area_level_3: 'long_name',
     administrative_area_level_2: 'long_name',
     administrative_area_level_1: 'short_name',
     country: 'short_name',
@@ -369,9 +370,11 @@ function fillInAddress() {
   
   var street_number;
   var route;
+  var savedValues = {};
 
   for (var i = 0; i < place.address_components.length; i++) {
     var addressType = place.address_components[i].types[0];
+    savedValues[addressType] = place.address_components[i]['long_name'];
     if (addressType == 'street_number'){
       street_number = place.address_components[i]['short_name'];
     }                
@@ -406,6 +409,17 @@ function fillInAddress() {
       the_address += route;
     }
     document.getElementById(id_for_part['address']).value = the_address;
+  }
+  if (typeof(id_for_part['city']) != "undefined" && document.getElementById(id_for_part['city']) != null){
+    if (document.getElementById(id_for_part['city']).value == '' && typeof(savedValues['sublocality_level_1']) != 'undefined'){
+      document.getElementById(id_for_part['city']).value = savedValues['sublocality_level_1'];
+    }
+    if (document.getElementById(id_for_part['city']).value == '' && typeof(savedValues['neighborhood']) != 'undefined'){
+      document.getElementById(id_for_part['city']).value = savedValues['neighborhood'];
+    }
+    if (document.getElementById(id_for_part['city']).value == '' && typeof(savedValues['administrative_area_level_3']) != 'undefined'){
+      document.getElementById(id_for_part['city']).value = savedValues['administrative_area_level_3'];
+    }
   }
 }
 

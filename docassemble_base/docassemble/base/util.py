@@ -242,6 +242,8 @@ def year_of(the_date):
 
 def format_date(the_date, format='long'):
     """Interprets the_date as a date and returns the date formatted for the current locale."""
+    if isinstance(the_date, DAEmpty):
+        return ""
     try:
         if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
             date = the_date
@@ -253,6 +255,8 @@ def format_date(the_date, format='long'):
 
 def format_datetime(the_date, format='long'):
     """Interprets the_date as a date/time and returns the date/time formatted for the current locale."""
+    if isinstance(the_date, DAEmpty):
+        return ""
     try:
         if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
             date = the_date
@@ -264,6 +268,8 @@ def format_datetime(the_date, format='long'):
 
 def format_time(the_time, format='short'):
     """Interprets the_time as a date/time and returns the time formatted for the current locale."""
+    if isinstance(the_time, DAEmpty):
+        return ""
     try:
         if isinstance(the_time, datetime.datetime) or isinstance(the_time, datetime.date) or isinstance(the_time, datetime.time):
             time = the_time
@@ -832,7 +838,7 @@ class Address(DAObject):
                     'sublocality_level_3': ('sublocality_level_3', 'long_name'),
                     'sublocality_level_4': ('sublocality_level_4', 'long_name'),
                     'sublocality_level_5': ('sublocality_level_5', 'long_name'),
-                    'subpremise': ('unit', 'long_name'),
+#                    'subpremise': ('unit', 'long_name'),
                 }
                 for component in results.raw['address_components']:
                     if 'types' in component and 'long_name' in component:
@@ -868,7 +874,7 @@ class Address(DAObject):
                     'sublocality_level_3': 'sublocality_level_3',
                     'sublocality_level_4': 'sublocality_level_4',
                     'sublocality_level_5': 'sublocality_level_5',
-                    'subpremise': 'unit'
+#                    'subpremise': 'unit'
                 }
                 for component in results.raw['address_components']:
                     if 'types' in component:

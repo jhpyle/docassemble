@@ -1853,7 +1853,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
             else:
                 navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>'
         else:
-            navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-right">'
+            navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-right">'
             if custom_menu:
                 navbar += custom_menu
             if not status.question.interview.options.get('hide_standard_menu', False):
@@ -4106,9 +4106,9 @@ def index():
         obtain_lock(user_code, yaml_filename)
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
-        except:
+        except Exception as the_err:
             #logmessage("index: there was an exception after fetch_user_dict and we need to reset")
-            #sys.stderr.write(str(the_err) + "\n")
+            #logmessage(unicode(the_err.__class__.__name__) + " " + unicode(the_err))
             release_lock(user_code, yaml_filename)
             logmessage("index: dictionary fetch failed, resetting without retain_code")
             user_code, user_dict = reset_session(yaml_filename, secret)
@@ -7272,6 +7272,15 @@ def index():
         the_progress_bar = progress_bar(user_dict['_internal']['progress'])
     else:
         the_progress_bar = None
+    if interview_status.question.interview.use_navigation:
+        the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview)
+        if the_nav_bar != '':
+            interview_status.using_navigation = True
+        else:
+            interview_status.using_navigation = False
+    else:
+        the_nav_bar = ''
+        interview_status.using_navigation = False
     content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules, the_field_errors, the_progress_bar, steps - user_dict['_internal']['steps_offset'])
     if debug_mode:
         readability = dict()
@@ -7342,12 +7351,11 @@ def index():
             start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
         start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n'
     output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
-    if interview_status.question.interview.use_navigation:
-        output += navigation_bar(user_dict['nav'], interview_status.question.interview)
-    #output += '        <div class="tab-content col">\n'
+    if the_nav_bar != '':
+        output += the_nav_bar
     output += content
     if 'rightText' in interview_status.extras:
-        if interview_status.question.interview.use_navigation:
+        if interview_status.using_navigation:
             output += '          <section id="daright" class="d-none d-lg-block col-lg-3 col-xl-2 daright">\n'
         else:
             if interview_status.question.interview.flush_left:
@@ -7360,7 +7368,7 @@ def index():
     output += "      </div>\n"
     if len(interview_status.attributions):
         output += '      <div class="row">' + "\n"
-        if interview_status.question.interview.use_navigation:
+        if interview_status.using_navigation:
             output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="attributions">\n'
         else:
             if interview_status.question.interview.flush_left:
@@ -7373,7 +7381,7 @@ def index():
         output += '      </div>' + "\n"
     if debug_mode:
         output += '      <div class="row">' + "\n"
-        if interview_status.question.interview.use_navigation:
+        if interview_status.using_navigation:
             output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-xl-6 col-lg-6 col-md-9 col-sm-12" style="display: none" id="readability">' + readability_report + '</div>'
         else:
             if interview_status.question.interview.flush_left:
@@ -14153,9 +14161,11 @@ def train():
 
 def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True):
     # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))
-    if user_id is None and not in_celery and (current_user.is_anonymous or not current_user.has_role('admin')):
-        raise Exception('user_interviews: non-administrator cannot access information about other users')
-    if action is not None:
+    if user_id is None and not in_celery and (current_user.is_anonymous or not current_user.has_role('admin', 'advocate')):
+        raise Exception('user_interviews: only administrators and advocates can access information about other users')
+    if user_id is not None and not in_celery and not current_user.is_anonymous and current_user.id != user_id and not current_user.has_role('admin', 'advocate'):
+        raise Exception('user_interviews: only administrators and advocates can access information about other users')
+    if action is not None and not current_user.has_role('admin', 'advocate'):
         if user_id is None:
             raise Exception("user_interviews: no user_id provided")
         the_user = get_person(int(user_id), dict())
@@ -14167,12 +14177,25 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             for interview_info in user_interviews(user_id=user_id, secret=secret, tag=tag):
                 sessions_to_delete.add((interview_info['session'], interview_info['filename']))
         else:
-            interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.user_id == user_id).group_by(UserDictKeys.filename, UserDictKeys.key)
+            if user_id is None:
+                if filename is None:
+                    interview_query = db.session.query(UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key)
+                else:
+                    interview_query = db.session.query(UserDict.filename, UserDict.key).filter(UserDict.filename == filename).group_by(UserDict.filename, UserDict.key)
+            else:
+                if filename is None:
+                    interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.user_id == user_id).group_by(UserDictKeys.filename, UserDictKeys.key)
+                else:
+                    interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename).group_by(UserDictKeys.filename, UserDictKeys.key)
             for interview_info in interview_query:
                 sessions_to_delete.add((interview_info.key, interview_info.filename))
-            interview_query = db.session.query(UserDict.filename, UserDict.key).filter(UserDict.user_id == user_id).group_by(UserDict.filename, UserDict.key)
-            for interview_info in interview_query:
-                sessions_to_delete.add((interview_info.key, interview_info.filename))
+            if user_id is not None:
+                if filename is None:
+                    interview_query = db.session.query(UserDict.filename, UserDict.key).filter(UserDict.user_id == user_id).group_by(UserDict.filename, UserDict.key)
+                else:
+                    interview_query = db.session.query(UserDict.filename, UserDict.key).filter(UserDict.user_id == user_id, UserDict.filename == filename).group_by(UserDict.filename, UserDict.key)
+                for interview_info in interview_query:
+                    sessions_to_delete.add((interview_info.key, interview_info.filename))
         if len(sessions_to_delete):
             for session_id, yaml_filename in sessions_to_delete:
                 manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename)
@@ -14200,9 +14223,9 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno)
     else:
         if filename is not None:
-            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserModel.active == True, UserDictKeys.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno)
+            interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).filter(UserDict.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserModel.email)
         else:
-            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserModel.active == True).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno)
+            interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).group_by(UserDictKeys.user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno,UserModel.email).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserModel.email)
     #logmessage(str(interview_query))
     interviews = list()
     for interview_info in interview_query:
@@ -15476,8 +15499,8 @@ def true_or_false(text):
     return True
 
 def get_user_list(include_inactive=False):
-    if not (current_user.is_authenticated and current_user.has_role('admin')):
-        raise Exception("You cannot call get_user_list() unless you are an administrator")
+    if not (current_user.is_authenticated and current_user.has_role('admin', 'advocate')):
+        raise Exception("You cannot call get_user_list() unless you are an administrator or advocate")
     if include_inactive:
         the_users = UserModel.query.order_by(UserModel.id).all()
     else:
@@ -15496,7 +15519,7 @@ def get_user_list(include_inactive=False):
 
 @app.route('/api/user_list', methods=['GET'])
 def api_user_list():
-    if not api_verify(request, roles=['admin']):
+    if not api_verify(request, roles=['admin', 'advocate']):
         return jsonify_with_status("Access denied.", 403)
     include_inactive = true_or_false(request.args.get('include_inactive', False))
     user_list = get_user_list(include_inactive)
@@ -15507,9 +15530,9 @@ def get_user_info(user_id=None, email=None):
         raise Exception("You cannot call get_user_info() unless you are logged in")
     if user_id is None and email is None:
         user_id = current_user.id
-    if not (current_user.has_role('admin')):
+    if not (current_user.has_role('admin', 'advocate')):
         if (user_id is not None and current_user.id != user_id) or (email is not None and current_user.email != email):
-            raise Exception("You cannot call get_user_info() unless you are an administrator")
+            raise Exception("You cannot call get_user_info() unless you are an administrator or advocate")
     user_info = dict(privileges=[])
     if user_id is not None:
         user = UserModel.query.filter_by(id=user_id).first()
@@ -15634,8 +15657,8 @@ def api_privileges():
         return ('', 204)
 
 def get_privileges_list():
-    if not (current_user.has_role('admin')):
-        raise Exception('You must have admin privileges to call get_privileges_list().')
+    if not (current_user.has_role('admin', 'developer')):
+        raise Exception('You must have admin or developer privileges to call get_privileges_list().')
     role_names = []
     for role in Role.query.order_by('name'):
         role_names.append(role.name)
@@ -15676,7 +15699,7 @@ def remove_privilege(privilege):
 @app.route('/api/user/<user_id>/privileges', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt
 def api_user_by_id_privileges(user_id):
-    if not api_verify(request, roles=['admin']):
+    if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
     try:
         user_info = get_user_info(user_id=user_id)
@@ -15687,6 +15710,8 @@ def api_user_by_id_privileges(user_id):
     if request.method == 'GET':
         return jsonify(user_info['privileges'])
     if request.method in ('DELETE', 'POST'):
+        if not (current_user.has_role('admin')):
+            return jsonify_with_status("Access denied.", 403)
         if request.method == 'DELETE':
             role_name = request.args.get('privilege', None)
             if role_name is None:
@@ -15729,7 +15754,7 @@ def add_user_privilege(user_id, privilege):
 
 def remove_user_privilege(user_id, privilege):
     if not (current_user.has_role('admin')):
-        raise Exception('You must have admin privileges to call add_privilege().')
+        raise Exception('You must have admin privileges to call remove_user_privilege().')
     if current_user.id == user_id and privilege == 'admin':
         raise Exception('You cannot take away the admin privilege from the current user.')
     if privilege not in get_privileges_list():
@@ -15819,7 +15844,7 @@ def get_secret(username, password):
 @app.route('/api/users/interviews', methods=['GET', 'DELETE'])
 @csrf.exempt
 def api_users_interviews():
-    if not api_verify(request, roles=['admin']):
+    if not api_verify(request, roles=['admin', 'advocate']):
         return jsonify_with_status("Access denied.", 403)
     user_id = request.args.get('user_id', None)
     filename = request.args.get('i', None)
@@ -15847,7 +15872,7 @@ def api_users_interviews():
 def api_user_user_id_interviews(user_id):
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
-    if not (current_user.id == user_id or current_user.has_role('admin')):
+    if not (current_user.id == user_id or current_user.has_role('admin', 'advocate')):
         return jsonify_with_status("Access denied.", 403)
     filename = request.args.get('i', None)
     secret = request.args.get('secret', None)
@@ -16369,7 +16394,7 @@ def api_user_interviews():
 @app.route('/api/interviews', methods=['GET', 'DELETE'])
 @csrf.exempt
 def api_interviews():
-    if not api_verify(request, roles=['admin']):
+    if not api_verify(request, roles=['admin', 'advocate']):
         return jsonify_with_status("Access denied.", 403)
     filename = request.args.get('i', None)
     session = request.args.get('session', None)

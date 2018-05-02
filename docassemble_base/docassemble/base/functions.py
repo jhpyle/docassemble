@@ -288,6 +288,7 @@ def state_name(state_code, country_code=None):
         m = re.search(r'-([A-Z]+)$', subdivision.code)
         if m and m.group(1) == state_code:
             return subdivision.name
+    return state_code
     #return us.states.lookup(state_code).name
 
 def subdivision_type(country_code):
