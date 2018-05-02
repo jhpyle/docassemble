@@ -1,6 +1,10 @@
 # Change Log
 
 ## [0.2.51] - 2018-05-01
+### Fixed
+- Command line options to `pip`.
+
+## [0.2.51] - 2018-05-01
 ### Changed
 - The `advocate` privilege grants access to see user information using
   the API.
