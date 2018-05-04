@@ -4,22 +4,46 @@ title: Installing on Docker
 short_title: Docker
 ---
 
+[Docker] is an application that treats a whole Linux machine,
+including its operating system and installed applications, as a
+computer-within-a-computer, called a "container."  "Containers" are
+similar to a [virtual machine] in many respects.  They are typically
+used for "shipping" applications.  Instead of installing an
+application on a server directly, you can run the application in a
+"container."  This way, the application runs bundled with all of the
+operating system software that it needs.  Installing applications is
+quicker, simpler, and less error-prone.  There is virtually no
+performance degredation.
+
 [Docker] is a good platform for trying out **docassemble** for the
 first time.  It is also ideal in a production environment.
 
-Amazon's [EC2 Container Service] can be used to maintain a cluster of
-**docassemble** web server instances, created from [Docker] images,
-that communicate with a central server.  For information about how to
-install **docassemble** in a multi-server arrangement on
-[EC2 Container Service] ("[ECS]"), see the [scalability] section.
+Since the **docassemble** application depends on so many different
+component parts, including a web server, SQL server, Redis server,
+distributed task queue, background task system, scheduled task system,
+and other components, running it inside of a [Docker] container is
+convenient.  When all of these components are running inside of a
+"container," you don't have to do the work of installing and
+maintaining these components.
 
-If you are not familiar with [Docker] or with hosting web
-applications, you may want to use [Docassemble Toolkit], a support
-service provided by [community.lawyer], a Public Benefit Corporation
-based in Brookyln, New York.  [Docassemble Toolkit] provides an
-encrypted **docassemble** server hosted on [Amazon Web Services].
-This saves you from needing to figure out [Docker], [Let's Encrypt],
-etc.
+As much as [Docker] simplifies the process of installing
+**docassemble**, it takes some time to understand the concepts behind
+"running," "stopping," and "starting" containers.  If you are not
+familiar with [Docker] or with hosting web applications, and you want
+to get up and running fast, you may want to use [Docassemble Toolkit],
+a support service provided by [community.lawyer], a Public Benefit
+Corporation based in Brookyln, New York.  [Docassemble Toolkit]
+provides an encrypted **docassemble** server hosted on [Amazon Web
+Services].  This saves you from needing to figure out [Docker], [Let's
+Encrypt], etc.
+
+[Docker] can also be used to deploy even the most complex
+**docassemble** installations.  For example, Amazon's [EC2 Container
+Service] can be used to maintain a cluster of **docassemble** web
+server instances, created from [Docker] images, that communicate with
+a central server.  For information about how to install
+**docassemble** in a multi-server arrangement on [EC2 Container
+Service] ("[ECS]"), see the [scalability] section.
 
 # <a name="where"></a>Choosing where to run Docker
 
@@ -174,7 +198,66 @@ initialization.
 To see a list of stopped containers, run `docker ps -a`.  To remove a
 container, run `docker rm <containerid>`.
 
-## <a name="troubleshooting"></a>Troubleshooting
+# <a name="overview"></a>Overview of the Docker container
+
+There are a variety of ways to deploy **docassemble** with [Docker],
+but this subsection will give an overview of the most common way,
+which is to use a single [Docker] container hosted on a cloud
+provider.
+
+When you run [`docker run`] on the "image" `jhpyle/docassemble`,
+[Docker] will go onto the internet and download the
+`jhpyle/docassemble` image, and then "start" a new container using
+that image.  However, first it will check to see if a copy of the
+`jhpyle/docassemble` image has already been downloaded, and if there
+is a copy already downloaded, it will start the container using that
+copy.  This is important to keep in mind; when you run `docker run`,
+you might be thinking you will always get the most recent version, but
+that is not the case.  (See [upgrading], below, for more information.)
+
+When the **docassemble** container starts, it runs one command:
+
+{% highlight bash %}
+/usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf
+{% endhighlight %}
+
+(This is specified in the [Dockerfile], if you are curious.)
+
+This command starts an application called [Supervisor].  [Supervisor]
+is a "process control system" that starts up the various applications
+that **docassemble** uses, including:
+
+* A web server, Apache, which is called `apache2` within the
+  Supervisor configuration.
+* A background task system, Celery, called `celery`.
+* A scheduled task runner, called `cron`.
+* A SQL server, PostgreSQL, called `postgres`.
+* A distributed task queue system, RabbitMQ, called `rabbitmq`.
+* An in-memory data structure store, Redis, called `redis`.
+* A watchdog daemon that looks for out-of-control Apache processes and
+  kills them, called `watchdog`.
+* A websockets server that supports the "live help" functionality,
+  called `websockets`.
+
+In addition to starting background tasks, [Supervisor] coordinates the
+running of ad-hoc tasks, including:
+
+* A script called `sync` that consolidates log files in one place,
+  to support the [Logs] interface.
+* A script called `update` that installs and upgrades the Python
+  packages on the system.
+
+There is also a [Supervisor] service called `syslogng`, which is
+dormant on a single-server system.  (The [syslog-ng] application is
+used in the multi-server arrangement to consolidate log files from
+multiple machines.)
+
+Finally, there is a service called `initialize`, which runs
+automatically when [Supervisor] starts.  This is a shell script that
+initializes the server and starts the other services in the correct
+order.
+
+# <a name="troubleshooting"></a>Troubleshooting
 
 You should not need to access the running container in order to get
 **docassemble** to work, and all the log files you need will hopefully
@@ -236,6 +319,8 @@ Log files on the container that you might wish to check include:
 
 Enter `exit` to leave the container and get back to your standard
 command prompt.
+
+
 
 # <a name="configuration options"></a>Configuration options
 
@@ -1641,3 +1726,9 @@ line), as the containers depend on the images.
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [Docassemble Toolkit]: https://community.lawyer/docassemble
 [community.lawyer]: https://community.lawyer/
+[virtual machine]: https://en.wikipedia.org/wiki/Virtual_machine
+[upgrading]: #upgrading
+[`Dockerfile`]: {{ site.github.repository_url }}/blob/master/Dockerfile
+[Logs]: {{ site.baseurl }}/docs/admin.html#logs
+[Supervisor]: http://supervisord.org/
+[syslog-ng]: https://en.wikipedia.org/wiki/Syslog-ng

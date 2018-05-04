@@ -378,6 +378,21 @@ If you want the raw [Python] dictionary, you can call
 save the result of this function to your interview, because then your
 interview dictionary will double in size.
 
+The [`all_variables()`] function also has three special behaviors:
+
+* `all_variables(special='titles')` will return a [Python dictionary]
+  containing information set by the [`metadata` initial block] and the
+  [`set_title()`] function.
+* `all_variables(special='metadata')` will return a dictionary
+  representing the "metadata" indicated in the [`metadata` initial
+  block]s of the interview.  (If multiple blocks exist, information is
+  "layered" so that keys in later blocks overwrite keys in earlier
+  blocks.)  Unlike the `'titles'` option, the information returned
+  here is not updated to take into account changes made
+  programmatically by the [`set_title()`] function.
+* `all_variables(special='tags')` will return a [Python set]
+  containing the current set of [tags] defined on the interview.
+
 # <a name="special responses"></a>Functions for special responses
 
 ## <a name="message"></a>message()
@@ -1756,7 +1771,7 @@ the list of saved interviews that can be resumed (`/interviews`).
 The tags associated with an interview session can be edited using
 [Python] code.  The function `session_tags()` returns a [Python set]
 representing the tags.  It isn't technically a [Python set], but it
-works just like one, and it allows you to use the read and write the
+works just like one, and it allows you to read and write the
 tags associated with the interview session.
 
 {% include side-by-side.html demo="tags" %}
@@ -4564,11 +4579,314 @@ names you choose.
 `write_record()` by converting any item that cannot be [pickled] to
 `None`.
 
+### <a name="sql example"></a>Example of using stored objects
+
+Suppose you have an interview that your user might complete several
+times for different situations, but you do not want the user to have
+to re-enter the same information more than once.  You can use
+[`read_records()`] and [`write_record()`] to accomplish this.
+
+Here is an example:
+
+{% highlight yaml %}
+metadata:
+  title: Side of the bed
+---
+modules:
+  - docassemble.base.util
+---
+code: |
+  user_key = 'workers_comp_user:' + user_info().email
+---
+objects:
+  - user: Individual
+---
+code: |
+  saved_records = read_records(user_key)
+  for id in saved_records:
+    user = saved_records[id]
+---
+mandatory: True
+code: |
+  if not user_logged_in():
+    command('leave', url=url_of('login', next=interview_url()))
+  first_part_finished
+  user_info_saved
+  interview_finished
+---
+question: |
+  Thanks for all that information!
+subquestion: |
+  We now know that your name is
+  ${ user },
+  your favorite fruit is
+  ${ user.favorite_fruit },
+  and you woke up on the
+  ${ side_of_bed }
+  side of the bed this morning.
+field: first_part_finished
+---
+question: |
+  What is your name?
+fields:
+  - First name: user.name.first
+  - Last name: user.name.last
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: user.favorite_fruit
+---
+question: |
+  On which side of the bed did you
+  wake up this morning, ${ user }?
+field: side_of_bed
+choices:
+  Right side: right
+  Wrong side: wrong
+---
+event: interview_finished
+question: |
+  Ok, go eat some
+  ${ user.favorite_fruit },
+  ${ user }.
+subquestion: |
+  Perhaps you will wake up on
+  the ${ side_of_bed } side of
+  the bed tomorrow, too.
+buttons:
+  - Exit: leave
+    url: ${ url_of('dispatch') }
+---
+code: |
+  for id in read_records(user_key):
+    delete_record(user_key, id)
+  write_record(user_key, user)
+  set_title(title=capitalize(side_of_bed) + " side of the bed")
+  session_tags().add(side_of_bed)
+  user_info_saved = True
+{% endhighlight %}
+
+The first time the user goes through the interview, the interview will
+ask for the user's name and favorite fruit.  The second time the user
+goes through the interview, the interview does not ask for the name
+and favorite fruit, because it already knows the information -- even
+though the user's second interview is a separate session with a
+separate, isolated set of interview answers.
+
+The interview accomplishes this using [`write_record()`] and
+[`read_records()`].
+
+When the interview is done asking questions, it calls
+[`write_record()`] to store the object `user` to SQL.  It records this
+information using a unique "key" that is based on the e-mail address
+of the user (e.g., `workers_comp_user:fred@example.com`).  To get the
+e-mail address of the user, the interview requires the user to log in,
+and uses `user_info().email` to get the e-mail address.
+
+Whenever the interview starts, the interview first checks to see if
+anything has been stored under the unique "key."  If there is
+something stored, then the `user` object is retrieved from storage.
+If there is nothing stored, `user` is initialized as an object of type
+[`Individual`].
+
+Note that the timing of when `user` is stored is important.  The
+[`write_record()`] function will store a "snapshot" of the object, so
+if `user` is stored before the necessary information (name and
+favorite fruit) have been gathered, then the interview will not work
+as intended.
+
+Here is the code that initializes the `user` object:
+
+{% highlight yaml %}
+objects:
+  - user: Individual
+---
+code: |
+  saved_records = read_records(user_key)
+  for id in saved_records:
+    user = saved_records[id]
+{% endhighlight %}
+
+Note that neither of these blocks is [`mandatory`]; when the interview
+needs to know the definition of `user`, it will try the [`code`] block
+first (because it is later in the [YAML]).  If `user` is still
+undefined, the interview will "fall back" to trying the `objects`
+block, which will initialize a fresh object of class [`Individual`].
+
+The [`read_records()`] function always returns a [Python dictionary],
+because you can store more than one record under a single key.  But in
+this interview, we are only storing one record under the key
+`user_key`.
+
+The interview logic starts with forcing the user to log in:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  if not user_logged_in():
+    command('leave', url=url_of('login', next=interview_url()))
+  first_part_finished
+  user_info_saved
+  interview_finished
+{% endhighlight %}
+
+The [`command()`] line redirects the user to the sign-in page, but
+tells the sign-in page that when the user logs in, the user
+should be directed back to the same interview.
+
+The reference to `user_info_saved` before `interview_finished` ensures
+that before the user sees the last screen of the interview, some code
+is run that saves the `user` object to storage.
+
+The [`code`] block that defines `user_info_saved` looks like this:
+
+{% highlight yaml %}
+code: |
+  for id in read_records(user_key):
+    delete_record(user_key, id)
+  write_record(user_key, user)
+  set_title(title=capitalize(side_of_bed) + " side of the bed")
+  session_tags().add(side_of_bed)
+  user_info_saved = True
+{% endhighlight %}
+
+First, the code deletes any existing records under `user_key`, and
+then stores the `user` object.  This means that even if the interview
+session started off by retrieving `user` from storage, it will save a
+new copy of the `user` object to storage.  Thus, the interview can
+make changes to the `user` object of necessary, and those changes will
+be saved.
+
+Just for fun, this interview also uses [`set_title()`] and
+[`session_tags()`] to change the title and tags of the interview, so
+that when the user goes to "My Interviews," the user will see a
+different title and different tags based on their interview answers.
+Using a technique like this might help your users in case your users
+want to resume their interview session.
+
+Now, suppose you have a variety of interviews, all of which relate to
+the same topic (e.g., workers compensation).  If any one of these
+interviews is the first interview that the user uses, you want the
+basic questions (name, favorite fruit) to be asked.  And if the user
+launches another interview, you don't want to re-ask those basic
+questions.
+
+You can do this using interviews like the above, but each interview
+would need to contain the same blocks that force the user to log in,
+retrieves `user` from storage, saves `user` to storage at the end,
+etc.  It is inconvenient to maintain the same code in several
+different files.
+
+You can avoid this problem by using [`include`].  You can create a
+"common" [YAML] file called `wc_common.yml`, which contains the
+following:
+
+{% highlight yaml %}
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+---
+code: |
+  user_key = 'workers_comp_user:' + user_info().email
+---
+code: |
+  saved_records = read_records(user_key)
+  for id in saved_records:
+    user = saved_records[id]
+---
+initial: True
+code: |
+  if not user_logged_in():
+    command('leave', url=url_of('login', next=interview_url()))
+---
+question: |
+  What is your name?
+fields:
+  - First name: user.name.first
+  - Last name: user.name.last
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: user.favorite_fruit
+---
+code: |
+  for id in read_records(user_key):
+    delete_record(user_key, id)
+  write_record(user_key, user)
+  user_info_saved = True
+{% endhighlight %}
+
+Then your actual interview file will just incorporate this by
+reference.  For example, you could have a file called
+`wc_side_of_bed.yml`, which looks like this:
+
+{% highlight yaml %}
+metadata:
+  title: Side of the bed
+---
+include:
+  - wc_common.yml
+---
+mandatory: True
+code: |
+  first_part_finished
+  user_info_saved
+  interview_tagged
+  interview_finished
+---
+question: |
+  Thanks for all that information!
+subquestion: |
+  We now know that your name is
+  ${ user },
+  your favorite fruit is
+  ${ user.favorite_fruit },
+  and you woke up on the
+  ${ side_of_bed }
+  side of the bed this morning.
+field: first_part_finished
+---
+question: |
+  On which side of the bed did you
+  wake up this morning, ${ user }?
+field: side_of_bed
+choices:
+  Right side: right
+  Wrong side: wrong
+---
+event: interview_finished
+question: |
+  Ok, go eat some
+  ${ user.favorite_fruit },
+  ${ user }.
+subquestion: |
+  Perhaps you will wake up on
+  the ${ side_of_bed } side of
+  the bed tomorrow, too.
+buttons:
+  - Exit: leave
+    url: ${ url_of('dispatch') }
+---
+code: |
+  set_title(title=capitalize(side_of_bed) + " side of the bed")
+  session_tags().add(side_of_bed)
+  interview_tagged = True
+{% endhighlight %}
+
+You could then create other [YAML] files that follow the same pattern,
+all of which [`include`] the `wc_common.yml` file.  Any time you
+wanted to change a "common" question, you would only need to make the
+change in one place.
+
 ### Advanced SQL storage
 
 Though the data are stored on a SQL server, you cannot use SQL queries
-to retrieve data stored by `write_record()`; you can only use
-`read_records()` to retrieve data.
+to retrieve data stored by [`write_record()`]; you can only use
+[`read_records()`] to retrieve data.
 
 If you want to use the full power of SQL in your interviews, you can
 write a module that does something like this:
@@ -5506,3 +5824,8 @@ $(document).on('daPageLoad', function(){
 [`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
 [`interview_list()`]: #interview_list
 [Google Drive API]: https://developers.google.com/drive/
+[`set_title()`]: #set_title
+[`include`]: {{ site.baseurl }}/docs/initial.html#include
+[`session_tags()`]: #session_tags
+[`read_records()`]: #read_records
+[`write_record()`]: #write_record

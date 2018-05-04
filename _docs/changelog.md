@@ -6,6 +6,12 @@ short_title: Change Log
 
 ## [0.2.53](https://github.com/jhpyle/docassemble/releases/tag/v0.2.53) - 2018-05-02
 
+### Changed
+- Social logins now populate first and last name in the user profile.
+- The `all_variables()` function now has an optional keyword argument
+  `special` that returns information about an interview that is not
+  stored in the variables.
+
 ### Added
 - Support for `long_description` in setup.py files.
 

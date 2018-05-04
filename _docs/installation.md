@@ -73,8 +73,8 @@ Although **docassemble** is a [Python] application, it requires more
 than a `pip install` to install.
 
 There is a core [Python] module, [`docassemble.base`], that parses
-interviews and determines what question should be asked next, and
-there is a separate [Python] module, [`docassemble.webapp`], that
+interviews and determines what question should be asked next.  There
+is also a separate [Python] module, [`docassemble.webapp`], that
 contains the code for the web application and the
 [text messaging interface].  These modules have a number of
 dependencies, including other [Python] packages as well as libraries
@@ -111,8 +111,8 @@ to run, and the **docassemble** application servers need to run
 [syslog-ng] background processes that push log file entries to that
 central server.
 
-(Installing on [Docker] ensures that all of these additional
-applications are running.)
+Installing on [Docker] ensures that all of these additional
+applications are running.
 
 It is highly recommended that you run **docassemble** over HTTPS,
 since the web application uses a password system, and because your
@@ -125,9 +125,12 @@ services:
 
 * An [SMTP] server for [sending](#email) (as opposed to receiving)
   e-mails;
-* [Twilio] for receiving text messages, sending text messages, and
-  forwarding phone calls; and
-* [VoiceRSS] for converting text to an audio file.
+* [Twilio] for receiving text messages, sending text messages, sending
+  faxes, and forwarding phone calls;
+* [VoiceRSS] for converting text to an audio file; and
+* [Google APIs] for autocompleting addresses, normalizing addresses,
+  drawing maps, translating text, and synchronizing files between the
+  [Playground] and a [Google Drive] folder;
 
 The authentication keys for these services can be set up in the
 [configuration].
@@ -1512,3 +1515,5 @@ All of these system administration headaches can be avoided by
 [alembic]: http://alembic.zzzcomputing.com/en/latest/
 [`github`]: {{ site.baseurl }}/docs/config.html#github
 [`server administrator email`]: {{ site.baseurl }}/docs/config.html#server administrator email
+[Google APIs]: https://developers.google.com/apis-explorer/#p/
+[Google Drive]
