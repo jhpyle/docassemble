@@ -516,6 +516,8 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
       version=""" + repr(info['version']) + """,
       description=(""" + repr(info['description']) + """),
+      long_description=""" + repr(readme) + """,
+      long_description_content_type='text/markdown',
       author=""" + repr(info['author_name']) + """,
       author_email=""" + repr(info['author_email']) + """,
       license=""" + repr(info['license']) + """,

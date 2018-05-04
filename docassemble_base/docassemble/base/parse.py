@@ -4246,7 +4246,7 @@ class Interview:
                 if not hasattr(the_error, 'traceback'):
                     the_error.traceback = traceback.format_exc()
             raise the_error
-        if docassemble.base.functions.get_info('prevent_going_back'):
+        if docassemble.base.functions.this_thread.prevent_going_back:
             interview_status.can_go_back = False
         docassemble.base.functions.close_files()
         if debug:

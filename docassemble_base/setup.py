@@ -6,6 +6,9 @@ from setuptools import setup, find_packages
 from fnmatch import fnmatchcase
 from distutils.util import convert_path
 
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 standard_exclude = ('*.py', '*.pyc', '*~', '.*', '*.bak', '*.swp*')
 standard_exclude_directories = ('.*', 'CVS', '_darcs', './build', './dist', 'EGG-INFO', '*.egg-info')
 def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
@@ -47,13 +50,15 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
 setup(name='docassemble.base',
       version='0.2.52',
       description=('The base components of the docassemble system.'),
+      long_description=read("README.md"),
+      long_description_content_type='text/markdown',
       author='Jonathan Pyle',
       author_email='jhpyle@gmail.com',
       license='MIT',
       url='https://docassemble.org',
       download_url='https://download.docassemble.org/docassemble-base.tar.gz',
       namespace_packages = ['docassemble'],
-      install_requires = ['docassemble', '3to2', 'astunparse', 'babel', 'bcrypt', 'blinker', 'cffi', 'fdfgen', 'guess-language-spirit', 'httplib2', 'itsdangerous', 'jellyfish==0.5.1', 'jinja2', 'lxml', 'mako', 'markdown', 'markupsafe', 'mdx-smartypants', 'namedentities==1.5.2', 'passlib', 'pdfminer', 'pillow', 'pip', 'pycparser', 'pycrypto', 'geopy', 'pygments', 'pyjwt', 'pypdf', 'pypdftk', 'PyPDF2', 'python-dateutil', 'pytz', 'pyyaml', 'ruamel.yaml', 'qrcode', 'six', 'titlecase', 'wheel', 'pattern', 'tzlocal', 'us', 'phonenumbers', 'pycountry', 'ua-parser', 'user-agents', 'textstat', 'twine', 'docxtpl', 'qrtools'],
+      install_requires = ['docassemble==0.2.52', '3to2', 'astunparse', 'babel', 'bcrypt', 'blinker', 'cffi', 'fdfgen', 'guess-language-spirit', 'httplib2', 'itsdangerous', 'jellyfish==0.5.1', 'jinja2', 'lxml', 'mako', 'markdown', 'markupsafe', 'mdx-smartypants', 'namedentities==1.5.2', 'passlib', 'pdfminer', 'pillow', 'pip', 'pycparser', 'pycrypto', 'geopy', 'pygments', 'pyjwt', 'pypdf', 'pypdftk', 'PyPDF2', 'python-dateutil', 'pytz', 'pyyaml', 'ruamel.yaml', 'qrcode', 'six', 'titlecase', 'wheel', 'pattern', 'tzlocal', 'us', 'phonenumbers', 'pycountry', 'ua-parser', 'user-agents', 'textstat', 'twine', 'docxtpl', 'qrtools'],
       packages=find_packages(),
       zip_safe = False,
       package_data=find_package_data(where='docassemble/base/', package='docassemble.base'),

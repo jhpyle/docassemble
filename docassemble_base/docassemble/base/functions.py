@@ -661,13 +661,16 @@ def interview_url_action_as_qr(action, **kwargs):
 def get_info(att):
     """Used to retrieve the values of global variables set through set_info()."""
     if hasattr(this_thread, att):
-        return getattr(this_thread, att)
+        return getattr(this_thread.global_vars, att)
     return None
+
+def get_current_info(*pargs):
+    return this_thread.current_info
 
 def set_info(**kwargs):
     """Used to set the values of global variables you wish to retrieve through get_info()."""
     for att, value in kwargs.iteritems():
-        setattr(this_thread, att, value)
+        setattr(this_thread.global_vars, att, value)
 
 def set_progress(number):
     """Sets the position of the progress meter."""
@@ -1178,6 +1181,7 @@ class ThreadVariables(threading.local):
     evaluation_context = None
     docx_template = None
     gathering_mode = dict()
+    global_vars = dict()
     current_variable = list()
     open_files = set()
     #markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
@@ -1197,12 +1201,12 @@ this_thread = ThreadVariables()
 
 def backup_thread_variables():
     backup = dict()
-    for key in ['language', 'dialect', 'country', 'locale', 'user', 'role', 'current_info', 'internal', 'initialized', 'session_id', 'gathering_mode', 'current_variable']:
+    for key in ['language', 'dialect', 'country', 'locale', 'user', 'role', 'current_info', 'internal', 'initialized', 'session_id', 'gathering_mode', 'current_variable', 'global_vars']:
         backup[key] = copy.deepcopy(getattr(this_thread, key))
     return backup
 
 def restore_thread_variables(backup):
-    for key in ['language', 'dialect', 'country', 'locale', 'user', 'role', 'current_info', 'internal', 'initialized', 'session_id', 'gathering_mode', 'current_variable']:
+    for key in ['language', 'dialect', 'country', 'locale', 'user', 'role', 'current_info', 'internal', 'initialized', 'session_id', 'gathering_mode', 'current_variable', 'global_vars']:
         setattr(this_thread, key, backup[key])
 
 def background_response(*pargs, **kwargs):
@@ -1496,6 +1500,7 @@ def reset_local_variables():
     this_thread.open_files = set()
     this_thread.saved_files = dict()
     this_thread.message_log = list()
+    this_thread.global_vars = dict()
 
 def prevent_going_back():
     """Instructs docassemble to disable the user's back button, so that the user cannot
@@ -2126,8 +2131,15 @@ def variables_as_json():
     """Sends an HTTP response with all variables in JSON format."""
     raise ResponseError(None, all_variables=True)
 
-def all_variables(simplify=True):
+def all_variables(simplify=True, special=False):
     """Returns the interview variables as a dictionary suitable for export to JSON or other formats."""
+    if special == 'titles':
+        return this_thread.interview.get_title(get_user_dict())
+    if special == 'metadata':
+        return this_thread.interview.get_metadata()
+    if special == 'tags':
+        session_tags()
+        return copy.deepcopy(this_thread.internal['tags'])
     if simplify:
         return serializable_dict(get_user_dict())
     return pickleable_objects(get_user_dict())

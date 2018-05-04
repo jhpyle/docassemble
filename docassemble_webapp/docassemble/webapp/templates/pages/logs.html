@@ -31,7 +31,11 @@
     <div class="col-auto my-1">
       <button type="submit" name="{{ form.clear.id }}" class="btn btn-secondary" value="{{ form.clear.label.text }}">{{ form.clear.label.text }}</button>
     </div>
+    <div class="col-auto ml-auto my-1 h3">
+      <a title="{{ word('Refresh') }}" href="{{ url_for('logs', file=current_file) }}"><i class="fas fa-sync-alt"></i></a>
+    </div>
   </div>
+  <div class="row
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.file_name, value=current_file) }}
 </form>

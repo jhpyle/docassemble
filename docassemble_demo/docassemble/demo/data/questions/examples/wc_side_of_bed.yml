@@ -1,0 +1,50 @@
+metadata:
+  title: Side of the bed
+---
+include:
+  - wc_common.yml
+---
+mandatory: True
+code: |
+  first_part_finished
+  user_info_saved
+  interview_tagged
+  interview_finished
+---
+question: |
+  Thanks for all that information!
+subquestion: |
+  We now know that your name is
+  ${ user },
+  your favorite fruit is
+  ${ user.favorite_fruit },
+  and you woke up on the
+  ${ side_of_bed }
+  side of the bed this morning.
+field: first_part_finished
+---
+question: |
+  On which side of the bed did you
+  wake up this morning, ${ user }?
+field: side_of_bed
+choices:
+  Right side: right
+  Wrong side: wrong
+---
+event: interview_finished
+question: |
+  Ok, go eat some
+  ${ user.favorite_fruit },
+  ${ user }.
+subquestion: |
+  Perhaps you will wake up on
+  the ${ side_of_bed } side of
+  the bed tomorrow, too.
+buttons:
+  - Exit: leave
+    url: ${ url_of('dispatch') }
+---
+code: |
+  set_title(title=capitalize(side_of_bed) + " side of the bed")
+  session_tags().add(side_of_bed)
+  interview_tagged = True

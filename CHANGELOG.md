@@ -1,8 +1,22 @@
 # Change Log
 
-## [0.2.51] - 2018-05-01
+## [0.2.53] - 2018-05-02
+### Changed
+- Social logins now populate first and last name in the user profile.
+- The `all_variables()` function now has an optional keyword argument
+  `special` that returns information about an interview that is not
+  stored in the variables.
+### Added
+- Support for `long_description` in setup.py files.
 ### Fixed
-- The setup.py file for `docassemble.webapp`.
+- Update button in `/updatepackage` reverted package to `master`
+  branch.
+- Unicode problem in `/logs`.
+
+## [0.2.52] - 2018-05-01
+### Fixed
+- The setup.py file for `docassemble.webapp` did not depend on
+  particular versions of `docassemble.base` and `docassemble`.
 
 ## [0.2.51] - 2018-05-01
 ### Changed

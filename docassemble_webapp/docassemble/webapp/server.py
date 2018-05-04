@@ -728,7 +728,7 @@ def initiate_sms_session(phone_number, yaml_filename=None, uid=None, secret=None
     if config not in twilio_config['name']:
         raise DAError("get_sms_session: Invalid twilio configuration")
     tconfig = twilio_config['name'][config]
-    current_info = docassemble.base.functions.get_info('current_info')
+    current_info = docassemble.base.functions.get_current_info()
     if yaml_filename is None:
         yaml_filename = current_info.get('yaml_filename', None)
         if yaml_filename is None:
@@ -2803,10 +2803,11 @@ class GoogleSignIn(OAuthSignIn):
         )
     def authorize(self):
         result = urlparse.parse_qs(request.data)
-        #logmessage("GoogleSignIn, args: " + str([str(arg) + ": " + str(request.args[arg]) for arg in request.args]))
-        #logmessage("GoogleSignIn, request: " + str(request.data))
+        logmessage("GoogleSignIn, args: " + str([str(arg) + ": " + str(request.args[arg]) for arg in request.args]))
+        logmessage("GoogleSignIn, request: " + str(request.data))
         session['google_id'] = result.get('id', [None])[0]
         session['google_email'] = result.get('email', [None])[0]
+        session['google_name'] = result.get('name', [None])[0]
         response = make_response(json.dumps('Successfully connected user.'), 200)
         response.headers['Content-Type'] = 'application/json'
         # oauth_session = self.service.get_auth_session(
@@ -2821,15 +2822,19 @@ class GoogleSignIn(OAuthSignIn):
         #logmessage("GoogleCallback, request: " + str(request.data))
         email = session.get('google_email', None)
         google_id = session.get('google_id', None)
+        google_name = session.get('google_name', None)
         if 'google_id' in session:
             del session['google_id']
         if 'google_email' in session:
             del session['google_email']
+        if 'google_name' in session:
+            del session['google_name']
         if email is not None and google_id is not None:
             return (
                 'google$' + str(google_id),
                 email.split('@')[0],
-                email
+                email,
+                {'name': google_name}
             )
         else:
             raise Exception("Could not get Google authorization information")
@@ -2841,9 +2846,9 @@ class FacebookSignIn(OAuthSignIn):
             name='facebook',
             client_id=self.consumer_id,
             client_secret=self.consumer_secret,
-            authorize_url='https://graph.facebook.com/v2.9/oauth/authorize',           
-            access_token_url='https://graph.facebook.com/v2.9/oauth/access_token',
-            base_url='https://graph.facebook.com/v2.9/'
+            authorize_url='https://www.facebook.com/v3.0/dialog/oauth',           
+            access_token_url='https://graph.facebook.com/v3.0/oauth/access_token',
+            base_url='https://graph.facebook.com/v3.0'
         )
     def authorize(self):
         return redirect(self.service.get_authorize_url(
@@ -2853,18 +2858,23 @@ class FacebookSignIn(OAuthSignIn):
         )
     def callback(self):
         if 'code' not in request.args:
-            return None, None, None
+            return None, None, None, None
         oauth_session = self.service.get_auth_session(
             decoder=json.loads,
             data={'code': request.args['code'],
-                  'grant_type': 'authorization_code',
                   'redirect_uri': self.get_callback_url()}
         )
-        me = oauth_session.get('me', params={'fields': 'id,name,email'}).json()
+        me = oauth_session.get('me', params={'fields': 'id,name,first_name,middle_name,last_name,name_format,email'}).json()
+        #logmessage("Facebook: returned " + json.dumps(me))
         return (
-            'facebook$' + me['id'],
+            'facebook$' + str(me['id']),
             me.get('email').split('@')[0],
-            me.get('email')
+            me.get('email'),
+            {'first': me.get('first_name', None),
+             'middle': me.get('middle_name', None),
+             'last': me.get('last_name', None),
+             'name': me.get('name', None),
+             'name_format': me.get('name_format', None)}
         )
 
 class AzureSignIn(OAuthSignIn):
@@ -2886,7 +2896,7 @@ class AzureSignIn(OAuthSignIn):
         )
     def callback(self):
         if 'code' not in request.args:
-            return None, None, None
+            return None, None, None, None
         oauth_session = self.service.get_auth_session(
             decoder=json.loads,
             data={'code': request.args['code'],
@@ -2898,9 +2908,12 @@ class AzureSignIn(OAuthSignIn):
         )
         me = oauth_session.get('me').json()
         return (
-            'azure$' + me['id'],
+            'azure$' + str(me['id']),
             me.get('mail').split('@')[0],
-            me.get('mail')
+            me.get('mail'),
+            {'first_name': me.get('givenName', None),
+             'last_name': me.get('surname', None),
+             'name': me.get('displayName', me.get('userPrincipalName', None))}
         )
 
 class TwitterSignIn(OAuthSignIn):
@@ -2924,17 +2937,18 @@ class TwitterSignIn(OAuthSignIn):
     def callback(self):
         request_token = session.pop('request_token')
         if 'oauth_verifier' not in request.args:
-            return None, None, None
+            return None, None, None, None
         oauth_session = self.service.get_auth_session(
             request_token[0],
             request_token[1],
             data={'oauth_verifier': request.args['oauth_verifier']}
         )
         me = oauth_session.get('account/verify_credentials.json', params={'skip_status': 'true', 'include_email': 'true', 'include_entites': 'false'}).json()
+        logmessage("Twitter returned " + json.dumps(me))
         social_id = 'twitter$' + str(me.get('id_str'))
         username = me.get('screen_name')
         email = me.get('email')
-        return social_id, username, email
+        return social_id, username, email, {'name': me.get('name', None)}
 
 @flaskbabel.localeselector
 def get_locale():
@@ -2982,7 +2996,7 @@ def oauth_callback(provider):
     # for argument in request.args:
     #     logmessage("argument " + str(argument) + " is " + str(request.args[argument]))
     oauth = OAuthSignIn.get_provider(provider)
-    social_id, username, email = oauth.callback()
+    social_id, username, email, name_data = oauth.callback()
     if social_id is None:
         flash(word('Authentication failed.'), 'error')
         return redirect(url_for('interview_list'))
@@ -2994,6 +3008,12 @@ def oauth_callback(provider):
         return redirect(url_for('user.login'))
     if not user:
         user = UserModel(social_id=social_id, nickname=username, email=email, active=True)
+        if 'first_name' in name_data and 'last_name' in name_data and name_data['first_name'] is not None and name_data['last_name'] is not None:
+            user.first_name = name_data['first_name']
+            user.last_name = name_data['last_name']
+        elif 'name' in name_data and name_data['name'] is not None:
+            user.first_name = re.sub(r' .*', '', name_data['name'])
+            user.last_name = re.sub(r'.* ', '', name_data['name'])
         db.session.add(user)
         db.session.commit()
     login_user(user, remember=False)
@@ -9759,7 +9779,10 @@ def update_package():
                 existing_package = Package.query.filter_by(name=target, active=True).order_by(Package.id.desc()).first()
                 if existing_package is not None:
                     if existing_package.type == 'git' and existing_package.giturl is not None:
-                        install_git_package(target, existing_package.giturl)
+                        if existing_package.gitbranch:
+                            install_git_package(target, existing_package.giturl, branch=existing_package.gitbranch)
+                        else:
+                            install_git_package(target, existing_package.giturl)
                     elif existing_package.type == 'pip':
                         install_pip_package(existing_package.name, existing_package.limitation)
         result = docassemble.webapp.worker.update_packages.delay()
@@ -10299,8 +10322,10 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
             setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
       version='0.0.1',
       description=('A docassemble extension.'),
-      author=""" + repr(str(name_of_user(current_user))) + """,
-      author_email=""" + repr(str(current_user.email)) + """,
+      long_description=""" + repr(readme) + """,
+      long_description_content_type='text/markdown',
+      author=""" + repr(unicode(name_of_user(current_user))) + """,
+      author_email=""" + repr(unicode(current_user.email)) + """,
       license='MIT',
       url='https://docassemble.org',
       packages=find_packages(),
@@ -13448,6 +13473,8 @@ def logs():
     default_filter_string = ''
     if request.method == 'POST' and form.file_name.data:
         the_file = form.file_name.data
+    if the_file is not None and (the_file.startswith('.') or the_file.startswith('/') or the_file == ''):
+        the_file = None
     if LOGSERVER is None:
         call_sync()
         files = sorted([f for f in os.listdir(LOG_DIRECTORY) if os.path.isfile(os.path.join(LOG_DIRECTORY, f))])
@@ -13458,10 +13485,6 @@ def logs():
                 the_file = files[0]
         if the_file is not None:
             filename = os.path.join(LOG_DIRECTORY, the_file)
-            # if (not os.path.isfile(filename)) and len(files):
-            #     the_file = files[0]
-            # else:
-            #     the_file = None
     else:
         h = httplib2.Http()
         resp, content = h.request("http://" + LOGSERVER + ':8080', "GET")
@@ -13473,6 +13496,11 @@ def logs():
             if the_file is None:
                 the_file = files[0]
             filename, headers = urllib.urlretrieve("http://" + LOGSERVER + ':8080/' + urllib.quote(the_file))
+    if not os.path.isfile(filename):
+        flash(word("The file you requested does not exist."), 'error')
+        if len(files):
+            the_file = files[0]
+            filename = os.path.join(LOG_DIRECTORY, files[0])
     if len(files):
         if request.method == 'POST' and form.submit.data and form.filter_string.data:
             default_filter_string = form.filter_string.data
@@ -13486,7 +13514,7 @@ def logs():
             temp_file.close()
         else:
             lines = tailer.tail(open(filename), 30)
-        content = "\n".join(lines)
+        content = "\n".join(map(lambda x: x.decode('utf8'), lines))
     else:
         content = "No log files available"
     return render_template('pages/logs.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Logs"), page_title=word("Logs"), form=form, files=files, current_file=the_file, content=content, default_filter_string=default_filter_string), 200

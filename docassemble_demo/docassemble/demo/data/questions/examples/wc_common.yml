@@ -1,0 +1,35 @@
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+---
+code: |
+  user_key = 'workers_comp_user:' + user_info().email
+---
+code: |
+  saved_records = read_records(user_key)
+  for id in saved_records:
+    user = saved_records[id]
+---
+initial: True
+code: |
+  if not user_logged_in():
+    command('leave', url=url_of('login', next=interview_url()))
+---
+question: |
+  What is your name?
+fields:
+  - First name: user.name.first
+  - Last name: user.name.last
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: user.favorite_fruit
+---
+code: |
+  for id in read_records(user_key):
+    delete_record(user_key, id)
+  write_record(user_key, user)
+  user_info_saved = True
