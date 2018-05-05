@@ -1162,15 +1162,15 @@ def update_server(*pargs, **kwargs):
 # worker_convert = null_worker
 
 class GenericObject(object):
-    pass
+    def __init__(self):
+        self.user = None
+        self.role = 'user'
 
 class ThreadVariables(threading.local):
     language = server.default_language
     dialect = server.default_dialect
     country = server.default_country
     locale = server.default_locale
-    user = None
-    role = 'user'
     current_info = dict()
     internal = dict()
     #user_dict = None

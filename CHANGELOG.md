@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.54] - 2018-05-05
+### Fixed
+- Bug in `set_info()`.
+
 ## [0.2.53] - 2018-05-02
 ### Changed
 - Social logins now populate first and last name in the user profile.
