@@ -783,6 +783,7 @@ class DAList(DAObject):
         self._trigger_gather()
         return self.elements.__len__()
     def __delitem__(self, index):
+        self[index]
         self.elements.__delitem__(index)
         self._reset_instance_names()
     def __reversed__(self):
@@ -1429,6 +1430,7 @@ class DADict(DAObject):
         self._trigger_gather()
         return self.elements.__reversed__()
     def __delitem__(self, key):
+        self[key]
         return self.elements.__delitem__(key)
     def __missing__(self, key):
         return self.elements.__missing__(key)

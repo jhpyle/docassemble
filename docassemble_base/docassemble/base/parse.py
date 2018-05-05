@@ -2276,6 +2276,51 @@ class Question:
         #         self.interview.questions_by_id[self.id] = [self]
         if self.name is not None:
             self.interview.questions_by_name[self.name] = self
+        foundmatch = False
+        for field_name in self.fields_used:
+            if re.search(r'\[', field_name):
+                foundmatch = True
+                break
+        while foundmatch:
+            foundmatch = False
+            vars_to_add = set()
+            for field_name in self.fields_used:
+                for m in re.finditer(r'^(.*?)\[\'([^\'\"]*)\'\](.*)', field_name):
+                    new_var = m.group(1) + "[u'" + m.group(2) + "']" + m.group(3)
+                    if new_var not in self.fields_used:
+                        foundmatch = True
+                        logmessage("Adding " + new_var)
+                        vars_to_add.add(new_var)
+                    # new_var = m.group(1) + '["' + m.group(2) + '"]' + m.group(3)
+                    # if new_var not in self.fields_used:
+                    #     foundmatch = True
+                    #     logmessage("Adding " + new_var)
+                    #     vars_to_add.add(new_var)
+                for m in re.finditer(r'^(.*?)\[\"([^\"\']*)\"\](.*)', field_name):
+                    new_var = m.group(1) + "[u'" + m.group(2) + "']" + m.group(3)
+                    if new_var not in self.fields_used:
+                        foundmatch = True
+                        logmessage("Adding " + new_var)
+                        vars_to_add.add(new_var)
+                    new_var = m.group(1) + "['" + m.group(2) + "']" + m.group(3)
+                    if new_var not in self.fields_used:
+                        foundmatch = True
+                        logmessage("Adding " + new_var)
+                        vars_to_add.add(new_var)
+                for m in re.finditer(r'^(.*?)\[u\'([^\'\"]*)\'\](.*)', field_name):
+                    new_var = m.group(1) + "['" + m.group(2) + "']" + m.group(3)
+                    if new_var not in self.fields_used:
+                        foundmatch = True
+                        logmessage("Adding " + new_var)
+                        vars_to_add.add(new_var)
+                    # new_var = m.group(1) + '["' + m.group(2) + '"]' + m.group(3)
+                    # if new_var not in self.fields_used:
+                    #     foundmatch = True
+                    #     logmessage("Adding " + new_var)
+                    #     vars_to_add.add(new_var)
+            for new_var in vars_to_add:
+                logmessage("Really adding " + new_var)
+                self.fields_used.add(new_var)
         for field_name in self.fields_used:
             if field_name not in self.interview.questions:
                 self.interview.questions[field_name] = dict()

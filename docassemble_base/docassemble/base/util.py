@@ -613,7 +613,7 @@ class RoleChangeTracker(DAObject):
         active of the interviewee.  Returns True if an e-mail was
         successfully sent.  Otherwise, returns False.  False could
         mean that it was not necessary to send an e-mail."""
-        #logmessage("Current role is " + str(this_thread.role))
+        #logmessage("Current role is " + str(this_thread.global_vars.role))
         for role_option in kwargs:
             if 'to' in kwargs[role_option]:
                 need(kwargs[role_option]['to'].email)
@@ -1068,7 +1068,7 @@ class Person(DAObject):
             result = {'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}
             if hasattr(self, 'icon'):
                 result['icon'] = self.icon
-            elif self is this_thread.user:
+            elif self is this_thread.global_vars.user:
                 result['icon'] = {'path': 'CIRCLE', 'scale': 5, 'strokeColor': 'blue'}
             return [result]
         return None
@@ -1097,20 +1097,20 @@ class Person(DAObject):
     def possessive(self, target, **kwargs):
         """Given a word like "fish," returns "your fish" or 
         "John Smith's fish," depending on whether the person is the user."""
-        if self is this_thread.user:
+        if self is this_thread.global_vars.user:
             return your(target, **kwargs)
         else:
             return possessify(self.name, target)
     def object_possessive(self, target, **kwargs):
         """Given a word, returns a phrase indicating possession, but
         uses the variable name rather than the object's actual name."""
-        if self is this_thread.user:
+        if self is this_thread.global_vars.user:
             return your(target, **kwargs)
         return super(Person, self).object_possessive(target, **kwargs)
     def is_are_you(self, **kwargs):
         """Returns "are you" if the object is the user, otherwise returns
         "is" followed by the object name."""
-        if self is this_thread.user:
+        if self is this_thread.global_vars.user:
             output = word('are you', **kwargs)
         else:
             output = is_word(self.name.full(), **kwargs)
@@ -1120,7 +1120,7 @@ class Person(DAObject):
             return(output)
     def is_user(self):
         """Returns True if the person is the user, otherwise False."""
-        return self is this_thread.user
+        return self is this_thread.global_vars.user
     def address_block(self):
         """Returns the person name address as a block, for use in mailings."""
         if this_thread.evaluation_context == 'docx':
@@ -1173,14 +1173,14 @@ class Person(DAObject):
     def do_question(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "do you eat" or "does John Smith eat,"
         depending on whether the person is the user."""
-        if self == this_thread.user:
+        if self == this_thread.global_vars.user:
             return(do_you(the_verb, **kwargs))
         else:
             return(does_a_b(self.name, the_verb, **kwargs))
     def did_question(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "did you eat" or "did John Smith eat,"
         depending on whether the person is the user."""
-        if self == this_thread.user:
+        if self == this_thread.global_vars.user:
             return did_you(the_verb, **kwargs)
         else:
             return did_a_b(self.name, the_verb, **kwargs)
@@ -1188,7 +1188,7 @@ class Person(DAObject):
         """Given a target like "married", returns "were you married" or "was
         John Smith married," depending on whether the person is the
         user."""
-        if self == this_thread.user:
+        if self == this_thread.global_vars.user:
             return were_you(the_target, **kwargs)
         else:
             return was_a_b(self.name, the_target, **kwargs)
@@ -1196,14 +1196,14 @@ class Person(DAObject):
         """Given a target like "", returns "have you married" or "has
         John Smith married," depending on whether the person is the
         user."""
-        if self == this_thread.user:
+        if self == this_thread.global_vars.user:
             return have_you(the_target, **kwargs)
         else:
             return has_a_b(self.name, the_target, **kwargs)
     def does_verb(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "eat" or "eats"
         depending on whether the person is the user."""
-        if self == this_thread.user:
+        if self == this_thread.global_vars.user:
             tense = '1sg'
         else:
             tense = '3sg'
@@ -1213,7 +1213,7 @@ class Person(DAObject):
             return verb_present(the_verb, tense, **kwargs)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except uses the past tense of the verb."""
-        if self == this_thread.user:
+        if self == this_thread.global_vars.user:
             tense = "2sgp"
         else:
             tense = "3sgp"
@@ -1222,7 +1222,7 @@ class Person(DAObject):
     def subject(self, **kwargs):
         """Returns "you" or the person's name, depending on whether the 
         person is the user."""
-        if self == this_thread.user:
+        if self == this_thread.global_vars.user:
             output = 'you'
         else:
             output = unicode(self)
@@ -1275,14 +1275,14 @@ class Individual(Person):
         """If the individual is the user and the user is logged in and 
         the user has set up a name in the user profile, this returns 
         the user's first name.  Otherwise, returns a blank string."""
-        if self is this_thread.user and this_thread.current_info['user']['is_authenticated'] and 'firstname' in this_thread.current_info['user'] and this_thread.current_info['user']['firstname']:
+        if self is this_thread.global_vars.user and this_thread.current_info['user']['is_authenticated'] and 'firstname' in this_thread.current_info['user'] and this_thread.current_info['user']['firstname']:
             return this_thread.current_info['user']['firstname'];
         return ''
     def last_name_hint(self):
         """If the individual is the user and the user is logged in and 
         the user has set up a name in the user profile, this returns 
         the user's last name.  Otherwise, returns a blank string."""
-        if self is this_thread.user and this_thread.current_info['user']['is_authenticated'] and 'lastname' in this_thread.current_info['user'] and this_thread.current_info['user']['lastname']:
+        if self is this_thread.global_vars.user and this_thread.current_info['user']['is_authenticated'] and 'lastname' in this_thread.current_info['user'] and this_thread.current_info['user']['lastname']:
             return this_thread.current_info['user']['lastname'];
         return ''
     def salutation(self, **kwargs):
@@ -1290,7 +1290,7 @@ class Individual(Person):
         return salutation(self, **kwargs)
     def pronoun_possessive(self, target, **kwargs):
         """Given a word like "fish," returns "her fish" or "his fish," as appropriate."""
-        if self == this_thread.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
+        if self == this_thread.global_vars.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
             output = your(target, **kwargs)
         elif self.gender == 'female':
             output = her(target, **kwargs)
@@ -1302,7 +1302,7 @@ class Individual(Person):
             return(output)            
     def pronoun(self, **kwargs):
         """Returns a pronoun like "you," "her," or "him," as appropriate."""
-        if self == this_thread.user:
+        if self == this_thread.global_vars.user:
             output = word('you', **kwargs)
         if self.gender == 'female':
             output = word('her', **kwargs)
@@ -1317,7 +1317,7 @@ class Individual(Person):
         return self.pronoun(**kwargs)
     def pronoun_subjective(self, **kwargs):
         """Returns a pronoun like "you," "she," or "he," as appropriate."""
-        if self == this_thread.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
+        if self == this_thread.global_vars.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
             output = word('you', **kwargs)
         elif self.gender == 'female':
             output = word('she', **kwargs)
@@ -1330,7 +1330,7 @@ class Individual(Person):
     def yourself_or_name(self, **kwargs):
         """Returns a "yourself" if the individual is the user, otherwise 
         returns the individual's name."""
-        if self == this_thread.user:
+        if self == this_thread.global_vars.user:
             output = word('yourself', **kwargs)
         else:
             output = self.name.full()

@@ -1161,6 +1161,9 @@ def update_server(*pargs, **kwargs):
 
 # worker_convert = null_worker
 
+class GenericObject(object):
+    pass
+
 class ThreadVariables(threading.local):
     language = server.default_language
     dialect = server.default_dialect
@@ -1181,7 +1184,7 @@ class ThreadVariables(threading.local):
     evaluation_context = None
     docx_template = None
     gathering_mode = dict()
-    global_vars = dict()
+    global_vars = GenericObject()
     current_variable = list()
     open_files = set()
     #markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
@@ -1500,7 +1503,7 @@ def reset_local_variables():
     this_thread.open_files = set()
     this_thread.saved_files = dict()
     this_thread.message_log = list()
-    this_thread.global_vars = dict()
+    this_thread.global_vars = GenericObject()
 
 def prevent_going_back():
     """Instructs docassemble to disable the user's back button, so that the user cannot
