@@ -10,3 +10,16 @@ def get_cloud():
     else:
         cloud = None
     return cloud
+
+def get_custom_cloud(provider, config):
+    if provider is None or config is None:
+        return None
+    if provider == 's3':
+        import docassemble.webapp.amazon
+        cloud = docassemble.webapp.amazon.s3object(config)
+    elif provider == 'azure':
+        import docassemble.webapp.microsoft
+        cloud = docassemble.webapp.microsoft.azureobject(config)
+    else:
+        cloud = None
+    return cloud

@@ -296,6 +296,7 @@
 "Playground YAML": Null
 "Please check at least one.": Null
 "Please choose a different e-mail address.": Null
+"Please enter a valid date.": Null
 "Please enter a valid phone number": Null
 "Please enter a valid value.": Null
 "Please enter the four digit code, followed by the pound sign.": Null
@@ -563,6 +564,9 @@
 "You must sign your name to continue.": Null
 "You must type at least": Null
 "You need to enter a complete e-mail address.": Null
+"You need to enter a date between %s and %s": Null
+"You need to enter a date on or after": Null
+"You need to enter a date on or before": Null
 "You need to enter a number.": Null
 "You need to enter a number that is at least": Null
 "You need to enter a number that is at most": Null

@@ -2289,7 +2289,7 @@ class Question:
                     new_var = m.group(1) + "[u'" + m.group(2) + "']" + m.group(3)
                     if new_var not in self.fields_used:
                         foundmatch = True
-                        logmessage("Adding " + new_var)
+                        #logmessage("Adding " + new_var)
                         vars_to_add.add(new_var)
                     # new_var = m.group(1) + '["' + m.group(2) + '"]' + m.group(3)
                     # if new_var not in self.fields_used:
@@ -2300,18 +2300,18 @@ class Question:
                     new_var = m.group(1) + "[u'" + m.group(2) + "']" + m.group(3)
                     if new_var not in self.fields_used:
                         foundmatch = True
-                        logmessage("Adding " + new_var)
+                        #logmessage("Adding " + new_var)
                         vars_to_add.add(new_var)
                     new_var = m.group(1) + "['" + m.group(2) + "']" + m.group(3)
                     if new_var not in self.fields_used:
                         foundmatch = True
-                        logmessage("Adding " + new_var)
+                        #logmessage("Adding " + new_var)
                         vars_to_add.add(new_var)
                 for m in re.finditer(r'^(.*?)\[u\'([^\'\"]*)\'\](.*)', field_name):
                     new_var = m.group(1) + "['" + m.group(2) + "']" + m.group(3)
                     if new_var not in self.fields_used:
                         foundmatch = True
-                        logmessage("Adding " + new_var)
+                        #logmessage("Adding " + new_var)
                         vars_to_add.add(new_var)
                     # new_var = m.group(1) + '["' + m.group(2) + '"]' + m.group(3)
                     # if new_var not in self.fields_used:
@@ -2319,7 +2319,7 @@ class Question:
                     #     logmessage("Adding " + new_var)
                     #     vars_to_add.add(new_var)
             for new_var in vars_to_add:
-                logmessage("Really adding " + new_var)
+                #logmessage("Really adding " + new_var)
                 self.fields_used.add(new_var)
         for field_name in self.fields_used:
             if field_name not in self.interview.questions:

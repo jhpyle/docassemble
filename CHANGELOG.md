@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.2.55] - 2018-05-06
+### Changed
+- The `DACloudStorage` object can now be initialized to use
+  Configuration directives other than `s3` and `azure`.
+- The `min` and `max` field modifiers now work with `datatype: date`.
+### Added
+- The `slurp()` method for `DAStaticFile` objects.
+- Support for editing HTML and other text file formats in the Static
+  Files folder of the Playground.
+### Fixed
+- List of branches in pull-down cut off at a certain length.
+
 ## [0.2.54] - 2018-05-05
 ### Fixed
 - Bug in `set_info()`.

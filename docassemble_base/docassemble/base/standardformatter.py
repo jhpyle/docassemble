@@ -1,4 +1,5 @@
 from docassemble.base.functions import word, currency_symbol, url_action, comma_and_list, server
+from docassemble.base.util import format_date
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape
 from docassemble.base.parse import Question, debug
 from docassemble.base.logger import logmessage
@@ -530,7 +531,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     # if status.question.script is not None:
     #     status.extra_scripts.append(status.question.script)
     if status.question.interview.question_back_button and status.question.can_go_back and steps > 1:
-        back_button = '\n                  <button class="btn btn-secondary ' + BUTTON_CLASS + ' " id="questionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '><i class="fas fa-chevron-left"></i>' + status.question.back() + '</button>'
+        back_button = '\n                  <button class="btn btn-secondary ' + BUTTON_CLASS + ' " id="questionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '><i class="fas fa-chevron-left"></i> ' + status.question.back() + '</button>'
     else:
         back_button = ''
     if status.question.interview.question_help_button and len(status.helpText) and status.question.helptext is not None:
@@ -905,6 +906,18 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if field.datatype == 'date':
                     validation_rules['rules'][the_saveas]['date'] = True
                     validation_rules['messages'][the_saveas]['date'] = word("You need to enter a valid date.")
+                    if hasattr(field, 'extras') and 'min' in field.extras and 'min' in status.extras and 'max' in field.extras and 'max' in status.extras:
+                        validation_rules['rules'][the_saveas]['minmaxdate'] = [status.extras['min'][field.number], status.extras['max'][field.number]]
+                        validation_rules['messages'][the_saveas]['minmaxdate'] = word("You need to enter a date between %s and %s") % (format_date(status.extras['min'][field.number], format='short'), format_date(status.extras['max'][field.number], format='short'))
+                    else:
+                        for key in ['min', 'max']:
+                            if hasattr(field, 'extras') and key in field.extras and key in status.extras:
+                                #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
+                                validation_rules['rules'][the_saveas][key + 'date'] = status.extras[key][field.number]
+                                if key == 'min':
+                                    validation_rules['messages'][the_saveas][key + 'date'] = word("You need to enter a date on or after") + " " + format_date(status.extras[key][field.number], format='short')
+                                elif key == 'max':
+                                    validation_rules['messages'][the_saveas][key + 'date'] = word("You need to enter a date on or before") + " " + format_date(status.extras[key][field.number], format='short')
                 if field.datatype == 'time':
                     validation_rules['rules'][the_saveas]['time'] = True
                     validation_rules['messages'][the_saveas]['time'] = word("You need to enter a valid time.")
@@ -1611,95 +1624,6 @@ def add_validation(extra_scripts, validation_rules, field_error):
         error_show = "\n  validator.showErrors(" + json.dumps(error_mess) + ");"
     extra_scripts.append("""<script>
   var validation_rules = """ + json.dumps(validation_rules) + """;
-  $.validator.setDefaults({
-    highlight: function(element) {
-        $(element).closest('.form-group').addClass('has-error');
-    },
-    unhighlight: function(element) {
-        $(element).closest('.form-group').removeClass('has-error');
-    },
-    errorElement: 'span',
-    errorClass: 'help-block',
-    errorPlacement: function(error, element) {
-        var elementName = $(element).attr("name");
-        var lastInGroup = $.map(validation_rules['groups'], function(thefields, thename){
-          var fieldsArr;
-          if (thefields.indexOf(elementName) >= 0) {
-            fieldsArr = thefields.split(" ");
-            return fieldsArr[fieldsArr.length - 1];
-          }
-          else {
-            return null;
-          }
-        })[0];
-        if (element.hasClass('input-embedded')){
-          error.insertAfter(element);
-        }
-        else if (element.hasClass('file-embedded')){
-          error.insertAfter(element);
-        }
-        else if (element.hasClass('radio-embedded')){
-          element.parent().append(error);
-        }
-        else if (element.hasClass('checkbox-embedded')){
-          element.parent().append(error);
-        }
-        else if (element.hasClass('uncheckable') && lastInGroup){
-          $("input[name='" + lastInGroup + "']").parent().append(error);
-        }
-        else if (element.parent().hasClass('combobox-container')){
-          error.insertAfter(element.parent());
-        }
-        else if (element.hasClass('dafile')){
-          var fileContainer = $(element).parents(".file-input").first();
-          if (fileContainer.length > 0){
-            $(fileContainer).append(error);
-          }
-          else{
-            error.insertAfter(element.parent());
-          }
-        }
-        else if (element.parent('.input-group').length) {
-          error.insertAfter(element.parent());
-        }
-        else if (element.hasClass('labelauty')){
-          var choice_with_help = $(element).parents(".choicewithhelp").first();
-          if (choice_with_help.length > 0){
-            $(choice_with_help).parent().append(error);
-          }
-          else{
-            element.parent().append(error);
-          }
-        }
-        else if (element.hasClass('non-nota-checkbox')){
-          element.parent().append(error);
-        }
-        else {
-          error.insertAfter(element);
-        }
-    }
-  });
-  $.validator.addMethod('checkone', function(value, element, params){
-    var number_needed = params[0];
-    var css_query = params[1];
-    if ($(css_query).length >= number_needed){
-      return true;
-    }
-    else{
-      return false;
-    }
-  }, """ + json.dumps(word("Please check at least one.")) + """);
-  $.validator.addMethod('checkbox', function(value, element, params){
-    if ($(element).attr('name') != '_ignore' + params[0]){
-      return true;
-    }
-    if ($('.dafield' + params[0] + ':checked').length > 0){
-      return true;
-    }
-    else{
-      return false;
-    }
-  }, """ + json.dumps(word("Please select one.")) + """);
   validation_rules.submitHandler = daValidationHandler;
   if ($("#daform").length > 0){
     //console.log("Running validator")

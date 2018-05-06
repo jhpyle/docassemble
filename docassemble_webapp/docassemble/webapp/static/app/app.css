@@ -243,6 +243,9 @@ a.backbuttoncolor:focus {
     .datext-right {
 	min-height: 1.5rem;
     }
+    .file-input-ajax-new .file-preview {
+	display: none;
+    }
 }
 
 input[type="text"],
@@ -1921,3 +1924,4 @@ div.constraintlist div + div {
 .to-labelauty {
     display: none;
 }
+

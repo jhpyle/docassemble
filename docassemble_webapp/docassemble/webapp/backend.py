@@ -192,7 +192,21 @@ cloud = docassemble.webapp.cloud.get_cloud()
 
 import docassemble.webapp.google_api
 
+cloud_cache = dict()
+
+def cloud_custom(provider, config):
+    config_id = str(provider) + str(config)
+    if config_id in cloud_cache:
+        return cloud_cache[config_id]
+    the_config = daconfig.get(config, None)
+    if the_config is None or type(the_config) is not dict:
+        logmessage("cloud_custom: invalid cloud configuration")
+        return None
+    cloud_cache[config_id] = docassemble.webapp.cloud.get_custom_cloud(provider, the_config)
+    return cloud_cache[config_id]
+
 docassemble.base.functions.update_server(cloud=cloud,
+                                         cloud_custom=cloud_custom,
                                          google_api=docassemble.webapp.google_api)
 
 initial_dict = dict(_internal=dict(progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict(), nav=docassemble.base.functions.DANav())
@@ -256,6 +270,8 @@ def unpad(the_string):
 def encrypt_phrase(phrase, secret):
     iv = current_app.secret_key[:16]
     encrypter = AES.new(secret, AES.MODE_CBC, iv)
+    if isinstance(phrase, unicode):
+        phrase = phrase.encode('utf8')
     return iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64').decode()
 
 def pack_phrase(phrase):
@@ -263,7 +279,7 @@ def pack_phrase(phrase):
 
 def decrypt_phrase(phrase_string, secret):
     decrypter = AES.new(secret, AES.MODE_CBC, str(phrase_string[:16]))
-    return unpad(decrypter.decrypt(codecs.decode(phrase_string[16:], 'base64')))
+    return unpad(decrypter.decrypt(codecs.decode(phrase_string[16:], 'base64'))).decode('utf8')
 
 def unpack_phrase(phrase_string):
     return codecs.decode(phrase_string, 'base64')

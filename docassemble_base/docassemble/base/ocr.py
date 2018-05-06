@@ -157,7 +157,7 @@ def ocr_page(doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resolution=300, p
     final_image.save(file_to_read, "PNG")
     file_to_read.seek(0)
     try:
-        text = subprocess.check_output(['tesseract', 'stdin', 'stdout', '-l', str(lang), '-psm', str(psm)], stdin=file_to_read, stderr=subprocess.STDOUT)
+        text = subprocess.check_output(['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], stdin=file_to_read)
     except subprocess.CalledProcessError as err:
         raise Exception("ocr_page: failed to list available languages: " + str(err) + " " + str(err.output))
     sys.stderr.write("ocr_page finished with page " + str(page) + "\n")

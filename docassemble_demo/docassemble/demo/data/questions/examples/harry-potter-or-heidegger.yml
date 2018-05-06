@@ -1,0 +1,63 @@
+metadata:
+  title: Harry Potter or Heidegger?
+  short title: HP or H
+  example start: 2
+  example end: 9
+  documentation: "https://docassemble.org/docs/functions.html#ocr_file"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  the_file.set_attributes(persistent=True)
+---
+mandatory: True
+code: |
+  the_task
+  if not the_task.ready():
+    waiting_screen
+  ml = SimpleTextMachineLearner('hp_h')
+  ml.save_for_classification(phrase, info=the_file)
+  predictions = ml.predict(phrase)
+---
+question: |
+  Upload a page
+subquestion: |
+  Please upload or take a
+  picture of a page from Harry Potter
+  or Heidegger.
+fields:
+  - no label: the_file
+    datatype: file
+---
+code: |
+  the_task = background_action('ocr_start', None)
+---
+event: ocr_start
+code: |
+  background_response_action('ocr_finish', text=ocr_file(the_file))
+---
+event: ocr_finish
+code: |
+  phrase = action_argument('text')
+  background_response()
+---
+event: waiting_screen
+reload: 5
+question: |
+  Please wait.
+---
+mandatory: True
+question: |
+  Your text
+subquestion: |
+  % if len(predictions):
+  Your document appears to be
+  from ${ predictions[0] }.
+  % else:
+  There is not enough training data
+  to make a determination yet.
+  % endif
+buttons:
+  - Restart: restart

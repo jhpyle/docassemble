@@ -1924,7 +1924,7 @@ class DAFile(DAObject):
         if not os.path.isfile(the_path):
             raise Exception("File " + str(the_path) + " does not exist yet.")
         with open(the_path, 'rU') as f:
-            if auto_decode and hasattr(self, 'mimetype') and self.mimetype.startswith('text') or self.mimetype in ('application/json', 'application/javascript'):
+            if auto_decode and hasattr(self, 'mimetype') and (self.mimetype.startswith('text') or self.mimetype in ('application/json', 'application/javascript')):
                 return(f.read().decode('utf8'))
             else:
                 return(f.read())
@@ -2164,6 +2164,10 @@ class DAFileList(DAList):
                 element.set_attributes(**kwargs)
 
 class DAStaticFile(DAObject):
+    def init(self, *pargs, **kwargs):
+        if 'filename' in kwargs and 'mimetype' not in kwargs and 'extension' not in kwargs:
+            self.extension, self.mimetype = server.get_ext_and_mimetype(kwargs['filename'])
+        return super(DAStaticFile, self).init(*pargs, **kwargs)
     def show(self, width=None):
         """Inserts markup that displays the file.  Takes an optional keyword
         argument width.
@@ -2176,6 +2180,16 @@ class DAStaticFile(DAObject):
                 return('[FILE ' + str(self.filename) + ', ' + str(width) + ']')
             else:
                 return('[FILE ' + str(self.filename) + ']')
+    def slurp(self, auto_decode=True):
+        """Returns the contents of the file."""
+        the_path = self.path()
+        if not os.path.isfile(the_path):
+            raise Exception("File " + str(the_path) + " does not exist.")
+        with open(the_path, 'rU') as f:
+            if auto_decode and hasattr(self, 'mimetype') and (self.mimetype.startswith('text') or self.mimetype in ('application/json', 'application/javascript')):
+                return(f.read().decode('utf8'))
+            else:
+                return(f.read())
     def path(self):
         """Returns a path and filename at which the file can be accessed.
 

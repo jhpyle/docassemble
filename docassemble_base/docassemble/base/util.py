@@ -97,26 +97,52 @@ def set_redis_server(redis_host):
 
 class DACloudStorage(DAObject):
     """Returns an object that can be used to interface with S3 or Azure."""
+    def init(self, *pargs, **kwargs):
+        if 'provider' in kwargs and 'config' in kwargs:
+            self.custom = True
+            self.provider = kwargs['provider']
+            self.config = kwargs['config']
+            del kwargs['provider']
+            del kwargs['config']
+            server.cloud_custom(self.provider, self.config)
+        else:
+            self.custom = False
+        return super(DACloudStorage, self).init(*pargs, **kwargs)
     @property
     def conn(self):
         """This property returns a boto3.resource('s3') or BlockBlobService() object."""
-        return server.cloud.conn
+        if self.custom:
+            return server.cloud_custom(self.provider, self.config).conn
+        else:
+            return server.cloud.conn
     @property
     def client(self):
         """This property returns a boto3.client('s3') object."""
-        return server.cloud.client
+        if self.custom:
+            return server.cloud_custom(self.provider, self.config).client
+        else:
+            return server.cloud.client
     @property
     def bucket(self):
         """This property returns a boto3 Bucket() object."""
-        return server.cloud.bucket
+        if self.custom:
+            return server.cloud_custom(self.provider, self.config).bucket
+        else:
+            return server.cloud.bucket
     @property
     def bucket_name(self):
         """This property returns the name of the Amazon S3 bucket."""
-        return server.cloud.bucket_name
+        if self.custom:
+            return server.cloud_custom(self.provider, self.config).bucket_name
+        else:
+            return server.cloud.bucket_name
     @property
     def container_name(self):
         """This property returns the name of the Azure Blob Storage container."""
-        return server.cloud.container
+        if self.custom:
+            return server.cloud_custom(self.provider, self.config).container
+        else:
+            return server.cloud.container
 
 class DAGoogleAPI(DAObject):
     def api_credentials(self, scope):
@@ -1914,7 +1940,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
         final_image.save(file_to_read, "PNG")
         file_to_read.seek(0)
         try:
-            text = subprocess.check_output(['tesseract', 'stdin', 'stdout', '-l', str(lang), '-psm', str(psm)], stdin=file_to_read, stderr=subprocess.STDOUT)
+            text = subprocess.check_output(['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], stdin=file_to_read)
         except subprocess.CalledProcessError as err:
             raise Exception("ocr_file: failed to list available languages: " + str(err) + " " + str(err.output))
         page_text.append(text.decode('utf8'))

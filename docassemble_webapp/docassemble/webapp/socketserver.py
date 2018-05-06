@@ -150,6 +150,8 @@ def chat_log(message):
     if temp_user_id is not None:
         temp_user_id = int(temp_user_id)
     secret = request.cookies.get('secret', None)
+    if secret is not None:
+        secret = str(secret)    
     #sys.stderr.write("chat_log: " + str(repr(user_id)) + " " + str(repr(temp_user_id)) + "\n")
     messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, user_id, temp_user_id)
     socketio.emit('chat_log', {'data': messages}, namespace='/interview', room=request.sid)
@@ -178,6 +180,8 @@ def chat_message(data):
     yaml_filename = session.get('i', None)
     encrypted = session.get('encrypted', True)
     secret = request.cookies.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
     if encrypted:
         message = encrypt_phrase(data['data'], secret)
     else:
@@ -243,6 +247,8 @@ def interview_connect():
             secret = request.cookies.get('secret', None)
         else:
             secret = None
+        if secret is not None:
+            secret = str(secret)
         if user_dict is None:
             sys.stderr.write("user_dict did not exist.\n")
             socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
@@ -336,12 +342,15 @@ def get_dict():
     session_id = session.get('uid', None)
     yaml_filename = session.get('i', None)
     secret = request.cookies.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
     if session_id is None or yaml_filename is None:
         sys.stderr.write('Attempt to get dictionary where session not defined\n')
         return None
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
-    except:
+    except Exception as err:
+        sys.stderr.write('get_dict: attempt to get dictionary failed: ' + unicode(err) + '\n')
         return None
     return user_dict
 
@@ -349,12 +358,15 @@ def get_dict_encrypt():
     session_id = session.get('uid', None)
     yaml_filename = session.get('i', None)
     secret = request.cookies.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
     if session_id is None or yaml_filename is None:
         sys.stderr.write('Attempt to get dictionary where session not defined\n')
         return None, None
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
-    except:
+    except Exception as err:
+        sys.stderr.write('get_dict_encrypt: attempt to get dictionary failed: ' + unicode(err) + '\n')
         return None, None
     return user_dict, is_encrypted
 
@@ -696,12 +708,13 @@ def monitor_chat_message(data):
     if sid is None:
         sys.stderr.write("No sid for monitor chat message with key " + str(key) + "\n")
         return
-
     secret = secrets.get(sid, None)
+    if secret is not None:
+        secret = str(secret)
     try:
         steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
-    except:
-        sys.stderr.write("Could not get dictionary for monitor_chat_message\n")
+    except Exception as err:
+        sys.stderr.write("monitor_chat_message: could not get dictionary: " + unicode(err) + "\n")
         return
     nowtime = datetime.datetime.utcnow()
     if encrypted:
@@ -753,12 +766,13 @@ def monitor_chat_log(data):
     if sid is None:
         sys.stderr.write("No sid for monitor chat message with key " + str(key) + "\n")
         return
-
     secret = secrets.get(sid, None)
+    if secret is not None:
+        secret = str(secret)
     try:
         steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
-    except:
-        sys.stderr.write("Could not get dictionary for monitor_chat_message\n")
+    except Exception as err:
+        sys.stderr.write("monitor_chat_log: could not get dictionary: " + unicode(err) + "\n")
         return
     chat_mode = user_dict['_internal']['livehelp']['mode']
     m = re.match('t([0-9]+)', chat_user_id)

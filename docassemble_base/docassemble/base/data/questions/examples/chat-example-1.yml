@@ -1,5 +1,6 @@
 metadata:
   title: Complaint for Child Support
+  short title: Complaint
   example start: 2
   example end: 3
   documentation: "https://docassemble.org/docs/livehelp.html#chat"

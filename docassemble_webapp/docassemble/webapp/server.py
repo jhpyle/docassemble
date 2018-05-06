@@ -86,8 +86,8 @@ code: |
     benefits = "Medicaid"
 """
 
-ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python", "application/json": "json", "text/css": "css"}
-ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python", "json": "json", "css": "css"}
+ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python", "application/json": "json", "text/css": "css", 'text/html': 'htmlmixed'}
+ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python", "json": "json", "css": "css", "html": "htmlmixed"}
 
 default_yaml_filename = daconfig.get('default interview', None)
 final_default_yaml_filename = daconfig.get('default interview', 'docassemble.demo:data/questions/questions.yml')
@@ -7223,6 +7223,126 @@ def index():
           }
         }
       }
+      $.validator.setDefaults({
+        highlight: function(element) {
+            $(element).closest('.form-group').addClass('has-error');
+        },
+        unhighlight: function(element) {
+            $(element).closest('.form-group').removeClass('has-error');
+        },
+        errorElement: 'span',
+        errorClass: 'help-block',
+        errorPlacement: function(error, element) {
+            var elementName = $(element).attr("name");
+            var lastInGroup = $.map(validation_rules['groups'], function(thefields, thename){
+              var fieldsArr;
+              if (thefields.indexOf(elementName) >= 0) {
+                fieldsArr = thefields.split(" ");
+                return fieldsArr[fieldsArr.length - 1];
+              }
+              else {
+                return null;
+              }
+            })[0];
+            if (element.hasClass('input-embedded')){
+              error.insertAfter(element);
+            }
+            else if (element.hasClass('file-embedded')){
+              error.insertAfter(element);
+            }
+            else if (element.hasClass('radio-embedded')){
+              element.parent().append(error);
+            }
+            else if (element.hasClass('checkbox-embedded')){
+              element.parent().append(error);
+            }
+            else if (element.hasClass('uncheckable') && lastInGroup){
+              $("input[name='" + lastInGroup + "']").parent().append(error);
+            }
+            else if (element.parent().hasClass('combobox-container')){
+              error.insertAfter(element.parent());
+            }
+            else if (element.hasClass('dafile')){
+              var fileContainer = $(element).parents(".file-input").first();
+              if (fileContainer.length > 0){
+                $(fileContainer).append(error);
+              }
+              else{
+                error.insertAfter(element.parent());
+              }
+            }
+            else if (element.parent('.input-group').length) {
+              error.insertAfter(element.parent());
+            }
+            else if (element.hasClass('labelauty')){
+              var choice_with_help = $(element).parents(".choicewithhelp").first();
+              if (choice_with_help.length > 0){
+                $(choice_with_help).parent().append(error);
+              }
+              else{
+                element.parent().append(error);
+              }
+            }
+            else if (element.hasClass('non-nota-checkbox')){
+              element.parent().append(error);
+            }
+            else {
+              error.insertAfter(element);
+            }
+        }
+      });
+      $.validator.addMethod('checkone', function(value, element, params){
+        var number_needed = params[0];
+        var css_query = params[1];
+        if ($(css_query).length >= number_needed){
+          return true;
+        }
+        else{
+          return false;
+        }
+      }, """ + json.dumps(word("Please check at least one.")) + """);
+      $.validator.addMethod('checkbox', function(value, element, params){
+        if ($(element).attr('name') != '_ignore' + params[0]){
+          return true;
+        }
+        if ($('.dafield' + params[0] + ':checked').length > 0){
+          return true;
+        }
+        else{
+          return false;
+        }
+      }, """ + json.dumps(word("Please select one.")) + """);
+      $.validator.addMethod('mindate', function(value, element, params){
+        try {
+          var date = new Date(value);
+          var comparator = new Date(params);
+          if (date >= comparator) {
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      }, """ + json.dumps(word("Please enter a valid date.")) + """);
+      $.validator.addMethod('maxdate', function(value, element, params){
+        try {
+          var date = new Date(value);
+          var comparator = new Date(params);
+          if (date <= comparator) {
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      }, """ + json.dumps(word("Please enter a valid date.")) + """);
+      $.validator.addMethod('minmaxdate', function(value, element, params){
+        try {
+          var date = new Date(value);
+          var before_comparator = new Date(params[0]);
+          var after_comparator = new Date(params[1]);
+          if (date >= before_comparator && date <= after_comparator) {
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      }, """ + json.dumps(word("Please enter a valid date.")) + """);
     </script>"""
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language
@@ -9865,7 +9985,7 @@ def update_package():
         }
         $.get(""" + json.dumps(url_for('get_git_branches')) + """, { url: github_url }, "json")
         .done(function(data){
-          console.log(data);
+          //console.log(data);
           if (data.success){
             var n = data.result.length;
             if (n > 0){
@@ -11372,7 +11492,7 @@ def playground_files():
     mode = "yaml"
     for a_file in files:
         extension, mimetype = get_ext_and_mimetype(a_file)
-        if (mimetype and mimetype in ok_mimetypes) or (extension and extension in ok_extensions):
+        if (mimetype and mimetype in ok_mimetypes) or (extension and extension in ok_extensions) or (mimetype and mimetype.startswith('text')):
             if section == 'sources' and re.match(r'ml-.*\.json', a_file):
                 trainable_files[a_file] = re.sub(r'^ml-|\.json$', '', a_file)
             else:
@@ -11407,6 +11527,8 @@ def playground_files():
             mode = ok_mimetypes[mimetype]
         elif (extension and extension in ok_extensions):
             mode = ok_extensions[extension]
+        elif (mimetype and mimetype.startswith('text')):
+            mode = 'null'
     if mode != 'markdown':
         active_file = None
     formtwo.original_file_name.data = the_file
@@ -11573,7 +11695,16 @@ def playground_files():
         any_files = False
     #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
     back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="playground-back text-muted backbuttoncolor" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
-    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + ('damarkdown' if mode == 'markdown' else mode) + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
+    cm_mode = ''
+    if mode == 'null':
+        modes = []
+    elif mode == 'htmlmixed':
+        modes = ['css', 'xml', 'htmlmixed']
+    else:
+        modes = [mode]
+    for the_mode in modes:
+        cm_mode += '\n    <script src="' + url_for('static', filename="codemirror/mode/" + the_mode + "/" + ('damarkdown' if the_mode == 'markdown' else the_mode) + ".js") + '"></script>'
+    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>' + cm_mode + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
 
 @app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
 @login_required
@@ -11657,7 +11788,7 @@ def get_git_branches():
     repo_name = re.sub(r'.*@github.com:', '', repo_name)
     repo_name = re.sub(r'.git$', '', repo_name)
     try:
-        if github_auth:
+        if github_auth and access_token_part == '':
             storage = RedisCredStorage(app='github')
             credentials = storage.get()
             if not credentials or credentials.invalid:
@@ -11666,10 +11797,22 @@ def get_git_branches():
         else:
             http = httplib2.Http()
         the_url = "https://api.github.com/repos/" + repo_name + '/branches' + access_token_part
+        branches = list()
         resp, content = http.request(the_url, "GET")
         if int(resp['status']) == 200:
-            return jsonify(dict(success=True, result=json.loads(content)))
-        return jsonify(dict(success=False, reason=repo_name + " fetch failed"))
+            branches.extend(json.loads(content))
+            while True:
+                next_link = get_next_link(resp)
+                if next_link:
+                    resp, content = http.request(next_link, "GET")
+                    if int(resp['status']) != 200:
+                        return jsonify(dict(success=False, reason=repo_name + " fetch failed"))
+                    else:
+                        branches.extend(json.loads(content))
+                else:
+                    break
+            return jsonify(dict(success=True, result=branches))
+        return jsonify(dict(success=False, reason=the_url + " fetch failed on first try; got " + str(resp['status'])))
     except Exception as err:
         return jsonify(dict(success=False, reason=str(err)))
     return jsonify(dict(success=False))
