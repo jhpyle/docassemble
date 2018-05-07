@@ -1153,7 +1153,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += status.submit
             output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
             output += '                <div>' + back_button + '\n'
-            output += '                  <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>\n'
+            output += '                  <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '\n'
             output += '                </div>\n'
         else:
             output += status.submit

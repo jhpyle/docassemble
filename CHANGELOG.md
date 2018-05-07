@@ -11,6 +11,8 @@
   Files folder of the Playground.
 ### Fixed
 - List of branches in pull-down cut off at a certain length.
+- Live Help had problems with encryption.
+- Missing help button on `field` with `choices`.
 
 ## [0.2.54] - 2018-05-05
 ### Fixed
