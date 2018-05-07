@@ -4,6 +4,28 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.55](https://github.com/jhpyle/docassemble/releases/tag/v0.2.55) - 2018-05-06
+
+### Changed
+- The `DACloudStorage` object can now be initialized to use
+  Configuration directives other than `s3` and `azure`.
+- The `min` and `max` field modifiers now work with `datatype: date`.
+
+### Added
+- The `slurp()` method for `DAStaticFile` objects.
+- Support for editing HTML and other text file formats in the Static
+  Files folder of the Playground.
+
+### Fixed
+- List of branches in pull-down cut off at a certain length.
+- Live Help had problems with encryption.
+- Missing help button on `field` with `choices`.
+
+## [0.2.54](https://github.com/jhpyle/docassemble/releases/tag/v0.2.54) - 2018-05-05
+
+### Fixed
+- Bug in `set_info()`.
+
 ## [0.2.53](https://github.com/jhpyle/docassemble/releases/tag/v0.2.53) - 2018-05-02
 
 ### Changed
@@ -18,6 +40,7 @@ short_title: Change Log
 ### Fixed
 - Update button in `/updatepackage` reverted package to `master`
   branch.
+- Unicode problem in `/logs`.
 
 ## [0.2.52](https://github.com/jhpyle/docassemble/releases/tag/v0.2.52) - 2018-05-01
 

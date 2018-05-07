@@ -9184,6 +9184,38 @@
     What is your favorite vegetable?
   fields:
     - Vegetable: favorite_vegetable
+"interview_in_interview": "objects:\n  - user_global: Individual\n  - user: Individual\n\
+  \  - endpoint: DADict\n---\nmandatory: True\ncode: |\n  while True:\n    del endpoint[user.goal]\n\
+  \    del user\n---\nquestion: |\n  What interview would you like to complete?\n\
+  field: user.goal\nchoices:\n  - Fruit quiz: fruit\n  - Vegetable quiz: vegetable\n\
+  \  - Legume quiz: legume\n---\ncode: |\n  user.name.first = user_global.name.first\n\
+  \  user.name.last = user_global.name.last\n---\ncode: |\n  user.age_category = user_global.age_category\n\
+  ---\nquestion: |\n  What is your name?\nfields:\n  - First name: user_global.name.first\n\
+  \  - Last name: user_global.name.last\n---\nquestion: |\n  How old are you, ${ user\
+  \ }?\nfield: user_global.age_category\nchoices:\n  - \"Spring chicken\"\n  - \"\
+  The music I like isn't cool anymore\"\n  - \"Wiser than most\"\n---\nquestion: |\n\
+  \  Fruit quiz results\nsubquestion: |\n  Your favorite fruit is\n  ${ user.favorite_fruit\
+  \ }.\nfield: endpoint['fruit']\ncontinue button label: Try again\n---\nquestion:\
+  \ |\n  Vegetable quiz results\nsubquestion: |\n  % if user.age_category == 'Spring\
+  \ chicken':\n  You are still growing, ${ user }, so you should eat lots of vegetables.\n\
+  \  % endif\n  \n  Your favorite vegetable is\n  ${ user.favorite_vegetable }.\n\
+  field: endpoint['vegetable']\ncontinue button label: Try again\n---\nquestion: |\n\
+  \  Legume quiz results\nsubquestion: |\n  % if user.knows_legumes:\n  ${ user }\
+  \ definitely knows what a legume is.\n  % else:\n  You don't know what a legume\
+  \ is.\n  % endif\n  \n  % if user.age_category == 'Spring chicken':\n  You are still\
+  \ growing, ${ user }, so you should eat lots of legumes.\n  % endif\n  \n  Your\
+  \ favorite legume is\n  ${ user.favorite_legume }.\n\nfield: endpoint['legume']\n\
+  continue button label: Try again\n---\nquestion: |\n  What is your favorite fruit?\n\
+  fields:\n  Favorite fruit: user.favorite_fruit\n---\nquestion: |\n  What is your\
+  \ favorite vegetable?\nfields:\n  Favorite vegetable: user.favorite_vegetable\n\
+  ---\nquestion: |\n  What is your favorite legume?\nfields:\n  Favorite legume: user.favorite_legume\n\
+  ---\nquestion: |\n  Which of these are legumes?\nfields:\n  - no label: user.legume_picks\n\
+  \    datatype: checkboxes\n    choices:\n      - Peas\n      - Lentils\n      -\
+  \ Mango\n      - String beans\n      - Potato\n      - Peanut\n---\ncode: |\n  if\
+  \ user.legume_picks['Peas'] \\\n     and user.legume_picks['Lentils'] \\\n     and\
+  \ user.legume_picks['String beans'] \\\n     and user.legume_picks['Peanut'] \\\n\
+  \     and not user.legume_picks['Mango'] \\\n     and not user.legume_picks['Potato']:\n\
+  \    user.knows_legumes = True\n  else:\n    user.knows_legumes = False"
 "multi-user": "modules:\n  - docassemble.base.util\n---\nobjects:\n  firstparty: Individual\n\
   \  secondparty: Individual\n---\ninitial: true\ncode: |\n  multi_user = True\n \
   \ if user_logged_in():\n    if not defined('firstparty.email'):\n      firstparty.email\
@@ -9468,6 +9500,9 @@
   \ ['-v'])\n---\nmandatory: True\nquestion: |\n  Result of unit tests\nsubquestion:\
   \ |\n  % if return_code == 0:\n  Command succeeded.\n  % else:\n  Command failed!\n\
   \  % endif\n  \n  ${ indent(output) }"
+"save_object": |-
+  modules:
+    - docassemble.base.util
 "someone-already-mentioned": |-
   objects:
     cook: Individual
@@ -9615,4 +9650,10 @@
     - Tires: number_of_tires
       datatype: integer
       validate: is_multiple_of_four
+"wc_common": |-
+  objects:
+    - user: Individual
+"wc_side_of_bed": |-
+  include:
+    - wc_common.yml
 

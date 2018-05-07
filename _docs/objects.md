@@ -1214,6 +1214,17 @@ argument, `width`.
 When included in a [Mako] template, a `DAStaticFile` object will effectively
 call `show()` on itself.
 
+<a name="DAStaticFile.slurp"></a>The `.slurp()` method reads the contents of
+the file and returns them as a text value.
+
+{% highlight python %}
+contents = the_file.slurp()
+{% endhighlight %}
+
+By default, the `.slurp()` method attempts to automatically decode
+text files using the `utf8` encoding.  To turn off this automatic
+decoding feature, call it with `.slurp(auto_decode=False)`.
+
 <a name="DAStaticFile.url_for"></a>The `.url_for()` method returns a
 URL at which the file can be accessed.
 
@@ -1438,18 +1449,50 @@ If you have enabled [`azure`] in your [Configuration], then:
   according to the [`azure`] configuration.
 * `cloud.container_name` will return the name of the container defined
   in the [`azure`] configuration.
-  
-If you have not initialized [`s3`] or [`azure`], then `cloud` will be `None`.
+
+In some circumstances, you might not be using [`s3`] or [`azure`] for
+persistent storage, or you may wish to access a different bucket or
+container.  In that case, you can initialize the `DACloudStorage`
+object so that it uses a different directive in the [Configuration].
+
+For example, if you have an [S3 bucket] called `mybucket-example-com`,
+and your [Configuration] contains the following:
+
+{% highlight yaml %}
+mybucket:
+  access key id: AGJBRKYM3T4FY7HYWNBQ
+  secret access key: BkwEQeg+yeC3EJ2MoCDwY8jbiWrtKdLf4q3++EBd
+  bucket: mybucket-example-com
+{% endhighlight %}
+
+Then you can initialize a `DACloudStorage` object as follows:
+
+{% highlight yaml %}
+objects:
+  - cloud: DACloudStorage.using(provider='s3', config='mybucket')
+{% endhighlight %}
+
+Then, you can use the `cloud` object to access the contents of the
+`mybucket-example-com` bucket in your interview.  For example:
+
+{% highlight yaml %}
+question: |
+  How to seek help
+subquestion: |
+  ${ cloud.bucket.Object('markdown_files/help.md').get()['Body'].read().decode('utf-8') }
+{% endhighlight %}
+
+In this example, the `subquestion` incorporates the contents of a
+file called `help.md` located in the `markdown_files` folder of the
+`mybucket-example-com` bucket.
 
 For more information on how to use these objects, see the
 documentation for [boto3] and [azure.storage.blob].
 
 The `DACloudStorage` object simply provides a convenient way to obtain
-an authenticated API connection to [Amazon S3] or [Azure blob storage]
-if you are already using one of these systems for [data storage].
-
-If you do not have [`s3`] or [`azure`] configured, you can still use
-the [boto3] and [azure.storage.blob] packages; the only added
+an authenticated API connection to [Amazon S3] or [Azure blob
+storage].  If you do not use a `DACloudStorage` object, you can still
+use the [boto3] and [azure.storage.blob] packages; the only added
 complication is that you have to handle authentication yourself.  You
 can use the [`get_config()`] function to retrieve custom values from
 your [Configuration].

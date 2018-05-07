@@ -896,6 +896,83 @@ You might also offer these hyperlinks in the menu, using the
 You can also use the [`dispatch`] configuration directive to
 provide a list of interviews available on your server.
 
+<a name="subinterview"></a>Another way to offer an "interview inside
+an interview" is to populate variables and then delete them.
+
+{% include demo-side-by-side.html demo="interview_in_interview" %}
+
+The central logic of this interview is in the following [`code`]
+block:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  while True:
+    del endpoint[user.goal]
+    del user
+{% endhighlight %}
+
+This is concise but cryptic, so it may be easier to understand what
+the interview is doing by writing out the variables for which [Python]
+will seek definitions, in the order in which [Python] will seek them:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  while True:
+    user.goal
+    endpoint[user.goal]
+    del endpoint[user.goal]
+    del user
+{% endhighlight %}
+
+First, the interview asks for the goal (`user.goal`) -- whether the
+user wants do an interview about fruit, vegetables, or legumes.
+
+Next, it seeks an endpoint for that goal -- a variable like
+`endpoint['vegetable']`.  This results in the "sub-interview" being
+conducted.  Once that endpoint is reached (e.g., when
+`endpoint['vegetable']` is set to `True` by the final question of the
+"sub-interview"), then the variables `endpoint['vegetable']` and
+`user` are deleted (using the [Python] `del` statement).  Then the
+logic loops back around to where it began.  At this point, `user.goal`
+will be undefined, because the entire variable `user` had been
+deleted.  So the user will be presented with the "fruit, vegetable, or
+legume" choice again, and can choose to repeat the same
+"sub-interview," or start a different "sub-interview."
+
+Note that an interview like this is different from an interview that
+concludes with a [restart button].  While a [restart button] wipes out
+all of the user's answers, this interview retains some of the
+information that was gathered.  It does so by using two objects to
+track information about the user: information that is permanent is
+stored in the `user_global` object, and information that is temporary
+is stored in the `user` object.
+
+Note that the interview author only uses the object `user` when
+writing [`question`]s that refer to characteristics of the user.  The
+following [`code`] blocks assert that information about the `user`'s
+name and age should by defined by reference to attributes of the
+`user_global` object:
+
+{% highlight yaml %}
+code: |
+  user.name.first = user_global.name.first
+  user.name.last = user_global.name.last
+---
+code: |
+  user.age_category = user_global.age_category
+{% endhighlight %}
+
+This means that whenever the interview needs the definition of
+`user.name.first`, it will actually seek out `user_global.name.first`.
+If the user has been asked for their name before, no question needs to
+be asked; the [`code`] will take care of defining `user.name.first`
+and `user.name.last`.  But other attributes, like
+`user.favorite_fruit`, are lost when the interview logic does `del
+user`.  As a result, the interview will remember some answers and
+forget others.
+
 # <a name="bplogic"></a>Best practices for interview logic and organization
 
 * Use only a single [`mandatory`]<span></span> [`code`] block for each
@@ -974,3 +1051,4 @@ provide a list of interviews available on your server.
 [`order` initial block]: {{ site.baseurl }}/docs/initial.html#order
 [`if` modifier]: {{ site.baseurl}}/docs/modifiers.html#if
 [`scan for variables` modifier]: {{ site.baseurl}}/docs/modifiers.html#scan for variables
+[restart button]: {{ site.baseurl}}/docs/questions.html#special buttons

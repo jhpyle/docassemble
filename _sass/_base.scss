@@ -556,14 +556,18 @@ div.col-md-5 > figure > pre {
     max-width: 100%;
 }
 
+.daexample {
+    position: relative;
+}		  
+
 .daexample .dafull {
     display: none;
 }
 
 .daexample:hover .dafull {
     position: absolute;
-    bottom: 15px;
-    right: 15px;
+    bottom: 0px;
+    right: 0px;
     background-color: #ddd;
     display: inline-block;
     border-radius: 4px;
