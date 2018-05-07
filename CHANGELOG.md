@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.56] - 2018-05-07
+### Changed
+- The `min` and `max` field modifiers on `datatype: date` fields now
+  accept a wider range of date formats.
+
 ## [0.2.55] - 2018-05-06
 ### Changed
 - The `DACloudStorage` object can now be initialized to use

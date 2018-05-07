@@ -1857,9 +1857,9 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
             if custom_menu:
                 navbar += custom_menu
             if not status.question.interview.options.get('hide_standard_menu', False):
-                if current_user.has_role('admin', 'developer', 'advocate'):
+                if current_user.has_role('admin', 'advocate'):
                     navbar +='<a class="dropdown-item" href="' + url_for('monitor') + '">' + word('Monitor') + '</a>'
-                if current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
+                if current_user.has_role('admin', 'developer', 'trainer'):
                     navbar +='<a class="dropdown-item" href="' + url_for('train') + '">' + word('Train') + '</a>'
                 if current_user.has_role('admin', 'developer'):
                     navbar +='<a class="dropdown-item" href="' + url_for('update_package') + '">' + word('Package Management') + '</a>'
@@ -8034,7 +8034,7 @@ def serve_uploaded_pagescreen(number, page):
 
 @app.route('/visit_interview', methods=['GET', 'POST'])
 @login_required
-@roles_required(['admin', 'developer', 'advocate'])
+@roles_required(['admin', 'advocate'])
 def visit_interview():
     i = request.args.get('i', None)
     uid = request.args.get('uid', None)
@@ -8060,7 +8060,7 @@ def visit_interview():
 
 @app.route('/observer', methods=['GET', 'POST'])
 @login_required
-@roles_required(['admin', 'developer', 'advocate'])
+@roles_required(['admin', 'advocate'])
 def observer():
     session['observer'] = 1
     i = request.args.get('i', None)
@@ -8597,7 +8597,7 @@ def observer():
 
 @app.route('/monitor', methods=['GET', 'POST'])
 @login_required
-@roles_required(['admin', 'developer', 'advocate'])
+@roles_required(['admin', 'advocate'])
 def monitor():
     if request.method == 'GET' and needs_to_change_password():
         return redirect(url_for('user.change_password', next=url_for('interview_list')))
@@ -13932,7 +13932,7 @@ def ml_prefix(the_package, the_file):
 
 @app.route('/train', methods=['GET', 'POST'])
 @login_required
-@roles_required(['admin', 'developer', 'advocate', 'trainer'])
+@roles_required(['admin', 'developer', 'trainer'])
 def train():
     the_package = request.args.get('package', None)
     the_file = request.args.get('file', None)

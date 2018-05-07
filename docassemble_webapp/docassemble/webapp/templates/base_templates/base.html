@@ -36,10 +36,10 @@
             <li class="nav-item dropdown show">
               <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ user_designator(current_user) }}</a>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                {%- if current_user.has_roles(['admin', 'developer', 'advocate']) %}
+                {%- if current_user.has_roles(['admin', 'advocate']) %}
                 <a class="dropdown-item" href="{{ url_for('monitor') }}">{{ word('Monitor') }}</a>
                 {%- endif %}
-                {%- if current_user.has_roles(['admin', 'developer', 'advocate', 'trainer']) %}
+                {%- if current_user.has_roles(['admin', 'developer', 'trainer']) %}
                 <a class="dropdown-item" href="{{ url_for('train') }}">{{ word('Train') }}</a>
                 {%- endif %}
                 {%- if current_user.has_roles(['admin', 'developer']) %}

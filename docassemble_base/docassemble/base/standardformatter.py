@@ -907,13 +907,13 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     validation_rules['rules'][the_saveas]['date'] = True
                     validation_rules['messages'][the_saveas]['date'] = word("You need to enter a valid date.")
                     if hasattr(field, 'extras') and 'min' in field.extras and 'min' in status.extras and 'max' in field.extras and 'max' in status.extras:
-                        validation_rules['rules'][the_saveas]['minmaxdate'] = [status.extras['min'][field.number], status.extras['max'][field.number]]
+                        validation_rules['rules'][the_saveas]['minmaxdate'] = [format_date(status.extras['min'][field.number], format='yyyy-MM-dd'), format_date(status.extras['max'][field.number], format='yyyy-MM-dd')]
                         validation_rules['messages'][the_saveas]['minmaxdate'] = word("You need to enter a date between %s and %s") % (format_date(status.extras['min'][field.number], format='short'), format_date(status.extras['max'][field.number], format='short'))
                     else:
                         for key in ['min', 'max']:
                             if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                                 #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
-                                validation_rules['rules'][the_saveas][key + 'date'] = status.extras[key][field.number]
+                                validation_rules['rules'][the_saveas][key + 'date'] = format_date(status.extras[key][field.number], format='yyyy-MM-dd')
                                 if key == 'min':
                                     validation_rules['messages'][the_saveas][key + 'date'] = word("You need to enter a date on or after") + " " + format_date(status.extras[key][field.number], format='short')
                                 elif key == 'max':
