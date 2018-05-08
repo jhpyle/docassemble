@@ -967,6 +967,10 @@ equivalent to writing `${ myfile.show() }` (where `myfile` is a
 <a name="DAFile.path"></a>The `.path()` method returns a complete file
 path that you can use to read the file or write to the file.
 
+<a name="DAFile.num_pages"></a>The `.num_pages()` method returns the
+number of pages in a PDF file.  If the file is not a PDF file, it
+returns 1.
+
 <a name="DAFile.url_for"></a>The `.url_for()` method returns a URL at
 which the file can be accessed.  The URL should only be used in the
 context of the user's session and the user's web browser.  For
@@ -1130,6 +1134,10 @@ modifier.
 complete file path that you can use to access the first document type
 in the collection.
 
+<a name="DAFileCollection.num_pages"></a>The `.num_pages()` method
+returns the total number of pages in the PDF file.  If there is no PDF
+file, it returns 1.
+
 <a name="DAFileCollection.show"></a>The `.show()` method inserts
 markup that displays each file in the collection as an image, or as a
 link if the file cannot be displayed as an image.  This
@@ -1161,6 +1169,10 @@ element in it.
 
 <a name="DAFileList.path"></a>The `.path()` method returns a complete
 file path that you can use to access the first file in the collection.
+
+<a name="DAFileList.num_pages"></a>The `.num_pages()` method returns the
+total number of pages in all PDF files in the list.  If a file is not a PDF file, it
+counts as 1 page.
 
 <a name="DAFileList.set_attributes"></a>The `.set_attributes()` method
 calls [`.set_attributes()`] on each of the [`DAFile`]s in the list,

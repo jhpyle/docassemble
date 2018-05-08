@@ -3309,6 +3309,12 @@ For an [API] version of this function, see [`/api/privileges`].
 
 # <a name="functions"></a>Miscellaneous functions
 
+## <a name="validation_error"></a>validation_error()
+
+The `validation_error()` function takes an error message as an
+argument and raises an exception with that error message.  This is
+primarily useful when using lambda functions inside [`validate`] code.
+
 ## <a name="server_capabilities"></a>server_capabilities()
 
 The `server_capabilities()` function returns a dictionary indicating
@@ -5829,3 +5835,4 @@ $(document).on('daPageLoad', function(){
 [`session_tags()`]: #session_tags
 [`read_records()`]: #read_records
 [`write_record()`]: #write_record
+[`validate`]: {{ site.baseurl }}/docs/fields.html#validate

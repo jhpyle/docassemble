@@ -229,8 +229,8 @@ because `mood` itself is an [object].
 
 ## <a name="train"></a>Training
 
-To train the machine learning model, select "Train" from the main menu.
-Users need to have [privileges] of `admin`, `developer`, or `trainer` in
+To train the machine learning model, select "Train" from the main
+menu.  Users need to have [privileges] of `admin` or `trainer` in
 order to access the training area.
 
 Training sets are organized by [package], then by interview, and then

@@ -4,6 +4,30 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.57](https://github.com/jhpyle/docassemble/releases/tag/v0.2.57) - 2018-05-07
+
+### Added
+- The `validation_error()` function.
+- The `num_pages()` method on `DAFile`, `DAFileList`, and
+  `DAFileCollection` objects.
+
+### Changed
+- On the mobile `signature` page, the "Clear" button is replaced with
+  a "Back" button.
+- Python `validate` code now works on document uploads.
+
+### Fixed
+- The `question back button` was missing from the buttons on the
+  desktop `signature` page.
+- Problem with spacing of the `question back button` next to other
+  buttons.
+
+## [0.2.56](https://github.com/jhpyle/docassemble/releases/tag/v0.2.56) - 2018-05-07
+
+### Changed
+- The `min` and `max` field modifiers on `datatype: date` fields now
+  accept a wider range of date formats.
+
 ## [0.2.55](https://github.com/jhpyle/docassemble/releases/tag/v0.2.55) - 2018-05-06
 
 ### Changed

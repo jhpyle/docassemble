@@ -1107,11 +1107,12 @@ adding the following to the definition of a field:
 
 {% include side-by-side.html demo="minlength" %}
 
-You can also use [Python] code to validate an input field.  To do so,
-add a `validate` directive to the field description that refers to the
-name of a [function] that returns `True` (or something that [Python]
-considers "true") if the value is valid, and `False` (or something
-that [Python] considers "not true") if the value is invalid.
+<a name="validate"></a>You can also use [Python] code to validate an
+input field.  To do so, add a `validate` directive to the field
+description that refers to the name of a [function] that returns
+`True` (or something that [Python] considers "true") if the value is
+valid, and `False` (or something that [Python] considers "not true")
+if the value is invalid.
 
 {% include demo-side-by-side.html demo="validation-test" %}
 

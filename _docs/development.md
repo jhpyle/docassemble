@@ -72,7 +72,8 @@ containing all of your work product, then downloading that [package]
 as a ZIP file.  You can then [stop] and [remove] the [Docker]
 container, [pull] the latest version, [run] a new version of
 **docassemble**, and upload that ZIP file into the [Playground] on the
-new system.
+new system.  This will restore your [Playground] work product, but it
+will not keep your user profiles or any data from interview sessions.
 
 There are other, less cumbersome ways to ensure that your [Playground]
 data and other data persist through the process of removing and
