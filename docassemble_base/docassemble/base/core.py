@@ -1980,6 +1980,20 @@ class DAFile(DAObject):
             setattr(self, '_taskscreen', server.make_png_for_pdf(self, 'screen'))
         if not hasattr(self, '_taskpage'):
             setattr(self, '_taskpage', server.make_png_for_pdf(self, 'page'))
+    def num_pages(self):
+        """Returns the number of pages in the file, if a PDF file, and 1 otherwise"""
+        if not hasattr(self, 'number'):
+            raise Exception("Cannot get pages in file without a file number.")
+        if not hasattr(self, 'file_info'):
+            self.retrieve()
+        if hasattr(self, 'mimetype'):
+            if self.mimetype != 'application/pdf':
+                return 1
+            if 'pages' not in self.file_info:
+                return 1
+            return self.file_info['pages']
+        else:
+            return 1
     def page_path(self, page, prefix, wait=True):
         """Returns a path and filename at which a PDF page image can be accessed."""
         if not hasattr(self, 'number'):
@@ -2083,6 +2097,11 @@ class DAFileCollection(DAObject):
             # logmessage("Returning formats")
             return self.info['formats']
         return ['pdf', 'docx', 'rtf']
+    def num_pages(self):
+        """If there is a PDF file, returns the number of pages in the file, otherwise returns 1."""
+        if hasattr(self, 'pdf'):
+            return self.pdf.num_pages()
+        return result        
     def _first_file(self):
         for ext in self._extension_list():
             if hasattr(self, ext):
@@ -2131,6 +2150,13 @@ class DAFileList(DAList):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.show())
+    def num_pages(self):
+        """Returns the total number of pages in the PDF documents, or one page per non-PDF file."""
+        result = 0;
+        for element in sorted(self.elements):
+            if element.ok:
+                result += element.num_pages()
+        return result        
     def show(self, width=None):
         """Inserts markup that displays each element in the list as an image.
         Takes an optional keyword argument width.

@@ -2560,6 +2560,13 @@ def fg_make_png_for_pdf(doc, prefix, page=None):
         resolution = PNG_SCREEN_RESOLUTION
     docassemble.base.ocr.make_png_for_pdf(doc, prefix, resolution, PDFTOPPM_COMMAND, page=page)
 
+def fg_make_png_for_pdf_path(path, prefix, page=None):
+    if prefix == 'page':
+        resolution = PNG_RESOLUTION
+    else:
+        resolution = PNG_SCREEN_RESOLUTION
+    docassemble.base.ocr.make_png_for_pdf_path(path, prefix, resolution, PDFTOPPM_COMMAND, page=page)
+
 def task_ready(task_id):
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=task_id)
     if result.ready():
@@ -5017,6 +5024,8 @@ def index():
                     #logmessage("index: assemble 5")
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
+                    if not validated:
+                        break
                     orig_file_field = orig_file_field_raw
                     var_to_store = orig_file_field_raw
                     if orig_file_field not in fileDict['values'] and len(known_varnames):
@@ -5070,7 +5079,26 @@ def index():
                                 for (filename, file_number, mimetype, extension) in files_to_process:
                                     elements.append("docassemble.base.core.DAFile(" + repr(file_field + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
-                                the_string = file_field + " = docassemble.base.core.DAFileList(" + repr(file_field) + ", elements=[" + ", ".join(elements) + "])"
+                                the_file_list = "docassemble.base.core.DAFileList(" + repr(file_field) + ", elements=[" + ", ".join(elements) + "])"
+                                #logmessage("field_numbers is " + repr(field_numbers))
+                                #logmessage("orig_file_field is " + repr(orig_file_field))
+                                if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field] and hasattr(the_question.fields[field_numbers[orig_file_field]], 'validate'):
+                                    #logmessage("field " + orig_file_field + " has validation function")
+                                    the_key = orig_file_field
+                                    the_func = eval(the_question.fields[field_numbers[orig_file_field]].validate['compute'], user_dict)
+                                    try:
+                                        the_result = the_func(eval(the_file_list))
+                                        #logmessage("the result was " + str(the_result))
+                                        if not the_result:
+                                            field_error[the_key] = word("Please enter a valid value.")
+                                            validated = False
+                                            break
+                                    except Exception as errstr:
+                                        #logmessage("the result was an exception")
+                                        field_error[the_key] = unicode(errstr)
+                                        validated = False
+                                        break
+                                the_string = file_field + " = " + the_file_list
                             else:
                                 the_string = file_field + " = None"
                             #logmessage("5Doing " + the_string)
@@ -5109,6 +5137,8 @@ def index():
                     #logmessage("index: assemble 6")
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
+                    if not validated:
+                        break
                     orig_file_field = orig_file_field_raw
                     var_to_store = orig_file_field_raw
                     if orig_file_field not in request.files and len(known_varnames):
@@ -5152,25 +5182,48 @@ def index():
                                 for (filename, file_number, mimetype, extension) in files_to_process:
                                     elements.append("docassemble.base.core.DAFile(" + repr(file_field + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
-                                the_string = file_field + " = docassemble.base.core.DAFileList(" + repr(file_field) + ", elements=[" + ", ".join(elements) + "])"
+                                the_file_list = "docassemble.base.core.DAFileList(" + repr(file_field) + ", elements=[" + ", ".join(elements) + "])"
+                                #logmessage("field_numbers is " + repr(field_numbers))
+                                #logmessage("orig_file_field is " + repr(orig_file_field))
+                                if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field] and hasattr(the_question.fields[field_numbers[orig_file_field]], 'validate'):
+                                    #logmessage("field " + orig_file_field + " has validation function")
+                                    the_key = orig_file_field
+                                    the_func = eval(the_question.fields[field_numbers[orig_file_field]].validate['compute'], user_dict)
+                                    try:
+                                        the_result = the_func(eval(the_file_list))
+                                        #logmessage("the result was " + str(the_result))
+                                        if not the_result:
+                                            field_error[the_key] = word("Please enter a valid value.")
+                                            validated = False
+                                            break
+                                    except Exception as errstr:
+                                        #logmessage("the result was an exception")
+                                        field_error[the_key] = unicode(errstr)
+                                        validated = False
+                                        break
+                                the_string = file_field + " = " + the_file_list
                             else:
                                 the_string = file_field + " = None"
                             #logmessage("6Doing " + the_string)
-                            try:
-                                exec(the_string, user_dict)
-                                if not changed:
-                                    steps += 1
-                                    user_dict['_internal']['steps'] = steps
-                                    changed = True
-                            except Exception as errMess:
-                                sys.stderr.write("Error: " + str(errMess) + "\n")
-                                error_messages.append(("error", "Error: " + str(errMess)))
-        if 'informed' in request.form:
-            user_dict['_internal']['informed'][the_user_id] = dict()
-            for key in request.form['informed'].split(','):
-                user_dict['_internal']['informed'][the_user_id][key] = 1
-        if changed and '_question_name' in post_data and post_data['_question_name'] not in user_dict['_internal']['answers']:
-            user_dict['_internal']['answered'].add(post_data['_question_name'])
+                            if validated:
+                                try:
+                                    exec(the_string, user_dict)
+                                    if not changed:
+                                        steps += 1
+                                        user_dict['_internal']['steps'] = steps
+                                        changed = True
+                                except Exception as errMess:
+                                    sys.stderr.write("Error: " + str(errMess) + "\n")
+                                    error_messages.append(("error", "Error: " + str(errMess)))
+        if validated:
+            if 'informed' in request.form:
+                user_dict['_internal']['informed'][the_user_id] = dict()
+                for key in request.form['informed'].split(','):
+                    user_dict['_internal']['informed'][the_user_id][key] = 1
+            if changed and '_question_name' in post_data and post_data['_question_name'] not in user_dict['_internal']['answers']:
+                user_dict['_internal']['answered'].add(post_data['_question_name'])
+        else:
+            steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     else:
         steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     if next_action:
@@ -10006,6 +10059,12 @@ def update_package():
         get_branches();
         $("#giturl").on('change', get_branches);
       });
+      $('#zipfile').on('change', function(){
+        var fileName = $(this).val();
+        fileName = fileName.replace(/.*\\\\/, '');
+        fileName = fileName.replace(/.*\\//, '');
+        $(this).next('.custom-file-label').html(fileName);
+      });
     </script>"""
     return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, package_list=package_list, tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js)), 200
 
@@ -11682,6 +11741,12 @@ def playground_files():
         fetchVars(false);""" + extra_command + """
       });
       searchReady();
+      $('#uploadfile').on('change', function(){
+        var fileName = $(this).val();
+        fileName = fileName.replace(/.*\\\\/, '');
+        fileName = fileName.replace(/.*\\//, '');
+        $(this).next('.custom-file-label').html(fileName);
+      });
     </script>"""
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
@@ -13574,7 +13639,12 @@ def server_error(the_error):
 def package_static(package, filename):
     if package == 'fonts':
         return redirect(url_for('static', filename='bootstrap/fonts/' + filename))
-    the_file = docassemble.base.functions.package_data_filename(str(package) + ':data/static/' + str(filename))
+    try:
+        filename = re.sub(r'^\.+', '', filename)
+        filename = re.sub(r'\/\.+', '\/', filename)
+        the_file = docassemble.base.functions.package_data_filename(str(package) + ':data/static/' + str(filename))
+    except:
+        abort(404)
     if the_file is None:
         abort(404)
     extension, mimetype = get_ext_and_mimetype(the_file)
@@ -13812,7 +13882,16 @@ def utilities():
                         fields_output += "---"
                     else:
                         fields_output = word("Error: no fields could be found in the file")
-    return render_template('pages/utilities.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type, language_placeholder=word("Enter an ISO-639-1 language code (e.g., es, fr, it)"))
+    extra_js = """
+    <script>
+      $('#pdfdocxfile').on('change', function(){
+        var fileName = $(this).val();
+        fileName = fileName.replace(/.*\\\\/, '');
+        fileName = fileName.replace(/.*\\//, '');
+        $(this).next('.custom-file-label').html(fileName);
+      });
+    </script>"""
+    return render_template('pages/utilities.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='adminbody', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type, language_placeholder=word("Enter an ISO-639-1 language code (e.g., es, fr, it)"))
 
 # @app.route('/save', methods=['GET', 'POST'])
 # def save_for_later():
@@ -17071,7 +17150,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          add_user_privilege=add_user_privilege,
                                          remove_user_privilege=remove_user_privilege,
                                          file_set_attributes=file_set_attributes,
-                                         fg_make_png_for_pdf=fg_make_png_for_pdf)
+                                         fg_make_png_for_pdf=fg_make_png_for_pdf,
+                                         fg_make_png_for_pdf_path=fg_make_png_for_pdf_path)
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
 #docassemble.base.parse.set_url_finder(get_url_from_file_reference)

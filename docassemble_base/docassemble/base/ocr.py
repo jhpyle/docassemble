@@ -96,6 +96,10 @@ def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=N
 
 def make_png_for_pdf(doc, prefix, resolution, pdf_to_ppm, page=None):
     path = doc.path()
+    make_png_for_pdf_path(path, prefix, resolution, pdf_to_ppm, page=page)
+    doc.commit()
+
+def make_png_for_pdf_path(path, prefix, resolution, pdf_to_ppm, page=None):
     basefile = os.path.splitext(path)[0]
     test_path = basefile + prefix + '-in-progress'
     with open(test_path, 'a'):
@@ -103,13 +107,11 @@ def make_png_for_pdf(doc, prefix, resolution, pdf_to_ppm, page=None):
     if page is None:
         result = subprocess.call([str(pdf_to_ppm), '-r', str(resolution), '-png', str(path), str(basefile + prefix)])
     else:
-        result = subprocess.call([str(pdf_to_ppm), '-f', str(page), '-f', str(page), '-r', str(resolution), '-png', str(path), str(basefile + prefix)])
+        result = subprocess.call([str(pdf_to_ppm), '-f', str(page), '-l', str(page), '-r', str(resolution), '-png', str(path), str(basefile + prefix)])
     if os.path.isfile(test_path):
         os.remove(test_path)
     if result > 0:
         raise Exception("Unable to extract images from PDF file")
-    doc.commit()
-    return
 
 def ocr_page(doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resolution=300, psm=6, page=None, x=None, y=None, W=None, H=None, user_code=None):
     """Runs optical character recognition on an image or a page of a PDF file and returns the recognized text."""

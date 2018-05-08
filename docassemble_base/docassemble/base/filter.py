@@ -10,6 +10,8 @@ import qrcode.image.svg
 import StringIO
 import tempfile
 import types
+import time
+import stat
 from docassemble.base.functions import server, word
 import docassemble.base.functions
 from docassemble.base.pandoc import MyPandoc
@@ -725,21 +727,36 @@ def image_as_rtf(match, question=None):
     elif file_info['extension'] == 'pdf':
         output = ''
         if not width_supplied:
-            #logmessage("Adding page break\n")
+            #logmessage("image_as_rtf: Adding page break\n")
             width = DEFAULT_PAGE_WIDTH
             #output += '\\page '
-        #logmessage("maxpage is " + str(int(file_info['pages'])) + "\n")
+        #logmessage("image_as_rtf: maxpage is " + str(int(file_info['pages'])) + "\n")
         max_pages = 1 + int(file_info['pages'])
         formatter = '%0' + str(len(str(max_pages))) + 'd'
         for page in range(1, max_pages):
-            #logmessage("Doing page " + str(page) + "\n")
+            #logmessage("image_as_rtf: doing page " + str(page) + "\n")
             page_file = dict()
+            test_path = file_info['path'] + 'page-in-progress'
+            #logmessage("Test path is " + test_path)
+            if os.path.isfile(test_path):
+                #logmessage("image_as_rtf: test path " + test_path + " exists")
+                while (os.path.isfile(test_path) and time.time() - os.stat(test_path)[stat.ST_MTIME]) < 30:
+                    #logmessage("Waiting for test path to go away")
+                    if not os.path.isfile(test_path):
+                        break
+                    time.sleep(1)
             page_file['extension'] = 'png'
             page_file['path'] = file_info['path'] + 'page-' + formatter % page
             page_file['fullpath'] = page_file['path'] + '.png'
-            im = PIL.Image.open(page_file['fullpath'])
-            page_file['width'], page_file['height'] = im.size
-            output += rtf_image(page_file, width, False)
+            if not os.path.isfile(page_file['fullpath']):
+                #logmessage("Calling make_png_for_pdf")
+                server.fg_make_png_for_pdf_path(file_info['path'], 'page', page=page)
+            if os.path.isfile(page_file['fullpath']):
+                im = PIL.Image.open(page_file['fullpath'])
+                page_file['width'], page_file['height'] = im.size
+                output += rtf_image(page_file, width, False)
+            else:
+                output += "[Error including page image]"
             # if not width_supplied:
             #     #logmessage("Adding page break\n")
             #     output += '\\page '

@@ -1,5 +1,20 @@
 # Change Log
 
+## [0.2.57] - 2018-05-07
+### Added
+- The `validation_error()` function.
+- The `num_pages()` method on `DAFile`, `DAFileList`, and
+  `DAFileCollection` objects.
+### Changed
+- On the mobile `signature` page, the "Clear" button is replaced with
+  a "Back" button.
+- Python `validate` code now works on document uploads.
+### Fixed
+- The `question back button` was missing from the buttons on the
+  desktop `signature` page.
+- Problem with spacing of the `question back button` next to other
+  buttons.
+
 ## [0.2.56] - 2018-05-07
 ### Changed
 - The `min` and `max` field modifiers on `datatype: date` fields now

@@ -49,7 +49,7 @@ def varname_tag(varnames):
     return ('')
 
 def icon_html(status, name, width_value=1.0, width_units='em'):
-    logmessage("icon_html: name is " + repr(name))
+    #logmessage("icon_html: name is " + repr(name))
     if type(name) is dict and name['type'] == 'decoration':
         name = name['value']
     if type(name) is not dict:
@@ -593,7 +593,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             the_progress_bar = re.sub(r'class="row"', 'class="d-none d-md-block"', the_progress_bar)
         output += the_progress_bar
     if status.question.question_type == "signature":
-        output += '            <div class="sigpage" id="sigpage">\n              <div class="sigshowsmallblock sigheader d-block d-md-none" id="sigheader">\n                <div class="siginnerheader">\n                  <a tabindex="0" class="btn btn-sm btn-warning signav-left signavbutton sigclear">' + word('Clear') + '</a>\n                  <a tabindex="0" class="btn btn-sm btn-primary signav-right signavbutton sigsave">' + continue_label + '</a>\n                  <div class="sigtitle">'
+        if status.question.interview.question_back_button and status.question.can_go_back and steps > 1:
+            back_clear_button = '<button class="btn btn-sm btn-secondary signav-left signavbutton sigclear" id="questionbackbutton">' + status.question.back() + '</button>'
+        else:
+            back_clear_button = '<a tabindex="0" class="btn btn-sm btn-warning signav-left signavbutton sigclear">' + word('Clear') + '</a>'
+        output += '            <div class="sigpage" id="sigpage">\n              <div class="sigshowsmallblock sigheader d-block d-md-none" id="sigheader">\n                <div class="siginnerheader">\n                  ' + back_clear_button + '\n                  <a tabindex="0" class="btn btn-sm btn-primary signav-right signavbutton sigsave">' + continue_label + '</a>\n                  <div class="sigtitle">'
         if status.questionText:
             output += markdown_to_html(status.questionText, trim=True, status=status)
         else:
@@ -611,7 +615,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '                <div class="d-none d-md-block">' + markdown_to_html(status.extras['underText'], trim=False, status=status) + '</div>\n                <div class="d-block d-md-none">' + markdown_to_html(status.extras['underText'], trim=True, status=status) + '</div>'
         output += "\n              </div>"
         output += """
-              <div class="form-actions d-none d-md-block sigbuttons">
+              <div class="form-actions d-none d-md-block sigbuttons">""" + back_button + """
                 <a tabindex="0" class="btn btn-primary """ + BUTTON_CLASS + """ sigsave">""" + continue_label + """</a>
                 <a tabindex="0" class="btn btn-warning """ + BUTTON_CLASS + """ sigclear">""" + word('Clear') + """</a>
               </div>
@@ -713,9 +717,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += status.submit
         output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
         if hasattr(status.question, 'review_saveas'):
-            output += '                <div class="form-actions"><div>' + back_button + '<button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(safeid(status.question.review_saveas)) + '" value="True">' + continue_label + '</button>' + help_button + '</div></div>\n'
+            output += '                <div class="form-actions">' + back_button + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(safeid(status.question.review_saveas)) + '" value="True">' + continue_label + '</button>' + help_button + '</div>\n'
         else:
-            output += '                <div class="form-actions"><div>' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + resume_button_label + '</button>' + help_button + '</div></div>\n'
+            output += '                <div class="form-actions">' + back_button + '\n                <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + resume_button_label + '</button>' + help_button + '</div>\n'
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
@@ -1008,7 +1012,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             #status.extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
         output += status.submit
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '                <div class="form-actions"><div>' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '</div></div>\n'
+        output += '                <div class="form-actions">' + back_button + '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '</div>\n'
         #output += question_name_tag(status.question)
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
@@ -1030,7 +1034,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += indent_by(video_text, 12)
         output += status.submit
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '                <div class="form-actions"><div>' + back_button + '<button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True">' + continue_label + '</button>' + help_button + '</div></div>\n'
+        output += '                <div class="form-actions">' + back_button + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True">' + continue_label + '</button>' + help_button + '</div>\n'
         #output += question_name_tag(status.question)
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
@@ -1243,7 +1247,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if back_button != '' or help_button != '':
             output += status.submit
             output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-            output += '                <div class="form-actions"><div>' + back_button + help_button + '</div></div>\n'
+            output += '                <div class="form-actions">' + back_button + help_button + '</div>\n'
     else:
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST">\n              <fieldset>\n'
@@ -1254,7 +1258,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += indent_by(video_text, 12)
         output += status.submit
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '                <div class="form-actions"><div>' + back_button + '<button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '</div></div>\n'
+        output += '                <div class="form-actions">' + back_button + '\n                <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '</div>\n'
         #output += question_name_tag(status.question)
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
