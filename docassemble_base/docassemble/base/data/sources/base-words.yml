@@ -11,7 +11,7 @@
 "and enter the code": Null
 "and": Null
 "An e-mail address is required.": Null
-"A new docassemble system version is available.": Null
+"A new docassemble system version is available.  If you are using Docker, install a new Docker image.": Null
 "anonymous": Null
 "Anonymous": Null
 "anonymous visitor": Null
@@ -33,6 +33,7 @@
 "Author Name": Null
 "Available interviews": Null
 "Available Interviews": Null
+"Available": Null
 "back": Null
 "Back": Null
 "Back to question": Null
@@ -74,6 +75,7 @@
 "Created new Markdown file called ": Null
 "Create": Null
 "Create Package": Null
+"Current": Null
 "day": Null
 "Decorations": Null
 "Defined in": Null

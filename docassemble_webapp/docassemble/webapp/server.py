@@ -4528,9 +4528,24 @@ def index():
             key = myb64unquote(orig_key)
         except:
             continue
-        if key.startswith('_field_') and orig_key in known_varnames:
-            if not (known_varnames[orig_key] in post_data and post_data[known_varnames[orig_key]] != '' and post_data[orig_key] == ''):
-                post_data[known_varnames[orig_key]] = post_data[orig_key]
+        if key.startswith('_field_'):
+            if orig_key in known_varnames:
+                if not (known_varnames[orig_key] in post_data and post_data[known_varnames[orig_key]] != '' and post_data[orig_key] == ''):
+                    post_data[known_varnames[orig_key]] = post_data[orig_key]
+            else:
+                logmessage("orig_key " + orig_key + " is not in known_varnames")
+                m = re.search(r'^(_field_[0-9]+)(\[.*\])', key)
+                if m:
+                    logmessage("got a match")
+                    base_orig_key = safeid(m.group(1))
+                    if base_orig_key in known_varnames:
+                        full_key = safeid(myb64unquote(known_varnames[base_orig_key]) + m.group(2))
+                        logmessage("Adding " + full_key + " to post_data")
+                        post_data[full_key] = post_data[orig_key]
+                    else:
+                        logmessage("foo 1")
+                else:
+                    logmessage("foo 2")
         if key.endswith('.gathered'):
             objname = re.sub(r'\.gathered$', '', key)
             #logmessage("Considering gathered key: " + str(key))
@@ -10066,7 +10081,12 @@ def update_package():
         $(this).next('.custom-file-label').html(fileName);
       });
     </script>"""
-    return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, package_list=package_list, tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js)), 200
+    python_version = daconfig.get('python version', word('Unknown'))
+    version = word("Current") + ': <span class="badge badge-secondary">' + unicode(python_version) + '</span>'
+    dw_status = pypi_status('docassemble.webapp')
+    if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != unicode(python_version):
+        version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
+    return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, package_list=package_list, tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version)), 200
 
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():
@@ -17231,7 +17251,7 @@ def define_examples():
     pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
 
 if LooseVersion(min_system_version) > LooseVersion(daconfig['system version']):
-    version_warning = word("A new docassemble system version is available.")
+    version_warning = word("A new docassemble system version is available.  If you are using Docker, install a new Docker image.")
 else:
     version_warning = None
 

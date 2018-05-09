@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.58] - 2018-05-08
+### Added
+- Version number on the Package Management page.
+### Fixed
+- Problem with checkboxes inside of `show if`.
+- CSS problem with the "required" asterisk.
+
 ## [0.2.57] - 2018-05-07
 ### Added
 - The `validation_error()` function.

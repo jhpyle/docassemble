@@ -164,11 +164,16 @@ a.sourceactive {
     position: absolute;
     content: '*';
     color: red;
-    top: 5px;
 }
 
+@media (max-width: 767px) {
+    .form-group.required .col-form-label:after {
+	bottom: 0.7rem;
+    }
+}
 @media (min-width: 768px) {
     .form-group.required .col-form-label:after {
+	top: 5px;
 	right: 5px;
     }
 }
