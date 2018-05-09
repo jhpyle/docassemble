@@ -55,7 +55,7 @@ subquestion: |
   % if len(predictions):
   Your document appears to be
   from ${ predictions[0][0] }
-  (${ "%.0f" % (predictions[0][1] * 100.0) } sure).
+  (${ "%.0f%%" % (predictions[0][1] * 100.0) } sure).
   % else:
   There is not enough training data
   to make a determination yet.
