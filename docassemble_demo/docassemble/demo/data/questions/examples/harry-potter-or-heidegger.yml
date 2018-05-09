@@ -19,7 +19,7 @@ code: |
     waiting_screen
   ml = SimpleTextMachineLearner('hp_h')
   ml.save_for_classification(phrase, info=the_file)
-  predictions = ml.predict(phrase)
+  predictions = ml.predict(phrase, probabilities=True)
 ---
 question: |
   Upload a page
@@ -54,7 +54,8 @@ question: |
 subquestion: |
   % if len(predictions):
   Your document appears to be
-  from ${ predictions[0] }.
+  from ${ predictions[0][0] }
+  (${ "%.0f" % (predictions[0][1] * 100.0) } sure).
   % else:
   There is not enough training data
   to make a determination yet.

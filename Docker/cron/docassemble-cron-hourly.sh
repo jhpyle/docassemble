@@ -14,6 +14,16 @@ for old_file in $( find /tmp -maxdepth 1 -type f -mmin +60 -path "/tmp/datemp*" 
     rm -f "$old_file"
 done
 
+if [ -d /tmp/files ]; then
+    for old_file in $( find /tmp/files -type f -atime +1 ); do
+	rm -f "$old_file"
+    done
+    for old_file in $( find /tmp/files -type l -atime +1 ); do
+	rm -f "$old_file"
+    done
+    find /tmp/files -type d -empty -delete
+fi
+
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     ${DA_ROOT}/webapp/run-cron.sh cron_hourly
     su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cleanup_sessions $DA_CONFIG_FILE" www-data
