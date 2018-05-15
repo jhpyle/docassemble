@@ -23,8 +23,6 @@
     <script src="{{ '/tocmd-generator/js/jquery.toc.js' | prepend: site.baseurl }}"></script>
     <script>
       $('#main').toc({showAlways:true});
-    </script>
-    <script>
       $("h1, h2, h3, h4, h5").each(function(){
         if ($(this).children().length > 0){
           var firstElement = $(this).children()[0];
@@ -38,8 +36,6 @@
           }
         }
       });
-    </script>
-    <script>
       function goToAnchor() { 
         hash = document.location.hash;
         if (hash !="") {
@@ -55,6 +51,7 @@
         }
       }
       $(document).ready(function(){
+        $('blockquote').addClass('blockquote');
         goToAnchor();
       });
     </script>

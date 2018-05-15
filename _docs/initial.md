@@ -727,6 +727,11 @@ Note that the section list is not shown on small devices, such as
 smartphones.  To show a smartphone user a list of sections, you can
 use the [`nav.show_sections()`] function.
 
+If you want the navigation bar to be horizontal across the top of the
+page, set `navigation` to `horizontal`:
+
+{% include side-by-side.html demo="sections-horizontal" %}
+
 ## <a name="question back button"></a><a name="navigation back button"></a>Back button style
 
 By default, there is a "Back" button located in the upper-left corner

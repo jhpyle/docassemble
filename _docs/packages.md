@@ -556,4 +556,3 @@ interviews that might have a very different purpose.
 [packaging your interview]: {{ site.baseurl }}/docs/hello.html#packaging
 [hello world]: {{ site.baseurl }}/docs/hello.html
 [development workflows]: {{ site.baseurl }}/docs/development.html
-[PyPI]: 

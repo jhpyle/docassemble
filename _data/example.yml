@@ -4903,6 +4903,9 @@
       Answer each question to the best of your
       ability.  If you do not know the answer
       to any question, panic.
+"interview-list": |-
+  modules:
+    - docassemble.base.util
 "interview-url": |-
   modules:
     - docassemble.base.util
@@ -7733,6 +7736,10 @@
   ---\nevent: road_map\nquestion: |\n  Roadmap\nsubquestion: |\n  You are currently\
   \ in the\n  **${ nav.get_section(display=True) }**\n  section.\n\n  ${ nav }\n\n\
   \  Press \"Continue\" to resume the\n  interview.\nbuttons:\n  Continue: continue"
+"sections-horizontal": |-
+  features:
+    navigation: horizontal
+    progress bar: True
 "sections-keywords": "sections:\n  - intro: Introduction\n  - about: About you\n \
   \   subsections:\n      - contact: Contact info\n      - demographic: Demographics\n\
   \  - prefs: Preferences\n  - conclusion: Conclusion\n---\nfeatures:\n  navigation:\
@@ -8968,6 +8975,21 @@
       content: |
         Hello, world!
   mandatory: True
+"validation-error": |-
+  question: Repeat after me.
+  subquestion: |
+    To continue, type "I solemnly swear
+    that I am up to no good."
+  fields:
+    - no label: oath
+      validate: |
+        lambda y: validation_error("No, you typed it wrong.") if y != 'I solemnly swear that I am up to no good.' else True
+  ---
+  mandatory: True
+  need: oath
+  question: |
+    You are now allowed to use
+    the Marauder's Map.
 "value": |-
   question: Summary
   subquestion: |
@@ -9184,6 +9206,61 @@
     What is your favorite vegetable?
   fields:
     - Vegetable: favorite_vegetable
+"harry-potter-or-heidegger": |-
+  mandatory: True
+  code: |
+    the_file.set_attributes(persistent=True)
+  ---
+  mandatory: True
+  code: |
+    the_task
+    if not the_task.ready():
+      waiting_screen
+    ml = SimpleTextMachineLearner('hp_h')
+    ml.save_for_classification(phrase, info=the_file)
+    predictions = ml.predict(phrase, probabilities=True)
+  ---
+  question: |
+    Upload a page
+  subquestion: |
+    Please upload or take a
+    picture of a page from Harry Potter
+    or Heidegger.
+  fields:
+    - no label: the_file
+      datatype: file
+  ---
+  code: |
+    the_task = background_action('ocr_start', None)
+  ---
+  event: ocr_start
+  code: |
+    background_response_action('ocr_finish', text=ocr_file(the_file))
+  ---
+  event: ocr_finish
+  code: |
+    phrase = action_argument('text')
+    background_response()
+  ---
+  event: waiting_screen
+  reload: 5
+  question: |
+    Please wait.
+  ---
+  mandatory: True
+  question: |
+    Your text
+  subquestion: |
+    % if len(predictions):
+    Your document appears to be
+    from ${ predictions[0][0] }
+    (${ "%.0f%%" % (predictions[0][1] * 100.0) } sure).
+    % else:
+    There is not enough training data
+    to make a determination yet.
+    % endif
+  buttons:
+    - Restart: restart
 "interview_in_interview": "objects:\n  - user_global: Individual\n  - user: Individual\n\
   \  - endpoint: DADict\n---\nmandatory: True\ncode: |\n  while True:\n    del endpoint[user.goal]\n\
   \    del user\n---\nquestion: |\n  What interview would you like to complete?\n\
@@ -9500,9 +9577,6 @@
   \ ['-v'])\n---\nmandatory: True\nquestion: |\n  Result of unit tests\nsubquestion:\
   \ |\n  % if return_code == 0:\n  Command succeeded.\n  % else:\n  Command failed!\n\
   \  % endif\n  \n  ${ indent(output) }"
-"save_object": |-
-  modules:
-    - docassemble.base.util
 "someone-already-mentioned": |-
   objects:
     cook: Individual
@@ -9617,7 +9691,7 @@
       datatype: integer
   validation code: |
     if number_of_oranges + number_of_apples != 10:
-      raise Exception("The number of fruit must add up to 10!")
+      validation_error("The number of fruit must add up to 10!")
 "validation-test": |-
   modules:
     - docassemble.demo.validationfuncs

@@ -1472,9 +1472,9 @@ from the menu and clicking the "Upgrade" button.
 However, sometimes a "system upgrade" is necessary.  This can happen
 when changes are made to **docassemble**'s underlying operating system
 files.  When it is time for a "system upgrade," you will see a message
-on the [Configuration] screen that says "Your docassemble system needs
-to be upgraded" or "A new docassemble system version is available."
-Performing a "system upgrade" requires retrieving a new
+on the [Configuration] screen that says "A new docassemble system
+version is available.  If you are using Docker, install a new Docker
+image."  Performing a "system upgrade" requires retrieving a new
 **docassemble** [Docker] image and running `docker run` to start a new
 container.
 

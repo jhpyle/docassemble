@@ -2919,8 +2919,13 @@ In the list of dictionaries returned by the function, the keys of each
 dictionary are:
 
 * `dict`: the interview dictionary for the session.
-* `email`: the e-mail address of the user who started the interview.
-* `user_id`: the user ID of the user who started the interview.
+* `email`: the e-mail address of the user who started the interview, if the
+  user was logged in.
+* `user_id`: the user ID of the user who started the interview, if the
+  user was logged in.
+* `temp_user_id`: the temporary user ID of the anonymous user who
+  started the interview, if the user was not logged in.  (Note that
+  these IDs do not correspond to the IDs of logged-in users.)
 * `filename`: the filename of the interview, e.g.,
   `docassemble.demo:data/questions/questions.yml`
 * `metadata`: the metadata of the interview as a dictionary.
@@ -3311,9 +3316,29 @@ For an [API] version of this function, see [`/api/privileges`].
 
 ## <a name="validation_error"></a>validation_error()
 
-The `validation_error()` function takes an error message as an
-argument and raises an exception with that error message.  This is
-primarily useful when using lambda functions inside [`validate`] code.
+<a name="DAValidationError"></a>The `validation_error()` function
+takes an error message as an argument and [`raise`]s a
+`DAValidationError` exception with that error message.  This means
+that any code that follows the call to `validation_error()` will not
+be executed.
+
+This is primarily useful inside [`validate`] code and [`validation
+code`] when you want to indicate that the validation did not succeed.
+The `validation_error()` function requires a single argument, which is
+the error message the user should see.
+
+For more information, see the documentation for [`validate`] and
+[`validation code`].
+
+The `validation_error()` function can be used to raise an error
+message from inside a [lambda function] that is used as the argument
+for [`validate`]:
+
+{% include side-by-side.html demo="validation-error" %}
+
+However, note that [lambda functions] can be confusing to people who
+don't have a good knowledge of [Python], so you might want to keep
+them out of your interview files.
 
 ## <a name="server_capabilities"></a>server_capabilities()
 
@@ -4785,7 +4810,7 @@ etc.  It is inconvenient to maintain the same code in several
 different files.
 
 You can avoid this problem by using [`include`].  You can create a
-"common" [YAML] file called `wc_common.yml`, which contains the
+"common" [YAML] file called [`wc_common.yml`], which contains the
 following:
 
 {% highlight yaml %}
@@ -4828,7 +4853,7 @@ code: |
 
 Then your actual interview file will just incorporate this by
 reference.  For example, you could have a file called
-`wc_side_of_bed.yml`, which looks like this:
+[`wc_side_of_bed.yml`], which looks like this:
 
 {% highlight yaml %}
 metadata:
@@ -4884,7 +4909,7 @@ code: |
 {% endhighlight %}
 
 You could then create other [YAML] files that follow the same pattern,
-all of which [`include`] the `wc_common.yml` file.  Any time you
+all of which [`include`] the [`wc_common.yml`] file.  Any time you
 wanted to change a "common" question, you would only need to make the
 change in one place.
 
@@ -5836,3 +5861,9 @@ $(document).on('daPageLoad', function(){
 [`read_records()`]: #read_records
 [`write_record()`]: #write_record
 [`validate`]: {{ site.baseurl }}/docs/fields.html#validate
+[`wc_side_of_bed.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/wc_side_of_bed.yml
+[`wc_common.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/wc_common.yml
+[lambda function]: https://docs.python.org/2.7/tutorial/controlflow.html#lambda-expressions
+[lambda functions]: https://docs.python.org/2.7/tutorial/controlflow.html#lambda-expressions
+[`raise`]: https://docs.python.org/2.7/tutorial/errors.html#raising-exceptions
+[`validation code`]: {{ site.baseurl }}/docs/fields.html#validation code

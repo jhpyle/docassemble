@@ -1131,9 +1131,9 @@ divides the input value into a whole number
 The error message that the user will see is a generic error message,
 "Please enter a valid value."  In most cases you will want to explain
 to the user why the input did not validate.  To provide a more
-descriptive error message, your function can [raise an exception]
-using the error message you would like the user to see.  Both a false
-return value and an exception signal that the input is not valid.
+descriptive error message, your function can call the
+[`validation_error()`] function with the error message the user should
+see.
 
 {% include demo-side-by-side.html demo="validation-test-two" %}
 
@@ -1141,35 +1141,45 @@ In this example, the function `is_multiple_of_four` is defined as
 follows:
 
 {% highlight python %}
+from docassemble.base.util import *
+
 def is_multiple_of_four(x):
     if x/4 != int(x/4):
-        raise Exception("The number must be a multiple of four")
+        validation_error("The number must be a multiple of four")
     return True
 {% endhighlight %}
 
 This [Python] code is in the [`validationfuncstwo.py`] file.  If 4
-does not divide the input value into a whole number, then an exception
-is raised.  The text passed to `Exception()` will be the text the user
-sees if the value does not validate.  If 4 does divide the input value
-by a whole number, `True` is returned.
+does not divide the input value into a whole number, then
+[`validation_error()`] is called.  The [`validation_error()`] function
+[`raise`]s an exception, which means that code stops processing once
+the [`validation_error()`] function is called.  That is, if
+[`validation_error()`] is called, the `return True` statement will not
+be executed.
+
+The text passed to [`validation_error()`] is the text the user will
+see if the value does not validate.  If 4 does divide the input value
+by a whole number, the function returns `True`, which indicates that
+the input is valid.
 
 One limitation of these validation functions is that they can only
 test for characteristics inherent in the variable being validated;
 they cannot compare the variable to other variables.
 
-You can get around this restriction using the `validation code`
-modifier.
+<a name="validation code"></a>You can get around this restriction
+using the `validation code` modifier.
 
 {% include demo-side-by-side.html demo="validation-code" %}
 
 Note that the code under `validation code` is not within a function,
 so it should not try to `return` any values.  If the code runs through
 to the end, this indicates that the input for the question is valid.
-If an exception is raised, the input for the question is invalid.
+If [`validation_error()`] is called, or an [exception is raised], the
+input for the question is considered invalid.
 
 If the input is invalid, the user will see a message at the top of the
-screen containing the error message passed to the [`Exception`] that
-was raised.
+screen containing the error message passed to [`validation_error()`],
+or the error message for the error that was otherwise [`raise`]d.
 
 ## <a name="address autocomplete"></a>Address autocomplete
 
@@ -1706,6 +1716,7 @@ why this needs to be done manually as opposed to automatically:
 [date functions]: {{ site.baseurl }}/docs/functions.html#date functions
 [machine learning section]: {{ site.baseurl }}/docs/ml.html#howtouse
 [raise an exception]: https://en.wikibooks.org/wiki/Python_Programming/Exceptions
+[exception is raised]: https://en.wikibooks.org/wiki/Python_Programming/Exceptions
 [`Exception`]: https://docs.python.org/2/library/exceptions.html#exceptions.Exception
 [`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
 [action]: {{ site.baseurl }}/docs/functions.html#actions
@@ -1752,3 +1763,5 @@ why this needs to be done manually as opposed to automatically:
 [`format_datetime()`]: {{ site.baseurl }}/docs/functions.html#format_datetime
 [`.strftime()`]: https://docs.python.org/2/library/datetime.html#datetime.time.strftime
 [`continue button label`]: {{ site.baseurl }}/docs/modifiers.html#continue button label
+[`validation_error()`]: {{ site.baseurl }}/docs/functions.html#validation_error
+[`raise`]: https://docs.python.org/2.7/tutorial/errors.html#raising-exceptions
