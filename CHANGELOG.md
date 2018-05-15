@@ -1,5 +1,23 @@
 # Change Log
 
+## [0.2.59] - 2018-05-15
+### Added
+- Horizontal navigation bar option.
+- Option for disabling the `pip` cache when installing a package.
+- The `validation_error()` function and the `DAValidationError` error
+  type.
+### Changed
+- The `interview_list()` function now returns `temp_user_id`.
+### Fixed
+- PDF assembly resulted in a missing AcroForm error in some circumstances.
+- PyPI publishing code used out-of-date upload URL.
+- Deleting session in multi-user interview deleted sessions for all
+  users.
+- Visiting registration page while logged in did not redirect to My
+  Interviews page.
+- An inappropriate error was raised about `validate` input validation
+  functions for certain input types and values.
+
 ## [0.2.58] - 2018-05-08
 ### Added
 - Version number on the Package Management page.

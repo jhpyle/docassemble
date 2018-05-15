@@ -3,7 +3,7 @@ from docassemble.base.generate_key import random_string
 import re
 import os
 import codecs
-import redis
+#import redis
 import sys
 import shutil
 import inspect

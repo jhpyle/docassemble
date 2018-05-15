@@ -7,6 +7,7 @@ Create Date: ${create_date}
 """
 from alembic import op
 import sqlalchemy as sa
+from docassemble.webapp.database import dbtableprefix
 ${imports if imports else ""}
 
 # revision identifiers, used by Alembic.

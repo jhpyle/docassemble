@@ -44,7 +44,7 @@ do
     elif [ "$file" = "table-if-then" ]
     then
 	echo -e -n "\n    And I set \"Fruit\" to \"apple\"\n    And I set \"Number of seeds\" to \"3\"\n    And I click the button \"Continue\"\n    And I click the button \"Yes\"\n    And I set \"Fruit\" to \"pear\"\n    And I set \"Number of seeds\" to \"0\"\n    And I click the button \"Continue\"\n    And I click the button \"Yes\"\n    And I set \"Fruit\" to \"watermelon\"\n    And I set \"Number of seeds\" to \"1736\"\n    And I click the button \"Continue\"\n    And I click the button \"No\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
-    elif [ "$file" = "sections" ]
+    elif [ "$file" = "sections" -o "$file" = "sections-horizontal" ]
     then
 	echo -e -n "\n    And I click the button \"Continue\"\n    And I select \"Roadmap\" from the menu\n    And I wait 5 seconds\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
     elif [ "$file" = "review-1" -o "$file" = "review-2" -o "$file" = "review-3" -o "$file" = "resume-button-label" ]
@@ -103,6 +103,7 @@ do
          "$file" = "question-help-button-off" -o \
          "$file" = "right" -o \
          "$file" = "sections" -o \
+         "$file" = "sections-horizontal" -o \
          "$file" = "sections-keywords" -o \
          "$file" = "sections-keywords-code" -o \
          "$file" = "sections-keywords-get-sections" -o \

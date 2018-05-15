@@ -369,6 +369,7 @@ def get_ext_and_mimetype(filename):
 
 def publish_package(pkgname, info, author_info, tz_name):
     from flask_login import current_user
+    #raise Exception("email is " + repr(current_user.email) + " and pypi is " + repr(current_user.pypi_username))
     directory = make_package_dir(pkgname, info, author_info, tz_name)
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     output = "Publishing docassemble." + pkgname + " to PyPI . . .\n\n"
@@ -381,13 +382,14 @@ def publish_package(pkgname, info, author_info, tz_name):
     if not os.path.isdir(dist_dir):
         output += "dist directory " + str(dist_dir) + " did not exist after calling sdist"
     else:
-        for f in os.listdir(dist_dir):
-            try:
-                #output += str(['twine', 'register', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', f)]) + "\n"
-                output += subprocess.check_output(['twine', 'register', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', f)], cwd=packagedir, stderr=subprocess.STDOUT)
-            except subprocess.CalledProcessError as err:
-                output += "Error calling twine register.\n"
-                output += err.output
+        # for f in os.listdir(dist_dir):
+        #     try:
+        #         #output += str(['twine', 'register', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', f)]) + "\n"
+        #         #raise Exception(repr(['twine', 'register', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', f)]))
+        #         output += subprocess.check_output(['twine', 'register', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', f)], cwd=packagedir, stderr=subprocess.STDOUT)
+        #     except subprocess.CalledProcessError as err:
+        #         output += "Error calling twine register.\n"
+        #         output += err.output
         try:
             #output += str(['twine', 'upload', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', '*')])
             output += subprocess.check_output(['twine', 'upload', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', '*')], cwd=packagedir, stderr=subprocess.STDOUT)
@@ -521,7 +523,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
       author=""" + repr(info['author_name']) + """,
       author_email=""" + repr(info['author_email']) + """,
       license=""" + repr(info['license']) + """,
-      url=""" + repr(info['url']) + """,
+      url=""" + repr(info['url'] if info['url'] else 'https://docassemble.org') + """,
       packages=find_packages(),
       namespace_packages=['docassemble'],
       install_requires=[""" + dependencies + """],

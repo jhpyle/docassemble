@@ -5,6 +5,10 @@ class DAError(Exception):
     def __str__(self):
         return unicode(self.value)
 
+class DAValidationError(Exception):
+    """This is an Exception object that is used when raising an exception inside input validation code."""
+    pass
+
 class CodeExecute(Exception):
     def __init__(self, compute, question):
         if type(compute) is list:

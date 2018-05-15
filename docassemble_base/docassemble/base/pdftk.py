@@ -265,6 +265,8 @@ class DAPdfFileWriter(pypdf.PdfFileWriter):
         if results is None:
             results = dict()
         if tree is None:
+            if '/AcroForm' not in self._root_object:
+                self._root_object.update({pypdf.generic.NameObject('/AcroForm'): pypdf.generic.DictionaryObject()})
             tree = self._root_object['/AcroForm']
         if isinstance(tree, pypdf.generic.IndirectObject):
             the_tree = tree.getObject()
@@ -358,6 +360,8 @@ def replicate_js_and_calculations(template_filename, original_filename, password
             if field_name in fields:
                 co.append(fields[field_name])
         #writer._root_object['/AcroForm'][pypdf.generic.NameObject("/CO")] = pypdf.generic.ArrayObject(co)
+        if '/AcroForm' not in writer._root_object:
+            writer._root_object.update({pypdf.generic.NameObject('/AcroForm'): pypdf.generic.DictionaryObject()})
         writer._root_object['/AcroForm'].update({
             pypdf.generic.NameObject("/CO"): pypdf.generic.ArrayObject(co)
         })

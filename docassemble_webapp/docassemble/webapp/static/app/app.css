@@ -1304,13 +1304,20 @@ div.danavnested {
     padding-left: 20px;
 }
 
-.danav > a.inactive:hover,
-.danav > a.inactive:focus {
-    color: #337ab7;
-    text-decoration: inherit;
-    background-color: inherit;
-    outline-offset: inherit;
+div.danav-horiz {
 }
+
+div.danavnested-horiz {
+    font-size: 80%;
+}
+
+/* .danav > a.inactive:hover, */
+/* .danav > a.inactive:focus { */
+/*     color: #337ab7; */
+/*     text-decoration: inherit; */
+/*     background-color: inherit; */
+/*     outline-offset: inherit; */
+/* } */
 
 .danav > a.notavailableyet,
 .danav > a.notavailableyet {
@@ -1719,6 +1726,10 @@ div.constraintlist div + div {
 
 .larger-badge {
     font-size: 1.0rem;
+}
+
+.sigbuttons {
+    margin-top: 4px;
 }
 
 .sigbottompart {

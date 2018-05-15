@@ -467,3 +467,4 @@ manage_privileges: "https://docassemble.org/docs/functions.html#manage_privilege
 start_time: "https://docassemble.org/docs/functions.html#start_time"
 zip_file: "https://docassemble.org/docs/functions.html#zip_file"
 validation_error: "https://docassemble.org/docs/functions.html#validation_error"
+DAValidationError: "https://docassemble.org/docs/functions.html#DAValidationError"

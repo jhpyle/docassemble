@@ -190,6 +190,7 @@
 "Invalid e-mail address": Null
 "Invalid E-mail": Null
 "Invalid Email": Null
+"Invalid invitation token": Null
 "Invalid phone number.": Null
 "Invitation has been sent.": Null
 "Invite": Null
@@ -340,6 +341,7 @@
 "README file": Null
 "Reason for needing developer account (optional)": Null
 "Reconfigure": Null
+"Registration is invite only": Null
 "Remove": Null
 "Restarting": Null
 "Restart": Null
@@ -514,6 +516,7 @@
 "URL": Null
 "Used in": Null
 "Use Package": Null
+"Use pip cache": Null
 "User List": Null
 "user": Null
 "User": Null

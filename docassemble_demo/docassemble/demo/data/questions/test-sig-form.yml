@@ -1,0 +1,35 @@
+metadata:
+  title: Test signature on multiple pages
+  short title: Signature
+  example start: 4
+  example end: 4
+---
+question: |
+  What is your name?
+fields:
+  - Name: user_name
+---
+question: |
+  What are your favorite foods?
+fields:
+  - Fruit: favorite_fruit
+  - Vegetable: favorite_vegetable
+  - Legume: favorite_legume
+---
+signature: user_signature
+question: Sign your name
+---
+mandatory: True
+question: Here is your document.
+attachment:
+  - name: Test signature
+    filename: test_signature
+    pdf template file: testsigform.pdf
+    fields:
+      - "Name": ${ user_name }
+      - "Fruit": ${ favorite_fruit }
+      - "Signature1": ${ user_signature }
+      - "Legume": ${ favorite_legume }
+      - "Vegetable": ${ favorite_vegetable }
+      - "Signature2": ${ user_signature }
+---

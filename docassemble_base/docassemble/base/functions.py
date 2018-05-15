@@ -947,6 +947,7 @@ server.default_language = 'en'
 server.default_locale = 'US.utf8'
 server.default_country = 'US'
 server.server_redis = None
+server.server_redis_user = None
 server.twilio_config = dict()
 server.daconfig = dict()
 try:
@@ -1175,7 +1176,7 @@ class ThreadVariables(threading.local):
     internal = dict()
     #user_dict = None
     initialized = False
-    redis = None
+    #redis = None
     session_id = None
     current_package = None
     interview = None

@@ -28,15 +28,20 @@ from docassemble.base.functions import get_default_timezone, word
 from flask import session, request
 from flask_kvsession import KVSessionExtension
 
-redis_host = daconfig.get('redis', None)
-if redis_host is None:
-    redis_host = 'redis://localhost'
-docassemble.base.util.set_redis_server(redis_host)
+#redis_host = daconfig.get('redis', None)
+#if redis_host is None:
+#    redis_host = 'redis://localhost'
+#docassemble.base.util.set_redis_server(redis_host)
+import docassemble.webapp.daredis
 
-store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
+from docassemble.webapp.daredis import redis_host
+
+store = RedisStore(docassemble.webapp.daredis.r_store)
 kv_session = KVSessionExtension(store, app)
 
-rr = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
+from docassemble.webapp.daredis import r as rr
+
+#rr = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
 
 threads = dict()
 secrets = dict()
@@ -58,7 +63,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
             the_timezone = pytz.timezone(person.timezone)
         else:
             the_timezone = pytz.timezone(get_default_timezone())
-        r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
+        r = redis.StrictRedis(host=redis_host, db=0)
 
         partners = set()
         pubsub = r.pubsub()
@@ -383,7 +388,7 @@ def monitor_thread(sid=None, user_id=None):
             the_timezone = pytz.timezone(person.timezone)
         else:
             the_timezone = pytz.timezone(get_default_timezone())
-        r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
+        r = redis.StrictRedis(host=redis_host, db=0)
         listening_sids = set()
         pubsub = r.pubsub()
         pubsub.subscribe(['da:monitor', sid])
@@ -798,7 +803,7 @@ def monitor_chat_log(data):
 def observer_thread(sid=None, key=None):
     with app.app_context():
         sys.stderr.write("Started observer thread for " + str(sid) + "\n")
-        r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
+        r = redis.StrictRedis(host=redis_host, db=0)
         pubsub = r.pubsub()
         pubsub.subscribe([key, sid])
         for item in pubsub.listen():

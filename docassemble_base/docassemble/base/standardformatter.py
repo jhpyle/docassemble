@@ -513,7 +513,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     varnames = dict()
     onchange = list()
     autocomplete_id = False
-    if status.using_navigation:
+    if status.using_navigation == 'vertical':
         grid_class = "col-xl-6 col-lg-6 col-md-9"
     else:
         if status.question.interview.flush_left:
@@ -1427,7 +1427,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     if debug or status.using_screen_reader:
         status.screen_reader_text['question'] = unicode(output)
     if 'rightText' in status.extras:
-        if status.using_navigation:
+        if status.using_navigation == 'vertical':
             output += '            <div id="darightbottom" class="d-block d-lg-none daright">\n'
         else:
             if status.question.interview.flush_left:

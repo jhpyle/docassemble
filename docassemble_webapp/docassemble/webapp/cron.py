@@ -51,7 +51,7 @@ def clear_old_interviews():
             stale.append(dict(key=record.key, filename=record.filename))
     for item in stale:
         obtain_lock(item['key'], item['filename'])
-        reset_user_dict(item['key'], item['filename'])
+        reset_user_dict(item['key'], item['filename'], force=True)
         release_lock(item['key'], item['filename'])
     
 def run_cron(cron_type):
@@ -100,9 +100,10 @@ def run_cron(cron_type):
                             # sys.stderr.write("  " + str(cron_type_to_use) + " assemble\n")
                             interview.assemble(user_dict, interview_status)
                             # sys.stderr.write("  " + str(cron_type_to_use) + " save\n")
-                            if interview_status.question.question_type in ["restart", "exit", "logout"]:
+                            if interview_status.question.question_type in ["restart", "exit"]:
                                 #sys.stderr.write("  Deleting dictionary\n")
-                                reset_user_dict(item['key'], item['filename'])
+                                reset_user_dict(item['key'], item['filename'], force=True)
+                            if interview_status.question.question_type in ["restart", "exit", "logout"]:
                                 release_lock(item['key'], item['filename'])
                                 #sys.stderr.write("  Deleted dictionary\n")
                             elif interview_status.question.question_type in ["backgroundresponseaction"]:

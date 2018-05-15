@@ -23,6 +23,7 @@ from docassemble.webapp.db_object import db
 from docassemble.webapp.packages.models import Package, Install, PackageAuth
 from docassemble.webapp.core.models import Supervisors
 from docassemble.webapp.files import SavedFile
+from docassemble.webapp.daredis import r
 
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
@@ -267,28 +268,47 @@ def install_package(package):
     #pip.utils.logging._log_state.indentation = 0
     pip_log = tempfile.NamedTemporaryFile()
     temp_dir = tempfile.mkdtemp()
+    use_pip_cache = r.get('da:updatepackage:use_pip_cache')
+    if use_pip_cache is None:
+        disable_pip_cache = False
+    elif int(use_pip_cache):
+        disable_pip_cache = False
+    else:
+        disable_pip_cache = True
     if package.type == 'zip' and package.upload is not None:
         saved_file = SavedFile(package.upload, extension='zip', fix=True)
         # with zipfile.ZipFile(saved_file.path + '.zip', mode='r') as zf:
         #     for zinfo in zf.infolist():
         #         parts = splitall(zinfo.filename)
         #         if parts[-1] == 'setup.py':
-        commands = ['pip', 'install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--log-file=' + pip_log.name, '--upgrade', saved_file.path + '.zip']
+        commands = ['pip', 'install']
+        if disable_pip_cache:
+            commands.append('--no-cache-dir')
+        commands.extend(['--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--log-file=' + pip_log.name, '--upgrade', saved_file.path + '.zip'])
     elif package.type == 'git' and package.giturl is not None:
         if package.gitbranch is not None:
             branchpart = '@' + str(package.gitbranch)
         else:
             branchpart = ''
         if package.gitsubdir is not None:
-            commands = ['pip', 'install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + str(package.giturl) + '.git' + branchpart + '#egg=' + package.name + '&subdirectory=' + str(package.gitsubdir)]
+            commands = ['pip', 'install']
+            if disable_pip_cache:
+                commands.append('--no-cache-dir')
+            commands.extend(['--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + str(package.giturl) + '.git' + branchpart + '#egg=' + package.name + '&subdirectory=' + str(package.gitsubdir)])
         else:
-            commands = ['pip', 'install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + str(package.giturl) + '.git' + branchpart + '#egg=' + package.name]
+            commands = ['pip', 'install']
+            if disable_pip_cache:
+                commands.append('--no-cache-dir')
+            commands.extend(['--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + str(package.giturl) + '.git' + branchpart + '#egg=' + package.name])
     elif package.type == 'pip':
         if package.limitation is None:
             limit = ""
         else:
             limit = str(package.limitation)
-        commands = ['pip', 'install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, package.name + limit]
+        commands = ['pip', 'install']
+        if disable_pip_cache:
+            commands.append('--no-cache-dir')
+        commands.extend(['--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, package.name + limit])
     else:
         sys.stderr.write("Wrong package type\n")
         return 1, 'Unable to recognize package type: ' + package.name

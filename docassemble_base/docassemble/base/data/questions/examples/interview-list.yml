@@ -1,0 +1,84 @@
+metadata:
+  title: List of interviews
+  short title: Interviews
+  documentation: "https://docassemble.org/docs/functions.html#interview_list"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  My interviews
+subquestion: |
+  % for interview in interview_list():
+  * ${ interview['title'] }
+    started at
+    ${ interview['starttime'] }.
+  % endfor
+field: my_interviews
+---
+question: |
+  My demo interviews
+subquestion: |
+  % for interview in interview_list(filename='docassemble.demo:data/questions/questions.yml'):
+  * ${ interview['title'] }
+    started at
+    ${ interview['starttime'] }.
+  % endfor
+field: my_demo_interviews
+---
+question: |
+  All interviews by another user
+subquestion: |
+  % for interview in interview_list(user_id=3, exclude_invalid=False):
+  * ${ interview['title'] }
+    started at
+    ${ interview['starttime'] }
+    by
+    ${ interview['user_id'] }.
+  % endfor
+field: other_person_interviews
+---
+question: |
+  Demo interviews by another user
+subquestion: |
+  % for interview in interview_list(user_id=3, filename='docassemble.demo:data/questions/questions.yml', exclude_invalid=False):
+  * ${ interview['title'] }
+    started at
+    ${ interview['starttime'] }
+    by
+    ${ interview['user_id'] }.
+  % endfor
+field: other_person_demo_interviews
+---
+question: |
+  All interviews on server
+subquestion: |
+  % for interview in interview_list(user_id='all', exclude_invalid=False):
+  * ${ interview['title'] }
+    started at
+    ${ interview['starttime'] }
+    by
+    ${ interview['user_id'] }.
+  % endfor
+field: all_interviews
+---
+question: |
+  Demo interviews on server
+subquestion: |
+  % for interview in interview_list(user_id='all', filename='docassemble.demo:data/questions/questions.yml', exclude_invalid=False):
+  * ${ interview['title'] }
+    started at
+    ${ interview['starttime'] }
+    by
+    ${ interview['user_id'] }.
+  % endfor
+event: all_demo_interviews
+---
+mandatory: True
+code: |
+  my_interviews
+  my_demo_interviews
+  other_person_interviews
+  other_person_demo_interviews
+  all_interviews
+  all_demo_interviews

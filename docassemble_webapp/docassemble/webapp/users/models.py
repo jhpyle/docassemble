@@ -64,6 +64,7 @@ class UserDictKeys(db.Model):
     filename = db.Column(db.Text())
     key = db.Column(db.String(250))
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
+    temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'))
 
 # class UserDictLock(db.Model):
 #     __tablename__ = dbtableprefix + "userdictlock"

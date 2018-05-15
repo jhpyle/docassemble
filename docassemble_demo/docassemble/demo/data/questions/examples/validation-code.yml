@@ -2,8 +2,11 @@ metadata:
   title: Input validation
   short title: Valid
   documentation: "https://docassemble.org/docs/fields#input validation"
-  example start: 2
-  example end: 2
+  example start: 3
+  example end: 3
+---
+modules:
+  - docassemble.base.util
 ---
 mandatory: True
 question: |
@@ -23,4 +26,4 @@ fields:
     datatype: integer
 validation code: |
   if number_of_oranges + number_of_apples != 10:
-    raise Exception("The number of fruit must add up to 10!")
+    validation_error("The number of fruit must add up to 10!")

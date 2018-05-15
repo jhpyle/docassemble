@@ -5806,11 +5806,22 @@ Feature: Example interviews
     And I click the button "Try again"
     Then I should see the phrase "What interview would you like to complete?"
 
-  # Scenario: Test the interview "Side of the bed"
-  #   Given I start the interview "docassemble.demo:data/questions/examples/save_object.yml"
-
-  # Scenario: Test the interview ""
+  # Scenario: Test the interview "Common file for workers compensation questions"
   #   Given I start the interview "docassemble.demo:data/questions/examples/wc_common.yml"
 
   # Scenario: Test the interview "Side of the bed"
   #   Given I start the interview "docassemble.demo:data/questions/examples/wc_side_of_bed.yml"
+
+  # Scenario: Test the interview "List of interviews"
+  #   Given I start the interview "docassemble.base:data/questions/examples/interview-list.yml"
+
+  Scenario: Test the interview "Horizontal navigation bar"
+    Given I start the interview "docassemble.base:data/questions/examples/sections-horizontal.yml"
+    Then I should see the phrase "Welcome to the interview"
+
+  # Scenario: Test the interview "Harry Potter or Heidegger?"
+  #   Given I start the interview "docassemble.demo:data/questions/examples/harry-potter-or-heidegger.yml"
+
+  # Scenario: Test the interview "Test signature on multiple pages"
+  #   Given I start the interview "docassemble.demo:data/questions/test-sig-form.yml"
+

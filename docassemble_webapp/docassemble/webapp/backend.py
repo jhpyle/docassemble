@@ -404,25 +404,55 @@ def advance_progress(user_dict):
     user_dict['_internal']['progress'] += 0.05*(100-user_dict['_internal']['progress'])
     return
 
-def reset_user_dict(user_code, filename):
+def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=False):
     #logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename))
-    UserDict.query.filter_by(key=user_code, filename=filename).delete()
-    db.session.commit()
-    UserDictKeys.query.filter_by(key=user_code, filename=filename).delete()
-    db.session.commit()
-    for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).all():
-        old_file = SavedFile(upload.indexno)
-        old_file.delete()
-    Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).delete()
-    db.session.commit()
-    # Attachments.query.filter_by(key=user_code, filename=filename).delete()
-    # db.session.commit()
-    SpeakList.query.filter_by(key=user_code, filename=filename).delete()
-    db.session.commit()
-    ChatLog.query.filter_by(key=user_code, filename=filename).delete()
-    db.session.commit()
-    Shortener.query.filter_by(uid=user_code, filename=filename).delete()
-    db.session.commit()
+    if force:
+        the_user_id = None
+    else:
+        if user_id is None and temp_user_id is None:
+            if current_user.is_authenticated and not current_user.is_anonymous:
+                user_type = 'user'
+                the_user_id = current_user.id
+            else:
+                user_type = 'tempuser'
+                the_user_id = session.get('tempuser', None)
+        elif user_id is not None:
+            user_type = 'user'
+            the_user_id = user_id
+        else:
+            user_type = 'tempuser'
+            the_user_id = temp_user_id
+    if the_user_id is None:
+        UserDictKeys.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.commit()
+        do_delete = True
+    else:
+        if user_type == 'user':
+            UserDictKeys.query.filter_by(key=user_code, filename=filename, user_id=the_user_id).delete()
+        else:
+            UserDictKeys.query.filter_by(key=user_code, filename=filename, temp_user_id=the_user_id).delete()
+        db.session.commit()
+        existing_user_dict_key = UserDictKeys.query.filter_by(key=user_code, filename=filename).first()
+        if not existing_user_dict_key:
+            do_delete = True
+        else:
+            do_delete = False
+    if do_delete:
+        UserDict.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.commit()
+        for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).all():
+            old_file = SavedFile(upload.indexno)
+            old_file.delete()
+        Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).delete()
+        db.session.commit()
+        # Attachments.query.filter_by(key=user_code, filename=filename).delete()
+        # db.session.commit()
+        SpeakList.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.commit()
+        ChatLog.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.commit()
+        Shortener.query.filter_by(uid=user_code, filename=filename).delete()
+        db.session.commit()
     #logmessage("reset_user_dict: done")
     return
 

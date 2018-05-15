@@ -28,7 +28,7 @@ import json
 import docassemble.base.filter
 import docassemble.base.pdftk
 import docassemble.base.file_docx
-from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute
+from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError
 import docassemble.base.functions
 from docassemble.base.functions import pickleable_objects, word, get_language, server, RawValue, get_config
 from docassemble.base.logger import logmessage
@@ -951,7 +951,7 @@ class Question:
             if 'go full screen' in data['features'] and data['features']['go full screen']:
                 self.interview.force_fullscreen = data['features']['go full screen']
             if 'navigation' in data['features'] and data['features']['navigation']:
-                self.interview.use_navigation = True
+                self.interview.use_navigation = data['features']['navigation']
             if 'centered' in data['features'] and not data['features']['centered']:
                 self.interview.flush_left = True
             if 'maximum image size' in data['features']:
@@ -2955,21 +2955,24 @@ class Question:
                     extras['max_image_size'] = eval(field.max_image_size['compute'], user_dict)
                 if hasattr(field, 'validate'):
                     the_func = eval(field.validate['compute'], user_dict)
-                    if hasattr(field, 'datatype'):
-                        if field.datatype in ('number', 'integer', 'currency', 'range'):
-                            the_func(0)
-                        elif field.datatype in ('text', 'area', 'password', 'email', 'radio'):
+                    try:
+                        if hasattr(field, 'datatype'):
+                            if field.datatype in ('number', 'integer', 'currency', 'range'):
+                                the_func(0)
+                            elif field.datatype in ('text', 'area', 'password', 'email', 'radio'):
+                                the_func('')
+                            elif field.datatype == 'date':
+                                the_func('01/01/1970')
+                            elif field.datatype == 'time':
+                                the_func('12:00 AM')
+                            elif field.datatype == 'datetime':
+                                the_func('01/01/1970 12:00 AM')
+                            elif field.datatype.startswith('yesno') or field.datatype.startswith('noyes'):
+                                the_func(True)
+                        else:
                             the_func('')
-                        elif field.datatype == 'date':
-                            the_func('01/01/1970')
-                        elif field.datatype == 'time':
-                            the_func('12:00 AM')
-                        elif field.datatype == 'datetime':
-                            the_func('01/01/1970 12:00 AM')
-                        elif field.datatype.startswith('yesno') or field.datatype.startswith('noyes'):
-                            the_func(True)
-                    else:
-                        the_func('')
+                    except DAValidationError as err:
+                        pass
                 if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes'):
                     if field.number not in selectcompute:
                         raise DAError("datatype was set to object but no code or selections was provided")

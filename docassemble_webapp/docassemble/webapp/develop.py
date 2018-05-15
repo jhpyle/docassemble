@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from docassemble.base.functions import word
-from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField, FileField, HiddenField, RadioField
+from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField, FileField, HiddenField, RadioField, BooleanField
 import re
 import sys
 
@@ -27,6 +27,7 @@ class UpdatePackageForm(FlaskForm):
     gitbranch = SelectField(word('GitHub Branch'))
     zipfile = FileField(word('Zip File'))
     pippackage = StringField(word('Package on PyPI'))
+    use_cache = BooleanField(word('Use pip cache'), default=True)
     submit = SubmitField(word('Update'))
 
 class ConfigForm(FlaskForm):

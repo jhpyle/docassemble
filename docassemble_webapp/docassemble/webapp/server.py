@@ -253,6 +253,173 @@ def custom_resend_confirm_email():
         return redirect(flask_user.views._endpoint_url(user_manager.after_resend_confirm_email_endpoint))
     return user_manager.render_function(user_manager.resend_confirm_email_template, form=form)
 
+def custom_register():
+    """ Display registration form and create new User."""
+    if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
+        is_json = True
+    else:
+        is_json = False
+        
+    user_manager =  current_app.user_manager
+    db_adapter = user_manager.db_adapter
+
+    safe_next = _get_safe_next_param('next', user_manager.after_login_endpoint)
+    safe_reg_next = _get_safe_next_param('reg_next', user_manager.after_register_endpoint)
+
+    if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
+        return add_secret_to(redirect(safe_next))
+
+    # Initialize form
+    login_form = user_manager.login_form()                      # for login_or_register.html
+    register_form = user_manager.register_form(request.form)    # for register.html
+
+    # invite token used to determine validity of registeree
+    invite_token = request.values.get("token")
+
+    # require invite without a token should disallow the user from registering
+    if user_manager.require_invitation and not invite_token:
+        flash(word("Registration is invite only"), "error")
+        return redirect(url_for('user.login'))
+
+    user_invite = None
+    if invite_token and db_adapter.UserInvitationClass:
+        user_invite = db_adapter.find_first_object(db_adapter.UserInvitationClass, token=invite_token)
+        if user_invite:
+            register_form.invite_token.data = invite_token
+        else:
+            flash(word("Invalid invitation token"), "error")
+            return redirect(url_for('user.login'))
+
+    if request.method != 'POST':
+        login_form.next.data     = register_form.next.data     = safe_next
+        login_form.reg_next.data = register_form.reg_next.data = safe_reg_next
+        if user_invite:
+            register_form.email.data = user_invite.email
+
+    # Process valid POST
+    if request.method == 'POST' and register_form.validate():
+        # Create a User object using Form fields that have a corresponding User field
+        User = db_adapter.UserClass
+        user_class_fields = User.__dict__
+        user_fields = {}
+
+        # Create a UserEmail object using Form fields that have a corresponding UserEmail field
+        if db_adapter.UserEmailClass:
+            UserEmail = db_adapter.UserEmailClass
+            user_email_class_fields = UserEmail.__dict__
+            user_email_fields = {}
+
+        # Create a UserAuth object using Form fields that have a corresponding UserAuth field
+        if db_adapter.UserAuthClass:
+            UserAuth = db_adapter.UserAuthClass
+            user_auth_class_fields = UserAuth.__dict__
+            user_auth_fields = {}
+
+        # Enable user account
+        if db_adapter.UserProfileClass:
+            if hasattr(db_adapter.UserProfileClass, 'active'):
+                user_auth_fields['active'] = True
+            elif hasattr(db_adapter.UserProfileClass, 'is_enabled'):
+                user_auth_fields['is_enabled'] = True
+            else:
+                user_auth_fields['is_active'] = True
+        else:
+            if hasattr(db_adapter.UserClass, 'active'):
+                user_fields['active'] = True
+            elif hasattr(db_adapter.UserClass, 'is_enabled'):
+                user_fields['is_enabled'] = True
+            else:
+                user_fields['is_active'] = True
+
+        # For all form fields
+        for field_name, field_value in register_form.data.items():
+            # Hash password field
+            if field_name == 'password':
+                hashed_password = user_manager.hash_password(field_value)
+                if db_adapter.UserAuthClass:
+                    user_auth_fields['password'] = hashed_password
+                else:
+                    user_fields['password'] = hashed_password
+            # Store corresponding Form fields into the User object and/or UserProfile object
+            else:
+                if field_name in user_class_fields:
+                    user_fields[field_name] = field_value
+                if db_adapter.UserEmailClass:
+                    if field_name in user_email_class_fields:
+                        user_email_fields[field_name] = field_value
+                if db_adapter.UserAuthClass:
+                    if field_name in user_auth_class_fields:
+                        user_auth_fields[field_name] = field_value
+
+        # Add User record using named arguments 'user_fields'
+        user = db_adapter.add_object(User, **user_fields)
+        if db_adapter.UserProfileClass:
+            user_profile = user
+
+        # Add UserEmail record using named arguments 'user_email_fields'
+        if db_adapter.UserEmailClass:
+            user_email = db_adapter.add_object(UserEmail,
+                    user=user,
+                    is_primary=True,
+                    **user_email_fields)
+        else:
+            user_email = None
+
+        # Add UserAuth record using named arguments 'user_auth_fields'
+        if db_adapter.UserAuthClass:
+            user_auth = db_adapter.add_object(UserAuth, **user_auth_fields)
+            if db_adapter.UserProfileClass:
+                user = user_auth
+            else:
+                user.user_auth = user_auth
+
+        require_email_confirmation = True
+        if user_invite:
+            if user_invite.email == register_form.email.data:
+                require_email_confirmation = False
+                db_adapter.update_object(user, confirmed_at=datetime.utcnow())
+
+        db_adapter.commit()
+
+        # Send 'registered' email and delete new User object if send fails
+        if user_manager.send_registered_email:
+            try:
+                # Send 'registered' email
+                flask_user.views._send_registered_email(user, user_email, require_email_confirmation)
+            except Exception as e:
+                # delete new User object if send fails
+                db_adapter.delete_object(user)
+                db_adapter.commit()
+                raise
+
+        # Send user_registered signal
+        flask_user.signals.user_registered.send(current_app._get_current_object(),
+                                                user=user,
+                                                user_invite=user_invite)
+
+        # Redirect if USER_ENABLE_CONFIRM_EMAIL is set
+        if user_manager.enable_confirm_email and require_email_confirmation:
+            safe_reg_next = user_manager.make_safe_url_function(register_form.reg_next.data)
+            return redirect(safe_reg_next)
+
+        # Auto-login after register or redirect to login page
+        if 'reg_next' in request.args:
+            safe_reg_next = user_manager.make_safe_url_function(register_form.reg_next.data)
+        else:
+            safe_reg_next = _endpoint_url(user_manager.after_confirm_endpoint)
+        if user_manager.auto_login_after_register:
+            return flask_user.views._do_login_user(user, safe_reg_next)
+        else:
+            return redirect(url_for('user.login') + '?next=' + quote(safe_reg_next))
+
+    # Process GET or invalid POST
+    if is_json:
+        return jsonify(action='register', csrf_token=generate_csrf())
+    return render(user_manager.register_template,
+            form=register_form,
+            login_form=login_form,
+            register_form=register_form)
+
 def custom_login():
     """ Prompt for username/email and password and sign the user in."""
     if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
@@ -328,10 +495,7 @@ def custom_login():
 def add_secret_to(response):
     if 'newsecret' in session:
         response.set_cookie('secret', session['newsecret'])
-        #logmessage("post_login: setting the cookie to " + session['newsecret'])
         del session['newsecret']
-    # else:
-    #     logmessage("post_login: no newsecret")
     return response
 
 def logout():
@@ -471,7 +635,7 @@ from flask_user import UserManager, SQLAlchemyAdapter
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 from docassemble.webapp.users.views import user_profile_page
 user_manager = UserManager()
-user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, login_view_function=custom_login, resend_confirm_email_view_function=custom_resend_confirm_email, resend_confirm_email_form=MyResendConfirmEmailForm, password_validator=password_validator)
+user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, login_view_function=custom_login, register_view_function=custom_register, resend_confirm_email_view_function=custom_resend_confirm_email, resend_confirm_email_form=MyResendConfirmEmailForm, password_validator=password_validator)
 from flask_login import LoginManager
 lm = LoginManager()
 lm.init_app(app)
@@ -518,7 +682,7 @@ import urlparse
 import json
 import base64
 import requests
-import redis
+#import redis
 import yaml
 import inspect
 import pyotp
@@ -576,14 +740,13 @@ from jinja2.exceptions import TemplateError
 mimetypes.add_type('application/x-yaml', '.yml')
 mimetypes.add_type('application/x-yaml', '.yaml')
 
-redis_host = daconfig.get('redis', None)
-if redis_host is None:
-    redis_host = 'redis://localhost'
-
 #docassemble.base.parse.debug = DEBUG
-docassemble.base.util.set_redis_server(redis_host)
+#docassemble.base.util.set_redis_server(redis_host)
 
-store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
+from docassemble.webapp.daredis import r_store
+
+store = RedisStore(r_store)
+#store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
 
 kv_session = KVSessionExtension(store, app)
 
@@ -1312,7 +1475,7 @@ def fresh_dictionary():
     add_timestamps(the_dict)
     return the_dict    
 
-def manual_checkout(manual_session_id=None, manual_filename=None):
+def manual_checkout(manual_session_id=None, manual_filename=None, user_id=None):
     if manual_session_id is not None:
         session_id = manual_session_id
     else:
@@ -1323,10 +1486,13 @@ def manual_checkout(manual_session_id=None, manual_filename=None):
         yaml_filename = session.get('i', None)
     if session_id is None or yaml_filename is None:
         return
-    if current_user.is_anonymous:
-        the_user_id = 't' + str(session.get('tempuser', None))
+    if user_id is None:
+        if current_user.is_anonymous:
+            the_user_id = 't' + str(session.get('tempuser', None))
+        else:
+            the_user_id = current_user.id
     else:
-        the_user_id = current_user.id
+        the_user_id = user_id
     endpart = ':uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
     pipe = r.pipeline()
     pipe.expire('da:session' + endpart, 12)
@@ -1460,24 +1626,43 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
     #if extension == "pdf":
     #    make_image_files(saved_file.path)
     saved_file.finalize()
-    
-def save_user_dict_key(user_code, filename, priors=False, user=None):
-    if user is None:
-        user = current_user
+
+def sub_temp_user_dict_key(temp_user_id, user_id):
+    for record in UserDictKeys.query.filter_by(temp_user_id=temp_user_id).all():
+        record.temp_user_id = None
+        record.user_id = user_id
+    db.session.commit()
+
+def save_user_dict_key(session_id, filename, priors=False, user=None):
+    if user is not None:
+        user_id = user.id
+    else:
+        if current_user.is_authenticated and not current_user.is_anonymous:
+            is_auth = True
+            user_id = current_user.id
+        else:
+            is_auth = False
+            user_id = session.get('tempuser', None)
+            if user_id is None:
+                logmessage("save_user_dict_key: no user ID available for saving")
+                return
     #logmessage("save_user_dict_key: called")
     interview_list = set([filename])
     found = set()
     if priors:
-        for the_record in db.session.query(UserDict.filename).filter_by(key=user_code).group_by(UserDict.filename).all():
+        for the_record in db.session.query(UserDict.filename).filter_by(key=session_id).group_by(UserDict.filename).all():
             # if the_record.filename not in interview_list:
             #     logmessage("Other interview found: " + the_record.filename)
             interview_list.add(the_record.filename)
     for filename_to_search in interview_list:
-        the_record = UserDictKeys.query.filter_by(key=user_code, filename=filename_to_search, user_id=user.id).first()
+        the_record = UserDictKeys.query.filter_by(key=session_id, filename=filename_to_search, user_id=user_id).first()
         if the_record:
             found.add(filename_to_search)
     for filename_to_save in (interview_list - found):
-        new_record = UserDictKeys(key=user_code, filename=filename_to_save, user_id=user.id)
+        if is_auth:
+            new_record = UserDictKeys(key=session_id, filename=filename_to_save, user_id=user_id)
+        else:
+            new_record = UserDictKeys(key=session_id, filename=filename_to_save, temp_user_id=user_id)
         db.session.add(new_record)
         db.session.commit()
     return
@@ -2076,8 +2261,8 @@ def get_package_info(exclude_core=False):
             package_auth[auth.package_id] = dict()
         package_auth[auth.package_id][auth.user_id] = auth.authtype
     for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
-        if exclude_core and package.name in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
-            continue
+        #if exclude_core and package.name in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
+        #    continue
         if package.name in seen:
             continue
         seen[package.name] = 1
@@ -2093,6 +2278,9 @@ def get_package_info(exclude_core=False):
             if package.core:
                 can_uninstall = False
                 can_update = is_admin
+            if exclude_core and package.name in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
+                can_uninstall = False
+                can_update = False
             package_list.append(Object(package=package, can_update=can_update, can_uninstall=can_uninstall))
     return package_list, package_auth
 
@@ -3025,6 +3213,8 @@ def oauth_callback(provider):
         db.session.commit()
     login_user(user, remember=False)
     if 'i' in session and 'uid' in session:
+        if 'tempuser' in session:
+            sub_temp_user_dict_key(session['tempuser'], user.id)
         save_user_dict_key(session['uid'], session['i'], priors=True)
         session['key_logged'] = True
     #logmessage("oauth_callback: calling substitute_secret")
@@ -3123,6 +3313,8 @@ def phone_login_verify():
             login_user(user, remember=False)
             r.delete('da:phonelogin:ip:' + str(request.remote_addr) + ':phone:' + phone_number)
             if 'i' in session and 'uid' in session:
+                if 'tempuser' in session:
+                    sub_temp_user_dict_key(session['tempuser'], user.id)
                 save_user_dict_key(session['uid'], session['i'], priors=True)
                 session['key_logged'] = True
             secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()))
@@ -3558,6 +3750,7 @@ def leave():
 def exit():
     session_id = session.get('uid', None)
     yaml_filename = session.get('i', None)
+    the_exit_page = request.args.get('next', exit_page)
     if 'key_logged' in session:
         del session['key_logged']
     if session_id is not None and yaml_filename is not None:
@@ -3568,8 +3761,8 @@ def exit():
     if current_user.is_authenticated:
         flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
         logout_user()
-        delete_session()
-    response = redirect(exit_page)
+    delete_session() # used to be indented
+    response = redirect(the_exit_page)
     response.set_cookie('visitor_secret', '', expires=0)
     response.set_cookie('secret', '', expires=0)
     response.set_cookie('session', '', expires=0)
@@ -4076,13 +4269,13 @@ def index():
                     else:
                         message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
                 #logmessage("index: calling reset_session with retain_code")
-                if 'uid' in session and user_dict_exists(session['uid'], yaml_filename):
-                    retain_code = False
-                else:
-                    retain_code = True
-                user_code, user_dict = reset_session(yaml_filename, secret, retain_code=retain_code)
-                if reset_interview:
-                    reset_user_dict(user_code, yaml_filename)
+                # if (('uid' in session and user_dict_exists(session['uid'], yaml_filename)) or old_yaml_filename != yaml_filename):
+                #     retain_code = False
+                # else:
+                #     retain_code = True
+                if reset_interview and 'uid' in session:
+                    reset_user_dict(session['uid'], yaml_filename)
+                user_code, user_dict = reset_session(yaml_filename, secret)
                 add_referer(user_dict)
                 save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
                 release_lock(user_code, yaml_filename)
@@ -4103,8 +4296,9 @@ def index():
                 flash(word(message), 'info')
     else:
         if session_parameter is None and reset_interview:
+            if 'uid' in session:
+                reset_user_dict(session['uid'], yaml_filename)
             user_code, user_dict = reset_session(yaml_filename, secret, retain_code=False)
-            reset_user_dict(user_code, yaml_filename)
             add_referer(user_dict)
             save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
             release_lock(user_code, yaml_filename)
@@ -4143,8 +4337,6 @@ def index():
             encrypted = False
             session['encrypted'] = encrypted
             is_encrypted = encrypted
-            if 'key_logged' in session:
-                del session['key_logged']
             need_to_resave = True
             need_to_reset = True
         if encrypted != is_encrypted:
@@ -4168,8 +4360,6 @@ def index():
         add_referer(user_dict)
         encrypted = False
         session['encrypted'] = encrypted
-        if 'key_logged' in session:
-            del session['key_logged']
         steps = 1
     #g.got_dict = time.time()
     action = None
@@ -4187,7 +4377,8 @@ def index():
         session['encrypted'] = encrypted
     # else:
     #     logmessage("index: no encryption mismatch for should be True")        
-    if current_user.is_authenticated and 'key_logged' not in session:
+    # if current_user.is_authenticated and 'key_logged' not in session:
+    if 'key_logged' not in session:
         #logmessage("index: need to save user dict key")
         save_user_dict_key(user_code, yaml_filename)
         session['key_logged'] = True
@@ -5274,7 +5465,8 @@ def index():
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface))
         reset_user_dict(user_code, yaml_filename)
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
-        if current_user.is_authenticated and 'visitor_secret' not in request.cookies:
+        #if current_user.is_authenticated and 'visitor_secret' not in request.cookies:
+        if 'visitor_secret' not in request.cookies:
             save_user_dict_key(user_code, yaml_filename)
             session['key_logged'] = True
         steps = 1
@@ -5309,8 +5501,10 @@ def index():
         manual_checkout()
         # user_dict = fresh_dictionary()
         # logmessage("Calling reset_user_dict on " + user_code + " and " + yaml_filename)
-        reset_user_dict(user_code, yaml_filename)
-        delete_session_for_interview()
+        if interview_status.question.question_type == "exit":
+            reset_user_dict(user_code, yaml_filename)
+        # delete_session_for_interview() # used to be this
+        delete_session()
         # why did I think it would be good to put a blank dict in its place?
         # save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
         # if current_user.is_authenticated and 'visitor_secret' not in request.cookies:
@@ -5321,14 +5515,13 @@ def index():
             response = do_redirect(interview_status.questionText, is_ajax, is_json)
         else:
             response = do_redirect(exit_page, is_ajax, is_json)
-        if interview_status.question.question_type == "logout":
-            if current_user.is_authenticated:
-                flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
-                logout_user()
-                delete_session()
-            response.set_cookie('visitor_secret', '', expires=0)
-            response.set_cookie('secret', '', expires=0)
-            response.set_cookie('session', '', expires=0)
+        if current_user.is_authenticated:
+            flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
+            logout_user()
+        delete_session()
+        response.set_cookie('visitor_secret', '', expires=0)
+        response.set_cookie('secret', '', expires=0)
+        response.set_cookie('session', '', expires=0)
         return response
     if interview_status.question.question_type == "response":
         if is_ajax:
@@ -7481,9 +7674,18 @@ def index():
     else:
         the_progress_bar = None
     if interview_status.question.interview.use_navigation:
-        the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview)
+        if interview_status.question.interview.use_navigation == 'horizontal':
+            the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, inner_div_class='nav flex-row justify-content-center align-items-center nav-pills danav danav-horiz danavnested-horiz')
+            if the_nav_bar != '':
+                #offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12
+                the_nav_bar = '        <div class="col d-none d-md-block">\n          <div class="nav flex-row justify-content-center align-items-center nav-pills danav danav-horiz">\n            ' + the_nav_bar + '\n          </div>\n        </div>\n      </div>\n      <div class="row tab-content">\n'
+        else:
+            the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview)
         if the_nav_bar != '':
-            interview_status.using_navigation = True
+            if interview_status.question.interview.use_navigation == 'horizontal':
+                interview_status.using_navigation = 'horizontal'
+            else:
+                interview_status.using_navigation = 'vertical'
         else:
             interview_status.using_navigation = False
     else:
@@ -7563,7 +7765,7 @@ def index():
         output += the_nav_bar
     output += content
     if 'rightText' in interview_status.extras:
-        if interview_status.using_navigation:
+        if interview_status.using_navigation == 'vertical':
             output += '          <section id="daright" class="d-none d-lg-block col-lg-3 col-xl-2 daright">\n'
         else:
             if interview_status.question.interview.flush_left:
@@ -7576,7 +7778,7 @@ def index():
     output += "      </div>\n"
     if len(interview_status.attributions):
         output += '      <div class="row">' + "\n"
-        if interview_status.using_navigation:
+        if interview_status.using_navigation == 'vertical':
             output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="attributions">\n'
         else:
             if interview_status.question.interview.flush_left:
@@ -7589,7 +7791,7 @@ def index():
         output += '      </div>' + "\n"
     if debug_mode:
         output += '      <div class="row">' + "\n"
-        if interview_status.using_navigation:
+        if interview_status.using_navigation == 'vertical':
             output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-xl-6 col-lg-6 col-md-9 col-sm-12" style="display: none" id="readability">' + readability_report + '</div>'
         else:
             if interview_status.question.interview.flush_left:
@@ -7877,8 +8079,7 @@ def interview_menu(absolute_urls=False, start_new=False):
 
 @app.route('/list', methods=['GET'])
 def interview_start():
-    if current_user.is_authenticated:
-        delete_session_for_interview()
+    delete_session_for_interview()
     if len(daconfig['dispatch']) == 0:
         return redirect(url_for('index', i=final_default_yaml_filename))
     if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
@@ -8122,7 +8323,7 @@ def visit_interview():
     session['key_logged'] = True
     if 'tempuser' in session:
         del session['tempuser']
-    response = redirect(url_for('index', reset=1, i=i))
+    response = redirect(url_for('index', i=i))
     response.set_cookie('visitor_secret', obj['secret'])
     return response
 
@@ -9977,6 +10178,11 @@ def update_package():
         session['taskwait'] = result.id
         return redirect(url_for('update_package_wait'))
     if request.method == 'POST' and form.validate_on_submit():
+        use_pip_cache = form.use_cache.data
+        pipe = r.pipeline()
+        pipe.set('da:updatepackage:use_pip_cache', 1 if use_pip_cache else 0)
+        pipe.expire('da:updatepackage:use_pip_cache', 120)
+        pipe.execute()
         if 'zipfile' in request.files and request.files['zipfile'].filename:
             try:
                 the_file = request.files['zipfile']
@@ -10247,7 +10453,7 @@ def create_playground_package():
             author_info['last name'] = current_user.last_name
             author_info['id'] = current_user.id
             if do_pypi:
-                if current_user.pypi_username is None or current_user.pypi_password is None:
+                if current_user.pypi_username is None or current_user.pypi_password is None or current_user.pypi_username == '' or current_user.pypi_password == '':
                     flash("Could not publish to PyPI because username and password were not defined")
                     return redirect(url_for('playground_packages', file=current_package))
                 if current_user.timezone:
@@ -11975,7 +12181,7 @@ def playground_packages():
     pypi_username = current_user.pypi_username
     pypi_password = current_user.pypi_password
     pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
-    if allow_pypi is True and pypi_username is not None and pypi_password is not None:
+    if allow_pypi is True and pypi_username is not None and pypi_password is not None and pypi_username != '' and pypi_password != '':
         can_publish_to_pypi = True
     else:
         can_publish_to_pypi = False
@@ -14445,40 +14651,42 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         sessions_to_delete = set()
         if tag:
             for interview_info in user_interviews(user_id=user_id, secret=secret, tag=tag):
-                sessions_to_delete.add((interview_info['session'], interview_info['filename']))
+                sessions_to_delete.add((interview_info['session'], interview_info['filename'], interview_info['user_id']))
         else:
             if user_id is None:
                 if filename is None:
                     interview_query = db.session.query(UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key)
                 else:
                     interview_query = db.session.query(UserDict.filename, UserDict.key).filter(UserDict.filename == filename).group_by(UserDict.filename, UserDict.key)
+                for interview_info in interview_query:
+                    sessions_to_delete.add((interview_info.key, interview_info.filename, None))
             else:
                 if filename is None:
                     interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.user_id == user_id).group_by(UserDictKeys.filename, UserDictKeys.key)
                 else:
                     interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename).group_by(UserDictKeys.filename, UserDictKeys.key)
-            for interview_info in interview_query:
-                sessions_to_delete.add((interview_info.key, interview_info.filename))
+                for interview_info in interview_query:
+                    sessions_to_delete.add((interview_info.key, interview_info.filename, user_id))
             if user_id is not None:
                 if filename is None:
                     interview_query = db.session.query(UserDict.filename, UserDict.key).filter(UserDict.user_id == user_id).group_by(UserDict.filename, UserDict.key)
                 else:
                     interview_query = db.session.query(UserDict.filename, UserDict.key).filter(UserDict.user_id == user_id, UserDict.filename == filename).group_by(UserDict.filename, UserDict.key)
                 for interview_info in interview_query:
-                    sessions_to_delete.add((interview_info.key, interview_info.filename))
+                    sessions_to_delete.add((interview_info.key, interview_info.filename, user_id))
         if len(sessions_to_delete):
-            for session_id, yaml_filename in sessions_to_delete:
-                manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename)
+            for session_id, yaml_filename, the_user_id in sessions_to_delete:
+                manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename, user_id=the_user_id)
                 obtain_lock(session_id, yaml_filename)
-                reset_user_dict(session_id, yaml_filename)
+                reset_user_dict(session_id, yaml_filename, user_id=the_user_id)
                 release_lock(session_id, yaml_filename)
         return len(sessions_to_delete)
     if action == 'delete':
         if filename is None or session is None:
             raise Exception("user_interviews: filename and session must be provided in order to delete interview")
-        manual_checkout(manual_session_id=session, manual_filename=filename)
+        manual_checkout(manual_session_id=session, manual_filename=filename, user_id=user_id)
         obtain_lock(session, filename)
-        reset_user_dict(session, filename)
+        reset_user_dict(session, filename, user_id=user_id)
         release_lock(session, filename)
         return True
     if current_user and current_user.is_authenticated and current_user.timezone:
@@ -14488,14 +14696,14 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
     if user_id is not None:
         if filename is not None:
-            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno)
+            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno)
         else:
-            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno)
+            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno)
     else:
         if filename is not None:
-            interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).filter(UserDict.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserModel.email)
+            interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).filter(UserDict.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserModel.email)
         else:
-            interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).group_by(UserDictKeys.user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno,UserModel.email).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserModel.email)
+            interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).group_by(UserDictKeys.user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno,UserModel.email).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserModel.email)
     #logmessage(str(interview_query))
     interviews = list()
     for interview_info in interview_query:
@@ -14564,7 +14772,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             modtime = ''
         if tag is not None and tag not in tags:
             continue
-        out = {'filename': interview_info.filename, 'session': interview_info.key, 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid, 'metadata': metadata, 'tags': tags, 'email': interview_info.email, 'user_id': interview_info.user_id}
+        out = {'filename': interview_info.filename, 'session': interview_info.key, 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid, 'metadata': metadata, 'tags': tags, 'email': interview_info.email, 'user_id': interview_info.user_id, 'temp_user_id': interview_info.temp_user_id}
         if include_dict:
             out['dict'] = dictionary
         interviews.append(out)
@@ -14702,10 +14910,12 @@ def fix_secret(user=None):
 
 def login_or_register(sender, user, **extra):
     #logmessage("login or register!")
-    fix_secret(user=user)
     if 'i' in session and 'uid' in session:
+        if 'tempuser' in session:
+            sub_temp_user_dict_key(session['tempuser'], user.id)
         save_user_dict_key(session['uid'], session['i'], priors=True, user=user)
         session['key_logged'] = True
+    fix_secret(user=user)
     if 'tempuser' in session:
         changed = False
         for chat_entry in ChatLog.query.filter_by(temp_user_id=int(session['tempuser'])).all():
@@ -15039,7 +15249,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if inp.lower() in (word('exit'), word('quit')):
             logmessage("do_sms: exiting")
             if save:
-                reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
+                reset_user_dict(sess_info['uid'], sess_info['yaml_filename'], temp_user_id=sess_info['tempuser'])
             r.delete(key)
             return resp
         session['uid'] = sess_info['uid']
@@ -15622,7 +15832,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
     if interview_status.question.question_type in ("restart", "exit", "logout"):
         logmessage("do_sms: exiting because of restart or exit")
         if save:
-            reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
+            reset_user_dict(sess_info['uid'], sess_info['yaml_filename'], temp_user_id=sess_info['tempuser'])
         r.delete(key)
         if interview_status.question.question_type == 'restart':
             sess_info = dict(yaml_filename=sess_info['yaml_filename'], uid=get_unique_name(sess_info['yaml_filename'], sess_info['secret']), secret=sess_info['secret'], number=form["From"], encrypted=True, tempuser=sess_info['tempuser'], user_id=None)
@@ -17023,7 +17233,7 @@ def write_pypirc():
     pypirc_file = daconfig.get('pypirc path', '/var/www/.pypirc')
     #pypi_username = daconfig.get('pypi username', None)
     #pypi_password = daconfig.get('pypi password', None)
-    pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
+    pypi_url = daconfig.get('pypi url', 'https://upload.pypi.org/legacy/')
     # if pypi_username is None or pypi_password is None:
     #     return
     if os.path.isfile(pypirc_file):
@@ -17133,7 +17343,8 @@ for path in (FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY): #PACKAGE_
 if not os.access(WEBAPP_PATH, os.W_OK):
     sys.exit("Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH)
 
-r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
+from docassemble.webapp.daredis import r, r_user
+#r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
 #docassemble.base.functions.set_server_redis(r)
 
 #docassemble.base.util.set_twilio_config(twilio_config)
@@ -17148,6 +17359,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          terminate_sms_session=terminate_sms_session,
                                          twilio_config=twilio_config,
                                          server_redis=r,
+                                         server_redis_user=r_user,
                                          user_id_dict=user_id_dict,
                                          retrieve_emails=retrieve_emails,
                                          get_short_code=get_short_code,

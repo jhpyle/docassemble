@@ -1,0 +1,24 @@
+metadata:
+  title: Raise validation error
+  short title: Validation
+  documentation: "https://docassemble.org/docs/functions.html#validation_error"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+question: Repeat after me.
+subquestion: |
+  To continue, type "I solemnly swear
+  that I am up to no good."
+fields:
+  - no label: oath
+    validate: |
+      lambda y: validation_error("No, you typed it wrong.") if y != 'I solemnly swear that I am up to no good.' else True
+---
+mandatory: True
+need: oath
+question: |
+  You are now allowed to use
+  the Marauder's Map.
