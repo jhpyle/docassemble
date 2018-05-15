@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.60] - 2018-05-15
+### Fixed
+- Error on registration page.
+
 ## [0.2.59] - 2018-05-15
 ### Added
 - Horizontal navigation bar option.
