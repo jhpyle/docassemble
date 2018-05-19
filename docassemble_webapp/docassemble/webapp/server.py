@@ -750,6 +750,7 @@ from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipien
 from user_agents import parse as ua_parse
 import docassemble.base.ocr
 from jinja2.exceptions import TemplateError
+import uuid
 
 mimetypes.add_type('application/x-yaml', '.yml')
 mimetypes.add_type('application/x-yaml', '.yaml')
@@ -14128,6 +14129,11 @@ def utilities():
                         fields_output += "---"
                     else:
                         fields_output = word("Error: no fields could be found in the file")
+        if form.officeaddin_submit.data:
+            resp = make_response(render_template('pages/officemanifest.xml', guid=str(uuid.uuid4())))
+            resp.headers['Content-type'] = 'text/xml; charset=utf-8'
+            resp.headers['Content-Disposition'] = 'attachment; filename="manifest.xml"'
+            return resp
     extra_js = """
     <script>
       $('#pdfdocxfile').on('change', function(){

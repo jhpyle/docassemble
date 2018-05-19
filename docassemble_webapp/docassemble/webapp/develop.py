@@ -58,6 +58,7 @@ class Utilities(FlaskForm):
     scan = SubmitField(word('Scan'))
     language = StringField(word('Language'))
     language_submit = SubmitField(word('Translate'))
+    officeaddin_submit = SubmitField(word('Download'))
     
 class PlaygroundFilesForm(FlaskForm):
     section = StringField(word('Section'))
