@@ -24,7 +24,7 @@
   <HighResolutionIconUrl DefaultValue="{{ url_for('static', filename='office/cat-32.png', _external=True) }}"/>
 
   <!--If you plan to submit this add-in to the Office Store, uncomment the SupportUrl element below-->
-  <SupportUrl DefaultValue=""/>
+  <SupportUrl DefaultValue="https://docassemble.org/docs/officeaddin.html"/>
 
   <!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
   <AppDomains>
