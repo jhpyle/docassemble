@@ -17,7 +17,7 @@
 <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
   {%- if field.type != 'HiddenField' and label_visible %}
   {%- if not label %}{% set label=field.label.text|word %}{% endif %}
-  <label for="{{ field.id }}" class="control-label">{{ label|safe }}</label>
+  <label for="{{ field.id }}">{{ label|safe }}</label>
   {%- endif %}
   {%- if prelabel %}
   <div class="input-group">
@@ -65,28 +65,29 @@
 {%- endmacro %}
 
 {% macro render_checkbox_field(field, label=None) %}
-    {%- if not label %}{% set label=field.label.text|word %}{% endif %}
-    <div class="checkbox">
-      <label>
-        {{ field(type='checkbox', **kwargs) }} {{ label }}
-      </label>
-    </div>
+{%- if not label %}{% set label=field.label.text|word %}{% endif %}
+<div class="form-group">
+  <div class="form-check">
+    {{ field(type='checkbox', class='form-check-input', **kwargs) }}
+    <label class="form-check-label" for="{{ field.id }}">{{ label }}</label>
+  </div>
+</div>
 {% endmacro %}
  
 {% macro render_radio_field(field) -%}
     {%- for value, label, checked in field.iter_choices() %}
-        <div class="radio">
-          <label>
-            <input type="radio" name="{{ field.id }}" id="{{ field.id }}" value="{{ value }}"{% if checked %} checked{% endif %}>
-            {{ label }}
-          </label>
-        </div>
+<div class="form-group">
+  <div class="form-check">
+    <input class="form-check-input" type="radio" name="{{ field.id }}" id="{{ field.id }}" value="{{ value }}"{% if checked %} checked{% endif %}>
+    <label class="form-check-label" for="{{ field.id }}">{{ label }}</label>
+  </div>
+</div>
     {%- endfor %}
 {%- endmacro %}
 
 {% macro render_select_field(field) %}
 <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
-  <label for="{{ field.id }}" class="control-label">{{ field.label.text }}</label>
+  <label for="{{ field.id }}">{{ field.label.text }}</label>
   <select class="form-control" name="{{ field.id }}" id="{{ field.id }}">
   {%- for value, name, checked in field.iter_choices() %}
     <option value="{{ value }}"{% if checked %} selected="selected"{% endif %}>{{ name }}</option>
@@ -102,14 +103,12 @@
 
 {% macro render_multiselect_field(field) %}
 <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
-  <label for="{{ field.id }}" class="control-label">{{ field.label.text }}</label>
-  <div>
-  <select multiple name="{{ field.id }}" id="{{ field.id }}" name="{{ field.id }}">
+  <label for="{{ field.id }}">{{ field.label.text }}</label>
+  <select multiple class="form-control" name="{{ field.id }}" id="{{ field.id }}" name="{{ field.id }}">
   {%- for value, name, checked in field.iter_choices() %}
     <option value="{{ value }}"{% if checked %} selected="selected"{% endif %}>{{ name }}</option>
   {%- endfor %}
   </select>
-  </div>
   {%- if field.errors %}
   {%- for e in field.errors %}
   <p class="help-block">{{ e }}</p>
@@ -129,7 +128,7 @@
         {%- if not label %}
           {%- set label=field.label.text|word %}
         {%- endif %}
-      <label for="{{ field.id }}" class="control-label">{{ label|safe }}</label>
+      <label for="{{ field.id }}">{{ label|safe }}</label>
         {%- endif %}
       <div class="controls">    
       {{ field(class_='form-control', **kwargs) }}

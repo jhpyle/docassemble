@@ -2,6 +2,7 @@ en:
   First subdivision: State
   Second subdivision: County
   Third subdivision: Municipality
+  "/train": the Train Machine Learning Models page
   "/monitor": the Monitor
   "/logs": the Logs
   "/packages": Package Management
@@ -11,4 +12,4 @@ en:
   "/config": the Configuration
   "/interviews": the list of interviews
   "/user/profile": your user profile
-  "/updatepackages": the package update page
+  "/updatepackage": the package update page

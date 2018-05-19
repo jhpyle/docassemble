@@ -1,5 +1,6 @@
 metadata:
   title: Buttons with icons
+  short title: Icons
   documentation: "https://docassemble.org/docs/fields.html#image button"
 ---
 question: |

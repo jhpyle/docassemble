@@ -13,14 +13,23 @@ fields:
       - Blue
       - Green
       - Purple
-    disable others: True
+    disable others:
+      - favorite_color
+      - second_favorite_color
   - note: |
       If your favorite color is
       not listed, enter your
       favorite color here.
   - Other: favorite_color
+  - Second favorite color: second_favorite_color
+  - Explain your reasoning: reason
+    datatype: area
 ---
 question: |
   Your favorite color is
   ${ favorite_color }.
+subquestion: |
+  Your reasoning is:
+
+  ${ reason }
 mandatory: True

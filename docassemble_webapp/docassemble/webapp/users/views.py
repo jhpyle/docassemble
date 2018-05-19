@@ -40,7 +40,7 @@ def privilege_list():
       <tbody>
 """
     for role in db.session.query(Role).order_by(Role.name):
-        if role.name not in ['user', 'admin', 'developer', 'advocate', 'cron']:
+        if role.name not in ['user', 'admin', 'developer', 'advocate', 'cron', 'trainer']:
             output += '        <tr><td>' + str(role.name) + '</td><td><a class="btn btn-danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
         else:
             output += '        <tr><td>' + str(role.name) + '</td><td>&nbsp;</td></tr>\n'

@@ -216,21 +216,23 @@ def today(timezone=None, format=None):
 # if today.__doc__ is None:
 #     today.__doc__ = """Returns today's date in long form according to the current locale."""    
 
-def month_of(the_date, as_word=False):
+def month_of(the_date, as_word=False, language=None):
     """Interprets the_date as a date and returns the month.  
     Set as_word to True if you want the month as a word."""
+    if language is None:
+        language = get_language()
     try:
         if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
         if as_word:
-            return(babel.dates.format_date(date, format='MMMM', locale=get_language()))
+            return(babel.dates.format_date(date, format='MMMM', locale=language))
         return(int(date.strftime('%m')))
     except:
         return word("Bad date")
 
-def day_of(the_date):
+def day_of(the_date, language=None):
     """Interprets the_date as a date and returns the day of month."""
     try:
         if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
@@ -241,21 +243,23 @@ def day_of(the_date):
     except:
         return word("Bad date")
 
-def dow_of(the_date, as_word=False):
+def dow_of(the_date, as_word=False, language=None):
     """Interprets the_date as a date and returns the day of week as a number from 1 to 7 for Sunday through Saturday.  Set as_word to True if you want the day of week as a word."""
+    if language is None:
+        language = get_language()
     try:
         if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
         if as_word:
-            return(babel.dates.format_date(date, format='EEEE', locale=get_language()))
+            return(babel.dates.format_date(date, format='EEEE', locale=language))
         else:
             return(int(date.strftime('%u')))
     except:
         return word("Bad date")
 
-def year_of(the_date):
+def year_of(the_date, language=None):
     """Interprets the_date as a date and returns the year."""
     try:
         if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
@@ -266,8 +270,10 @@ def year_of(the_date):
     except:
         return word("Bad date")
 
-def format_date(the_date, format='long'):
+def format_date(the_date, format='long', language=None):
     """Interprets the_date as a date and returns the date formatted for the current locale."""
+    if language is None:
+        language = get_language()
     if isinstance(the_date, DAEmpty):
         return ""
     try:
@@ -275,12 +281,14 @@ def format_date(the_date, format='long'):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
-        return babel.dates.format_date(date, format=format, locale=get_language())
+        return babel.dates.format_date(date, format=format, locale=language)
     except:
         return word("Bad date")
 
-def format_datetime(the_date, format='long'):
+def format_datetime(the_date, format='long', language=None):
     """Interprets the_date as a date/time and returns the date/time formatted for the current locale."""
+    if language is None:
+        language = get_language()
     if isinstance(the_date, DAEmpty):
         return ""
     try:
@@ -288,12 +296,14 @@ def format_datetime(the_date, format='long'):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
-        return babel.dates.format_datetime(date, format=format, locale=get_language())
+        return babel.dates.format_datetime(date, format=format, locale=language)
     except:
         return word("Bad date")
 
-def format_time(the_time, format='short'):
+def format_time(the_time, format='short', language=None):
     """Interprets the_time as a date/time and returns the time formatted for the current locale."""
+    if language is None:
+        language = get_language()
     if isinstance(the_time, DAEmpty):
         return ""
     try:
@@ -301,7 +311,7 @@ def format_time(the_time, format='short'):
             time = the_time
         else:
             time = dateutil.parser.parse(the_time)
-        return babel.dates.format_time(time, format=format, locale=get_language())
+        return babel.dates.format_time(time, format=format, locale=language)
     except Exception as errmess:
         return word("Bad date: " + unicode(errmess))
 
@@ -312,14 +322,14 @@ class DateTimeDelta(object):
         return unicode(quantity_noun(output.days, word('day')))
 
 class DADateTime(datetime.datetime):
-    def format(self, format='long'):
-        return format_date(self, format=format)
-    def format_date(self, format='long'):
-        return format_date(self, format=format)
-    def format_datetime(self, format='long'):
-        return format_datetime(self, format=format)
-    def format_time(self, format='short'):
-        return format_time(self, format=format)
+    def format(self, format='long', language=None):
+        return format_date(self, format=format, language=language)
+    def format_date(self, format='long', language=None):
+        return format_date(self, format=format, language=language)
+    def format_datetime(self, format='long', language=None):
+        return format_datetime(self, format=format, language=language)
+    def format_time(self, format='short', language=None):
+        return format_time(self, format=format, language=language)
     def replace_time(self, time):
         return self.replace(hour=time.hour, minute=time.minute, second=time.second, microsecond=time.microsecond)
     @property
@@ -749,7 +759,7 @@ class Address(DAObject):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
         return(unicode(self.block()))
-    def on_one_line(self, include_unit=False, omit_default_country=True):
+    def on_one_line(self, include_unit=False, omit_default_country=True, language=None):
         """Returns a one-line address.  Primarily used internally for geolocation."""
         output = ""
         if self.city_only is False:
@@ -760,13 +770,13 @@ class Address(DAObject):
             if include_unit:
                 if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
                     if re.search(r'^[0-9]', self.unit):
-                        output += ", " + word("Unit") + " " + unicode(self.unit)
+                        output += ", " + word("Unit", language=language) + " " + unicode(self.unit)
                     else:
                         output += ", " + unicode(self.unit)
                 elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
-                    output += ", " + word("Floor") + " " + unicode(self.floor)
+                    output += ", " + word("Floor", language=language) + " " + unicode(self.floor)
                 elif hasattr(self, 'room') and self.room != '' and self.room is not None:
-                    output += ", " + word("Room") + " " + unicode(self.room)
+                    output += ", " + word("Room", language=language) + " " + unicode(self.room)
             output += ", "
         if hasattr(self, 'sublocality') and self.sublocality:
             output += unicode(self.sublocality) + ", "
@@ -957,7 +967,7 @@ class Address(DAObject):
         self.norm = the_norm
         self.norm_long = the_norm_long
         return True
-    def block(self):
+    def block(self, language=None):
         """Returns the address formatted as a block, as in a mailing."""
         output = ""
         if this_thread.evaluation_context == 'docx':
@@ -972,9 +982,9 @@ class Address(DAObject):
             if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
                 output += unicode(self.unit) + line_breaker
             elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
-                output += word("Floor") + " " + unicode(self.floor) + line_breaker
+                output += word("Floor", language=language) + " " + unicode(self.floor) + line_breaker
             elif hasattr(self, 'room') and self.room != '' and self.room is not None:
-                output += word("Room") + " " + unicode(self.room) + line_breaker
+                output += word("Room", language=language) + " " + unicode(self.room) + line_breaker
         if hasattr(self, 'sublocality') and self.sublocality:
             output += unicode(self.sublocality) + line_breaker
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
@@ -987,7 +997,7 @@ class Address(DAObject):
         elif hasattr(self, 'postal_code') and self.postal_code:
             output += " " + unicode(self.postal_code)
         return(output)
-    def line_one(self):
+    def line_one(self, language=None):
         """Returns the first line of the address, including the unit 
         number if there is one."""
         if self.city_only:
@@ -999,11 +1009,11 @@ class Address(DAObject):
         if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
             output += ", " + unicode(self.unit)
         elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
-            output += ", " + word("Floor") + " " + unicode(self.floor)
+            output += ", " + word("Floor", language=language) + " " + unicode(self.floor)
         elif hasattr(self, 'room') and self.room != '' and self.room is not None:
-            output += ", " + word("Room") + " " + unicode(self.room)
+            output += ", " + word("Room", language=language) + " " + unicode(self.room)
         return(output)
-    def line_two(self):
+    def line_two(self, language=None):
         """Returns the second line of the address, including the city,
         state and zip code."""
         output = ""
@@ -1126,7 +1136,7 @@ class Person(DAObject):
         if self is this_thread.global_vars.user:
             return your(target, **kwargs)
         else:
-            return possessify(self.name, target)
+            return possessify(self.name, target, **kwargs)
     def object_possessive(self, target, **kwargs):
         """Given a word, returns a phrase indicating possession, but
         uses the variable name rather than the object's actual name."""
@@ -1147,12 +1157,12 @@ class Person(DAObject):
     def is_user(self):
         """Returns True if the person is the user, otherwise False."""
         return self is this_thread.global_vars.user
-    def address_block(self):
+    def address_block(self, language=None):
         """Returns the person name address as a block, for use in mailings."""
         if this_thread.evaluation_context == 'docx':
-            return(self.name.full() + '</w:t><w:br/><w:t xml:space="preserve">' + self.address.block())
+            return(self.name.full() + '</w:t><w:br/><w:t xml:space="preserve">' + self.address.block(language=language))
         else:
-            return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block())
+            return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block(language=language))
     def sms_number(self):
         """Returns the person's mobile_number, if defined, otherwise the phone_number."""
         if hasattr(self, 'mobile_number'):
@@ -1249,7 +1259,7 @@ class Person(DAObject):
         """Returns "you" or the person's name, depending on whether the 
         person is the user."""
         if self == this_thread.global_vars.user:
-            output = 'you'
+            output = word('you', **kwargs)
         else:
             output = unicode(self)
         if 'capitalize' in kwargs and kwargs['capitalize']:

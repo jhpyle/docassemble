@@ -84,8 +84,8 @@ def da_unique_email_validator(form, field):
     return unique_email_validator(form, field)
 
 class MyRegisterForm(RegisterForm):
-    first_name = StringField(word('First name'))
-    last_name = StringField(word('Last name'))
+    first_name = StringField(word('First name'), [validators.Length(min=0, max=255)])
+    last_name = StringField(word('Last name'), [validators.Length(min=0, max=255)])
     social_id = StringField(word('Social ID'))
     nickname = StringField(word('Nickname'), [fix_nickname])
     email = StringField(word('Email'), validators=[
@@ -103,14 +103,12 @@ class NewPrivilegeForm(FlaskForm):
     submit = SubmitField(word('Add'))
 
 class UserProfileForm(FlaskForm):
-    first_name = StringField(word('First name'), validators=[
-        DataRequired(word('First name is required'))])
-    last_name = StringField(word('Last name'), validators=[
-        DataRequired(word('Last name is required'))])
+    first_name = StringField(word('First name'), [validators.Length(min=0, max=255)])
+    last_name = StringField(word('Last name'), [validators.Length(min=0, max=255)])
     country = StringField(word('Country code'), [validators.Length(min=0, max=2)])
-    subdivisionfirst = StringField(word('First subdivision'), [validators.Length(min=0, max=3)])
-    subdivisionsecond = StringField(word('Second subdivision'), [validators.Length(min=0, max=50)])
-    subdivisionthird = StringField(word('Third subdivision'), [validators.Length(min=0, max=50)])
+    subdivisionfirst = StringField(word('First subdivision'), [validators.Length(min=0, max=64)])
+    subdivisionsecond = StringField(word('Second subdivision'), [validators.Length(min=0, max=64)])
+    subdivisionthird = StringField(word('Third subdivision'), [validators.Length(min=0, max=64)])
     organization = StringField(word('Organization'), [validators.Length(min=0, max=64)])
     language = StringField(word('Language'), [validators.Length(min=0, max=64)])
     timezone = SelectField(word('Time Zone'))
@@ -155,23 +153,19 @@ class UserAddForm(FlaskForm):
     email = StringField(word('E-mail'), validators=[
         validators.Required(word('E-mail is required')),
         validators.Email(word('Invalid E-mail'))])
-    first_name = StringField(word('First name'), validators=[
-        DataRequired(word('First name is required'))])
-    last_name = StringField(word('Last name'), validators=[
-        DataRequired(word('Last name is required'))])
+    first_name = StringField(word('First name'), [validators.Length(min=0, max=255)])
+    last_name = StringField(word('Last name'), [validators.Length(min=0, max=255)])
     role_id = SelectMultipleField(word('Privileges'), coerce=int)
     password = StringField(word('Password'), widget=PasswordInput(hide_value=False), validators=[password_validator])
     submit = SubmitField(word('Add'))
     
 class PhoneLoginForm(FlaskForm):
     phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255)])
-    #next = HiddenField()
     submit = SubmitField(word('Go'))
 
 class PhoneLoginVerifyForm(FlaskForm):
     phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255)])
     verification_code = StringField(word('Verification code'), [validators.Length(min=daconfig['verification code digits'], max=daconfig['verification code digits'])])
-    #next = HiddenField()
     submit = SubmitField(word('Verify'))
     def validate(self):
         #import redis

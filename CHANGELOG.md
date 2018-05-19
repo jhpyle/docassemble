@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.2.61] - 2018-05-19
+### Changed
+- The `disable others` directive now accepts a list of fields.
+- Most natural language functions now accept an optional keyword
+  parameter `language`.
+- The `country` and `subdivisionfirst` database fields have longer
+  allowable lengths.
+- Additional system phrases are translatable.
+
 ## [0.2.60] - 2018-05-15
 ### Fixed
 - Error on registration page.

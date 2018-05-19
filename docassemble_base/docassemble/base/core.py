@@ -285,13 +285,14 @@ class DAObject(object):
     def as_serializable(self):
         """Returns a serializable representation of the object."""
         return docassemble.base.functions.safe_json(self)
-    def object_possessive(self, target):
+    def object_possessive(self, target, **kwargs):
         """Returns a possessive phrase based on the instanceName.  E.g., client.object_possessive('fish') returns
         "client's fish." """
+        language = kwargs.get('language', None)
         if len(self.instanceName.split(".")) > 1:
-            return(possessify_long(self.object_name(), target))
+            return(possessify_long(self.object_name(), target, language=language))
         else:
-            return(possessify(the(self.object_name()), target))
+            return(possessify(the(self.object_name(), language=language), target, language=language))
     def initializeAttribute(self, *pargs, **kwargs):
         """Defines an attribute for the object, setting it to a newly initialized object.
         The first argument is the name of the attribute and the second argument is type
@@ -560,25 +561,27 @@ class DAList(DAObject):
         there is only one element in the list or multiple elements.  E.g.,
         case.plaintiff.does_verb('sue') will return "sues" if there is one plaintiff
         and "sue" if there is more than one plaintiff."""
+        language = kwargs.get('language', None)
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
             if self.number() > 1:
                 tense = 'ppl'
             else:
                 tense = '3sgp'
-            return verb_past(the_verb, tense)
+            return verb_past(the_verb, tense, language=language)
         else:
             if self.number() > 1:
                 tense = 'pl'
             else:
                 tense = '3sg'
-            return verb_present(the_verb, tense)
+            return verb_present(the_verb, tense, language=language)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""        
+        language = kwargs.get('language', None)
         if self.number() > 1:
             tense = 'ppl'
         else:
             tense = '3sgp'
-        return verb_past(the_verb, tense)
+        return verb_past(the_verb, tense, language=language)
     def as_singular_noun(self):
         """Returns a human-readable expression of the object based on its instanceName,
         without making it plural.  E.g., case.plaintiff.child.as_singular_noun() 
@@ -593,25 +596,27 @@ class DAList(DAObject):
         list.
 
         """
-        return possessify(self.as_noun(**kwargs), target, plural=(self.number() > 1))
+        language = kwargs.get('language', None)
+        return possessify(self.as_noun(**kwargs), target, plural=(self.number() > 1), language=language)
     def as_noun(self, *pargs, **kwargs):
         """Returns a human-readable expression of the object based on its instanceName,
         using singular or plural depending on whether the list has one element or more
         than one element.  E.g., case.plaintiff.child.as_noun() returns "child" or
         "children," as appropriate.  If an argument is supplied, the argument is used
         instead of the instanceName."""
+        language = kwargs.get('language', None)
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         the_noun = re.sub(r'_', ' ', the_noun)
         if len(pargs) > 0:
             the_noun = pargs[0]
         if (self.number() > 1 or self.number() == 0 or ('plural' in kwargs and kwargs['plural'])) and not ('singular' in kwargs and kwargs['singular']):
-            output = noun_plural(the_noun)
+            output = noun_plural(the_noun, language=language)
             if 'article' in kwargs and kwargs['article']:
                 if 'some' in kwargs and kwargs['some']:
-                    output = some(output)
+                    output = some(output, language=language)
             elif 'this' in kwargs and kwargs['this']:
-                output = these(output)
+                output = these(output, language=language)
             if 'capitalize' in kwargs and kwargs['capitalize']:
                 return capitalize(output)
             else:
@@ -619,9 +624,9 @@ class DAList(DAObject):
         else:
             output = the_noun
             if 'article' in kwargs and kwargs['article']:
-                output = indefinite_article(output)
+                output = indefinite_article(output, language=language)
             elif 'this' in kwargs and kwargs['this']:
-                output = this(output)
+                output = this(output, language=language)
             if 'capitalize' in kwargs and kwargs['capitalize']:
                 return capitalize(output)
             else:
@@ -641,10 +646,10 @@ class DAList(DAObject):
         if len(self.elements) == 0:
             return 0
         return len(self.elements) - 1
-    def number_as_word(self):
+    def number_as_word(self, language=None):
         """Returns the number of elements in the list, spelling out the number if ten 
         or below.  Forces the gathering of the elements if necessary."""
-        return nice_number(self.number())
+        return nice_number(self.number(), language=language)
     def complete_elements(self, complete_attribute=None):
         """Returns a list of the elements that are complete."""
         if complete_attribute is None and hasattr(self, 'complete_attribute'):
@@ -1128,25 +1133,27 @@ class DADict(DAObject):
         keys.  E.g., player.does_verb('finish') will return "finishes" if there
         is one player and "finish" if there is more than one
         player."""
+        language = kwargs.get('language', None)
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
             if self.number() > 1:
                 tense = 'ppl'
             else:
                 tense = '3sgp'
-            return verb_past(the_verb, tense)
+            return verb_past(the_verb, tense, language=language)
         else:
             if self.number() > 1:
                 tense = 'pl'
             else:
                 tense = '3sg'
-            return verb_present(the_verb, tense)
+            return verb_present(the_verb, tense, language=language)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""        
+        language = kwargs.get('language', None)
         if self.number() > 1:
             tense = 'ppl'
         else:
             tense = '3sgp'
-        return verb_past(the_verb, tense)
+        return verb_past(the_verb, tense, language=language)
     def as_singular_noun(self):
         """Returns a human-readable expression of the object based on its
         instanceName, without making it plural.  E.g.,
@@ -1162,18 +1169,19 @@ class DADict(DAObject):
         player.as_noun() returns "player" or "players," as
         appropriate.  If an argument is supplied, the argument is used
         as the noun instead of the instanceName."""
+        language = kwargs.get('language', None)        
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         the_noun = re.sub(r'_', ' ', the_noun)
         if len(pargs) > 0:
             the_noun = pargs[0]
         if (self.number() > 1 or self.number() == 0 or ('plural' in kwargs and kwargs['plural'])) and not ('singular' in kwargs and kwargs['singular']):
-            output = noun_plural(the_noun)
+            output = noun_plural(the_noun, language=language)
             if 'article' in kwargs and kwargs['article']:
                 if 'some' in kwargs and kwargs['some']:
-                    output = some(output)
+                    output = some(output, language=language)
             elif 'this' in kwargs and kwargs['this']:
-                output = these(output)
+                output = these(output, language=language)
             if 'capitalize' in kwargs and kwargs['capitalize']:
                 return capitalize(output)
             else:
@@ -1181,9 +1189,9 @@ class DADict(DAObject):
         else:
             output = the_noun
             if 'article' in kwargs and kwargs['article']:
-                output = indefinite_article(output)
+                output = indefinite_article(output, language=language)
             elif 'this' in kwargs and kwargs['this']:
-                output = this(output)
+                output = this(output, language=language)
             if 'capitalize' in kwargs and kwargs['capitalize']:
                 return capitalize(output)
             else:
@@ -1195,7 +1203,8 @@ class DADict(DAObject):
         list.
 
         """
-        return possessify(self.as_noun(**kwargs), target, plural=(self.number() > 1))
+        language = kwargs.get('language', None)
+        return possessify(self.as_noun(**kwargs), target, plural=(self.number() > 1), language=language)
     def number(self):
         """Returns the number of keys in the dictionary.  Forces the gathering of the
         dictionary items if necessary."""
@@ -1206,10 +1215,10 @@ class DADict(DAObject):
     def number_gathered(self):
         """Returns the number of elements in the list that have been gathered so far."""
         return len(self.elements)
-    def number_as_word(self):
+    def number_as_word(self, language=None):
         """Returns the number of keys in the dictionary, spelling out the number if ten 
         or below.  Forces the gathering of the dictionary items if necessary."""
-        return nice_number(self.number())
+        return nice_number(self.number(), language=language)
     def complete_elements(self, complete_attribute=None):
         """Returns a dictionary containing the key/value pairs that are complete."""
         if complete_attribute is None and hasattr(self, 'complete_attribute'):
@@ -1581,25 +1590,27 @@ class DASet(DAObject):
         more than one player.
 
         """
+        language = kwargs.get('language', None)
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
             if self.number() > 1:
                 tense = 'ppl'
             else:
                 tense = '3sgp'
-            return verb_past(the_verb, tense)
+            return verb_past(the_verb, tense, language=language)
         else:
             if self.number() > 1:
                 tense = 'pl'
             else:
                 tense = '3sg'
-            return verb_present(the_verb, tense)
+            return verb_present(the_verb, tense, language=language)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""        
+        language = kwargs.get('language', None)
         if self.number() > 1:
             tense = 'ppl'
         else:
             tense = '3sgp'
-        return verb_past(the_verb, tense)
+        return verb_past(the_verb, tense, language=language)
     def as_singular_noun(self):
         """Returns a human-readable expression of the object based on its
         instanceName, without making it plural.  E.g.,
@@ -1619,18 +1630,19 @@ class DASet(DAObject):
         instead of the instanceName.
 
         """
+        language = kwargs.get('language', None)
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         the_noun = re.sub(r'_', ' ', the_noun)
         if len(pargs) > 0:
             the_noun = pargs[0]
         if (self.number() > 1 or self.number() == 0 or ('plural' in kwargs and kwargs['plural'])) and not ('singular' in kwargs and kwargs['singular']):
-            output = noun_plural(the_noun)
+            output = noun_plural(the_noun, language=language)
             if 'article' in kwargs and kwargs['article']:
                 if 'some' in kwargs and kwargs['some']:
-                    output = some(output)
+                    output = some(output, language=language)
             elif 'this' in kwargs and kwargs['this']:
-                output = these(output)
+                output = these(output, language=language)
             if 'capitalize' in kwargs and kwargs['capitalize']:
                 return capitalize(output)
             else:
@@ -1638,11 +1650,11 @@ class DASet(DAObject):
         else:
             output = the_noun
             if 'article' in kwargs and kwargs['article']:
-                output = indefinite_article(output)
+                output = indefinite_article(output, language=language)
             elif 'this' in kwargs and kwargs['this']:
-                output = this(output)
+                output = this(output, language=language)
             if 'capitalize' in kwargs and kwargs['capitalize']:
-                return capitalize(output)
+                return capitalize(output, language=language)
             else:
                 return output
     def number(self):
@@ -1657,12 +1669,12 @@ class DASet(DAObject):
     def number_gathered(self):
         """Returns the number of elements in the list that have been gathered so far."""
         return len(self.elements)
-    def number_as_word(self):
+    def number_as_word(self, language=None):
         """Returns the number of items in the set, spelling out the number if
         ten or below.  Forces the gathering of the items if necessary.
 
         """
-        return nice_number(self.number())
+        return nice_number(self.number(), language=language)
     def gather(self, number=None, minimum=None):
         """Causes the items in the set to be gathered.  Returns True.
 

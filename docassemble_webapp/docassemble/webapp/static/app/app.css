@@ -114,10 +114,8 @@ a.nohover:hover {
 button.btn-da-custom {
     width: 8em;
     height: 8em;
-    white-space: normal;
     text-align: center;
     vertical-align: middle;
-    margin-bottom: 5px;
 }
 
 .checkbox_count {
@@ -1941,3 +1939,8 @@ div.constraintlist div + div {
     display: none;
 }
 
+/* @media (max-width: 767px) { */
+/*     a:active { */
+/* 	text-decoration: underline; */
+/*     } */
+/* } */

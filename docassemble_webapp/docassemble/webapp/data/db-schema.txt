@@ -108,8 +108,8 @@ user|confirmed_at|timestamp without time zone||
 user|active|boolean||false
 user|first_name|character varying|255|''::character varying
 user|last_name|character varying|255|''::character varying
-user|country|character varying|2|
-user|subdivisionfirst|character varying|3|
+user|country|character varying|3|
+user|subdivisionfirst|character varying|255|
 user|subdivisionsecond|character varying|255|
 user|subdivisionthird|character varying|255|
 user|organization|character varying|255|

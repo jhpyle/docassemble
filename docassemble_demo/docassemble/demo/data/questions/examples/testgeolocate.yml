@@ -18,7 +18,7 @@ code: |
 ---
 mandatory: True
 code: |
-  need(welcome_screen, map_shown)
+  need(welcome_screen, user.address.address, enemy.name.first, enemy.address.address, map_shown)
 ---
 event: map_shown
 question: Map of you and your enemy

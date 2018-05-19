@@ -4,7 +4,7 @@
 {%- set extra_js = get_part('profile page extra javascript') %}
 {%- extends 'flask_user/public_base.html' %}
 {%- block content %}
-{%- from "base_templates/form_macros.html" import render_field, render_submit_field, render_checkbox_field %}
+{%- from "base_templates/form_macros.html" import render_field, render_submit_field %}
           <h1>{{ get_part('profile page heading', word('User profile')) }}</h1>
           {{ get_part('profile page pre') }}
           <div class="row">

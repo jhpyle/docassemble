@@ -2865,7 +2865,7 @@ def restart_others():
 def current_info(yaml=None, req=None, action=None, location=None, interface='web'):
     #logmessage("interface is " + str(interface))
     if current_user.is_authenticated and not current_user.is_anonymous:
-        ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], the_user_id=current_user.id, theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization, timezone=current_user.timezone)
+        ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], the_user_id=current_user.id, theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization, timezone=current_user.timezone, language=current_user.language)
     else:
         ext = dict(email=None, the_user_id='t' + str(session.get('tempuser', None)), theid=session.get('tempuser', None), roles=list())
     headers = dict()
@@ -3952,7 +3952,7 @@ def checkin():
                 help_ok = True
             obj['partner_roles'] = user_dict['_internal']['livehelp']['partner_roles']
             if current_user.is_authenticated:
-                for attribute in ('email', 'confirmed_at', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone'):
+                for attribute in ('email', 'confirmed_at', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
                     obj[attribute] = unicode(getattr(current_user, attribute, None))
             else:
                 obj['temp_user_id'] = temp_user_id
@@ -6221,7 +6221,7 @@ def index():
         if (whichButton != null){
           $(".btn-da").each(function(){
             if (this != whichButton){
-              $(this).removeClass("btn-primary btn-info btn-warning btn-error");
+              $(this).removeClass("btn-primary btn-info btn-warning btn-danger btn-light");
               $(this).addClass("btn-secondary");
             }
           });
@@ -6230,7 +6230,7 @@ def index():
             $(whichButton).addClass("btn-primary");
           }
           else{
-            $(whichButton).removeClass("btn-primary btn-info btn-warning btn-error btn-secondary");
+            $(whichButton).removeClass("btn-primary btn-info btn-warning btn-danger btn-secondary btn-light");
             $(whichButton).addClass("btn-success");
           }
         }
@@ -15127,7 +15127,6 @@ def sms_body(phone_number, body='question', config='default'):
     docassemble.base.functions.restore_thread_variables(tbackup)
     if resp is None or len(resp.verbs) == 0 or len(resp.verbs[0].verbs) == 0:
         return None
-    #return 'snooobar'
     return resp.verbs[0].verbs[0].body
 
 def favicon_file(filename):
@@ -16274,7 +16273,7 @@ def set_user_info(**kwargs):
         if type(kwargs['active']) is not bool:
             raise Exception("The active parameter must be True or False")
         if user.id == current_user.id:
-            raise Exception("Cannot disable the current user.")
+            raise Exception("Cannot change active status of the current user.")
         user.active = kwargs['active']
     db.session.commit()
     if 'privileges' in kwargs and type(kwargs['privileges']) in (list, tuple):

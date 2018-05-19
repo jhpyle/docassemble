@@ -211,10 +211,13 @@ def set_field(step, label, value):
 @step('I select "([^"]+)" as the "([^"]+)"')
 def select_option(step, value, label):
     elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+    found = False
     for option in elem.find_elements_by_tag_name('option'):
         if option.text == value:
+            found = True
             option.click()
             break
+    assert found
 
 @step('I choose "([^"]+)"')
 def select_option_from_only_select(step, value):

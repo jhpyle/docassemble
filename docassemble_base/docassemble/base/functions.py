@@ -1408,7 +1408,7 @@ def word(the_word, **kwargs):
     elif the_word is None:
         the_word = "I don't know"
     try:
-        the_word = word_collection[this_thread.language][the_word].decode('utf8')
+        the_word = word_collection[kwargs.get('language', this_thread.language)][the_word].decode('utf8')
     except:
         the_word = unicode(the_word)
     if kwargs.get('capitalize', False):
@@ -1710,10 +1710,12 @@ def ordinal_default(j, **kwargs):
         return capitalize(result)
     return result
 
-def nice_number_default(num, capitalize=False):
+def nice_number_default(num, capitalize=False, language=None):
     """Returns the number as a word in the current language."""
-    if this_thread.language in nice_numbers:
-        language_to_use = this_thread.language
+    if language is None:
+        language = this_thread.language
+    if language in nice_numbers:
+        language_to_use = language
     elif '*' in nice_numbers:
         language_to_use = '*'
     else:
@@ -1731,26 +1733,26 @@ def nice_number_default(num, capitalize=False):
     else:
         return unicode(locale.format("%.2f", float(num), grouping=True)).rstrip('0')
 
-def quantity_noun_default(num, noun, as_integer=True, capitalize=False):
+def quantity_noun_default(num, noun, as_integer=True, capitalize=False, language=None):
     if as_integer:
         num = int(round(num))
-    result = nice_number(num) + " " + noun_plural(noun, num)
+    result = nice_number(num, language=language) + " " + noun_plural(noun, num, language=language)
     if capitalize:
         return capitalize_function(result)
     else:
         return result
 
-def capitalize_default(a):
+def capitalize_default(a, **kwargs):
     if a and (type(a) is str or type(a) is unicode) and len(a) > 1:
         return(a[0].upper() + a[1:])
     else:
         return(unicode(a))
 
-def currency_symbol_default():
+def currency_symbol_default(**kwargs):
     """Returns the currency symbol for the current locale."""
     return locale.localeconv()['currency_symbol'].decode('utf8')
 
-def currency_default(value, decimals=True):
+def currency_default(value, decimals=True, **kwargs):
     """Returns the value as a currency, according to the conventions of the current locale.
     Use the optional keyword argument decimals=False if you do not want to see decimal places
     in the number."""
@@ -2009,12 +2011,15 @@ def language_function_constructor(term):
     if term not in language_functions:
         raise SystemError("term " + str(term) + " not in language_functions")
     def func(*args, **kwargs):
-        if this_thread.language in language_functions[term]:
-            return language_functions[term][this_thread.language](*args, **kwargs)
+        language = kwargs.get('language', None)
+        if language is None:
+            language = this_thread.language
+        if language in language_functions[term]:
+            return language_functions[term][language](*args, **kwargs)
         if '*' in language_functions[term]:
             return language_functions[term]['*'](*args, **kwargs)
         if 'en' in language_functions[term]:
-            logmessage("Term " + str(term) + " is not defined for language " + str(this_thread.language))
+            logmessage("Term " + str(term) + " is not defined for language " + str(language))
             return language_functions[term]['en'](*args, **kwargs)
         raise SystemError("term " + str(term) + " not defined in language_functions for English or *")
     return func

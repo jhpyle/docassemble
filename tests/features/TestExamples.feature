@@ -516,9 +516,6 @@ Feature: Example interviews
   # Scenario: Test the interview "Dialog box"
   #   Given I start the interview "docassemble.base:data/questions/examples/dialog-box.yml"
 
-  # Scenario: Test the interview "Disable others"
-  #   Given I start the interview "docassemble.base:data/questions/examples/disable-others.yml"
-
   # Scenario: Test the interview "Dispatch"
   #   Given I start the interview "docassemble.base:data/questions/examples/dispatch-count.yml"
 
@@ -5825,3 +5822,50 @@ Feature: Example interviews
   # Scenario: Test the interview "Test signature on multiple pages"
   #   Given I start the interview "docassemble.demo:data/questions/test-sig-form.yml"
 
+  Scenario: Test the interview "Disable others, with selecting color"
+    Given I start the interview "docassemble.base:data/questions/examples/disable-others.yml"
+    Then I should see the phrase "What is your favorite color?"
+    And I select "Red" as the "Favorite color"
+    And I wait 1 second
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite color is Red."
+
+  Scenario: Test the interview "Disable others, with selecting other"
+    Given I start the interview "docassemble.base:data/questions/examples/disable-others.yml"
+    Then I should see the phrase "What is your favorite color?"
+    And I set "Other" to "Orange"
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite color is Orange."
+
+  Scenario: Test the interview "Disable others with list, with selecting color"
+    Given I start the interview "docassemble.base:data/questions/examples/disable-others-list.yml"
+    Then I should see the phrase "What is your favorite color?"
+    And I select "Blue" as the "Favorite color"
+    And I wait 1 second
+    And I set "Explain your reasoning" to "Because I like it."
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite color is Blue."
+
+  Scenario: Test the interview "Disable others with list, with selecting other"
+    Given I start the interview "docassemble.base:data/questions/examples/disable-others-list.yml"
+    Then I should see the phrase "What is your favorite color?"
+    And I set "Other" to "Orange"
+    And I set "Second favorite color" to "Pink"
+    And I set "Explain your reasoning" to "Because I like it"
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite color is Orange."
+
+  Scenario: Test the interview "Raise validation error, typing correct thing"
+    Given I start the interview "docassemble.base:data/questions/examples/validation-error.yml"
+    Then I should see the phrase "Repeat after me."
+    And I set the text box to "I solemnly swear that I am up to no good."
+    And I click the button "Continue"
+    Then I should see the phrase "You are now allowed to use the Marauder’s Map."
+
+  Scenario: Test the interview "Raise validation error, typing incorrect thing"
+    Given I start the interview "docassemble.base:data/questions/examples/validation-error.yml"
+    Then I should see the phrase "Repeat after me."
+    And I set the text box to "I refuse."
+    And I click the button "Continue"
+    And I wait 2 seconds
+    Then I should see the phrase "No, you typed it wrong."

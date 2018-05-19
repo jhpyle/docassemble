@@ -1,0 +1,89 @@
+
+Feature: New example interviews                                                                    # features/Temp.feature:1
+  In order to ensure that new tests actually work,                                                 # features/Temp.feature:2
+  I want to test them here before adding them to                                                   # features/Temp.feature:3
+  TestExamples.feature                                                                             # features/Temp.feature:4
+
+  Scenario: Test the interview "Disable others with list, with selecting other"                    # features/Temp.feature:30
+    Given I start the interview "docassemble.base:data/questions/examples/disable-others-list.yml" # features/steps/docassemble.py:88
+    Given I start the interview "docassemble.base:data/questions/examples/disable-others-list.yml" # features/steps/docassemble.py:88
+    Then I should see the phrase "What is your favorite color?"                                    # features/steps/docassemble.py:184
+    Then I should see the phrase "What is your favorite color?"                                    # features/steps/docassemble.py:184
+    And I set "Other" to "Orange"                                                                  # features/steps/docassemble.py:200
+    And I set "Other" to "Orange"                                                                  # features/steps/docassemble.py:200
+    And I set "Second favorite color" to "Pink"                                                    # features/steps/docassemble.py:200
+    And I set "Second favorite color" to "Pink"                                                    # features/steps/docassemble.py:200
+    And I set "Explain your reasoning" to "Because I like it"                                      # features/steps/docassemble.py:200
+    And I set "Explain your reasoning" to "Because I like it"                                      # features/steps/docassemble.py:200
+    And I click the button "Continue"                                                              # features/steps/docassemble.py:106
+    And I click the button "Continue"                                                              # features/steps/docassemble.py:106
+    Then I should see the phrase "Your favorite color is Orange."                                  # features/steps/docassemble.py:184
+    Then I should see the phrase "Your favorite color is Orange."                                  # features/steps/docassemble.py:184
+
+  Scenario: Test the interview "Disable others, with selecting other"                              # features/Temp.feature:14
+    Given I start the interview "docassemble.base:data/questions/examples/disable-others.yml"      # features/steps/docassemble.py:88
+    Given I start the interview "docassemble.base:data/questions/examples/disable-others.yml"      # features/steps/docassemble.py:88
+    Then I should see the phrase "What is your favorite color?"                                    # features/steps/docassemble.py:184
+    Then I should see the phrase "What is your favorite color?"                                    # features/steps/docassemble.py:184
+    And I set "Other" to "Orange"                                                                  # features/steps/docassemble.py:200
+    And I set "Other" to "Orange"                                                                  # features/steps/docassemble.py:200
+    And I click the button "Continue"                                                              # features/steps/docassemble.py:106
+    And I click the button "Continue"                                                              # features/steps/docassemble.py:106
+    Then I should see the phrase "Your favorite color is Orange."                                  # features/steps/docassemble.py:184
+    Then I should see the phrase "Your favorite color is Orange."                                  # features/steps/docassemble.py:184
+
+  Scenario: Test the interview "Raise validation error, typing correct thing"                      # features/Temp.feature:39
+    Given I start the interview "docassemble.base:data/questions/examples/validation-error.yml"    # features/steps/docassemble.py:88
+    Given I start the interview "docassemble.base:data/questions/examples/validation-error.yml"    # features/steps/docassemble.py:88
+    Then I should see the phrase "Repeat after me."                                                # features/steps/docassemble.py:184
+    Then I should see the phrase "Repeat after me."                                                # features/steps/docassemble.py:184
+    And I set the text box to "I solemnly swear that I am up to no good."                          # features/steps/docassemble.py:243
+    And I set the text box to "I solemnly swear that I am up to no good."                          # features/steps/docassemble.py:243
+    And I click the button "Continue"                                                              # features/steps/docassemble.py:106
+    And I click the button "Continue"                                                              # features/steps/docassemble.py:106
+    Then I should see the phrase "You are now allowed to use the Marauder’s Map."                  # features/steps/docassemble.py:184
+    Then I should see the phrase "You are now allowed to use the Marauder’s Map."                  # features/steps/docassemble.py:184
+
+  Scenario: Test the interview "Raise validation error, typing incorrect thing"                    # features/Temp.feature:46
+    Given I start the interview "docassemble.base:data/questions/examples/validation-error.yml"    # features/steps/docassemble.py:88
+    Given I start the interview "docassemble.base:data/questions/examples/validation-error.yml"    # features/steps/docassemble.py:88
+    Then I should see the phrase "Repeat after me."                                                # features/steps/docassemble.py:184
+    Then I should see the phrase "Repeat after me."                                                # features/steps/docassemble.py:184
+    And I set the text box to "I refuse."                                                          # features/steps/docassemble.py:243
+    And I set the text box to "I refuse."                                                          # features/steps/docassemble.py:243
+    And I click the button "Continue"                                                              # features/steps/docassemble.py:106
+    And I click the button "Continue"                                                              # features/steps/docassemble.py:106
+    And I wait 2 seconds                                                                           # features/steps/docassemble.py:233
+    And I wait 2 seconds                                                                           # features/steps/docassemble.py:233
+    Then I should see the phrase "No, you typed it wrong."                                         # features/steps/docassemble.py:184
+    Then I should see the phrase "No, you typed it wrong."                                         # features/steps/docassemble.py:184
+
+  Scenario: Test the interview "Disable others, with selecting color"                              # features/Temp.feature:6
+    Given I start the interview "docassemble.base:data/questions/examples/disable-others.yml"      # features/steps/docassemble.py:88
+    Given I start the interview "docassemble.base:data/questions/examples/disable-others.yml"      # features/steps/docassemble.py:88
+    Then I should see the phrase "What is your favorite color?"                                    # features/steps/docassemble.py:184
+    Then I should see the phrase "What is your favorite color?"                                    # features/steps/docassemble.py:184
+    And I select "Red" as the "Favorite color"                                                     # features/steps/docassemble.py:212
+Elem is: ZmF2b3JpdGVfY29sb3I=
+    And I select "Red" as the "Favorite color"                                                     # features/steps/docassemble.py:212
+    Traceback (most recent call last):
+      File "/usr/local/lib/python2.7/dist-packages/lettuce/core.py", line 144, in __call__
+        ret = self.function(self.step, *args, **kw)
+      File "/home/jpyle/da/tests/features/steps/docassemble.py", line 222, in select_option
+        assert found
+    AssertionError
+
+Lettuce aborted running any more tests because was called with the `--failfast` option
+
+0 feature (0 passed)
+0 scenario (0 passed)
+0 step (0 passed)
+Total 0 of 0 scenarios passed!
+Traceback (most recent call last):
+  File "/usr/local/bin/lettuce", line 11, in <module>
+    sys.exit(main())
+  File "/usr/local/lib/python2.7/dist-packages/lettuce/bin.py", line 134, in main
+    result = runner.run()
+  File "/usr/local/lib/python2.7/dist-packages/lettuce/__init__.py", line 218, in run
+    raise LettuceRunnerError("Test failed.")
+lettuce.exceptions.LettuceRunnerError: Test failed.

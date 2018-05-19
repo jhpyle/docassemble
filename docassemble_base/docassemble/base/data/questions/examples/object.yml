@@ -20,12 +20,12 @@ code: |
 ---
 question: Who is the villain?
 fields:
-  The villain is: villain
-  datatype: object
-  default: antagonist
-  choices:
-    - protagonist
-    - antagonist
+  - The villain is: villain
+    datatype: object
+    default: antagonist
+    choices:
+      - protagonist
+      - antagonist
 ---
 question: |
   ${ villain } will surely be defeated!

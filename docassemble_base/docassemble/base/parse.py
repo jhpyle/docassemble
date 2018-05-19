@@ -1989,8 +1989,11 @@ class Question:
                             elif key == 'disable others':
                                 if 'datatype' in field and field['datatype'] in ('file', 'files', 'range', 'checkboxes', 'camera', 'user', 'environment', 'camcorder', 'microphone', 'object_checkboxes'): #'yesno', 'yesnowide', 'noyes', 'noyeswide', 
                                     raise DAError("A 'disable others' directive cannot be used with this data type." + self.idebug(data))
-                                field_info['disable others'] = True
-                                field_info['required'] = False
+                                if type(field[key]) not in (list, bool):
+                                    raise DAError("A 'disable others' directive must be True, False, or a list of variable names." + self.idebug(data))
+                                field_info['disable others'] = field[key]
+                                if field[key] is not False:
+                                    field_info['required'] = False
                             elif key == 'uncheck others' and 'datatype' in field and field['datatype'] in ('yesno', 'yesnowide', 'noyes', 'noyeswide'):
                                 if type(field[key]) not in (list, bool):
                                     raise DAError("An 'uncheck others' directive must be True, False, or a list of variable names." + self.idebug(data))
