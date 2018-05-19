@@ -1862,11 +1862,45 @@
         - Green
         - Purple
       disable others: True
+    - note: |
+        If your favorite color is
+        not listed, enter your
+        favorite color here.
     - Other: favorite_color
   ---
   question: |
     Your favorite color is
     ${ favorite_color }.
+  mandatory: True
+"disable-others-list": |-
+  question: |
+    What is your favorite color?
+  fields:
+    - Favorite color: favorite_color
+      choices:
+        - Red
+        - Blue
+        - Green
+        - Purple
+      disable others:
+        - favorite_color
+        - second_favorite_color
+    - note: |
+        If your favorite color is
+        not listed, enter your
+        favorite color here.
+    - Other: favorite_color
+    - Second favorite color: second_favorite_color
+    - Explain your reasoning: reason
+      datatype: area
+  ---
+  question: |
+    Your favorite color is
+    ${ favorite_color }.
+  subquestion: |
+    Your reasoning is:
+
+    ${ reason }
   mandatory: True
 "dispatch": |-
   mandatory: True
@@ -6030,12 +6064,12 @@
   ---
   question: Who is the villain?
   fields:
-    The villain is: villain
-    datatype: object
-    default: antagonist
-    choices:
-      - protagonist
-      - antagonist
+    - The villain is: villain
+      datatype: object
+      default: antagonist
+      choices:
+        - protagonist
+        - antagonist
 "object-checkboxes": |-
   objects:
     protagonist: Individual
@@ -6202,12 +6236,12 @@
   ---
   question: Who is the villain?
   fields:
-    The villain is: villain
-    datatype: object_radio
-    default: antagonist
-    choices:
-      - protagonist
-      - antagonist
+    - The villain is: villain
+      datatype: object_radio
+      default: antagonist
+      choices:
+        - protagonist
+        - antagonist
 "object-selections": |-
   objects:
     protagonist: Individual
@@ -9672,7 +9706,7 @@
   ---
   mandatory: True
   code: |
-    need(welcome_screen, map_shown)
+    need(welcome_screen, user.address.address, enemy.name.first, enemy.address.address, map_shown)
   ---
   event: map_shown
   question: Map of you and your enemy

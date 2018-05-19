@@ -1704,6 +1704,8 @@ attributes describing the current user:
 * `organization` (e.g., company or non-profit organization)
 * `session` the session ID of the current interview session
 * `filename` the filename of the current interview session
+* `language` the user's language, if set (an [ISO-639-1] code)
+* `timezone` the user's time zone, in a format like `America/New_York`
 
 All of these attributes, with the exception of `session` and
 `filename`, are set by the user on the [Profile page].  They can also
@@ -3090,6 +3092,7 @@ each dictionary has the following keys:
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
  - `subdivisionthird`: user's municipality.
+ - `language` the user's language (an [ISO-639-1] code).
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
 
 For an [API] version of this function, see [`/api/user_list`].
@@ -3130,6 +3133,7 @@ are optional:
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
  - `subdivisionthird`: user's municipality.
+ - `language` the user's language (an [ISO-639-1] code).
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
 
 The current user's profile will be updated with the values of the

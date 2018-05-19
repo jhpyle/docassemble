@@ -42,9 +42,10 @@
     - support
 - title: Administration
   docs:
+    - admin
     - installation
-    - config
     - docker
+    - config
     - scalability
     - security
     - changelog

@@ -593,6 +593,11 @@ will be disabled.
 
 {% include side-by-side.html demo="disable-others" %}
 
+Alternatively, `disable others` can be set to a list of variables on
+the same screen that should be disabled.
+
+{% include side-by-side.html demo="disable-others-list" %}
+
 ### <a name="note"></a>`note`
 
 The value of `note` is [Markdown] text that will appear on the screen;
