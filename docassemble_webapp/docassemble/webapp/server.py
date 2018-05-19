@@ -487,7 +487,7 @@ def custom_login():
             return add_secret_to(flask_user.views._do_login_user(user, safe_next, login_form.remember_me.data))
     if is_json:
         return jsonify(action='login', csrf_token=generate_csrf())
-    if safe_next.endswith('/officeaddin') or safe_next.endswith('%2Fofficeaddin'):
+    if 'officeaddin' in safe_next:
         extra_css = """
     <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.debug.js"></script>"""
         extra_js = """
