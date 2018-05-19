@@ -487,10 +487,24 @@ def custom_login():
             return add_secret_to(flask_user.views._do_login_user(user, safe_next, login_form.remember_me.data))
     if is_json:
         return jsonify(action='login', csrf_token=generate_csrf())
-    return user_manager.render_function(user_manager.login_template,
-            form=login_form,
-            login_form=login_form,
-            register_form=register_form)
+    if safe_next.endswith('/officeaddin') or safe_next.endswith('%2Fofficeaddin'):
+        extra_css = """
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.debug.js"></script>"""
+        extra_js = """
+    <script type="text/javascript" src=""" + '"' + url_for('static', filename='office/fabric.js') + '"' + """></script>
+    <script type="text/javascript" src=""" + '"' + url_for('static', filename='office/polyfill.js') + '"' + """></script>
+    <script type="text/javascript" src=""" + '"' + url_for('static', filename='office/app.js') + '"' + """></script>"""
+        return render_template(user_manager.login_template,
+                               form=login_form,
+                               login_form=login_form,
+                               register_form=register_form,
+                               extra_css=Markup(extra_css),
+                               extra_js=Markup(extra_js))
+    else:
+        return user_manager.render_function(user_manager.login_template,
+                                            form=login_form,
+                                            login_form=login_form,
+                                            register_form=register_form)
 
 def add_secret_to(response):
     if 'newsecret' in session:

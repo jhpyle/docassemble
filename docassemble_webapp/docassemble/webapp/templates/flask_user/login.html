@@ -1,7 +1,11 @@
 {%- set page_title = get_part('login page title', word('Sign in')) %}
 {%- set tab_title = get_part('login page tab title', word('Sign in')) %}
+{%- if extra_css is not defined %}
 {%- set extra_css = get_part('login page extra css') %}
+{%- endif %}
+{%- if extra_js is not defined %}
 {%- set extra_js = get_part('login page extra javascript') %}
+{%- endif %}
 {%- extends 'flask_user/public_base.html' %}
 {%- block content %}
 {%- from "base_templates/form_macros.html" import render_field, render_checkbox_field, render_submit_field, myrender_hidden_field %}

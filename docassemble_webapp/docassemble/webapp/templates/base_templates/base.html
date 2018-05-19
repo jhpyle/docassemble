@@ -10,7 +10,6 @@
 {%- endif %}{{ extra_meta }}
     <title>{% if tab_title %}{{ tab_title }}{% else %}{{ config['APP_NAME'] }}{% endif %}</title>
     <link href="{% if config['BOOTSTRAP_THEME'] %}{{ config['BOOTSTRAP_THEME'] }}{% else %}{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}{% endif %}" rel="stylesheet">
-    {#<link href="{{ url_for('static', filename='app/jasny-bootstrap.min.css') }}" rel="stylesheet">#}
     <link href="{{ url_for('static', filename='app/app.css') }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
     <link rel="shortcut icon" href="{{ url_for('favicon') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('apple_touch_icon') }}">
@@ -96,7 +95,6 @@
     <script src="{{ url_for('static', filename='popper/umd/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='popper/umd/tooltip.min.js') }}"></script>
     <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
-    {#<script src="{{ url_for('static', filename='app/jasny-bootstrap.min.js') }}"></script>#}
     <script>
       var whichButton = null;
       $( document ).ready(function(){
