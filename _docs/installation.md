@@ -1036,6 +1036,28 @@ If [supervisor] controls [PostgreSQL] and [Redis], then when
 and the [Redis] database in `/usr/share/docassemble/backup/` (or in
 the cloud).
 
+Alternatively, you can allow [systemd] to launch [PostgreSQL],
+[Redis], and [RabbitMQ], but in this case you should make sure that
+during the boot process, [supervisor] starts running after these
+services have started.  To do this, run:
+
+{% highlight bash %}
+sudo systemctl edit supervisor.service
+{% endhighlight %}
+
+and enter the following into the editor:
+
+{% highlight text %}
+[Unit]
+After=rabbitmq-server.target postgresql.target redis-server.target
+{% endhighlight %}
+
+Then tell [systemd] to notice your changes:
+
+{% highlight bash %}
+systemctl daemon-reload
+{% endhighlight %}
+
 Finally, restart the [supervisor] service:
 
 {% highlight bash %}
