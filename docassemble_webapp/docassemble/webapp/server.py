@@ -11626,6 +11626,10 @@ def playground_download(userid, filename):
         return(response)
     abort(404)
 
+@app.route('/officeaddintest', methods=['GET', 'POST'])
+def playground_office_addin_test():
+    return render_template('pages/officeaddintest.html', page_title=word("Docassemble Template Builder"), tab_title=word("Template Builder")), 200
+
 @app.route('/officeaddin', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])

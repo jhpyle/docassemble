@@ -11,13 +11,14 @@
     <link href="{{ url_for('static', filename='office/app.css') }}" rel="stylesheet" type="text/css" />
 </head>
 <body class="ms-font-m ms-welcome">
-    <header class="ms-welcome__header ms-bgColor-neutralLighter ms-u-fadeIn500">
+    <!--<header class="ms-welcome__header ms-bgColor-neutralLighter ms-u-fadeIn500">
         <img width="90" height="90" src="{{ url_for('static', filename='office/cat-in-circle.png') }}" alt="{{ page_title }}" title="{{ page_title }}" />
         <h1 class="ms-fontSize-su ms-fontWeight-light ms-fontColor-neutralPrimary">{{ page_title }}</h1>
-    </header>
+    </header>-->
     <section id="sideload-msg" class="ms-welcome__main">
         <h2 class="ms-font-xl ms-fontWeight-semilight ms-fontColor-neutralPrimary ms-u-slideUpIn20">{{ word('Please sideload this addin to see app body.') }}</h2>
     </section>
+    <iframe id="server" style="width: 100%; height: 450px; border-style: none;" src="https://demo.docassemble.org/officeaddin"></iframe>
     <main id="app-body" class="ms-welcome__main" style="display: none;">
 {%- block content %}{% endblock %}
     </main>
@@ -25,5 +26,6 @@
     <script type="text/javascript" src="{{ url_for('static', filename='office/fabric.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='office/polyfill.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='office/app.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='office/office.js') }}"></script>
 </body>
 </html>
