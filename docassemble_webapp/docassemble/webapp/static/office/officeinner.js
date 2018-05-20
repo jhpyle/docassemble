@@ -5,9 +5,9 @@ function receiveMessage(event)
     console.log("Message received from improper origin.")
     return;
   }
-  console.log("Received message " + event.data);
+  console.log("Received action " + event.data.action);
 }
 $( document ).ready(function() {
   window.addEventListener("message", receiveMessage, false);
-  window.parent.postMessage('Hello world!', 'http://localhost');
+  window.parent.postMessage({"action": "initialize"}, 'http://localhost');
 });

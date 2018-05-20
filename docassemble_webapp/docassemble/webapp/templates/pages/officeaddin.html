@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8">
     <title>{{ tab_title }}</title>
-</head>
+  </head>
   <body>
-    <p>No content in the iframe</p>
+    <p>{{ word('Connected to server.') }}</p>
     <script type="text/javascript" src="{{ url_for('static', filename='app/jquery.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='office/officeinner.js') }}"></script>
   </body>
