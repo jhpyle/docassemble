@@ -10,4 +10,4 @@ function receiveMessage(event)
 $( document ).ready(function() {
   window.addEventListener("message", receiveMessage, false);
   window.parent.postMessage('Hello world!', 'http://localhost');
-}
+});
