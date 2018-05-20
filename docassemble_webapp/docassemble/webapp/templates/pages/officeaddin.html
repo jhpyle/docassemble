@@ -6,6 +6,9 @@
   </head>
   <body>
     <p>{{ word('Connected to server.') }}</p>
+    <script>
+      var parentOrigin = "{{ parent_origin }}";
+    </script>
     <script type="text/javascript" src="{{ url_for('static', filename='app/jquery.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='office/officeinner.js') }}"></script>
   </body>
