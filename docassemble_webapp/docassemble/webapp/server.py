@@ -11630,7 +11630,7 @@ def playground_download(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_office_addin():
-    return render_template('pages/officeaddin.html', page_title=word("Docassemble Template Builder"), tab_title=word("Template Builder"), parent_origin=daconfig.get('office addin url', 'https://docassemble.org')), 200
+    return render_template('pages/officeaddin.html', page_title=word("Docassemble Template Builder"), tab_title=word("Template Builder"), parent_origin=daconfig.get('office addin url', 'https://addin.docassemble.org')), 200
 
 @app.route('/playgroundfiles', methods=['GET', 'POST'])
 @login_required
