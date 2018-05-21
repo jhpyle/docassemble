@@ -8,6 +8,7 @@ function receiveMessage(event)
   console.log("Received action " + event.data.action);
   if (event.data.action == 'initialize'){
     $("#server").hide();
+    $("#app-body").show();
   }
 }
 
@@ -20,10 +21,16 @@ function validateUrl(value) {
 }
 
 $( document ).ready(function() {
-  var doc = document.getElementById('server').contentWindow.document;
-  doc.open();
-  doc.write('<html><head><title></title></head><body>Loading...</body></html>');
-  doc.close();
+  try {
+    var doc = document.getElementById('server').contentWindow.document;
+    doc.open();
+    doc.write('<html><head><title></title></head><body>Loading...</body></html>');
+    doc.close();
+  }
+  catch(err) {
+    console.log(err.message);
+  }
+  $("#app-body").hide();
   $("#serverSet").on('click', function(){
     if (!validateUrl($("#serverName").val())){
       $("#serverNameError").show();
