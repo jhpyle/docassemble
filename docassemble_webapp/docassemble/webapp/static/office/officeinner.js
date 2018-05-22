@@ -8,11 +8,12 @@ function receiveMessage(event){
   console.log("Received action " + event.data.action);
 }
 
-function fetchFiles(event){
+function fetchFiles(){
   $.ajax({
     type: "GET",
     url: "?fetchfiles=1",
     success: function(data){
+      console.log("Got response for fetchFiles");
       if (data.success){
 	window.parent.postMessage({"action": "files", "files": data.files}, parentOrigin);
       }
@@ -27,11 +28,12 @@ function fetchFiles(event){
   });
 }
 
-function fetchVars(event){
+function fetchVars(){
   $.ajax({
     type: "GET",
     url: "?pgvars=" + yamlFile,
     success: function(data){
+      console.log("Got response for fetchVars");
       if (data.success){
 	window.parent.postMessage({"action": "vars", "vars": data.variables_json, "vocab": data.vocab_list}, parentOrigin);
       }
