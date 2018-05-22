@@ -377,7 +377,7 @@ def custom_register():
         if user_invite:
             if user_invite.email == register_form.email.data:
                 require_email_confirmation = False
-                db_adapter.update_object(user, confirmed_at=datetime.utcnow())
+                db_adapter.update_object(user, confirmed_at=datetime.datetime.utcnow())
 
         db_adapter.commit()
 
@@ -2455,7 +2455,7 @@ def get_ml_info(varname, default_package, default_file):
         the_varname = varname
     return (the_package, the_file, the_varname)
         
-def get_vars_in_use(interview, interview_status, debug_mode=False):
+def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=False):
     user_dict = fresh_dictionary()
     has_no_endpoint = False
     if 'uid' not in session:
@@ -2616,6 +2616,84 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     for var in [x for x in undefined_names if x.endswith(']')]:
         undefined_names.discard(var)
     names_used = names_used.difference( undefined_names )
+    if return_json:
+        if len(names_used):
+            has_parent = dict()
+            has_children = set()
+            for var in names_used:
+                parent = re.sub(r'[\.\[].*', '', var)
+                if parent != var:
+                    has_parent[var] = parent
+                    has_children.add(parent)
+            var_list = list()
+            for var in sorted(names_used):
+                var_trans = re.sub(r'\[[0-9]\]', '[i]', var)
+                var_trans = re.sub(r'\[i\](.*)\[i\](.*)\[i\]', r'[i]\1[j]\2[k]', var_trans)
+                var_trans = re.sub(r'\[i\](.*)\[i\]', r'[i]\1[j]', var_trans)
+                info = dict(var=var)
+                if var_trans != var:
+                    info['var_base'] = var_trans
+                if var in has_parent:
+                    info['hide'] = True
+                else:
+                    info['hide'] = False
+                if var in base_name_info:
+                    if not base_name_info[var]['show']:
+                        continue
+                if var in documentation_dict or var in base_name_info:
+                    info['var_type'] = 'builtin'
+                elif var not in fields_used and var not in implicitly_defined and var_trans not in fields_used and var_trans not in implicitly_defined:
+                    info['var_type'] = 'not_used'
+                elif var not in needed_names:
+                    info['var_type'] = 'possibly_not_used'
+                else:
+                    info['var_type'] = 'default'
+                if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
+                    info['class_name'] = name_info[var]['type']
+                elif var in interview.mlfields:
+                    info['class_name'] = 'DAModel'
+                if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
+                    info['doc_content'] = name_info[var]['doc']
+                    info['doc_title'] = word_documentation
+                if var in interview.mlfields:
+                    if 'ml_group' in interview.mlfields[var] and not interview.mlfields[var]['ml_group'].uses_mako:
+                        (ml_package, ml_file, ml_group_id) = get_ml_info(interview.mlfields[var]['ml_group'].original_text, ml_parts[0], ml_parts[1])
+                        info['train_link'] = url_for('train', package=ml_package, file=ml_file, group_id=ml_group_id)
+                    else:
+                        info['train_link'] = url_for('train', package=ml_parts[0], file=ml_parts[1], group_id=var)
+                var_list.append(info)
+        functions_list = list()
+        if len(functions):
+            for var in sorted(functions):
+                info = dict(var=var, to_insert=name_info[var]['insert'], name=name_info[var]['tag'])
+                if 'doc' in name_info[var] and name_info[var]['doc']:
+                    info['doc_content'] = name_info[var]['doc']
+                    info['doc_title'] = word_documentation
+                functions_list.append(info)
+        classes_list = list()
+        if len(classes):
+            for var in sorted(classes):
+                info = dict(var=var, to_insert=name_info[var]['insert'], name=name_info[var]['name'])
+                if name_info[var]['bases']:
+                    info['bases'] = name_info[var]['bases']
+                if 'doc' in name_info[var] and name_info[var]['doc']:
+                    info['doc_content'] = name_info[var]['doc']
+                    info['doc_title'] = word_documentation
+                if 'methods' in name_info[var] and len(name_info[var]['methods']):
+                    info['methods'] = list()
+                    for method_item in name_info[var]['methods']:
+                        method_info = dict(name=method_item['name'], to_insert=method_item['insert'], tag=method_item['tag'])
+                        if method_item['doc']:
+                            method_info['doc_content'] = method_item['doc']
+                            method_info['doc_title'] = word_documentation
+                        info['methods'].append(method_info)
+                classes_list.append(info)
+        modules_list = list()
+        if len(modules):
+            for var in sorted(modules):
+                info = dict(var=var, to_insert=name_info[var]['insert'])
+                modules_list.append(info)
+        return dict(undefined_names=undefined_names, var_list=var_list), sorted(vocab_set)
     if len(undefined_names):
         content += '\n                  <tr><td><h4>' + word('Undefined names') + infobutton('undefined') + '</h4></td></tr>'
         for var in sorted(undefined_names):
@@ -13245,6 +13323,30 @@ def playground_variables():
         variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False)
         return jsonify(success=True, variables_html=variables_html, vocab_list=vocab_list)
     return jsonify(success=False, reason=2)
+
+@app.route('/pgvars', methods=['GET'])
+@login_required
+@roles_required(['developer', 'admin'])
+def pg_vars():
+    playground = SavedFile(current_user.id, fix=True, section='playground')
+    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    if len(files) == 0:
+        return jsonify(success=False, reason=1)
+    active_file = request.args.get('variablefile', '')
+    if active_file in files:
+        session['variablefile'] = active_file
+        interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + active_file)
+        interview_source.set_testing(True)
+    else:
+        if active_file == '':
+            active_file = 'test.yml'
+        content = ''
+        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, package="docassemble.playground" + str(current_user.id), path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+    interview = interview_source.get_interview()
+    ensure_ml_file_exists(interview, active_file)
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
+    variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True)
+    return jsonify(success=True, variables_json=variables_json, vocab_list=vocab_list)
 
 def ensure_ml_file_exists(interview, yaml_file):
     if len(interview.mlfields):
