@@ -11630,7 +11630,7 @@ def playground_download(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_office_addin():
-    return render_template('pages/officeaddin.html', page_title=word("Docassemble Template Builder"), tab_title=word("Template Builder"), parent_origin=daconfig.get('office addin url', 'https://addin.docassemble.org')), 200
+    return render_template('pages/officeaddin.html', page_title=word("Docassemble Template Builder"), tab_title=word("Template Builder"), parent_origin=daconfig.get('office addin url', 'https://gbls.github.io')), 200
 
 @app.route('/playgroundfiles', methods=['GET', 'POST'])
 @login_required
@@ -14129,11 +14129,11 @@ def utilities():
                         fields_output += "---"
                     else:
                         fields_output = word("Error: no fields could be found in the file")
-        if form.officeaddin_submit.data:
-            resp = make_response(render_template('pages/officemanifest.xml', guid=str(uuid.uuid4())))
-            resp.headers['Content-type'] = 'text/xml; charset=utf-8'
-            resp.headers['Content-Disposition'] = 'attachment; filename="manifest.xml"'
-            return resp
+        # if form.officeaddin_submit.data:
+        #     resp = make_response(render_template('pages/officemanifest.xml', guid=str(uuid.uuid4())))
+        #     resp.headers['Content-type'] = 'text/xml; charset=utf-8'
+        #     resp.headers['Content-Disposition'] = 'attachment; filename="manifest.xml"'
+        #     return resp
     extra_js = """
     <script>
       $('#pdfdocxfile').on('change', function(){

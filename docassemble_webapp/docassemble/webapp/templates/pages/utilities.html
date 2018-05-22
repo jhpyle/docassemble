@@ -1,30 +1,24 @@
-{% extends 'base_templates/page_base_half.html' %}
-
-{% block content %}
-{% from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
-
-{% if fields %}
+{%- extends 'base_templates/page_base_half.html' %}
+{%- block content %}
+{%- from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
+{%- if fields %}
 <h3 class="page-header">{{ word('Fields from %s template' % (file_type.upper(),)) }}</h3>
 <p>{{ word('Here is the start of a question you can use to assemble the %s template.' % (file_type.upper(),)) }}</p>
 <pre>
 {{ fields }}
 </pre>
-
-{% endif %}
-
-{% if word_box %}
+{%- endif %}
+{%- if word_box %}
 <h3 class="page-header">{{ word('Draft translation of system phrases') }}</h3>
 <p>{{ word("Here is the start of a YAML file you can import with a 'words' directive in your Configuration.") }} </p>
 <p>{{ word("Copy from here and paste into a YAML file, e.g., in the Sources folder of the Playground or the sources folder of a package.") }}</p>
 {% if uses_null %}
 <p>{{ word("Replace each instance of Null with a quoted translation.") }}</p>
-{% endif %}
+{%- endif %}
 <textarea class="form-control translation-box">
 {{ word_box }}
 </textarea>
-
-{% endif %}
-
+{%- endif %}
 <h3 class="page-header">{{ word('Get list of fields from PDF/DOCX template') }}</h3>
 
 <form action="{{ url_for('utilities') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
@@ -45,8 +39,7 @@
   <div class="form-actions">
     {{ render_submit_field(form.language_submit, tabindex=120) }}
   </div>
-</form>
-
+</form>{#
 <h3 class="page-header">{{ word('Download Office Add-in Manifest File') }}</h3>
 
 <form action="{{ url_for('utilities') }}" method="POST" role="form">
@@ -55,5 +48,5 @@
     {{ render_submit_field(form.officeaddin_submit, tabindex=120) }}
   </div>
 </form>
-
+#}
 {% endblock %}
