@@ -11734,10 +11734,6 @@ def playground_download(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_office_addin():
-@app.route('/pgvars', methods=['GET'])
-@login_required
-@roles_required(['developer', 'admin'])
-def pg_vars():
     if request.args.get('fetchfiles', None):
         playground = SavedFile(current_user.id, fix=True, section='playground')
         files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
