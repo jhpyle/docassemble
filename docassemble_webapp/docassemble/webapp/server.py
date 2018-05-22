@@ -2630,7 +2630,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 var_trans = re.sub(r'\[[0-9]\]', '[i]', var)
                 var_trans = re.sub(r'\[i\](.*)\[i\](.*)\[i\]', r'[i]\1[j]\2[k]', var_trans)
                 var_trans = re.sub(r'\[i\](.*)\[i\]', r'[i]\1[j]', var_trans)
-                info = dict(var=var)
+                info = dict(var=var, to_insert=var)
                 if var_trans != var:
                     info['var_base'] = var_trans
                 if var in has_parent:
@@ -2692,8 +2692,34 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         if len(modules):
             for var in sorted(modules):
                 info = dict(var=var, to_insert=name_info[var]['insert'])
+                if name_info[var]['doc']:
+                    info['doc_content'] = name_info[var]['doc']
+                    info['doc_title'] = word_documentation
                 modules_list.append(info)
-        return dict(undefined_names=undefined_names, var_list=var_list), sorted(vocab_set)
+        modules_available_list = list()
+        if len(avail_modules):
+            for var in sorted(avail_modules):
+                info = dict(var=var, to_insert="." + var)
+                modules_available_list.append(info)
+        templates_list = list()
+        if len(templates):
+            for var in sorted(templates):
+                info = dict(var=var, to_insert=var)
+                templates_list.append(info)
+        sources_list = list()
+        if len(sources):
+            for var in sorted(sources):
+                info = dict(var=var, to_insert=var)
+                sources_list.append(info)
+        images_list = list()
+        if len(interview.images):
+            for var in sorted(interview.images):
+                info = dict(var=var, to_insert=var)
+                the_ref = get_url_from_file_reference(interview.images[var].get_reference())
+                if the_ref:
+                    info['url'] = the_ref
+                sources_list.append(info)
+        return dict(undefined_names=list(sorted(undefined_names)), var_list=var_list, functions_list=functions_list, classes_list=classes_list, modules_list=modules_list, modules_available_list=modules_available_list, templates_list=templates_list, sources_list=sources_list, images_list=images_list), sorted(vocab_set)
     if len(undefined_names):
         content += '\n                  <tr><td><h4>' + word('Undefined names') + infobutton('undefined') + '</h4></td></tr>'
         for var in sorted(undefined_names):
@@ -11708,6 +11734,31 @@ def playground_download(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_office_addin():
+@app.route('/pgvars', methods=['GET'])
+@login_required
+@roles_required(['developer', 'admin'])
+def pg_vars():
+    if request.args.get('fetchfiles', None):
+        playground = SavedFile(current_user.id, fix=True, section='playground')
+        files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+        return jsonify(success=True, files=files)
+    pg_var_file = request.args.get('pgvars', None)
+    if pg_var_file is not None:
+        playground = SavedFile(current_user.id, fix=True, section='playground')
+        files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+        if pg_var_file in files:
+            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + pg_var_file)
+            interview_source.set_testing(True)
+        else:
+            if pg_var_file == '':
+                pg_var_file = 'test.yml'
+            content = "modules:\n  - docassemble.base.util\n---\nmandatory: True\nquestion: hi"
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, package="docassemble.playground" + str(current_user.id), path="docassemble.playground" + str(current_user.id) + ":" + pg_var_file, testing=True)
+        interview = interview_source.get_interview()
+        ensure_ml_file_exists(interview, pg_var_file)
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + pg_var_file, req=request, action=None))
+        variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True)
+        return jsonify(success=True, variables_json=variables_json, vocab_list=list(vocab_list))
     return render_template('pages/officeaddin.html', page_title=word("Docassemble Template Builder"), tab_title=word("Template Builder"), parent_origin=daconfig.get('office addin url', 'https://gbls.github.io')), 200
 
 @app.route('/playgroundfiles', methods=['GET', 'POST'])
@@ -13323,30 +13374,6 @@ def playground_variables():
         variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False)
         return jsonify(success=True, variables_html=variables_html, vocab_list=vocab_list)
     return jsonify(success=False, reason=2)
-
-@app.route('/pgvars', methods=['GET'])
-@login_required
-@roles_required(['developer', 'admin'])
-def pg_vars():
-    playground = SavedFile(current_user.id, fix=True, section='playground')
-    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
-    if len(files) == 0:
-        return jsonify(success=False, reason=1)
-    active_file = request.args.get('variablefile', '')
-    if active_file in files:
-        session['variablefile'] = active_file
-        interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + active_file)
-        interview_source.set_testing(True)
-    else:
-        if active_file == '':
-            active_file = 'test.yml'
-        content = ''
-        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, package="docassemble.playground" + str(current_user.id), path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
-    interview = interview_source.get_interview()
-    ensure_ml_file_exists(interview, active_file)
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-    variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True)
-    return jsonify(success=True, variables_json=variables_json, vocab_list=vocab_list)
 
 def ensure_ml_file_exists(interview, yaml_file):
     if len(interview.mlfields):
