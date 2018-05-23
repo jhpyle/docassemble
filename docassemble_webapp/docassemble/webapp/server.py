@@ -2718,7 +2718,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 the_ref = get_url_from_file_reference(interview.images[var].get_reference())
                 if the_ref:
                     info['url'] = the_ref
-                sources_list.append(info)
+                images_list.append(info)
         return dict(undefined_names=list(sorted(undefined_names)), var_list=var_list, functions_list=functions_list, classes_list=classes_list, modules_list=modules_list, modules_available_list=modules_available_list, templates_list=templates_list, sources_list=sources_list, images_list=images_list), sorted(vocab_set)
     if len(undefined_names):
         content += '\n                  <tr><td><h4>' + word('Undefined names') + infobutton('undefined') + '</h4></td></tr>'
