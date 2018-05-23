@@ -5,30 +5,30 @@
           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
           xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
           xsi:type="TaskPaneApp">
-
   <!-- Begin Basic Settings: Add-in metadata, used for all versions of Office unless override provided. -->
-
   <!-- IMPORTANT! Id must be unique for your add-in, if you reuse this manifest ensure that you change this id to a new GUID. -->
-  <Id>1377d7eb-0431-460a-852f-699f4d76da37</Id>
+  <Id>1377d7db-0431-460a-852f-699f4e76da37</Id>
 
   <!--Version. Updates from the store only get triggered if there is a version change. -->
-  <Version>1.0.0.8</Version>
-  <ProviderName>Docassemble</ProviderName>
+  <Version>1.0.0.10</Version>
+  <ProviderName>Greater Boston Legal Services</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
   <DisplayName DefaultValue="Docassemble Template Builder" />
   <Description DefaultValue="An add-in that helps with building templates for Docassemble.org guided interviews."/>
 
   <!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
-  <IconUrl DefaultValue="https://addin.docassemble.org/static/cat-32.png" />
-  <HighResolutionIconUrl DefaultValue="https://addin.docassemble.org/static/cat-32.png"/>
+  <IconUrl DefaultValue="https://gbls.github.io/docassemble-template-builder-addin/static/logo-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://gbls.github.io/docassemble-template-builder-addin/static/logo-80.png"/>
 
   <!--If you plan to submit this add-in to the Office Store, uncomment the SupportUrl element below-->
   <SupportUrl DefaultValue="https://docassemble.org/docs/officeaddin.html"/>
 
   <!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
-  <!--<AppDomains>
-  </AppDomains>-->
+  <AppDomains>
+    <AppDomain>docassemble.org</AppDomain>
+    <AppDomain>nonprofittechy.com</AppDomain>
+  </AppDomains>
   <!--End Basic Settings. -->
 
   <!--Begin TaskPane Mode integration. This section is used if there are no VersionOverrides or if the Office client version does not support add-in commands. -->
@@ -36,7 +36,7 @@
     <Host Name="Document" />
   </Hosts>
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://addin.docassemble.org/index.html" />
+    <SourceLocation DefaultValue="https://gbls.github.io/docassemble-template-builder-addin/index.html" />
   </DefaultSettings>
   <!-- End TaskPane Mode integration.  -->
 
@@ -125,7 +125,7 @@
                   <Action xsi:type="ShowTaskpane">
                     <TaskpaneId>ButtonId1</TaskpaneId>
                     <!-- Provide a url resource id for the location that will be displayed on the task pane. -->
-                    <SourceLocation resid="DTB.Help.Url" />
+                    <SourceLocation resid="DTB.Taskpane.Url" />
                   </Action>
                 </Control>
               </Group>
@@ -138,15 +138,15 @@
     <!-- You can use resources across hosts and form factors. -->
     <Resources>
       <bt:Images>
-        <bt:Image id="DTB.tpicon_16x16" DefaultValue="https://addin.docassemble.org/static/cat-in-circle-16.png" />
-        <bt:Image id="DTB.tpicon_32x32" DefaultValue="https://addin.docassemble.org/static/cat-in-circle-32.png" />
-        <bt:Image id="DTB.tpicon_80x80" DefaultValue="https://addin.docassemble.org/static/cat-in-circle-80.png" />
+        <bt:Image id="DTB.tpicon_16x16" DefaultValue="https://gbls.github.io/docassemble-template-builder-addin/static/logo-16.png" />
+        <bt:Image id="DTB.tpicon_32x32" DefaultValue="https://gbls.github.io/docassemble-template-builder-addin/static/logo-32.png" />
+        <bt:Image id="DTB.tpicon_80x80" DefaultValue="https://gbls.github.io/docassemble-template-builder-addin/static/logo-80.png" />
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="DTB.Taskpane.Url" DefaultValue="https://addin.docassemble.org/index.html" />
+        <bt:Url id="DTB.Taskpane.Url" DefaultValue="https://gbls.github.io/docassemble-template-builder-addin/index.html" />
         <bt:Url id="DTB.Help.Url" DefaultValue="https://docassemble.org/docs.html" />
         <bt:Url id="DTB.GetStarted.LearnMoreUrl" DefaultValue="https://www.nonprofittechy.com/projects/projects-docassemble-template-builder/" />
-        <bt:Url id="DTB.DesktopFunctionFile.Url" DefaultValue="https://calm-tor-43985.herokuapp.com/function-file/function-file.html" />
+        <bt:Url id="DTB.DesktopFunctionFile.Url" DefaultValue="https://gbls.github.io/docassemble-template-builder-addinfunction-file.html" />
       </bt:Urls>
       <!-- ShortStrings max characters==125. -->
       <bt:ShortStrings>
@@ -158,10 +158,9 @@
       <!-- LongStrings max characters==250. -->
       <bt:LongStrings>
         <bt:String id="DTB.TaskpaneButton.Tooltip" DefaultValue="Click to Show Help" />
-        <bt:String id="DTB.GetStarted.Description" DefaultValue="The Docassemble Template Builder loaded successfully. Click Home | Show Docassemble Help to get started."/>
+        <bt:String id="DTB.GetStarted.Description" DefaultValue="The Docassemble Template Builder loaded successfully. Click Home | Docassemble."/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
   <!-- End Add-in Commands Mode integration. -->
-
 </OfficeApp>

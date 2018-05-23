@@ -15,6 +15,7 @@ function receiveMessage(event){
 }
 
 function fetchFiles(){
+  console.log("Calling fetchFiles");
   $.ajax({
     type: "GET",
     url: "?fetchfiles=1",
@@ -35,6 +36,7 @@ function fetchFiles(){
 }
 
 function fetchVars(yamlFile){
+  console.log("Calling fetchVars");
   $.ajax({
     type: "GET",
     url: "?pgvars=" + yamlFile,

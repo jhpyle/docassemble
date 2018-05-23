@@ -6,14 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Template Builder</title>
     <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.debug.js"></script>
-    <link rel="stylesheet" href="/static/fabric.min.css" />
-    <link rel="stylesheet" href="/static/fabric.components.css" />
-    <link href="/static/app.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.2.0/css/fabric.min.css">
+    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.2.0/css/fabric.components.min.css">
+    <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.2.0/js/fabric.min.js"></script>
+    <link rel="stylesheet" href="static/app.css" />
   </head>
   <body class="ms-font-m ms-welcome">
     <div id="serverNameDiv">
       <header class="ms-welcome__header ms-bgColor-neutralLighter ms-u-fadeIn500">
-        <img width="90" height="90" src="/static/cat-in-circle.png" alt="Docassemble Template Builder" title="Docassemble Template Builder" />
+        <img width="81" height="81" src="static/logo-80.png" alt="Docassemble Template Builder" title="Docassemble Template Builder" />
         <h1 class="ms-fontSize-su ms-fontWeight-light ms-fontColor-neutralPrimary">Docassemble Template Builder</h1>
       </header>
       <label for="serverName">Your docassemble server</label>
@@ -27,173 +28,177 @@
     </div>
     <iframe height="1200" id="server" style="width: 100%; border-style: none; display: none"></iframe>
     <main id="app-body" class="ms-welcome__main" style="display: none;">
-
-        <div id="variable">
-            <h2 class="ms-font-xl">Insert Variables</h2>
-            <div class="ms-TextField">
-                <label class="ms-Label" for="inputVariableName">Variable Name</label>
-                <input id="inputVariableName" class="ms-TextField-field" type="text" value="" placeholder="">
-            </div>
-            <div class="ms-CheckBox">
-                <input tabindex="-1" type="checkbox" class="ms-CheckBox-input" id="checkboxVariableReplaceAll">
-                <label role="checkbox" class="ms-CheckBox-field" tabindex="0" aria-checked="false" name="checkboxVariableReplaceAll">
-                    <span class="ms-Label">Find and Replace All</span>
-                </label>
-            </div>
-            <br/>
-
-            <!-- below should be single-argument functions only -->
-            <div class="ms-Dropdown">
-                <label class="ms-Label">Apply Format</label>
-                <i class="ms-Dropdown-caretDown ms-Icon ms-Icon--caretDown"></i>
-                <select id="selectVariableFormat" class="ms-Dropdown-select">
-                    <option value="">(none)</option>
-                    <option value="currency">Currency (localized)</option>
-                    <option value="capitalize">Capitalize</option>
-                    <option value="indefinite_article">Indefinite Article</option>
-                    <option value="nice_number">Nice Number</option>
-                    <option value="noun_plural">Pluralize noun</option>
-                    <option value="noun_singular">Singularize noun</option>
-                    <option value="ordinal_number">Ordinal Number</option>
-                    <option value="title_case">Title Case</option>
-                    <option value="verb_past">Past tense verb</option>
-                    <option value="verb_present">Present tense verb</option>
-                    <option value="fix_punctuation">Fix punctuation</option>
-                </select>
-            </div>
-
-            <div class="ms-CommandButton">
-                <button class="ms-CommandButton-button" id="insertVariable">
-                    <span class="ms-CommandButton-icon ms-fontColor-themePrimary">
-                        <i class="ms-Icon ms-Icon--CirclePlus"></i>
-                    </span>
-                    <span class="ms-CommandButton-label">Insert Variable</span>
-                </button>
-            </div>
-            <!--
+      <div id="variable">
+        <h2 class="ms-font-xl">Interview</h2>
+        <div class="ms-TextField">
+          <label class="ms-Label" for="interviewName">Interview</label>
+          <select id="interviewName"></select>
+        </div>
+        <h2 class="ms-font-xl">Insert Variables</h2>
+        <div class="ms-TextField">
+          <label class="ms-Label" for="inputVariableName">Variable Name</label>
+          <input id="inputVariableName" class="ms-TextField-field" type="text" value="" placeholder="">
+        </div>
+        <div class="ms-CheckBox">
+          <input tabindex="-1" type="checkbox" class="ms-CheckBox-input" id="checkboxVariableReplaceAll">
+          <label role="checkbox" class="ms-CheckBox-field" tabindex="0" aria-checked="false" name="checkboxVariableReplaceAll">
+            <span class="ms-Label">Find and Replace All</span>
+          </label>
+        </div>
+        <br/>
+        
+        <!-- below should be single-argument functions only -->
+        <div class="ms-Dropdown">
+          <label class="ms-Label">Apply Format</label>
+          <i class="ms-Dropdown-caretDown ms-Icon ms-Icon--caretDown"></i>
+          <select id="selectVariableFormat" class="ms-Dropdown-select">
+            <option value="">(none)</option>
+            <option value="currency">Currency (localized)</option>
+            <option value="capitalize">Capitalize</option>
+            <option value="indefinite_article">Indefinite Article</option>
+            <option value="nice_number">Nice Number</option>
+            <option value="noun_plural">Pluralize noun</option>
+            <option value="noun_singular">Singularize noun</option>
+            <option value="ordinal_number">Ordinal Number</option>
+            <option value="title_case">Title Case</option>
+            <option value="verb_past">Past tense verb</option>
+            <option value="verb_present">Present tense verb</option>
+            <option value="fix_punctuation">Fix punctuation</option>
+          </select>
+        </div>
+        
+        <div class="ms-CommandButton">
+          <button class="ms-CommandButton-button" id="insertVariable">
+            <span class="ms-CommandButton-icon ms-fontColor-themePrimary">
+              <i class="ms-Icon ms-Icon--CirclePlus"></i>
+            </span>
+            <span class="ms-CommandButton-label">Insert Variable</span>
+          </button>
+        </div>
+        <!--
             <div role="ms-CommandButton" id="insertVariable" class="ms-Button ms-Button--primary">
-                <span class="ms-Button-label" class="ms-Label">Insert Variable</span>
+              <span class="ms-Button-label" class="ms-Label">Insert Variable</span>
             </div>
--->
+            -->
+      </div>
+      <br/>
+      
+      <div id="if">
+        <h2 class="ms-font-xl">Branch Logic</h2>
+        
+        <div class="ms-TextField">
+          <label class="ms-Label" for="inputIfExpression">Expression or Variable Name</label>
+          <input id="inputIfExpression" type="text" class="ms-TextField-field">
         </div>
-        <br/>
-
-        <div id="if">
-            <h2 class="ms-font-xl">Branch Logic</h2>
-
-            <div class="ms-TextField">
-                <label class="ms-Label" for="inputIfExpression">Expression or Variable Name</label>
-                <input id="inputIfExpression" type="text" class="ms-TextField-field">
-            </div>
-            <!--
+        <!--
             <div class="ms-ChoiceFieldGroup" id="choicefieldgroup" role="radiogroup">
-                <div class="ms-ChoiceFieldGroup-title">
-                    <label class="ms-Label is-required">Inline or Paragraph</label>
-                </div>
-                <ul class="ms-ChoiceFieldGroup-list">
-                    <li class="ms-RadioButton">
-                        <input tabindex="-1" type="radio" class="ms-RadioButton-input" id="ifInlineRadio">
-                        <label role="radio" class="ms-RadioButton-field" tabindex="0" aria-checked="false" name="choicefieldgroup" for="ifInlineRadio">
-                            <span class="ms-Label">Inline</span>
-                        </label>
-                    </li>
-                    <li class="ms-RadioButton">
-                        <input tabindex="0" type="radio" class="ms-RadioButton-input" id="ifParaRadio">
-                        <label role="radio" class="ms-RadioButton-field" tabindex="0" aria-checked="false" name="choicefieldgroup" for="ifParaRadio">
-                            <span class="ms-Label">Separate Paragraph (for list item)</span>
-                        </label>
-                    </li>
-                </ul>
+              <div class="ms-ChoiceFieldGroup-title">
+                <label class="ms-Label is-required">Inline or Paragraph</label>
+              </div>
+              <ul class="ms-ChoiceFieldGroup-list">
+                <li class="ms-RadioButton">
+                  <input tabindex="-1" type="radio" class="ms-RadioButton-input" id="ifInlineRadio">
+                  <label role="radio" class="ms-RadioButton-field" tabindex="0" aria-checked="false" name="choicefieldgroup" for="ifInlineRadio">
+                    <span class="ms-Label">Inline</span>
+                  </label>
+                </li>
+                <li class="ms-RadioButton">
+                  <input tabindex="0" type="radio" class="ms-RadioButton-input" id="ifParaRadio">
+                  <label role="radio" class="ms-RadioButton-field" tabindex="0" aria-checked="false" name="choicefieldgroup" for="ifParaRadio">
+                    <span class="ms-Label">Separate Paragraph (for list item)</span>
+                  </label>
+                </li>
+              </ul>
             </div>
--->
-<br/>
-
-            <div class="ms-CommandButton">
-                <button class="ms-CommandButton-button" id="ifPara">
-                    <span class="ms-CommandButton-icon ms-fontColor-themePrimary">
-                        <i class="ms-Icon ms-Icon--BranchFork2"></i>
-                    </span>
-                    <span class="ms-CommandButton-label">If (Paragraph)</span>
-                </button>
-            </div>
-            <div class="ms-CommandButton">
-                <button class="ms-CommandButton-button" id="ifInline">
-                    <span class="ms-CommandButton-icon ms-fontColor-themePrimary">
-                        <i class="ms-Icon ms-Icon--BranchFork2"></i>
-                    </span>
-                    <span class="ms-CommandButton-label">If (Inline)</span>
-                </button>
-            </div>
-        </div>
+            -->
         <br/>
-
-        <div id="list">
-            <h2 class="ms-font-xl">Insert List</h2>
-
-            <div class="ms-TextField">
-                <label class="ms-Label" for="inputListVariableName">List Variable Name</label>
-                <input id="inputListVariableName" type="text" class="ms-TextField-field" />
-            </div>
-
-            <div class="ms-CheckBox">
-                    <input tabindex="-1" type="checkbox" class="ms-CheckBox-input" id="checkboxOnlyTrue">
-                    <label role="checkbox" class="ms-CheckBox-field" tabindex="0" aria-checked="false" for="checkboxOnlyTrue">
-                        <span class="ms-Label">Display only checked items</span>
-                    </label>
-                </div>
-
-            <div class="ms-CommandButton">
-                <button class="ms-CommandButton-button" id="listPara">
-                    <span class="ms-CommandButton-icon ms-fontColor-themePrimary">
-                        <i class="ms-Icon ms-Icon--CustomList"></i>
-                    </span>
-                    <span class="ms-CommandButton-label">Add List</span>
-                </button>
-            </div>
+        
+        <div class="ms-CommandButton">
+          <button class="ms-CommandButton-button" id="ifPara">
+            <span class="ms-CommandButton-icon ms-fontColor-themePrimary">
+              <i class="ms-Icon ms-Icon--BranchFork2"></i>
+            </span>
+            <span class="ms-CommandButton-label">If (Paragraph)</span>
+          </button>
         </div>
-        <br/>
-
-        <div id="insert">
-            <h2 class="ms-font-xl">Insert a child template</h2>
-            <div class="ms-TextField">
-                <label for="inputTemplateName" class="ms-Label">Child template name</label>
-                <input id="inputTemplateName" type="text" class="ms-TextField-field" />
-            </div>
-            <div class="ms-TextField">
-                <label class="ms-Label" for="inputTemplateOptions">Set child template variables</label>
-                <input id="inputTemplateOptions" type="text" class="ms-TextField-field" />
-            </div>
-            <div class="ms-CommandButton">
-                <button class="ms-CommandButton-button" id="insertTemplate">
-                    <span class="ms-CommandButton-icon ms-fontColor-themePrimary">
-                        <i class="ms-Icon ms-Icon--WordDocument"></i>
-                    </span>
-                    <span class="ms-CommandButton-label">Insert template</span>
-                </button>
-            </div>
+        <div class="ms-CommandButton">
+          <button class="ms-CommandButton-button" id="ifInline">
+            <span class="ms-CommandButton-icon ms-fontColor-themePrimary">
+              <i class="ms-Icon ms-Icon--BranchFork2"></i>
+            </span>
+            <span class="ms-CommandButton-label">If (Inline)</span>
+          </button>
         </div>
-<br/>
-        <div id="comment">
-            <h2 class="ms-font-xl">Comment</h2>
-            <div class="ms-CommandButton">
-                    <button class="ms-CommandButton-button" id="commentPara">
-                        <span class="ms-CommandButton-icon ms-fontColor-themePrimary">
-                            <i class="ms-Icon ms-Icon--Comment"></i>
-                        </span>
-                        <span class="ms-CommandButton-label">Toggle Comments</span>
-                    </button>
-            </div>
+      </div>
+      <br/>
+      
+      <div id="list">
+        <h2 class="ms-font-xl">Insert List</h2>
+        
+        <div class="ms-TextField">
+          <label class="ms-Label" for="inputListVariableName">List Variable Name</label>
+          <input id="inputListVariableName" type="text" class="ms-TextField-field" />
         </div>
-
+        
+        <div class="ms-CheckBox">
+          <input tabindex="-1" type="checkbox" class="ms-CheckBox-input" id="checkboxOnlyTrue">
+          <label role="checkbox" class="ms-CheckBox-field" tabindex="0" aria-checked="false" for="checkboxOnlyTrue">
+            <span class="ms-Label">Display only checked items</span>
+          </label>
+        </div>
+        
+        <div class="ms-CommandButton">
+          <button class="ms-CommandButton-button" id="listPara">
+            <span class="ms-CommandButton-icon ms-fontColor-themePrimary">
+              <i class="ms-Icon ms-Icon--CustomList"></i>
+            </span>
+            <span class="ms-CommandButton-label">Add List</span>
+          </button>
+        </div>
+      </div>
+      <br/>
+      
+      <div id="insert">
+        <h2 class="ms-font-xl">Insert a child template</h2>
+        <div class="ms-TextField">
+          <label for="inputTemplateName" class="ms-Label">Child template name</label>
+          <input id="inputTemplateName" type="text" class="ms-TextField-field" />
+        </div>
+        <div class="ms-TextField">
+          <label class="ms-Label" for="inputTemplateOptions">Set child template variables</label>
+          <input id="inputTemplateOptions" type="text" class="ms-TextField-field" />
+        </div>
+        <div class="ms-CommandButton">
+          <button class="ms-CommandButton-button" id="insertTemplate">
+            <span class="ms-CommandButton-icon ms-fontColor-themePrimary">
+              <i class="ms-Icon ms-Icon--WordDocument"></i>
+            </span>
+            <span class="ms-CommandButton-label">Insert template</span>
+          </button>
+        </div>
+      </div>
+      <br/>
+      <div id="comment">
+        <h2 class="ms-font-xl">Comment</h2>
+        <div class="ms-CommandButton">
+          <button class="ms-CommandButton-button" id="commentPara">
+            <span class="ms-CommandButton-icon ms-fontColor-themePrimary">
+              <i class="ms-Icon ms-Icon--Comment"></i>
+            </span>
+            <span class="ms-CommandButton-label">Toggle Comments</span>
+          </button>
+        </div>
+      </div>
     </main>
     <section id="sideload-msg" class="ms-welcome__main">
-        <h2 class="ms-font-xl ms-fontWeight-semilight ms-fontColor-neutralPrimary ms-u-slideUpIn20">Please sideload this addin to see app body.</h2>
+      <h2 class="ms-font-xl ms-fontWeight-semilight ms-fontColor-neutralPrimary ms-u-slideUpIn20">Please sideload this addin to see app body.</h2>
     </section>
-    <script type="text/javascript" src="/static/jquery.min.js"></script>
-    <script type="text/javascript" src="/static/fabric.js"></script>
-    <script type="text/javascript" src="/static/polyfill.js"></script>
-    <script type="text/javascript" src="/static/app.js"></script>
-    <script type="text/javascript" src="/static/js.cookie.min.js"></script>
-    <script type="text/javascript" src="/static/office.js"></script>
-</body>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <!--<script type="text/javascript" src="/docassemble-template-builder-addin/static/polyfill.js"></script>
+        <script type="text/javascript" src="/docassemble-template-builder-addin/static/app.js"></script>
+        <script type="text/javascript" src="static/js.cookie.min.js"></script>-->
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script src="https://unpkg.com/@microsoft/office-js-helpers@1.0.0/dist/office.helpers.min.js"></script>
+    <script type="text/javascript" src="static/index.js" type="module"></script>
+  </body>
 </html>
