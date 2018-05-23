@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.62] - 2018-05-23
+### Added
+- JSON interface to the "Variables, etc." and list of Playground
+  files.
+### Fixed
+- Error during invitation and registration.
+
 ## [0.2.61] - 2018-05-19
 ### Changed
 - The `disable others` directive now accepts a list of fields.
