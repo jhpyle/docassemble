@@ -1,4 +1,4 @@
-var yamlFile = '';
+var parwindow = window.parent;
 
 function receiveMessage(event){
   if (event.origin !== parentOrigin){
@@ -6,6 +6,12 @@ function receiveMessage(event){
     return;
   }
   console.log("Received action " + event.data.action);
+  if (event.data.action == 'fetchFiles'){
+    fetchFiles();
+  }
+  else if (event.data.action == 'fetchVars'){
+    fetchVars(event.data.file);
+  }
 }
 
 function fetchFiles(){
@@ -15,10 +21,10 @@ function fetchFiles(){
     success: function(data){
       console.log("Got response for fetchFiles");
       if (data.success){
-	window.parent.postMessage({"action": "files", "files": data.files}, parentOrigin);
+	parwindow.postMessage({"action": "files", "files": data.files}, parentOrigin);
       }
       else{
-	window.parent.postMessage({"action": "fail", "tried": "files"}. parentOrigin);
+	parwindow.postMessage({"action": "fail", "tried": "files"}. parentOrigin);
       }
     },
     error: function(xhr, status, error){
@@ -28,17 +34,17 @@ function fetchFiles(){
   });
 }
 
-function fetchVars(){
+function fetchVars(yamlFile){
   $.ajax({
     type: "GET",
     url: "?pgvars=" + yamlFile,
     success: function(data){
       console.log("Got response for fetchVars");
       if (data.success){
-	window.parent.postMessage({"action": "vars", "vars": data.variables_json, "vocab": data.vocab_list}, parentOrigin);
+	parwindow.postMessage({"action": "vars", "vars": data.variables_json, "vocab": data.vocab_list}, parentOrigin);
       }
       else{
-	window.parent.postMessage({"action": "fail", "tried": "vars"}. parentOrigin);
+	parwindow.postMessage({"action": "fail", "tried": "vars"}. parentOrigin);
       }
     },
     error: function(xhr, status, error){
@@ -50,5 +56,5 @@ function fetchVars(){
 
 $( document ).ready(function() {
   window.addEventListener("message", receiveMessage, false);
-  window.parent.postMessage({"action": "initialize"}, parentOrigin);
+  parwindow.postMessage({"action": "initialize"}, parentOrigin);
 });
