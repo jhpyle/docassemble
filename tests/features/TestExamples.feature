@@ -5869,3 +5869,15 @@ Feature: Example interviews
     And I click the button "Continue"
     And I wait 2 seconds
     Then I should see the phrase "No, you typed it wrong."
+
+  Scenario: Test the interview "Change language"
+    Given I start the interview "docassemble.base:data/questions/examples/language-change.yml"
+    Then I should see the phrase "What language do you speak?"
+    And I click the "Español" option
+    And I click the button "Continue"
+    Then I should see the phrase "¿Cuál es el significado de la vida?"
+    And I select "Cambiar idioma" from the menu
+    Then I should see the phrase "What language do you speak?"
+    And I click the "English" option
+    And I click the button "Continue"
+    Then I should see the phrase "What is the meaning of life?"

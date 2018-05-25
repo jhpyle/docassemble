@@ -1,6 +1,6 @@
 metadata:
   title: Font Awesome
-  documentation: "https://docassemble.org/docs/config.html#use font awesome"
+  documentation: "https://docassemble.org/docs/config.html#default icons"
   example start: 1
   example end: 1
 ---
