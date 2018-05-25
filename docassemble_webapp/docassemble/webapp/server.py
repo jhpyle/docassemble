@@ -13949,6 +13949,7 @@ def server_error(the_error):
                 if re.match('Exception', line):
                     flask_logtext = []
                 flask_logtext.append(line)
+    orig_errmess = errmess
     errmess = noquote(errmess)
     if re.search(r'\n', errmess):
         errmess = '<pre>' + errmess + '</pre>'
@@ -13992,6 +13993,8 @@ def server_error(the_error):
         showNotifications();
       });
     </script>"""
+    if not DEBUG:
+        error_notification(the_error, message=errmess, history=the_history, trace=the_trace, request=request)
     return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=unicode(the_history), logtext=unicode(the_trace), extra_js=Markup(script)), error_code
     #return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=None, logtext=str(the_trace)), error_code
 
@@ -17481,7 +17484,50 @@ def get_short_code(**pargs):
     if new_record is None:
         raise SystemError("Failed to generate unique short code")
     return new_short
-        
+
+def error_notification(err, message=None, history=None, trace=None, referer=None, request=None):
+    recipient_email = daconfig.get('error notification email', None)
+    if not recipient_email:
+        return
+    if message is None:
+        errmess = unicode(err)
+    else:
+        errmess = message
+    if request:
+        try:
+            referer = unicode(request.referrer)
+        except:
+            referer = None
+    else:
+        referer = None
+    try:
+        try:
+            body = "There was an error in the " + app.config['APP_NAME'] + " application.\n\nThe error message was:\n\n" + unicode()
+            if trace is not None:
+                body += "\n\n" + unicode(trace)
+            if history is not None:
+                body += "\n\n" + BeautifulSoup(history, "html.parser").get_text('\n')
+            if referer is not None and referer != 'None':
+                html += "\n\nThe referer URL was " + unicode(referer)
+            html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n    <p>The error message was:</p>\n<pre>" + unicode(err)
+            if trace is not None:
+                html += "\n\n" + unicode(trace)
+            html += "</pre>\n"
+            if history is not None:
+                html += unicode(history)
+            if referer is not None and referer != 'None':
+                html += "<p>The referer URL was " + unicode(referer) + "</p>"
+            html += "\n  </body>\n</html>"
+            msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=[recipient_email], body=body, html=html)
+            da_send_mail(msg)
+        except:
+            body = "There was an error in the " + app.config['APP_NAME'] + " application."
+            html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n  </body>\n</html>"
+            msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=[recipient_email], body=body, html=html)
+            da_send_mail(msg)
+    except:
+        pass
+
 for path in (FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY): #PACKAGE_CACHE
     if not os.path.isdir(path):
         try:

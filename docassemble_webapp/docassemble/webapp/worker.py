@@ -36,7 +36,7 @@ worker_controller = None
 def initialize_db():
     global worker_controller
     worker_controller = WorkerController()
-    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype, get_user_object, login_user
+    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype, get_user_object, login_user, error_notification
     from docassemble.webapp.server import app as flaskapp
     import docassemble.base.functions
     import docassemble.base.interview_cache
@@ -64,6 +64,7 @@ def initialize_db():
     worker_controller.loaded = True
     worker_controller.get_user_object = get_user_object
     worker_controller.login_user = login_user
+    worker_controller.error_notification = error_notification
 
 def convert(obj):
     return result_from_tuple(obj.as_tuple(), app=workerapp)
@@ -486,6 +487,8 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 else:
                     error_trace = None
                 variables = list(reversed([y for y in worker_controller.functions.this_thread.current_variable]))
+                if not daconfig.get('debug', False):
+                    worker_controller.error_notification(e, message=error_message, trace=error_trace)
                 if 'on_error' not in worker_controller.functions.this_thread.current_info:
                     return(worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace, variables=variables))
                 else:
@@ -537,6 +540,8 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     else:
                         error_trace = None
                     variables = list(reversed([y for y in worker_controller.functions.this_thread.current_variable]))
+                    if not daconfig.get('debug', False):
+                        worker_controller.error_notification(e, message=error_message, trace=error_trace)
                     has_error = True
                 # is this right?
                 if str(user_info.get('the_user_id', None)).startswith('t'):
@@ -566,6 +571,8 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 error_trace = None
                 error_message = interview_status.questionText
                 variables = list(reversed([y for y in worker_controller.functions.this_thread.current_variable]))
+                if not daconfig.get('debug', False):
+                    worker_controller.error_notification(Exception("The end result of the background action was the asking of this question: " + repr(str(interview_status.questionText).strip())))
                 if 'on_error' not in worker_controller.functions.this_thread.current_info:
                     return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
                 else:
@@ -598,6 +605,8 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
                 error_trace += "\nIn line: " + unicode(e.da_line_with_error)
         else:
             error_trace = None
+        if not daconfig.get('debug', False):
+            worker_controller.error_notification(e, message=error_message, trace=error_trace)
     # is this right?
     if str(user_info.get('the_user_id', None)).startswith('t'):
         worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)

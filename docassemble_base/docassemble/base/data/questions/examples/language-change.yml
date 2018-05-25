@@ -1,0 +1,55 @@
+metadata:
+  title: Change language
+  documentation: "https://docassemble.org/docs/modifiers.html#language"
+  example start: 2
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+initial: True
+code: |
+  set_language(language)
+  menu_items
+---
+language: en
+code: |
+  menu_items = [ action_menu_item('Change language', 'change_language') ]
+---
+language: es
+code: |
+  menu_items = [ action_menu_item('Cambiar idioma', 'change_language') ]
+---
+event: change_language
+code: |
+  del language
+  del menu_items
+---
+question: |
+  What is the meaning of life?
+fields:
+  - Meaning of life: meaning_life
+---
+language: es
+question: |
+  ¿Cuál es el significado de la vida?
+fields:
+  - Significado de la Vida: meaning_life
+---
+question: |
+  What language do you speak?
+subquestion: |
+  (¿Qué idioma hablas?)
+field: language
+choices:
+  - English: en
+  - Español: es
+---
+question: |
+  The meaning of life
+subquestion: |
+  The interviewee said the meaning of life
+  is:
+
+  ${ meaning_life }
+mandatory: True

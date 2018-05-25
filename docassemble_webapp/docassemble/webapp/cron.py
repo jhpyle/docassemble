@@ -14,7 +14,7 @@ if __name__ == "__main__":
         remaining_arguments.append(arguments.pop(0))
     import docassemble.base.config
     docassemble.base.config.load(arguments=remaining_arguments)
-from docassemble.webapp.server import UserModel, UserDict, logmessage, unpack_dictionary, db, set_request_active, fetch_user_dict, save_user_dict, fresh_dictionary, reset_user_dict, obtain_lock, release_lock, app, login_user, get_user_object
+from docassemble.webapp.server import UserModel, UserDict, logmessage, unpack_dictionary, db, set_request_active, fetch_user_dict, save_user_dict, fresh_dictionary, reset_user_dict, obtain_lock, release_lock, app, login_user, get_user_object, error_notification
 import docassemble.webapp.backend
 import docassemble.base.interview_cache
 import docassemble.base.parse
@@ -130,6 +130,14 @@ def run_cron(cron_type):
                         except Exception as err:
                             sys.stderr.write(str(err.__class__.__name__) + ": " + str(err) + "\n")
                             release_lock(item['key'], item['filename'])
+                            if not docassemble.base.config.daconfig.get('debug', False):
+                                if hasattr(err, 'traceback'):
+                                    error_trace = unicode(err.traceback)
+                                    if hasattr(err, 'da_line_with_error'):
+                                        error_trace += "\nIn line: " + unicode(err.da_line_with_error)
+                                else:
+                                    error_trace = None
+                                error_notification(err, trace=error_trace)
                             continue
             
 if __name__ == "__main__":

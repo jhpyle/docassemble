@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.2.63] - 
+### Added
+- The `error notification email` configuration option.
+### Fixed
+- Error with PDF fields and signature overlay.
+
 ## [0.2.62] - 2018-05-23
 ### Added
 - JSON interface to the "Variables, etc." and list of Playground

@@ -137,6 +137,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
         for field, default, pageno, rect, field_type in read_fields(template):
             if str(field_type) == '/Sig':
                 fields[field] = {'pageno': pageno, 'rect': rect}
+        image_todo = list()
         for field, file_info in images:
             if field not in fields:
                 logmessage("field name " + str(field) + " not found in PDF file")
@@ -158,25 +159,42 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
             else:
                 dpp = dppy
             extent_x, extent_y = xone*dpp+width, yone*dpp+height
-            overlay_pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf")
+            overlay_pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=False)
             args = ["convert", temp_png.name, "-background", "none", "-density", str(int(dpp*72)), "-gravity", "NorthEast", "-extent", str(int(extent_x)) + 'x' + str(int(extent_y)), overlay_pdf_file.name]
             result = call(args)
             if result == 1:
                 logmessage("failed to make overlay: " + " ".join(args))
                 continue
+            image_todo.append({'overlay_stream': open(overlay_pdf_file.name, "rb"), 'pageno': fields[field]['pageno']})
+        if len(image_todo):
             new_pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf")
-            with open(pdf_file.name, "rb") as inFile, open(overlay_pdf_file.name, "rb") as overlay:
+            with open(pdf_file.name, "rb") as inFile:
                 original = pypdf.PdfFileReader(inFile)
-                background = original.getPage(fields[field]['pageno']-1)
-                foreground = pypdf.PdfFileReader(overlay).getPage(0)
-                background.mergePage(foreground)
+                catalog = original.trailer["/Root"]
                 writer = pypdf.PdfFileWriter()
+                if "/AcroForm" in catalog:
+                    tree = catalog["/AcroForm"]
+                else:
+                    tree = None
                 for i in range(original.getNumPages()):
-                    page = original.getPage(i)
-                    writer.addPage(page)
+                    for item in image_todo:
+                        if (item['pageno'] - 1) == i:
+                            page = original.getPage(i)
+                            foreground_file = pypdf.PdfFileReader(item['overlay_stream'])
+                            foreground_page = foreground_file.getPage(0)
+                            page.mergePage(foreground_page)
+                for i in range(original.getNumPages()):
+                    newpage = original.getPage(i)
+                    writer.addPage(newpage)
+                if tree is not None:
+                    writer._root_object.update({pypdf.generic.NameObject('/AcroForm'): tree})
+                else:
+                    logmessage("Tree was none")
                 with open(new_pdf_file.name, "wb") as outFile:
                     writer.write(outFile)
             shutil.copyfile(new_pdf_file.name, pdf_file.name)
+            for item in image_todo:
+                item['overlay_stream'].close()
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
     if editable:
