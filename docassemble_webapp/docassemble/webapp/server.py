@@ -750,7 +750,8 @@ from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipien
 from user_agents import parse as ua_parse
 import docassemble.base.ocr
 from jinja2.exceptions import TemplateError
-import uuid
+#import uuid
+from bs4 import BeautifulSoup
 
 mimetypes.add_type('application/x-yaml', '.yml')
 mimetypes.add_type('application/x-yaml', '.yaml')
@@ -13993,8 +13994,7 @@ def server_error(the_error):
         showNotifications();
       });
     </script>"""
-    if not DEBUG:
-        error_notification(the_error, message=errmess, history=the_history, trace=the_trace, request=request)
+    error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request)
     return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=unicode(the_history), logtext=unicode(the_trace), extra_js=Markup(script)), error_code
     #return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=None, logtext=str(the_trace)), error_code
 
@@ -17485,31 +17485,49 @@ def get_short_code(**pargs):
         raise SystemError("Failed to generate unique short code")
     return new_short
 
-def error_notification(err, message=None, history=None, trace=None, referer=None, request=None):
+def error_notification(err, message=None, history=None, trace=None, referer=None, the_request=None):
     recipient_email = daconfig.get('error notification email', None)
     if not recipient_email:
+        return
+    if err.__class__.__name__ == 'CSRFError':
         return
     if message is None:
         errmess = unicode(err)
     else:
         errmess = message
-    if request:
+    if the_request:
         try:
-            referer = unicode(request.referrer)
+            referer = unicode(the_request.referrer)
         except:
             referer = None
+        try:
+            ipaddress = the_request.remote_addr
+        except:
+            ipaddress = None
     else:
         referer = None
+        ipaddress = None
+    try:
+        the_key = 'da:errornotification:' + str(ipaddress)
+        existing = r.get(the_key)
+        pipe = r.pipeline()
+        pipe.set(the_key, 1)
+        pipe.expire(the_key, 60)
+        pipe.execute()
+        if existing:
+            return
+    except:
+        pass
     try:
         try:
-            body = "There was an error in the " + app.config['APP_NAME'] + " application.\n\nThe error message was:\n\n" + unicode()
+            body = "There was an error in the " + app.config['APP_NAME'] + " application.\n\nThe error message was:\n\n" + err.__class__.__name__ + ": " + unicode(errmess)
             if trace is not None:
                 body += "\n\n" + unicode(trace)
             if history is not None:
                 body += "\n\n" + BeautifulSoup(history, "html.parser").get_text('\n')
             if referer is not None and referer != 'None':
-                html += "\n\nThe referer URL was " + unicode(referer)
-            html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n    <p>The error message was:</p>\n<pre>" + unicode(err)
+                body += "\n\nThe referer URL was " + unicode(referer)
+            html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n    <p>The error message was:</p>\n<pre>" + err.__class__.__name__ + ": " + unicode(errmess)
             if trace is not None:
                 html += "\n\n" + unicode(trace)
             html += "</pre>\n"
@@ -17520,7 +17538,8 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
             html += "\n  </body>\n</html>"
             msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=[recipient_email], body=body, html=html)
             da_send_mail(msg)
-        except:
+        except Exception as zerr:
+            logmessage(unicode(zerr))
             body = "There was an error in the " + app.config['APP_NAME'] + " application."
             html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n  </body>\n</html>"
             msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=[recipient_email], body=body, html=html)

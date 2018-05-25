@@ -32,7 +32,6 @@ from flask_wtf.csrf import generate_csrf
 from flask_login import current_user
 import docassemble.webapp.worker
 from docassemble.webapp.mailgun_mail import Mail as MailgunMail
-from bs4 import BeautifulSoup
 
 #sys.stderr.write("I am in backend\n")
 

@@ -130,14 +130,13 @@ def run_cron(cron_type):
                         except Exception as err:
                             sys.stderr.write(str(err.__class__.__name__) + ": " + str(err) + "\n")
                             release_lock(item['key'], item['filename'])
-                            if not docassemble.base.config.daconfig.get('debug', False):
-                                if hasattr(err, 'traceback'):
-                                    error_trace = unicode(err.traceback)
-                                    if hasattr(err, 'da_line_with_error'):
-                                        error_trace += "\nIn line: " + unicode(err.da_line_with_error)
-                                else:
-                                    error_trace = None
-                                error_notification(err, trace=error_trace)
+                            if hasattr(err, 'traceback'):
+                                error_trace = unicode(err.traceback)
+                                if hasattr(err, 'da_line_with_error'):
+                                    error_trace += "\nIn line: " + unicode(err.da_line_with_error)
+                            else:
+                                error_trace = None
+                            error_notification(err, trace=error_trace)
                             continue
             
 if __name__ == "__main__":

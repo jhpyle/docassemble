@@ -464,9 +464,7 @@ class InterviewStatus(object):
                 the_field['none_of_the_above'] = self.extras['nota'][field.number]
             the_field['active'] = self.extras['ok'][field.number]
             if field.number in self.extras['required']:
-                the_field['required'] = True
-            else:
-                the_field['required'] = False
+                the_field['required'] = self.extras['required'][field.number]
             if hasattr(field, 'extras'):
                 if 'ml_group' in field.extras or 'ml_train' in field.extras:
                     the_field['ml_info'] = dict()
