@@ -5152,6 +5152,24 @@
 "language": "question: |\n  What is the meaning of life?\nfields:\n  - Meaning of\
   \ life: meaning_life\n---\nlanguage: es\nquestion: |\n  \xBFCu\xE1l es el significado\
   \ de la vida?\nfields:\n  - Significado de la Vida: meaning_life"
+"language-change": |-
+  initial: True
+  code: |
+    set_language(language)
+    menu_items
+  ---
+  language: en
+  code: |
+    menu_items = [ action_menu_item('Change language', 'change_language') ]
+  ---
+  language: es
+  code: |
+    menu_items = [ action_menu_item('Cambiar idioma', 'change_language') ]
+  ---
+  event: change_language
+  code: |
+    del language
+    del menu_items
 "language_from_browser": |-
   question: |
     I think your language code is

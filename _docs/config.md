@@ -623,10 +623,8 @@ The default value is `medium`.
 ## <a name="default icons"></a>Using standard sets of icons
 
 [Font Awesome] is enabled on all pages. **docassemble** includes the
-free version (5.0.7) of [Font Awesome].  When `use font awesome` is
-`True`, [Font Awesome] will be enabled in the web app, in interviews
-as well as in administrative pages.  This allows you to refer to [Font
-Awesome] icons using raw HTML.
+free version (5.0.7) of [Font Awesome].  This allows you to refer to
+[Font Awesome] icons using raw HTML.
 
 In addition, **docassemble** allows you to use Google's [Material
 Icons] in your raw HTML.  Since the [Material Icons] are just a font,
@@ -1148,6 +1146,15 @@ server administrator email: support@example.com
 
 This e-mail address will be used to set the [`ServerAdmin`] directive
 in the [Apache] configuration.
+
+## <a name="error notification email"></a>E-mail address to which error messages shall be sent
+
+If `error notification email` is set to an e-mail address, then if any
+user sees an error message, the server will try to send an e-mail
+notification to this e-mail address.  If possible, the e-mail will
+contain the error message.
+
+Information about errors is also available in the [Logs].
 
 ## <a name="debian packages"></a>Debian packages to install
 
@@ -2769,3 +2776,5 @@ and Facebook API keys.
 [`path_and_mimetype()`]: {{ site.baseurl }}/docs/functions.html#path_and_mimetype
 [user agent]: https://en.wikipedia.org/wiki/User_agent
 [address autocomplete]: {{ site.baseurl }}/docs/fields.html#address autocomplete
+[`debug`]: #debug
+[Logs]: {{ site.baseurl }}/docs/admin.html#logs

@@ -4,6 +4,23 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.63](https://github.com/jhpyle/docassemble/releases/tag/v0.2.63) - 2018-05-25
+
+### Added
+- The `error notification email` configuration option.
+
+### Fixed
+- Error with PDF fields and signature overlay.
+
+## [0.2.62](https://github.com/jhpyle/docassemble/releases/tag/v0.2.62) - 2018-05-23
+
+### Added
+- JSON interface to the "Variables, etc." and list of Playground
+  files.
+
+### Fixed
+- Error during invitation and registration.
+
 ## [0.2.61](https://github.com/jhpyle/docassemble/releases/tag/v0.2.61) - 2018-05-19
 
 ### Changed
