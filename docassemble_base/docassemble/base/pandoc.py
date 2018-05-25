@@ -109,7 +109,7 @@ class MyPandoc(object):
         icc_profile_in_temp = os.path.join(tempfile.gettempdir(), 'sRGB_IEC61966-2-1_black_scaled.icc')
         if not os.path.isfile(icc_profile_in_temp):
             shutil.copyfile(docassemble.base.functions.standard_template_filename('sRGB_IEC61966-2-1_black_scaled.icc'), icc_profile_in_temp)
-        subprocess_arguments = [PANDOC_PATH, '-M', 'latextmpdir=' + os.path.join('latex_convert', ''), '-M', 'pdfa=' + ('true' if self.pdfa else 'false')]
+        subprocess_arguments = [PANDOC_PATH, '--smart', '-M', 'latextmpdir=' + os.path.join('latex_convert', ''), '-M', 'pdfa=' + ('true' if self.pdfa else 'false')]
         if len(yaml_to_use) > 0:
             subprocess_arguments.extend(yaml_to_use)
         if self.template_file is not None:
@@ -162,7 +162,7 @@ class MyPandoc(object):
         if self.output_format in ("pdf", "tex", "rtf", "rtf to docx", "epub", "docx"):
             self.convert_to_file(question)
         else:
-            subprocess_arguments = [PANDOC_PATH, '-M', 'latextmpdir=' + os.path.join('latex_convert', ''), '--from=%s' % self.input_format, '--to=%s' % self.output_format]
+            subprocess_arguments = [PANDOC_PATH, '--smart', '-M', 'latextmpdir=' + os.path.join('latex_convert', ''), '--from=%s' % self.input_format, '--to=%s' % self.output_format]
             subprocess_arguments.extend(self.arguments)
             #logmessage("Arguments are " + str(subprocess_arguments))
             p = subprocess.Popen(
@@ -233,7 +233,7 @@ def word_to_markdown(in_file, in_format):
         in_file_to_use = in_file
         in_format_to_use = in_format
         tempdir = None
-    subprocess_arguments = [PANDOC_PATH, '--from=%s' % str(in_format_to_use), '--to=markdown', str(in_file_to_use), '-o', str(temp_file.name)]
+    subprocess_arguments = [PANDOC_PATH, '--smart', '--from=%s' % str(in_format_to_use), '--to=markdown', str(in_file_to_use), '-o', str(temp_file.name)]
     result = subprocess.call(subprocess_arguments)
     if tempdir is not None:
         shutil.rmtree(tempdir)
