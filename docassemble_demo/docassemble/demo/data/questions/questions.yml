@@ -599,14 +599,15 @@ comment: |
 ---
 generic object: Individual
 question: |
-  Please upload one or more pictures of ${ x.yourself_or_name() }.
+  Please upload a picture of ${ x.yourself_or_name() }.
 decoration: picture
 fields:
   - A test file: x.picture
-    datatype: files
+    datatype: camera
 comment: |
   You can accept file uploads from users by using the datatypes "file"
-  (for a single file) or "files" (for one or more files).
+  (for a single file) or "files" (for one or more files).  The "camera"
+  file type ensures that only image files are accepted.
 ---
 generic object: Individual
 question: |
