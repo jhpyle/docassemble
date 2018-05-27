@@ -11764,7 +11764,7 @@ def playground_office_addin():
         area.write_content(codecs.decode(content[start_index:], 'base64'), filename=filename)
         area.finalize()
         if pg_var_file is None or pg_var_file == '':
-            return jsonify({'success': True, 'variables_json': [], vocab_list: []})
+            return jsonify({'success': True, 'variables_json': [], 'vocab_list': []})
     if pg_var_file is not None:
         playground = SavedFile(current_user.id, fix=True, section='playground')
         files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])

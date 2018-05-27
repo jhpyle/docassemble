@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.64] - 
+## Added
+- Feature for uploading files through dataurls to the Template Folder
+  of the Playground.
+
 ## [0.2.63] - 2018-05-25
 ### Added
 - The `error notification email` configuration option.
