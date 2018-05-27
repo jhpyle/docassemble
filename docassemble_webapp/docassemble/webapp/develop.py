@@ -132,6 +132,10 @@ class TrainingUploadForm(FlaskForm):
     importtype = RadioField(word('Import method'))
     submit = SubmitField(word('Import'))
 
+class AddinUploadForm(FlaskForm):
+    contents = HiddenField()
+    filename = HiddenField()
+    
 class APIKey(FlaskForm):
     action = HiddenField()
     key = HiddenField()

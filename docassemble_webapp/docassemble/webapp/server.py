@@ -716,7 +716,7 @@ from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
 #from flask_wtf.csrf import generate_csrf
-from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey
+from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey, AddinUploadForm
 import flask_user.signals
 import flask_user.translations
 import flask_user.views
@@ -11746,6 +11746,23 @@ def playground_office_addin():
         files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
         return jsonify(success=True, files=files)
     pg_var_file = request.args.get('pgvars', None)
+    if request.method == 'POST':
+        uploadform = AddinUploadForm(request.form)
+        area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
+        filename = secure_filename(uploadform.filename.data)
+        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', filename)
+        contents = uploadform.contents.data
+        start_index = 0
+        char_index = 0
+        for char in contents:
+            char_index += 1
+            if char == ',':
+                start_index = char_index
+                break
+        area.write_content(codecs.decode(contents[start_index:], 'base64'), filename=filename)
+        area.finalize()
+        if pg_var_file is None or pg_var_file == '':
+            return jsonify(success=False)
     if pg_var_file is not None:
         playground = SavedFile(current_user.id, fix=True, section='playground')
         files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])

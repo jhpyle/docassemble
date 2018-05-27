@@ -12,6 +12,9 @@ function receiveMessage(event){
   else if (event.data.action == 'fetchVars'){
     fetchVars(event.data.file);
   }
+  else if (event.data.action == 'uploadFile'){
+    uploadFile(event.data.yamlFile, event.data.fileName, event.data.content);
+  }
 }
 
 function fetchFiles(){
@@ -45,6 +48,31 @@ function fetchVars(yamlFile){
     url: "?pgvars=" + yamlFile,
     success: function(data){
       console.log("Got response for fetchVars");
+      if (data.success){
+	parwindow.postMessage({"action": "vars", "vars": data.variables_json, "vocab": data.vocab_list}, parentOrigin);
+      }
+      else{
+	parwindow.postMessage({"action": "fail", "tried": "vars"}. parentOrigin);
+      }
+    },
+    error: function(xhr, status, error){
+      console.log(xhr.responseText);
+    },
+    dataType: 'json'
+  });
+}
+
+function uploadFile(yamlFile, fileName, content){
+  console.log("Calling uploadFile");
+  if (yamlFile == null){
+    yamlFile = ""
+  }
+  $.ajax({
+    type: "POST",
+    url: "?pgvars=" + yamlFile,
+    data: $.param({'filename': fileName, 'content': content});
+    success: function(data){
+      console.log("Got response for uploadFile");
       if (data.success){
 	parwindow.postMessage({"action": "vars", "vars": data.variables_json, "vocab": data.vocab_list}, parentOrigin);
       }
