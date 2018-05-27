@@ -6,6 +6,9 @@
   </head>
   <body>
     <p>{{ word('Connected to server.') }}</p>
+    <form action="" method="POST" class="form" role="form">
+      {{ form.hidden_tag() }}
+    </form>
     <script>
       var parentOrigin = "{{ parent_origin }}";
     </script>

@@ -70,7 +70,7 @@ function uploadFile(yamlFile, fileName, content){
   $.ajax({
     type: "POST",
     url: "?pgvars=" + yamlFile,
-    data: $.param({'filename': fileName, 'content': content}),
+    data: $.param({'filename': fileName, 'content': content, 'csrf_token': $("input[name='csrf_token']").val()}),
     success: function(data){
       console.log("Got response for uploadFile");
       if (data.success){

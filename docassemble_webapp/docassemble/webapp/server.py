@@ -11746,8 +11746,8 @@ def playground_office_addin():
         files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
         return jsonify(success=True, files=files)
     pg_var_file = request.args.get('pgvars', None)
+    uploadform = AddinUploadForm(request.form)
     if request.method == 'POST':
-        uploadform = AddinUploadForm(request.form)
         area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
         filename = secure_filename(uploadform.filename.data)
         filename = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', filename)
@@ -11779,7 +11779,7 @@ def playground_office_addin():
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + pg_var_file, req=request, action=None))
         variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True)
         return jsonify(success=True, variables_json=variables_json, vocab_list=list(vocab_list))
-    return render_template('pages/officeaddin.html', page_title=word("Docassemble Template Builder"), tab_title=word("Template Builder"), parent_origin=daconfig.get('office addin url', 'https://gbls.github.io')), 200
+    return render_template('pages/officeaddin.html', page_title=word("Docassemble Template Builder"), tab_title=word("Template Builder"), parent_origin=daconfig.get('office addin url', 'https://gbls.github.io'), form=uploadform), 200
 
 @app.route('/playgroundfiles', methods=['GET', 'POST'])
 @login_required
