@@ -2551,7 +2551,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         if val not in name_info:
             name_info[val] = dict()
         name_info[val]['type'] = user_dict[val].__class__.__name__
-        if hasattr(name_info[val], '__iter__') and not isinstance(name_info[val], basestring):
+        if hasattr(user_dict[val], '__iter__') and not isinstance(user_dict[val], basestring):
             name_info[val]['iterable'] = True
         else:
             name_info[val]['iterable'] = False
