@@ -133,7 +133,7 @@ class TrainingUploadForm(FlaskForm):
     submit = SubmitField(word('Import'))
 
 class AddinUploadForm(FlaskForm):
-    contents = HiddenField()
+    content = HiddenField()
     filename = HiddenField()
     
 class APIKey(FlaskForm):

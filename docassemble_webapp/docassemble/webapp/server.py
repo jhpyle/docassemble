@@ -11751,17 +11751,17 @@ def playground_office_addin():
         area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
         filename = secure_filename(uploadform.filename.data)
         filename = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', filename)
-        contents = unicode(uploadform.contents.data)
-        logmessage("Contents is " + str(len(contents)) + " in length")
-        sys.stderr.write(contents + "\n");
+        content = unicode(uploadform.content.data)
+        logmessage("Content is " + str(len(content)) + " in length")
+        sys.stderr.write(content + "\n");
         start_index = 0
         char_index = 0
-        for char in contents:
+        for char in content:
             char_index += 1
             if char == ',':
                 start_index = char_index
                 break
-        area.write_content(codecs.decode(contents[start_index:], 'base64'), filename=filename)
+        area.write_content(codecs.decode(content[start_index:], 'base64'), filename=filename)
         area.finalize()
         if pg_var_file is None or pg_var_file == '':
             return jsonify({'success': True, 'variables_json': [], vocab_list: []})
