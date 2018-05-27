@@ -11752,8 +11752,6 @@ def playground_office_addin():
         filename = secure_filename(uploadform.filename.data)
         filename = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', filename)
         content = unicode(uploadform.content.data)
-        logmessage("Content is " + str(len(content)) + " in length")
-        sys.stderr.write(content + "\n");
         start_index = 0
         char_index = 0
         for char in content:
