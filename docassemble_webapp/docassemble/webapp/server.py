@@ -11762,7 +11762,7 @@ def playground_office_addin():
         area.write_content(codecs.decode(contents[start_index:], 'base64'), filename=filename)
         area.finalize()
         if pg_var_file is None or pg_var_file == '':
-            return jsonify(success=False)
+            return jsonify({'success': True, 'variables_json': [], vocab_list: []})
     if pg_var_file is not None:
         playground = SavedFile(current_user.id, fix=True, section='playground')
         files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
@@ -11778,7 +11778,7 @@ def playground_office_addin():
         ensure_ml_file_exists(interview, pg_var_file)
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + pg_var_file, req=request, action=None))
         variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True)
-        return jsonify(success=True, variables_json=variables_json, vocab_list=list(vocab_list))
+        return jsonify({'success': True, 'variables_json': variables_json, 'vocab_list': list(vocab_list)})
     return render_template('pages/officeaddin.html', page_title=word("Docassemble Template Builder"), tab_title=word("Template Builder"), parent_origin=daconfig.get('office addin url', 'https://gbls.github.io'), form=uploadform), 200
 
 @app.route('/playgroundfiles', methods=['GET', 'POST'])

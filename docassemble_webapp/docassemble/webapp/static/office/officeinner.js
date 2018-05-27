@@ -74,14 +74,15 @@ function uploadFile(yamlFile, fileName, content){
     success: function(data){
       console.log("Got response for uploadFile");
       if (data.success){
-	parwindow.postMessage({"action": "vars", "vars": data.variables_json, "vocab": data.vocab_list}, parentOrigin);
+	parwindow.postMessage({"action": "vars", "vars": data.variables_json, "vocab": data.vocab_list, "uploaded": true}, parentOrigin);
       }
       else{
-	parwindow.postMessage({"action": "fail", "tried": "vars"}. parentOrigin);
+	parwindow.postMessage({"action": "fail", "tried": "uploadFile"}, parentOrigin);
       }
     },
     error: function(xhr, status, error){
       console.log(xhr.responseText);
+      parwindow.postMessage({"action": "fail", "tried": "uploadFile"}, parentOrigin);
     },
     dataType: 'json'
   });
