@@ -37,6 +37,9 @@ function fetchFiles(){
 
 function fetchVars(yamlFile){
   console.log("Calling fetchVars");
+  if (yamlFile == null){
+    return;
+  }
   $.ajax({
     type: "GET",
     url: "?pgvars=" + yamlFile,

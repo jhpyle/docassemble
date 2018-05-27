@@ -2551,6 +2551,10 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         if val not in name_info:
             name_info[val] = dict()
         name_info[val]['type'] = user_dict[val].__class__.__name__
+        if hasattr(name_info[val], '__iter__') and not isinstance(name_info[val], basestring):
+            name_info[val]['iterable'] = True
+        else:
+            name_info[val]['iterable'] = False
     for var in base_name_info:
         if base_name_info[var]['show']:
             names_used.add(var)
@@ -2653,6 +2657,8 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     info['class_name'] = name_info[var]['type']
                 elif var in interview.mlfields:
                     info['class_name'] = 'DAModel'
+                if var in name_info and 'iterable' in name_info[var]:
+                    info['iterable'] = name_info[var]['iterable']
                 if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
                     info['doc_content'] = name_info[var]['doc']
                     info['doc_title'] = word_documentation
@@ -5106,10 +5112,10 @@ def index():
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[real_key] in ('object', 'object_radio'):
-                #logmessage("We have an object type and objselections is " + str(user_dict['_internal']['objselections']))
-                #logmessage("We have an object type and key is " + str(key))
-                #logmessage("We have an object type and data is " + str(data))
-                #logmessage("We have an object type and set_to_empty is " + str(set_to_empty))
+                logmessage("We have an object type and objselections is " + str(user_dict['_internal']['objselections']))
+                logmessage("We have an object type and key is " + str(key))
+                logmessage("We have an object type and data is " + str(data))
+                logmessage("We have an object type and set_to_empty is " + str(set_to_empty))
                 if data == '' or set_to_empty:
                     continue
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
