@@ -4,6 +4,7 @@ role_event:
     multi-user interviews when the role needed to answer the next
     question is different from the current role.
   show: True
+  iterable: False
 role_needed:
   doc: |
     This is an internal variable that docassemble uses during
@@ -12,11 +13,13 @@ role_needed:
     answer the next question.
   type: list
   show: True
+  iterable: True
 url_args:
   doc: |
     This is a special variable used by docassemble to store the
     parameters passed to the interview through the URL.
   type: dict
+  iterable: True
   show: True
 nav:
   doc: |
@@ -25,18 +28,21 @@ nav:
     interview makes use of the navigation bar feature.
   type: DANav
   show: True
+  iterable: False
 role:
   doc: |
     This is a special variable used in multi-user interviews to indicate
     the role of the current user.  Typically set during initial code.
   type: str
   show: True
+  iterable: False
 speak_text:
   doc: |
     This is a special variable that can be set during an interview.  If
     True, the text-to-speech feature is turned on.
   type: bool
   show: True
+  iterable: False
 track_location:
   doc: |
     This is a special variable that can be set during an interview.  If
@@ -44,63 +50,79 @@ track_location:
     using the GPS features of the browser.
   type: bool
   show: True
+  iterable: False
 allow_cron:
   doc: |
     This is a special variable that can be set during an interview.  If
     True, the scheduled tasks system will be enabled for the interview.
   type: bool
   show: True
+  iterable: False
 multi_user:
   doc: |
     This is a special variable that can be set during an interview.  If
     True, the multi-user interview feature will be turned on.
   type: bool
   show: True
+  iterable: False
 menu_items:
   doc: |
     This is a special variable that can be set during an interview in
     order to add selections to the menu.
   type: list
+  iterable: True
   show: True
 "True":
   doc: |
     This is a built-in Python variable that expresses the boolean value of true.
   type: bool
+  iterable: False
 "False":
   doc: |
     This is a built-in Python variable that expresses the boolean value of false.
   type: bool
+  iterable: False
 "None":
   doc: |
     This is a built-in Python variable that expresses a variable that exists but that lacks a value.
   type: NoneType
+  iterable: False
 Exception:
   doc: |
     This is a built-in Python class that represents an exception.
+  iterable: False
 loop:
   doc: |
     This is a variable that can be used inside of Mako for loops.
+  iterable: False
 x:
   doc: |
     This is a special variable that is used in generic object questions.
+  iterable: False
 i:
   doc: |
     This is a special variable that is used in questions that populate lists.
+  iterable: False
 j:
   doc: |
     This is a special variable that is used in questions that populate lists.
+  iterable: False
 k:
   doc: |
     This is a special variable that is used in questions that populate lists.
+  iterable: False
 l:
   doc: |
     This is a special variable that is used in questions that populate lists.
+  iterable: False
 m:
   doc: |
     This is a special variable that is used in questions that populate lists.
+  iterable: False
 n:
   doc: |
     This is a special variable that is used in questions that populate lists.
+  iterable: False
 list:
   doc: |
     This is a built-in Python data type that expresses an ordered list of things.
