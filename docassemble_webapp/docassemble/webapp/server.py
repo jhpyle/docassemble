@@ -11751,7 +11751,9 @@ def playground_office_addin():
         area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
         filename = secure_filename(uploadform.filename.data)
         filename = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', filename)
-        contents = uploadform.contents.data
+        contents = unicode(uploadform.contents.data)
+        logmessage("Contents is " + str(len(contents)) + " in length")
+        sys.stderr.write(contents + "\n");
         start_index = 0
         char_index = 0
         for char in contents:
