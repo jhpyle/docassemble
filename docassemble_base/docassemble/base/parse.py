@@ -3289,6 +3289,7 @@ class Question:
                             except:
                                 logmessage("There was an error during word_to_pdf")
                             try:
+                                logmessage("Saving numbered file")
                                 result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
                             except:
                                 logmessage("there was an error during save_numbered_file")
