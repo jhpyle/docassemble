@@ -2,6 +2,7 @@
  * bootstrap-combobox.js v1.1.8
  * =============================================================
  * Copyright 2012 Daniel Farrell
+ * Modified 2018 for docassemble by Jonathan Pyle 
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -291,6 +292,7 @@
   , listen: function () {
       this.$element
         .on('focus',    $.proxy(this.focus, this))
+        .on('change',   $.proxy(this.change, this))
         .on('blur',     $.proxy(this.blur, this))
         .on('keypress', $.proxy(this.keypress, this))
         .on('keyup',    $.proxy(this.keyup, this));
@@ -397,7 +399,8 @@
           break;
 
         default:
-          this.clearTarget();
+          this.clearTarget();    
+          this.$target.val(this.$element.val());
           this.lookup();
       }
 
@@ -407,16 +410,19 @@
 
   , focus: function (e) {
       this.focused = true;
-    }
+  }
 
   , blur: function (e) {
       var that = this;
       this.focused = false;
       var val = this.$element.val();
-      if (!this.selected && val !== '' ) {
+      if (false && !this.selected && val !== '' ) {
         this.$element.val('');
         this.$source.val('').trigger('change');
         this.$target.val('').trigger('change');
+      }
+      if (!this.selected){
+        this.$target.val(val).trigger('change');
       }
       if (!this.mousedover && this.shown) {setTimeout(function () { that.hide(); }, 200);}
     }

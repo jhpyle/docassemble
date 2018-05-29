@@ -8302,12 +8302,15 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
         if 'path' not in file_info:
             abort(404)
         else:
+            logmessage("Filename is " + file_info['path'] + '.' + extension)
             if os.path.isfile(file_info['path'] + '.' + extension):
+                logmessage("Using " + file_info['path'] + '.' + extension)
                 extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
                 response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
             elif os.path.isfile(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension)):
+                logmessage("Using " + os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension))
                 extension, mimetype = get_ext_and_mimetype(filename + '.' + extension)
                 response = send_file(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension), mimetype=mimetype)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -11751,6 +11754,8 @@ def playground_office_addin():
         area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
         filename = secure_filename(uploadform.filename.data)
         filename = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', filename)
+        if filename == '':
+            return jsonify({'success': False})
         content = unicode(uploadform.content.data)
         start_index = 0
         char_index = 0

@@ -4,6 +4,8 @@
 ## Added
 - Feature for uploading files through dataurls to the Template Folder
   of the Playground.
+## Changed
+- Comboboxes now accept free text input.
 
 ## [0.2.63] - 2018-05-25
 ### Added

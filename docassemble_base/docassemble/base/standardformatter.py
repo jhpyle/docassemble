@@ -1121,10 +1121,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="form-control daspaceafter' + combobox + '" name="' + escape_id(status.question.fields[0].saveas) + '" id="' + escape_id(status.question.fields[0].saveas) + '">' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 if status.question.question_variety == 'combobox':
                     validation_rules['ignore'] = list()
+                    validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one or type in a new value.")}
                 else:
                     validation_rules['ignore'] = None
+                    validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
-                validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
             else:
                 indexno = 0
                 for choice in status.selectcompute[status.question.fields[0].number]:
@@ -1161,10 +1162,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="form-control ' + combobox + '" name="X211bHRpcGxlX2Nob2ljZQ==">' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 if status.question.question_variety == 'combobox':
                     validation_rules['ignore'] = list()
+                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one or type in a new value.")}
                 else:
                     validation_rules['ignore'] = None
+                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
                 validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': True}
-                validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
             output += '                <div id="errorcontainer" style="display:none"></div>\n'
             output += status.submit
             output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
