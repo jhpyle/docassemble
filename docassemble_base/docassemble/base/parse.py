@@ -3284,8 +3284,14 @@ class Question:
                             result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)
                         if 'pdf' in result['formats_to_use']:
                             pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'])
-                            result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
+                            try:
+                                docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'])
+                            except:
+                                logmessage("There was an error during word_to_pdf")
+                            try:
+                                result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
+                            except:
+                                logmessage("there was an error during save_numbered_file")
                         for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'password']:
                             if key in result:
                                 del result[key]
