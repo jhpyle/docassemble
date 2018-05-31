@@ -589,6 +589,7 @@
 "You need to enter a valid time.": Null
 "You need to log in before you can access": Null
 "You need to select one.": Null
+"You need to select one or type in a new value.": Null
 "You need to supply a Git URL, upload a file, or supply the name of a package on PyPI.": Null
 "You need to type in a name for the file": Null
 "You need to type in a name for the interview": Null

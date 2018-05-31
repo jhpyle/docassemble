@@ -60,7 +60,6 @@ def delete_record(key, id):
     db.session.commit()
 
 def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
-    logmessage("save_numbered_file: filename is " + str(filename) + " and orig_path is " + str(orig_path))
     if uid is None:
         if has_request_context() and 'uid' in session:
             uid = session.get('uid', None)
@@ -73,7 +72,6 @@ def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     new_file = SavedFile(file_number, extension=extension, fix=True)
     new_file.copy_from(orig_path)
     new_file.save(finalize=True)
-    logmessage("save_numbered_file: file_number is " + str(file_number))
     return(file_number, extension, mimetype)
 
 def fix_ml_files(playground_number):

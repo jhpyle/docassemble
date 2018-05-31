@@ -366,9 +366,6 @@ Feature: Example interviews
   # Scenario: Test the interview "Checking in"
   #   Given I start the interview "docassemble.base:data/questions/examples/check-in.yml"
 
-  # Scenario: Test the interview "Combobox"
-  #   Given I start the interview "docassemble.base:data/questions/examples/choices-combobox.yml"
-
   # Scenario: Test the interview "Dropdown"
   #   Given I start the interview "docassemble.base:data/questions/examples/choices-dropdown.yml"
 

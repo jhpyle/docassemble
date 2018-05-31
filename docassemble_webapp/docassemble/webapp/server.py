@@ -3997,7 +3997,7 @@ def checkin():
         temp_user_id = None
     if request.form.get('action', None) == 'chat_log':
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
-        if user_dict['_internal']['livehelp']['availability'] != 'available':
+        if user_dict is None or user_dict['_internal']['livehelp']['availability'] != 'available':
             return jsonify(success=False)
         messages = get_chat_log(user_dict['_internal']['livehelp']['mode'], yaml_filename, session_id, auth_user_id, temp_user_id, secret, auth_user_id, temp_user_id)
         return jsonify(success=True, messages=messages)

@@ -21,6 +21,7 @@ from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdftypes import resolve1
 from pdfminer.pdfpage import PDFPage
+import uuid
 
 PDFTK_PATH = 'pdftk'
 
@@ -105,7 +106,61 @@ def read_fields_pdftk(pdffile):
         if 'FieldName' in field:
             fields.append((field['FieldName'], default))
     return fields
-    
+
+pdf_parts = ['/AcroForm', '/Metadata', '/OCProperties', '/StructTreeRoot', '/OpenAction', '/AA', '/MarkInfo', '/Lang']
+
+def recursive_get_pages(indirect_obj, result):
+    obj = indirect_obj.getObject()
+    if '/Type' in obj and obj['/Type'] == '/Page':
+        result.append(indirect_obj)
+    if '/Kids' in obj:
+        for kid in obj['/Kids']:
+            recursive_get_pages(kid, result)
+
+def get_page_hash(obj):
+    page_list = list()
+    recursive_get_pages(obj['/Root']['/Pages'], page_list)
+    result = dict()
+    indexno = 1
+    for item in page_list:
+        result[item.idnum] = indexno
+        indexno += 1
+    return result
+
+def recursive_add_bookmark(reader, writer, outlines, parent=None):
+    #logmessage("recursive_add_bookmark")
+    cur_bm = None
+    for destination in outlines:
+        if type(destination) is list:
+            #logmessage("Going into subbookmark")
+            recursive_add_bookmark(reader, writer, destination, parent=cur_bm)
+        else:
+            #logmessage("page is " + str(destination.page))
+            if isinstance(destination.page, pypdf.generic.NullObject):
+                #logmessage("continue 1")
+                continue
+            if not isinstance(destination.page, pypdf.generic.IndirectObject):
+                #logmessage("continue 2")
+                continue
+            if destination.page.idnum not in reader.idnum_to_page:
+                #logmessage("continue 3")
+                continue
+            if reader.idnum_to_page[destination.page.idnum] > len(writer.page_list):
+                #logmessage("continue 4")
+                continue
+            destination_page = writer.page_list[reader.idnum_to_page[destination.page.idnum] - 1]
+            if destination.typ in ('/FitH', '/FitBH'):
+                cur_bm = writer.addBookmark(destination.title, destination_page, parent, None, False, False, destination.typ, destination.top)
+            elif destination.typ in ('/FitV', '/FitBV'):
+                cur_bm = writer.addBookmark(destination.title, destination_page, parent, None, False, False, destination.typ, destination.left)
+            elif destination.typ == '/FitR':
+                cur_bm = writer.addBookmark(destination.title, destination_page, parent, None, False, False, destination.typ, destination.left, destination.bottom, destination.right, destination.top)
+            elif destination.typ == '/XYZ':
+                cur_bm = writer.addBookmark(destination.title, destination_page, parent, None, False, False, destination.typ, destination.left, destination.top, destination.zoom)
+            else:
+                cur_bm = writer.addBookmark(destination.title, destination_page, parent, None, False, False, destination.typ)
+            #logmessage("Added bookmark " + destination.title)
+
 def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True, pdfa=False, password=None):
     if pdf_url is None:
         pdf_url = ''
@@ -170,12 +225,13 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
             new_pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf")
             with open(pdf_file.name, "rb") as inFile:
                 original = pypdf.PdfFileReader(inFile)
+                original.idnum_to_page = get_page_hash(original.trailer)
                 catalog = original.trailer["/Root"]
-                writer = pypdf.PdfFileWriter()
-                if "/AcroForm" in catalog:
-                    tree = catalog["/AcroForm"]
-                else:
-                    tree = None
+                writer = DAPdfFileWriter()
+                tree = dict()
+                for part in pdf_parts:
+                    if part in catalog:
+                        tree[part] = catalog[part]
                 for i in range(original.getNumPages()):
                     for item in image_todo:
                         if (item['pageno'] - 1) == i:
@@ -186,10 +242,11 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
                 for i in range(original.getNumPages()):
                     newpage = original.getPage(i)
                     writer.addPage(newpage)
-                if tree is not None:
-                    writer._root_object.update({pypdf.generic.NameObject('/AcroForm'): tree})
-                else:
-                    logmessage("Tree was none")
+                for key, val in tree.iteritems():
+                    writer._root_object.update({pypdf.generic.NameObject(key): val})
+                writer.page_list = list()
+                recursive_get_pages(writer._root_object['/Pages'], writer.page_list)
+                recursive_add_bookmark(original, writer, original.getOutlines())
                 with open(new_pdf_file.name, "wb") as outFile:
                     writer.write(outFile)
             shutil.copyfile(new_pdf_file.name, pdf_file.name)
@@ -316,6 +373,66 @@ class DAPdfFileWriter(pypdf.PdfFileWriter):
         if "/Kids" in tree:
             for kid in tree["/Kids"]:
                 self.DAGetFields(tree=kid, results=results)
+
+    def addBookmark(self, title, page, parent=None, color=None, bold=False, italic=False, fit='/Fit', *args):
+        """
+        Add a bookmark to this PDF file.
+
+        :param str title: Title to use for this bookmark.
+        :param int pagenum: Page number this bookmark will point to.
+        :param parent: A reference to a parent bookmark to create nested
+            bookmarks.
+        :param tuple color: Color of the bookmark as a red, green, blue tuple
+            from 0.0 to 1.0
+        :param bool bold: Bookmark is bold
+        :param bool italic: Bookmark is italic
+        :param str fit: The fit of the destination page. See
+            :meth:`addLink()<addLink>` for details.
+        """
+        action = pypdf.generic.DictionaryObject()
+        zoomArgs = []
+        for a in args:
+            if a is not None:
+                zoomArgs.append(pypdf.generic.NumberObject(a))
+            else:
+                zoomArgs.append(pypdf.generic.NullObject())
+        dest = pypdf.generic.Destination(pypdf.generic.NameObject("/"+str(uuid.uuid4())), page, pypdf.generic.NameObject(fit), *zoomArgs)
+        destArray = dest.getDestArray()
+        action.update({
+            pypdf.generic.NameObject('/D') : destArray,
+            pypdf.generic.NameObject('/S') : pypdf.generic.NameObject('/GoTo')
+        })
+        actionRef = self._addObject(action)
+
+        outlineRef = self.getOutlineRoot()
+
+        if parent == None:
+            parent = outlineRef
+
+        bookmark = pypdf.generic.TreeObject()
+
+        bookmark.update({
+            pypdf.generic.NameObject('/A'): actionRef,
+            pypdf.generic.NameObject('/Title'): pypdf.generic.createStringObject(title),
+        })
+
+        if color is not None:
+            bookmark.update({pypdf.generic.NameObject('/C'): pypdf.generic.ArrayObject([pypdf.generic.FloatObject(c) for c in color])})
+
+        format = 0
+        if italic:
+            format += 1
+        if bold:
+            format += 2
+        if format:
+            bookmark.update({pypdf.generic.NameObject('/F'): pypdf.generic.NumberObject(format)})
+
+        bookmarkRef = self._addObject(bookmark)
+
+        parent = parent.getObject()
+        parent.addChild(bookmarkRef, self)
+
+        return bookmarkRef
 
 def remove_nonprintable(text):
     final = ''

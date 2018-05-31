@@ -208,6 +208,15 @@ def set_field(step, label, value):
         pass
     elem.send_keys(value)
 
+@step('I select "([^"]+)" in the combobox')
+def set_combobox(step, value):
+    togglers = world.browser.find_elements_by_xpath("//button[contains(@class, 'dacomboboxtoggle')]")
+    assert len(togglers) > 0
+    togglers[0].click()
+    time.sleep(0.5)
+    elem = world.browser.find_element_by_xpath("//div[contains(@class, 'combobox-container')][.//a[contains(@class, 'dropdown-item') and text()='" + value + "']]")
+    elem.click()
+
 @step('I select "([^"]+)" as the "([^"]+)"')
 def select_option(step, value, label):
     elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
