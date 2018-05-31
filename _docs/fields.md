@@ -183,6 +183,9 @@ To provide a multiple choice question with a "combobox" selector, use
 
 {% include side-by-side.html demo="choices-combobox" %}
 
+The "combobox" selector allows users to choose a selection from a list
+or enter a value of their own.
+
 ## <a name="image button"></a>Adding images to buttons and list items
 
 To add a decorative icon to a `buttons` choice, use a key/value pair
@@ -985,10 +988,12 @@ the value of the selected choice.
 
 `datatype: combobox` shows a [`choices`](#choices) list as a
 [combobox] instead of as a dropdown [select] element (which is
-[the default](#select)).  The variable will be set to the value of the
-selected choice.
+[the default](#select)).
 
 {% include side-by-side.html demo="fields-choices-combobox" %}
+
+The "combobox" selector allows users to choose a selection from a list
+or enter a value of their own.
 
 ## <a name="radio"></a>Radio buttons
 

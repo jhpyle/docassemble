@@ -1308,9 +1308,9 @@
     What is your favorite color?
   field: favorite_color
   combobox:
-    - Red
-    - Green
-    - Purple
+    - Red: red
+    - Green: green
+    - Purple: purple
   ---
   mandatory: True
   question: All done
