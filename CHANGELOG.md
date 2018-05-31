@@ -1,11 +1,13 @@
 # Change Log
 
-## [0.2.64] - 
+## [0.2.64] - 2018-05-31
 ## Added
 - Feature for uploading files through dataurls to the Template Folder
   of the Playground.
 ## Changed
 - Comboboxes now accept free text input.
+## Fixed
+- PDF bookmarks restored after inserting images.
 
 ## [0.2.63] - 2018-05-25
 ### Added
