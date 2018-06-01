@@ -16,6 +16,9 @@ attachment:
     This document demonstrates the
     markup codes you can insert into
     document text.
+  valid formats:
+    - pdf
+    - tex
   metadata:
     FirstFooterLeft: |
       First of [TOTALPAGES] pages

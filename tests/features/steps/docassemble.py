@@ -214,8 +214,22 @@ def set_combobox(step, value):
     assert len(togglers) > 0
     togglers[0].click()
     time.sleep(0.5)
-    elem = world.browser.find_element_by_xpath("//div[contains(@class, 'combobox-container')][.//a[contains(@class, 'dropdown-item') and text()='" + value + "']]")
-    elem.click()
+    found = False
+    for elem in world.browser.find_elements_by_css_selector("div.combobox-container a.dropdown-item"):
+        if elem.text == value:
+            found = True
+            elem.click()
+            break
+    assert found
+
+@step('I set the combobox text to "([^"]*)"')
+def set_combobox_text(step, value):
+    elem = world.browser.find_element_by_css_selector("div.combobox-container input[type='text']")
+    try:
+        elem.clear()
+    except:
+        pass
+    elem.send_keys(value)
 
 @step('I select "([^"]+)" as the "([^"]+)"')
 def select_option(step, value, label):

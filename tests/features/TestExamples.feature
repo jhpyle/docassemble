@@ -417,9 +417,6 @@ Feature: Example interviews
   # Scenario: Test the interview "Code"
   #   Given I start the interview "docassemble.base:data/questions/examples/code.yml"
 
-  # Scenario: Test the interview "Combobox"
-  #   Given I start the interview "docassemble.base:data/questions/examples/combobox.yml"
-
   # Scenario: Test the interview "Comments"
   #   Given I start the interview "docassemble.base:data/questions/examples/comment-weather.yml"
 
@@ -5878,3 +5875,37 @@ Feature: Example interviews
     And I click the "English" option
     And I click the button "Continue"
     Then I should see the phrase "What is the meaning of life?"
+
+  Scenario: Test the interview "Combobox" in fields with selection
+    Given I start the interview "docassemble.base:data/questions/examples/choices-combobox.yml"
+    Then I should see the phrase "What is your favorite color?"
+    I select "Green" in the combobox
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite color is green."
+
+  Scenario: Test the interview "Combobox" in fields with typing
+    Given I start the interview "docassemble.base:data/questions/examples/choices-combobox.yml"
+    Then I should see the phrase "What is your favorite color?"
+    And I set the combobox text to "Orange"
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite color is Orange."
+
+  Scenario: Test the interview "Combobox" with selection
+    Given I start the interview "docassemble.base:data/questions/examples/combobox.yml"
+    Then I should see the phrase "What is your favorite color?"
+    I select "Green" in the combobox
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite color is green."
+    
+  Scenario: Test the interview "Combobox" in fields with typing
+    Given I start the interview "docassemble.base:data/questions/examples/combobox.yml"
+    Then I should see the phrase "What is your favorite color?"
+    And I set the combobox text to "Orange"
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite color is Orange."
+
+  # Scenario: Test the interview "Chart"
+  #   Given I start the interview "docassemble.base:data/questions/examples/chart.yml"
+
+  # Scenario: Test the interview "Google Chart"
+  #   Given I start the interview "docassemble.base:data/questions/examples/googlechart.yml"

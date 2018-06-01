@@ -1,0 +1,80 @@
+metadata:
+  title: Chart
+  short title: Chart
+  documentation: "https://docassemble.org/docs/initial.html#javascript"
+  example start: 5
+  example end: 8
+---
+modules:
+  - docassemble.base.util
+---
+imports:
+  - json
+---
+objects:
+  - how_many: DADict
+---
+variable name: things
+data:
+  - computers
+  - books
+  - pets
+  - windows
+---
+features:
+  javascript: https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js
+---
+mandatory: True
+question: Your stuff
+subquestion: |
+  <div class="chart-container" style="position: relative; height:450px; width:100%">
+    <canvas id="myChart" width="600" height="400"></canvas>
+  </div>
+script: |
+  <script>
+    var ctx = $("#myChart");
+    var myDoughnutChart = new Chart(ctx, {
+     type: 'doughnut',
+     data: ${ json.dumps(data) }
+    });
+  </script>
+---
+code: |
+  data = {'datasets': [{'data': [how_many[y] for y in things],
+                        'backgroundColor': [color[y] for y in range(len(things))]}],
+          'labels': things}
+---
+variable name: color
+data:
+  - '#3366CC'
+  - '#DC3912'
+  - '#FF9900'
+  - '#109618'
+  - '#990099'
+  - '#3B3EAC'
+  - '#0099C6'
+  - '#DD4477'
+  - '#66AA00'
+  - '#B82E2E'
+  - '#316395'
+  - '#994499'
+  - '#22AA99'
+  - '#AAAA11'
+  - '#6633CC'
+  - '#E67300'
+  - '#8B0707'
+  - '#329262'
+  - '#5574A6'
+  - '#3B3EAC'
+---
+question: |
+  How many ${ i } do you have in your house?
+fields:
+  - label: ${ capitalize(i) }
+    field: how_many[i]
+    datatype: range
+    min: 0
+    max: 100
+    step: 10
+    default: 10
+    scale: logarithmic
