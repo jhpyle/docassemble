@@ -887,6 +887,17 @@ If you want to include [CSS] or [Javascript] code in a specific
 question, rather than in all questions of your interview you can use
 the [`script`] and [`css`] modifiers.
 
+### <a name="charts"></a>Example use of JavaScript: charting
+
+Here is an example interview that uses a [`javascript`] feature and a
+[`script`] modifier to draw a doughnut chart using [chart.js].
+
+{% include side-by-side.html demo="chart" %}
+
+Here is an example interview that draws a pie chart using [Google Charts].
+
+{% include side-by-side.html demo="googlechart" %}
+
 ## <a name="bootstrap theme"></a>Bootstrap theme
 
 Using the `bootstrap theme` feature, you can change the look and feel
@@ -1139,3 +1150,6 @@ features:
 [`metadata`]: #metadata
 [`set_title()`]: {{ site.baseurl}}/docs/functions.html#set_title
 [`set_progress()`]: {{ site.baseurl}}/docs/functions.html#set_progress
+[chart.js]: https://www.chartjs.org/
+[Google Charts]: https://developers.google.com/chart/
+[`javascript`]: #javascript

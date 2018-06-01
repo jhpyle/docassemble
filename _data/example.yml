@@ -1023,6 +1023,52 @@
 "centered": |-
   features:
     centered: False
+"chart": |-
+  features:
+    javascript: https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js
+  ---
+  mandatory: True
+  question: Your stuff
+  subquestion: |
+    <div class="chart-container" style="position: relative; height:450px; width:100%">
+      <canvas id="myChart" width="600" height="400"></canvas>
+    </div>
+  script: |
+    <script>
+      var ctx = $("#myChart");
+      var myDoughnutChart = new Chart(ctx, {
+       type: 'doughnut',
+       data: ${ json.dumps(data) }
+      });
+    </script>
+  ---
+  code: |
+    data = {'datasets': [{'data': [how_many[y] for y in things],
+                          'backgroundColor': [color[y] for y in range(len(things))]}],
+            'labels': things}
+  ---
+  variable name: color
+  data:
+    - '#3366CC'
+    - '#DC3912'
+    - '#FF9900'
+    - '#109618'
+    - '#990099'
+    - '#3B3EAC'
+    - '#0099C6'
+    - '#DD4477'
+    - '#66AA00'
+    - '#B82E2E'
+    - '#316395'
+    - '#994499'
+    - '#22AA99'
+    - '#AAAA11'
+    - '#6633CC'
+    - '#E67300'
+    - '#8B0707'
+    - '#329262'
+    - '#5574A6'
+    - '#3B3EAC'
 "chat": |-
   interview help: |
     This is the interview help.
@@ -1123,9 +1169,9 @@
     What is your favorite color?
   field: favorite_color
   combobox:
-    - Red
-    - Green
-    - Purple
+    - Red: red
+    - Green: green
+    - Purple: purple
 "choices-dropdown": |-
   question: |
     What type of shoes do you wear?
@@ -2174,80 +2220,81 @@
 "document-markup": "mandatory: True\nquestion: Here is your document.\nattachment:\n\
   \  name: A demonstration\n  filename: demo_document\n  description: |\n    This\
   \ document demonstrates the\n    markup codes you can insert into\n    document\
-  \ text.\n  metadata:\n    FirstFooterLeft: |\n      First of [TOTALPAGES] pages\n\
-  \    HeaderLeft: |\n      Page [PAGENUM] of [TOTALPAGES]\n  content: |\n    [BOLDCENTER]\
-  \ Lorem Ipsum Dolor Sit\n    Amet\n\n    [BEGIN_CAPTION]\n    Consectetur adipiscing\
-  \ elit.\n    \n    Integer nec ${ client_name } odio.\n\n    Praesent libero.\n\n\
-  \    [VERTICAL_LINE]\n\n    Sed cursus ante dapibus diam.\n\n    Sed nisi.\n   \
-  \ [END_CAPTION]\n\n    [CENTER] Nulla quis sem at\n    nibh elementum imperdiet.\n\
-  \n    Duis sagittis ipsum. Praesent\n    mauris. Fusce nec tellus sed\n    augue\
-  \ semper porta. Mauris massa.\n    Proin ut ligula vel nunc egestas\n    porttitor.\n\
-  \    \n    Vestibulum lacinia arcu eget nulla. \n    Class aptent taciti sociosqu\
-  \ ad\n    litora torquent per conubia nostra,\n    per inceptos himenaeos.\n   \
-  \ \n    Curabitur sodales\n    ligula in libero. Praesent\n    mauris. Fusce nec\
-  \ tellus sed\n    augue semper porta. Mauris massa.\n    Proin ut ligula vel nunc\
-  \ egestas\n    porttitor.\n\n    [FLUSHLEFT] Sed dignissim. [NEWLINE]\n    Lacinia\
-  \ nunc. [NEWLINE]\n    Curabitur tortor. [NEWLINE]\n    These lines are [NEWLINE]\n\
-  \    flushed left.\n\n    Pellentesque nibh.\n\n    [NOINDENT] Primis tacimates\
-  \ eos\n    in. Vel affert vituperata te, eos\n    te melius legimus temporibus.\
-  \ At\n    quaeque aliquando contentiones\n    his. First-line indentation is\n \
-  \   suppressed in this paragraph.\n    \n    [FILE stareps.eps]\n    \n    Unless\
-  \ a width is specified, images\n    will be displayed four inches wide.\n    Maecenas\
-  \ mattis. Sed convallis\n    tristique sem.\n\n    [FLUSHRIGHT] Proin ut ligula\n\
-  \    vel nunc egestas porttitor.\n    [NEWLINE]\n    Quisque volutpat condimentum\n\
-  \    velit. [NEWLINE]\n    We are flushed right.\n    \n    Morbi lectus risus,\
-  \ iaculis vel,\n    suscipit quis, luctus non, massa.\n    Time for a page break.\n\
-  \n    [PAGEBREAK]\n\n    Nulla facilisi. Ut fringilla.\n    Suspendisse potenti.\n\
-  \    \n    [INDENTBY 3in] Curabitur tortor.\n    Pellentesque nibh. Aenean quam.\n\
-  \    In scelerisque sem at dolor.\n    Maecenas mattis. Sed convallis\n    tristique\
-  \ sem. Proin ut ligula\n    vel nunc egestas porttitor. I\n    am indented by three\
-  \ inches.\n\n    [INDENTBY 1in 1in] Morbi lectus\n    risus, iaculis vel, suscipit\
-  \ quis,\n    luctus non, massa.  Fusce ac\n    turpis quis ligula lacinia\n    aliquet.\
-  \ Sed convallis tristique\n    sem. I am indented by one inch\n    on each side.\n\
-  \n    Now, let's put text in two columns\n    side by side.\n    \n    [BEGIN_TWOCOL]\n\
-  \n    This is the first column.\n    \n    Nulla facilisi.\n\n    Let's insert some\
-  \ vertical space.\n\n    [SKIPLINE]\n    Cras metus.\n\n    [BREAK]\n\n    This\
-  \ is the second column.\n    \n    Cras metus. Let's have some\n    vertical space\
-  \ again.\n\n    [SKIPLINE]\n\n    Integer id quam.\n\n    Morbi mi.\n\n    [END_TWOCOL]\n\
-  \n    \n    Quisque nisl felis, venenatis\n    tristique, dignissim in,\n    ultrices\
-  \ sit amet, augue.\n\n    [FLUSHLEFT] [FILE bluediamond.png, 0.5in]\n\n    Maecenas\
-  \ mattis. Sed convallis\n    tristique sem.\n    \n    [BORDER] Vestibulum ante\
-  \ ipsum\n    primis in faucibus orci luctus et\n    ultrices posuere cubilia\n \
-  \   Curae; [FILE bluediamond.png, 10pt]\n    Morbi lacinia molestie dui. \n\n  \
-  \  Here we see various types of dashes.\n    Praesent[HYPHEN]mauris.  Nulla \n \
-  \   quis [ENDASH] sem at nibh\n    elementum imperdiet.  Duis\n    sagittis[EMDASH]ipsum.\n\
-  \n    [BORDER] Class aptent\n    taciti sociosqu ad litora torquent\n    per conubia\
-  \ nostra, per inceptos \n    himenaeos.\n    [NEWPAR]\n    Curabitur sodales ligula\
-  \ in libero.\n    Sed dignissim lacinia nunc.\n    [NEWPAR]\n    You can include\
-  \ paragraph breaks \n    inside of a border.\n\n    Aenean quam. In scelerisque\
-  \ sem at \n    dolor. Maecenas mattis. Sed \n    convallis tristique sem.  Let us\
-  \ \n    now stop indenting the first line \n    of each paragraph.\n\n    [STOP_INDENTATION]\n\
-  \n    Duis sagittis ipsum. Praesent\n    mauris. Fusce nec tellus sed\n    augue\
-  \ semper porta. Mauris massa.\n    Proin ut ligula vel nunc egestas\n    porttitor.\n\
-  \n    Praesent mauris. Fusce nec tellus sed\n    augue semper porta. \n\n    [TAB]\
-  \ Even though we are no longer\n    indenting the first line of each \n    paragraph\
-  \ automatically, we can \n    still indent manually.\n    \n    Vestibulum lacinia\
-  \ arcu eget nulla. \n    Class aptent taciti sociosqu ad\n    litora torquent per\
-  \ conubia nostra,\n    per inceptos himenaeos.  Let us go\n    back to indenting\
-  \ the first line\n    of each paragraph.  \n\n    [START_INDENTATION]\n\n    Duis\
-  \ sagittis ipsum. Praesent mauris. \n    Fusce nec tellus sed augue semper \n  \
-  \  porta. Mauris massa.  Proin ut \n    ligula vel nunc egestas porttitor.\n   \
-  \ \n    Vestibulum lacinia arcu eget nulla. \n    Class aptent taciti sociosqu ad\n\
-  \    litora torquent per conubia nostra,\n    per inceptos himenaeos.  Let's try\n\
-  \    single spacing now.\n\n    [SINGLESPACING]\n\n    Ullum primis scripserit ne\
-  \ vis, ad eam\n    quem dictas dissentias. Alia\n    scripserit vel cu, choro delicata\n\
-  \    dissentiunt mel no, reque persequeris\n    mei an. Paulo graeci ex eos, no\
-  \ usu\n    dicit inimicus. In putant ornatus\n    forensibus cum, percipit mediocrem\n\
-  \    in vel.\n\n    Alii timeam eos ut, habeo oblique\n    ocurreret ei sea. Quis\
-  \ utroque\n    definiebas et per, ad sumo\n    repudiandae eam, pro no sale\n  \
-  \  adolescens. Habeo splendide\n    evertitur has eu, in has vocent\n    signiferumque.\
-  \ Ex qui homero graeci\n    quaerendum, nulla veniam blandit\n    ei mea. Sea at\
-  \ idque referrentur.\n    Sit autem liberavisse te.  Let's \n    go back to double\
-  \ spacing now.\n\n    [DOUBLESPACING]\n\n    Sea ad tacimates elaboraret, \n   \
-  \ vel simul urbanitas efficiantur id. \n    Id mel option denique. Ludus essent\n\
-  \    eu ius, natum option appareat cu mea, \n    in saepe deterruisset pri. Mei\
-  \ et vero \n    admodum. At quas pertinax sed, et mel \n    modo probo iriure. Per\
-  \ te sententiae \n    elaboraret. Cum tritani delectus \n    definitionem ne."
+  \ text.\n  valid formats:\n    - pdf\n    - tex\n  metadata:\n    FirstFooterLeft:\
+  \ |\n      First of [TOTALPAGES] pages\n    HeaderLeft: |\n      Page [PAGENUM]\
+  \ of [TOTALPAGES]\n  content: |\n    [BOLDCENTER] Lorem Ipsum Dolor Sit\n    Amet\n\
+  \n    [BEGIN_CAPTION]\n    Consectetur adipiscing elit.\n    \n    Integer nec ${\
+  \ client_name } odio.\n\n    Praesent libero.\n\n    [VERTICAL_LINE]\n\n    Sed\
+  \ cursus ante dapibus diam.\n\n    Sed nisi.\n    [END_CAPTION]\n\n    [CENTER]\
+  \ Nulla quis sem at\n    nibh elementum imperdiet.\n\n    Duis sagittis ipsum. Praesent\n\
+  \    mauris. Fusce nec tellus sed\n    augue semper porta. Mauris massa.\n    Proin\
+  \ ut ligula vel nunc egestas\n    porttitor.\n    \n    Vestibulum lacinia arcu\
+  \ eget nulla. \n    Class aptent taciti sociosqu ad\n    litora torquent per conubia\
+  \ nostra,\n    per inceptos himenaeos.\n    \n    Curabitur sodales\n    ligula\
+  \ in libero. Praesent\n    mauris. Fusce nec tellus sed\n    augue semper porta.\
+  \ Mauris massa.\n    Proin ut ligula vel nunc egestas\n    porttitor.\n\n    [FLUSHLEFT]\
+  \ Sed dignissim. [NEWLINE]\n    Lacinia nunc. [NEWLINE]\n    Curabitur tortor. [NEWLINE]\n\
+  \    These lines are [NEWLINE]\n    flushed left.\n\n    Pellentesque nibh.\n\n\
+  \    [NOINDENT] Primis tacimates eos\n    in. Vel affert vituperata te, eos\n  \
+  \  te melius legimus temporibus. At\n    quaeque aliquando contentiones\n    his.\
+  \ First-line indentation is\n    suppressed in this paragraph.\n    \n    [FILE\
+  \ stareps.eps]\n    \n    Unless a width is specified, images\n    will be displayed\
+  \ four inches wide.\n    Maecenas mattis. Sed convallis\n    tristique sem.\n\n\
+  \    [FLUSHRIGHT] Proin ut ligula\n    vel nunc egestas porttitor.\n    [NEWLINE]\n\
+  \    Quisque volutpat condimentum\n    velit. [NEWLINE]\n    We are flushed right.\n\
+  \    \n    Morbi lectus risus, iaculis vel,\n    suscipit quis, luctus non, massa.\n\
+  \    Time for a page break.\n\n    [PAGEBREAK]\n\n    Nulla facilisi. Ut fringilla.\n\
+  \    Suspendisse potenti.\n    \n    [INDENTBY 3in] Curabitur tortor.\n    Pellentesque\
+  \ nibh. Aenean quam.\n    In scelerisque sem at dolor.\n    Maecenas mattis. Sed\
+  \ convallis\n    tristique sem. Proin ut ligula\n    vel nunc egestas porttitor.\
+  \ I\n    am indented by three inches.\n\n    [INDENTBY 1in 1in] Morbi lectus\n \
+  \   risus, iaculis vel, suscipit quis,\n    luctus non, massa.  Fusce ac\n    turpis\
+  \ quis ligula lacinia\n    aliquet. Sed convallis tristique\n    sem. I am indented\
+  \ by one inch\n    on each side.\n\n    Now, let's put text in two columns\n   \
+  \ side by side.\n    \n    [BEGIN_TWOCOL]\n\n    This is the first column.\n   \
+  \ \n    Nulla facilisi.\n\n    Let's insert some vertical space.\n\n    [SKIPLINE]\n\
+  \    Cras metus.\n\n    [BREAK]\n\n    This is the second column.\n    \n    Cras\
+  \ metus. Let's have some\n    vertical space again.\n\n    [SKIPLINE]\n\n    Integer\
+  \ id quam.\n\n    Morbi mi.\n\n    [END_TWOCOL]\n\n    \n    Quisque nisl felis,\
+  \ venenatis\n    tristique, dignissim in,\n    ultrices sit amet, augue.\n\n   \
+  \ [FLUSHLEFT] [FILE bluediamond.png, 0.5in]\n\n    Maecenas mattis. Sed convallis\n\
+  \    tristique sem.\n    \n    [BORDER] Vestibulum ante ipsum\n    primis in faucibus\
+  \ orci luctus et\n    ultrices posuere cubilia\n    Curae; [FILE bluediamond.png,\
+  \ 10pt]\n    Morbi lacinia molestie dui. \n\n    Here we see various types of dashes.\n\
+  \    Praesent[HYPHEN]mauris.  Nulla \n    quis [ENDASH] sem at nibh\n    elementum\
+  \ imperdiet.  Duis\n    sagittis[EMDASH]ipsum.\n\n    [BORDER] Class aptent\n  \
+  \  taciti sociosqu ad litora torquent\n    per conubia nostra, per inceptos \n \
+  \   himenaeos.\n    [NEWPAR]\n    Curabitur sodales ligula in libero.\n    Sed dignissim\
+  \ lacinia nunc.\n    [NEWPAR]\n    You can include paragraph breaks \n    inside\
+  \ of a border.\n\n    Aenean quam. In scelerisque sem at \n    dolor. Maecenas mattis.\
+  \ Sed \n    convallis tristique sem.  Let us \n    now stop indenting the first\
+  \ line \n    of each paragraph.\n\n    [STOP_INDENTATION]\n\n    Duis sagittis ipsum.\
+  \ Praesent\n    mauris. Fusce nec tellus sed\n    augue semper porta. Mauris massa.\n\
+  \    Proin ut ligula vel nunc egestas\n    porttitor.\n\n    Praesent mauris. Fusce\
+  \ nec tellus sed\n    augue semper porta. \n\n    [TAB] Even though we are no longer\n\
+  \    indenting the first line of each \n    paragraph automatically, we can \n \
+  \   still indent manually.\n    \n    Vestibulum lacinia arcu eget nulla. \n   \
+  \ Class aptent taciti sociosqu ad\n    litora torquent per conubia nostra,\n   \
+  \ per inceptos himenaeos.  Let us go\n    back to indenting the first line\n   \
+  \ of each paragraph.  \n\n    [START_INDENTATION]\n\n    Duis sagittis ipsum. Praesent\
+  \ mauris. \n    Fusce nec tellus sed augue semper \n    porta. Mauris massa.  Proin\
+  \ ut \n    ligula vel nunc egestas porttitor.\n    \n    Vestibulum lacinia arcu\
+  \ eget nulla. \n    Class aptent taciti sociosqu ad\n    litora torquent per conubia\
+  \ nostra,\n    per inceptos himenaeos.  Let's try\n    single spacing now.\n\n \
+  \   [SINGLESPACING]\n\n    Ullum primis scripserit ne vis, ad eam\n    quem dictas\
+  \ dissentias. Alia\n    scripserit vel cu, choro delicata\n    dissentiunt mel no,\
+  \ reque persequeris\n    mei an. Paulo graeci ex eos, no usu\n    dicit inimicus.\
+  \ In putant ornatus\n    forensibus cum, percipit mediocrem\n    in vel.\n\n   \
+  \ Alii timeam eos ut, habeo oblique\n    ocurreret ei sea. Quis utroque\n    definiebas\
+  \ et per, ad sumo\n    repudiandae eam, pro no sale\n    adolescens. Habeo splendide\n\
+  \    evertitur has eu, in has vocent\n    signiferumque. Ex qui homero graeci\n\
+  \    quaerendum, nulla veniam blandit\n    ei mea. Sea at idque referrentur.\n \
+  \   Sit autem liberavisse te.  Let's \n    go back to double spacing now.\n\n  \
+  \  [DOUBLESPACING]\n\n    Sea ad tacimates elaboraret, \n    vel simul urbanitas\
+  \ efficiantur id. \n    Id mel option denique. Ludus essent\n    eu ius, natum option\
+  \ appareat cu mea, \n    in saepe deterruisset pri. Mei et vero \n    admodum. At\
+  \ quas pertinax sed, et mel \n    modo probo iriure. Per te sententiae \n    elaboraret.\
+  \ Cum tritani delectus \n    definitionem ne."
 "document-variable-name": |-
   mandatory: True
   question: Ok, all done.
@@ -4655,6 +4702,37 @@
     The default time zone is
     ${ get_default_timezone() }.
   mandatory: True
+"googlechart": |-
+  features:
+    javascript: https://www.gstatic.com/charts/loader.js
+  ---
+  mandatory: True
+  question: Your stuff
+  subquestion: |
+    <div id="piechart" style="width: 100%; min-height: 450px;"></div>
+  script: |
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var chartwidth = $('#piechart').width();
+        var data = google.visualization.arrayToDataTable(${ json.dumps(data) });
+        var options = {
+          title: ${ json.dumps(title) },
+          width: chartwidth,
+          chartArea: {width: chartwidth, left: 20, top: 20, height: chartwidth*0.75}
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+        chart.draw(data, options);
+      }
+    </script>
+  ---
+  code: |
+    title = "Household stuff"
+    data = [['Thing', 'How many']] + [[y, how_many[y]] for y in things]
 "hello-not-oop": |-
   question: What is your name?
   fields:
