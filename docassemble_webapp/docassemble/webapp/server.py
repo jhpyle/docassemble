@@ -17521,6 +17521,10 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
         errmess = unicode(err)
     else:
         errmess = message
+    try:
+        email_address = current_user.email
+    except:
+        email_address = None
     if the_request:
         try:
             referer = unicode(the_request.referrer)
@@ -17533,6 +17537,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
     else:
         referer = None
         ipaddress = None
+    interview_path = docassemble.base.functions.interview_path()
     try:
         the_key = 'da:errornotification:' + str(ipaddress)
         existing = r.get(the_key)
@@ -17553,6 +17558,10 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
                 body += "\n\n" + BeautifulSoup(history, "html.parser").get_text('\n')
             if referer is not None and referer != 'None':
                 body += "\n\nThe referer URL was " + unicode(referer)
+            elif interview_path is not None:
+                body += "\n\nThe interview was " + unicode(interview_path)
+            if email_address is not None:
+                body += "\n\nThe user was " + unicode(email_address)
             html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n    <p>The error message was:</p>\n<pre>" + err.__class__.__name__ + ": " + unicode(errmess)
             if trace is not None:
                 html += "\n\n" + unicode(trace)
@@ -17561,6 +17570,10 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
                 html += unicode(history)
             if referer is not None and referer != 'None':
                 html += "<p>The referer URL was " + unicode(referer) + "</p>"
+            elif interview_path is not None:
+                body += "<p>The interview was " + unicode(interview_path) + "</p>"
+            if email_address is not None:
+                body += "<p>The user was " + unicode(email_address) + "</p>"
             html += "\n  </body>\n</html>"
             msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=[recipient_email], body=body, html=html)
             da_send_mail(msg)

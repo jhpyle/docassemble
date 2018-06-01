@@ -617,6 +617,12 @@ def session_tags():
                 for tag in metadata['tags']:
                     this_thread.internal['tags'].add(tag)
     return DATagsSet()
+
+def interview_path():
+    try:
+        return this_thread.interview.source.path
+    except:
+        return None
     
 def interview_url_action(action, **kwargs):
     """Like interview_url, except it additionally specifies an action.
