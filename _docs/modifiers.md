@@ -606,6 +606,31 @@ code: |
 then **docassemble** will try to run it if it needs a definition for
 `claim_is_valid`.  Sometimes, however, **docassemble** needs a hint.
 
+You can explicitly indicate that a block sets a variable using `sets`:
+
+{% highlight yaml %}
+---
+sets: claim_is_valid
+code: |
+  if hell.temperature_in_celcius == 0:
+    claim_is_valid = True
+---
+{% endhighlight %}
+
+It also accepts multiple values:
+
+{% highlight yaml %}
+---
+sets: 
+  - claim_is_valid
+  - type_of_claim
+code: |
+  if hell.temperature_in_celcius == 0:
+    claim_is_valid = True
+    type_of_claim = 'tort'
+---
+{% endhighlight %}
+
 # <a name="precedence"></a>Changing order of precedence
 
 As explained in [how **docassemble** finds questions for variables],

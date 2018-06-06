@@ -713,7 +713,8 @@ obtain an `id` and `secret` for use with Facebook's [OAuth2] interface.
   `facebook`.
 * Note also the "App Secret."  You need to set this as the `secret` in
   the [`oauth`] configuration.
-* Under Valid Oauth Redirect URIs, put in the domain of your site followed by /callback/facebook.  E.g.,
+* Under Valid Oauth Redirect URIs, put in the domain of your site
+  followed by `/callback/facebook`.  E.g.,
   `https://docassemble.example.com/callback/facebook`.
 * Edit your **docassemble** [configuration] and update the values
   under the `facebook` part of the [`oauth`] directive so that it
@@ -739,14 +740,44 @@ obtain an `id` and `secret` for use with Twitter's [OAuth] interface.
 * Set up your app so that it requests read-only access and requests
   access to the user's e-mail address.  Without access to the user's
   e-mail, the login will generate an error.
-* Note the Consumer Key and Consumer Secret.  You need to set this
-  value as the `id` in the [`oauth`] configuration, under `twitter`.
+* Note the Consumer Key.  You need to set this value as the `id` in
+  the [`oauth`] configuration, under `twitter`.
 * Note also the "Consumer Secret."  You need to set this as the
   `secret` in the [`oauth`] configuration.
 * Edit your **docassemble** [configuration] and update the values
   under the `twitter` part of the [`oauth`] directive so that it
   includes the `id` and the `secret` you obtained in the steps above.
   Make sure that `enable` is not set to `False`.
+
+## <a name="auth0"></a>Setting up Auth0 logins
+
+To enable users to log in with their Auth0 accounts, you need to
+obtain a `domain`, `id`, and `secret` for use with Auth0's [OAuth]
+interface.
+
+* Log in to [Auth0].
+* Create an application, or edit the default application.
+* Give your application a name.  Users will see this name when they
+  are asked to consent to sharing of information between Auth0 and
+  your site, so be sure to pick a name that your users will recognize.
+* Set the Application Type to "Regular Web Application."
+* Set the Token Endpoint to "Post."
+* Note the Domain, Client ID, and Client Secret associated with your
+  application.  You will need to set these values as the `domain`,
+  `id`, and `secret` values, respectively, in the [`oauth`]
+  configuration, under `auth0`.
+* Under Allowed Callback URLs, enter the URL of your site with
+  `/callback/auth0` at the end.  E.g.,
+  `https://docassemble.example.com/callback/auth0`.
+* Under Allowed Web Origins, enter the URL of your site.  E.g.,
+  `https://docassemble.example.com`.
+* Under Allowed Logout URLs, enter the URL of your site with
+  `/user/sign-in` at the end.  E.g.,
+  `https://docassemble.example.com/user/sign-in`.
+* Edit your **docassemble** [configuration] and update the values
+  under the `auth0` part of the [`oauth`] directive so that it
+  includes the `domain`, `id`, and `secret` values you noted in the
+  steps above.  Make sure that `enable` is not set to `False`.
 
 ## <a name="azure"></a>Setting up Microsoft Azure logins
 
@@ -1538,4 +1569,5 @@ All of these system administration headaches can be avoided by
 [`github`]: {{ site.baseurl }}/docs/config.html#github
 [`server administrator email`]: {{ site.baseurl }}/docs/config.html#server administrator email
 [Google APIs]: https://developers.google.com/apis-explorer/#p/
-[Google Drive]
+[Google Drive]: https://drive.google.com
+[Auth0]: https://auth0.com/

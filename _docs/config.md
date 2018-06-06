@@ -2263,11 +2263,11 @@ The `pypirc path` directive refers to the file where the repository
 URL will be stored.  You may need to edit this if you run
 **docassemble** on a non-standard operating system.
 
-## <a name="oauth"></a>Facebook, Twitter, Google, and Azure login
+## <a name="oauth"></a>Facebook, Twitter, Google, Auth0, and Azure login
 
-If you want to enable logging in with Facebook, Twitter, Google, or Microsoft
-Azure, you will need to tell **docassemble** your [OAuth2] keys for
-these services:
+If you want to enable logging in with Facebook, Twitter, Google,
+Auth0, or Microsoft Azure, you will need to tell **docassemble** your
+[OAuth2] keys for these services:
 
 {% highlight yaml %}
 oauth:
@@ -2279,6 +2279,11 @@ oauth:
     enable: True
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
     secret: DGE34gdgerg3GDG545tgdfRf
+  auth0:
+    enable: True
+    id: ceyd6imTYxTNmuj2CYpwH_cEhdWt93e6
+    secret: LLGEBDrrgDFDfBsFjErsdSdsntkrtAbfa4ee3ss_adfdSDFEWEsfgHTerjNsd3dD
+    domain: example.auth0.com
   twitter:
     enable: True
     id: Iweh63ReKfOCttaUBE3t27TET
@@ -2293,8 +2298,8 @@ You can disable these login methods by setting `enable` to `False` or
 by removing the configuration entirely.
 
 For more information about how to obtain these keys, see the
-[installation] page's sections on [Facebook], [Twitter], [Google], and
-[Azure].
+[installation] page's sections on [Facebook], [Twitter], [Google],
+[Auth0], and [Azure].
 
 ## <a name="googledrive"></a>Google Drive configuration
 
@@ -2638,6 +2643,7 @@ and Facebook API keys.
 [Facebook]: {{ site.baseurl }}/docs/installation.html#facebook
 [Twitter]: {{ site.baseurl }}/docs/installation.html#twitter
 [Google]: {{ site.baseurl }}/docs/installation.html#google
+[Auth0]: {{ site.baseurl }}/docs/installation.html#auth0
 [Azure]: {{ site.baseurl }}/docs/installation.html#azure
 [invited by an administrator]: {{ site.baseurl }}/docs/users.html#invite
 [`root`]: #root
