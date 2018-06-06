@@ -3583,7 +3583,7 @@ class Question:
                                 modified_metadata[key] = data + unicode('[END]')
                             else:
                                 modified_metadata[key] = data
-                        the_markdown += "---\n" + ruamel.yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|') + "...\n"
+                        the_markdown += u'---\n' + ruamel.yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|') + "...\n"
                     the_markdown += attachment['content'].text(user_dict)
                     #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
                     if emoji_match.search(the_markdown) and len(self.interview.images) > 0:

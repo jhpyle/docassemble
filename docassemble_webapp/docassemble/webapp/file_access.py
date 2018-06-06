@@ -163,6 +163,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
         #logmessage("Extension is " + result['extension'])
         if convert is not None and result['extension'] in convert:
             #logmessage("Converting...")
+            #PPP
             if os.path.isfile(result['path'] + '.' + convert[result['extension']]):
                 #logmessage("Found conversion file ")
                 result['extension'] = convert[result['extension']]

@@ -1039,7 +1039,7 @@ def url_of(file_reference, **kwargs):
 
 def server_capabilities():
     """Returns a dictionary with true or false values indicating various capabilities of the server."""
-    result = dict(sms=False, fax=False, google_login=False, facebook_login=False, twitter_login=False, azure_login=False, phone_login=False, voicerss=False, s3=False, azure=False, github=False, pypi=False, googledrive=False, google_maps=False)
+    result = dict(sms=False, fax=False, google_login=False, facebook_login=False, auth0_login=False, twitter_login=False, azure_login=False, phone_login=False, voicerss=False, s3=False, azure=False, github=False, pypi=False, googledrive=False, google_maps=False)
     if 'twilio' in server.daconfig and type(server.daconfig['twilio']) in [list, dict]:
         if type(server.daconfig['twilio']) is list:
             tconfigs = server.daconfig['twilio']
@@ -1063,6 +1063,9 @@ def server_capabilities():
         if 'azure' in server.daconfig['oauth'] and type(server.daconfig['oauth']['azure']) is dict:
             if not ('enable' in server.daconfig['oauth']['azure'] and not server.daconfig['oauth']['azure']['enable']):
                 result['azure_login'] = True
+        if 'auth0' in server.daconfig['oauth'] and type(server.daconfig['oauth']['auth0']) is dict:
+            if not ('enable' in server.daconfig['oauth']['auth0'] and not server.daconfig['oauth']['auth0']['enable']):
+                result['auth0_login'] = True
         if 'twitter' in server.daconfig['oauth'] and type(server.daconfig['oauth']['twitter']) is dict:
             if not ('enable' in server.daconfig['oauth']['twitter'] and not server.daconfig['oauth']['twitter']['enable']):
                 result['twitter_login'] = True

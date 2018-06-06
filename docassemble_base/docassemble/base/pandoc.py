@@ -124,7 +124,7 @@ class MyPandoc(object):
         try:
             msg = subprocess.check_output(subprocess_arguments, cwd=the_temp_dir, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as err:
-            raise Exception("Failed to assemble file: " + str(err.output))
+            raise Exception("Failed to assemble file: " + unicode(err.output))
         if msg:
             self.pandoc_message = msg
         os.remove(temp_file.name)

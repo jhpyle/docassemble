@@ -39,7 +39,7 @@
               {{ render_submit_field(form.submit, tabindex=280) }}
             </div>
           </form>
-          {%- if config['USE_GOOGLE_LOGIN'] or config['USE_FACEBOOK_LOGIN'] or config['USE_TWITTER_LOGIN'] or config['USE_AZURE_LOGIN'] or config['USE_PHONE_LOGIN'] %}
+          {%- if config['USE_GOOGLE_LOGIN'] or config['USE_FACEBOOK_LOGIN'] or config['USE_TWITTER_LOGIN'] or config['USE_AUTH0_LOGIN'] or config['USE_AZURE_LOGIN'] or config['USE_PHONE_LOGIN'] %}
           <p style="padding: 15px 15px 5px 15px;"><strong>or</strong></p>
           {%- endif %}
           {%- if config['USE_PHONE_LOGIN'] %}
@@ -60,6 +60,11 @@
           {%- if config['USE_TWITTER_LOGIN'] %}
           <div class="row nomargin">
             <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='twitter') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/twitter-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Twitter') }}</td></tr></tbody></table></a></div>
+          </div>
+          {%- endif %}
+          {%- if config['USE_AUTH0_LOGIN'] %}
+          <div class="row nomargin">
+            <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='auth0') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/auth0-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Auth0') }}</td></tr></tbody></table></a></div>
           </div>
           {%- endif %}
           {%- if config['USE_AZURE_LOGIN'] %}

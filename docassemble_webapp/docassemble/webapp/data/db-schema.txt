@@ -89,28 +89,17 @@ install|hostname|text||
 install|version|integer||
 install|packageversion|text||
 install|package_id|integer||
-speaklist|id|integer||nextval('speaklist_id_seq'::regclass)
-speaklist|filename|text||
-speaklist|key|character varying|250|
-speaklist|phrase|text||
-speaklist|question|integer||
-speaklist|type|character varying|20|
-speaklist|language|character varying|10|
-speaklist|dialect|character varying|10|
-speaklist|upload|integer||
-speaklist|encrypted|boolean||true
-speaklist|digest|text||
-chatlog|id|integer||nextval('chatlog_id_seq'::regclass)
-chatlog|filename|text||
-chatlog|key|character varying|250|
-chatlog|message|text||
-chatlog|user_id|integer||
-chatlog|temp_user_id|integer||
-chatlog|owner_id|integer||
-chatlog|temp_owner_id|integer||
-chatlog|open_to_peer|boolean||false
-chatlog|encrypted|boolean||true
-chatlog|modtime|timestamp without time zone||
+email|id|integer||nextval('email_id_seq'::regclass)
+email|short|character varying|250|
+email|all_addr|text||
+email|to_addr|text||
+email|cc_addr|text||
+email|from_addr|text||
+email|reply_to_addr|text||
+email|return_path_addr|text||
+email|subject|text||
+email|datetime_message|timestamp without time zone||
+email|datetime_received|timestamp without time zone||
 user|id|integer||nextval('user_id_seq'::regclass)
 user|social_id|character varying|255|
 user|nickname|character varying|255|
@@ -131,17 +120,28 @@ user|otp_secret|character varying|255|
 user|pypi_username|character varying|255|
 user|pypi_password|character varying|255|
 user|modified_at|timestamp without time zone||
-email|id|integer||nextval('email_id_seq'::regclass)
-email|short|character varying|250|
-email|all_addr|text||
-email|to_addr|text||
-email|cc_addr|text||
-email|from_addr|text||
-email|reply_to_addr|text||
-email|return_path_addr|text||
-email|subject|text||
-email|datetime_message|timestamp without time zone||
-email|datetime_received|timestamp without time zone||
+chatlog|id|integer||nextval('chatlog_id_seq'::regclass)
+chatlog|filename|text||
+chatlog|key|character varying|250|
+chatlog|message|text||
+chatlog|user_id|integer||
+chatlog|temp_user_id|integer||
+chatlog|owner_id|integer||
+chatlog|temp_owner_id|integer||
+chatlog|open_to_peer|boolean||false
+chatlog|encrypted|boolean||true
+chatlog|modtime|timestamp without time zone||
+speaklist|id|integer||nextval('speaklist_id_seq'::regclass)
+speaklist|filename|text||
+speaklist|key|character varying|250|
+speaklist|phrase|text||
+speaklist|question|integer||
+speaklist|type|character varying|20|
+speaklist|language|character varying|10|
+speaklist|dialect|character varying|10|
+speaklist|upload|integer||
+speaklist|encrypted|boolean||true
+speaklist|digest|text||
 user_auth|id|integer||nextval('user_auth_id_seq'::regclass)
 user_auth|user_id|integer||
 user_auth|password|character varying|255|''::character varying

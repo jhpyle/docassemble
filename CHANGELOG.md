@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.65] - 2018-06-05
+## Added
+- Login via Auth0.
+## Fixed
+- Better error handling after uploads.
+- Better error handling during software updates.
+
 ## [0.2.64] - 2018-05-31
 ## Added
 - Feature for uploading files through dataurls to the Template Folder

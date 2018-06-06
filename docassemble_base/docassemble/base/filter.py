@@ -37,7 +37,7 @@ code_match = re.compile(r'<code>')
 
 def set_default_page_width(width):
     global DEFAULT_PAGE_WIDTH
-    DEFAULT_PAGE_WIDTH = str(width)
+    DEFAULT_PAGE_WIDTH = unicode(width)
     return
 
 def get_default_page_width():
@@ -47,7 +47,7 @@ DEFAULT_IMAGE_WIDTH = '4in'
 
 def set_default_image_width(width):
     global DEFAULT_IMAGE_WIDTH
-    DEFAULT_IMAGE_WIDTH = str(width)
+    DEFAULT_IMAGE_WIDTH = unicode(width)
     return
 
 def get_default_image_width():
@@ -91,7 +91,7 @@ def get_max_width_points():
 
 # def set_file_finder(func):
 #     global file_finder
-#     #sys.stderr.write("set the file finder to " + str(func) + "\n")
+#     #sys.stderr.write("set the file finder to " + unicode(func) + "\n")
 #     file_finder = func
 #     return
 
@@ -144,12 +144,12 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
         styles = dict()
     #sys.stderr.write(text + "\n")
     if 'fontsize' in metadata:
-        text = re.sub(r'{\\pard', r'\\fs' + str(convert_length(metadata['fontsize'], 'hp')) + r' {\\pard', text, count=1)
-        after_space_multiplier = str(convert_length(metadata['fontsize'], 'twips'))
+        text = re.sub(r'{\\pard', r'\\fs' + unicode(convert_length(metadata['fontsize'], 'hp')) + r' {\\pard', text, count=1)
+        after_space_multiplier = unicode(convert_length(metadata['fontsize'], 'twips'))
     else:
         after_space_multiplier = 240
     if 'IndentationAmount' in metadata:
-        indentation_amount = str(convert_length(metadata['IndentationAmount'], 'twips'))
+        indentation_amount = unicode(convert_length(metadata['IndentationAmount'], 'twips'))
     else:
         indentation_amount = '720'
     if 'Indentation' in metadata:
@@ -218,7 +218,7 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
     lines = text.split('\n')
     spacing_command = rtf_spacing[default_spacing]
     if default_indentation:
-        indentation_command = r'\\fi' + str(indentation_amount) + " "
+        indentation_command = r'\\fi' + unicode(indentation_amount) + " "
     else:
         indentation_command = r'\\fi0 '
     text = ''
@@ -256,7 +256,7 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
             default_spacing = 'triple'
             after_space = after_space_multiplier * rtf_after_space[default_spacing]
         elif re.search(r'\[START_INDENTATION\]', line):
-            indentation_command = r'\\fi' + str(indentation_amount) + " "
+            indentation_command = r'\\fi' + unicode(indentation_amount) + " "
         elif re.search(r'\[STOP_INDENTATION\]', line):
             indentation_command = r'\\fi0 '
         elif line != '':
@@ -276,11 +276,11 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
             if n:
                 line = re.sub(r'\\fi-?[0-9]+ ', r'\\fi0 ', line)
                 line = re.sub(r'\\ri-?[0-9]+ ', r'', line)
-                line = re.sub(r'\\li-?[0-9]+ ', r'\\li' + str(convert_length(n.group(1), 'twips')) + r' \\ri' + str(convert_length(n.group(2), 'twips')) + ' ', line)
+                line = re.sub(r'\\li-?[0-9]+ ', r'\\li' + unicode(convert_length(n.group(1), 'twips')) + r' \\ri' + unicode(convert_length(n.group(2), 'twips')) + ' ', line)
                 line = re.sub(r'\[INDENTBY[^\]]*\]', '', line)
             elif m:
                 line = re.sub(r'\\fi-?[0-9]+ ', r'\\fi0 ', line)
-                line = re.sub(r'\\li-?[0-9]+ ', r'\\li' + str(convert_length(m.group(1), 'twips')) + ' ', line)
+                line = re.sub(r'\\li-?[0-9]+ ', r'\\li' + unicode(convert_length(m.group(1), 'twips')) + ' ', line)
                 line = re.sub(r' *\[INDENTBY[^\]]*\] *', '', line)
             elif re.search(r'\[NOINDENT\]', line):
                 line = re.sub(r'\\fi-?[0-9]+ ', r'\\fi0 ', line)
@@ -311,15 +311,15 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
                     spacing_command_to_use = special_spacing
                 else:
                     spacing_command_to_use = spacing_command
-                line = re.sub(r'\\pard ', r'\\pard ' + str(spacing_command_to_use) + str(border_text), line)
-                line = re.sub(r'\\pard\\intbl ', r'\\pard\\intbl ' + str(spacing_command_to_use) + str(border_text), line)
+                line = re.sub(r'\\pard ', r'\\pard ' + unicode(spacing_command_to_use) + unicode(border_text), line)
+                line = re.sub(r'\\pard\\intbl ', r'\\pard\\intbl ' + unicode(spacing_command_to_use) + unicode(border_text), line)
             if not (re.search(r'\\fi0\\(endash|bullet)', line) or re.search(r'\\s[0-9]', line) or re.search(r'\\intbl', line)):
                 if special_after_space:
                     after_space_to_use = special_after_space
                 else:
                     after_space_to_use = after_space
                 if after_space_to_use > 0:
-                    line = re.sub(r'\\sa[0-9]+ ', r'\\sa' + str(after_space_to_use) + ' ', line)
+                    line = re.sub(r'\\sa[0-9]+ ', r'\\sa' + unicode(after_space_to_use) + ' ', line)
                 else:
                     line = re.sub(r'\\sa[0-9]+ ', r'\\sa0 ', line)
             text += line + '\n'
@@ -579,11 +579,11 @@ def html_filter(text, status=None, question=None, embedder=None, default_image_w
             classes.add('dabold')
         m = re.search(r'\[INDENTBY *([0-9]+ *[A-Za-z]+)\]', line)
         if m:
-            styles["padding-left"] = str(convert_length(m.group(1), 'px')) + 'px'
+            styles["padding-left"] = unicode(convert_length(m.group(1), 'px')) + 'px'
         m = re.search(r'\[INDENTBY *([0-9]+ *[A-Za-z]+) *([0-9]+ *[A-Za-z]+)\]', line)
         if m:
-            styles["margin-left"] = str(convert_length(m.group(1), 'px')) + 'px'
-            styles["margin-right"] = str(convert_length(m.group(2), 'px')) + 'px'
+            styles["margin-left"] = unicode(convert_length(m.group(1), 'px')) + 'px'
+            styles["margin-right"] = unicode(convert_length(m.group(2), 'px')) + 'px'
         line = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\] *', r'', line)
         line = re.sub(r'\[INDENTBY[^\]]*\]', r'', line)
         if len(classes) or len(styles):
@@ -591,7 +591,7 @@ def html_filter(text, status=None, question=None, embedder=None, default_image_w
             if len(classes):
                 text += ' class="' + " ".join(classes) + '"'
             if len(styles):
-                text += ' style="' + "".join(map(lambda x: str(x) + ":" + styles[x] + ';', styles.keys())) + '"'
+                text += ' style="' + "".join(map(lambda x: unicode(x) + ":" + styles[x] + ';', styles.keys())) + '"'
             text += ">" + line + '</p>\n\n'
         else:
             text += line + '\n\n'
@@ -618,11 +618,11 @@ def map_string(encoded_text, status):
         return ''
     map_number = len(status.maps)
     status.maps.append(codecs.decode(encoded_text, 'base64').decode('utf8'))
-    return '<div id="map' + str(map_number) + '" class="googleMap"></div>'
+    return '<div id="map' + unicode(map_number) + '" class="googleMap"></div>'
 
 def target_html(match):
     target = match.group(1)
-    target = re.sub(r'[^A-Za-z0-9\_]', r'', str(target))
+    target = re.sub(r'[^A-Za-z0-9\_]', r'', unicode(target))
     return '<span id="datarget' + target + '"></span>'
 
 def pdf_two_col(match, add_line=False):
@@ -688,16 +688,16 @@ def indentby_left_pdf(match):
     string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
     if re.search(r'\[BORDER\]', string):
         string = re.sub(r' *\[BORDER\] *', r'', string)
-        return '\\mdframed[leftmargin=' + str(convert_length(match.group(1), 'pt')) + 'pt]\n\\noindent ' + unicode(string) + '\n\n\\endmdframed' + "\n\n"
-    return '\\begingroup\\setlength{\\leftskip}{' + str(convert_length(match.group(1), 'pt')) + 'pt}\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n"
+        return '\\mdframed[leftmargin=' + unicode(convert_length(match.group(1), 'pt')) + 'pt]\n\\noindent ' + unicode(string) + '\n\n\\endmdframed' + "\n\n"
+    return '\\begingroup\\setlength{\\leftskip}{' + unicode(convert_length(match.group(1), 'pt')) + 'pt}\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n"
 
 def indentby_both_pdf(match):
     string = match.group(3)
     string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
     if re.search(r'\[BORDER\]', string):
         string = re.sub(r' *\[BORDER\] *', r'', string)
-        return '\\mdframed[leftmargin=' + str(convert_length(match.group(1), 'pt')) + 'pt,rightmargin=' + str(convert_length(match.group(2), 'pt')) + 'pt]\n\\noindent ' + unicode(string) + '\n\n\\endmdframed' + "\n\n"
-    return '\\begingroup\\setlength{\\leftskip}{' + str(convert_length(match.group(1), 'pt')) + 'pt}\\setlength{\\rightskip}{' + str(convert_length(match.group(2), 'pt')) + 'pt}\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n"
+        return '\\mdframed[leftmargin=' + unicode(convert_length(match.group(1), 'pt')) + 'pt,rightmargin=' + unicode(convert_length(match.group(2), 'pt')) + 'pt]\n\\noindent ' + unicode(string) + '\n\n\\endmdframed' + "\n\n"
+    return '\\begingroup\\setlength{\\leftskip}{' + unicode(convert_length(match.group(1), 'pt')) + 'pt}\\setlength{\\rightskip}{' + unicode(convert_length(match.group(2), 'pt')) + 'pt}\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n"
 
 def borderify(string):
     if not re.search(r'\[BORDER\]', string):
@@ -730,11 +730,11 @@ def image_as_rtf(match, question=None):
             #logmessage("image_as_rtf: Adding page break\n")
             width = DEFAULT_PAGE_WIDTH
             #output += '\\page '
-        #logmessage("image_as_rtf: maxpage is " + str(int(file_info['pages'])) + "\n")
+        #logmessage("image_as_rtf: maxpage is " + unicode(int(file_info['pages'])) + "\n")
         max_pages = 1 + int(file_info['pages'])
-        formatter = '%0' + str(len(str(max_pages))) + 'd'
+        formatter = '%0' + unicode(len(unicode(max_pages))) + 'd'
         for page in range(1, max_pages):
-            #logmessage("image_as_rtf: doing page " + str(page) + "\n")
+            #logmessage("image_as_rtf: doing page " + unicode(page) + "\n")
             page_file = dict()
             test_path = file_info['path'] + 'page-in-progress'
             #logmessage("Test path is " + test_path)
@@ -802,22 +802,22 @@ def rtf_image(file_info, width, insert_page_breaks):
     pixels = pixels_in(width)
     if pixels > 0 and file_info['width'] > 0:
         scale = float(pixels)/float(file_info['width'])
-        #logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + unicode(scale) + "\n")
         if scale*float(file_info['height']) > float(MAX_HEIGHT_POINTS):
             scale = float(MAX_HEIGHT_POINTS)/float(file_info['height'])
-        #logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + unicode(scale) + "\n")
         if scale*float(file_info['width']) > float(MAX_WIDTH_POINTS):
             scale = float(MAX_WIDTH_POINTS)/float(file_info['width'])
-        #logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + unicode(scale) + "\n")
         #scale *= 100.0
-        #logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + unicode(scale) + "\n")
         #scale = int(scale)
-        #logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + unicode(scale) + "\n")
         wtwips = int(scale*float(file_info['width'])*20.0)
         htwips = int(scale*float(file_info['height'])*20.0)
         image = Image( file_info['fullpath'] )
-        image.Data = re.sub(r'\\picwgoal([0-9]+)', r'\\picwgoal' + str(wtwips), image.Data)
-        image.Data = re.sub(r'\\pichgoal([0-9]+)', r'\\pichgoal' + str(htwips), image.Data)
+        image.Data = re.sub(r'\\picwgoal([0-9]+)', r'\\picwgoal' + unicode(wtwips), image.Data)
+        image.Data = re.sub(r'\\pichgoal([0-9]+)', r'\\pichgoal' + unicode(htwips), image.Data)
     else:
         image = Image( file_info['fullpath'] )
     if insert_page_breaks:
@@ -835,20 +835,20 @@ def convert_length(length, unit):
         size = float(value)/float(unit_multipliers[unit])
         return(int(size))
     else:
-        logmessage("Unit " + str(unit) + " is not a valid unit\n")
+        logmessage("Unit " + unicode(unit) + " is not a valid unit\n")
     return(300)
     
 def pixels_in(length):
-    m = re.search(r"([0-9.]+) *([a-z]+)", str(length).lower())
+    m = re.search(r"([0-9.]+) *([a-z]+)", unicode(length).lower())
     if m:
         value = float(m.group(1))
         unit = m.group(2)
-        #logmessage("value is " + str(value) + " and unit is " + unit + "\n")
+        #logmessage("value is " + unicode(value) + " and unit is " + unit + "\n")
         if unit in unit_multipliers:
             size = float(unit_multipliers[unit]) * value
-            #logmessage("size is " + str(size) + "\n")
+            #logmessage("size is " + unicode(size) + "\n")
             return(int(size))
-    logmessage("Could not read " + str(length) + "\n")
+    logmessage("Could not read " + unicode(length) + "\n")
     return(300)
 
 def image_url_string(match, emoji=False, question=None, playground=False, default_image_width=None):
@@ -883,25 +883,25 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
             width_string += ';vertical-align: middle'
         the_url = server.url_finder(file_reference, _question=question, display_filename=file_info['filename'])
         if the_url is None:
-            return ('[ERROR: File reference ' + str(file_reference) + ' cannot be displayed]')
+            return ('[ERROR: File reference ' + unicode(file_reference) + ' cannot be displayed]')
         if file_info.get('extension', '') in ['png', 'jpg', 'gif', 'svg', 'jpe', 'jpeg']:
             return('<img class="daicon daimageref" style="' + width_string + '" src="' + the_url + '"/>')
         elif file_info['extension'] == 'pdf':
             image_url = server.url_finder(file_reference, size="screen", page=1, _question=question)
             if image_url is None:
-                return ('[ERROR: File reference ' + str(file_reference) + ' cannot be displayed]')
+                return ('[ERROR: File reference ' + unicode(file_reference) + ' cannot be displayed]')
             if 'filename' in file_info:
                 title = ' title="' + file_info['filename'] + '"'
             else:
                 title = ''
             output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img class="daicon dapdfscreen" style="' + width_string + '" src="' + image_url + '"/></a>'
             if 'pages' in file_info and file_info['pages'] > 1:
-                output += " (" + str(file_info['pages']) + " " + word('pages') + ")"
+                output += " (" + unicode(file_info['pages']) + " " + word('pages') + ")"
             return(output)
         else:
             return('<a target="_blank" class="daimageref" href="' + the_url + '">' + file_info['filename'] + '</a>')
     else:
-        return('[Invalid image reference; reference=' + str(file_reference) + ', width=' + str(width) + ', filename=' + file_info.get('filename', 'unknown') + ']')
+        return('[Invalid image reference; reference=' + unicode(file_reference) + ', width=' + unicode(width) + ', filename=' + file_info.get('filename', 'unknown') + ']')
 
 def qr_url_string(match):
     string = match.group(1)
@@ -928,7 +928,7 @@ def qr_url_string(match):
 
 def convert_pixels(match):
     pixels = match.group(1)
-    return (str(int(pixels)/72.0) + "in")
+    return (unicode(int(pixels)/72.0) + "in")
 
 def image_include_string(match, emoji=False, question=None):
     file_reference = match.group(1)
@@ -939,13 +939,13 @@ def image_include_string(match, emoji=False, question=None):
             width = '\\textwidth'
     except:
         width = DEFAULT_IMAGE_WIDTH
-    file_info = server.file_finder(file_reference, convert={'svg': 'eps'}, question=question)
+    file_info = server.file_finder(file_reference, convert={'svg': 'eps', 'gif': 'png'}, question=question)
     if 'mimetype' in file_info:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
         if 'extension' in file_info:
-            if file_info['extension'] in ['png', 'jpg', 'gif', 'pdf', 'eps', 'jpe', 'jpeg']:
+            if file_info['extension'] in ['png', 'jpg', 'pdf', 'eps', 'jpe', 'jpeg']:
                 if file_info['extension'] == 'pdf':
                     output = '\\includepdf[pages={-}]{' + file_info['path'] + '.pdf}'
                 else:
@@ -1057,10 +1057,10 @@ def emoji_html(text, status=None, images=None):
             text = m.group(2)
         else:
             the_prefix = docassemble.base.functions.get_config('font awesome prefix', 'fas')
-        return('<i class="' + the_prefix + ' fa-' + str(text) + '"></i>')
+        return('<i class="' + the_prefix + ' fa-' + unicode(text) + '"></i>')
     elif icons_setting == 'material icons':
-        return('<i class="material-icons">' + str(text) + '</i>')
-    return(":" + str(text) + ":")
+        return('<i class="material-icons">' + unicode(text) + '</i>')
+    return(":" + unicode(text) + ":")
 
 def emoji_insert(text, status=None, images=None):
     if images is None:
@@ -1070,7 +1070,7 @@ def emoji_insert(text, status=None, images=None):
             status.attributions.add(images[text].attribution)
         return("[EMOJI " + images[text].get_reference() + ', 1.2em]')
     else:
-        return(":" + str(text) + ":")
+        return(":" + unicode(text) + ":")
 
 def link_rewriter(m, status):
     if re.search(r'^(\?|javascript:)', m.group(1)):
@@ -1090,7 +1090,7 @@ def link_rewriter(m, status):
     if status is None:
         return '<a ' + action_data + target + js_data + 'href="' + m.group(1) + '"'
     status.linkcounter += 1
-    return '<a data-linknum="' + str(status.linkcounter) + '" ' + action_data + target + js_data + 'href="' + m.group(1) + '"'
+    return '<a data-linknum="' + unicode(status.linkcounter) + '" ' + action_data + target + js_data + 'href="' + m.group(1) + '"'
 
 def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None, divclass=None, embedder=None, default_image_width=None):
     a = unicode(a)
@@ -1109,12 +1109,12 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
                 for term in question.interview.terms[question.language]:
                     #logmessage("Searching for term " + term + " in " + a + "\n")
                     a = question.interview.terms[question.language][term]['re'].sub(r'[[\1]]', a)
-                    #logmessage("string is now " + str(a) + "\n")
+                    #logmessage("string is now " + unicode(a) + "\n")
             if question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]) > 0:
                 for term in question.interview.autoterms[question.language]:
                     #logmessage("Searching for term " + term + " in " + a + "\n")
                     a = question.interview.autoterms[question.language][term]['re'].sub(r'[[\1]]', a)
-                    #logmessage("string is now " + str(a) + "\n")
+                    #logmessage("string is now " + unicode(a) + "\n")
     if status is not None and question.interview.scan_for_emojis:
         a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status)), a)
     a = html_filter(unicode(a), status=status, question=question, embedder=embedder, default_image_width=default_image_width)
@@ -1158,7 +1158,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         if strip_newlines:
             result = result.replace('\n', ' ')
         if divclass is not None:
-            result = '<div class="' + str(divclass) + '">' + result + '</div>'
+            result = '<div class="' + unicode(divclass) + '">' + result + '</div>'
         if indent and not code_match.search(result):
             return (" " * indent) + re.sub(r'\n', "\n" + (" " * indent), result).rstrip() + "\n"
     return(result)
@@ -1355,9 +1355,9 @@ def get_video_urls(the_video, question=None):
 
 def to_text(html_doc, terms, links, status):
     #url = status.current_info.get('url', 'http://localhost')
-    #logmessage("url is " + str(url))
+    #logmessage("url is " + unicode(url))
     output = ""
-    #logmessage("to_text: html doc is " + str(html_doc))
+    #logmessage("to_text: html doc is " + unicode(html_doc))
     soup = BeautifulSoup(html_doc, 'html.parser')
     [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]
     [s.extract() for s in soup.find_all(hidden)]
@@ -1396,7 +1396,7 @@ bad_list = ['div', 'option']
 good_list = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'button', 'textarea', 'note']
 
 def do_show(element):
-    if re.match('<!--.*-->', str(element), re.DOTALL):
+    if re.match('<!--.*-->', unicode(element), re.DOTALL):
         return False
     if element.name in ['option'] and element.has_attr('selected'):
         return True    

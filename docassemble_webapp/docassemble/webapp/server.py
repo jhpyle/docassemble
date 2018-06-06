@@ -520,13 +520,17 @@ def logout():
     # else:
     #     secret = str(secret)
     #     set_cookie = False
-    set_cookie = False
     user_manager = current_app.user_manager
+    next = request.args.get('next', _endpoint_url(user_manager.after_logout_endpoint))
+    if current_user.is_authenticated and current_user.social_id.startswith('auth0$') and 'oauth' in daconfig and 'auth0' in daconfig['oauth'] and 'domain' in daconfig['oauth']['auth0']:
+        if next.startswith('/'):
+            next = docassemble.base.functions.get_url_root() + next
+        next = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urllib.urlencode(dict(returnTo=next, client_id=daconfig['oauth']['auth0']['id']))
+    set_cookie = False
     flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
     delete_session()
     flash(word('You have signed out successfully.'), 'success')
-    next = request.args.get('next', _endpoint_url(user_manager.after_logout_endpoint))
     response = redirect(next)
     if set_cookie:
         response.set_cookie('secret', secret)
@@ -795,6 +799,7 @@ app.handle_url_build_error = my_default_url
 app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
 app.config['USE_TWITTER_LOGIN'] = False
+app.config['USE_AUTH0_LOGIN'] = False
 app.config['USE_AZURE_LOGIN'] = False
 app.config['USE_GOOGLE_DRIVE'] = False
 app.config['USE_PHONE_LOGIN'] = False
@@ -819,6 +824,10 @@ if 'oauth' in daconfig:
         app.config['USE_TWITTER_LOGIN'] = True
     else:
         app.config['USE_TWITTER_LOGIN'] = False
+    if 'auth0' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['auth0'] and daconfig['oauth']['auth0']['enable'] is False):
+        app.config['USE_AUTH0_LOGIN'] = True
+    else:
+        app.config['USE_AUTH0_LOGIN'] = False
     if 'azure' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['azure'] and daconfig['oauth']['azure']['enable'] is False):
         app.config['USE_AZURE_LOGIN'] = True
     else:
@@ -3091,6 +3100,7 @@ class OAuthSignIn(object):
         credentials = current_app.config['OAUTH_CREDENTIALS'].get(provider_name, dict())
         self.consumer_id = credentials.get('id', None)
         self.consumer_secret = credentials.get('secret', None)
+        self.consumer_domain = credentials.get('domain', None)
 
     def authorize(self):
         pass
@@ -3237,6 +3247,45 @@ class AzureSignIn(OAuthSignIn):
              'name': me.get('displayName', me.get('userPrincipalName', None))}
         )
 
+class Auth0SignIn(OAuthSignIn):
+    def __init__(self):
+        super(Auth0SignIn, self).__init__('auth0')
+        if self.consumer_domain is None:
+            raise Exception("To use Auth0, you need to set your domain in the configuration.")
+        self.service = OAuth2Service(
+            name='auth0',
+            client_id=self.consumer_id,
+            client_secret=self.consumer_secret,
+            authorize_url='https://' + self.consumer_domain + '/authorize',
+            access_token_url='https://' + self.consumer_domain + '/oauth/token',
+            base_url='https://' + self.consumer_domain
+        )
+    def authorize(self):
+        return redirect(self.service.get_authorize_url(
+            response_type='code',
+            scope='openid profile email',
+            audience='https://' + self.consumer_domain + '/userinfo',
+            redirect_uri=self.get_callback_url())
+        )
+    def callback(self):
+        if 'code' not in request.args:
+            return None, None, None, None
+        oauth_session = self.service.get_auth_session(
+            decoder=json.loads,
+            data={'code': request.args['code'],
+                  'grant_type': 'authorization_code',
+                  'redirect_uri': self.get_callback_url()}
+        )
+        me = oauth_session.get('userinfo').json()
+        #logmessage("Auth0 returned " + json.dumps(me))
+        user_id = me.get('sub', me.get('user_id'))
+        social_id = 'auth0$' + str(user_id)
+        username = me.get('name')
+        email = me.get('email')
+        if user_id is None or username is None or email is None:
+            raise Exception("Error: could not get necessary information from Auth0")
+        return social_id, username, email, {'name': me.get('name', None)}
+
 class TwitterSignIn(OAuthSignIn):
     def __init__(self):
         super(TwitterSignIn, self).__init__('twitter')
@@ -3265,7 +3314,7 @@ class TwitterSignIn(OAuthSignIn):
             data={'oauth_verifier': request.args['oauth_verifier']}
         )
         me = oauth_session.get('account/verify_credentials.json', params={'skip_status': 'true', 'include_email': 'true', 'include_entites': 'false'}).json()
-        logmessage("Twitter returned " + json.dumps(me))
+        #logmessage("Twitter returned " + json.dumps(me))
         social_id = 'twitter$' + str(me.get('id_str'))
         username = me.get('screen_name')
         email = me.get('email')
@@ -3332,7 +3381,7 @@ def oauth_callback(provider):
         if 'first_name' in name_data and 'last_name' in name_data and name_data['first_name'] is not None and name_data['last_name'] is not None:
             user.first_name = name_data['first_name']
             user.last_name = name_data['last_name']
-        elif 'name' in name_data and name_data['name'] is not None:
+        elif 'name' in name_data and name_data['name'] is not None and ' ' in name_data['name']:
             user.first_name = re.sub(r' .*', '', name_data['name'])
             user.last_name = re.sub(r'.* ', '', name_data['name'])
         db.session.add(user)
@@ -4659,7 +4708,7 @@ def index():
                 #logmessage("index: pre-assembly necessary")
                 break
         except:
-            logmessage("index: bad key was " + str(key))
+            logmessage("index: bad key was " + unicode(key))
     #g.before_interview = time.time()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     #g.after_interview = time.time()
@@ -4722,9 +4771,9 @@ def index():
                     logmessage("index: failed with " + str(errmess))
                     break
             if success:
-                flash(word("Your documents will be e-mailed to") + " " + str(attachment_email_address) + ".", 'success')
+                flash(word("Your documents will be e-mailed to") + " " + unicode(attachment_email_address) + ".", 'success')
             else:
-                flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
+                flash(word("Unable to e-mail your documents to") + " " + unicode(attachment_email_address) + ".", 'error')
         else:
             flash(word("Unable to find documents to e-mail."), 'error')
     if '_download_attachments' in post_data:
@@ -4776,7 +4825,7 @@ def index():
                 #logmessage("index: doing " + initial_string)
                 exec(initial_string, user_dict)
             except Exception as errMess:
-                error_messages.append(("error", "Error: " + str(errMess)))
+                error_messages.append(("error", "Error: " + unicode(errMess)))
             if '_success' in post_data and post_data['_success']:
                 theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
                 filename = secure_filename('canvas.png')
@@ -4796,7 +4845,7 @@ def index():
                     user_dict['_internal']['steps'] = steps
                     changed = True
             except Exception as errMess:
-                error_messages.append(("error", "Error: " + str(errMess)))
+                error_messages.append(("error", "Error: " + unicode(errMess)))
     known_datatypes = dict()
     if '_next_action_to_set' in post_data:
         next_action_to_set = json.loads(myb64unquote(post_data['_next_action_to_set']))
@@ -4821,7 +4870,7 @@ def index():
             if m:
                 field_numbers[kv_var] = int(m.group(1))
         except:
-            logmessage("index: error where kv_key is " + str(kv_key) + " and kv_var is " + str(kv_var))
+            logmessage("index: error where kv_key is " + unicode(kv_key) + " and kv_var is " + unicode(kv_var))
     #logmessage("field_numbers is " + str(field_numbers))
     if '_question_name' in post_data and post_data['_question_name'] in interview.questions_by_name:
         the_question = interview.questions_by_name[post_data['_question_name']]
@@ -4883,10 +4932,11 @@ def index():
             continue
         #logmessage("Got a key: " + key)
         data = post_data[orig_key]
+        #logmessage("The data type is " + unicode(type(data)))
         try:
             key = myb64unquote(orig_key)
         except:
-            raise DAError("index: invalid name " + str(orig_key))
+            raise DAError("index: invalid name " + unicode(orig_key))
         if key.startswith('_field_'):
             continue
         bracket_expression = None
@@ -4902,7 +4952,7 @@ def index():
             try:
                 key = match.group(1)
             except:
-                raise DAError("index: invalid bracket name " + str(match.group(1)))
+                raise DAError("index: invalid bracket name " + unicode(match.group(1)))
             real_key = safeid(key)
             b_match = match_inside_brackets.search(match.group(2))
             if b_match:
@@ -5112,10 +5162,10 @@ def index():
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[real_key] in ('object', 'object_radio'):
-                logmessage("We have an object type and objselections is " + str(user_dict['_internal']['objselections']))
-                logmessage("We have an object type and key is " + str(key))
-                logmessage("We have an object type and data is " + str(data))
-                logmessage("We have an object type and set_to_empty is " + str(set_to_empty))
+                #logmessage("We have an object type and objselections is " + str(user_dict['_internal']['objselections']))
+                #logmessage("We have an object type and key is " + str(key))
+                #logmessage("We have an object type and data is " + str(data))
+                #logmessage("We have an object type and set_to_empty is " + str(set_to_empty))
                 if data == '' or set_to_empty:
                     continue
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
@@ -5129,8 +5179,10 @@ def index():
             elif set_to_empty == 'object_checkboxes':
                 continue    
             else:
-                if type(data) in (str, unicode):
+                if isinstance(data, basestring):
+                    #data = fixunicode(data)
                     data = data.strip()
+                    #logmessage("data is " + data)
                 test_data = data
                 data = repr(data)
             if known_datatypes[real_key] == 'object_checkboxes':
@@ -5211,8 +5263,10 @@ def index():
             elif set_to_empty == 'object_checkboxes':
                 continue    
             else:
-                if type(data) in (str, unicode):
+                if isinstance(data, basestring):
+                    #data = fixunicode(data)
                     data = data.strip()
+                    #logmessage("data is " + data)
                 test_data = data
                 data = repr(data)
         elif key == "_multiple_choice":
@@ -5235,13 +5289,13 @@ def index():
             try:
                 exec("import docassemble.base.util", user_dict)
             except Exception as errMess:
-                error_messages.append(("error", "Error: " + str(errMess)))
+                error_messages.append(("error", "Error: " + unicode(errMess)))
         if is_ml:
             #logmessage("index: doing import docassemble.base.util")
             try:
                 exec("import docassemble.base.util", user_dict)
             except Exception as errMess:
-                error_messages.append(("error", "Error: " + str(errMess)))
+                error_messages.append(("error", "Error: " + unicode(errMess)))
             if orig_key in ml_info and 'train' in ml_info[orig_key]:
                 if not ml_info[orig_key]['train']:
                     use_for_training = 'False'
@@ -5258,7 +5312,7 @@ def index():
                 try:
                     exec("import docassemble.base.core", user_dict)
                 except Exception as errMess:
-                    error_messages.append(("error", "Error: " + str(errMess)))
+                    error_messages.append(("error", "Error: " + unicode(errMess)))
                 data = 'docassemble.base.core.DADict(' + repr(key) + ', auto_gather=False, gathered=True)'
             else:
                 data = 'None'
@@ -5269,6 +5323,7 @@ def index():
             else:
                 the_string = 'if ' + data + ' not in ' + key_to_use + '.elements:\n    ' + key_to_use + '.append(' + data + ')'
         else:
+            #logmessage("data is " + data)
             the_string = key + ' = ' + data
             if orig_key in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_key] and hasattr(the_question.fields[field_numbers[orig_key]], 'validate'):
                 #logmessage("field " + orig_key + " has validation function")
@@ -5287,7 +5342,7 @@ def index():
                         continue
                 except Exception as errstr:
                     #logmessage("the result was an exception")
-                    field_error[the_key] = str(errstr)
+                    field_error[the_key] = unicode(errstr)
                     validated = False
                     continue
         #logmessage("2Doing " + str(the_string))
@@ -5298,9 +5353,9 @@ def index():
                 user_dict['_internal']['steps'] = steps
                 changed = True
         except Exception as errMess:
-            error_messages.append(("error", "Error: " + str(errMess)))
+            error_messages.append(("error", "Error: " + unicode(errMess)))
             try:
-                logmessage("Error: " + str(errMess))
+                logmessage("Error: " + unicode(errMess))
             except:
                 pass
     if validated:
@@ -5320,7 +5375,7 @@ def index():
             try:
                 exec(the_question.validation_code, user_dict)
             except Exception as validation_error:
-                the_error_message = str(validation_error)
+                the_error_message = unicode(validation_error)
                 if the_error_message == '':
                     the_error_message = word("Please enter a valid value.")
                 error_messages.append(("error", the_error_message))
@@ -5351,7 +5406,7 @@ def index():
                 try:
                     exec(initial_string, user_dict)
                 except Exception as errMess:
-                    error_messages.append(("error", "Error: " + str(errMess)))
+                    error_messages.append(("error", "Error: " + unicode(errMess)))
                 if something_changed and should_assemble_now and not should_assemble:
                     #logmessage("index: assemble 5")
                     interview.assemble(user_dict, interview_status)
@@ -5441,8 +5496,8 @@ def index():
                                     user_dict['_internal']['steps'] = steps
                                     changed = True
                             except Exception as errMess:
-                                sys.stderr.write("Error: " + str(errMess) + "\n")
-                                error_messages.append(("error", "Error: " + str(errMess)))
+                                sys.stderr.write("Error: " + unicode(errMess) + "\n")
+                                error_messages.append(("error", "Error: " + unicode(errMess)))
         if '_files' in post_data:
             file_fields = json.loads(myb64unquote(post_data['_files'])) #post_data['_files'].split(",")
             has_invalid_fields = False
@@ -5464,7 +5519,7 @@ def index():
                 try:
                     exec(initial_string, user_dict)
                 except Exception as errMess:
-                    error_messages.append(("error", "Error: " + str(errMess)))
+                    error_messages.append(("error", "Error: " + unicode(errMess)))
                 if something_changed and should_assemble_now and not should_assemble:
                     #logmessage("index: assemble 6")
                     interview.assemble(user_dict, interview_status)
@@ -5545,8 +5600,8 @@ def index():
                                         user_dict['_internal']['steps'] = steps
                                         changed = True
                                 except Exception as errMess:
-                                    sys.stderr.write("Error: " + str(errMess) + "\n")
-                                    error_messages.append(("error", "Error: " + str(errMess)))
+                                    sys.stderr.write("Error: " + unicode(errMess) + "\n")
+                                    error_messages.append(("error", "Error: " + unicode(errMess)))
         if validated:
             if 'informed' in request.form:
                 user_dict['_internal']['informed'][the_user_id] = dict()
@@ -6498,7 +6553,12 @@ def index():
           $(form).attr("target", "uploadiframe");
           iframe.bind('load', function(){
             setTimeout(function(){
-              daProcessAjax($.parseJSON(unfake_html_response($("#uploadiframe").contents().text())), form, 1);
+              try {
+                daProcessAjax($.parseJSON(unfake_html_response($("#uploadiframe").contents().text())), form, 1);
+              }
+              catch (e){
+                daShowErrorScreen(document.getElementById('uploadiframe').contentWindow.document.body.innerHTML);
+              }
             }, 0);
           });
           form.submit();
@@ -6595,6 +6655,13 @@ def index():
           }
         }
       });
+      function daShowErrorScreen(data){
+        console.log('daShowErrorScreen');
+        if ("activeElement" in document){
+          document.activeElement.blur();
+        }
+        $("body").html(data);
+      }
       function daProcessAjax(data, form, doScroll){
         daInformedChanged = false;
         if (dadisable != null){
@@ -8011,6 +8078,9 @@ def index():
     #sys.stderr.write("11\n")
     return response
 
+def fixunicode(data):
+    return data.decode('utf-8','ignore').encode("utf-8")
+
 def get_history(interview, interview_status):
     output = ''
     if hasattr(interview_status, 'question'):
@@ -8302,15 +8372,15 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
         if 'path' not in file_info:
             abort(404)
         else:
-            logmessage("Filename is " + file_info['path'] + '.' + extension)
+            #logmessage("Filename is " + file_info['path'] + '.' + extension)
             if os.path.isfile(file_info['path'] + '.' + extension):
-                logmessage("Using " + file_info['path'] + '.' + extension)
+                #logmessage("Using " + file_info['path'] + '.' + extension)
                 extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
                 response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
             elif os.path.isfile(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension)):
-                logmessage("Using " + os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension))
+                #logmessage("Using " + os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension))
                 extension, mimetype = get_ext_and_mimetype(filename + '.' + extension)
                 response = send_file(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension), mimetype=mimetype)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -10127,6 +10197,8 @@ def update_package_wait():
     <script>
       var checkinInterval = null;
       var resultsAreIn = false;
+      var pollDelay = 0;
+      var pollPending = false;
       function daRestartCallback(data){
         //console.log("Restart result: " + data.success);
       }
@@ -10141,6 +10213,7 @@ def update_package_wait():
         return true;
       }
       function daUpdateCallback(data){
+        pollPending = false;
         if (data.success){
           if (data.status == 'finished'){
             resultsAreIn = true;
@@ -10192,9 +10265,25 @@ def update_package_wait():
         }
       }
       function daUpdate(){
+        if (pollDelay > 5){
+          $("#notification").html(""" + json.dumps(word("Server did not respond to request for update.")) + """);
+          $("#notification").removeClass("alert-info");
+          $("#notification").removeClass("alert-success");
+          $("#notification").addClass("alert-danger");
+          if (checkinInterval != null){
+            clearInterval(checkinInterval);
+          }
+          return;
+        }
+        if (pollPending){
+          pollDelay += 1;
+          return;
+        }
         if (resultsAreIn){
           return;
         }
+        pollDelay = 0;
+        pollPending = true;
         $.ajax({
           type: 'POST',
           url: """ + json.dumps(url_for('update_package_ajax')) + """,
@@ -10211,7 +10300,7 @@ def update_package_wait():
     </script>"""
     return render_template('pages/update_package_wait.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=next_url)
 
-@app.route('/update_package_ajax', methods=['GET', 'POST'])
+@app.route('/update_package_ajax', methods=['POST'])
 @login_required
 @roles_required(['admin', 'developer'])
 def update_package_ajax():
@@ -10219,8 +10308,8 @@ def update_package_ajax():
         return jsonify(success=False)
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['taskwait'])
     if result.ready():
-        if 'taskwait' in session:
-            del session['taskwait']
+        #if 'taskwait' in session:
+        #    del session['taskwait']
         the_result = result.get()
         if type(the_result) is ReturnValue:
             if the_result.ok:
