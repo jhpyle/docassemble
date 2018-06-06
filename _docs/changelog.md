@@ -5,19 +5,24 @@ short_title: Change Log
 ---
 
 ## [0.2.65](https://github.com/jhpyle/docassemble/releases/tag/v0.2.65) - 2018-06-06
-## Added
+
+### Added
 - Login via Auth0.
-## Fixed
+
+### Fixed
 - Better error handling after uploads.
 - Better error handling during software updates.
 
 ## [0.2.64](https://github.com/jhpyle/docassemble/releases/tag/v0.2.64) - 2018-05-31
-## Added
+
+### Added
 - Feature for uploading files through dataurls to the Template Folder
   of the Playground.
-## Changed
+
+### Changed
 - Comboboxes now accept free text input.
-## Fixed
+
+### Fixed
 - PDF bookmarks restored after inserting images.
 
 ## [0.2.63](https://github.com/jhpyle/docassemble/releases/tag/v0.2.63) - 2018-05-25
