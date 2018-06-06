@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.2.65] - 2018-06-05
+## [0.2.65] - 2018-06-06
 ## Added
 - Login via Auth0.
 ## Fixed
