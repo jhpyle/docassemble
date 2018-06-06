@@ -17606,6 +17606,8 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
     recipient_email = daconfig.get('error notification email', None)
     if not recipient_email:
         return
+    if err.__class__.__name__ == 'CSRFError':
+        return
     if message is None:
         errmess = unicode(err)
     else:

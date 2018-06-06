@@ -1,7 +1,7 @@
 {% extends "base_templates/base.html" %}
 {% block main %}
-      <div class="row">
-        <div class="col-sm-8 col-md-8 col-lg-8">
+      <div class="row pgtop">
+        <div class="col-md-8 pgmain">
           {%- if version_warning and current_user.has_roles(['admin', 'developer']) %}
           <div class="alert alert-danger">
             {{ version_warning }}
@@ -9,7 +9,7 @@
           {%- endif %}
           {%- block content %}{% endblock %}
         </div>
-        <div class="col-sm-4 col-md-4 col-lg-4">
+        <div class="col-md-4 pgright">
           {%- block rightside %}{% endblock %}
         </div>
       </div>

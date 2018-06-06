@@ -65,7 +65,7 @@
   </li>
   {%- endif %}
 </ul>
-<form action="{{ url_for('playground_page') }}" method="POST" class="form" role="form" id="form" autocomplete="off">
+<form action="{{ url_for('playground_page') }}" method="POST" class="form pgform" role="form" id="form" autocomplete="off">
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.original_playground_name, value=current_file) }}
   <div class="row mb-1">
@@ -76,14 +76,8 @@
       {{ render_addon_field(form.search_term, tabindex=80, autocomplete="off", extra='<div class="input-group-append"><button title="' + word('Previous result') + '" class="btn btn-outline-secondary no-outline pointer" id="daSearchPrevious"><i class="fas fa-chevron-left"></i></button><button title="' + word('Next result') + '" class="btn btn-outline-secondary no-outline pointer" id="daSearchNext"><i class="fas fa-chevron-right"></i></button></div>', extra_class='pull-right') }}
     </div>
   </div>
-  <div class="row">
-    <div class="col">
-      <div class="form-group">
-        <textarea rows="34" cols="80" id="playground_content" name="playground_content" tabindex="70">{{ content }}</textarea>
-      </div>
-    </div>
-  </div>
-  <div class="form-actions">
+  <textarea rows="34" cols="80" id="playground_content" name="playground_content" tabindex="70">{{ content }}</textarea>
+  <div class="form-actions mt-2">
     {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS'], tabindex="90") }}
     {% if is_new == 'False' %}<a tabindex="100" id="daRun" target="_blank" href="{{ url_for('playground_redirect') }}" class="btn btn-warning {{ config['BUTTON_CLASS'] }}" >{{ word("Save and Run") }}</a>
     {{ render_submit_field(form.delete, id='daDelete', class="btn btn-danger " + config['BUTTON_CLASS'], tabindex="110") }}

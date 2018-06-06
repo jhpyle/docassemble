@@ -5,6 +5,22 @@ body.dabody {
     /* font-size: 16px; */
 }
 
+.pgtop {
+}
+
+.playgroundbox {
+}
+
+.pgtop .pgmain {
+}
+
+.pgtop .pgright {
+}
+
+.pgtop .pgform {
+    
+}
+
 body.dasignature {
     border: 0px;
     margin: 0px;
@@ -1027,7 +1043,12 @@ img.da-sig-spinner {
     border-color: #dddddd;
     border-style: solid;
     font-size: 14px;
+    /* height: auto !important; */
 }
+
+/* .CodeMirror-scroll { */
+/*     max-height: ; */
+/* } */
 
 .search-error {
   background-color: #f2dede;
