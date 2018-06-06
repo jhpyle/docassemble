@@ -322,7 +322,7 @@ def install_package(package):
         returnval = err.returncode
     sys.stderr.flush()
     sys.stdout.flush()
-    time.sleep(1)
+    time.sleep(4)
     with open(pip_log.name, 'rU') as x:
         logfilecontents += x.read().decode('utf8')
     pip_log.close()
@@ -332,7 +332,7 @@ def install_package(package):
         pass
     sys.stderr.flush()
     sys.stdout.flush()
-    time.sleep(1)
+    time.sleep(4)
     sys.stderr.write('returnval is: ' + str(returnval) + "\n")
     sys.stderr.write('install_package: done' + "\n")
     shutil.rmtree(temp_dir)
@@ -357,7 +357,7 @@ def uninstall_package(package):
         returnval = err.returncode
     sys.stderr.flush()
     sys.stdout.flush()
-    time.sleep(1)
+    time.sleep(4)
     sys.stderr.write('Finished running pip' + "\n")
     with open(pip_log.name, 'rU') as x:
         logfilecontents += x.read().decode('utf8')
@@ -368,7 +368,7 @@ def uninstall_package(package):
         pass
     sys.stderr.flush()
     sys.stdout.flush()
-    time.sleep(1)
+    time.sleep(4)
     sys.stderr.write('uninstall_package: done' + "\n")
     return returnval, logfilecontents
 
