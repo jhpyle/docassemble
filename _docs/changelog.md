@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.66](https://github.com/jhpyle/docassemble/releases/tag/v0.2.66) - 2018-06-07
+
+### Changed
+- Code editing boxes are now sized relative to screen size.
+
 ## [0.2.65](https://github.com/jhpyle/docassemble/releases/tag/v0.2.65) - 2018-06-06
 
 ### Added
