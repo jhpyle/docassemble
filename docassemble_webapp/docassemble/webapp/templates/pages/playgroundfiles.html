@@ -67,7 +67,7 @@
 {%- else %}
           <div class="col-md-10 pgmain">
 {%- endif %}
-            <ul id="editnav" class="nav nav-pills mt-1 mb-1">
+            <ul id="editnav" class="nav nav-pills mt-1">
               <li class="nav-item">
                 <a tabindex="571" class="nav-link" title="{{ word('Create a new file') }}" href="?section={{ section }}&new=1"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
               </li>
@@ -95,7 +95,7 @@
               {{ formtwo.hidden_tag() }}
               {{ myrender_hidden_field(formtwo.section, value=section) }}
               {{ myrender_hidden_field(formtwo.original_file_name, value=current_file) }}
-              <div class="row mb-1">
+              <div class="row mb-1 mt-1">
                 <div class="col-lg-6">
                   {{ render_addon_field(formtwo.file_name, tabindex=579) }}
                 </div>

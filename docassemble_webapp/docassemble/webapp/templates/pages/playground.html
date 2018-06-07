@@ -1,7 +1,7 @@
 {% extends 'base_templates/flask_two_col_base.html' %}
 {% block content %}
 {%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
-<ul class="nav nav-pills mt-1 mb-1">
+<ul class="nav nav-pills mt-1">
   <li class="nav-item">
     <a class="nav-link" tabindex="1" title="{{ word('Create a new interview') }}" href="?new=1"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
   </li>
@@ -68,7 +68,7 @@
 <form action="{{ url_for('playground_page') }}" method="POST" class="form pgform" role="form" id="form" autocomplete="off">
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.original_playground_name, value=current_file) }}
-  <div class="row mb-1">
+  <div class="row mb-1 mt-1">
     <div class="col-lg-6">
       {{ render_addon_field(form.playground_name, tabindex=20) }}
     </div>
