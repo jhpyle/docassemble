@@ -5,20 +5,40 @@ body.dabody {
     /* font-size: 16px; */
 }
 
-.pgtop {
+.configform .CodeMirror {
+    height: 75vh;
 }
 
-.playgroundbox {
+.pgmain {
+    height: 75vh;
+    display: flex;
+    flex-flow: column;
+    align-items: stretch;
 }
 
-.pgtop .pgmain {
+.pgright {
+    height: 75vh;
+    display: flex;
+    flex-flow: column;
+    align-items: stretch;
 }
 
-.pgtop .pgright {
+.pgmain .pgform {
+    flex: 1;
+    display: flex;
+    flex-flow: column;
+    align-items: stretch;
+    overflow: hidden;
 }
 
-.pgtop .pgform {
-    
+.pgmain .pgform .CodeMirror {
+    flex: 1;
+    overflow: hidden;
+}
+
+.pgright .playgroundbox {
+    flex: 1;
+    overflow: hidden;
 }
 
 body.dasignature {
@@ -1043,12 +1063,7 @@ img.da-sig-spinner {
     border-color: #dddddd;
     border-style: solid;
     font-size: 14px;
-    /* height: auto !important; */
 }
-
-/* .CodeMirror-scroll { */
-/*     max-height: ; */
-/* } */
 
 .search-error {
   background-color: #f2dede;

@@ -1,4 +1,4 @@
-{%- extends 'base_templates/page_base_half.html' %}
+{%- extends 'base_templates/page_base_half_pgfiles.html' %}
 {%- from "base_templates/form_macros.html" import render_addon_field, render_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
 {%- block top %}
 {%- endblock %}
@@ -62,6 +62,11 @@
           {%- endif %}
 {%- endblock %}
 {%- block below %}
+{%- if active_file %}
+          <div class="col-md-8 pgmain">
+{%- else %}
+          <div class="col-md-10 pgmain">
+{%- endif %}
             <ul id="editnav" class="nav nav-pills mt-1 mb-1">
               <li class="nav-item">
                 <a tabindex="571" class="nav-link" title="{{ word('Create a new file') }}" href="?section={{ section }}&new=1"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
@@ -86,7 +91,7 @@
               </li>
             </ul>
 
-            <form action="{{ url_for('playground_files') }}" method="POST" class="form" role="form" id="formtwo" autocomplete="off">
+            <form action="{{ url_for('playground_files') }}" method="POST" class="form pgform" role="form" id="formtwo" autocomplete="off">
               {{ formtwo.hidden_tag() }}
               {{ myrender_hidden_field(formtwo.section, value=section) }}
               {{ myrender_hidden_field(formtwo.original_file_name, value=current_file) }}
@@ -98,10 +103,8 @@
                   {{ render_addon_field(formtwo.search_term, tabindex=590, autocomplete="off", extra='<div class="input-group-append"><button title="' + word('Previous result') + '" class="btn btn-outline-secondary no-outline pointer" id="daSearchPrevious"><i class="fas fa-chevron-left"></i></button><button title="' + word('Next result') + '" class="btn btn-outline-secondary no-outline pointer" id="daSearchNext"><i class="fas fa-chevron-right"></i></button></div>', extra_class='pull-right') }}
                 </div>
               </div>
-              <div class="form-group">
-                <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="580">{{ content }}</textarea>
-              </div>
-              <div class="form-actions">
+              <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="580">{{ content }}</textarea>
+              <div class="form-actions mt-2">
                 {{ render_submit_field(formtwo.submit, tabindex=600, class="btn btn-primary " + config['BUTTON_CLASS'], data={'disable-button': 0}) }}
                 {% if is_new == 'False' %}<a tabindex="610" class="btn btn-danger {{ config['BUTTON_CLASS'] }}" href="?section={{ section }}&delete={{ current_file }}">{{ word('Delete') }}</a>{% endif %}
               </div>
@@ -109,9 +112,9 @@
             {%- if after_text %}
             <p>{{ after_text }}</p>
             {%- endif %}
-{%- endblock %}
-{% block rightside %}
+          </div>
 {%- if active_file %}
+          <div class="col-md-4 pgright">
             <div id="playgroundbox" class="card bg-light playgroundbox">
               <div class="card-header">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="badge badge-primary larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a></h3>
               </div>
@@ -120,6 +123,7 @@
                 </table>
               </div>
             </div>
+          </div>
 {%- endif %}
 {%- endblock %}
 {%- block bottom %}
