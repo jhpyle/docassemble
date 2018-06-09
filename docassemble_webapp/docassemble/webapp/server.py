@@ -11688,7 +11688,11 @@ def google_drive_page():
     the_folder = get_gd_folder()
     active_folder = None
     if the_folder is not None:
-        response = service.files().get(fileId=the_folder, fields="mimeType, trashed").execute()
+        try:
+            response = service.files().get(fileId=the_folder, fields="mimeType, trashed").execute()
+        except HttpError:
+            set_gd_folder(None)
+            return redirect(url_for('google_drive_page'))
         the_mime_type = response.get('mimeType', None)
         trashed = response.get('trashed', False)
         if trashed is False and the_mime_type == "application/vnd.google-apps.folder":
