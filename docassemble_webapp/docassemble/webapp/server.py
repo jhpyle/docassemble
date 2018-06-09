@@ -11674,6 +11674,7 @@ def google_drive_page():
                                               fields='id').execute()
             new_folder = new_file.get('id', None)
             set_gd_folder(new_folder)
+            fix_subdirs(service, new_folder)
             if new_folder is not None:
                 active_folder = dict(id=new_folder, name='docassemble')
                 items.append(active_folder)
@@ -11713,29 +11714,32 @@ def google_drive_page():
         items.append(active_folder)
         item_ids.append(-1)
     if the_folder is not None:
-        subdirs = list()
-        page_token = None
-        while True:
-            response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and '" + str(the_folder) + "' in parents").execute()
-            for the_file in response.get('files', []):
-                subdirs.append(the_file)
-            page_token = response.get('nextPageToken', None)
-            if page_token is None:
-                break
-        todo = set(['questions', 'static', 'sources', 'templates', 'modules'])
-        done = set([x['name'] for x in subdirs if x['name'] in todo])
-        for key in todo - done:
-            file_metadata = {
-                'name' : key,
-                'mimeType' : 'application/vnd.google-apps.folder',
-                'parents': [the_folder]
-            }
-            new_file = service.files().create(body=file_metadata,
-                                              fields='id').execute()
+        fix_subdirs(service, the_folder)
     if the_folder is None:
         the_folder = ''
     description = 'Select the folder from your Google Drive that you want to be synchronized with the Playground.'
     return render_template('pages/googledrive.html', version_warning=version_warning, bodyclass='adminbody', header=word('Google Drive'), tab_title=word('Google Drive'), items=items, the_folder=the_folder, page_title=word('Google Drive'), form=form)
+
+def fix_subdirs(service, the_folder):
+    subdirs = list()
+    page_token = None
+    while True:
+        response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and '" + str(the_folder) + "' in parents").execute()
+        for the_file in response.get('files', []):
+            subdirs.append(the_file)
+        page_token = response.get('nextPageToken', None)
+        if page_token is None:
+            break
+    todo = set(['questions', 'static', 'sources', 'templates', 'modules'])
+    done = set([x['name'] for x in subdirs if x['name'] in todo])
+    for key in todo - done:
+        file_metadata = {
+            'name' : key,
+            'mimeType' : 'application/vnd.google-apps.folder',
+            'parents': [the_folder]
+        }
+        new_file = service.files().create(body=file_metadata,
+                                          fields='id').execute()
 
 @app.route('/config', methods=['GET', 'POST'])
 @login_required
