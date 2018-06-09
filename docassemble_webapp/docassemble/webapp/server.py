@@ -11679,9 +11679,11 @@ def google_drive_page():
                 active_folder = dict(id=new_folder, name='docassemble')
                 items.append(active_folder)
                 item_ids.append(new_folder)
+            flash(word("Google Drive folder was set."), 'success')
         elif form.folder.data in item_ids:
             flash(word("Google Drive folder was set."), 'success')
             set_gd_folder(form.folder.data)
+            fix_subdirs(service, form.folder.data)
         else:
             flash(word("The supplied folder " + unicode(form.folder.data) + "could not be found."), 'error')
             set_gd_folder(None)
