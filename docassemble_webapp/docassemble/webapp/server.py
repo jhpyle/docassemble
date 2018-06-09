@@ -4061,7 +4061,7 @@ def checkin():
             if form_parameters is not None:
                 form_parameters = json.loads(form_parameters)
                 for param in form_parameters:
-                    if param['name'] in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or param['name'].startswith('_ignore'):
+                    if param['name'] in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or param['name'].startswith('_ignore'):
                         continue
                     try:
                         parameters[from_safeid(param['name'])] = param['value']
@@ -4669,10 +4669,38 @@ def index():
     #             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     #             release_lock(user_code, yaml_filename)
     #             return(response)
+    known_varnames = dict()
+    if '_varnames' in post_data:
+        known_varnames = json.loads(myb64unquote(post_data['_varnames']))
+    if '_visible' in post_data:
+        visible_field_names = json.loads(myb64unquote(post_data['_visible']))
+    else:
+        visible_field_names = list()
+    logmessage("Visible field names is " + repr(visible_field_names))
+    field_numbers = dict()
+    numbered_fields = dict()
+    for kv_key, kv_var in known_varnames.iteritems():
+        try:
+            field_identifier = myb64unquote(kv_key)
+            m = re.search(r'_field_([0-9]+)', field_identifier)
+            if m:
+                numbered_fields[kv_var] = kv_key
+                field_numbers[kv_var] = int(m.group(1))
+        except:
+            logmessage("index: error where kv_key is " + unicode(kv_key) + " and kv_var is " + unicode(kv_var))
+    visible_fields = set()
+    for field_name in visible_field_names:
+        if field_name in known_varnames:
+            visible_fields.add(known_varnames[field_name])
+        else:
+            visible_fields.add(field_name)
+    logmessage("Visible fields is " + repr(visible_fields))
+    logmessage("Numbered fields is " + repr(numbered_fields))
     if '_checkboxes' in post_data:
         checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
         for checkbox_field, checkbox_value in checkbox_fields.iteritems():
-            if checkbox_field not in post_data:
+            if checkbox_field in visible_fields and checkbox_field not in post_data and not (checkbox_field in numbered_fields and numbered_fields[checkbox_field] in post_data):
+                logmessage("Checkbox: adding " + checkbox_field + " set to " + checkbox_value)
                 post_data.add(checkbox_field, checkbox_value)
     if '_empties' in post_data:
         empty_fields = json.loads(myb64unquote(post_data['_empties']))
@@ -4859,18 +4887,6 @@ def index():
         next_action = None
     if '_datatypes' in post_data:
         known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
-    known_varnames = dict()
-    if '_varnames' in post_data:
-        known_varnames = json.loads(myb64unquote(post_data['_varnames']))
-    field_numbers = dict()
-    for kv_key, kv_var in known_varnames.iteritems():
-        try:
-            field_identifier = myb64unquote(kv_key)
-            m = re.search(r'_field_([0-9]+)', field_identifier)
-            if m:
-                field_numbers[kv_var] = int(m.group(1))
-        except:
-            logmessage("index: error where kv_key is " + unicode(kv_key) + " and kv_var is " + unicode(kv_var))
     #logmessage("field_numbers is " + str(field_numbers))
     if '_question_name' in post_data and post_data['_question_name'] in interview.questions_by_name:
         the_question = interview.questions_by_name[post_data['_question_name']]
@@ -4886,9 +4902,9 @@ def index():
                         break
     else:
         the_question = None
-    known_variables = dict()
+    #known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
             continue
         try:
             key = myb64unquote(orig_key)
@@ -4899,19 +4915,19 @@ def index():
                 if not (known_varnames[orig_key] in post_data and post_data[known_varnames[orig_key]] != '' and post_data[orig_key] == ''):
                     post_data[known_varnames[orig_key]] = post_data[orig_key]
             else:
-                logmessage("orig_key " + orig_key + " is not in known_varnames")
+                #logmessage("orig_key " + orig_key + " is not in known_varnames")
                 m = re.search(r'^(_field_[0-9]+)(\[.*\])', key)
                 if m:
-                    logmessage("got a match")
+                    #logmessage("got a match")
                     base_orig_key = safeid(m.group(1))
                     if base_orig_key in known_varnames:
                         full_key = safeid(myb64unquote(known_varnames[base_orig_key]) + m.group(2))
-                        logmessage("Adding " + full_key + " to post_data")
+                        #logmessage("Adding " + full_key + " to post_data")
                         post_data[full_key] = post_data[orig_key]
-                    else:
-                        logmessage("foo 1")
-                else:
-                    logmessage("foo 2")
+                    #else:
+                    #    logmessage("foo 1")
+                #else:
+                #    logmessage("foo 2")
         if key.endswith('.gathered'):
             objname = re.sub(r'\.gathered$', '', key)
             #logmessage("Considering gathered key: " + str(key))
@@ -4927,16 +4943,21 @@ def index():
     field_error = dict()
     validated = True
     imported_core = False
+    #blank_fields = set(known_datatypes.keys())
+    #logmessage("blank_fields is " + repr(blank_fields))
     for orig_key in post_data:
-        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
             continue
-        #logmessage("Got a key: " + key)
         data = post_data[orig_key]
         #logmessage("The data type is " + unicode(type(data)))
         try:
             key = myb64unquote(orig_key)
         except:
             raise DAError("index: invalid name " + unicode(orig_key))
+        #logmessage("Processing a key: " + key)
+        #if orig_key in blank_fields:
+            #logmessage(key + " is not a blank field")
+            #blank_fields.discard(orig_key)
         if key.startswith('_field_'):
             continue
         bracket_expression = None
@@ -5094,7 +5115,7 @@ def index():
         test_data = data
         if real_key in known_datatypes:
             #logmessage("real key " + real_key + " is in datatypes: " + known_datatypes[real_key])
-            if known_datatypes[real_key] in ('boolean', 'checkboxes', 'yesno', 'noyes', 'yesnowide', 'noyeswide'):
+            if known_datatypes[real_key] in ('boolean', 'checkboxes'):
                 #logmessage("Processing boolean")
                 if data == "True":
                     data = "True"
@@ -5102,7 +5123,7 @@ def index():
                 else:
                     data = "False"
                     test_data = False
-            elif known_datatypes[real_key] in ('threestate', 'yesnomaybe', 'noyesmaybe', 'yesnowidemaybe', 'noyeswidemaybe'):
+            elif known_datatypes[real_key] == 'threestate':
                 if data == "True":
                     data = "True"
                     test_data = True
@@ -5189,7 +5210,7 @@ def index():
                 do_append = True
         elif orig_key in known_datatypes:
             #logmessage("key " + key + " is in datatypes: " + known_datatypes[orig_key])
-            if known_datatypes[orig_key] in ('boolean', 'checkboxes', 'yesno', 'noyes', 'yesnowide', 'noyeswide'):
+            if known_datatypes[orig_key] in ('boolean', 'checkboxes'):
                 #logmessage("Processing boolean")
                 if data == "True":
                     data = "True"
@@ -5197,7 +5218,7 @@ def index():
                 else:
                     data = "False"
                     test_data = False
-            elif known_datatypes[orig_key] in ('threestate', 'yesnomaybe', 'noyesmaybe', 'yesnowidemaybe', 'noyeswidemaybe'):
+            elif known_datatypes[orig_key] == 'threestate':
                 if data == "True":
                     data = "True"
                     test_data = True
@@ -5359,6 +5380,9 @@ def index():
             except:
                 pass
     if validated:
+        #for orig_key in blank_fields:
+            #key = myb64unquote(orig_key)
+            #logmessage("Found a blank field " + key + " of type " + known_datatypes[orig_key])
         for orig_key in empty_fields:
             key = myb64unquote(orig_key)
             #logmessage("3Doing empty key " + str(key))
@@ -6388,7 +6412,21 @@ def index():
       function daValidationHandler(form){
         //form.submit();
         //console.log("daValidationHandler");
-        $("#daform").each(function(){
+        var visibleElements = [];
+        var seen = Object();
+        $(form).find("input, select, textarea").filter(":not(:disabled)").each(function(){
+          //console.log("Considering an element");
+          if ($(this).attr('name') && $(this).attr('type') != "hidden" && (($(this).hasClass('labelauty') && $(this).parent().is(":visible")) || $(this).is(":visible"))){
+            var theName = $(this).attr('name');
+            //console.log("Including an element " + theName);
+            if (!seen.hasOwnProperty(theName)){
+              visibleElements.push(theName);
+              seen[theName] = 1;
+            }
+          }
+        });
+        $(form).find("input[name='_visible']").val(btoa(JSON.stringify(visibleElements)));
+        $(form).each(function(){
           $(this).find(':input').off('change', pushChanges);
         });
         $("meta[name=viewport]").attr('content', "width=device-width, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0");
@@ -7380,13 +7418,20 @@ def index():
           for (var key in the_hash){
             if (the_hash.hasOwnProperty(key)){
               var checkboxName = atob(key);
-              var baseName = checkboxName
+              var baseName = checkboxName;
               checkboxName = checkboxName.replace(/^.*\[['"]([^\]]*)['"]\]$/, "$1");
               if (checkboxName != baseName){
                 baseName = baseName.replace(/^(.*)\[.*/, "$1");
-                varlookup[btoa(baseName + "['" + atob(checkboxName) + "']")] = key;
-                varlookup[btoa(baseName + "[u'" + atob(checkboxName) + "']")] = key;
-                varlookup[btoa(baseName + '["' + atob(checkboxName) + '"]')] = key;
+                var convertedName;
+                try {
+                  convertedName = atob(checkboxName);
+                }
+                catch (e) {
+                  continue;
+                }
+                varlookup[btoa(baseName + "['" + convertedName + "']")] = key;
+                varlookup[btoa(baseName + "[u'" + convertedName + "']")] = key;
+                varlookup[btoa(baseName + '["' + convertedName + '"]')] = key;
               }
             }
           }
@@ -7744,6 +7789,9 @@ def index():
               error.insertAfter(element);
             }
         }
+      });
+      $.validator.addMethod("datetime", function(a, b){
+        return true;
       });
       $.validator.addMethod('checkone', function(value, element, params){
         var number_needed = params[0];
@@ -11378,13 +11426,13 @@ def gd_sync_wait():
     </script>"""
     return render_template('pages/gd_sync_wait.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Synchronizing'), page_title=word('Synchronizing'), next_page=next_url)
     
-@app.route('/old_sync_with_google_drive', methods=['GET', 'POST'])
-@login_required
-@roles_required(['admin', 'developer'])
-def old_sync_with_google_drive():
-    next = request.args.get('next', url_for('playground_page'))
-    extra_meta = """\n    <meta http-equiv="refresh" content="1; url='""" + url_for('do_sync_with_google_drive', next=next) + """'">"""
-    return render_template('pages/google_sync.html', version_warning=None, bodyclass='adminbody', extra_meta=Markup(extra_meta), tab_title=word('Synchronizing'), page_title=word('Synchronizing'))
+# @app.route('/old_sync_with_google_drive', methods=['GET', 'POST'])
+# @login_required
+# @roles_required(['admin', 'developer'])
+# def old_sync_with_google_drive():
+#     next = request.args.get('next', url_for('playground_page'))
+#     extra_meta = """\n    <meta http-equiv="refresh" content="1; url='""" + url_for('do_sync_with_google_drive', next=next) + """'">"""
+#     return render_template('pages/google_sync.html', version_warning=None, bodyclass='adminbody', extra_meta=Markup(extra_meta), tab_title=word('Synchronizing'), page_title=word('Synchronizing'))
 
 def add_br(text):
     return re.sub(r'[\n\r]+', "<br>", text)
@@ -11418,171 +11466,171 @@ def checkin_sync_with_google_drive():
     else:
         return jsonify(success=True, status='waiting', restart=False)
     
-@app.route('/do_sync_with_google_drive', methods=['GET', 'POST'])
-@login_required
-@roles_required(['admin', 'developer'])
-def do_sync_with_google_drive():
-    if app.config['USE_GOOGLE_DRIVE'] is False:
-        flash(word("Google Drive is not configured"), "error")
-        return redirect(url_for('interview_list'))
-    storage = RedisCredStorage(app='googledrive')
-    credentials = storage.get()
-    if not credentials or credentials.invalid:
-        flow = get_gd_flow()
-        uri = flow.step1_get_authorize_url()
-        return redirect(uri)
-    http = credentials.authorize(httplib2.Http())
-    service = apiclient.discovery.build('drive', 'v3', http=http)
-    the_folder = get_gd_folder()
-    response = service.files().get(fileId=the_folder, fields="mimeType, id, name, trashed").execute()
-    the_mime_type = response.get('mimeType', None)
-    trashed = response.get('trashed', False)
-    if trashed is True or the_mime_type != "application/vnd.google-apps.folder":
-        flash(word("Error accessing Google Drive"), 'error')
-        return redirect(url_for('google_drive'))
-    local_files = dict()
-    local_modtimes = dict()
-    gd_files = dict()
-    gd_ids = dict()
-    gd_modtimes = dict()
-    gd_deleted = dict()
-    sections_modified = set()
-    commentary = ''
-    for section in ('static', 'templates', 'questions', 'modules', 'sources'):
-        local_files[section] = set()
-        local_modtimes[section] = dict()
-        if section == 'questions':
-            the_section = 'playground'
-        elif section == 'templates':
-            the_section = 'playgroundtemplate'
-        else:
-            the_section = 'playground' + section
-        area = SavedFile(current_user.id, fix=True, section=the_section)
-        for f in os.listdir(area.directory):
-            local_files[section].add(f)
-            local_modtimes[section][f] = os.path.getmtime(os.path.join(area.directory, f))
-        subdirs = list()
-        page_token = None
-        while True:
-            response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + section + "' and '" + str(the_folder) + "' in parents").execute()
-            for the_file in response.get('files', []):
-                if 'id' in the_file:
-                    subdirs.append(the_file['id'])
-            page_token = response.get('nextPageToken', None)
-            if page_token is None:
-                break
-        if len(subdirs) == 0:
-            flash(word("Error accessing " + section + " in Google Drive"), 'error')
-            return redirect(url_for('google_drive'))
-        subdir = subdirs[0]
-        gd_files[section] = set()
-        gd_ids[section] = dict()
-        gd_modtimes[section] = dict()
-        gd_deleted[section] = set()
-        page_token = None
-        while True:
-            response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name, modifiedTime, trashed)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(subdir) + "' in parents").execute()
-            for the_file in response.get('files', []):
-                if re.search(r'(\.tmp|\.gdoc)$', the_file['name']):
-                    continue
-                if re.search(r'^\~', the_file['name']):
-                    continue
-                gd_ids[section][the_file['name']] = the_file['id']
-                gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])
-                logmessage("Google says modtime on " + unicode(the_file) + " is " + the_file['modifiedTime'])
-                if the_file['trashed']:
-                    gd_deleted[section].add(the_file['name'])
-                    continue
-                gd_files[section].add(the_file['name'])
-            page_token = response.get('nextPageToken', None)
-            if page_token is None:
-                break
-        gd_deleted[section] = gd_deleted[section] - gd_files[section]
-        for f in gd_files[section]:
-            logmessage("Considering " + f + " on GD")
-            if f not in local_files[section] or gd_modtimes[section][f] - local_modtimes[section][f] > 3:
-                logmessage("Considering " + f + " to copy to local")
-                sections_modified.add(section)
-                commentary += "Copied " + f + " from Google Drive.  "
-                the_path = os.path.join(area.directory, f)
-                with open(the_path, 'wb') as fh:
-                    response = service.files().get_media(fileId=gd_ids[section][f])
-                    downloader = apiclient.http.MediaIoBaseDownload(fh, response)
-                    done = False
-                    while done is False:
-                        status, done = downloader.next_chunk()
-                        #logmessage("Download %d%%." % int(status.progress() * 100))
-                os.utime(the_path, (gd_modtimes[section][f], gd_modtimes[section][f]))
-        for f in local_files[section]:
-            logmessage("Considering " + f + ", which is a local file")
-            if f not in gd_deleted[section]:
-                logmessage("Considering " + f + " is not in Google Drive deleted")
-                if f not in gd_files[section]:
-                    logmessage("Considering " + f + " is not in Google Drive")
-                    the_path = os.path.join(area.directory, f)
-                    if os.path.getsize(the_path) == 0:
-                        logmessage("Found zero byte file: " + the_path)
-                        continue
-                    logmessage("Copying " + f + " to Google Drive.")
-                    commentary += "Copied " + f + " to Google Drive.  "
-                    extension, mimetype = get_ext_and_mimetype(the_path)
-                    the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
-                    logmessage("Setting GD modtime on new file " + unicode(f) + " to " + unicode(the_modtime))
-                    file_metadata = { 'name': f, 'parents': [subdir], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
-                    media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
-                    the_new_file = service.files().create(body=file_metadata,
-                                                          media_body=media,
-                                                          fields='id').execute()
-                    new_id = the_new_file.get('id')
-                elif local_modtimes[section][f] - gd_modtimes[section][f] > 3:
-                    logmessage("Considering " + f + " is in Google Drive but local is more recent")
-                    the_path = os.path.join(area.directory, f)
-                    if os.path.getsize(the_path) == 0:
-                        logmessage("Found zero byte file during update: " + the_path)
-                        continue
-                    commentary += "Updated " + f + " on Google Drive.  "
-                    extension, mimetype = get_ext_and_mimetype(the_path)
-                    the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
-                    logmessage("Setting GD modtime on modified " + unicode(f) + " to " + unicode(the_modtime))
-                    file_metadata = { 'modifiedTime': the_modtime }
-                    media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
-                    service.files().update(fileId=gd_ids[section][f],
-                                           body=file_metadata,
-                                           media_body=media).execute()
-        for f in gd_deleted[section]:
-            logmessage("Considering " + f + " is deleted on Google Drive")
-            if f in local_files[section]:
-                logmessage("Considering " + f + " is deleted on Google Drive but exists locally")
-                if local_modtimes[section][f] - gd_modtimes[section][f] > 3:
-                    logmessage("Considering " + f + " is deleted on Google Drive but exists locally and needs to be undeleted on GD")
-                    commentary += "Undeleted and updated " + f + " on Google Drive.  "
-                    the_path = os.path.join(area.directory, f)
-                    extension, mimetype = get_ext_and_mimetype(the_path)
-                    the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
-                    logmessage("Setting GD modtime on undeleted file " + unicode(f) + " to " + unicode(the_modtime))
-                    file_metadata = { 'modifiedTime': the_modtime, 'trashed': False }
-                    media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
-                    service.files().update(fileId=gd_ids[section][f],
-                                           body=file_metadata,
-                                           media_body=media).execute()
-                else:
-                    logmessage("Considering " + f + " is deleted on Google Drive but exists locally and needs to deleted locally")
-                    sections_modified.add(section)
-                    commentary += "Deleted " + f + " from Playground.  "
-                    the_path = os.path.join(area.directory, f)
-                    if os.path.isfile(the_path):
-                        area.delete_file(f)
-        area.finalize()
-    for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
-        r.incr(key)
-    if commentary != '':
-        flash(commentary, 'info')
-        logmessage(commentary)
-    next = request.args.get('next', url_for('playground_page'))
-    if 'modules' in sections_modified:
-        return redirect(url_for('restart_page', next=next))
-    return redirect(next)
-    #return render_template('pages/testgoogledrive.html', tab_title=word('Google Drive Test'), page_title=word('Google Drive Test'), commentary=commentary)
+# @app.route('/do_sync_with_google_drive', methods=['GET', 'POST'])
+# @login_required
+# @roles_required(['admin', 'developer'])
+# def do_sync_with_google_drive():
+#     if app.config['USE_GOOGLE_DRIVE'] is False:
+#         flash(word("Google Drive is not configured"), "error")
+#         return redirect(url_for('interview_list'))
+#     storage = RedisCredStorage(app='googledrive')
+#     credentials = storage.get()
+#     if not credentials or credentials.invalid:
+#         flow = get_gd_flow()
+#         uri = flow.step1_get_authorize_url()
+#         return redirect(uri)
+#     http = credentials.authorize(httplib2.Http())
+#     service = apiclient.discovery.build('drive', 'v3', http=http)
+#     the_folder = get_gd_folder()
+#     response = service.files().get(fileId=the_folder, fields="mimeType, id, name, trashed").execute()
+#     the_mime_type = response.get('mimeType', None)
+#     trashed = response.get('trashed', False)
+#     if trashed is True or the_mime_type != "application/vnd.google-apps.folder":
+#         flash(word("Error accessing Google Drive"), 'error')
+#         return redirect(url_for('google_drive'))
+#     local_files = dict()
+#     local_modtimes = dict()
+#     gd_files = dict()
+#     gd_ids = dict()
+#     gd_modtimes = dict()
+#     gd_deleted = dict()
+#     sections_modified = set()
+#     commentary = ''
+#     for section in ('static', 'templates', 'questions', 'modules', 'sources'):
+#         local_files[section] = set()
+#         local_modtimes[section] = dict()
+#         if section == 'questions':
+#             the_section = 'playground'
+#         elif section == 'templates':
+#             the_section = 'playgroundtemplate'
+#         else:
+#             the_section = 'playground' + section
+#         area = SavedFile(current_user.id, fix=True, section=the_section)
+#         for f in os.listdir(area.directory):
+#             local_files[section].add(f)
+#             local_modtimes[section][f] = os.path.getmtime(os.path.join(area.directory, f))
+#         subdirs = list()
+#         page_token = None
+#         while True:
+#             response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + section + "' and '" + str(the_folder) + "' in parents").execute()
+#             for the_file in response.get('files', []):
+#                 if 'id' in the_file:
+#                     subdirs.append(the_file['id'])
+#             page_token = response.get('nextPageToken', None)
+#             if page_token is None:
+#                 break
+#         if len(subdirs) == 0:
+#             flash(word("Error accessing " + section + " in Google Drive"), 'error')
+#             return redirect(url_for('google_drive'))
+#         subdir = subdirs[0]
+#         gd_files[section] = set()
+#         gd_ids[section] = dict()
+#         gd_modtimes[section] = dict()
+#         gd_deleted[section] = set()
+#         page_token = None
+#         while True:
+#             response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name, modifiedTime, trashed)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(subdir) + "' in parents").execute()
+#             for the_file in response.get('files', []):
+#                 if re.search(r'(\.tmp|\.gdoc)$', the_file['name']):
+#                     continue
+#                 if re.search(r'^\~', the_file['name']):
+#                     continue
+#                 gd_ids[section][the_file['name']] = the_file['id']
+#                 gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])
+#                 logmessage("Google says modtime on " + unicode(the_file) + " is " + the_file['modifiedTime'])
+#                 if the_file['trashed']:
+#                     gd_deleted[section].add(the_file['name'])
+#                     continue
+#                 gd_files[section].add(the_file['name'])
+#             page_token = response.get('nextPageToken', None)
+#             if page_token is None:
+#                 break
+#         gd_deleted[section] = gd_deleted[section] - gd_files[section]
+#         for f in gd_files[section]:
+#             logmessage("Considering " + f + " on GD")
+#             if f not in local_files[section] or gd_modtimes[section][f] - local_modtimes[section][f] > 3:
+#                 logmessage("Considering " + f + " to copy to local")
+#                 sections_modified.add(section)
+#                 commentary += "Copied " + f + " from Google Drive.  "
+#                 the_path = os.path.join(area.directory, f)
+#                 with open(the_path, 'wb') as fh:
+#                     response = service.files().get_media(fileId=gd_ids[section][f])
+#                     downloader = apiclient.http.MediaIoBaseDownload(fh, response)
+#                     done = False
+#                     while done is False:
+#                         status, done = downloader.next_chunk()
+#                         #logmessage("Download %d%%." % int(status.progress() * 100))
+#                 os.utime(the_path, (gd_modtimes[section][f], gd_modtimes[section][f]))
+#         for f in local_files[section]:
+#             logmessage("Considering " + f + ", which is a local file")
+#             if f not in gd_deleted[section]:
+#                 logmessage("Considering " + f + " is not in Google Drive deleted")
+#                 if f not in gd_files[section]:
+#                     logmessage("Considering " + f + " is not in Google Drive")
+#                     the_path = os.path.join(area.directory, f)
+#                     if os.path.getsize(the_path) == 0:
+#                         logmessage("Found zero byte file: " + the_path)
+#                         continue
+#                     logmessage("Copying " + f + " to Google Drive.")
+#                     commentary += "Copied " + f + " to Google Drive.  "
+#                     extension, mimetype = get_ext_and_mimetype(the_path)
+#                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+#                     logmessage("Setting GD modtime on new file " + unicode(f) + " to " + unicode(the_modtime))
+#                     file_metadata = { 'name': f, 'parents': [subdir], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
+#                     media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
+#                     the_new_file = service.files().create(body=file_metadata,
+#                                                           media_body=media,
+#                                                           fields='id').execute()
+#                     new_id = the_new_file.get('id')
+#                 elif local_modtimes[section][f] - gd_modtimes[section][f] > 3:
+#                     logmessage("Considering " + f + " is in Google Drive but local is more recent")
+#                     the_path = os.path.join(area.directory, f)
+#                     if os.path.getsize(the_path) == 0:
+#                         logmessage("Found zero byte file during update: " + the_path)
+#                         continue
+#                     commentary += "Updated " + f + " on Google Drive.  "
+#                     extension, mimetype = get_ext_and_mimetype(the_path)
+#                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+#                     logmessage("Setting GD modtime on modified " + unicode(f) + " to " + unicode(the_modtime))
+#                     file_metadata = { 'modifiedTime': the_modtime }
+#                     media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
+#                     service.files().update(fileId=gd_ids[section][f],
+#                                            body=file_metadata,
+#                                            media_body=media).execute()
+#         for f in gd_deleted[section]:
+#             logmessage("Considering " + f + " is deleted on Google Drive")
+#             if f in local_files[section]:
+#                 logmessage("Considering " + f + " is deleted on Google Drive but exists locally")
+#                 if local_modtimes[section][f] - gd_modtimes[section][f] > 3:
+#                     logmessage("Considering " + f + " is deleted on Google Drive but exists locally and needs to be undeleted on GD")
+#                     commentary += "Undeleted and updated " + f + " on Google Drive.  "
+#                     the_path = os.path.join(area.directory, f)
+#                     extension, mimetype = get_ext_and_mimetype(the_path)
+#                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+#                     logmessage("Setting GD modtime on undeleted file " + unicode(f) + " to " + unicode(the_modtime))
+#                     file_metadata = { 'modifiedTime': the_modtime, 'trashed': False }
+#                     media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
+#                     service.files().update(fileId=gd_ids[section][f],
+#                                            body=file_metadata,
+#                                            media_body=media).execute()
+#                 else:
+#                     logmessage("Considering " + f + " is deleted on Google Drive but exists locally and needs to deleted locally")
+#                     sections_modified.add(section)
+#                     commentary += "Deleted " + f + " from Playground.  "
+#                     the_path = os.path.join(area.directory, f)
+#                     if os.path.isfile(the_path):
+#                         area.delete_file(f)
+#         area.finalize()
+#     for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+#         r.incr(key)
+#     if commentary != '':
+#         flash(commentary, 'info')
+#         logmessage(commentary)
+#     next = request.args.get('next', url_for('playground_page'))
+#     if 'modules' in sections_modified:
+#         return redirect(url_for('restart_page', next=next))
+#     return redirect(next)
+#     #return render_template('pages/testgoogledrive.html', tab_title=word('Google Drive Test'), page_title=word('Google Drive Test'), commentary=commentary)
 
 @app.route('/google_drive', methods=['GET', 'POST'])
 @login_required
@@ -11617,7 +11665,7 @@ def google_drive_page():
             set_gd_folder(None)
             storage.locked_delete()
             flash(word("Google Drive is not linked."), 'success')
-        elif form.folder.data == -1:
+        elif form.folder.data == -1 or form.folder.data == '-1':
             file_metadata = {
                 'name' : 'docassemble',
                 'mimeType' : 'application/vnd.google-apps.folder'
@@ -12159,7 +12207,6 @@ def playground_files():
           $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '</div>');
         }
       }
-
       function scrollBottom(){
         $("html, body").animate({
           scrollTop: $("#editnav").offset().top - 53
@@ -15804,14 +15851,14 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         data = None
                         if interview_status.extras['required'][field.number]:
                             special_messages.append(word("You must attach a file."))
-            elif question.question_type == "yesno" or (hasattr(field, 'datatype') and (field.datatype in ('yesno', 'yesnowide') or (hasattr(field, 'datatype') and field.datatype == 'boolean' and (hasattr(field, 'sign') and field.sign > 0)))):
+            elif question.question_type == "yesno" or (hasattr(field, 'datatype') and (hasattr(field, 'datatype') and field.datatype == 'boolean' and (hasattr(field, 'sign') and field.sign > 0))):
                 if inp_lower in true_list:
                     data = 'True'
                 elif inp_lower in false_list:
                     data = 'False'
                 else:
                     data = None
-            elif question.question_type == "yesnomaybe" or (hasattr(field, 'datatype') and (field.datatype in ('yesnomaybe', 'yesnowidemaybe') or (field.datatype == 'threestate' and (hasattr(field, 'sign') and field.sign > 0)))):
+            elif question.question_type == "yesnomaybe" or (hasattr(field, 'datatype') and (field.datatype == 'threestate' and (hasattr(field, 'sign') and field.sign > 0))):
                 if inp_lower in true_list:
                     data = 'True'
                 elif inp_lower in false_list:
