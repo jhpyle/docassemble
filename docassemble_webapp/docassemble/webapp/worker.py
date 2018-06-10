@@ -242,6 +242,7 @@ def sync_with_google_drive(user_id):
                             service.files().update(fileId=gd_ids[section][f],
                                                    body=file_metadata,
                                                    media_body=media).execute()
+                            gd_modtimes[section][f] = local_modtimes[section][f]
                 for f in gd_deleted[section]:
                     sys.stderr.write("Considering " + unicode(f) + " is deleted on Google Drive\n")
                     if f in local_files[section]:
@@ -259,6 +260,7 @@ def sync_with_google_drive(user_id):
                             service.files().update(fileId=gd_ids[section][f],
                                                    body=file_metadata,
                                                    media_body=media).execute()
+                            gd_modtimes[section][f] = local_modtimes[section][f]
                         else:
                             sys.stderr.write("Considering " + unicode(f) + " is deleted on Google Drive but exists locally and needs to deleted locally\n")
                             sections_modified.add(section)
@@ -268,6 +270,8 @@ def sync_with_google_drive(user_id):
                                 area.delete_file(f)
                 area.finalize()
                 for f in os.listdir(area.directory):
+                    if f not in gd_files[section]:
+                        continue
                     local_files[section].add(f)
                     the_path = os.path.join(area.directory, f)
                     local_modtimes[section][f] = os.path.getmtime(the_path)
