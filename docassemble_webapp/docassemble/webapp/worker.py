@@ -236,7 +236,7 @@ def sync_with_google_drive(user_id):
                             commentary += "Updated " + unicode(f) + " on Google Drive.\n"
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
                             the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
-                            sys.stderr.write("Setting GD modtime on modified " + unicode(f) + " to " + unicode(the_modtime) + "\n")
+                            sys.stderr.write("Updating on Google Drive and setting GD modtime on modified " + unicode(f) + " to " + unicode(the_modtime) + "\n")
                             file_metadata = { 'modifiedTime': the_modtime }
                             media = worker_controller.apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
                             updated_file = service.files().update(fileId=gd_ids[section][f],
@@ -244,6 +244,8 @@ def sync_with_google_drive(user_id):
                                                                   media_body=media,
                                                                   fields='modifiedTime').execute()
                             gd_modtimes[section][f] = strict_rfc3339.rfc3339_to_timestamp(updated_file['modifiedTime'])
+                            sys.stderr.write("After update, timestamp on Google Drive is " + unicode(gd_modtimes[section][f]) + "\n")
+                            sys.stderr.write("After update, timestamp on local system is " + unicode(os.path.getmtime(the_path)) + "\n")
                 for f in gd_deleted[section]:
                     sys.stderr.write("Considering " + unicode(f) + " is deleted on Google Drive\n")
                     if f in local_files[section]:
