@@ -272,6 +272,9 @@ def sync_with_google_drive(user_id):
                             the_path = os.path.join(area.directory, f)
                             if os.path.isfile(the_path):
                                 area.delete_file(f)
+                for f in os.listdir(area.directory):
+                    the_path = os.path.join(area.directory, f)
+                    sys.stderr.write("Before finalizing, " + unicode(f) + " has a modtime of " + unicode(os.path.getmtime(the_path)) + "\n")
                 area.finalize()
                 for f in os.listdir(area.directory):
                     if f not in gd_files[section]:
@@ -279,6 +282,7 @@ def sync_with_google_drive(user_id):
                     local_files[section].add(f)
                     the_path = os.path.join(area.directory, f)
                     local_modtimes[section][f] = os.path.getmtime(the_path)
+                    sys.stderr.write("After finalizing, " + unicode(f) + " has a modtime of " + unicode(local_modtimes[section][f]) + "\n")
                     if abs(local_modtimes[section][f] - gd_modtimes[section][f]) > 3:
                         the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
                         sys.stderr.write("post-finalize: updating GD modtime on file " + unicode(f) + " to " + unicode(the_modtime) + "\n")
