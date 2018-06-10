@@ -1,11 +1,20 @@
 # Change Log
 
+## [0.2.68] - 2018-06-10
+### Fixed
+- Problems with Google Drive timestamps when cloud storage in use.
+- Invalid use of echo in Dockerfile.
+
 ## [0.2.67] - 2018-06-09
 ### Changed
 - When a non-text field is not required, and the user does not provide
   a value, the variable will be set to `None`.
 - Required field markers show differently in some contexts.
 - Additional log messages for Google Drive.
+### Added
+- New Debian dependencies `ttf-mscorefonts-installer`,
+  `fonts-ebgaramond-extra`, `ttf-liberation`, and `fonts-liberation`
+  in Docker.
 ### Fixed
 - Problems with Google Drive initial set-up.
 

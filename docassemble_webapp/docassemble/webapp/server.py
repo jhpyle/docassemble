@@ -4676,7 +4676,7 @@ def index():
         visible_field_names = json.loads(myb64unquote(post_data['_visible']))
     else:
         visible_field_names = list()
-    logmessage("Visible field names is " + repr(visible_field_names))
+    #logmessage("Visible field names is " + repr(visible_field_names))
     field_numbers = dict()
     numbered_fields = dict()
     for kv_key, kv_var in known_varnames.iteritems():
@@ -4694,13 +4694,13 @@ def index():
             visible_fields.add(known_varnames[field_name])
         else:
             visible_fields.add(field_name)
-    logmessage("Visible fields is " + repr(visible_fields))
-    logmessage("Numbered fields is " + repr(numbered_fields))
+    #logmessage("Visible fields is " + repr(visible_fields))
+    #logmessage("Numbered fields is " + repr(numbered_fields))
     if '_checkboxes' in post_data:
         checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
         for checkbox_field, checkbox_value in checkbox_fields.iteritems():
             if checkbox_field in visible_fields and checkbox_field not in post_data and not (checkbox_field in numbered_fields and numbered_fields[checkbox_field] in post_data):
-                logmessage("Checkbox: adding " + checkbox_field + " set to " + checkbox_value)
+                #logmessage("Checkbox: adding " + checkbox_field + " set to " + checkbox_value)
                 post_data.add(checkbox_field, checkbox_value)
     if '_empties' in post_data:
         empty_fields = json.loads(myb64unquote(post_data['_empties']))
@@ -12355,7 +12355,7 @@ def pull_playground_package():
         }
         $.get(""" + json.dumps(url_for('get_git_branches')) + """, { url: github_url }, "json")
         .done(function(data){
-          console.log(data);
+          //console.log(data);
           if (data.success){
             var n = data.result.length;
             if (n > 0){
