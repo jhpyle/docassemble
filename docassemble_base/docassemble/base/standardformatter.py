@@ -987,11 +987,13 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 continue
             if hasattr(field, 'label'):
                 if status.labels[field.number] == 'no label':
-                    fieldlist.append('                <div class="form-group row' + req_tag + '"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group row' + req_tag + '"><div class="col widecol">' + input_for(status, field, wide=True) + '</div></div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
-                    fieldlist.append('                <div class="form-group row yesnospacing"><div class="col-md-12">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group row yesnospacing"><div class="col widecol">' + input_for(status, field) + '</div></div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
                     fieldlist.append('                <div class="form-group row yesnospacing' + req_tag +'"><div class="offset-md-4 col-md-8">' + input_for(status, field) + '</div></div>\n')
+                elif status.labels[field.number] == '':
+                    fieldlist.append('                <div class="form-group row' + req_tag + '"><div class="offset-md-4 col-md-8 fieldpart nolabel">' + input_for(status, field) + '</div></div>\n')
                 else:
                     fieldlist.append('                <div class="form-group row' + req_tag + '"><label for="' + escape_id(label_saveas) + '" class="col-md-4 col-form-label datext-right">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-md-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
             if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras:

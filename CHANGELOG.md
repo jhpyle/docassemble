@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.2.67] - 2018-06-09
+### Changed
+- When a non-text field is not required, and the user does not provide
+  a value, the variable will be set to `None`.
+- Additional log messages for Google Drive.
+### Fixed
+- Problems with Google Drive initial set-up.
+
 ## [0.2.66] - 2018-06-07
 ### Changed
 - Code editing boxes are now sized relative to screen size.

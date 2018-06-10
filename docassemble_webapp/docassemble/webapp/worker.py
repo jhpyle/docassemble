@@ -177,7 +177,7 @@ def sync_with_google_drive(user_id):
                             continue
                         gd_ids[section][the_file['name']] = the_file['id']
                         gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])
-                        sys.stderr.write("Google says modtime on " + unicode(the_file) + " is " + the_file['modifiedTime'] + "\n")
+                        sys.stderr.write("Google says modtime on " + unicode(the_file['name']) + " is " + the_file['modifiedTime'] + ", which is " + unicode(gd_modtimes[section][the_file['name']]) + "\n")
                         if the_file['trashed']:
                             gd_deleted[section].add(the_file['name'])
                             continue
@@ -188,8 +188,10 @@ def sync_with_google_drive(user_id):
                 gd_deleted[section] = gd_deleted[section] - gd_files[section]
                 for f in gd_files[section]:
                     sys.stderr.write("Considering " + f + " on GD\n")
+                    if f in local_files[section]:
+                        sys.stderr.write("Local timestamp was " + unicode(local_modtimes[section][f]) + " while timestamp on Google Drive was " + gd_modtimes[section][f] + "\n")
                     if f not in local_files[section] or gd_modtimes[section][f] - local_modtimes[section][f] > 3:
-                        sys.stderr.write("Considering " + f + " to copy to local\n")
+                        sys.stderr.write("Going to copy " + f + " from Google Drive to local\n")
                         sections_modified.add(section)
                         commentary += "Copied " + f + " from Google Drive.\n"
                         the_path = os.path.join(area.directory, f)
@@ -203,6 +205,8 @@ def sync_with_google_drive(user_id):
                         os.utime(the_path, (gd_modtimes[section][f], gd_modtimes[section][f]))
                 for f in local_files[section]:
                     sys.stderr.write("Considering " + f + ", which is a local file\n")
+                    if f in gd_files[section]:
+                        sys.stderr.write("Local timestamp was " + unicode(local_modtimes[section][f]) + " while timestamp on Google Drive was " + gd_modtimes[section][f] + "\n")
                     if f not in gd_deleted[section]:
                         sys.stderr.write("Considering " + f + " is not in Google Drive deleted\n")
                         if f not in gd_files[section]:
@@ -241,6 +245,7 @@ def sync_with_google_drive(user_id):
                     sys.stderr.write("Considering " + f + " is deleted on Google Drive\n")
                     if f in local_files[section]:
                         sys.stderr.write("Considering " + f + " is deleted on Google Drive but exists locally\n")
+                        sys.stderr.write("Local timestamp was " + unicode(local_modtimes[section][f]) + " while timestamp on Google Drive was " + gd_modtimes[section][f] + "\n")
                         if local_modtimes[section][f] - gd_modtimes[section][f] > 3:
                             sys.stderr.write("Considering " + f + " is deleted on Google Drive but exists locally and needs to be undeleted on GD\n")
                             commentary += "Undeleted and updated " + f + " on Google Drive.\n"

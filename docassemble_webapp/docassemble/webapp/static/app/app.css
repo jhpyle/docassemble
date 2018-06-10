@@ -194,6 +194,22 @@ a.sourceactive {
     background-image: linear-gradient(to bottom, #080808 0px, #0F0F0F 100%);
 }
 
+.form-group.required .widecol:before {
+    position: absolute;
+    content: '*';
+    color: red;
+    top: 0rem;
+    left: 0.2rem;
+}
+
+.form-group.required .nolabel:before {
+    position: absolute;
+    content: '*';
+    color: red;
+    top: 0rem;
+    left: 0.2rem;
+}
+
 .form-group.required .col-form-label:after {
     position: absolute;
     content: '*';

@@ -5909,3 +5909,20 @@ Feature: Example interviews
 
   # Scenario: Test the interview "Google Chart"
   #   Given I start the interview "docassemble.base:data/questions/examples/googlechart.yml"
+
+  Scenario: Test the interview "Non-required radio buttons" leaving field blank
+    Given I start the interview "docassemble.base:data/questions/examples/non-required-radio.yml"
+    Then I should see the phrase "Please provide the following information."
+    And I click the "Yes" option under "Do you like apricots?"
+    And I click the button "Continue"
+    Then I should see the phrase "likes_apricots is True"
+    Then I should see the phrase "fruit_favorites is None"
+
+  Scenario: Test the interview "Non-required radio buttons" filling out field
+    Given I start the interview "docassemble.base:data/questions/examples/non-required-radio.yml"
+    Then I should see the phrase "Please provide the following information."
+    And I click the "Yes" option under "Do you like apricots?"
+    And I click the "Apples" option under "Which of these do you like best?"
+    And I click the button "Continue"
+    Then I should see the phrase "likes_apricots is True."
+    Then I should see the phrase "fruit_favorites is Apples."
