@@ -15915,9 +15915,12 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                     continue
                                 user_dict['_internal']['command_cache'][field.number].append(choice[1] + ' = False')
                         elif (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')) or hasattr(field, 'choicetype'):
-                            logmessage("do_sms: setting skip_it to True")
-                            skip_it = True
-                            data = repr('')
+                            if user_entered_skip:
+                                data = repr(None)
+                            else:
+                                logmessage("do_sms: setting skip_it to True")
+                                skip_it = True
+                                data = repr('')
                         elif field.datatype == 'integer':
                             data = '0'
                         elif field.datatype in ('number', 'float', 'currency', 'range'):

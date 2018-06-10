@@ -4,6 +4,7 @@
 ### Changed
 - When a non-text field is not required, and the user does not provide
   a value, the variable will be set to `None`.
+- Required field markers show differently in some contexts.
 - Additional log messages for Google Drive.
 ### Fixed
 - Problems with Google Drive initial set-up.
