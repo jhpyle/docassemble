@@ -355,10 +355,19 @@ stored.  For a full explanation of how this is used, see the
 ### <a name="required"></a>`required`
 
 `required` affects whether the field will be optional or required.  If
-a field is required, it will be marked with a red asterisk.  The value
-of `required` can be `True` or `False`.  By default, all fields are
-required, so you never need to write `required: True` unless you want
-to.
+a field is required, it will be marked with a red asterisk, and input
+validation will be enforced to make sure the user provides a value.
+
+If the user skips a non-required field, the variable will be blank for
+text-based fields and `None` for multiple-choice and yes/no fields.
+
+Some `datatype`s are never marked with a red asterisk.  For example,
+[`range`](#range) and [`yesno`](#fields yesno) fields are set to real
+values by default, so the user cannot actuall skip the question.
+
+The value of `required` can be `True` or `False`.  By default, all
+fields are required, so you never need to write `required: True`
+unless you want to.
 
 {% include side-by-side.html demo="optional-field" %}
 

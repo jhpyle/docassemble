@@ -6068,6 +6068,35 @@
     % else:
     I am sorry you aren't feeling 100%.
     % endif
+"non-required-radio": |-
+  question: |
+    Please provide the following information.
+  fields:
+    - no label: likes_pears
+      datatype: yesnoradio
+    - no label: why_pears
+      hint: |
+        Please explain your reasoning.
+    - "": motto
+      hint: |
+        Please provide a motto.
+    - "": personal_statement
+      datatype: area
+      hint: |
+        Please provide a personal statement.
+    - "I am a fruit expert": is_fruit_expert
+      datatype: yesnowide
+    - "I am a vegetable expert": is_vegetable_expert
+      datatype: yesno
+    - "Do you like apricots?": likes_apricots
+      datatype: yesnoradio
+    - "Which of these do you like best?": fruit_favorite
+      datatype: radio
+      required: false
+      choices:
+        - Apples
+        - Oranges
+        - Peaches
 "normalize": |-
   objects:
     - the_address: Address
