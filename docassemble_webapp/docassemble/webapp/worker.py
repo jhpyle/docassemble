@@ -177,7 +177,7 @@ def sync_with_google_drive(user_id):
                             continue
                         gd_ids[section][the_file['name']] = the_file['id']
                         gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])
-                        sys.stderr.write("Google says modtime on " + unicode(the_file['name']) + " is " + the_file['modifiedTime'] + ", which is " + unicode(gd_modtimes[section][the_file['name']]) + "\n")
+                        sys.stderr.write("Google says modtime on " + unicode(the_file['name']) + " is " + unicode(the_file['modifiedTime']) + ", which is " + unicode(gd_modtimes[section][the_file['name']]) + "\n")
                         if the_file['trashed']:
                             gd_deleted[section].add(the_file['name'])
                             continue
@@ -187,13 +187,13 @@ def sync_with_google_drive(user_id):
                         break
                 gd_deleted[section] = gd_deleted[section] - gd_files[section]
                 for f in gd_files[section]:
-                    sys.stderr.write("Considering " + f + " on GD\n")
+                    sys.stderr.write("Considering " + unicode(f) + " on GD\n")
                     if f in local_files[section]:
-                        sys.stderr.write("Local timestamp was " + unicode(local_modtimes[section][f]) + " while timestamp on Google Drive was " + gd_modtimes[section][f] + "\n")
+                        sys.stderr.write("Local timestamp was " + unicode(local_modtimes[section][f]) + " while timestamp on Google Drive was " + unicode(gd_modtimes[section][f]) + "\n")
                     if f not in local_files[section] or gd_modtimes[section][f] - local_modtimes[section][f] > 3:
-                        sys.stderr.write("Going to copy " + f + " from Google Drive to local\n")
+                        sys.stderr.write("Going to copy " + unicode(f) + " from Google Drive to local\n")
                         sections_modified.add(section)
-                        commentary += "Copied " + f + " from Google Drive.\n"
+                        commentary += "Copied " + unicode(f) + " from Google Drive.\n"
                         the_path = os.path.join(area.directory, f)
                         with open(the_path, 'wb') as fh:
                             response = service.files().get_media(fileId=gd_ids[section][f])
@@ -204,19 +204,19 @@ def sync_with_google_drive(user_id):
                                 #sys.stderr.write("Download %d%%." % int(status.progress() * 100) + "\n")
                         os.utime(the_path, (gd_modtimes[section][f], gd_modtimes[section][f]))
                 for f in local_files[section]:
-                    sys.stderr.write("Considering " + f + ", which is a local file\n")
+                    sys.stderr.write("Considering " + unicode(f) + ", which is a local file\n")
                     if f in gd_files[section]:
-                        sys.stderr.write("Local timestamp was " + unicode(local_modtimes[section][f]) + " while timestamp on Google Drive was " + gd_modtimes[section][f] + "\n")
+                        sys.stderr.write("Local timestamp was " + unicode(local_modtimes[section][f]) + " while timestamp on Google Drive was " + unicode(gd_modtimes[section][f]) + "\n")
                     if f not in gd_deleted[section]:
-                        sys.stderr.write("Considering " + f + " is not in Google Drive deleted\n")
+                        sys.stderr.write("Considering " + unicode(f) + " is not in Google Drive deleted\n")
                         if f not in gd_files[section]:
-                            sys.stderr.write("Considering " + f + " is not in Google Drive\n")
+                            sys.stderr.write("Considering " + unicode(f) + " is not in Google Drive\n")
                             the_path = os.path.join(area.directory, f)
                             if os.path.getsize(the_path) == 0:
-                                sys.stderr.write("Found zero byte file: " + the_path + "\n")
+                                sys.stderr.write("Found zero byte file: " + unicode(the_path) + "\n")
                                 continue
-                            sys.stderr.write("Copying " + f + " to Google Drive.\n")
-                            commentary += "Copied " + f + " to Google Drive.\n"
+                            sys.stderr.write("Copying " + unicode(f) + " to Google Drive.\n")
+                            commentary += "Copied " + unicode(f) + " to Google Drive.\n"
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
                             the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
                             sys.stderr.write("Setting GD modtime on new file " + unicode(f) + " to " + unicode(the_modtime) + "\n")
@@ -227,12 +227,12 @@ def sync_with_google_drive(user_id):
                                                                   fields='id').execute()
                             new_id = the_new_file.get('id')
                         elif local_modtimes[section][f] - gd_modtimes[section][f] > 3:
-                            sys.stderr.write("Considering " + f + " is in Google Drive but local is more recent\n")
+                            sys.stderr.write("Considering " + unicode(f) + " is in Google Drive but local is more recent\n")
                             the_path = os.path.join(area.directory, f)
                             if os.path.getsize(the_path) == 0:
-                                sys.stderr.write("Found zero byte file during update: " + the_path + "\n")
+                                sys.stderr.write("Found zero byte file during update: " + unicode(the_path) + "\n")
                                 continue
-                            commentary += "Updated " + f + " on Google Drive.\n"
+                            commentary += "Updated " + unicode(f) + " on Google Drive.\n"
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
                             the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
                             sys.stderr.write("Setting GD modtime on modified " + unicode(f) + " to " + unicode(the_modtime) + "\n")
@@ -242,13 +242,13 @@ def sync_with_google_drive(user_id):
                                                    body=file_metadata,
                                                    media_body=media).execute()
                 for f in gd_deleted[section]:
-                    sys.stderr.write("Considering " + f + " is deleted on Google Drive\n")
+                    sys.stderr.write("Considering " + unicode(f) + " is deleted on Google Drive\n")
                     if f in local_files[section]:
-                        sys.stderr.write("Considering " + f + " is deleted on Google Drive but exists locally\n")
-                        sys.stderr.write("Local timestamp was " + unicode(local_modtimes[section][f]) + " while timestamp on Google Drive was " + gd_modtimes[section][f] + "\n")
+                        sys.stderr.write("Considering " + unicode(f) + " is deleted on Google Drive but exists locally\n")
+                        sys.stderr.write("Local timestamp was " + unicode(local_modtimes[section][f]) + " while timestamp on Google Drive was " + unicode(gd_modtimes[section][f]) + "\n")
                         if local_modtimes[section][f] - gd_modtimes[section][f] > 3:
-                            sys.stderr.write("Considering " + f + " is deleted on Google Drive but exists locally and needs to be undeleted on GD\n")
-                            commentary += "Undeleted and updated " + f + " on Google Drive.\n"
+                            sys.stderr.write("Considering " + unicode(f) + " is deleted on Google Drive but exists locally and needs to be undeleted on GD\n")
+                            commentary += "Undeleted and updated " + unicode(f) + " on Google Drive.\n"
                             the_path = os.path.join(area.directory, f)
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
                             the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
@@ -259,9 +259,9 @@ def sync_with_google_drive(user_id):
                                                    body=file_metadata,
                                                    media_body=media).execute()
                         else:
-                            sys.stderr.write("Considering " + f + " is deleted on Google Drive but exists locally and needs to deleted locally\n")
+                            sys.stderr.write("Considering " + unicode(f) + " is deleted on Google Drive but exists locally and needs to deleted locally\n")
                             sections_modified.add(section)
-                            commentary += "Deleted " + f + " from Playground.\n"
+                            commentary += "Deleted " + unicode(f) + " from Playground.\n"
                             the_path = os.path.join(area.directory, f)
                             if os.path.isfile(the_path):
                                 area.delete_file(f)
