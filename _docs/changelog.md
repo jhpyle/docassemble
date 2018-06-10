@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.68](https://github.com/jhpyle/docassemble/releases/tag/v0.2.68) - 2018-06-10
+
+### Fixed
+- Problems with Google Drive timestamps when cloud storage in use.
+- Invalid use of echo in Dockerfile.
+
 ## [0.2.67](https://github.com/jhpyle/docassemble/releases/tag/v0.2.67) - 2018-06-09
 
 ### Changed
@@ -11,6 +17,11 @@ short_title: Change Log
   a value, the variable will be set to `None`.
 - Required field markers show differently in some contexts.
 - Additional log messages for Google Drive.
+
+### Added
+- New Debian dependencies `ttf-mscorefonts-installer`,
+  `fonts-ebgaramond-extra`, `ttf-liberation`, and `fonts-liberation`
+  in Docker.
 
 ### Fixed
 - Problems with Google Drive initial set-up.
