@@ -199,7 +199,8 @@ class SavedFile(object):
             if key is None or not key.does_exist:
                 raise DAError("get_modtime: file " + filename + " in " + self.section + " did not exist")
             #logmessage("Modtime for key " + key_name + " is now " + str(key.last_modified))
-            return key.last_modified
+            #return key.last_modified
+            return key.get_epoch_modtime()
         else:
             the_path = os.path.join(self.directory, filename)
             if not os.path.isfile(the_path):

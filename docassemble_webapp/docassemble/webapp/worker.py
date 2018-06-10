@@ -150,6 +150,7 @@ def sync_with_google_drive(user_id):
                 for f in os.listdir(area.directory):
                     local_files[section].add(f)
                     local_modtimes[section][f] = os.path.getmtime(os.path.join(area.directory, f))
+                    #local_modtimes[section][f] = area.get_modtime(filename=f)
                 subdirs = list()
                 page_token = None
                 while True:
@@ -266,6 +267,19 @@ def sync_with_google_drive(user_id):
                             if os.path.isfile(the_path):
                                 area.delete_file(f)
                 area.finalize()
+                for f in os.listdir(area.directory):
+                    local_files[section].add(f)
+                    the_path = os.path.join(area.directory, f)
+                    local_modtimes[section][f] = os.path.getmtime(the_path)
+                    if local_modtimes[section][f] != gd_modtimes[section][f]:
+                        the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                        sys.stderr.write("Updating GD modtime on file " + unicode(f) + " to " + unicode(the_modtime) + "\n")
+                        file_metadata = { 'modifiedTime': the_modtime }
+                        updated_file = service.files().patch(fileId=gd_ids[section][f],
+                                                             body=file_metadata,
+                                                             setModifiedDate=True,
+                                                             fields='modifiedTime').execute()
+                        gd_modtimes[section][f] = strict_rfc3339.rfc3339_to_timestamp(updated_file['modifiedTime'])
             for key in worker_controller.r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
                 worker_controller.r.incr(key)
             if commentary != '':
