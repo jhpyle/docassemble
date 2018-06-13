@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.69](https://github.com/jhpyle/docassemble/releases/tag/v0.2.69) - 2018-06-12
+
+### Fixed
+- Section headers with hyperlinks.
+- Google Drive with a large number of files.
+
 ## [0.2.68](https://github.com/jhpyle/docassemble/releases/tag/v0.2.68) - 2018-06-10
 
 ### Fixed
