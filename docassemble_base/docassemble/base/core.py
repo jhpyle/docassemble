@@ -10,7 +10,7 @@ import inspect
 import yaml
 import pycurl
 import mimetypes
-from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article, force_gather
+from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article, force_gather, quantity_noun
 import docassemble.base.functions
 import docassemble.base.file_docx
 from docassemble.webapp.files import SavedFile
@@ -260,6 +260,7 @@ class DAObject(object):
         return
     def _mark_as_gathered_recursively(self):
         self.gathered = True
+        self.revisit = True
         for aname in self.__dict__:
             if hasattr(self, aname) and isinstance(getattr(self, aname), DAObject):
                 getattr(self, aname)._mark_as_gathered_recursively()
@@ -397,6 +398,7 @@ class DAList(DAObject):
             for element in kwargs['elements']:
                 self.append(element)
             self.gathered = True
+            self.revisit = True
             del kwargs['elements']
         if 'object_type' in kwargs:
             if isinstance(kwargs['object_type'], DAObjectPlusParameters):
@@ -435,6 +437,8 @@ class DAList(DAObject):
             delattr(self, 'there_is_another')
         if hasattr(self, 'gathered'):
             delattr(self, 'gathered')
+        if hasattr(self, 'revisit'):
+            delattr(self, 'revisit')
         if hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
         if recursive:
@@ -528,21 +532,31 @@ class DAList(DAObject):
             new_obj_parameters[key] = val
         newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']', *pargs, **new_obj_parameters)
         self.elements.append(newobject)
+        if hasattr(self, 'there_are_any'):
+            self.there_are_any = True
         return newobject
     def append(self, *pargs):
         """Adds the arguments to the end of the list."""
+        something_added = False
         for parg in pargs:
             if isinstance(parg, DAObject) and not parg.has_nonrandom_instance_name:
                 parg.fix_instance_name(parg.instanceName, self.instanceName + '[' + str(len(self.elements)) + ']')
                 #parg.has_nonrandom_instance_name = True
                 #parg.instanceName = self.instanceName + '[' + str(len(self.elements)) + ']'
             self.elements.append(parg)
+            something_added = True
+        if something_added and len(self.elements) > 0 and hasattr(self, 'there_are_any'):
+            self.there_are_any = True
     def remove(self, *pargs):
         """Removes the given arguments from the list, if they are in the list"""
+        something_removed = False
         for value in pargs:
             if value in self.elements:
                 self.elements.remove(value)
+                something_removed = True
         self._reset_instance_names()
+        if something_removed and len(self.elements) == 0 and hasattr(self, 'there_are_any'):
+            self.there_are_any = False
     def extend(self, the_list):
         """Adds each of the elements of the given list to the end of the list."""
         self.elements.extend(the_list)
@@ -598,6 +612,9 @@ class DAList(DAObject):
         """
         language = kwargs.get('language', None)
         return possessify(self.as_noun(**kwargs), target, plural=(self.number() > 1), language=language)
+    def quantity_noun(self, *pargs, **kwargs):
+        the_args = [self.number()] + list(pargs)
+        return quantity_noun(*the_args, **kwargs)
     def as_noun(self, *pargs, **kwargs):
         """Returns a human-readable expression of the object based on its instanceName,
         using singular or plural depending on whether the list has one element or more
@@ -765,6 +782,7 @@ class DAList(DAObject):
             del self._necessary_length
         if self.auto_gather:
             self.gathered = True
+            self.revisit = True
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
         return True
     def comma_and_list(self, **kwargs):
@@ -915,6 +933,16 @@ class DAList(DAObject):
             return(capitalize(output))
         else:
             return(output)
+    def item_actions(self, *pargs):
+        """Returns HTML for editing the items in a list"""
+        the_args = list(pargs)
+        item = the_args.pop(0)
+        return '<a class="btn btn-sm btn-secondary" href="' + docassemble.base.functions.url_action('_da_list_edit', list=self.instanceName, items=[item.instanceName + '.' + y for y in the_args]) + '"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> <a class="btn btn-sm btn-danger" href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=item.instanceName) + '"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+    def add_action(self, message=None):
+        """Returns HTML for adding an item to a list"""
+        if message is None:
+            message = word("Add another")
+        return '<a class="btn btn-sm btn-success" href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '"><i class="fas fa-plus-circle"></i> ' + unicode(message) + '</a>'
 
 class DADict(DAObject):
     """A base class for objects that behave like Python dictionaries."""
@@ -926,6 +954,7 @@ class DADict(DAObject):
         if 'elements' in kwargs:
             self.elements.update(kwargs['elements'])
             self.gathered = True
+            self.revisit = True
             del kwargs['elements']
         if 'object_type' in kwargs:
             if isinstance(kwargs['object_type'], DAObjectPlusParameters):
@@ -1118,6 +1147,8 @@ class DADict(DAObject):
             delattr(self, 'there_is_another')
         if hasattr(self, 'gathered'):
             delattr(self, 'gathered')
+        if hasattr(self, 'revisit'):
+            delattr(self, 'revisit')
         if hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
         if recursive:
@@ -1162,6 +1193,9 @@ class DADict(DAObject):
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun        
+    def quantity_noun(self, *pargs, **kwargs):
+        the_args = [self.number()] + list(pargs)
+        return quantity_noun(*the_args, **kwargs)
     def as_noun(self, *pargs, **kwargs):
         """Returns a human-readable expression of the object based on its
         instanceName, using singular or plural depending on whether
@@ -1332,6 +1366,7 @@ class DADict(DAObject):
         self._validate(item_object_type, complete_attribute, keys=keys)
         if self.auto_gather:
             self.gathered = True
+            self.revisit = True
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
         return True
     def _new_item_init_callback(self):
@@ -1530,6 +1565,7 @@ class DASet(DAObject):
         if 'elements' in kwargs:
             self.add(kwargs['elements'])
             self.gathered = True
+            self.revisit = True
             del kwargs['elements']
         return super(DASet, self).init(*pargs, **kwargs)
     def _trigger_gather(self):
@@ -1621,6 +1657,9 @@ class DASet(DAObject):
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun        
+    def quantity_noun(self, *pargs, **kwargs):
+        the_args = [self.number()] + list(pargs)
+        return quantity_noun(*the_args, **kwargs)
     def as_noun(self, *pargs, **kwargs):
         """Returns a human-readable expression of the object based on its
         instanceName, using singular or plural depending on whether
@@ -1706,6 +1745,7 @@ class DASet(DAObject):
                 del self.there_is_another
         if self.auto_gather:
             self.gathered = True
+            self.revisit = True
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
         return True
     def comma_and_list(self, **kwargs):
@@ -2407,6 +2447,7 @@ def objects_from_file(file_ref, recursive=True, gathered=True, name=None):
     else:
         objects = DAList(thename)
     objects.gathered = True
+    objects.revisit = True
     is_singular = True
     with open(file_info['fullpath'], 'rU') as fp:
         for document in yaml.load_all(fp):

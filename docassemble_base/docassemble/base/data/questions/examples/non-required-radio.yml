@@ -6,22 +6,6 @@ metadata:
 question: |
   Please provide the following information.
 fields:
-  - no label: likes_pears
-    datatype: yesnoradio
-  - no label: why_pears
-    hint: |
-      Please explain your reasoning.
-  - "": motto
-    hint: |
-      Please provide a motto.
-  - "": personal_statement
-    datatype: area
-    hint: |
-      Please provide a personal statement.
-  - "I am a fruit expert": is_fruit_expert
-    datatype: yesnowide
-  - "I am a vegetable expert": is_vegetable_expert
-    datatype: yesno
   - "Do you like apricots?": likes_apricots
     datatype: yesnoradio
   - "Which of these do you like best?": fruit_favorite

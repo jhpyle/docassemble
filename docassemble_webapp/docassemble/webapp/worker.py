@@ -154,7 +154,10 @@ def sync_with_google_drive(user_id):
                 subdirs = list()
                 page_token = None
                 while True:
-                    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + section + "' and '" + str(the_folder) + "' in parents").execute()
+                    param = dict(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + section + "' and '" + str(the_folder) + "' in parents")
+                    if page_token is not None:
+                        param['pageToken'] = page_token
+                    response = service.files().list(**param).execute()
                     for the_file in response.get('files', []):
                         if 'id' in the_file:
                             subdirs.append(the_file['id'])
@@ -170,11 +173,14 @@ def sync_with_google_drive(user_id):
                 gd_deleted[section] = set()
                 page_token = None
                 while True:
-                    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name, modifiedTime, trashed)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(subdir) + "' in parents").execute()
+                    param = dict(spaces="drive", fields="nextPageToken, files(id, name, modifiedTime, trashed)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(subdir) + "' in parents")
+                    if page_token is not None:
+                        param['pageToken'] = page_token
+                    response = service.files().list(**param).execute()
                     for the_file in response.get('files', []):
-                        if re.search(r'(\.tmp|\.gdoc)$', the_file['name']):
+                        if re.search(r'(\.tmp|\.gdoc|\#)$', the_file['name']):
                             continue
-                        if re.search(r'^\~', the_file['name']):
+                        if re.search(r'^(\~|\.)', the_file['name']):
                             continue
                         gd_ids[section][the_file['name']] = the_file['id']
                         gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])

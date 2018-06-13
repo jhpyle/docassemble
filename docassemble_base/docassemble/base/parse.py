@@ -103,7 +103,7 @@ def textify(data, user_dict):
 #     save_numbered_file = func
 #     return
 
-initial_dict = dict(_internal=dict(progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict(), nav=docassemble.base.functions.DANav())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
 
 def set_initial_dict(the_dict):
     global initial_dict
@@ -4018,6 +4018,11 @@ class Interview:
                     docassemble.base.functions.close_files()
                     raise DAError("There appears to be a circularity.  Variables involved: " + ", ".join(variables_sought) + ".")
                 docassemble.base.functions.reset_gathering_mode()
+                if 'action' in interview_status.current_info:
+                    if interview_status.current_info['action'] in ('_da_list_remove', '_da_list_edit', '_da_list_add'):
+                        for the_key in ('list', 'item', 'items'):
+                            if the_key in interview_status.current_info['arguments']:
+                                interview_status.current_info['action_' + the_key] = eval(interview_status.current_info['arguments'][the_key], user_dict)
                 try:
                     if (self.imports_util or self.uses_action or 'action' in interview_status.current_info) and not self.calls_process_action:
                         if self.imports_util:

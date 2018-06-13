@@ -1820,7 +1820,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         else:
             the_key = None
             the_title = unicode(x)
-        if (the_key is not None and the_section == the_key) or (the_key is None and the_section == the_title):
+        if (the_key is not None and the_section == the_key) or the_section == the_title:
             #output += '<li role="presentation" class="' + li_class + ' active">'
             section_reached = True
             currently_active = True
@@ -1865,7 +1865,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                 else:
                     sub_key = None
                     sub_title = unicode(y)
-                if (sub_key is not None and the_section == sub_key) or (sub_key is None and the_section == sub_title):
+                if (sub_key is not None and the_section == sub_key) or the_section == sub_title:
                     #suboutput += '<li class="' + li_class + ' active" role="presentation">'
                     section_reached = True
                     current_is_within = True
@@ -3010,6 +3010,7 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         secret = None
         clientip = None
         method = None
+        unique_id = '0'
     else:
         url = req.base_url
         url_root = req.url_root
@@ -3018,9 +3019,10 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
             headers[key] = value
         clientip = req.remote_addr
         method = req.method
+        unique_id = str(request.cookies.get('session'))[5:15]
     if secret is not None:
         secret = str(secret)
-    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': session.get('encrypted', True), 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}, 'headers': headers, 'clientip': clientip, 'method': method}
+    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': session.get('encrypted', True), 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'session_uid': unique_id}, 'headers': headers, 'clientip': clientip, 'method': method}
     if action is not None:
         return_val.update(action)
         # return_val['orig_action'] = action['action']
@@ -4061,7 +4063,7 @@ def checkin():
             if form_parameters is not None:
                 form_parameters = json.loads(form_parameters)
                 for param in form_parameters:
-                    if param['name'] in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or param['name'].startswith('_ignore'):
+                    if param['name'] in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or param['name'].startswith('_ignore'):
                         continue
                     try:
                         parameters[from_safeid(param['name'])] = param['value']
@@ -4904,7 +4906,7 @@ def index():
         the_question = None
     #known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
             continue
         try:
             key = myb64unquote(orig_key)
@@ -4946,7 +4948,7 @@ def index():
     #blank_fields = set(known_datatypes.keys())
     #logmessage("blank_fields is " + repr(blank_fields))
     for orig_key in post_data:
-        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
             continue
         data = post_data[orig_key]
         #logmessage("The data type is " + unicode(type(data)))
@@ -5633,6 +5635,11 @@ def index():
                     user_dict['_internal']['informed'][the_user_id][key] = 1
             if changed and '_question_name' in post_data and post_data['_question_name'] not in user_dict['_internal']['answers']:
                 user_dict['_internal']['answered'].add(post_data['_question_name'])
+            if '_event' in post_data and 'event_stack' in user_dict['_internal']:
+                events_list = json.loads(myb64unquote(post_data['_event']))
+                for event_name in events_list:
+                    if event_name in user_dict['_internal']['event_stack']:
+                        user_dict['_internal']['event_stack'].remove(event_name)
         else:
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     else:
@@ -7323,13 +7330,13 @@ def index():
           daSubmitter = this;
           return true;
         });
-        $(".danavdiv a.clickable").click(function(e){
+        $(".danav a.clickable").click(function(e){
           var the_key = $(this).data('key');
           url_action_perform(the_key, {});
           e.preventDefault();
           return false;
         });
-        $(".danavdiv ul li ul").each(function(){
+        $(".danav ul li ul").each(function(){
           var the_ul = $(this);
           var the_li = $(this).parent();
           var the_a = $(the_li).children('a').first();

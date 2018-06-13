@@ -708,6 +708,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
+        fieldlist.append('                <input type="hidden" name="_event" value=' + myb64doublequote(json.dumps(list(status.question.fields_used))) + ' />\n')
         if (len(fieldlist)):
             output += "".join(fieldlist)
         if status.continueLabel:

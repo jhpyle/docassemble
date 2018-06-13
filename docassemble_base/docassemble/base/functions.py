@@ -2332,11 +2332,29 @@ def process_action():
                 this_thread.internal['gather'].remove(variable_name)
             else:
                 force_ask_nameerror(variable_name)
+        if 'event_stack' in this_thread.internal:
+            for event_info in this_thread.internal['event_stack']:
+                if type(event_info) in (str, unicode):
+                    force_ask_nameerror(event_info)
         return
     #sys.stderr.write("process_action() continuing")
     the_action = this_thread.current_info['action']
     del this_thread.current_info['action']
-    if the_action == 'need':
+    if the_action == '_da_list_remove':
+        if 'action_item' in interview_status.current_info and 'action_list' in interview_status.current_info:
+            try:
+                interview_status.current_info['action_list'].remove(interview_status.current_info['action_item'])
+            except Exception as err:
+                logmessage("_da_list_remove:" + unicode(err))
+    elif the_action == '_da_list_edit' and 'action_items' in interview_status.current_info:
+        docassemble.base.functions.force_ask(*interview_status.current_info['action_items'])
+    elif the_action == '_da_list_add' and 'action_list' in interview_status.current_info:
+        the_list = interview_status.current_info['action_list']
+        the_list.appendObject()
+        the_list.reset_gathered()
+        the_list.there_is_another = False
+        the_list._validate(the_list.object_type, the_list.complete_attribute)
+    elif the_action == 'need':
         for key in ['variable', 'variables']:
             if key in this_thread.current_info['arguments']:
                 if type(this_thread.current_info['arguments'][key]) is list:
