@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.70](https://github.com/jhpyle/docassemble/releases/tag/v0.2.70) - 2018-06-14
+
+### Changed
+- Calls to `force_ask()` and calls actions now result in more
+  persistent variable seeking.
+- Improved editing of lists.
+
+### Fixed
+- Using `show if` with `datatype: file`.
+- Using `show if` with a value of `0`.
+
 ## [0.2.69](https://github.com/jhpyle/docassemble/releases/tag/v0.2.69) - 2018-06-12
 
 ### Fixed

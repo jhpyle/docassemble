@@ -2473,15 +2473,20 @@
 "dual-dict": |-
   objects:
     fruit: DADict
-"edit-list": "objects:\n  - person: DAList\n---\nmandatory: True\ncode: |\n  person.object_type\
-  \ = Individual\n  person.there_are_any = True\n  person.complete_attribute = 'complete'\n\
-  ---\ncode: |\n  person[i].name.first\n  person[i].favorite_fruit\n  person[i].complete\
-  \ = True\n---\nquestion: |\n  Who is the ${ ordinal(i) } person?\nfields:\n  - First\
-  \ Name: person[i].name.first\n  - Last Name: person[i].name.last\n---\nquestion:\
-  \ |\n  What is ${ person[i].possessive('favorite fruit') }?\nfields:\n  - Fruit:\
-  \ person[i].favorite_fruit\n---\nquestion: |\n  Are there any more people\n  you\
-  \ would like to mention?\nyesno: person.there_is_another\n---\nquestion: |\n  Who\
-  \ is your favorite person?\nfields:\n  - Favorite: favorite\n    code: person\n\
+"edit-list": "mandatory: True\nquestion: |\n  All done\nsubquestion: |\n  The people\
+  \ are ${ person }.\n\n  Your favorite is ${ favorite }.\n  \n  ${ person.table }\n\
+  \  \n  ${ person.add_action() }\n---\ntable: person.table\nrows: person\ncolumns:\n\
+  \  - Name: |\n      row_item.name.full()\n  - Fruit: |\n      row_item.favorite_fruit\n\
+  edit:\n  - name.first\n  - favorite_fruit"
+"edit-list-manual": "objects:\n  - person: DAList\n---\nmandatory: True\ncode: |\n\
+  \  person.object_type = Individual\n  person.there_are_any = True\n  person.complete_attribute\
+  \ = 'complete'\n---\ncode: |\n  person[i].name.first\n  person[i].favorite_fruit\n\
+  \  person[i].complete = True\n---\nquestion: |\n  Who is the ${ ordinal(i) } person?\n\
+  fields:\n  - First Name: person[i].name.first\n  - Last Name: person[i].name.last\n\
+  ---\nquestion: |\n  What is ${ person[i].possessive('favorite fruit') }?\nfields:\n\
+  \  - Fruit: person[i].favorite_fruit\n---\nquestion: |\n  Are there any more people\n\
+  \  you would like to mention?\nyesno: person.there_is_another\n---\nquestion: |\n\
+  \  Who is your favorite person?\nfields:\n  - Favorite: favorite\n    code: person\n\
   ---\nmandatory: True\nquestion: |\n  All done\nsubquestion: |\n  The people are\
   \ ${ person }.\n\n  Your favorite is ${ favorite }.\n  \n  ${ people_table }\n \
   \ \n  [<i class=\"fas fa-plus-circle\"></i> Add another person](${ url_action('person_add')\
@@ -6072,22 +6077,6 @@
   question: |
     Please provide the following information.
   fields:
-    - no label: likes_pears
-      datatype: yesnoradio
-    - no label: why_pears
-      hint: |
-        Please explain your reasoning.
-    - "": motto
-      hint: |
-        Please provide a motto.
-    - "": personal_statement
-      datatype: area
-      hint: |
-        Please provide a personal statement.
-    - "I am a fruit expert": is_fruit_expert
-      datatype: yesnowide
-    - "I am a vegetable expert": is_vegetable_expert
-      datatype: yesno
     - "Do you like apricots?": likes_apricots
       datatype: yesnoradio
     - "Which of these do you like best?": fruit_favorite
@@ -7678,6 +7667,35 @@
       help: |
         You indicated you liked
         ${ fungi }.
+"review-5": "event: review_answers\nquestion: |\n  Revisit your answers\nreview:\n\
+  \  - Edit:\n      - fruit\n      - vegetable\n      - fungi\n    button: |\n   \
+  \   Your favorite fruit is ${ fruit }.\n      \n      Your favorite vegetable is\
+  \ ${ vegetable }.\n      \n      Your favorite fungus is ${ fungi }."
+"review-6": |-
+  event: review_answers
+  question: |
+    Revisit your answers
+  review:
+    - note: |
+        Thank you for telling me
+        about your food preferences.
+      show if:
+        - fruit
+        - vegetable
+        - fungi
+    - Favorite fruit: fruit
+    - Favorite vegetable: vegetable
+    - Favorite fungus: fungi
+"review-edit-list": "mandatory: true\nquestion: |\n  Thank you for your answers!\n\
+  subquestion: |\n  The people are ${ person } and your\n  favorite is ${ favorite\
+  \ }.\n\n  You can\n  [edit your answers](${ url_action('review_interview') })\n\
+  \  if you want.\n---\nevent: review_interview\nquestion: |\n  Edit your answers\n\
+  review:\n  - Edit: favorite\n    button: |\n      Your favorite person is ${ favorite\
+  \ }.\n  - Edit: person.revisit\n    button: |\n      The people are:\n\n      %\
+  \ for y in person:\n      * ${ y }\n      % endfor\n---\nfield: person.revisit\n\
+  question: |\n  Edit the people\nsubquestion: |\n  ${ person.table }\n  \n  ${ person.add_action()\
+  \ }\n---\ntable: person.table\nrows: person\ncolumns:\n  - Name: |\n      row_item.name.full()\n\
+  \  - Fruit: |\n      row_item.favorite_fruit\nedit:\n  - name.first\n  - favorite_fruit"
 "review-field": "question: |\n  Revisit your answers\nreview:\n  - Revisit fruit:\
   \ fruit\n    button: |\n      You said your favorite fruit was\n      ${ fruit }.\n\
   \  - Revisit vegetable: vegetable\n    button: |\n      You said your favorite vegetable\n\
@@ -9006,7 +9024,7 @@
 "upload": "question: |\n  Please upload a picture of yourself.\nfields:\n  - Picture:\
   \ user_picture\n    datatype: file\n---\nquestion: |\n  You're so adorable, Fran\xE7\
   ois!\nsubquestion: |\n  ${ user_picture }\nmandatory: True\n# ---\n# features:\n\
-  #   maximum image size: None"
+  #   maximum image size: 150"
 "upload-max-image-size": |-
   question: |
     Please upload a picture of yourself.

@@ -1603,6 +1603,17 @@ the item will not be shown.  Note: this is not available with the
 
 {% include side-by-side.html demo="review-4" %}
 
+By referring to a list of variables instead of a single variable, you
+can indicate that more than one variable should be sought.  The fields
+mentioned will not appear on the review screen until all have been
+gathered.
+
+{% include side-by-side.html demo="review-5" %}
+
+You can also indicate more than one variable when using `show if`:
+
+{% include side-by-side.html demo="review-6" %}
+
 ### <a name="review field"></a>Placing a review block within the interview logic
 
 In the examples above, the `review` block is identified with an

@@ -784,13 +784,37 @@ after it is defined.
 
 ## <a name="editing"></a>Edit an already-gathered list
 
-It is possible to allow your users to edit a list that has already
-been gathered.  Here is an example.
+It is possible to allow your users to edit a [`DAList`] list that has
+already been gathered.  Here is an example.
 
 {% include side-by-side.html demo="edit-list" %}
 
-For more information about how this works, consult the documentation
-for the functions and block types that this example uses.
+This works using two features:
+
+1. The `edit` directive on the [`table`] block, which adds an
+   "Actions" column to the table and indicates which screens should be
+   shown when the user clicks the "Edit" button.  First a screen will
+   be shown that asks for the the attribute `.name.first`.  Then a
+   screen will be shown that asks for the attribute `.favorite_fruit`.
+2. The `.add_action()` method on the [`DAList`] inserts HTML for a
+   button that the user can press in order to add an entry to an
+   already-gathered list.
+
+You can also allow your users to edit a [`DAList`] from a [`review`]
+page.
+
+{% include side-by-side.html demo="review-edit-list" %}
+
+The attribute `.revisit` of a [`DAList`] is special; it is undefined
+by default and is set to `True` by the auto-gathering process at the
+same time that `.gathered` is set to `True`.  Because `.revisit` is
+undefined at first, the [`review`] block will not show the "Edit"
+button for the list until the list is gathered.  When the list has
+been gathered, and the user clicks the "Edit" button associated with
+`.revisit`, the user is taken to the block with `field:
+person.revisit`.  On this screen, you can show the list as a table
+and provide the `.add_action()` button if you want users to be able to
+add entries.
 
 # For loop
 
@@ -916,3 +940,5 @@ For more information about "for loops" in [Mako], see the
 [idempotent]: https://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning
 [`del`]: https://docs.python.org/2/tutorial/datastructures.html#the-del-statement
 [YAML]: https://en.wikipedia.org/wiki/YAML
+[`table`]: {{ site.baseurl }}/docs/template.html#table
+[`review`]: {{ site.baseurl }}/docs/fields.html#review
