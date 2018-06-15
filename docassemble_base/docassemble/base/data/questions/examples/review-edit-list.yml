@@ -2,20 +2,20 @@ metadata:
   title: Edit list
   short title: Edit list
   documentation: "https://docassemble.org/docs/groups.html#editing"
-  example start: 2
-  example end: 13
+  example start: 9
+  example end: 12
 ---
 modules:
   - docassemble.base.util
 ---
 objects:
-  - person: DAList
+  - person: DAList.using(object_type=Individual,
+                         there_are_any=True,
+                         complete_attribute='complete')
 ---
 mandatory: True
 code: |
-  person.object_type = Individual
-  person.there_are_any = True
-  person.complete_attribute = 'complete'
+  menu_items = [ action_menu_item('Review Answers', 'review_interview') ]
 ---
 code: |
   person[i].name.first
@@ -44,24 +44,47 @@ fields:
   - Favorite: favorite
     code: person
 ---
-mandatory: True
+mandatory: true
 question: |
-  All done
+  Thank you for your answers!
 subquestion: |
-  The people are ${ person }.
+  The people are ${ person } and your
+  favorite is ${ favorite }.
 
-  Your favorite is ${ favorite }.
-  
-  ${ people_table }
+  You can
+  [edit your answers](${ url_action('review_interview') })
+  if you want.
+---
+event: review_interview
+question: |
+  Edit your answers
+review:
+  - Edit: favorite
+    button: |
+      Your favorite person is ${ favorite }.
+  - Edit: person.revisit
+    button: |
+      The people are:
+
+      % for y in person:
+      * ${ y }
+      % endfor
+---
+field: person.revisit
+question: |
+  Edit the people
+subquestion: |
+  ${ person.table }
   
   ${ person.add_action() }
 ---
-table: people_table
+table: person.table
 rows: person
 columns:
   - Name: |
       row_item.name.full()
   - Fruit: |
       row_item.favorite_fruit
-  - Action: |
-      person.item_actions(row_item, 'name.first', 'favorite_fruit')
+edit:
+  - name.first
+  - favorite_fruit

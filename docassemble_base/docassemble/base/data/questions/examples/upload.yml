@@ -17,4 +17,4 @@ subquestion: |
 mandatory: True
 # ---
 # features:
-#   maximum image size: None
+#   maximum image size: 150

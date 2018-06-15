@@ -2,20 +2,16 @@ metadata:
   title: Edit list
   short title: Edit list
   documentation: "https://docassemble.org/docs/groups.html#editing"
-  example start: 2
-  example end: 13
+  example start: 8
+  example end: 9
 ---
 modules:
   - docassemble.base.util
 ---
 objects:
-  - person: DAList
----
-mandatory: True
-code: |
-  person.object_type = Individual
-  person.there_are_any = True
-  person.complete_attribute = 'complete'
+  - person: DAList.using(object_type=Individual,
+                         there_are_any=True,
+                         complete_attribute='complete')
 ---
 code: |
   person[i].name.first
@@ -52,40 +48,17 @@ subquestion: |
 
   Your favorite is ${ favorite }.
   
-  ${ people_table }
+  ${ person.table }
   
-  [<i class="fas fa-plus-circle"></i> Add another person](${ url_action('person_add') })
+  ${ person.add_action() }
 ---
-table: people_table
+table: person.table
 rows: person
 columns:
   - Name: |
       row_item.name.full()
   - Fruit: |
       row_item.favorite_fruit
-  - Action: |
-      '[:pencil-alt:](' + url_action(row_item.instanceName + '.review') + ')&nbsp;&nbsp;&nbsp;&nbsp;' + \
-      '[:trash:](' + url_action('person_del', item=row_item.instanceName) + ')'
----
-event: person[i].review
-question: |
-  Edit information about 
-  ${ person[i] }.
-review:
-  - Edit name: person[i].name.first
-    button: |
-      **Name**: ${ person[i] }
-  - Edit fruit: person[i].favorite_fruit
-    button: |
-      **Favorite fruit**: 
-      ${ person[i].favorite_fruit }
----
-event: person_del
-code: |
-  person.remove(value(action_argument('item')))
----
-event: person_add
-code: |
-  person.appendObject()
-  person.reset_gathered()
-  person.there_is_another = False
+edit:
+  - name.first
+  - favorite_fruit

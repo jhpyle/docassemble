@@ -47,7 +47,7 @@ do
     elif [ "$file" = "sections" -o "$file" = "sections-horizontal" ]
     then
 	echo -e -n "\n    And I click the button \"Continue\"\n    And I select \"Roadmap\" from the menu\n    And I wait 5 seconds\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
-    elif [ "$file" = "review-1" -o "$file" = "review-2" -o "$file" = "review-3" -o "$file" = "resume-button-label" ]
+    elif [ "$file" = "review-1" -o "$file" = "review-2" -o "$file" = "review-3" -o "$file" = "resume-button-label" -o "$file" = "review-5" -o "$file" = "review-6" ]
     then
 	echo -e -n "\n    And I set the text box to \"apple\"\n    And I click the button \"Continue\"\n    And I set the text box to \"turnip\"\n    And I click the button \"Continue\"\n    And I select \"Review Answers\" from the menu\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
     elif [ "$file" = "review-4" ]

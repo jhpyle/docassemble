@@ -297,10 +297,6 @@ buttons:
       generic object: Individual
       code: |
         x.signature_verified = False
-  - "Let me try again":
-      generic object: Individual
-      code: |
-        force_ask('x.signature')
 comment: |
   This is an example of a multiple choice question where selecting an
   option causes code to be run.  Each multiple choice option contains

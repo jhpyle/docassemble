@@ -27,8 +27,11 @@ else:
 def tracker_tag(status):
     output = ''
     output += '                <input type="hidden" name="csrf_token" value=' + json.dumps(server.generate_csrf()) + '/>\n'
-    if len(status.next_action):
-        output += '                <input type="hidden" name="_next_action" value=' + myb64doublequote(json.dumps(status.next_action)) + '/>\n'
+    #restore this, maybe
+    #if len(status.next_action):
+    #    output += '                <input type="hidden" name="_next_action" value=' + myb64doublequote(json.dumps(status.next_action)) + '/>\n'
+    if status.orig_sought is not None:
+        output += '                <input type="hidden" name="_event" value=' + myb64doublequote(json.dumps([status.orig_sought])) + ' />\n'
     if status.question.name:
         output += '                <input type="hidden" name="_question_name" value=' + json.dumps(status.question.name) + '/>\n'
     # if 'orig_action' in status.current_info:
@@ -695,10 +698,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 # elif field.datatype in ['script', 'css']:
                 #     continue
                 elif field.datatype == 'button' and hasattr(field, 'label') and field.number in status.helptexts:
-                    fieldlist.append('                <div class="row"><div class="col-md-12"><a tabindex="0" class="btn btn-success review-action review-action-button" data-action="' + str(field.action) + '">' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
+                    fieldlist.append('                <div class="row"><div class="col-md-12"><a tabindex="0" class="btn btn-sm btn-success review-action review-action-button" data-action=' + myb64doublequote(json.dumps(field.action)) + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
                     continue
             if hasattr(field, 'label'):
-                fieldlist.append('                <div class="form-group row"><div class="col-md-12"><a tabindex="0" class="review-action" data-action="' + str(field.action) + '">' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a></div></div>\n')
+                fieldlist.append('                <div class="form-group row"><div class="col-md-12"><a tabindex="0" class="review-action" data-action=' + myb64doublequote(json.dumps(field.action)) + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a></div></div>\n')
                 if field.number in status.helptexts:
                     fieldlist.append('                <div class="row"><div class="col-md-12">' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
         output += status.pre
@@ -708,7 +711,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
-        fieldlist.append('                <input type="hidden" name="_event" value=' + myb64doublequote(json.dumps(list(status.question.fields_used))) + ' />\n')
+        #fieldlist.append('                <input type="hidden" name="_event" value=' + myb64doublequote(json.dumps(list(status.question.fields_used))) + ' />\n')
         if (len(fieldlist)):
             output += "".join(fieldlist)
         if status.continueLabel:
@@ -961,8 +964,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                                 validation_rules['messages'][the_saveas][key] = word("You need to enter a number that is at most") + " " + str(status.extras[key][field.number])
                 if (field.datatype in ['files', 'file', 'camera', 'user', 'environment', 'camcorder', 'microphone']):
                     enctype_string = ' enctype="multipart/form-data"'
-                    files.append(field.saveas)
-                    validation_rules['messages'][field.saveas]['required'] = word("You must provide a file.")
+                    files.append(the_saveas)
+                    validation_rules['messages'][the_saveas]['required'] = word("You must provide a file.")
                 if field.datatype == 'combobox':
                     validation_rules['ignore'] = list()
                 if field.datatype == 'boolean':
@@ -1245,6 +1248,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                             btn_class = ' btn-info'
                         elif choice['key'].question_type in ("exit", "logout"):
                             btn_class = ' btn-danger'
+                    #output += '                  <input type="hidden" name="_event" value=' + myb64doublequote(json.dumps(list(status.question.fields_used))) + ' />\n'
                     output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ==" value="' + str(indexno) + '">' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False, strip_newlines=True) + '</button>\n'
                     indexno += 1
             output += help_button

@@ -153,7 +153,8 @@ def edit_user_profile_page(id):
         return redirect(url_for('user_list'))
 
     form.role_id.default = the_role_id
-    return render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form)
+    confirmation_feature = True if user.id > 2 else False
+    return render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature)
 
 @app.route('/privilege/add', methods=['GET', 'POST'])
 @login_required

@@ -28,7 +28,7 @@ import json
 import docassemble.base.filter
 import docassemble.base.pdftk
 import docassemble.base.file_docx
-from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError
+from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError, ForcedReRun
 import docassemble.base.functions
 from docassemble.base.functions import pickleable_objects, word, get_language, server, RawValue, get_config
 from docassemble.base.logger import logmessage
@@ -318,11 +318,13 @@ class InterviewStatus(object):
         self.can_go_back = True
         self.attachments = None
         self.linkcounter = 0
-        self.next_action = list()
+        #restore this, maybe
+        #self.next_action = list()
         self.embedded = set()
         self.extras = dict()
         self.followed_mc = False
         self.tentatively_answered = set()
+        self.checkin = False
     def get_field_list(self):
         if 'sub_fields' in self.extras:
             field_list = list()
@@ -358,6 +360,7 @@ class InterviewStatus(object):
         self.extras = question_result['extras']
         self.labels = question_result['labels']
         self.sought = question_result['sought']
+        self.orig_sought = question_result['orig_sought']
     def set_tracker(self, tracker):
         self.tracker = tracker
     def as_data(self, encode=True):
@@ -1825,6 +1828,22 @@ class Question:
                     header.append(TextObject(definitions + unicode(header_text), names_used=self.mako_names))
                 self.find_fields_in(cell_text)
                 column.append(compile(cell_text, '<column code>', 'eval'))
+            if 'edit' in data and data['edit'] is not False:
+                if type(data['edit']) is not list or len(data['edit']) == 0:
+                    raise DAError("The edit directive must be a list of attributes, or False" + self.idebug(data))
+                for attribute_name in data['edit']:
+                    if type(attribute_name) not in (str, unicode):
+                        raise DAError("The edit directive must be a list of attribute names" + self.idebug(data))
+                column.append(compile(data['rows'] + '.item_actions(row_item, ' + ', '.join([repr(y) for y in data['edit']]) + ')', '<column code>', 'eval'))
+                if 'edit header' in data:
+                    if type(data['edit header']) not in (str, unicode):
+                        raise DAError("The edit header directive must be text" + self.idebug(data))
+                    if data['edit header'] == '':
+                        header.append(TextObject('&nbsp;'))
+                    else:
+                        header.append(TextObject(definitions + unicode(data['edit header']), names_used=self.mako_names))
+                else:
+                    header.append(TextObject(word("Actions")))
             #column = list(map(lambda x: compile(x, '<expression>', 'eval'), data['column']))
             if self.scan_for_variables:
                 self.fields_used.add(data['table'])
@@ -2188,7 +2207,7 @@ class Question:
             for field in data['review']:
                 if type(field) is not dict:
                     raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
-                field_info = {'number': field_number}
+                field_info = {'number': field_number, 'data': []}
                 for key in field:
                     if key == 'action':
                         continue
@@ -2211,43 +2230,75 @@ class Question:
                             field_info['extras'] = dict()
                         field_info['type'] = 'html'
                         field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
-                    # elif key in ('css', 'script'):
-                    #     if 'extras' not in field_info:
-                    #         field_info['extras'] = dict()
-                    #     if field_info['type'] == 'text':
-                    #         field_info['type'] = key
-                    #     field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
                     elif key == 'show if':
-                        field_info['saveas_code'] = compile(field[key], '<expression>', 'eval')
-                        self.find_fields_in(field[key])
-                        field[key] = field[key].strip()
-                        if invalid_variable_name(field[key]):
-                            raise DAError("Missing or invalid variable name " + repr(field[key]) + "." + self.idebug(data))
-                        field_info['saveas'] = field[key]
-                    elif key == 'field':
+                        if type(field[key]) is not list:
+                            field_list = [field[key]]
+                        else:
+                            field_list = field[key]
+                        field_data = []
+                        for the_saveas in field_list:
+                            if type(the_saveas) not in (str, unicode):
+                                raise DAError("Invalid variable name in fields." + self.idebug(data))
+                            the_saveas = the_saveas.strip()
+                            if invalid_variable_name(the_saveas):
+                                raise DAError("Missing or invalid variable name " + repr(the_saveas) + " ." + self.idebug(data))
+                            if the_saveas not in field_data:
+                                field_data.append(the_saveas)
+                            self.find_fields_in(the_saveas)
+                        if len(field_list):
+                            if 'saveas_code' not in field_info:
+                                field_info['saveas_code'] = []
+                            field_info['saveas_code'].extend([compile(y, '<expression>', 'eval') for y in field_list])
+                    elif key in ('field', 'fields'):
                         if 'label' not in field:
-                            raise DAError("If you use 'field' to indicate a variable in a 'review' section, you must also include a 'label.'" + self.idebug(data))
-                        field[key] = field[key].strip()
-                        if invalid_variable_name(field[key]):
-                            raise DAError("Missing or invalid variable name " + repr(field[key]) + " ." + self.idebug(data))
-                        field_info['saveas'] = field[key]
+                            raise DAError("If you use 'field' or 'fields' to indicate variables in a 'review' section, you must also include a 'label.'" + self.idebug(data))
+                        if type(field[key]) is not list:
+                            field_list = [field[key]]
+                        else:
+                            field_list = field[key]
+                        for the_saveas in field_list:
+                            if type(the_saveas) not in (str, unicode):
+                                raise DAError("Invalid variable name in fields." + self.idebug(data))
+                            the_saveas = the_saveas.strip()
+                            if invalid_variable_name(the_saveas):
+                                raise DAError("Missing or invalid variable name " + repr(the_saveas) + " ." + self.idebug(data))
+                            if the_saveas not in field_info['data']:
+                                field_info['data'].append(the_saveas)
+                            self.find_fields_in(the_saveas)
+                        if 'action' in field:
+                            field_info['action'] = dict(action=field['action'], arguments=dict())
                     elif key == 'label':
-                        if 'field' not in field:
-                            raise DAError("If you use 'label' to label a field in a 'fields' section, you must also include a 'field.'" + self.idebug(data))                                    
+                        if 'field' not in field and 'fields' not in field:
+                            raise DAError("If you use 'label' to label a field in a 'review' section, you must also include a 'field' or 'fields.'" + self.idebug(data))                                    
                         field_info['label'] = TextObject(definitions + interpret_label(field[key]), names_used=self.mako_names)
                     else:
                         field_info['label'] = TextObject(definitions + interpret_label(key), names_used=self.mako_names)
-                        field[key] = field[key].strip()
-                        if invalid_variable_name(field[key]):
-                            raise DAError("Missing or invalid variable name " + repr(field[key]) + "." + self.idebug(data))
-                        field_info['saveas'] = field[key]
-                        if 'action' in field:
-                            field_info['action'] = field['action']
+                        if type(field[key]) is not list:
+                            field_list = [field[key]]
                         else:
-                            field_info['action'] = field[key]
-                        field_info['saveas_code'] = compile(field[key], '<expression>', 'eval')
-                        self.find_fields_in(field[key])
-                if 'saveas' in field_info or ('type' in field_info and field_info['type'] in ('note', 'html')): #, 'script', 'css'
+                            field_list = field[key]
+                        field_info['data'] = []
+                        for the_saveas in field_list:
+                            if type(the_saveas) not in (str, unicode):
+                                raise DAError("Invalid variable name in fields." + self.idebug(data))
+                            the_saveas = the_saveas.strip()
+                            if invalid_variable_name(the_saveas):
+                                raise DAError("Missing or invalid variable name " + repr(the_saveas) + " ." + self.idebug(data))
+                            if the_saveas not in field_info['data']:
+                                field_info['data'].append(the_saveas)
+                            self.find_fields_in(the_saveas)
+                        if 'action' in field:
+                            field_info['action'] = dict(action=field['action'], arguments=dict())
+                if len(field_info['data']):
+                    if 'saveas_code' not in field_info:
+                        field_info['saveas_code'] = []
+                    field_info['saveas_code'].extend([compile(y, '<expression>', 'eval') for y in field_info['data']])
+                    if 'action' not in field_info:
+                        if len(field_info['data']) == 1:
+                            field_info['action'] = dict(action=field_info['data'][0], arguments=dict())
+                        else:
+                            field_info['action'] = dict(action="_da_force_ask", arguments=dict(variables=field_info['data']))
+                if len(field_info['data']) or ('type' in field_info and field_info['type'] in ('note', 'html')):
                     self.fields.append(Field(field_info))
                 else:
                     raise DAError("A field in a review list was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(field_info))
@@ -2658,7 +2709,8 @@ class Question:
         else:
             raise DAError("Unknown data type in attachment")
 
-    def ask(self, user_dict, old_user_dict, the_x, iterators, sought):
+    def ask(self, user_dict, old_user_dict, the_x, iterators, sought, orig_sought):
+        #logmessage("ask: orig_sought is " + unicode(orig_sought))
         docassemble.base.functions.this_thread.current_question = self
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
@@ -2775,9 +2827,14 @@ class Question:
             for field in self.fields:
                 extras['ok'][field.number] = False
                 if hasattr(field, 'saveas_code'):
-                    try:
-                        eval(field.saveas_code, user_dict)
-                    except:
+                    failed = False
+                    for expression in field.saveas_code:
+                        try:
+                            eval(expression, user_dict)
+                        except:
+                            failed = True
+                            break
+                    if failed:
                         continue
                 if hasattr(field, 'extras'):
                     for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width'): # 'script', 'css', 
@@ -3001,7 +3058,7 @@ class Question:
                         new_interview = new_interview_source.get_interview()
                         reproduce_basics(self.interview, new_interview)
                         the_question = Question(dict(question='n/a', fields=field_list), new_interview, source=new_interview_source, package=self.package)
-                        ask_result = the_question.ask(user_dict, old_user_dict, the_x, iterators, sought)
+                        ask_result = the_question.ask(user_dict, old_user_dict, the_x, iterators, sought, orig_sought)
                         for key in ('selectcompute', 'defaults', 'hints', 'helptexts', 'labels'):
                             for field_num, val in ask_result[key].iteritems():
                                 if key == 'selectcompute':
@@ -3099,7 +3156,20 @@ class Question:
                 # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
-        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought}) #'defined': defined, 
+        if self.question_type == 'review' and sought is not None:
+            if 'event_stack' not in user_dict['_internal']:
+                user_dict['_internal']['event_stack'] = dict()
+            session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
+            if session_uid not in user_dict['_internal']['event_stack']:
+                user_dict['_internal']['event_stack'][session_uid] = list()
+            already_there = False
+            for event_item in user_dict['_internal']['event_stack'][session_uid]:
+                if event_item['action'] == sought:
+                    already_there = True
+                    break
+            if not already_there:
+                user_dict['_internal']['event_stack'][session_uid].insert(0, dict(action=sought, arguments=dict()))
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought, 'orig_sought': orig_sought}) #'defined': defined, 
     def processed_attachments(self, user_dict, **kwargs):
         seeking_var = kwargs.get('seeking_var', '__novar')
         steps = user_dict['_internal'].get('steps', -1)
@@ -4019,10 +4089,13 @@ class Interview:
                     raise DAError("There appears to be a circularity.  Variables involved: " + ", ".join(variables_sought) + ".")
                 docassemble.base.functions.reset_gathering_mode()
                 if 'action' in interview_status.current_info:
-                    if interview_status.current_info['action'] in ('_da_list_remove', '_da_list_edit', '_da_list_add'):
+                    #logmessage("assemble: there is an action in the current_info: " + repr(interview_status.current_info['action']))
+                    if interview_status.current_info['action'] in ('_da_list_remove', '_da_list_add', '_da_list_complete'):
                         for the_key in ('list', 'item', 'items'):
                             if the_key in interview_status.current_info['arguments']:
                                 interview_status.current_info['action_' + the_key] = eval(interview_status.current_info['arguments'][the_key], user_dict)
+                #else:
+                #    logmessage("assemble: there is no action in the current_info")
                 try:
                     if (self.imports_util or self.uses_action or 'action' in interview_status.current_info) and not self.calls_process_action:
                         if self.imports_util:
@@ -4099,7 +4172,7 @@ class Interview:
                                 if question.name and question.name in user_dict['_internal']['answers']:
                                     #logmessage("in answers")
                                     #question.mark_as_answered(user_dict)
-                                    #interview_status.populate(question.follow_multiple_choice(user_dict, interview_status).ask(user_dict, old_user_dict, 'None', [], None))
+                                    #interview_status.populate(question.follow_multiple_choice(user_dict, interview_status).ask(user_dict, old_user_dict, 'None', [], None, None))
                                     the_question = question.follow_multiple_choice(user_dict, interview_status)
                                     if the_question.question_type in ["code", "event_code"]:
                                         docassemble.base.functions.this_thread.current_question = the_question
@@ -4107,30 +4180,52 @@ class Interview:
                                         interview_status.mark_tentative_as_answered(user_dict)
                                         continue
                                     elif hasattr(the_question, 'content'):
-                                        interview_status.populate(the_question.ask(user_dict, old_user_dict, 'None', [], None))
+                                        interview_status.populate(the_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                                         interview_status.mark_tentative_as_answered(user_dict)
                                     else:
                                         raise DAError("An embedded question can only be a code block or a regular question block.  The question type was " + getattr(the_question, 'question_type', 'unknown'))
                                 else:
-                                    interview_status.populate(question.ask(user_dict, old_user_dict, 'None', [], None))
+                                    interview_status.populate(question.ask(user_dict, old_user_dict, 'None', [], None, None))
                                 if interview_status.question.question_type == 'continue':
                                     user_dict['_internal']['answered'].add(question.name)
                                 else:
                                     raise MandatoryQuestion()
+                except ForcedReRun as the_exception:
+                    continue
                 except NameError as the_exception:
                     #logmessage("Error in NameError is " + str(the_exception))
                     docassemble.base.functions.reset_context()
+                    seeking_question = False
                     if isinstance(the_exception, ForcedNameError):
-                        #logmessage("assemble: got a ForcedNameError for " + the_exception.name)
+                        #logmessage("assemble: got a ForcedNameError for " + unicode(the_exception.name))
                         follow_mc = False
-                        if the_exception.next_action is not None:
-                            interview_status.next_action.extend(the_exception.next_action)
+                        seeking_question = True
+                        #logmessage("next action is " + repr(the_exception.next_action))
+                        if the_exception.next_action is not None and not interview_status.checkin:
+                            if 'event_stack' not in user_dict['_internal']:
+                                user_dict['_internal']['event_stack'] = dict()
+                            session_uid = interview_status.current_info['user']['session_uid']
+                            if session_uid not in user_dict['_internal']['event_stack']:
+                                user_dict['_internal']['event_stack'][session_uid] = list()
+                            new_items = list()
+                            for new_item in the_exception.next_action:
+                                already_there = False
+                                for event_item in user_dict['_internal']['event_stack'][session_uid]:
+                                    if event_item['action'] == new_item:
+                                        already_there = True
+                                        break
+                                if not already_there:
+                                    new_items.append(new_item)
+                            if len(new_items):
+                                #logmessage("adding a new item to event_stack: " + repr(new_items))
+                                user_dict['_internal']['event_stack'][session_uid] = new_items + user_dict['_internal']['event_stack'][session_uid]
+                            #interview_status.next_action.extend(the_exception.next_action)
                         missingVariable = the_exception.name
                     else:
                         follow_mc = True
                         missingVariable = extract_missing_name(the_exception)
                     variables_sought.add(missingVariable)
-                    question_result = self.askfor(missingVariable, user_dict, old_user_dict, interview_status, seeking=interview_status.seeking, follow_mc=follow_mc)
+                    question_result = self.askfor(missingVariable, user_dict, old_user_dict, interview_status, seeking=interview_status.seeking, follow_mc=follow_mc, seeking_question=seeking_question)
                     if question_result['type'] == 'continue':
                         continue
                     elif question_result['type'] == 'refresh':
@@ -4158,7 +4253,7 @@ class Interview:
                     reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
-                    interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None))
+                    interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                     break
                 except ResponseError as qError:
                     docassemble.base.functions.reset_context()
@@ -4188,7 +4283,7 @@ class Interview:
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
                     #the_question = new_question.follow_multiple_choice(user_dict)
-                    interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None))
+                    interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                     break
                 except BackgroundResponseError as qError:
                     docassemble.base.functions.reset_context()
@@ -4201,7 +4296,7 @@ class Interview:
                     reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
-                    interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None))
+                    interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                     break
                 except BackgroundResponseActionError as qError:
                     docassemble.base.functions.reset_context()
@@ -4214,7 +4309,7 @@ class Interview:
                     reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
-                    interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None))
+                    interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                     break
                 # except SendFileError as qError:
                 #     #logmessage("Trapped SendFileError")
@@ -4263,7 +4358,7 @@ class Interview:
                     new_question.name = "Question_Temp"
                     # will this be a problem?  Maybe, since the question name can vary by thread.
                     #the_question = new_question.follow_multiple_choice(user_dict)
-                    interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None))
+                    interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                     break
                 except AttributeError as the_error:
                     docassemble.base.functions.reset_context()
@@ -4307,6 +4402,7 @@ class Interview:
             interview_status.seeking.append({'done': True, 'time': time.time()})
         #return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, old_user_dict, interview_status, **kwargs):
+        seeking_question = kwargs.get('seeking_question', False)
         variable_stack = kwargs.get('variable_stack', set())
         questions_tried = kwargs.get('questions_tried', dict())
         recursion_depth = kwargs.get('recursion_depth', 0)
@@ -4414,13 +4510,13 @@ class Interview:
                         string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
-                        return({'type': 'continue', 'sought': missing_var})
+                        return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "data_from_code":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict))
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
-                        return({'type': 'continue', 'sought': missing_var})
+                        return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "objects":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         success = False
@@ -4482,11 +4578,11 @@ class Interview:
                         # logmessage("pop current variable")
                         docassemble.base.functions.pop_current_variable()
                         # logmessage("Returning")
-                        return({'type': 'continue', 'sought': missing_var})
+                        return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "template":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         if question.target is not None:
-                            return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'under_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict(), 'sought': missing_var})
+                            return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'under_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict(), 'sought': missing_var, 'orig_sought': origMissingVariable})
                         string = "import docassemble.base.core"
                         exec(string, user_dict)
                         if question.decorations is None:
@@ -4498,7 +4594,7 @@ class Interview:
                         exec(string, user_dict)
                         #question.mark_as_answered(user_dict)
                         docassemble.base.functions.pop_current_variable()
-                        return({'type': 'continue', 'sought': missing_var})
+                        return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "table":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         string = "import docassemble.base.core"
@@ -4567,7 +4663,7 @@ class Interview:
                         string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + repr(from_safeid(question.fields[0].saveas)) + ", content=" + repr(table_content) + ")"
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
-                        return({'type': 'continue', 'sought': missing_var})
+                        return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == 'attachments':
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         attachment_text = question.processed_attachments(user_dict, seeking_var=origMissingVariable)
@@ -4577,7 +4673,7 @@ class Interview:
                             eval(missing_var, user_dict)
                             question.mark_as_answered(user_dict)
                             docassemble.base.functions.pop_current_variable()
-                            return({'type': 'continue', 'sought': missing_var})
+                            return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         except:
                             continue
                     if question.question_type in ["code", "event_code"]:
@@ -4589,18 +4685,26 @@ class Interview:
                             was_defined = True
                         except:
                             pass
+                        if question.question_type == 'event_code':
+                            docassemble.base.functions.pop_event_stack(origMissingVariable)
                         exec_with_trap(question, user_dict)
                         interview_status.mark_tentative_as_answered(user_dict)
+                        #PPP
                         if missing_var in variable_stack:
                             variable_stack.remove(missing_var)
                         if question.question_type == 'event_code':
                             docassemble.base.functions.pop_current_variable()
-                            return({'type': 'continue', 'sought': missing_var})
+                            return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         try:
                             eval(missing_var, user_dict)
+                            if was_defined:
+                                exec("del __oldvariable__", user_dict)
+                            if seeking_question:
+                                continue
                             question.mark_as_answered(user_dict)
                             docassemble.base.functions.pop_current_variable()
-                            return({'type': 'continue', 'sought': missing_var})
+                            docassemble.base.functions.pop_event_stack(origMissingVariable)
+                            return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         except:
                             if was_defined:
                                 try:
@@ -4614,19 +4718,42 @@ class Interview:
                         interview_status.mark_tentative_as_answered(user_dict)
                         if question.question_type == 'continue':
                             continue
-                        return question.ask(user_dict, old_user_dict, the_x, iterators, missing_var)
+                        return question.ask(user_dict, old_user_dict, the_x, iterators, missing_var, origMissingVariable)
                 if a_question_was_skipped:
                     raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
                 raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
+            except ForcedReRun as the_exception:
+                continue
             except NameError as the_exception:
                 # logmessage("NameError: " + str(the_exception))
                 docassemble.base.functions.reset_context()
+                seeking_question = False
                 if isinstance(the_exception, ForcedNameError):
-                    #logmessage("askfor: got a ForcedNameError for " + the_exception.name)
+                    #logmessage("askfor: got a ForcedNameError for " + unicode(the_exception.name))
                     follow_mc = False
+                    seeking_question = True
+                    #logmessage("Seeking question is True")
                     newMissingVariable = the_exception.name
-                    if the_exception.next_action is not None:
-                        interview_status.next_action.extend(the_exception.next_action)
+                    #logmessage("next action is " + repr(the_exception.next_action))
+                    if the_exception.next_action is not None and not interview_status.checkin:
+                        if 'event_stack' not in user_dict['_internal']:
+                            user_dict['_internal']['event_stack'] = dict()
+                        session_uid = interview_status.current_info['user']['session_uid']
+                        if session_uid not in user_dict['_internal']['event_stack']:
+                            user_dict['_internal']['event_stack'][session_uid] = list()
+                        new_items = list()
+                        for new_item in the_exception.next_action:
+                            already_there = False
+                            for event_item in user_dict['_internal']['event_stack'][session_uid]:
+                                if event_item['action'] == new_item:
+                                    already_there = True
+                                    break
+                            if not already_there:
+                                new_items.append(new_item)
+                        if len(new_items):
+                            #logmessage("adding a new item to event_stack: " + repr(new_items))
+                            user_dict['_internal']['event_stack'][session_uid] = new_items + user_dict['_internal']['event_stack'][session_uid]
+                        #interview_status.next_action.extend(the_exception.next_action)
                 else:
                     #logmessage("regular nameerror")
                     follow_mc = True
@@ -4639,14 +4766,14 @@ class Interview:
                 else:
                     variable_stack.add(missingVariable)
                 questions_tried[newMissingVariable].add(current_question)
-                question_result = self.askfor(newMissingVariable, user_dict, old_user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=follow_mc, recursion_depth=recursion_depth)
+                question_result = self.askfor(newMissingVariable, user_dict, old_user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=follow_mc, recursion_depth=recursion_depth, seeking_question=seeking_question)
                 if question_result['type'] == 'continue' and missing_var != newMissingVariable:
                     # logmessage("Continuing after asking for newMissingVariable " + str(newMissingVariable))
                     continue
                 docassemble.base.functions.pop_current_variable()
                 return(question_result)
             except UndefinedError as the_exception:
-                # logmessage("UndefinedError: " + str(the_exception))
+                logmessage("UndefinedError: " + unicode(the_exception))
                 docassemble.base.functions.reset_context()
                 newMissingVariable = extract_missing_name(the_exception)
                 if newMissingVariable not in questions_tried:
@@ -4654,7 +4781,7 @@ class Interview:
                 else:
                     variable_stack.add(missingVariable)
                 questions_tried[newMissingVariable].add(current_question)
-                question_result = self.askfor(newMissingVariable, user_dict, old_user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=True, recursion_depth=recursion_depth)
+                question_result = self.askfor(newMissingVariable, user_dict, old_user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=True, recursion_depth=recursion_depth, seeking_question=seeking_question)
                 if question_result['type'] == 'continue':
                     continue
                 docassemble.base.functions.pop_current_variable()
@@ -4668,7 +4795,7 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var))
+                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable))
             except ResponseError as qError:
                 # logmessage("ResponseError")
                 docassemble.base.functions.reset_context()
@@ -4693,7 +4820,8 @@ class Interview:
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 #the_question = new_question.follow_multiple_choice(user_dict)
-                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var))
+                docassemble.base.functions.pop_event_stack(origMissingVariable)
+                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable))
             except BackgroundResponseError as qError:
                 # logmessage("BackgroundResponseError")
                 docassemble.base.functions.reset_context()
@@ -4706,7 +4834,8 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var))
+                docassemble.base.functions.pop_event_stack(origMissingVariable)
+                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable))
             except BackgroundResponseActionError as qError:
                 # logmessage("BackgroundResponseActionError")
                 docassemble.base.functions.reset_context()
@@ -4719,7 +4848,8 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var))
+                docassemble.base.functions.pop_event_stack(origMissingVariable)
+                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable))
             except QuestionError as qError:
                 # logmessage("QuestionError")
                 docassemble.base.functions.reset_context()
@@ -4756,7 +4886,7 @@ class Interview:
                 new_question.name = "Question_Temp"
                 # will this be a problem? yup
                 # the_question = new_question.follow_multiple_choice(user_dict)
-                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var))
+                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable))
             except CodeExecute as code_error:
                 # logmessage("CodeExecute")
                 docassemble.base.functions.reset_context()
@@ -4772,7 +4902,7 @@ class Interview:
                     #logmessage("returning from running code")
                     docassemble.base.functions.pop_current_variable()
                     #logmessage("Got here 2")
-                    return({'type': 'continue', 'sought': missing_var})
+                    return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                 except:
                     #raise DAError("Problem setting that variable")
                     continue
@@ -4798,7 +4928,7 @@ class Interview:
             #     new_interview = new_interview_source.get_interview()
             #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
             #     new_question.name = "Question_Temp"
-            #     return(new_question.ask(user_dict, old_user_dict, 'None', [], None))
+            #     return(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
         raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
 
 def reproduce_basics(interview, new_interview):

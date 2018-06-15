@@ -3024,6 +3024,7 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         secret = str(secret)
     return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': session.get('encrypted', True), 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'session_uid': unique_id}, 'headers': headers, 'clientip': clientip, 'method': method}
     if action is not None:
+        #logmessage("current_info: setting an action " + repr(action))
         return_val.update(action)
         # return_val['orig_action'] = action['action']
         # return_val['orig_arguments'] = action['arguments']
@@ -4073,6 +4074,7 @@ def checkin():
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters)))
+            interview_status.checkin = True
             interview.assemble(user_dict, interview_status)
             if interview_status.question.question_type == "backgroundresponse":
                 the_response = interview_status.question.backgroundresponse
@@ -4565,7 +4567,7 @@ def index():
         del session['action']
     if '_action' in request.form:
         action = json.loads(myb64unquote(request.form['_action']))
-        #logmessage("Action is " + str(action))
+        #logmessage("index: action from _action is " + str(action))
     if len(request.args):
         #logmessage("index: there were args")
         if 'action' in request.args:
@@ -4751,6 +4753,7 @@ def index():
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface), tracker=user_dict['_internal']['tracker'])
     #g.interview_status = interview_status
     #g.status_created = time.time()
+    vars_set = set()
     if ('_email_attachments' in post_data and '_attachment_email_address' in post_data) or '_download_attachments' in post_data:
         should_assemble = True
     if should_assemble or something_changed:
@@ -4868,6 +4871,7 @@ def index():
             else:
                 the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ")"
             #logmessage("0Doing " + the_string)
+            vars_set.add(file_field)
             try:
                 exec(the_string, user_dict)
                 if not changed:
@@ -4882,7 +4886,8 @@ def index():
         #logmessage("next_action_to_set is " + str(next_action_to_set))
     else:
         next_action_to_set = None
-    if '_next_action' in post_data:
+    # restore this, maybe
+    if False and '_next_action' in post_data:
         next_action = json.loads(myb64unquote(post_data['_next_action']))
         #logmessage("next_action is " + str(next_action))
     else:
@@ -5037,17 +5042,20 @@ def index():
                         commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
                     elif datatype == 'object_checkboxes':
                         commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
+                    vars_set.add(core_key_name)
                 elif method == 'index':
                     index_name = parse_result['final_parts'][1][1:-1]
                     if datatype == 'checkboxes':
                         commands.append(core_key_name + ".initializeObject(" + repr(index_name) + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
                     elif datatype == 'object_checkboxes':
                         commands.append(core_key_name + ".initializeObject(" + repr(index_name) + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
+                    vars_set.add(core_key_name)
                 else:
                     if datatype == 'checkboxes':
                         commands.append(whole_key + ' = docassemble.base.core.DADict(' + repr(whole_key) + ', auto_gather=False, gathered=True)')
                     elif datatype == 'object_checkboxes':
                         commands.append(whole_key + ' = docassemble.base.core.DAList(' + repr(whole_key) + ', auto_gather=False, gathered=True)')
+                    vars_set.add(whole_key)
                 for command in commands:
                     #logmessage("1Doing " + command)
                     exec(command, user_dict)            
@@ -5347,6 +5355,7 @@ def index():
                 the_string = 'if ' + data + ' not in ' + key_to_use + '.elements:\n    ' + key_to_use + '.append(' + data + ')'
         else:
             #logmessage("data is " + data)
+            vars_set.add(key)
             the_string = key + ' = ' + data
             if orig_key in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_key] and hasattr(the_question.fields[field_numbers[orig_key]], 'validate'):
                 #logmessage("field " + orig_key + " has validation function")
@@ -5388,11 +5397,13 @@ def index():
         for orig_key in empty_fields:
             key = myb64unquote(orig_key)
             #logmessage("3Doing empty key " + str(key))
+            vars_set.add(key + '.gathered')
             if empty_fields[orig_key] == 'object_checkboxes':
                 docassemble.base.parse.ensure_object_exists(key, 'object_checkboxes', user_dict)
                 exec(key + '.clear()' , user_dict)
                 exec(key + '.gathered = True' , user_dict)
             elif empty_fields[orig_key] in ('object', 'object_radio'):
+                vars_set.add(key)
                 try:
                     eval(key, user_dict)
                 except:
@@ -5415,6 +5426,10 @@ def index():
             has_invalid_fields = False
             should_assemble_now = False
             for orig_file_field in file_fields:
+                if orig_file_field in known_varnames:
+                    orig_file_field = known_varnames[orig_file_field]
+                if orig_file_field not in visible_fields:
+                    continue
                 try:
                     file_field = from_safeid(orig_file_field)
                 except:
@@ -5437,6 +5452,10 @@ def index():
                     #logmessage("index: assemble 5")
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
+                    if orig_file_field_raw in known_varnames:
+                        orig_file_field_raw = known_varnames[orig_file_field_raw]
+                    if orig_file_field_raw not in visible_fields:
+                        continue
                     if not validated:
                         break
                     orig_file_field = orig_file_field_raw
@@ -5515,6 +5534,7 @@ def index():
                             else:
                                 the_string = file_field + " = None"
                             #logmessage("5Doing " + the_string)
+                            vars_set.add(file_field)
                             try:
                                 exec(the_string, user_dict)
                                 if not changed:
@@ -5529,6 +5549,10 @@ def index():
             has_invalid_fields = False
             should_assemble_now = False
             for orig_file_field in file_fields:
+                if orig_file_field in known_varnames:
+                    orig_file_field = known_varnames[orig_file_field]
+                if orig_file_field not in visible_fields:
+                    continue
                 try:
                     file_field = from_safeid(orig_file_field)
                 except:
@@ -5550,6 +5574,10 @@ def index():
                     #logmessage("index: assemble 6")
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
+                    if orig_file_field_raw in known_varnames:
+                        orig_file_field_raw = known_varnames[orig_file_field_raw]
+                    if orig_file_field_raw not in visible_fields:
+                        continue
                     if not validated:
                         break
                     orig_file_field = orig_file_field_raw
@@ -5618,6 +5646,7 @@ def index():
                             else:
                                 the_string = file_field + " = None"
                             #logmessage("6Doing " + the_string)
+                            vars_set.add(file_field)
                             if validated:
                                 try:
                                     exec(the_string, user_dict)
@@ -5635,19 +5664,40 @@ def index():
                     user_dict['_internal']['informed'][the_user_id][key] = 1
             if changed and '_question_name' in post_data and post_data['_question_name'] not in user_dict['_internal']['answers']:
                 user_dict['_internal']['answered'].add(post_data['_question_name'])
+            #logmessage("start: event_stack is " + repr(user_dict['_internal']['event_stack']))
             if '_event' in post_data and 'event_stack' in user_dict['_internal']:
                 events_list = json.loads(myb64unquote(post_data['_event']))
-                for event_name in events_list:
-                    if event_name in user_dict['_internal']['event_stack']:
-                        user_dict['_internal']['event_stack'].remove(event_name)
+                #logmessage("events_list was " + repr(events_list))
+                if len(events_list):
+                    session_uid = interview_status.current_info['user']['session_uid']
+                    if session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
+                        for event_name in events_list:
+                            if user_dict['_internal']['event_stack'][session_uid][0]['action'] == event_name:
+                                user_dict['_internal']['event_stack'][session_uid].pop(0)
+                                if 'action' in interview_status.current_info and interview_status.current_info['action'] == event_name:
+                                    del interview_status.current_info['action']
+                                    if 'arguments' in interview_status.current_info:
+                                        del interview_status.current_info['arguments']
+                                #logmessage("popped!")
+                                break
+            #logmessage("vars_set was " + repr(vars_set))
+            if len(vars_set) and 'event_stack' in user_dict['_internal']:
+                session_uid = interview_status.current_info['user']['session_uid']
+                if session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
+                    for var_name in vars_set:
+                        if user_dict['_internal']['event_stack'][session_uid][0]['action'] == var_name:
+                            #logmessage("popped based on vars_set!")
+                            user_dict['_internal']['event_stack'][session_uid].pop(0)
+            #logmessage("finish: event_stack is " + repr(user_dict['_internal']['event_stack']))
         else:
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     else:
         steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
-    if next_action:
-        the_next_action = next_action.pop(0)
-        interview_status.next_action = next_action
-        interview_status.current_info.update(the_next_action)
+    # restore this, maybe
+    #if next_action:
+    #    the_next_action = next_action.pop(0)
+    #    interview_status.next_action = next_action
+    #    interview_status.current_info.update(the_next_action)
     #startTime = int(round(time.time() * 1000))
     #g.assembly_start = time.time()
     #logmessage("index: assemble 7")
@@ -5663,10 +5713,11 @@ def index():
     # if len(interview_status.attachments) > 0:
     #     #logmessage("Updating attachment info")
     #     update_attachment_info(user_code, user_dict, interview_status, secret)
-    if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
-        next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
-    else:
-        next_action_review = None
+    # restore this, maybe
+    #if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
+    #    next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
+    #else:
+    #    next_action_review = None
     if interview_status.question.question_type == "restart":
         manual_checkout()
         url_args = user_dict['url_args']
@@ -5943,6 +5994,7 @@ def index():
         else:
             forceFullScreen = ''
         the_checkin_interval = interview_status.question.interview.options.get('checkin interval', CHECKIN_INTERVAL)
+#      //var daNextAction = """ + json.dumps(next_action_review) + """;
         scripts += """
     <script type="text/javascript" charset="utf-8">
       var map_info = null;
@@ -5972,7 +6024,6 @@ def index():
       var daUsingGA = """ + ("true" if ga_id is not None else 'false') + """;
       var daDoAction = """ + do_action + """;
       var daQuestionID = """ + json.dumps(question_id) + """;
-      var daNextAction = """ + json.dumps(next_action_review) + """;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
       var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
@@ -6722,7 +6773,7 @@ def index():
           $("body").addClass(data.bodyclass);
           $("meta[name=viewport]").attr('content', "width=device-width, initial-scale=1");
           daDoAction = data.do_action;
-          daNextAction = data.next_action;
+          //daNextAction = data.next_action;
           daChatAvailable = data.livehelp.availability;
           daChatMode = data.livehelp.mode;
           daChatRoles = data.livehelp.roles;
@@ -6809,7 +6860,9 @@ def index():
         return false;
       }
       function daReviewAction(e){
-        url_action_perform_with_next($(this).data('action'), null, daNextAction);
+        //url_action_perform_with_next($(this).data('action'), null, daNextAction);
+        var info = $.parseJSON(atob($(this).data('action')));
+        url_action_perform(info['action'], info['arguments']);
         e.preventDefault();
         return false;
       }
@@ -7481,9 +7534,9 @@ def index():
             else{
               theVal = $(this).val();
             }
-            //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + theVal + " and showIfVal is " + showIfVal);
-            if(theVal == showIfVal){
-              //console.log("They are the same");
+            //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
+            if(String(theVal) == String(showIfVal)){
+              console.log("They are the same");
               if (showIfSign){
                 //console.log("Showing1!");
                 //$(showIfDiv).removeClass("invisible");
@@ -7915,8 +7968,23 @@ def index():
         the_field_errors = field_error
     else:
         the_field_errors = None
+    # restore this, maybe
+    # if next_action_to_set:
+    #     interview_status.next_action.append(next_action_to_set)
     if next_action_to_set:
-        interview_status.next_action.append(next_action_to_set)
+        logmessage("Setting the next_action")
+        if 'event_stack' not in user_dict['_internal']:
+            user_dict['_internal']['event_stack'] = dict()
+        session_uid = interview_status.current_info['user']['session_uid']
+        if session_uid not in user_dict['_internal']['event_stack']:
+            user_dict['_internal']['event_stack'][session_uid] = list()
+        already_there = False
+        for event_item in user_dict['_internal']['event_stack'][session_uid]:
+            if event_item['action'] == next_action_to_set['action']:
+                already_there = True
+                break
+        if not already_there:
+            user_dict['_internal']['event_stack'][session_uid].insert(0, next_action_to_set)
     if interview_status.question.interview.use_progress_bar:
         the_progress_bar = progress_bar(user_dict['_internal']['progress'])
     else:
@@ -8103,8 +8171,8 @@ def index():
     if is_json:
         data = dict(browser_title=interview_status.tabtitle, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id=question_id)
         data.update(interview_status.as_data())
-        if next_action_review:
-            data['next_action'] = next_action_review
+        #if next_action_review:
+        #    data['next_action'] = next_action_review
         if reload_after and reload_after > 0:
             data['reload_after'] = reload_after
         if 'action' in data and data['action'] == 'redirect' and 'url' in data:
@@ -8116,7 +8184,8 @@ def index():
             do_action = interview_status.question.checkin
         else:
             do_action = None
-        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id=question_id)
+        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id=question_id)
+        #response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id=question_id)
         if return_fake_html:
             response.set_data('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Response</title></head><body><pre>ABCDABOUNDARYSTARTABC' + response.get_data().encode('base64') + 'ABCDABOUNDARYENDABC</pre></body></html>')
             response.headers['Content-type'] = 'text/html; charset=utf-8'
@@ -8907,7 +8976,7 @@ def observer():
               theVal = $(this).val();
             }
             //console.log("val is " + theVal + " and showIfVal is " + showIfVal)
-            if($(this).parent().is(":visible") && theVal == showIfVal){
+            if($(this).parent().is(":visible") && String(theVal) == String(showIfVal)){
               //console.log("They are the same");
               if (showIfSign){
                 $(showIfDiv).show(speed);
@@ -17087,16 +17156,16 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         allow_going_back = False
     data = dict(browser_title=interview_status.tabtitle, exit_link=interview_status.exit_link, exit_label=interview_status.exit_label, title=interview_status.title, display_title=interview_status.display_title, short_title=interview_status.short_title, lang=interview_language, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log())
     data.update(interview_status.as_data(encode=False))
-    if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
-        next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
-    else:
-        next_action_review = None
+    #if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
+    #    next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
+    #else:
+    #    next_action_review = None
     if 'reload_after' in interview_status.extras:
         reload_after = 1000 * int(interview_status.extras['reload_after'])
     else:
         reload_after = 0
-    if next_action_review:
-        data['next_action'] = next_action_review
+    #if next_action_review:
+    #    data['next_action'] = next_action_review
     if reload_after and reload_after > 0:
         data['reload_after'] = reload_after
     for key in data.keys():

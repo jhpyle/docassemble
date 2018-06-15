@@ -16,24 +16,33 @@ class CodeExecute(Exception):
         else:
             self.compute = compute
         self.question = question
-    
+
+class ForcedReRun(Exception):
+    pass
+
 class ForcedNameError(NameError):
-    def __init__(self, *pargs):
+    def __init__(self, *pargs, **kwargs):
         the_args = [x for x in pargs]
-        self.name = unicode(the_args.pop(0))
-        if len(the_args):
-            self.next_action = list()
-            while len(the_args):
-                arg = the_args.pop(0)
-                if type(arg) is dict:
-                    if (len(arg.keys()) == 2 and 'action' in arg and 'arguments' in arg) or (len(arg.keys()) == 1 and 'action' in arg):
-                        self.next_action.append(arg)
-                    else:
-                        raise DAError("Dictionaries passed to force_ask must have keys of 'action' and 'argument' only.")
-                else:
-                    self.next_action.append(dict(action=arg, arguments=dict()))
+        #self.name = unicode(the_args.pop(0))
+        if len(the_args) == 0:
+            raise DAError("ForcedNameError must have at least one argument")
+        if type(the_args[0]) is dict:
+            self.name = the_args[0]['action']
         else:
+            self.name = the_args[0]
+        if kwargs.get('gathering', False):
             self.next_action = None
+            return
+        self.next_action = list()
+        while len(the_args):
+            arg = the_args.pop(0)
+            if type(arg) is dict:
+                if (len(arg.keys()) == 2 and 'action' in arg and 'arguments' in arg) or (len(arg.keys()) == 1 and 'action' in arg):
+                    self.next_action.append(arg)
+                else:
+                    raise DAError("Dictionaries passed to force_ask must have keys of 'action' and 'argument' only.")
+            else:
+                self.next_action.append(dict(action=arg, arguments=dict()))
 
 class DAErrorNoEndpoint(DAError):
     pass

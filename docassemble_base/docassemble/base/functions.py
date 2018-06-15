@@ -13,7 +13,7 @@ import locale
 import pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
-from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError
+from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun
 import locale
 import decimal
 import urllib
@@ -100,6 +100,13 @@ def set_current_variable(var):
     # if len(this_thread.current_variable) > 0 and this_thread.current_variable[-1] == var:
     #     return
     this_thread.current_variable.append(var)
+
+def pop_event_stack(var):
+    unique_id = this_thread.current_info['user']['session_uid']
+    if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack']:
+        if len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == var:
+            this_thread.internal['event_stack'][unique_id].pop(0)
+            #logmessage("popped the event stack")
 
 def pop_current_variable():
     #logmessage("pop_current_variable: " + str(this_thread.current_variable))
@@ -408,6 +415,7 @@ def action_argument(item):
     """Used when processing an "action."  Returns the value of the given 
     argument, which is assumed to have been passed to url_action() or 
     interview_url_action()."""
+    #logmessage("action_argument: item is " + unicode(item) + " and arguments are " + repr(this_thread.current_info['arguments']))
     if 'arguments' in this_thread.current_info:
         return this_thread.current_info['arguments'].get(item, None)
     else:
@@ -2166,7 +2174,7 @@ def command(*pargs, **kwargs):
     """Executes a command, such as exit, logout, restart, or leave."""
     raise CommandError(*pargs, **kwargs)
 
-def force_ask(*pargs):
+def force_ask(*pargs, **kwargs):
     """Given a variable name, instructs docassemble to ask a question that
     would define the variable, even if the variable has already been
     defined.  This does not change the interview logic, but merely
@@ -2175,10 +2183,13 @@ def force_ask(*pargs):
     questions will be asked serially.
 
     """
-    raise ForcedNameError(*pargs)
+    if kwargs.get('persistent', True):
+        raise ForcedNameError(*pargs)
+    else:
+        force_ask_nameerror(pargs[0])
 
 def force_ask_nameerror(variable_name):
-    raise NameError("name '" + str(variable_name) + "' is not defined")
+    raise NameError("name '" + unicode(variable_name) + "' is not defined")
 
 def force_gather(*pargs):
     """Like force_ask(), except more insistent.  In addition to making a 
@@ -2189,7 +2200,7 @@ def force_gather(*pargs):
     for variable_name in pargs:
         if variable_name not in this_thread.internal['gather']:
             this_thread.internal['gather'].append(variable_name)
-    raise ForcedNameError(variable_name)
+    raise ForcedNameError(variable_name, gathering=True)
 
 def static_filename_path(filereference):
     result = package_data_filename(static_filename(filereference))
@@ -2325,35 +2336,67 @@ def nodoublequote(text):
 def process_action():
     """If an action is waiting to be processed, it processes the action."""
     #sys.stderr.write("process_action() started")
+    #logmessage("process_action: starting")
     if 'action' not in this_thread.current_info:
         to_be_gathered = [variable_name for variable_name in this_thread.internal['gather']]
         for variable_name in to_be_gathered:
             if defined(variable_name):
                 this_thread.internal['gather'].remove(variable_name)
             else:
+                #logmessage("process_action: doing a gather of " + variable_name)
                 force_ask_nameerror(variable_name)
-        if 'event_stack' in this_thread.internal:
-            for event_info in this_thread.internal['event_stack']:
-                if type(event_info) in (str, unicode):
-                    force_ask_nameerror(event_info)
+        if 'event_stack' in this_thread.internal and this_thread.current_info['user']['session_uid'] in this_thread.internal['event_stack']:
+            if len(this_thread.internal['event_stack'][this_thread.current_info['user']['session_uid']]):
+                if this_thread.interview_status.checkin:
+                    event_info = this_thread.internal['event_stack'][this_thread.current_info['user']['session_uid']].pop(0)
+                else:
+                    event_info = this_thread.internal['event_stack'][this_thread.current_info['user']['session_uid']][0]
+                #logmessage("process_action: adding " + event_info['action'] + " to current_info")
+                this_thread.current_info.update(event_info)
+                if event_info['action'].startswith('_da_'):
+                    raise ForcedReRun()
+                else:
+                    force_ask_nameerror(event_info['action'])
         return
     #sys.stderr.write("process_action() continuing")
     the_action = this_thread.current_info['action']
+    #logmessage("process_action: action is " + the_action)
     del this_thread.current_info['action']
-    if the_action == '_da_list_remove':
-        if 'action_item' in interview_status.current_info and 'action_list' in interview_status.current_info:
+    if the_action == '_da_force_ask' and 'variables' in this_thread.current_info['arguments']:
+        force_ask(*this_thread.current_info['arguments']['variables'])
+    elif the_action == '_da_list_remove':
+        if 'action_item' in this_thread.current_info and 'action_list' in this_thread.current_info:
             try:
-                interview_status.current_info['action_list'].remove(interview_status.current_info['action_item'])
+                this_thread.current_info['action_list'].remove(this_thread.current_info['action_item'])
             except Exception as err:
-                logmessage("_da_list_remove:" + unicode(err))
-    elif the_action == '_da_list_edit' and 'action_items' in interview_status.current_info:
-        docassemble.base.functions.force_ask(*interview_status.current_info['action_items'])
-    elif the_action == '_da_list_add' and 'action_list' in interview_status.current_info:
-        the_list = interview_status.current_info['action_list']
+                logmessage("process_action: _da_list_remove:" + unicode(err))
+        raise ForcedReRun()
+    elif the_action == '_da_list_edit' and 'items' in this_thread.current_info['arguments']:
+        force_ask(*this_thread.current_info['arguments']['items'])
+    elif the_action == '_da_list_complete' and 'action_list' in this_thread.current_info:
+        the_list = this_thread.current_info['action_list']
+        the_list._validate(the_list.object_type, the_list.complete_attribute)
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and this_thread.internal['event_stack'][unique_id][0]['arguments']['list'] == the_list.instanceName:
+            this_thread.internal['event_stack'][unique_id].pop(0)
+        raise ForcedReRun()
+    elif the_action == '_da_list_add' and 'action_list' in this_thread.current_info:
+        the_list = this_thread.current_info['action_list']
         the_list.appendObject()
         the_list.reset_gathered()
         the_list.there_is_another = False
-        the_list._validate(the_list.object_type, the_list.complete_attribute)
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' not in this_thread.internal:
+            this_thread.internal['event_stack'] = dict()
+        if unique_id not in this_thread.internal['event_stack']:
+            this_thread.internal['event_stack'][unique_id] = list()
+        if len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and this_thread.internal['event_stack'][unique_id][0]['arguments']['list'] == the_list.instanceName:
+            this_thread.internal['event_stack'][unique_id].pop(0)
+        the_action = dict(action='_da_list_complete', arguments=dict(list=the_list.instanceName))
+        this_thread.internal['event_stack'][unique_id].insert(0, the_action)
+        this_thread.current_info.update(the_action)
+        raise ForcedReRun()
+        #the_list._validate(the_list.object_type, the_list.complete_attribute)
     elif the_action == 'need':
         for key in ['variable', 'variables']:
             if key in this_thread.current_info['arguments']:
@@ -2369,8 +2412,10 @@ def process_action():
             if defined(variable_name):
                 this_thread.internal['gather'].remove(variable_name)
             else:
+                #logmessage("process_action: doing a gather2: " + variable_name)
                 force_ask_nameerror(variable_name)
-        return        
+        return
+    #logmessage("process_action: calling force_ask")
     force_ask(the_action)
 
 def url_action(action, **kwargs):

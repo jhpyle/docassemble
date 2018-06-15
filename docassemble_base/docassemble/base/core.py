@@ -937,12 +937,12 @@ class DAList(DAObject):
         """Returns HTML for editing the items in a list"""
         the_args = list(pargs)
         item = the_args.pop(0)
-        return '<a class="btn btn-sm btn-secondary" href="' + docassemble.base.functions.url_action('_da_list_edit', list=self.instanceName, items=[item.instanceName + '.' + y for y in the_args]) + '"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> <a class="btn btn-sm btn-danger" href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=item.instanceName) + '"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+        return '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=[item.instanceName + '.' + y for y in the_args]) + '" class="btn btn-sm btn-secondary"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> <a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=item.instanceName) + '" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
     def add_action(self, message=None):
         """Returns HTML for adding an item to a list"""
         if message is None:
             message = word("Add another")
-        return '<a class="btn btn-sm btn-success" href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '"><i class="fas fa-plus-circle"></i> ' + unicode(message) + '</a>'
+        return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn btn-sm btn-success"><i class="fas fa-plus-circle"></i> ' + unicode(message) + '</a>'
 
 class DADict(DAObject):
     """A base class for objects that behave like Python dictionaries."""

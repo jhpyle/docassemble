@@ -1,0 +1,61 @@
+metadata:
+  title: Review answers
+  short title: Review
+  example start: 4
+  example end: 4
+  documentation: "https://docassemble.org/docs/fields.html#review"
+---
+modules:
+  - docassemble.base.util
+---
+initial: True
+code: |
+  process_action()
+---
+code: |
+  fruit = "apples"
+  vegetable = "potatoes"
+---
+event: review_answers
+question: |
+  Revisit your answers
+review:
+  - note: |
+      Thank you for telling me
+      about your food preferences.
+    show if:
+      - fruit
+      - vegetable
+      - fungi
+  - Favorite fruit: fruit
+  - Favorite vegetable: vegetable
+  - Favorite fungus: fungi
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - no label: fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - no label: vegetable
+---
+question: |
+  What is your favorite fungi?
+fields:
+  - no label: fungi
+---
+sets: final_screen
+question: All done
+subquestion: |
+  You like ${ fruit }, ${ vegetable }, and ${ fungi }.
+---
+mandatory: True
+code: |
+  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
+---
+mandatory: True
+code: |
+  need(final_screen)
+---
