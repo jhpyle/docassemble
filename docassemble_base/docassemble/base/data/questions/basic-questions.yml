@@ -288,23 +288,18 @@ question: |
   Is this ${ x.possessive('signature') }?
 subquestion: |
   ${ x.signature.show() }
+field: x.signature_verified_button
 buttons:
-  - "Yes":
-      generic object: Individual
-      code: |
-        x.signature_verified = True
-  - "No":
-      generic object: Individual
-      code: |
-        x.signature_verified = False
-comment: |
-  This is an example of a multiple choice question where selecting an
-  option causes code to be run.  Each multiple choice option contains
-  an embedded block.
-  
-  Note that in order for an "embedded" code or question block to use
-  the special variable "x," you need to declare a generic object
-  within the embedded code or question.
+  - Yes: True
+  - No: False
+  - Let me try again: Null
+---
+generic object: Individual
+code: |
+  if x.signature_verified_button in (True, False):
+    x.signature_verified = x.signature_verified_button
+  else:
+    force_ask('x.signature', 'x.signature_verified_button')
 ---
 generic object: Individual
 question: |
