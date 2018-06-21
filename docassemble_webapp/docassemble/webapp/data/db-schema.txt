@@ -89,11 +89,6 @@ user_invite|email|character varying|255|
 user_invite|role_id|integer||
 user_invite|invited_by_user_id|integer||
 user_invite|token|character varying|100|''::character varying
-userdictkeys|indexno|integer||nextval('userdictkeys_indexno_seq'::regclass)
-userdictkeys|filename|text||
-userdictkeys|key|character varying|250|
-userdictkeys|user_id|integer||
-userdictkeys|temp_user_id|integer||
 userdict|indexno|integer||nextval('userdict_indexno_seq'::regclass)
 userdict|filename|text||
 userdict|key|character varying|250|
@@ -119,17 +114,6 @@ chatlog|temp_owner_id|integer||
 chatlog|open_to_peer|boolean||false
 chatlog|encrypted|boolean||true
 chatlog|modtime|timestamp without time zone||
-speaklist|id|integer||nextval('speaklist_id_seq'::regclass)
-speaklist|filename|text||
-speaklist|key|character varying|250|
-speaklist|phrase|text||
-speaklist|question|integer||
-speaklist|type|character varying|20|
-speaklist|language|character varying|10|
-speaklist|dialect|character varying|10|
-speaklist|upload|integer||
-speaklist|encrypted|boolean||true
-speaklist|digest|text||
 email|id|integer||nextval('email_id_seq'::regclass)
 email|short|character varying|250|
 email|all_addr|text||
@@ -146,3 +130,19 @@ install|hostname|text||
 install|version|integer||
 install|packageversion|text||
 install|package_id|integer||
+userdictkeys|indexno|integer||nextval('userdictkeys_indexno_seq'::regclass)
+userdictkeys|filename|text||
+userdictkeys|key|character varying|250|
+userdictkeys|user_id|integer||
+userdictkeys|temp_user_id|integer||
+speaklist|id|integer||nextval('speaklist_id_seq'::regclass)
+speaklist|filename|text||
+speaklist|key|character varying|250|
+speaklist|phrase|text||
+speaklist|question|integer||
+speaklist|type|character varying|20|
+speaklist|language|character varying|10|
+speaklist|dialect|character varying|10|
+speaklist|upload|integer||
+speaklist|encrypted|boolean||true
+speaklist|digest|text||

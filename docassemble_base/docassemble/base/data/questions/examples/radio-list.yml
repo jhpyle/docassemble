@@ -9,13 +9,13 @@ fields:
   - Number of wheels: wheels_on_car
     datatype: integer
   - Type: car_type
-    datatype: radio
+    input type: radio
     choices:
       - Convertible
       - Hatchback
       - Sedan
   - Model: car_country
-    datatype: radio
+    input type: radio
     choices:
       - BMW: Germany
       - Buick: United States

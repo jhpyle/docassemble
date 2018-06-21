@@ -53,6 +53,16 @@ do
     elif [ "$file" = "review-4" ]
     then
 	echo -e -n "\n    And I set the text box to \"apple\"\n    And I click the button \"Continue\"\n    And I select \"Review Answers\" from the menu\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
+    elif [ "$file" = "review-7" ]
+    then
+	echo -e -n "\n    And I set the text box to \"apple\"\n    And I click the button \"Continue\"\n    And I set the text box to \"turnip\"\n    And I click the button \"Continue\"\n    And I set the text box to \"button mushrooms\"\n    And I click the button \"Continue\"\n    And I select \"Review Answers\" from the menu\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
+    elif [ "$file" = "review-8" ]
+    then
+	echo -e -n "\n    Then I should see the phrase \"What is your address?\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
+	#echo -e -n "\n    Then I should see the phrase \"What is your address?\"\n    And I set \"Street address\" to \"418 South 20th Street\"\n    And I set \"City\" to \"Philadelphia\"\n    And I select \"Pennsylvania\" as the \"State\"\n    And I set \"Zip\" to \"19146\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"You live in Philadelphia County.\"\n    And I click the link \"Review your answers\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
+    elif [ "$file" = "review-9" ]
+    then
+	echo -e -n "\n    Then I should see the phrase \"What is a?\"\n    And I set \"a\" to \"10\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"What is b?\"\n    And I set \"b\" to \"5\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"What is c?\"\n    And I set \"c\" to \"2\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"The answer is 13.0.\"\n    And I click the link \"change this\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
     elif [ "$file" = "sections-keywords" ]
     then
 	echo -e -n "\n    And I click the button \"Continue\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile

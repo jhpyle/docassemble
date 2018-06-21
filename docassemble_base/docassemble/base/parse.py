@@ -717,6 +717,8 @@ class Field:
         if 'choices' in data:
             self.fieldtype = 'multiple_choice'
             self.choices = data['choices']
+        if 'inputtype' in data:
+            self.inputtype = data['inputtype']
         if 'has_code' in data:
             self.has_code = True
         # if 'script' in data:
@@ -1930,6 +1932,9 @@ class Question:
                     if type(field) is dict:
                         manual_keys = set()
                         field_info = {'type': 'text', 'number': field_number}
+                        if 'datatype' in field and field['datatype'] in ('radio', 'combobox', 'pulldown'):
+                            field['input type'] = field['datatype']
+                            field['datatype'] = 'text'
                         if len(field) == 1 and 'code' in field:
                             field_info['type'] = 'fields_code'
                             self.find_fields_in(field['code'])
@@ -1941,7 +1946,9 @@ class Question:
                         for key in field:
                             if key == 'default' and 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'object_checkboxes'):
                                 continue
-                            if 'datatype' in field and field['datatype'] in ('ml', 'mlarea') and key in ('using', 'keep for training'):
+                            if key == 'input type':
+                                field_info['inputtype'] = field[key]
+                            elif 'datatype' in field and field['datatype'] in ('ml', 'mlarea') and key in ('using', 'keep for training'):
                                 if key == 'using':
                                     if 'extras' not in field_info:
                                         field_info['extras'] = dict()
@@ -2248,7 +2255,7 @@ class Question:
                         if len(field_list):
                             if 'saveas_code' not in field_info:
                                 field_info['saveas_code'] = []
-                            field_info['saveas_code'].extend([compile(y, '<expression>', 'eval') for y in field_list])
+                            field_info['saveas_code'].extend([(compile(y, '<expression>', 'eval'), True) for y in field_list])
                     elif key in ('field', 'fields'):
                         if 'label' not in field:
                             raise DAError("If you use 'field' or 'fields' to indicate variables in a 'review' section, you must also include a 'label.'" + self.idebug(data))
@@ -2256,7 +2263,43 @@ class Question:
                             field_list = [field[key]]
                         else:
                             field_list = field[key]
+                        field_info['data'] = []
                         for the_saveas in field_list:
+                            if type(the_saveas) is dict and len(the_saveas) == 1 and ('undefine' in the_saveas or 'recompute' in the_saveas or 'set' in the_saveas):
+                                if 'set' in the_saveas:
+                                    if type(the_saveas['set']) is not list:
+                                        raise DAError("The set statement must refer to a list." + self.idebug(data))
+                                    clean_list = []
+                                    for the_dict in the_saveas['set']:
+                                        if type(the_dict) is not dict:
+                                            raise DAError("A set command must refer to a list of dicts." + self.idebug(data))
+                                        for the_var, the_val in the_dict.iteritems():
+                                            if not isinstance(the_var, basestring):
+                                                raise DAError("A set command must refer to a list of dicts with keys as variable names." + self.idebug(data))
+                                            the_var_stripped = the_var.strip()
+                                        if invalid_variable_name(the_var_stripped):
+                                            raise DAError("Missing or invalid variable name " + repr(the_var) + " ." + self.idebug(data))
+                                        self.find_fields_in(the_var_stripped)
+                                        clean_list.append([the_var_stripped, the_val])
+                                    field_info['data'].append(dict(action='_da_set', arguments=dict(variables=clean_list)))
+                                for command in ('undefine', 'recompute'):
+                                    if command not in the_saveas:
+                                        continue
+                                    if type(the_saveas[command]) is not list:
+                                        raise DAError("The " + command + " statement must refer to a list." + self.idebug(data))
+                                    clean_list = []
+                                    for undef_var in the_saveas[command]:
+                                        if type(undef_var) not in (str, unicode):
+                                            raise DAError("Invalid variable name in fields " + command + "." + self.idebug(data))
+                                        undef_saveas = undef_var.strip()
+                                        if invalid_variable_name(undef_saveas):
+                                            raise DAError("Missing or invalid variable name " + repr(undef_saveas) + " ." + self.idebug(data))
+                                        self.find_fields_in(undef_saveas)
+                                        clean_list.append(undef_saveas)
+                                    field_info['data'].append(dict(action='_da_undefine', arguments=dict(variables=clean_list)))
+                                    if command == 'recompute':
+                                        field_info['data'].append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
+                                continue
                             if type(the_saveas) not in (str, unicode):
                                 raise DAError("Invalid variable name in fields." + self.idebug(data))
                             the_saveas = the_saveas.strip()
@@ -2279,22 +2322,57 @@ class Question:
                             field_list = field[key]
                         field_info['data'] = []
                         for the_saveas in field_list:
+                            if type(the_saveas) is dict and len(the_saveas) == 1 and ('undefine' in the_saveas or 'recompute' in the_saveas):
+                                if 'set' in the_saveas:
+                                    if type(the_saveas['set']) is not list:
+                                        raise DAError("The set statement must refer to a list." + self.idebug(data))
+                                    clean_list = []
+                                    for the_dict in the_saveas['set']:
+                                        if type(the_dict) is not dict:
+                                            raise DAError("A set command must refer to a list of dicts." + self.idebug(data))
+                                        for the_var, the_val in the_dict.iteritems():
+                                            if not isinstance(the_var, basestring):
+                                                raise DAError("A set command must refer to a list of dicts with keys as variable names." + self.idebug(data))
+                                            the_var_stripped = the_var.strip()
+                                        if invalid_variable_name(the_var_stripped):
+                                            raise DAError("Missing or invalid variable name " + repr(the_var) + " ." + self.idebug(data))
+                                        self.find_fields_in(the_var_stripped)
+                                        clean_list.append([the_var_stripped, the_val])
+                                    field_info['data'].append(dict(action='_da_set', arguments=dict(variables=clean_list)))
+                                for command in ('undefine', 'recompute'):
+                                    if command not in the_saveas:
+                                        continue
+                                    if type(the_saveas[command]) is not list:
+                                        raise DAError("The " + command + " statement must refer to a list." + self.idebug(data))
+                                    clean_list = []
+                                    for undef_var in the_saveas[command]:
+                                        if type(undef_var) not in (str, unicode):
+                                            raise DAError("Invalid variable name in fields " + command + "." + self.idebug(data))
+                                        undef_saveas = undef_var.strip()
+                                        if invalid_variable_name(undef_saveas):
+                                            raise DAError("Missing or invalid variable name " + repr(undef_saveas) + " ." + self.idebug(data))
+                                        self.find_fields_in(undef_saveas)
+                                        clean_list.append(undef_saveas)
+                                    field_info['data'].append(dict(action='_da_undefine', arguments=dict(variables=clean_list)))
+                                    if command == 'recompute':
+                                        field_info['data'].append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
+                                continue
                             if type(the_saveas) not in (str, unicode):
                                 raise DAError("Invalid variable name in fields." + self.idebug(data))
                             the_saveas = the_saveas.strip()
                             if invalid_variable_name(the_saveas):
                                 raise DAError("Missing or invalid variable name " + repr(the_saveas) + " ." + self.idebug(data))
-                            if the_saveas not in field_info['data']:
-                                field_info['data'].append(the_saveas)
+                            #if the_saveas not in field_info['data']:
+                            field_info['data'].append(the_saveas)
                             self.find_fields_in(the_saveas)
                         if 'action' in field:
                             field_info['action'] = dict(action=field['action'], arguments=dict())
                 if len(field_info['data']):
                     if 'saveas_code' not in field_info:
                         field_info['saveas_code'] = []
-                    field_info['saveas_code'].extend([compile(y, '<expression>', 'eval') for y in field_info['data']])
+                    field_info['saveas_code'].extend([(compile(y, '<expression>', 'eval'), False) for y in field_info['data'] if isinstance(y, basestring)])
                     if 'action' not in field_info:
-                        if len(field_info['data']) == 1:
+                        if len(field_info['data']) == 1 and type(field_info['data'][0]) in (str, unicode):
                             field_info['action'] = dict(action=field_info['data'][0], arguments=dict())
                         else:
                             field_info['action'] = dict(action="_da_force_ask", arguments=dict(variables=field_info['data']))
@@ -2828,10 +2906,13 @@ class Question:
                 extras['ok'][field.number] = False
                 if hasattr(field, 'saveas_code'):
                     failed = False
-                    for expression in field.saveas_code:
+                    for (expression, is_showif) in field.saveas_code:
                         try:
-                            eval(expression, user_dict)
+                            the_val = eval(expression, user_dict)
                         except:
+                            failed = True
+                            break
+                        if is_showif and not the_val:
                             failed = True
                             break
                     if failed:
@@ -3164,11 +3245,11 @@ class Question:
                 user_dict['_internal']['event_stack'][session_uid] = list()
             already_there = False
             for event_item in user_dict['_internal']['event_stack'][session_uid]:
-                if event_item['action'] == sought:
+                if event_item['action'] in (sought, orig_sought):
                     already_there = True
                     break
             if not already_there:
-                user_dict['_internal']['event_stack'][session_uid].insert(0, dict(action=sought, arguments=dict()))
+                user_dict['_internal']['event_stack'][session_uid].insert(0, dict(action=orig_sought, arguments=dict()))
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought, 'orig_sought': orig_sought}) #'defined': defined, 
     def processed_attachments(self, user_dict, **kwargs):
         seeking_var = kwargs.get('seeking_var', '__novar')
@@ -4220,6 +4301,8 @@ class Interview:
                                 #logmessage("adding a new item to event_stack: " + repr(new_items))
                                 user_dict['_internal']['event_stack'][session_uid] = new_items + user_dict['_internal']['event_stack'][session_uid]
                             #interview_status.next_action.extend(the_exception.next_action)
+                            if the_exception.name.startswith('_da_'):
+                                continue
                         missingVariable = the_exception.name
                     else:
                         follow_mc = True
@@ -4751,9 +4834,11 @@ class Interview:
                             if not already_there:
                                 new_items.append(new_item)
                         if len(new_items):
-                            #logmessage("adding a new item to event_stack: " + repr(new_items))
+                            logmessage("adding a new item to event_stack: " + repr(new_items))
                             user_dict['_internal']['event_stack'][session_uid] = new_items + user_dict['_internal']['event_stack'][session_uid]
                         #interview_status.next_action.extend(the_exception.next_action)
+                    if the_exception.name.startswith('_da_'):
+                        continue
                 else:
                     #logmessage("regular nameerror")
                     follow_mc = True

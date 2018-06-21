@@ -9,7 +9,7 @@ question: |
   What is your favorite color?
 fields:
   - Color: favorite_color
-    datatype: combobox
+    input type: combobox
     choices: 
       - Red
       - Green

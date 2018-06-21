@@ -1,0 +1,51 @@
+metadata:
+  title: Review answers
+  short title: Review
+  example start: 2
+  example end: 4
+  documentation: "https://docassemble.org/docs/fields.html#review"
+---
+modules:
+  - docassemble.base.util
+---
+event: review_answer
+question: |
+  Revisit the equation
+review:
+  - Change this:
+      - undefine:
+          - a
+          - b
+          - c
+      - recompute:
+          - d
+    button: |
+      ${ a } + ${ b } - ${ c } = ${ d }
+---
+code: |
+  d = a + b - c
+---
+mandatory: True
+question: All done
+subquestion: |
+  The answer is ${ d }.  You can
+  [change this](${ url_action('review_answer') }).
+---
+question: |
+  What is `a`?
+fields:
+  - a: a
+    datatype: number
+---
+question: |
+  What is `b`?
+fields:
+  - b: b
+    datatype: number
+---
+question: |
+  What is `c`?
+fields:
+  - c: c
+    datatype: number
+  

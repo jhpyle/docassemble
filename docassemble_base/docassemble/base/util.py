@@ -778,8 +778,8 @@ class Address(DAObject):
                 elif hasattr(self, 'room') and self.room != '' and self.room is not None:
                     output += ", " + word("Room", language=language) + " " + unicode(self.room)
             output += ", "
-        if hasattr(self, 'sublocality') and self.sublocality:
-            output += unicode(self.sublocality) + ", "
+        #if hasattr(self, 'sublocality') and self.sublocality:
+        #    output += unicode(self.sublocality) + ", "
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
             output += unicode(self.sublocality_level_1) + ", "
         output += unicode(self.city)
@@ -932,6 +932,14 @@ class Address(DAObject):
                     self.norm.address = self.norm.street_number + " " + self.norm.street
                 if hasattr(self.norm_long, 'street_number') and hasattr(self.norm_long, 'street'):
                     self.norm_long.address = self.norm_long.street_number + " " + self.norm_long.street
+                if (not hasattr(self.norm, 'city')) and hasattr(self.norm, 'administrative_area_level_3'):
+                    self.norm.city = self.norm.administrative_area_level_3
+                if (not hasattr(self.norm_long, 'city')) and hasattr(self.norm_long, 'administrative_area_level_3'):
+                    self.norm_long.city = self.norm_long.administrative_area_level_3
+                if (not hasattr(self.norm, 'city')) and hasattr(self.norm, 'neighborhood'):
+                    self.norm.city = self.norm.neighborhood
+                if (not hasattr(self.norm_long, 'city')) and hasattr(self.norm_long, 'neighborhood'):
+                    self.norm_long.city = self.norm_long.neighborhood
             self.norm.geolocated = True
             self.norm.location.gathered = True
             self.norm.location.known = True
@@ -985,8 +993,8 @@ class Address(DAObject):
                 output += word("Floor", language=language) + " " + unicode(self.floor) + line_breaker
             elif hasattr(self, 'room') and self.room != '' and self.room is not None:
                 output += word("Room", language=language) + " " + unicode(self.room) + line_breaker
-        if hasattr(self, 'sublocality') and self.sublocality:
-            output += unicode(self.sublocality) + line_breaker
+        #if hasattr(self, 'sublocality') and self.sublocality:
+        #    output += unicode(self.sublocality) + line_breaker
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
             output += unicode(self.sublocality_level_1) + line_breaker
         output += unicode(self.city)
@@ -1017,8 +1025,8 @@ class Address(DAObject):
         """Returns the second line of the address, including the city,
         state and zip code."""
         output = ""
-        if hasattr(self, 'sublocality') and self.sublocality:
-            output += unicode(self.sublocality) + ", "
+        #if hasattr(self, 'sublocality') and self.sublocality:
+        #    output += unicode(self.sublocality) + ", "
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
             output += unicode(self.sublocality_level_1) + ", "
         output += unicode(self.city)

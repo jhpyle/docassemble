@@ -2333,6 +2333,26 @@ def package_question_filename(the_file):
 def nodoublequote(text):
     return re.sub(r'"', '', unicode(text))
 
+def list_same(a, b):
+    for elem in a:
+        if elem not in b:
+            return False
+    for elem in b:
+        if elem not in a:
+            return False
+    return True
+
+def list_list_same(a, b):
+    if len(a) != len(b):
+        return False
+    for i in range(len(a)):
+        if len(a[i]) != len(b[i]):
+            return False
+        for j in range(len(a[i])):
+            if a[i][j] != b[i][j]:
+                return False
+    return True
+
 def process_action():
     """If an action is waiting to be processed, it processes the action."""
     #sys.stderr.write("process_action() started")
@@ -2340,6 +2360,7 @@ def process_action():
     if 'action' not in this_thread.current_info:
         to_be_gathered = [variable_name for variable_name in this_thread.internal['gather']]
         for variable_name in to_be_gathered:
+            #logmessage("process_action: considering a gather of " + variable_name)
             if defined(variable_name):
                 this_thread.internal['gather'].remove(variable_name)
             else:
@@ -2360,16 +2381,47 @@ def process_action():
         return
     #sys.stderr.write("process_action() continuing")
     the_action = this_thread.current_info['action']
-    #logmessage("process_action: action is " + the_action)
+    logmessage("process_action: action is " + the_action)
     del this_thread.current_info['action']
     if the_action == '_da_force_ask' and 'variables' in this_thread.current_info['arguments']:
         force_ask(*this_thread.current_info['arguments']['variables'])
+    elif the_action == '_da_compute' and 'variables' in this_thread.current_info['arguments']:
+        for variable_name in this_thread.current_info['arguments']['variables']:
+            if variable_name not in this_thread.internal['gather']:
+                this_thread.internal['gather'].append(variable_name)
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and list_same(this_thread.internal['event_stack'][unique_id][0]['arguments']['variables'], this_thread.current_info['arguments']['variables']):
+            #logmessage("popped the da_compute")
+            this_thread.internal['event_stack'][unique_id].pop(0)
+        #logmessage("forcing nameerror on " + this_thread.current_info['arguments']['variables'][0])
+        force_ask_nameerror(this_thread.current_info['arguments']['variables'][0])
+    elif the_action == '_da_set':
+        for the_args in this_thread.current_info['arguments']['variables']:
+            #logmessage("defining " + repr(the_args))
+            define(*the_args)
+            #logmessage("done defining " + repr(the_args))
+        unique_id = this_thread.current_info['user']['session_uid']
+        #logmessage("It is " + repr(this_thread.internal['event_stack'][unique_id][0]))
+        #logmessage("The other is " + repr(this_thread.current_info['arguments']['variables']))
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and list_list_same(this_thread.internal['event_stack'][unique_id][0]['arguments']['variables'], this_thread.current_info['arguments']['variables']):
+            #logmessage("popped the da_set")
+            this_thread.internal['event_stack'][unique_id].pop(0)
+        logmessage("Doing ForcedReRun")
+        raise ForcedReRun()
+    elif the_action == '_da_undefine':
+        for undef_var in this_thread.current_info['arguments']['variables']:
+            undefine(undef_var)
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and list_same(this_thread.internal['event_stack'][unique_id][0]['arguments']['variables'], this_thread.current_info['arguments']['variables']):
+            logmessage("popped the da_undefine")
+            this_thread.internal['event_stack'][unique_id].pop(0)
+        raise ForcedReRun()
     elif the_action == '_da_list_remove':
         if 'action_item' in this_thread.current_info and 'action_list' in this_thread.current_info:
             try:
                 this_thread.current_info['action_list'].remove(this_thread.current_info['action_item'])
             except Exception as err:
-                logmessage("process_action: _da_list_remove:" + unicode(err))
+                logmessage("process_action: _da_list_remove error: " + unicode(err))
         raise ForcedReRun()
     elif the_action == '_da_list_edit' and 'items' in this_thread.current_info['arguments']:
         force_ask(*this_thread.current_info['arguments']['items'])
@@ -2541,6 +2593,7 @@ def define(var, val):
         raise Exception("define: could not find interview answers")
     # Trigger exceptions for the left hand side before creating __define_val
     exec(var + " = None", user_dict)
+    #logmessage("Got past the lhs check")
     user_dict['__define_val'] = val
     exec(var + " = __define_val", user_dict)
     if '__define_val' in user_dict:
@@ -2574,6 +2627,7 @@ def defined(var):
         else:
             the_user_dict = frame.f_locals
     if variable not in the_user_dict:
+        #logmessage("Returning False1")
         return False
     if len(components) == 1:
         return True
@@ -2589,18 +2643,32 @@ def defined(var):
             try:
                 the_index = eval(elem[1], the_user_dict)
             except:
+                #logmessage("Returning False2")
                 return False
-            if type(the_index) == int:
-                to_eval = 'len(' + cum_variable + ') > ' + str(the_index)
+            try:
+                the_cum = eval(cum_variable, the_user_dict)
+            except:
+                #logmessage("Returning False2.5")
+                return False
+            if hasattr(the_cum, 'instanceName') and hasattr(the_cum, 'elements'):
+                if type(the_index) == int:
+                    to_eval = 'len(' + cum_variable + '.elements) > ' + str(the_index)
+                else:
+                    to_eval = elem[1] + " in " + cum_variable + ".elements"
             else:
-                to_eval = elem[1] + " in " + cum_variable
+                if type(the_index) == int:
+                    to_eval = 'len(' + cum_variable + ') > ' + str(the_index)
+                else:
+                    to_eval = elem[1] + " in " + cum_variable
             cum_variable += '[' + elem[1] + ']'
         try:
             result = eval(to_eval, the_user_dict)
-        except:
+        except Exception as err:
+            #logmessage("Returning False3 after " + to_eval + ": " + unicode(err))
             return False
         if result:
             continue
+        #logmessage("Returning False4")
         return False
     return True
 

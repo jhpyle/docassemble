@@ -1789,6 +1789,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
     indexno = 0
     seen = set()
     on_first = True
+    #logmessage("Sections is " + repr(the_sections))
     for x in the_sections:
         if include_arrows and not on_first:
             output += '<span class="dainlinearrow"><i class="fas fa-chevron-right"></i></span>'
@@ -1798,6 +1799,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         subitems = None
         currently_active = False
         if type(x) is dict:
+            #logmessage("It is a dict")
             if len(x) == 2 and 'subsections' in x:
                 for key, val in x.iteritems():
                     if key == 'subsections':
@@ -1807,6 +1809,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                         test_for_valid_var(the_key)
                         the_title = val
             elif len(x) == 1:
+                #logmessage("The len is one")
                 the_key = x.keys()[0]
                 test_for_valid_var(the_key)
                 value = x[the_key]
@@ -1818,6 +1821,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
             else:
                 raise DAError("navigation_bar: too many keys in dict.  " + unicode(the_sections))
         else:
+            #logmessage("It is not a dict")
             the_key = None
             the_title = unicode(x)
         if (the_key is not None and the_section == the_key) or the_section == the_title:
@@ -1835,6 +1839,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
             seen_more = True
         else:
             seen_more = False
+        #logmessage("the title is " + str(the_title) + " and show links is " + str(show_links) + " and seen_more is " + str(seen_more) + " and currently_active is " + str(currently_active) + " and section_reached is " + str(section_reached) + " and the_key is " + str(the_key) + " and interview is " + unicode(interview) + " and in q is " + ('in q' if the_key in interview.questions else 'not in q'))
         if show_links and (seen_more or currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
             #url = docassemble.base.functions.interview_url_action(the_key)
             output += '<a tabindex="0" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + active_class + '">' + unicode(the_title) + '</a>'
@@ -5208,14 +5213,18 @@ def index():
                     do_opposite = True
                 data = "_internal['objselections'][" + repr(from_safeid(real_key)) + "][" + repr(bracket_expression) + "]"
             elif set_to_empty == 'object_checkboxes':
-                continue    
+                continue
             else:
                 if isinstance(data, basestring):
                     #data = fixunicode(data)
                     data = data.strip()
                     #logmessage("data is " + data)
-                test_data = data
-                data = repr(data)
+                if data == "None" and set_to_empty is not None:
+                    test_data = None
+                    data = "None"
+                else:
+                    test_data = data
+                    data = repr(data)
             if known_datatypes[real_key] == 'object_checkboxes':
                 do_append = True
         elif orig_key in known_datatypes:
@@ -7233,6 +7242,24 @@ def index():
           }
         }
       }
+      function showIfCompare(theVal, showIfVal){
+        if (typeof theVal == 'string' && theVal.match(/^-?\d+\.\d+$/)){
+          theVal = parseFloat(theVal);
+        }
+        else if (typeof theVal == 'string' && theVal.match(/^-?\d+$/)){
+          theVal = parseInt(theVal);
+        }
+        if (typeof showIfVal == 'string' && showIfVal.match(/^-?\d+\.\d+$/)){
+          showIfVal = parseFloat(showIfVal);
+        }
+        else if (typeof showIfVal == 'string' && showIfVal.match(/^-?\d+$/)){
+          showIfVal = parseInt(showIfVal);
+        }
+        if (typeof theVal == 'string' || typeof showIfVal == 'string'){
+          return (String(theVal) == String(showIfVal));
+        }
+        return (theVal == showIfVal);
+      }
       function daInitialize(doScroll){
         daResetCheckinCode();
         if (daSpinnerTimeout != null){
@@ -7535,8 +7562,8 @@ def index():
               theVal = $(this).val();
             }
             //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
-            if(String(theVal) == String(showIfVal)){
-              console.log("They are the same");
+            if(showIfCompare(theVal, showIfVal)){
+              //console.log("They are the same");
               if (showIfSign){
                 //console.log("Showing1!");
                 //$(showIfDiv).removeClass("invisible");
@@ -8976,7 +9003,7 @@ def observer():
               theVal = $(this).val();
             }
             //console.log("val is " + theVal + " and showIfVal is " + showIfVal)
-            if($(this).parent().is(":visible") && String(theVal) == String(showIfVal)){
+            if($(this).parent().is(":visible") && showIfCompare(theVal, showIfVal)){
               //console.log("They are the same");
               if (showIfSign){
                 $(showIfDiv).show(speed);
@@ -15078,11 +15105,15 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                     interview_query = db.session.query(UserDict.filename, UserDict.key).filter(UserDict.user_id == user_id, UserDict.filename == filename).group_by(UserDict.filename, UserDict.key)
                 for interview_info in interview_query:
                     sessions_to_delete.add((interview_info.key, interview_info.filename, user_id))
+        logmessage("Deleting " + str(len(sessions_to_delete)) + " interviews")
         if len(sessions_to_delete):
             for session_id, yaml_filename, the_user_id in sessions_to_delete:
                 manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename, user_id=the_user_id)
                 obtain_lock(session_id, yaml_filename)
-                reset_user_dict(session_id, yaml_filename, user_id=the_user_id)
+                if the_user_id is None:
+                    reset_user_dict(session_id, yaml_filename, user_id=the_user_id, force=True)
+                else:
+                    reset_user_dict(session_id, yaml_filename, user_id=the_user_id)
                 release_lock(session_id, yaml_filename)
         return len(sessions_to_delete)
     if action == 'delete':
@@ -15965,7 +15996,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     data = 'True'
                 else:
                     data = 'None'
-            elif question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'radio', 'checkboxes', 'object_checkboxes')):
+            elif question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'checkboxes', 'object_checkboxes')) or (hasattr(field, 'inputtype') and field.inputtype == 'radio'):
                 cdata, choice_list = get_choices_with_abb(interview_status, field)
                 data = None
                 if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes') and saveas is not None:

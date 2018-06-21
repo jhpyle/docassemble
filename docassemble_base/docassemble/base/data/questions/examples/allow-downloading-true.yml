@@ -8,7 +8,7 @@ metadata:
 mandatory: True
 question: Your documents are ready.
 allow downloading: True
-attachment:
+attachments:
   - name: A hello world document
     filename: Hello_World
     description: |

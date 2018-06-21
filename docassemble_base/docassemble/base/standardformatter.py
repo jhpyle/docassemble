@@ -897,6 +897,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                             validation_rules['messages'][the_saveas][key] = word("You must type at least") + " " + str(status.extras[key][field.number]) + " " + word("characters")
                         elif key == 'maxlength':
                             validation_rules['messages'][the_saveas][key] = word("You cannot type more than") + " " + str(status.extras[key][field.number]) + " " + word("characters")
+            if hasattr(field, 'inputtype'):
+                if field.inputtype in ['yesnoradio', 'noyesradio', 'radio']:
+                    validation_rules['ignore'] = None
+                elif field.inputtype == 'combobox':
+                    validation_rules['ignore'] = list()
             if hasattr(field, 'datatype'):
                 if field.datatype in ('checkboxes', 'object_checkboxes') and hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
                     validation_rules['rules']['_ignore' + str(field.number)] = dict(checkbox=[str(field.number)])
@@ -919,9 +924,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 #     validation_rules['messages']['_ignore' + str(field.number)] = dict(require_from_group=word("Please select one."))
                 #     validation_rules['groups'][the_saveas] = " ".join(name_list + ['_ignore' + str(field.number)])
                 #     validation_rules['ignore'] = None
-                if hasattr(field, 'inputtype') and field.inputtype in ['yesnoradio', 'noyesradio']:
-                    validation_rules['ignore'] = None
-                if field.datatype in ['radio', 'object_radio']:
+                if field.datatype == 'object_radio':
                     validation_rules['ignore'] = None
                 if field.datatype == 'date':
                     validation_rules['rules'][the_saveas]['date'] = True
@@ -966,8 +969,6 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(the_saveas)
                     validation_rules['messages'][the_saveas]['required'] = word("You must provide a file.")
-                if field.datatype == 'combobox':
-                    validation_rules['ignore'] = list()
                 if field.datatype == 'boolean':
                     if field.sign > 0:
                         checkboxes[field.saveas] = 'False'
@@ -1685,7 +1686,7 @@ def input_for(status, field, wide=False, embedded=False):
     output = ""
     if field.number in status.defaults:
         defaultvalue_set = True
-        if type(status.defaults[field.number]) in [str, unicode, int, float]:
+        if type(status.defaults[field.number]) in (str, int, float):
             defaultvalue = unicode(status.defaults[field.number])
         else:
             defaultvalue = status.defaults[field.number]
@@ -1740,6 +1741,11 @@ def input_for(status, field, wide=False, embedded=False):
         extra_radio = ''
         title_text = ''
     if hasattr(field, 'choicetype'):
+        # logmessage("In a choicetype where field datatype is " + field.datatype)
+        # if hasattr(field, 'inputtype'):
+        #     logmessage("inputtype is" + field.inputtype)
+        # else:
+        #     logmessage("No inputtype")
         if field.choicetype in ['compute', 'manual']:
             pairlist = list(status.selectcompute[field.number])
         else:
@@ -1807,7 +1813,7 @@ def input_for(status, field, wide=False, embedded=False):
                 output += u''.join(inner_fieldlist)
             if field.datatype in ['object_checkboxes']:                
                 output += '<input type="hidden" name="' + safeid(from_safeid(saveas_string) + ".gathered") + '" value="True"' + disable_others_data + '/>'
-        elif field.datatype in ['radio', 'object_radio']:
+        elif field.datatype == 'object_radio' or (hasattr(field, 'inputtype') and field.inputtype == 'radio'):
             inner_fieldlist = list()
             id_index = 0
             try:
@@ -1865,14 +1871,14 @@ def input_for(status, field, wide=False, embedded=False):
                     emb_text += 'title=' + json.dumps(label_text) + ' '
             else:
                 output += '<p class="sr-only">' + word('Select box') + '</p>'
-                if hasattr(field, 'datatype') and field.datatype == 'combobox':
+                if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
                     emb_text = 'class="form-control combobox" '
                 else:
                     emb_text = 'class="form-control" '
             if embedded:
                 output += '<span class="inline-error-wrapper">'
             output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" ' + disable_others_data + '>'
-            if hasattr(field, 'datatype') and field.datatype == 'combobox' and not embedded:
+            if hasattr(field, 'inputtype') and field.inputtype == 'combobox' and not embedded:
                 if placeholdertext == '':
                     output += '<option value="">' + word('Select one') + '</option>'
                 else:
