@@ -291,7 +291,7 @@
   mandatory: True
   question: Your documents are ready.
   allow downloading: True
-  attachment:
+  attachments:
     - name: A hello world document
       filename: Hello_World
       description: |
@@ -311,7 +311,7 @@
   question: Your documents are ready.
   allow downloading: True
   zip filename: Hello_Goodbye.zip
-  attachment:
+  attachments:
     - name: A hello world document
       filename: Hello_World
       description: |
@@ -3374,7 +3374,7 @@
         - Oranges: orange
         - Pears: pear
 "fields-choices-combobox": "question: |\n  What is your favorite color?\nfields:\n\
-  \  - Color: favorite_color\n    datatype: combobox\n    choices: \n      - Red\n\
+  \  - Color: favorite_color\n    input type: combobox\n    choices: \n      - Red\n\
   \      - Green\n      - Purple\n---\nmandatory: True\nquestion: All done\nsubquestion:\
   \ |\n  Your favorite color is\n  ${ favorite_color }."
 "fields-choices-dropdown": "question: | \n  What type of shoes do you wear?\nfields:\n\
@@ -7375,13 +7375,13 @@
     - Number of wheels: wheels_on_car
       datatype: integer
     - Type: car_type
-      datatype: radio
+      input type: radio
       choices:
         - Convertible
         - Hatchback
         - Sedan
     - Model: car_country
-      datatype: radio
+      input type: radio
       choices:
         - BMW: Germany
         - Buick: United States
@@ -7686,6 +7686,90 @@
     - Favorite fruit: fruit
     - Favorite vegetable: vegetable
     - Favorite fungus: fungi
+"review-7": "event: review_answers\nquestion: |\n  Revisit your answers\nreview:\n\
+  \  - Edit:\n      - fruit\n      - vegetable\n      - recompute:\n          - salad\n\
+  \      - fungi\n    button: |\n      Your favorite fruit is ${ fruit }.\n      \n\
+  \      Your favorite vegetable is ${ vegetable }.\n      \n      Your favorite fungus\
+  \ is ${ fungi }.\n\n      We expect you would enjoy a ${ salad }.\n---\nquestion:\
+  \ |\n  What is your favorite fruit?\nfields:\n  - no label: fruit\n---\nquestion:\
+  \ |\n  What is your favorite vegetable?\nfields:\n  - no label: vegetable\n---\n\
+  code: |\n  salad = fruit + \"-\" + vegetable + \" salad\"\n---\nquestion: |\n  What\
+  \ is your favorite fungi?\nfields:\n  - no label: fungi"
+"review-8": |-
+  objects:
+    address: Address
+  ---
+  event: review_answers
+  question: |
+    Revisit your answers
+  review:
+    - label: Edit
+      fields:
+        - address.address
+        - set:
+            - address.geolocated: False
+        - recompute:
+            - address.county
+      button: |
+        Your address is:
+
+        ${ address }
+
+        This address is located in
+        ${ address.county }.
+  ---
+  question: |
+    What is your address?
+  fields:
+    - "Street address": address.address
+      address autocomplete: True
+    - 'Apt/Unit': address.unit
+      required: False
+    - 'City': address.city
+    - 'State': address.state
+      code: states_list()
+    - 'Zip': address.zip
+  ---
+  question: |
+    In which county in
+    ${ state_name(address.state) }
+    do you live?
+  fields:
+    - County: address.county
+  ---
+  sets: address.county
+  code: |
+    address.geolocate()
+  ---
+  mandatory: True
+  question: All done
+  subquestion: |
+    You live in ${ address.county }.
+
+    [Review your answers](${ url_action('review_answers')})
+"review-9": |-
+  event: review_answer
+  question: |
+    Revisit the equation
+  review:
+    - Change this:
+        - undefine:
+            - a
+            - b
+            - c
+        - recompute:
+            - d
+      button: |
+        ${ a } + ${ b } - ${ c } = ${ d }
+  ---
+  code: |
+    d = a + b - c
+  ---
+  mandatory: True
+  question: All done
+  subquestion: |
+    The answer is ${ d }.  You can
+    [change this](${ url_action('review_answer') }).
 "review-edit-list": "mandatory: true\nquestion: |\n  Thank you for your answers!\n\
   subquestion: |\n  The people are ${ person } and your\n  favorite is ${ favorite\
   \ }.\n\n  You can\n  [edit your answers](${ url_action('review_interview') })\n\

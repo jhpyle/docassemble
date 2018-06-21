@@ -349,8 +349,15 @@ The following are the keys that have special meaning:
 ### <a name="summary datatype"></a>`datatype`
 
 `datatype` affects how the data will be collected, validated and
-stored.  For a full explanation of how this is used, see the
-[section on `datatype`] below.
+stored.  For a full explanation of how this is used, see
+[below](#datatype).
+
+### <a name="input type"></a>`input type`
+
+The `input type` is similar to `datatype`.  It is used in situations
+where the `datatype` might be [`date`], [`number`], etc., but you want
+the field to use a particular type of multiple-choice input element,
+such as a list of [radio buttons](#radio) or [a combobox](#combobox).
 
 ### <a name="required"></a>`required`
 
@@ -650,8 +657,8 @@ and the variable name using the `field` key.
 
 Within a [`fields`] question, there are many possible `datatype`
 values, which affect what the user sees and how the input is stored in
-a variable.  The following sections describe the available
-`datatype`s.
+a variable.    The following sections describe the available
+`datatype`s and `input type`s.
 
 ## <a name="plaintext"></a>Plain text
 
@@ -995,7 +1002,7 @@ the value of the selected choice.
 
 ## <a name="combobox"></a>Multiple-choice combobox
 
-`datatype: combobox` shows a [`choices`](#choices) list as a
+`input type: combobox` shows a [`choices`](#choices) list as a
 [combobox] instead of as a dropdown [select] element (which is
 [the default](#select)).
 
@@ -1006,7 +1013,7 @@ or enter a value of their own.
 
 ## <a name="radio"></a>Radio buttons
 
-`datatype: radio` shows a [`choices`](#choices) list as a list of
+`input type: radio` shows a [`choices`](#choices) list as a list of
 radio buttons instead of as a dropdown [select] element (which is
 [the default](#select)).  The variable will be set to the value of the
 selected choice.
@@ -1570,7 +1577,7 @@ display.
 For more information about adding menu items, see the sections on
 [special variables] and [functions].
 
-In the above example, note that the `review` screen identified with
+In the above example, note that the `review` screen is tagged with
 `event: review_answers`.  For more information about how [`event`]s
 work, [see above](#event).  The interview will show this screen
 whenever it seeks out the definition of the variable `review_answers`.
@@ -1614,11 +1621,74 @@ You can also indicate more than one variable when using `show if`:
 
 {% include side-by-side.html demo="review-6" %}
 
+Some of the variables that you use in your interview might be computed
+by [`code`] based on answers to [`question`]s, rather than defined
+directly by asking the user a question.  Thus, if the user changes the
+answers to these underlying questions, you may want your interview to
+recompute the values of these variables.  This recalculation does not
+happen automatically; however, you can cause it to happen in your
+`review` block by including `recompute` in the list of variables to be
+re-asked.
+
+{% include side-by-side.html demo="review-7" %}
+
+In this example, it would not have worked to merely include the
+variable `salad` in the list of variables, as follows:
+
+{% highlight yaml %}
+  - Edit:
+      - fruit
+      - vegetable
+      - salad
+      - fungi
+{% endhighlight %}
+
+Here, the presence of `salad` in this list means "ask a [`question`]
+to redefine the variable `salad`."  If there is no [`question`] that
+defines `salad`, the interview will generate an error.  Including
+`salad` in a `recompute` list, as in the above interview, indicates
+that it is ok if the variable is defined by `code`.
+
+You might also want to use `recompute` with variables that are defined
+by [`code`] in some circumstances but are defined by [`question`]s in
+other circumstances.
+
+When you write lists of operations to be performed when a user clicks
+a link on a `review` page, you will probably want to make sure that at
+least one of the variables in the list will trigger the asking of a
+[`question`].  Otherwise, the user might click the link and be
+returned back to the same page again, and when that happens they may
+assume that clicking the link didn't do anything, and the app is
+broken.
+
+There are two other special commands that you can use in a list of
+variables in a `review` block: `set` and `undefine`.  The following
+interview illustrates `set`:
+
+{% include side-by-side.html demo="review-8" %}
+
+This interview demonstrates how to re-do the geolocation of an
+[`Address`].  When you call [`.geolocate()`] on an [`Address`] the
+first time, the address is geolocated and the `.geolocated` attribute
+of the object is changed from `False` to `True`.  If you call
+[`.geolocate()`] on the object again, the first thing it does is check
+the `.geolocated` attribute, and if it is `True`, it will immediately
+return without doing anything.  This is useful for avoiding
+unnecessary API calls, which can slow down the responsiveness of your
+app.  However, if the user edits the underlying attributes of the
+address, you need to "reset" the geolocation in order to get it to run
+again.
+
+In the above interview, the `set` command sets `address.geolocated` to
+`False`, which means that when the `address.county` is recomputed, and
+the [`.geolocate()`] method is run again by the `code` block, then the
+[`.geolocate()`] method will actually geolocate the new address.
+
 ### <a name="review field"></a>Placing a review block within the interview logic
 
 In the examples above, the `review` block is identified with an
-`event: review_answers`, meaning that the variable `review_answers`
-does not actually get defined, though it gets sought.
+`event` like `event: review_answers`, meaning that the variable
+`review_answers` does not actually get defined, though it gets sought.
 
 As a result, a `review` screen identified with an `event` can only be
 shown when triggered by a user action (e.g., clicking a link,
@@ -1635,9 +1705,10 @@ defined; it gets set to `True` when the user clicks "Continue."  It
 works much like a [standard question with a "Continue" button that sets a
 variable to `True`](#field).
 
-The interview flow is set by the [`code`] block.  First the interview
-asks about the user's favorite fruit, vegetable, and fungus, and then
-the `review` screen is shown, and then the final screen is shown.
+The interview flow in this interview is set by the [`code`] block.
+First the interview asks about the user's favorite fruit, vegetable,
+and fungus.  Then the `review` screen is shown.  Then the final
+screen is shown.
 
 ### <a name="resume button label"></a>Customizing the Resume button
 
@@ -1725,7 +1796,6 @@ why this needs to be done manually as opposed to automatically:
 [`object`]: #object
 [`object_radio`]: #object_radio
 [`object_checkboxes`]: #object_checkboxes
-[section on `datatype`]: #datatype
 [`datatype`]: #datatype
 [roles]: {{ site.baseurl }}/docs/roles.html
 [`task_not_yet_performed()`]: {{ site.baseurl }}/docs/functions.html#task_not_yet_performed
@@ -1795,3 +1865,6 @@ why this needs to be done manually as opposed to automatically:
 [`continue button label`]: {{ site.baseurl }}/docs/modifiers.html#continue button label
 [`validation_error()`]: {{ site.baseurl }}/docs/functions.html#validation_error
 [`raise`]: https://docs.python.org/2.7/tutorial/errors.html#raising-exceptions
+[`date`]: #date
+[`number`]: #number
+[`.geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate

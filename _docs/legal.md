@@ -44,7 +44,7 @@ A `Court` has one attribute:
 
 * `name`: e.g., "Court of Common Pleas of Butler County"
 
-If you refer to an address in a template, it returns `.name`.
+If you refer to a `Court` in a template, it returns `.name`.
 
 The `Court` class has the following methods:
 

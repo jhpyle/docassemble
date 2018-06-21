@@ -4,6 +4,26 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.71](https://github.com/jhpyle/docassemble/releases/tag/v0.2.71) - 2018-06-21
+
+### Added
+- The `undefine`, `recompute`, and `set` options inside of a `review`
+  block.
+
+### Changed
+- To indicate that a multiple-choice under `fields` should use `radio`
+  buttons, a `pulldown`, or a `combobox`, use `input type` instead of
+  `datatype`.  The `datatype` can then be set to something else, like
+  `number`.  This change is backwards compatible.
+- Removed sublocality from normalized addresses.
+
+### Fixed
+- The `show if` JavaScript comparison is now more lenient when the
+  values look like numbers.
+- The `delete_all` function did not delete all interviews.
+- The `defined` function did not work well with lists and dictionaries
+  in the process of being gathered.
+
 ## [0.2.70](https://github.com/jhpyle/docassemble/releases/tag/v0.2.70) - 2018-06-14
 
 ### Changed

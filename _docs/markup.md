@@ -15,7 +15,9 @@ The syntax of [Markdown] is explained well
 [elsewhere](https://daringfireball.net/projects/markdown/).
 
 When generating [documents], **docassemble** uses [Pandoc] to convert
-your [Markdown] to PDF, RTF, and HTML.
+your [Markdown] to PDF, RTF, and HTML.  (Unless you are using
+[Microsoft Word templates], in which case you will use the [Jinja2]
+templating language in the Word document.)
 
 Here are some examples of things you can do with Markdown.
 
@@ -418,3 +420,5 @@ information about this feature, see the section on
 [Configuration]: {{ site.baseurl}}/docs/config.html
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
+[Microsoft Word templates]: {{ site.baseurl}}/docs/documents.html#docx template file
+[Jinja2]: http://jinja.pocoo.org/docs/2.9/

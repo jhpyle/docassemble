@@ -234,9 +234,9 @@ Now you should see the .docx file listed as one of your Templates.
 ![Template list]({{ site.baseurl }}/img/playground-files-template-listing.png)
 
 Then, click ![Back]({{ site.baseurl
-}}/img/playground-button-back-to-playground-top.png) or
+}}/img/playground-button-back-to-playground.png) or
 ![Back to playground]({{ site.baseurl
-}}/img/playground-button-back-to-playground.png) to go back to the
+}}/img/playground-button-back-to-playground-bottom.png) to go back to the
 main page of the [Playground].
 
 Now you need to edit the interview so that it uses the .docx file.
@@ -310,9 +310,9 @@ You should now see the file listed as one of the "Static files."
 In this example, the name of the file is `globe.svg`.
 
 Now, click ![Back]({{ site.baseurl
-}}/img/playground-button-back-to-playground-top.png) or
+}}/img/playground-button-back-to-playground.png) or
 ![Back to playground]({{ site.baseurl
-}}/img/playground-button-back-to-playground.png) and add the following
+}}/img/playground-button-back-to-playground-bottom.png) and add the following
 to your interview:
 
 {% highlight yaml %}
