@@ -56,11 +56,14 @@ knowledgeable developers on the [**docassemble** Slack group].  If you
 find a bug, you can [submit an issue on GitHub].  You can also [e-mail
 the developer].
 
-In-person training will be available at [Docacon 2018], a one-day
-**docassemble** conference to be held on June 22, 2018 in Chicago,
-Illinois.
+On June 22, 2018, the docassemble community convened in Chicago for <a
+href="https://docacon.com">Docacon</a>, a one-day docassemble
+conference (see <a
+href="https://twitter.com/search?q=%23docacon18">#docacon18</a> on
+Twitter).  For more information about <a
+href="https://docacon.com">Docacon</a>, see the <a
+href="https://docacon.com">Docacon web site</a>.
 
-[Docacon 2018]: https://twitter.com/search?q=%23docacon18
 [get help]: {{ site.baseurl }}/docs/support.html
 [documentation]: {{ site.baseurl }}/docs.html
 [submit an issue on GitHub]: https://github.com/jhpyle/docassemble/issues
