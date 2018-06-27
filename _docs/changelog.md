@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.72](https://github.com/jhpyle/docassemble/releases/tag/v0.2.72) - 2018-06-27
+
+### Fixed
+- Error message when publishing to PyPI.
+- Unicode error in YAML dump.
+
 ## [0.2.71](https://github.com/jhpyle/docassemble/releases/tag/v0.2.71) - 2018-06-21
 
 ### Added

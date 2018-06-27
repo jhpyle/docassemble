@@ -301,8 +301,6 @@ Then, go to "Upload a static file" and click "Browse."
 After you select the file (or files) on your computer that you want to
 upload, click "Upload."
 
-![File ready to be uploaded]({{ site.baseurl }}/img/playground-files-upload-with-preview.png)
-
 You should now see the file listed as one of the "Static files."
 
 ![File uploaded]({{ site.baseurl }}/img/playground-files-listing.png)
@@ -436,6 +434,10 @@ Then, once your package is saved in the system, you will see the
 following buttons at the top of the screen.
 
 ![Buttons]({{ site.baseurl }}/img/playground-packages-buttons-top.png)
+
+You will see the following buttons at the bottom of the screen.
+
+![Buttons]({{ site.baseurl }}/img/playground-packages-buttons-bottom.png)
 
 Click the ![Install]({{ site.baseurl
 }}/img/playground-packages-button-install.png) button.  This will take
