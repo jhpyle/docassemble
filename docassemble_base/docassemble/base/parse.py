@@ -3329,7 +3329,7 @@ class Question:
                         result_dict['key'] = TextObject(value)
                 elif type(value) is dict:
                     result_dict['label'] = TextObject(key)
-                    result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=ruamel.yaml.safe_dump(value, default_flow_style=False, default_style = '|', allow_unicode=True))
+                    result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=ruamel.yaml.safe_dump(value, default_flow_style=False, default_style = '|', allow_unicode=True).decode('utf8'))
                 elif type(value) in (str, unicode):
                     if value in ('exit', 'logout', 'leave') and 'url' in the_dict:
                         result_dict['label'] = TextObject(key)
@@ -3725,7 +3725,7 @@ class Question:
                                 else:
                                     result['data_strings'].append((key, val))
                 else:
-                    the_markdown = ""
+                    the_markdown = u""
                     if len(result['metadata']):
                         modified_metadata = dict()
                         for key, data in result['metadata'].iteritems():
@@ -3734,7 +3734,7 @@ class Question:
                                 modified_metadata[key] = data + unicode('[END]')
                             else:
                                 modified_metadata[key] = data
-                        the_markdown += u'---\n' + ruamel.yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|', allow_unicode=True) + "...\n"
+                        the_markdown += u'---\n' + ruamel.yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|', allow_unicode=True).decode('utf8') + u"...\n"
                     the_markdown += attachment['content'].text(user_dict)
                     #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
                     if emoji_match.search(the_markdown) and len(self.interview.images) > 0:

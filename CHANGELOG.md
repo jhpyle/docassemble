@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.72] - 2018-06-27
+### Fixed
+- Error message when publishing to PyPI.
+- Unicode error in YAML dump.
+
 ## [0.2.71] - 2018-06-21
 ### Added
 - The `undefine`, `recompute`, and `set` options inside of a `review`
