@@ -14206,7 +14206,10 @@ def server_error(the_error):
         # if hasattr(the_error, 'source') and the_error.source is not None:
         #     errmess += "; source: " + unicode(the_error.source)
         the_trace = traceback.format_exc()
-        logmessage(errmess)
+        try:
+            logmessage(errmess)
+        except:
+            logmessage("Could not log the error message")
     else:
         errmess = unicode(type(the_error).__name__) + ": " + unicode(the_error)
         if hasattr(the_error, 'traceback'):

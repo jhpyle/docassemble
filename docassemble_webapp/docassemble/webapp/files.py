@@ -375,7 +375,7 @@ def publish_package(pkgname, info, author_info, tz_name):
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     output = "Publishing docassemble." + pkgname + " to PyPI . . .\n\n"
     try:
-        output += subprocess.check_output(['python', 'setup.py', 'sdist', 'bdist_wheel'], cwd=packagedir, stderr=subprocess.STDOUT)
+        output += subprocess.check_output(['python', 'setup.py', 'sdist'], cwd=packagedir, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as err:
         output += err.output
     dist_file = None
