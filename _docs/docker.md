@@ -47,7 +47,7 @@ Service] ("[ECS]"), see the [scalability] section.
 
 # <a name="where"></a>Choosing where to run Docker
 
-[Docker] can be run on a Windows PC, a Mac, an on-site Linux machinne,
+[Docker] can be run on a Windows PC, a Mac, an on-site Linux machine,
 or a Linux-based virtual machine in the cloud.  Since **docassemble**
 is a web application, the ideal platform is a Linux virtual machine in
 the cloud.  You can test out **docassemble** on a PC or a Mac, but for
