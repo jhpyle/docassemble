@@ -1140,7 +1140,7 @@ to this directory, and you can copy the SSL certificate files into
 that directory before starting the container.
 
 Note that the files need to be called `apache.crt`,
-`apacke.key`, and `apache.ca.pem`, because this is what the
+`apache.key`, and `apache.ca.pem`, because this is what the
 standard web server configuration expects.
 
 If you want to use different filesystem or cloud locations, the
