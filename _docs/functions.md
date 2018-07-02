@@ -5209,7 +5209,8 @@ service account, you will be provided with "credentials."  Download
 the [JSON] (not p12) credential file for the service account.  Also
 make a note of the e-mail address of the service account.
 
-Within the [Google Developers Console], enable the [Google Drive API].
+Within the [Google Developers Console], enable the [Google Drive API]
+and the [Google Sheets API].
 
 Go to [Google Sheets], pick a spreadsheet that you want to use, and
 share it with the e-mail address of the service account, just like you
@@ -5871,3 +5872,4 @@ $(document).on('daPageLoad', function(){
 [lambda functions]: https://docs.python.org/2.7/tutorial/controlflow.html#lambda-expressions
 [`raise`]: https://docs.python.org/2.7/tutorial/errors.html#raising-exceptions
 [`validation code`]: {{ site.baseurl }}/docs/fields.html#validation code
+[Google Sheets API]: https://developers.google.com/sheets/api/

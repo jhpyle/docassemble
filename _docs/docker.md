@@ -221,7 +221,7 @@ When the **docassemble** container starts, it runs one command:
 /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf
 {% endhighlight %}
 
-(This is specified in the [Dockerfile][`docassemble/Dockerfile`], if you are curious.)
+(This is specified in the [`Dockerfile`], if you are curious.)
 
 This command starts an application called [Supervisor].  [Supervisor]
 is a "process control system" that starts up the various applications

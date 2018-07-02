@@ -302,7 +302,10 @@ such package actually exists.)
 2. In the **docassemble** web app, go to Package Management.
 3. Enter `https://github.com/jhpyle/docassemble-baseball`
    into the "GitHub URL" field.
-4. Click "Update."
+4. The "GitHub Branch" field will be updated with the default branch
+   of the repository (usually `master`).  You can select another
+   branch if you wish to install a different branch of the repository.
+5. Click "Update."
 
 ![GitHub Install]({{ site.baseurl }}/img/github-install.png){: .maybe-full-width }
 
