@@ -47,7 +47,7 @@ Service] ("[ECS]"), see the [scalability] section.
 
 # <a name="where"></a>Choosing where to run Docker
 
-[Docker] can be run on a Windows PC, a Mac, an on-site Linux machinne,
+[Docker] can be run on a Windows PC, a Mac, an on-site Linux machine,
 or a Linux-based virtual machine in the cloud.  Since **docassemble**
 is a web application, the ideal platform is a Linux virtual machine in
 the cloud.  You can test out **docassemble** on a PC or a Mac, but for
@@ -221,7 +221,7 @@ When the **docassemble** container starts, it runs one command:
 /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf
 {% endhighlight %}
 
-(This is specified in the [Dockerfile], if you are curious.)
+(This is specified in the [Dockerfile][`docassemble/Dockerfile`], if you are curious.)
 
 This command starts an application called [Supervisor].  [Supervisor]
 is a "process control system" that starts up the various applications
@@ -1140,7 +1140,7 @@ to this directory, and you can copy the SSL certificate files into
 that directory before starting the container.
 
 Note that the files need to be called `apache.crt`,
-`apacke.key`, and `apache.ca.pem`, because this is what the
+`apache.key`, and `apache.ca.pem`, because this is what the
 standard web server configuration expects.
 
 If you want to use different filesystem or cloud locations, the
