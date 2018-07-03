@@ -148,7 +148,7 @@ located in the subdirectory `data/questions`.
 
 You can make your own [packages] in the [Playground] and then install
 them on the same server or a different server.  If the name of your
-server is `interview.example.come`, the name of your package is
+server is `interview.example.com`, the name of your package is
 `docassemble.mypackage`, and the name of your interview file is
 `myinterview.yml`, your users can access the interview at:
 
