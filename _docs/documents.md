@@ -675,7 +675,7 @@ In [Jinja2], you would write:
 
 {% highlight text %}
 You may wish to distribute your property to your 
-{% raw %}{% if user.child.number() > 0 %}heirs.{% else %}friends.{% endraw %}
+{% raw %}{% if user.child.number() > 0 %}heirs.{% else %}friends.{% endif %}{% endraw %}
 {% endhighlight %}
 
 Also, the [`python-docx-template`] package uses a slightly modified
