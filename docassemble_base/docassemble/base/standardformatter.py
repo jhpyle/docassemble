@@ -12,6 +12,7 @@ import json
 import random
 import sys
 import codecs
+import datetime
 
 DECORATION_SIZE = daconfig.get('decoration size', 2.0)
 DECORATION_UNITS = daconfig.get('decoration units', 'em')
@@ -1894,9 +1895,13 @@ def input_for(status, field, wide=False, embedded=False):
             except:
                 defaultvalue_printable = None
                 defaultvalue_is_printable = False
+            #logmessage("defaultvalue is " + repr(defaultvalue))
+            #logmessage("defaultvalue_printable is " + repr(defaultvalue_printable))
+            #logmessage("defaultvalue_is_printable is " + repr(defaultvalue_is_printable))
             for pair in pairlist:
                 if True or pair['key'] is not None:
                     formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, do_terms=False)
+                    #logmessage("Considering " + repr(pair['key']) + " and " + repr(pair['label']))
                     output += '<option value="' + unicode(pair['key']) + '"'
                     if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and type(defaultvalue) not in [str, unicode, int, bool, float] and defaultvalue_is_printable and unicode(pair['label']) == defaultvalue_printable):
                         output += ' selected="selected"'
@@ -2091,6 +2096,8 @@ def input_for(status, field, wide=False, embedded=False):
         else:
             if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
                 defaultstring = ' value="' + defaultvalue + '"'
+            elif isinstance(defaultvalue, datetime.datetime):
+                defaultstring = ' value="' + format_date(defaultvalue, format='yyyy-MM-dd') + '"'
             else:
                 defaultstring = ''
             input_type = field.datatype

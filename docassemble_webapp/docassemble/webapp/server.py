@@ -1847,7 +1847,10 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
             if section_reached and not currently_active and not seen_more:
                 output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
             else:
-                output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + active_class + ' inactive">' + unicode(the_title) + '</a>'
+                if active_class == '':
+                    output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
+                else:
+                    output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + active_class + '">' + unicode(the_title) + '</a>'
         suboutput = ''
         if subitems:
             current_is_within = False
@@ -4681,7 +4684,7 @@ def index():
     known_varnames = dict()
     if '_varnames' in post_data:
         known_varnames = json.loads(myb64unquote(post_data['_varnames']))
-    if '_visible' in post_data:
+    if '_visible' in post_data and post_data['_visible'] != "":
         visible_field_names = json.loads(myb64unquote(post_data['_visible']))
     else:
         visible_field_names = list()
@@ -7282,6 +7285,12 @@ def index():
           e.preventDefault();
           $('#questionlabel').tab('show');
         });
+        if (navigator.userAgent.match(/(iPad|iPhone|iPod touch);/i)) {
+          var selects = document.querySelectorAll("select");
+          for (var i = 0; i < selects.length; i++){
+            selects[i].appendChild(document.createElement("optgroup"));
+          }
+        }
         $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
         $(".to-labelauty-icon").labelauty({ label: false });
         $("button").on('click', function(){

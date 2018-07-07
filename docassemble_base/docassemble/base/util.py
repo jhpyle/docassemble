@@ -988,6 +988,8 @@ class Address(DAObject):
             else:
                 output += unicode(self.address) + line_breaker
             if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
+                if not re.search(r'unit|floor|suite|apt|apartment|room|ste|fl', unicode(self.unit)):
+                    output += word("Unit", language=language) + " "
                 output += unicode(self.unit) + line_breaker
             elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
                 output += word("Floor", language=language) + " " + unicode(self.floor) + line_breaker

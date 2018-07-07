@@ -117,10 +117,17 @@ def pop_current_variable():
     #logmessage("pop_current_variable: None")
     return None
 
-def close_files():
+def wrap_up(user_dict):
     while len(this_thread.open_files):
         file_object = this_thread.open_files.pop()
         file_object.commit()
+    while len(this_thread.template_vars):
+        saveas = this_thread.template_vars.pop()
+        #logmessage('wrap_up: deleting ' + saveas)
+        try:
+            exec('del ' + saveas, user_dict)
+        except:
+            pass
     # while len(this_thread.temporary_resources):
     #     the_resource = this_thread.temporary_resources.pop()
     #     if os.path.isdir(the_resource):
@@ -1204,6 +1211,7 @@ class ThreadVariables(threading.local):
     gathering_mode = dict()
     global_vars = GenericObject()
     current_variable = list()
+    template_vars = list()
     open_files = set()
     #markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
     markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
@@ -1519,6 +1527,7 @@ def reset_local_variables():
     this_thread.gathering_mode = dict()
     this_thread.current_variable = list()
     this_thread.open_files = set()
+    this_thread.template_vars = list()
     this_thread.saved_files = dict()
     this_thread.message_log = list()
     this_thread.global_vars = GenericObject()
@@ -2381,7 +2390,7 @@ def process_action():
         return
     #sys.stderr.write("process_action() continuing")
     the_action = this_thread.current_info['action']
-    logmessage("process_action: action is " + the_action)
+    #logmessage("process_action: action is " + the_action)
     del this_thread.current_info['action']
     if the_action == '_da_force_ask' and 'variables' in this_thread.current_info['arguments']:
         force_ask(*this_thread.current_info['arguments']['variables'])
@@ -2406,14 +2415,14 @@ def process_action():
         if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and list_list_same(this_thread.internal['event_stack'][unique_id][0]['arguments']['variables'], this_thread.current_info['arguments']['variables']):
             #logmessage("popped the da_set")
             this_thread.internal['event_stack'][unique_id].pop(0)
-        logmessage("Doing ForcedReRun")
+        #logmessage("Doing ForcedReRun")
         raise ForcedReRun()
     elif the_action == '_da_undefine':
         for undef_var in this_thread.current_info['arguments']['variables']:
             undefine(undef_var)
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and list_same(this_thread.internal['event_stack'][unique_id][0]['arguments']['variables'], this_thread.current_info['arguments']['variables']):
-            logmessage("popped the da_undefine")
+            #logmessage("popped the da_undefine")
             this_thread.internal['event_stack'][unique_id].pop(0)
         raise ForcedReRun()
     elif the_action == '_da_list_remove':

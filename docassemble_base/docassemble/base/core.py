@@ -394,12 +394,19 @@ class DAList(DAObject):
         self.auto_gather = True
         self.ask_number = False
         self.minimum_number = None
+        if 'set_instance_name' in kwargs:
+            set_instance_name = kwargs['set_instance_name']
+            del kwargs['set_instance_name']
+        else:
+            set_instance_name = False
         if 'elements' in kwargs:
             for element in kwargs['elements']:
                 self.append(element)
             self.gathered = True
             self.revisit = True
             del kwargs['elements']
+            if set_instance_name:
+                self._set_instance_name_recursively(self.instanceName)
         if 'object_type' in kwargs:
             if isinstance(kwargs['object_type'], DAObjectPlusParameters):
                 self.object_type = kwargs['object_type'].object_type
@@ -937,7 +944,7 @@ class DAList(DAObject):
         """Returns HTML for editing the items in a list"""
         the_args = list(pargs)
         item = the_args.pop(0)
-        return '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=[item.instanceName + '.' + y for y in the_args]) + '" class="btn btn-sm btn-secondary"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> <a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=item.instanceName) + '" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+        return '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=[item.instanceName + '.' + y for y in the_args]) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> <a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=item.instanceName) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
     def add_action(self, message=None):
         """Returns HTML for adding an item to a list"""
         if message is None:

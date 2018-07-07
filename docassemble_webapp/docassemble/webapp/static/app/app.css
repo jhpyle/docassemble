@@ -142,6 +142,10 @@ a.nohover:hover {
     /* } */
 /* } */
 
+.btn-revisit {
+    margin-bottom: 5px;
+}
+
 .btn-da {
     margin-bottom: 5px;
     white-space: normal;
@@ -1373,7 +1377,6 @@ div.danavnested-horiz {
 /*     outline-offset: inherit; */
 /* } */
 
-.danav > a.notavailableyet,
 .danav > a.notavailableyet {
     color: #aaa;
     text-decoration: inherit;

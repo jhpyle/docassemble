@@ -1,5 +1,22 @@
 # Change Log
 
+## [0.2.73] - 2018-07-07
+
+### Added
+- The `set_instance_name` option for use with `elements` when
+  initializing a `DAList`.
+- The `skip undefined` option for `review` blocks.
+### Changed
+- The `block()` method of `Address` now includes the word "Unit"
+  before the unit, if the unit exists.
+- On iOS mobile devices, an `<optgroup>` is now added to `<select>`
+  via JavaScript.
+### Fixed
+- Vertical spacing between buttons in the Actions column of a table.
+- Templates with variable names containing iterators were not being
+  regenerated.
+- Default date values were not displayed in `fields`.
+
 ## [0.2.72] - 2018-06-27
 ### Fixed
 - Error message when publishing to PyPI.

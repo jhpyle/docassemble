@@ -1062,6 +1062,10 @@ class Question:
             if 'review' not in data:
                 raise DAError("You cannot set a resume button label if the type of question is not review." + self.idebug(data))
             self.continuelabel = TextObject(definitions + unicode(data['resume button label']), names_used=self.mako_names)
+        if 'skip undefined' in data:
+            if 'review' not in data:
+                raise DAError("You cannot set the skip undefined directive if the type of question is not review." + self.idebug(data))
+            self.skip_undefined = False
         if 'mandatory' in data:
             if data['mandatory'] is True:
                 self.is_mandatory = True
@@ -1857,8 +1861,8 @@ class Question:
             self.content = TextObject('')
             self.subcontent = TextObject('')
             self.question_type = 'table'
-            if self.scan_for_variables:
-                self.reset_list = self.fields_used
+            #if self.scan_for_variables:
+            #    self.reset_list = self.fields_used
         if 'template' in data and 'content file' in data:
             if type(data['content file']) is not list:
                 data['content file'] = [data['content file']]
@@ -1890,8 +1894,8 @@ class Question:
             else:
                 self.subcontent = TextObject("")
             self.question_type = 'template'
-            if self.scan_for_variables:
-                self.reset_list = self.fields_used
+            #if self.scan_for_variables:
+            #    self.reset_list = self.fields_used
         if 'code' in data:
             if 'event' in data:
                 self.question_type = 'event_code'
@@ -2901,20 +2905,30 @@ class Question:
             #     extras['response_filename'] = None
             extras['content_type'] = self.content_type.text(user_dict)
         elif self.question_type == 'review':
+            if hasattr(self, 'skip_undefined') and not self.skip_undefined:
+                skip_undefined = False
+            else:
+                skip_undefined = True
             extras['ok'] = dict()
             for field in self.fields:
                 extras['ok'][field.number] = False
                 if hasattr(field, 'saveas_code'):
                     failed = False
                     for (expression, is_showif) in field.saveas_code:
-                        try:
+                        if skip_undefined:
+                            try:
+                                the_val = eval(expression, user_dict)
+                            except:
+                                failed = True
+                                break
+                            if is_showif and not the_val:
+                                failed = True
+                                break
+                        else:
                             the_val = eval(expression, user_dict)
-                        except:
-                            failed = True
-                            break
-                        if is_showif and not the_val:
-                            failed = True
-                            break
+                            if is_showif and not the_val:
+                                failed = True
+                                break
                     if failed:
                         continue
                 if hasattr(field, 'extras'):
@@ -2922,20 +2936,29 @@ class Question:
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
-                            try:
+                            if skip_undefined:
+                                try:
+                                    extras[key][field.number] = field.extras[key].text(user_dict)
+                                except Exception:
+                                    continue
+                            else:
                                 extras[key][field.number] = field.extras[key].text(user_dict)
-                            except:
-                                continue
                 if hasattr(field, 'helptext'):
-                    try:
+                    if skip_undefined:
+                        try:
+                            helptexts[field.number] = field.helptext.text(user_dict)
+                        except:
+                            continue
+                    else:
                         helptexts[field.number] = field.helptext.text(user_dict)
-                    except:
-                        continue
                 if hasattr(field, 'label'):
-                    try:
+                    if skip_undefined:
+                        try:
+                            labels[field.number] = field.label.text(user_dict)
+                        except:
+                            continue
+                    else:
                         labels[field.number] = field.label.text(user_dict)
-                    except:
-                        continue
                 extras['ok'][field.number] = True
         else:
             only_empty_fields_exist = True
@@ -4137,7 +4160,7 @@ class Interview:
                         exec('from ' + str(self.source.package) + module_name + ' import *', user_dict)
                     else:
                         exec('from ' + module_name + ' import *', user_dict)
-            if question.question_type in ['reset', 'template', 'table']:
+            if question.question_type == 'reset': #, 'template', 'table'
                 for var in question.reset_list:
                     if complications.search(var):
                         try:
@@ -4166,7 +4189,7 @@ class Interview:
             while True:
                 number_loops += 1
                 if number_loops > self.loop_limit:
-                    docassemble.base.functions.close_files()
+                    docassemble.base.functions.wrap_up(user_dict)
                     raise DAError("There appears to be a circularity.  Variables involved: " + ", ".join(variables_sought) + ".")
                 docassemble.base.functions.reset_gathering_mode()
                 if 'action' in interview_status.current_info:
@@ -4446,7 +4469,7 @@ class Interview:
                 except AttributeError as the_error:
                     docassemble.base.functions.reset_context()
                     #logmessage(str(the_error.args))
-                    docassemble.base.functions.close_files()
+                    docassemble.base.functions.wrap_up(user_dict)
                     raise DAError('Got error ' + str(the_error) + " " + traceback.format_exc(the_error) + "\nHistory was " + pprint.pformat(interview_status.seeking))
                 except MandatoryQuestion:
                     docassemble.base.functions.reset_context()
@@ -4464,12 +4487,12 @@ class Interview:
                         the_question = question
                     except:
                         pass
-                    docassemble.base.functions.close_files()
+                    docassemble.base.functions.wrap_up(user_dict)
                     if the_question is not None:
                         raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
                     raise DAError("no question available: " + str(qError))
                 else:
-                    docassemble.base.functions.close_files()
+                    docassemble.base.functions.wrap_up(user_dict)
                     raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
         except Exception as the_error:
             if debug:
@@ -4480,7 +4503,7 @@ class Interview:
             raise the_error
         if docassemble.base.functions.this_thread.prevent_going_back:
             interview_status.can_go_back = False
-        docassemble.base.functions.close_files()
+        docassemble.base.functions.wrap_up(user_dict)
         if debug:
             interview_status.seeking.append({'done': True, 'time': time.time()})
         #return(pickleable_objects(user_dict))
@@ -4672,7 +4695,10 @@ class Interview:
                             decoration_list = []
                         else:
                             decoration_list = question.decorations
-                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + repr(from_safeid(question.fields[0].saveas)) + ", content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ', decorations=' + repr([dec['image'].text(user_dict).rstrip() for dec in decoration_list]) + ')'
+                        actual_saveas = substitute_vars(from_safeid(question.fields[0].saveas), is_generic, the_x, iterators)
+                        docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
+                        #logmessage("Template1: saveas is " + actual_saveas)
+                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + repr(actual_saveas) + ", content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ', decorations=' + repr([dec['image'].text(user_dict).rstrip() for dec in decoration_list]) + ')'
                         #logmessage("Doing " + string)
                         exec(string, user_dict)
                         #question.mark_as_answered(user_dict)
@@ -4743,7 +4769,10 @@ class Interview:
                             else:
                                 table_content = question.fields[0].extras['empty_message'].text(user_dict) + "\n"
                         table_content += "\n"
-                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + repr(from_safeid(question.fields[0].saveas)) + ", content=" + repr(table_content) + ")"
+                        actual_saveas = substitute_vars(from_safeid(question.fields[0].saveas), is_generic, the_x, iterators)
+                        docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
+                        #logmessage("Template2: saveas is " + actual_saveas)
+                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + repr(actual_saveas) + ", content=" + repr(table_content) + ")"
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
@@ -4834,7 +4863,7 @@ class Interview:
                             if not already_there:
                                 new_items.append(new_item)
                         if len(new_items):
-                            logmessage("adding a new item to event_stack: " + repr(new_items))
+                            #logmessage("adding a new item to event_stack: " + repr(new_items))
                             user_dict['_internal']['event_stack'][session_uid] = new_items + user_dict['_internal']['event_stack'][session_uid]
                         #interview_status.next_action.extend(the_exception.next_action)
                     if the_exception.name.startswith('_da_'):
@@ -5015,6 +5044,18 @@ class Interview:
             #     new_question.name = "Question_Temp"
             #     return(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
         raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
+
+def substitute_vars(var, is_generic, the_x, iterators):
+    if is_generic:
+        if the_x != 'None' and hasattr(the_x, 'instanceName'):
+            var = re.sub(r'^x\b', the_x.instanceName, var)
+    if len(iterators):
+        for indexno in range(len(iterators)):
+            the_iterator = iterators[indexno]
+            if isinstance(the_iterator, basestring) and re.match(r'^-?[0-9]+$', the_iterator):
+                the_iterator = int(the_iterator)
+            var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + repr(the_iterator) + ']', var)
+    return var
 
 def reproduce_basics(interview, new_interview):
     new_interview.metadata = interview.metadata
