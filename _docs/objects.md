@@ -656,7 +656,20 @@ The `DAList` uses the following attributes:
   type.  You can also use the result of the [`using()`] method here.
 * `gathered`: a boolean value, initially undefined.  It is set to
   `True` when then all of the items of the list are defined.
-* `elements`: a [Python list] containing the items of the list.
+* `elements`: a [Python list] containing the items of the list.  If
+  this is set, the list will be considered gathered as soon as it is
+  initialized.
+* `set_instance_name`: this can be used in combination with
+  `elements`.  If set to `True`, then when the `elements` are added to
+  the list, their instrinsic names ([see above](#DAObject)) are
+  changed to match the intrinsic name of the list.  For example, if
+  you initialize `parties` as a `DAList` using `elements=[plaintiff,
+  defendant]` and `set_instance_name=True`, then the name of
+  `plaintiff` will be changed to `parties[0]` and the name of
+  `defendant` will be changed to `defendant[0]`.  The variables
+  `plaintiff` and `defendant` will still exist, but if your interview
+  refers to an undefined attribute `plaintiff.net_worth`, the
+  interview will seek a definition of `parties[0].net_worth`.
 * `are_there_any`: a boolean value, initially undefined, indicating
   whether any values should be gathered.  The expectation is that the
   interview will define a [question] or [code block] that defines this

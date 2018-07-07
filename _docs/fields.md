@@ -1710,6 +1710,30 @@ First the interview asks about the user's favorite fruit, vegetable,
 and fungus.  Then the `review` screen is shown.  Then the final
 screen is shown.
 
+### <a name="skip undefined"></a>Ensuring variables are defined first
+
+By default, when a `review` block encounters and undefined variable,
+it does not seek out its definition.  This is so you can have a single
+review block that is used throughout your interview (or a section of
+your interview), where the user only sees that fields that have
+already been asked about.
+
+If you would like to use the functionality of a `review` block, but
+you want all the variables to be defined first, set `skip undefined`
+to `True`:
+
+{% highlight yaml %}
+skip undefined: True
+question: |
+  Review your answers
+review:
+  ...
+{% endhighlight %}
+
+This enables you to use tables in your `review` block.  Ordinarily,
+tables are always undefined (so that their contents always reflect the
+current state of the list, so a `review` block would never display them.
+
 ### <a name="resume button label"></a>Customizing the Resume button
 
 By default, the `review` block puts a "Resume" button at the bottom of
