@@ -4,7 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.2.74](https://github.com/jhpyle/docassemble/releases/tag/v0.2.74) - 2018-07-10
+## [0.2.75](https://github.com/jhpyle/docassemble/releases/tag/v0.2.75) - 2018-07-11
+
+### Added
+- The `step` option for `datatype: number` and `datatype: currency`.
+
+### Changed
+- Fields with `datatype: number` are no longer limited to two decimal
+  places.
+
+### Fixed
+- The "exit" command was logging the user out.
+
+## [0.2.74](https://github.com/jhpyle/docassemble/releases/tag/v0.2.74) - 2018-07-11
 
 ### Added
 - The `error help` configuration and metadata directives.
@@ -15,8 +27,8 @@ short_title: Change Log
   JSON file.
 
 ### Fixed
-- Error in cron about missing session_uid.
-- Auth0 login enabled by default.
+- Error in cron about missing `session_uid`.
+- Auth0 login was erroneously enabled by default.
 
 ## [0.2.73](https://github.com/jhpyle/docassemble/releases/tag/v0.2.73) - 2018-07-07
 

@@ -1399,6 +1399,12 @@
 "continue-special": |-
   modules:
     - docassemble.base.util
+"copy-shallow": |-
+  objects:
+    - orig_company: DAObject
+  ---
+  code: |
+    other_company = orig_company.shallow_copy('other_company')
 "country": |-
   question: |
     Where do you live?
@@ -6148,6 +6154,15 @@
       datatype: integer
     - Ounces of gold: gold_ounces
       datatype: number
+"number-field-step": |-
+  question: |
+    How much gold and silver do you have?
+  fields:
+    - Ounces of gold: gold_ounces
+      datatype: number
+    - Ounces of silver: silver_ounces
+      datatype: number
+      step: 0.001
 "number-formatting": |-
   code: |
     monthly_income = 43143.26/12

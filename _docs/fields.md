@@ -789,6 +789,12 @@ should be a valid numeric value.
 
 {% include side-by-side.html demo="number-field" %}
 
+You can use the optional modifier `step` to limit the number to a
+certain number of decimal places and to control the way the browser
+widget controls work:
+
+{% include side-by-side.html demo="number-field-step" %}
+
 ## <a name="currencysec"></a>Currency
 
 <a name="currency"></a>`datatype: currency` indicates that the input
