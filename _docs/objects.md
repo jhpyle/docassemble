@@ -430,6 +430,42 @@ conversion is not reversible, and much information cannot be
 converted, but this can be a useful way to access information in your
 objects.  See also the [`all_variables()`] function.
 
+<a name="DAObject.copy_shallow"></a>The `copy_shallow()` method
+creates a copy of the object and gives it a new intrinsic name.
+
+{% highlight python %}
+new_object = old_object.copy_shallow('new_object')
+{% endhighlight %}
+
+The copy is "shallow," which means that while `new_object` will be a
+new object with its own separate existence, sub-objects of the new
+object will simply be references to corresponding sub-objects of the
+original object.
+
+{% highlight python %}
+>>> new_object is old_object
+False
+>>> new_object.sub_object is old_object.sub_object
+True
+{% endhighlight %}
+
+<a name="DAObject.copy_deep"></a>The `copy_deep()` method creates a
+copy of the object its sub-objects and gives it, and all of its
+sub-objects, new intrinsic names.
+
+{% highlight python %}
+new_object = old_object.copy_deep('new_object')
+{% endhighlight %}
+
+Because the copy is "deep," each sub-object has a separate existence:
+
+{% highlight python %}
+>>> new_object is old_object
+False
+>>> new_object.sub_object is old_object.sub_object
+False
+{% endhighlight %}
+
 ## <a name="DAList"></a>DAList
 
 A `DAList` acts like an ordinary [Python list], except that

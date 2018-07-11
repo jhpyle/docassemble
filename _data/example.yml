@@ -2886,6 +2886,14 @@
     % endif
   buttons:
     - Restart: restart
+"error-help": |-
+  metadata:
+    title: Error help
+    error help: |
+      We are sorry.
+      An error has occurred.
+      Please contact
+      [the administrator](mailto:admin@example.com).
 "event-example": |-
   question: |
     This is a special screen.

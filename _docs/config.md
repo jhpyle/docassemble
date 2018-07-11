@@ -1156,6 +1156,24 @@ contain the error message.
 
 Information about errors is also available in the [Logs].
 
+## <a name="error help"></a>Help text to display when there is an error
+
+When an error happens, the user will see the error message on the
+screen, which can be confusing.  You can add some additional content
+to this screen so that the user sees something other than the error
+message:
+
+{% highlight yaml %}
+error help: |
+  We are sorry, our computer has malfunctioned.  Please call
+  202-555-1515 for assistance, or visit our [web site](https://example.com).
+{% endhighlight %}
+
+The format of the `error help` is [Markdown].
+
+You can also set this on a per-interview basis using [`error help`]
+inside the [`metadata`].
+
 ## <a name="debian packages"></a>Debian packages to install
 
 On [Docker], you can ensure that particular [Debian] packages are
@@ -2615,6 +2633,7 @@ and Facebook API keys.
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [LibreOffice]: https://www.libreoffice.org/
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
+[`error help`]: {{ site.baseurl }}/docs/initial.html#error help
 [scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
 [scheduled task]: {{ site.baseurl }}/docs/background.html#scheduled
 [enabled]: {{ site.baseurl }}/docs/background.html#enabling
