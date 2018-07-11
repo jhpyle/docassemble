@@ -1,7 +1,17 @@
 # Change Log
 
-## [0.2.73] - 2018-07-07
+## [0.2.74] - 2018-07-10
+### Added
+- The `error help` configuration and metadata directives.
+- The `.copy_shallow()` and `.copy_deep()` methods of `DAObject`s.
+### Changed
+- Error e-mails now attempt to attach the interview variables as a
+  JSON file.
+### Fixed
+- Error in cron about missing session_uid.
+- Auth0 login enabled by default.
 
+## [0.2.73] - 2018-07-07
 ### Added
 - The `set_instance_name` option for use with `elements` when
   initializing a `DAList`.

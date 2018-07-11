@@ -1,0 +1,14 @@
+code: |
+  answer = 5/0
+---
+metadata:
+  title: Error help
+  error help: |
+    We are sorry.
+    An error has occurred.
+    Please contact
+    [the administrator](mailto:admin@example.com).
+---
+mandatory: True
+question: |
+  The answer is ${ answer }.

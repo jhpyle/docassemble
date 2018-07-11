@@ -21,7 +21,11 @@
   {%- endif %}
   {%- if prelabel %}
   <div class="input-group">
-    <span class="input-group-addon">{{ prelabel }}</span>
+    <div class="input-group-prepend">
+      <div class="input-group-text">
+        {{ prelabel }}
+      </div>
+    </div>
     {{ field(class_='form-control', **kwargs) }}
   </div>
   {%- else %}

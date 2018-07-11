@@ -14200,6 +14200,7 @@ def server_error(the_error):
         the_history = get_history(the_error.interview, the_error.interview_status)
     else:
         the_history = None
+    the_vars = None
     if isinstance(the_error, DAError):
         errmess = unicode(the_error)
         the_trace = None
@@ -14232,6 +14233,18 @@ def server_error(the_error):
         error_code = the_error.error_code
     else:
         error_code = 501
+    if hasattr(the_error, 'user_dict'):
+        the_vars = the_error.user_dict
+    if hasattr(the_error, 'interview'):
+        special_error_markdown = the_error.interview.get_metadata().get('error help', None)
+    else:
+        special_error_markdown = None
+    if special_error_markdown is None:
+        special_error_markdown = daconfig.get('error help', None)
+    if special_error_markdown is not None:
+        special_error_html = docassemble.base.util.markdown_to_html(special_error_markdown)
+    else:
+        special_error_html = None
     flask_logtext = []
     if os.path.exists(LOGFILE):
         with open(LOGFILE) as the_file:
@@ -14283,8 +14296,8 @@ def server_error(the_error):
         showNotifications();
       });
     </script>"""
-    error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request)
-    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=unicode(the_history), logtext=unicode(the_trace), extra_js=Markup(script)), error_code
+    error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request, the_vars=the_vars)
+    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=unicode(the_history), logtext=unicode(the_trace), extra_js=Markup(script), special_error=special_error_html), error_code
     #return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=None, logtext=str(the_trace)), error_code
 
 # @app.route('/testpost', methods=['GET', 'POST'])
@@ -17781,7 +17794,7 @@ def get_short_code(**pargs):
         raise SystemError("Failed to generate unique short code")
     return new_short
 
-def error_notification(err, message=None, history=None, trace=None, referer=None, the_request=None):
+def error_notification(err, message=None, history=None, trace=None, referer=None, the_request=None, the_vars=None):
     recipient_email = daconfig.get('error notification email', None)
     if not recipient_email:
         return
@@ -17807,6 +17820,19 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
     else:
         referer = None
         ipaddress = None
+    if the_vars is None:
+        try:
+            the_vars = docassemble.base.functions.all_variables()
+        except:
+            pass
+    json_filename = None
+    if the_vars is not None and len(the_vars):
+        try:
+            with tempfile.NamedTemporaryFile(prefix="datemp", suffix='.json', delete=False) as fp:
+                fp.write(json.dumps(the_vars, sort_keys=True, indent=2).encode('utf8'))
+                json_filename = fp.name
+        except Exception as the_err:
+            pass
     interview_path = docassemble.base.functions.interview_path()
     try:
         the_key = 'da:errornotification:' + str(ipaddress)
@@ -17846,12 +17872,18 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
                 body += "<p>The user was " + unicode(email_address) + "</p>"
             html += "\n  </body>\n</html>"
             msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=[recipient_email], body=body, html=html)
+            if json_filename:
+                with open(json_filename, 'rb') as fp:
+                    msg.attach('variables.json', 'application/json', fp.read())
             da_send_mail(msg)
         except Exception as zerr:
             logmessage(unicode(zerr))
             body = "There was an error in the " + app.config['APP_NAME'] + " application."
             html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n  </body>\n</html>"
             msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=[recipient_email], body=body, html=html)
+            if json_filename:
+                with open(json_filename, 'rb') as fp:
+                    msg.attach('variables.json', 'application/json', fp.read())
             da_send_mail(msg)
     except:
         pass

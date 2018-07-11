@@ -4498,6 +4498,7 @@ class Interview:
             if debug:
                 the_error.interview = self
                 the_error.interview_status = interview_status
+                the_error.user_dict = docassemble.base.functions.serializable_dict(user_dict)
                 if not hasattr(the_error, 'traceback'):
                     the_error.traceback = traceback.format_exc()
             raise the_error
@@ -5344,6 +5345,7 @@ def exec_with_trap(the_question, the_dict):
         raise
     except Exception as e:
         cl, exc, tb = sys.exc_info()
+        exc.user_dict = docassemble.base.functions.serializable_dict(the_dict)
         if len(traceback.extract_tb(tb)) == 2:
             line_with_error = traceback.extract_tb(tb)[-1][1]
             if type(line_with_error) is int and line_with_error > 0 and hasattr(the_question, 'sourcecode'):

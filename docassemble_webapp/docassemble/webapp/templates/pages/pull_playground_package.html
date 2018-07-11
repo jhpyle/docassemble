@@ -4,7 +4,11 @@
 {% from "base_templates/form_macros.html" import render_field, render_submit_field, render_select_field %}
 <h1>{{ title }}</h1>
 
-<p>{{ description }}</p>
+<div class="card">
+  <div class="card-body">
+    {{ description }}
+  </div>
+</div>
 
 <form action="" method="POST" role="form" class="form">
   {{ form.hidden_tag() }}

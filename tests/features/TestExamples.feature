@@ -6117,3 +6117,7 @@ Feature: Example interviews
     And I should see the phrase "15.0 + 13.0 - 12.0 = 16.0"
     And I click the button "Resume"
     Then I should see the phrase "The answer is 16.0."
+
+  Scenario: Test the interview "Error help"
+    Given I start the interview "docassemble.base:data/questions/examples/error-help.yml"
+    Then I should see the phrase "We are sorry."

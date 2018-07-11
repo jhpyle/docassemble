@@ -18,6 +18,7 @@ from docxtpl import InlineImage
 import tempfile
 import time
 import stat
+import copy
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink']
 
@@ -247,6 +248,16 @@ class DAObject(object):
         """Sets the instanceName attribute to a random value."""
         self.instanceName = unicode(get_unique_name())
         self.has_nonrandom_instance_name = False
+    def copy_shallow(self, thename):
+        """Returns a copy of the object, giving the new object the intrinsic name 'thename'; does not change intrinsic names of sub-objects"""
+        new_object = copy.copy(self)
+        new_object._set_instance_name_recursively(thename)
+        return new_object
+    def copy_deep(self, thename):
+        """Returns a copy of the object, giving the new object the intrinsic name 'thename'; also changes the intrinsic names of sub-objects"""
+        new_object = copy.deepcopy(self)
+        new_object._set_instance_name_recursively(thename)
+        return new_object
     def _set_instance_name_recursively(self, thename):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
         #logmessage("Change " + str(self.instanceName) + " to " + str(thename))

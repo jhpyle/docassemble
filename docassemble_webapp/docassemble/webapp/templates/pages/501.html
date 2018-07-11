@@ -4,6 +4,9 @@
 
 <h1>{{ word('Error') }}</h1>
 
+{%- if special_error %}
+{{ special_error|safe }}
+{%- endif %}
 {{ error|safe }}
 
 {% if historytext != 'None' %}

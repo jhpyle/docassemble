@@ -107,6 +107,7 @@ do
          "$file" = "flash" -o \
          "$file" = "log" -o \
          "$file" = "branch-error" -o \
+         "$file" = "error-help" -o \
          "$file" = "set-title" -o \
          "$file" = "set-logo-title" -o \
          "$file" = "question-help-button" -o \
