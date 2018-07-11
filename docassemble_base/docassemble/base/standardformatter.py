@@ -2106,12 +2106,16 @@ def input_for(status, field, wide=False, embedded=False):
             step_string = ''
             if field.datatype in ['integer', 'float', 'currency', 'number']:
                 input_type = 'number'
-                if field.datatype == 'integer':
-                    step_string = ' step="1"'
-                if field.datatype == 'float' or field.datatype == 'number':
-                    step_string = ' step="0.01"'
+                if hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step']:
+                    step_string = ' step="' + unicode(status.extras['step'][field.number]) + '"'
+                else:
+                    if field.datatype == 'integer':
+                        step_string = ' step="1"'
+                    if field.datatype == 'float' or field.datatype == 'number':
+                        step_string = ''
+                    if field.datatype == 'currency':
+                        step_string = ' step="0.01"'
                 if field.datatype == 'currency':
-                    step_string = ' step="0.01"'
                     if embedded:
                         output += '<span class="embed-currency-wrapper"><span class="embed-currency-symbol">' + currency_symbol() + '</span>'
                     else:

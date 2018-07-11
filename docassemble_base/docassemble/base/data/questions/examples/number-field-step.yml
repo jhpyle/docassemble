@@ -1,0 +1,20 @@
+metadata:
+  title: Numbers
+  documentation: "https://docassemble.org/docs/fields.html#number"
+---
+question: |
+  How much gold and silver do you have?
+fields:
+  - Ounces of gold: gold_ounces
+    datatype: number
+  - Ounces of silver: silver_ounces
+    datatype: number
+    step: 0.001
+---
+question: Result of question
+subquestion: |
+  You have ${ gold_ounces }
+  ounces of gold.
+  You have ${ silver_ounces }
+  ounces of silver.
+mandatory: True

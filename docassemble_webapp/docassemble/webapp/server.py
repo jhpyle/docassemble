@@ -5772,19 +5772,22 @@ def index():
             #logmessage("Section changed")
             #changed = True
             #steps += 1
-    if interview_status.question.question_type in ("exit", "logout"):
+    if interview_status.question.question_type == "exit":
         manual_checkout()
-        # user_dict = fresh_dictionary()
-        # logmessage("Calling reset_user_dict on " + user_code + " and " + yaml_filename)
         if interview_status.question.question_type == "exit":
             reset_user_dict(user_code, yaml_filename)
-        # delete_session_for_interview() # used to be this
+        delete_session_for_interview()
+        release_lock(user_code, yaml_filename)
+        if interview_status.questionText != '':
+            response = do_redirect(interview_status.questionText, is_ajax, is_json)
+        else:
+            response = do_redirect(exit_page, is_ajax, is_json)
+        return response
+    if interview_status.question.question_type in ("exitlogout", "logout"):
+        manual_checkout()
+        if interview_status.question.question_type == "exitlogout":
+            reset_user_dict(user_code, yaml_filename)
         delete_session()
-        # why did I think it would be good to put a blank dict in its place?
-        # save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
-        # if current_user.is_authenticated and 'visitor_secret' not in request.cookies:
-        #     save_user_dict_key(user_code, yaml_filename)
-        #     session['key_logged'] = True
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json)

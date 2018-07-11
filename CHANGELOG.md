@@ -1,6 +1,15 @@
 # Change Log
 
-## [0.2.74] - 2018-07-10
+## [0.2.75] - 2018-07-11
+### Added
+- The `step` option for `datatype: number` and `datatype: currency`.
+### Changed
+- Fields with `datatype: number` are no longer limited to two decimal
+  places.
+### Fixed
+- The "exit" command was logging the user out.
+
+## [0.2.74] - 2018-07-11
 ### Added
 - The `error help` configuration and metadata directives.
 - The `.copy_shallow()` and `.copy_deep()` methods of `DAObject`s.
@@ -8,8 +17,8 @@
 - Error e-mails now attempt to attach the interview variables as a
   JSON file.
 ### Fixed
-- Error in cron about missing session_uid.
-- Auth0 login enabled by default.
+- Error in cron about missing `session_uid`.
+- Auth0 login was erroneously enabled by default.
 
 ## [0.2.73] - 2018-07-07
 ### Added

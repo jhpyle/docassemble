@@ -251,7 +251,7 @@ class DAObject(object):
     def copy_shallow(self, thename):
         """Returns a copy of the object, giving the new object the intrinsic name 'thename'; does not change intrinsic names of sub-objects"""
         new_object = copy.copy(self)
-        new_object._set_instance_name_recursively(thename)
+        new_object.instanceName = thename
         return new_object
     def copy_deep(self, thename):
         """Returns a copy of the object, giving the new object the intrinsic name 'thename'; also changes the intrinsic names of sub-objects"""

@@ -1,0 +1,90 @@
+metadata:
+  title: Shallow copy
+  documentation: "https://docassemble.org/docs/objects.html#DAObject.copy_shallow"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - orig_company: DAObject
+---
+code: |
+  other_company = orig_company.shallow_copy('other_company')
+---
+generic object: DAObject
+objects:
+  - x.ceo: Individual
+  - x.cfo: Individual
+  - x.employees: DAList.using(object_type=Individual, there_are_any=True)
+---
+generic object: DAObject
+question: |
+  What is the company's name?
+fields:
+  - Name: x.company_name
+---
+generic object: DAObject
+question: |
+  Who is the company's CEO?
+fields:
+  - First Name: x.ceo.name.first
+  - Last Name: x.ceo.name.last
+---
+generic object: DAObject
+question: |
+  Who is the company's CFO?
+fields:
+  - First Name: x.cfo.name.first
+  - Last Name: x.cfo.name.last
+---
+generic object: DAObject
+question: |
+  What is the name of the
+  ${ ordinal(i) } employee of
+  ${ x.company_name }?
+fields:
+  - First Name: x.employee[i].name.first
+  - Last Name: x.employee[i].name.last
+---
+generic object: DAObject
+question: |
+  Are there any other employees of
+  ${ x.company_name }?
+subquestion: |
+  So far, you have told me about:
+
+  % for ee in x.employee:
+  * ${ ee }
+  % endfor
+yesno: x.employee.there_is_another
+---
+generic object: DAObject
+template: x.summary
+content: |
+  The company name is ${ x.company_name }.
+  
+  The CEO is ${ x.ceo }.
+
+  The CFO is ${ x.cfo }.
+
+  The employees are:
+
+  % for ee in ${ x.employee }:
+  ${ ee }
+  % endfor
+---
+mandatory: True
+question: |
+  Summary of companies
+subquestion: |
+  ##### Original company
+
+  ${ orig_company.summary }
+
+  ##### Other company
+
+  ${ other_company.summary }
+  
+  
