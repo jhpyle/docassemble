@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.76] - 2018-07-11
+### Fixed
+- Fix for "group by" SQL error in `user_interviews()`.
+
 ## [0.2.75] - 2018-07-11
 ### Added
 - The `step` option for `datatype: number` and `datatype: currency`.
