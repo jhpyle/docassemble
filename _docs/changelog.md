@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.76](https://github.com/jhpyle/docassemble/releases/tag/v0.2.76) - 2018-07-11
+
+### Fixed
+- Fix for "group by" SQL error in `user_interviews()`.
+
 ## [0.2.75](https://github.com/jhpyle/docassemble/releases/tag/v0.2.75) - 2018-07-11
 
 ### Added
