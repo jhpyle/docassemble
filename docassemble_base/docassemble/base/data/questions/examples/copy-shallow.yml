@@ -27,14 +27,14 @@ fields:
 ---
 generic object: DAObject
 question: |
-  Who is the company's CEO?
+  Who is the CEO of ${ x.company_name }?
 fields:
   - First Name: x.ceo.name.first
   - Last Name: x.ceo.name.last
 ---
 generic object: DAObject
 question: |
-  Who is the company's CFO?
+  Who is the CFO of ${ x.company_name }?
 fields:
   - First Name: x.cfo.name.first
   - Last Name: x.cfo.name.last
@@ -75,16 +75,58 @@ content: |
   ${ ee }
   % endfor
 ---
+table: x.employee.table
+rows: x.employee
+columns:
+  - Name: row_item.name.full()
+edit:
+  - name.first
+---
+field: x.employee.revisit
+question: |
+  Please review the employees of
+  ${ x.company_name }.
+subquestion: |
+  ${ x.employee.table }
+
+  ${ x.employee.add_action() }
+---
 mandatory: True
 question: |
-  Summary of companies
-subquestion: |
-  ##### Original company
-
-  ${ orig_company.summary }
-
-  ##### Other company
-
-  ${ other_company.summary }
+  Edit company info
+skip undefined: False
+review:
+  - note: |
+      ##### Original company
+  - Edit: orig_company.company_name
+    button: |
+      ${ orig_company.company_name }
+  - Edit: orig_company.ceo.name.first
+    button: |
+      ${ orig_company.ceo }
+  - Edit: orig_company.cfo.name.first
+    button: |
+      ${ orig_company.ceo }
+  - Edit: orig_company.employee.revisit
+    button: |
+      % for ee in orig_company.employee:
+      * ${ ee }
+      % endif
+  - note: |
+      ##### Other company
+  - Edit: other_company.company_name
+    button: |
+      ${ other_company.company_name }
+  - Edit: other_company.ceo.name.first
+    button: |
+      ${ other_company.ceo }
+  - Edit: other_company.cfo.name.first
+    button: |
+      ${ other_company.ceo }
+  - Edit: other_company.employee.revisit
+    button: |
+      % for ee in other_company.employee:
+      * ${ ee }
+      % endif
   
   

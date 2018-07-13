@@ -1860,6 +1860,9 @@ div.constraintlist div + div {
     .sigbottompart {
 	padding-top: 6px;
     }
+    .sigpost {
+	display: none;
+    }
 }
 
 .sigheader, .sigfooter{

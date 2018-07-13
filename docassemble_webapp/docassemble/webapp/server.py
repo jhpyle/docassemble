@@ -2071,34 +2071,37 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
             else:
                 navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>'
         else:
-            navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-right">'
-            if custom_menu:
-                navbar += custom_menu
-            if not status.question.interview.options.get('hide standard menu', False):
-                if current_user.has_role('admin', 'advocate'):
-                    navbar +='<a class="dropdown-item" href="' + url_for('monitor') + '">' + word('Monitor') + '</a>'
-                if current_user.has_role('admin', 'developer', 'trainer'):
-                    navbar +='<a class="dropdown-item" href="' + url_for('train') + '">' + word('Train') + '</a>'
-                if current_user.has_role('admin', 'developer'):
-                    navbar +='<a class="dropdown-item" href="' + url_for('update_package') + '">' + word('Package Management') + '</a>'
-                    navbar +='<a class="dropdown-item" href="' + url_for('logs') + '">' + word('Logs') + '</a>'
-                    navbar +='<a class="dropdown-item" href="' + url_for('playground_page') + '">' + word('Playground') + '</a>'
-                    navbar +='<a class="dropdown-item" href="' + url_for('utilities') + '">' + word('Utilities') + '</a>'
-                    if current_user.has_role('admin'):
-                        navbar +='<a class="dropdown-item" href="' + url_for('user_list') + '">' + word('User List') + '</a>'
-                        navbar +='<a class="dropdown-item" href="' + url_for('config_page') + '">' + word('Configuration') + '</a>'
-                if app.config['SHOW_DISPATCH']:
-                    navbar += '<a class="dropdown-item" href="' + url_for('interview_start') + '">' + word('Available Interviews') + '</a>'
-                if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
-                    navbar += '<a class="dropdown-item" href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a>'
-                if current_user.has_role('admin', 'developer'):
-                    navbar += '<a class="dropdown-item" href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a>'
-                else:
-                    if app.config['SHOW_PROFILE'] or current_user.has_role('admin'):
+            if (custom_menu is False or custom_menu == '') and status.question.interview.options.get('hide standard menu', False):
+                navbar += '            <li class="nav-item"><a class="nav-link" tabindex="0">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
+            else:
+                navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-right">'
+                if custom_menu:
+                    navbar += custom_menu
+                if not status.question.interview.options.get('hide standard menu', False):
+                    if current_user.has_role('admin', 'advocate'):
+                        navbar +='<a class="dropdown-item" href="' + url_for('monitor') + '">' + word('Monitor') + '</a>'
+                    if current_user.has_role('admin', 'developer', 'trainer'):
+                        navbar +='<a class="dropdown-item" href="' + url_for('train') + '">' + word('Train') + '</a>'
+                    if current_user.has_role('admin', 'developer'):
+                        navbar +='<a class="dropdown-item" href="' + url_for('update_package') + '">' + word('Package Management') + '</a>'
+                        navbar +='<a class="dropdown-item" href="' + url_for('logs') + '">' + word('Logs') + '</a>'
+                        navbar +='<a class="dropdown-item" href="' + url_for('playground_page') + '">' + word('Playground') + '</a>'
+                        navbar +='<a class="dropdown-item" href="' + url_for('utilities') + '">' + word('Utilities') + '</a>'
+                        if current_user.has_role('admin'):
+                            navbar +='<a class="dropdown-item" href="' + url_for('user_list') + '">' + word('User List') + '</a>'
+                            navbar +='<a class="dropdown-item" href="' + url_for('config_page') + '">' + word('Configuration') + '</a>'
+                    if app.config['SHOW_DISPATCH']:
+                        navbar += '<a class="dropdown-item" href="' + url_for('interview_start') + '">' + word('Available Interviews') + '</a>'
+                    if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
+                        navbar += '<a class="dropdown-item" href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a>'
+                    if current_user.has_role('admin', 'developer'):
                         navbar += '<a class="dropdown-item" href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a>'
                     else:
-                        navbar += '<a class="dropdown-item" href="' + url_for('user.change_password') + '">' + word('Change Password') + '</a>'
-                navbar += '<a class="dropdown-item" href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a>'
+                        if app.config['SHOW_PROFILE'] or current_user.has_role('admin'):
+                            navbar += '<a class="dropdown-item" href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a>'
+                        else:
+                            navbar += '<a class="dropdown-item" href="' + url_for('user.change_password') + '">' + word('Change Password') + '</a>'
+                    navbar += '<a class="dropdown-item" href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a>'
             navbar += '</div></li>'
     else:
         if custom_menu:

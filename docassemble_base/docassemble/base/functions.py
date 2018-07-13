@@ -2700,17 +2700,17 @@ def value(var):
     while variable not in the_user_dict:
         frame = frame.f_back
         if frame is None:
-            force_ask(var)
+            force_ask(var, persistent=False)
         if 'user_dict' in frame.f_locals:
             the_user_dict = eval('user_dict', frame.f_locals)
             if variable in the_user_dict:
                 break
             else:
-                force_ask(var)
+                force_ask(var, persistent=False)
         else:
             the_user_dict = frame.f_locals
     if variable not in the_user_dict:
-        force_ask(var)
+        force_ask(var, persistent=False)
     if len(components) == 1:
         return eval(variable, the_user_dict)
     cum_variable = ''
@@ -2725,7 +2725,7 @@ def value(var):
             try:
                 the_index = eval(elem[1], the_user_dict)
             except:
-                force_ask(var)
+                force_ask(var, persistent=False)
             if type(the_index) == int:
                 to_eval = 'len(' + cum_variable + ') > ' + str(the_index)
             else:
@@ -2734,10 +2734,10 @@ def value(var):
         try:
             result = eval(to_eval, the_user_dict)
         except:
-            force_ask(var)
+            force_ask(var, persistent=False)
         if result:
             continue
-        force_ask(var)
+        force_ask(var, persistent=False)
     return eval(cum_variable, the_user_dict)
 
 # def _undefine(*pargs):

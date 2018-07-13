@@ -1445,7 +1445,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
 #    </script>""")
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
-    if status.question.question_type != "signature":
+    if status.question.question_type == "signature":
+        output += '<div class="sigpost">' + status.post + '</div>'
+    else:
         output += status.post
         # if len(status.attributions):
         #     output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
