@@ -4705,14 +4705,27 @@ def index():
             logmessage("index: error where kv_key is " + unicode(kv_key) + " and kv_var is " + unicode(kv_var))
     visible_fields = set()
     for field_name in visible_field_names:
+        try:
+            m = re.search(r'(.*)(\[[^\]]+\])$', from_safeid(field_name))
+            if m:
+                #logmessage("Found a checkbox var " + m.group(1))
+                #logmessage("Found a checkbox index " + m.group(2))
+                if safeid(m.group(1)) in known_varnames:
+                    #logmessage("Adding " + from_safeid(known_varnames[safeid(m.group(1))]) + m.group(2) + " to visible_fields")
+                    visible_fields.add(safeid(from_safeid(known_varnames[safeid(m.group(1))]) + m.group(2)))
+        except Exception as the_err:
+            #logmessage("Failure to unpack " + field_name + " because of " + unicode(the_err))
+            pass
         if field_name in known_varnames:
             visible_fields.add(known_varnames[field_name])
         else:
             visible_fields.add(field_name)
+    #logmessage("known_varnames is " + repr(known_varnames))
     #logmessage("Visible fields is " + repr(visible_fields))
     #logmessage("Numbered fields is " + repr(numbered_fields))
     if '_checkboxes' in post_data:
         checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
+        #logmessage("checkbox_fields is " + repr(checkbox_fields))
         for checkbox_field, checkbox_value in checkbox_fields.iteritems():
             if checkbox_field in visible_fields and checkbox_field not in post_data and not (checkbox_field in numbered_fields and numbered_fields[checkbox_field] in post_data):
                 #logmessage("Checkbox: adding " + checkbox_field + " set to " + checkbox_value)
@@ -12274,28 +12287,32 @@ def playground_files():
     description = None
     if (section == "template"):
         header = word("Templates")
-        description = 'Add files here that you want want to include in your interviews using <a target="_blank" href="https://docassemble.org/docs/documents.html#docx template file">docx template file</a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#pdf template file">pdf template file</a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#content file">content file</a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#initial yaml">initial yaml</a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#additional yaml">additional yaml</a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#template file">template file</a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#rtf template file">rtf template file</a>, or <a target="_blank" href="https://docassemble.org/docs/documents.html#docx reference file">docx reference file</a>.'
+        description = 'Add files here that you want want to include in your interviews using <a target="_blank" href="https://docassemble.org/docs/documents.html#docx template file"><code>docx template file</code></a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#pdf template file"><code>pdf template file</code></a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#content file"><code>content file</code></a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#initial yaml"><code>initial yaml</code></a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#additional yaml"><code>additional yaml</code></a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#template file"><code>template file</code></a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#rtf template file"><code>rtf template file</code></a>, or <a target="_blank" href="https://docassemble.org/docs/documents.html#docx reference file"><code>docx reference file</code></a>.'
         upload_header = word("Upload a template file")
+        list_header = word("Existing template files")
         edit_header = word('Edit text files')
         after_text = None
     elif (section == "static"):
         header = word("Static Files")
-        description = 'Add files here that you want to include in your interviews with "images," "image sets," "[FILE]" or "url_of()."'
+        description = 'Add files here that you want to include in your interviews with <a target="_blank" href="https://docassemble.org/docs/initial.html#images"><code>images</code></a>, <a target="_blank" href="https://docassemble.org/docs/initial.html#image sets"><code>image sets</code></a>, <a target="_blank" href="https://docassemble.org/docs/markup.html#inserting%20images"><code>[FILE]</code></a> or <a target="_blank" href="https://docassemble.org/docs/functions.html#url_of"><code>url_of()</code></a>.'
         upload_header = word("Upload a static file")
+        list_header = word("Existing static files")
         edit_header = word('Edit text files')
         after_text = None
     elif (section == "sources"):
         header = word("Source Files")
         description = 'Add files here that you want to make available to your interview code, such as word translation files and training data for machine learning.'
         upload_header = word("Upload a source file")
+        list_header = word("Existing source files")
         edit_header = word('Edit source files')
         after_text = None
     elif (section == "modules"):
         header = word("Modules")
         upload_header = word("Upload a Python module")
+        list_header = word("Existing module files")
         edit_header = word('Edit module files')
-        description = 'You can use this page to add Python module files (.py files) that you want to include in your interviews using "modules" or "imports."'
-        lowerdescription = Markup("""<p>To use this in an interview, write a <code>modules</code> block that refers to this module using Python's syntax for specifying a "relative import" of a module (i.e., prefix the module name with a period).</p>""" + highlight('---\nmodules:\n  - .' + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter()))
+        description = 'You can use this page to add Python module files (.py files) that you want to include in your interviews using <a target="_blank" href="https://docassemble.org/docs/initial.html#modules"><code>modules</code></a> or <a target="_blank" href="https://docassemble.org/docs/initial.html#imports"><code>imports</code></a>.'
+        lowerdescription = Markup("""<p>To use this in an interview, write a <a target="_blank" href="https://docassemble.org/docs/initial.html#modules"><code>modules</code></a> block that refers to this module using Python's syntax for specifying a "relative import" of a module (i.e., prefix the module name with a period).</p>""" + highlight('---\nmodules:\n  - .' + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter()))
         after_text = None
     if scroll:
         extra_command = """
@@ -12434,7 +12451,7 @@ def playground_files():
         modes = [mode]
     for the_mode in modes:
         cm_mode += '\n    <script src="' + url_for('static', filename="codemirror/mode/" + the_mode + "/" + ('damarkdown' if the_mode == 'markdown' else the_mode) + ".js") + '"></script>'
-    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>' + cm_mode + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
+    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>' + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
 
 @app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
 @login_required

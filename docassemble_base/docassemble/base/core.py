@@ -440,6 +440,7 @@ class DAList(DAObject):
         if not hasattr(self, 'ask_object_type'):
             self.ask_object_type = False
         return super(DAList, self).init(*pargs, **kwargs)
+    
     def _trigger_gather(self):
         """Triggers the gathering process."""
         if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
@@ -484,6 +485,10 @@ class DAList(DAObject):
             other._trigger_gather()
             return self.elements + other.elements
         return self.elements + other
+    def index(self, *pargs, **kwargs):
+        """Returns the first index at which a given item may be found."""
+        self._trigger_gather()
+        return self.elements.index(*pargs, **kwargs)
     def clear(self):
         """Removes all the items from the list."""
         self.elements = list()

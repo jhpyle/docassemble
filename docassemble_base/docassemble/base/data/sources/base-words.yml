@@ -134,6 +134,10 @@
 "Error reading JSON file.  Not a valid JSON file.": Null
 "Error reading JSON file.  The JSON file needs to contain a dictionary at the root level.": Null
 "Every Two Weeks": Null
+"Existing module files": Null
+"Existing source files": Null
+"Existing static files": Null
+"Existing template files": Null
 "exit": Null
 "Exit": Null
 "false": Null

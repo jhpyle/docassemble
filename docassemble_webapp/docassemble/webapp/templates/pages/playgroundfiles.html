@@ -10,12 +10,27 @@
             </div>
           </div>
           {%- endif %}
+          {%- if upload_header %}
+          <div class="mt-3">
+            <h3>{{ upload_header }}</h3>
+          </div>
+
+          <form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            {{ myrender_hidden_field(form.section, value=section) }}
+            {{ render_file_field(form.uploadfile, tabindex=60, multiple=True) }}
+            <div class="form-actions">
+              {{ render_submit_field(form.submit, tabindex=565, id="uploadbutton") }}
+            </div>
+          </form>
+          <div class="mt-3">
+            <h3>{{ list_header }}</h3>
+          </div>
           {%- if use_gd %}
           <div>
             <a tabindex="15" title="{{ word('Sync with Google Drive') }}" class="btn btn-success btn-sm mt-2 mb-2" href="{{ url_for('sync_with_google_drive', next=url_for('playground_files', section=section)) }}"><i class="fab fa-google-drive"></i>&nbsp;{{ word('Sync') }}</a>
           </div>
           {%- endif %}
-          {%- if upload_header %}
           {%- if files %}
           <table class="table table-striped mt-2">
             <thead>
@@ -36,19 +51,6 @@
           {%- else %}
           <p><em>{{ word("No files have been uploaded yet.") }}</em></p>
           {%- endif %}
-
-          <div>
-            <h3>{{ upload_header }}</h3>
-          </div>
-
-          <form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
-            {{ form.hidden_tag() }}
-            {{ myrender_hidden_field(form.section, value=section) }}
-            {{ render_file_field(form.uploadfile, tabindex=60, multiple=True) }}
-            <div class="form-actions">
-              {{ render_submit_field(form.submit, tabindex=565, id="uploadbutton") }}
-            </div>
-          </form>
           {%- endif %}
           {%- if edit_header %}
           <h3>{{ edit_header }}</h3>

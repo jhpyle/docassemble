@@ -824,7 +824,8 @@ class Address(DAObject):
             try:
                 results = my_geocoder.geocode(the_address)
                 success = True
-            except:
+            except Exception as the_err:
+                logmessage(unicode(the_err))
                 try_number += 1
                 time.sleep(try_number)
         self.geolocated = True

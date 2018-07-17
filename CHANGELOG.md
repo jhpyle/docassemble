@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.2.78] - 2018-07-17
+### Added
+- The `index()` method of the `DAList` class.
+### Changed
+- File uploads are now at the top of the screen in Playground folders.
+### Fixed
+- Problem with `datatype: checkboxes` and `show if`.
+
 ## [0.2.77] - 2018-07-13
 ### Fixed
 - The `post` HTML was missing on signature pages.
@@ -69,7 +77,7 @@
 
 ## [0.2.70] - 2018-06-14
 ### Changed
-- Calls to `force_ask()` and calls actions now result in more
+- Calls to `force_ask()` and calls to actions now result in more
   persistent variable seeking.
 - Improved editing of lists.
 ### Fixed

@@ -177,6 +177,7 @@ DAList.complete_elements: "https://docassemble.org/docs/objects.html#DAList.comp
 DAList.extend: "https://docassemble.org/docs/objects.html#DAList.extend"
 DAList.first: "https://docassemble.org/docs/objects.html#DAList.first"
 DAList.last: "https://docassemble.org/docs/objects.html#DAList.last"
+DAList.index: "https://docassemble.org/docs/objects.html#DAList.index"
 DAList.item: "https://docassemble.org/docs/objects.html#DAList.item"
 DAList.does_verb: "https://docassemble.org/docs/objects.html#DAList.does_verb"
 DAList.did_verb: "https://docassemble.org/docs/objects.html#DAList.did_verb"
