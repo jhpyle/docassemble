@@ -616,7 +616,6 @@ persistent volume, and find
 
 When **docassemble** starts up on a [Docker] container, it:
 
-* 
 * Creates a [configuration] file from a template, using environment
   variables for initial values, if a [configuration] file does not
   already exist.
