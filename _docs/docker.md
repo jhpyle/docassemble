@@ -951,7 +951,7 @@ jhpyle/docassemble
 {% endhighlight %}
 
 Note that [Docker] will fail if any of these ports is already in use.
-For example, many Linux distributions run a mail tranport agent on
+For example, many Linux distributions run a mail transport agent on
 port 25 by default; you will have to stop that service in order to
 start [Docker] with `-p 25:25`.  For example, on [Amazon Linux] you
 may need to run:
