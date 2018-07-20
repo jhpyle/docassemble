@@ -24,6 +24,10 @@ are:
    * **E-mail**: admin@admin.com
    * **Password**: password
 
+The default password ("password") will need to be changed.  Change it
+to something that is at least eight characters long with at least one
+lowercase letter and one number.
+
 Then, from the menu, select [Playground].  The [Playground] is a
 "sandbox" area where you can develop interviews and test them, all
 inside the web browser.
