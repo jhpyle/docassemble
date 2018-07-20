@@ -227,11 +227,11 @@ is set to `True` or `False`.
 There are two important things to understand about [actions] invoked
 through `background_action()`:
 
-#. Background actions are not capable of asking the user any
+1. Background actions are not capable of asking the user any
    questions.  Before calling [`background_action()`], you need to
    make sure that all of the variables the [action] needs have been
    defined.
-#. Any changes made to variables by a background action will not be
+2. Any changes made to variables by a background action will not be
    remembered after the action finishes.  In order to communicate back
    to the interview, you need to use [`background_response()`] or
    [`background_response_action()`] (discussed below).
