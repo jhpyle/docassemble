@@ -543,8 +543,12 @@ in order for it to be chosen.
 Other methods available on a `DAList` are:
 
 * <a name="DAList.append"></a>`append(item_to_append)` - adds
-  `item_to_append` to the end of the list.  Just like the
-  [Python list] method of the same name.
+  `item_to_append` to the end of the list.  Just like the [Python
+  list] method of the same name.  It takes an optional keyword
+  argument `set_instance_name`.  If `set_instance_name` is `True`,
+  then the object's intrinsic name will be changed to that of a member
+  of the list (e.g., `my_list[2]`).  If `set_instance_name` is `False`
+  (the default), then the object's instance name will not be changed.
 * <a name="DAList.clear"></a><a name="DADict.clear"></a><a
   name="DASet.clear"></a>`clear()` - makes the list empty.
 * <a name="DAList.complete_elements"></a><a
