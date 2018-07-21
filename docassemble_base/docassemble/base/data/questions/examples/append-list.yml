@@ -1,0 +1,57 @@
+metadata:
+  title: Adding object to list
+  short title: Append
+  example start: 2
+  example end: 8
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - person: DAList.using(object_type=Individual, there_are_any=True)
+  - doctor: Individual
+---
+question: |
+  What is the name of the ${ ordinal(i) } person?
+fields:
+  - First name: person[i].name.first
+  - Last name: person[i].name.last
+---
+question: |
+  What ${ person[i].possessive('age') }?
+fields:
+  - Age in years: person[i].age
+    datatype: integer
+---
+question: |
+  Is there another person?
+yesno: person.there_is_another
+---
+question: |
+  Who is your doctor?
+fields:
+  - "Someone already mentioned": doctor
+    datatype: object
+    choices:
+      - person
+    disable others: True
+  - First name: doctor.name.first
+  - Last name: doctor.name.last
+---
+mandatory: True
+code: |
+  person.gather()
+  need(doctor.name.first, doctor.name.last)
+  if doctor not in person:
+    person.append(doctor, set_instance_name=True)
+  finish_screen
+---
+event: finish_screen
+question: All done
+subquestion: |
+  The people are:
+    
+  % for y in person:
+  * ${ y } is ${ y.age } years old.
+  % endfor
+    

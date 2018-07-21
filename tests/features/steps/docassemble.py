@@ -11,6 +11,8 @@ import os
 import re
 import sys
 
+number_from_ordinal = dict(first=1, second=2, third=3, fourth=4, fifth=5, sixth=6, seventh=7, eighth=8, ninth=9, tenth=10)
+
 def do_wait():
     if world.wait_seconds > 0:
         if world.wait_seconds > 3:
@@ -174,10 +176,10 @@ def click_back_to_question_button(step):
     world.browser.find_element_by_id('backToQuestion').click()
     world.browser.wait_for_it()
 
-@step('I click the second link "([^"]+)"')
-def click_second_link(step, link_name):
+@step('I click the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) link "([^"]+)"')
+def click_nth_link(step, ordinal, link_name):
     do_wait()
-    world.browser.find_element_by_xpath('(//a[text()="' + link_name + '"])[2]').click()
+    world.browser.find_element_by_xpath('(//a[text()="' + link_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
     world.browser.wait_for_it()
 
 @step('I should see the phrase "([^"]+)"')

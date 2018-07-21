@@ -558,11 +558,12 @@ class DAList(DAObject):
         if hasattr(self, 'there_are_any'):
             self.there_are_any = True
         return newobject
-    def append(self, *pargs):
+    def append(self, *pargs, **kwargs):
         """Adds the arguments to the end of the list."""
         something_added = False
+        set_instance_name = kwargs.get('set_instance_name', False)
         for parg in pargs:
-            if isinstance(parg, DAObject) and not parg.has_nonrandom_instance_name:
+            if isinstance(parg, DAObject) and (set_instance_name or (not parg.has_nonrandom_instance_name)):
                 parg.fix_instance_name(parg.instanceName, self.instanceName + '[' + str(len(self.elements)) + ']')
                 #parg.has_nonrandom_instance_name = True
                 #parg.instanceName = self.instanceName + '[' + str(len(self.elements)) + ']'

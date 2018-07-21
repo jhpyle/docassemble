@@ -4443,7 +4443,7 @@ def index():
         #logmessage("index: old_yaml_filename is " + str(old_yaml_filename))
         if old_yaml_filename != yaml_filename or reset_interview:
             #logmessage("index: change in yaml filename detected")
-            if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base') or yaml_filename.startswith('docassemble.demo')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
+            if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
                 raise DAError("Not authorized")
             show_flash = False
             if not yaml_filename.startswith('docassemble.playground'):
@@ -17821,7 +17821,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
     recipient_email = daconfig.get('error notification email', None)
     if not recipient_email:
         return
-    if err.__class__.__name__ == 'CSRFError':
+    if err.__class__.__name__ in ('CSRFError', 'ClientDisconnected'):
         return
     if message is None:
         errmess = unicode(err)

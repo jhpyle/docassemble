@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.2.79] - 2018-07-21
+### Changed
+- The `append` method to the `DAList` class now accepts an optional
+  keyword argument `set_instance_name`.
+### Fixed
+- Any package name starting with `base` or `demo` was being blocked
+  when `allow demo` was not set to `False`.
+
 ## [0.2.78] - 2018-07-17
 ### Added
 - The `index()` method of the `DAList` class.

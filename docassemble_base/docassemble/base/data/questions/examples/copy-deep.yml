@@ -1,6 +1,6 @@
 metadata:
-  title: Shallow copy
-  documentation: "https://docassemble.org/docs/objects.html#DAObject.copy_shallow"
+  title: Deep copy
+  documentation: "https://docassemble.org/docs/objects.html#DAObject.copy_deep"
   example start: 2
   example end: 3
 ---
@@ -11,7 +11,7 @@ objects:
   - orig_company: DAObject
 ---
 code: |
-  other_company = orig_company.copy_shallow('other_company')
+  other_company = orig_company.copy_deep('other_company')
 ---
 generic object: DAObject
 objects:
