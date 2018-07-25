@@ -79,10 +79,10 @@ submit`], and [`main page post`] directives in the [Configuration].
 You can also customize these values with the [`set_title()`] function.
 
 <a name="error help">The [`metadata`] block also accepts the directive
-`error help`.  This is [Markdown] text that will be converted to HTML
-and included on any error screen that appears to the user during the
-interview.  You can also provide this text on a server-wide basis
-using the [`error help`] directive in the [Configuration].
+`error help`.  This is [Markdown]-formatted text that will be included
+on any error screen that appears to the user during the interview.
+You can also provide this text on a server-wide basis using the
+[`error help`] directive in the [Configuration].
 
 # <a name="objects"></a>Creating `objects`
 
