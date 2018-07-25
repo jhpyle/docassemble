@@ -1911,7 +1911,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
     if wrapper:
         output += "\n</div>\n</div>\n"
     if not section_reached:
-        raise DAError("Section \"" + unicode(the_section) + "\" did not exist.")
+        logmessage("Section \"" + unicode(the_section) + "\" did not exist.")
     return output        
 
 def progress_bar(progress):
@@ -17577,7 +17577,14 @@ def manage_api():
         argu['avail_keys'] = avail_keys
         argu['has_any_keys'] = True if len(avail_keys) > 0 else False
     return render_template('pages/manage_api.html', **argu)
-    
+
+@app.route('/me', methods=['GET'])
+def whoami():
+    if current_user.is_authenticated:
+        return jsonify(logged_in=True, user_id=current_user.id, email=current_user.email, roles=[role.name for role in current_user.roles], firstname=current_user.first_name, lastname=current_user.last_name, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization, timezone=current_user.timezone)
+    else:
+        return jsonify(logged_in=False)
+
 def retrieve_email(email_id):
     email = Email.query.filter_by(id=email_id).first()
     if email is None:

@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.80] - 2018-07-24
+### Added
+- The `/me` resource with information about the user.
+### Changed
+- JSON returned by API and `/vars` is now pretty-printed.
+- Referencing a non-existent section no longer triggers an error.
+
 ## [0.2.79] - 2018-07-21
 ### Changed
 - The `append` method to the `DAList` class now accepts an optional
