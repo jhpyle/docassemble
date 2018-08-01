@@ -2247,6 +2247,16 @@ that go by different names:
 libreoffice: soffice
 {% endhighlight %}
 
+## <a name="pandoc engine"></a>Pandoc's LaTeX engine
+
+By default, [Pandoc] uses `pdflatex` to generate PDF files from
+[Markdown].  If you would like to use a different engine, you can
+specify it using the `pandoc engine` directive:
+
+{% highlight yaml %}
+pandoc engine: xelatex
+{% endhighlight %}
+
 ## <a name="pdfa"></a>Producing PDF/A files
 
 If you want the [PDF] files produced by interviews on your server to be
