@@ -91,28 +91,28 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
                             data['message']['is_self'] = True
                         else:
                             data['message']['is_self'] = False
-                        socketio.emit('chatmessage', {'i': data['yaml_filename'], 'uid': data['uid'], 'userid': data['user_id'], 'data': data['message']}, namespace='/interview', room=sid)
+                        socketio.emit('chatmessage', {'i': data['yaml_filename'], 'uid': data['uid'], 'userid': data['user_id'], 'data': data['message']}, namespace='/wsinterview', room=sid)
                     elif data['messagetype'] == 'chatready':
                         pubsub.subscribe(data['sid'])
                         partners.add(data['sid'])
                         sys.stderr.write("chatready 2")
-                        socketio.emit('chatready', {}, namespace='/interview', room=sid)
+                        socketio.emit('chatready', {}, namespace='/wsinterview', room=sid)
                     elif data['messagetype'] == 'departure':
                         if data['sid'] in partners:
                             partners.remove(data['sid'])
-                        socketio.emit('departure', {'numpartners': len(partners)}, namespace='/interview', room=sid)
+                        socketio.emit('departure', {'numpartners': len(partners)}, namespace='/wsinterview', room=sid)
                     elif data['messagetype'] == 'block':
                         if data['sid'] in partners:
                             partners.remove(data['sid'])
-                        socketio.emit('departure', {'numpartners': len(partners)}, namespace='/interview', room=sid)
+                        socketio.emit('departure', {'numpartners': len(partners)}, namespace='/wsinterview', room=sid)
                     elif data['messagetype'] == 'chatpartner':
                         partners.add(data['sid'])
                     elif data['messagetype'] == 'controllerchanges':
-                        socketio.emit('controllerchanges', {'parameters': data['parameters'], 'clicked': data['clicked']}, namespace='/interview', room=sid)
+                        socketio.emit('controllerchanges', {'parameters': data['parameters'], 'clicked': data['clicked']}, namespace='/wsinterview', room=sid)
                     elif data['messagetype'] == 'controllerstart':
-                        socketio.emit('controllerstart', {}, namespace='/interview', room=sid)
+                        socketio.emit('controllerstart', {}, namespace='/wsinterview', room=sid)
                     elif data['messagetype'] == 'controllerexit':
-                        socketio.emit('controllerexit', {}, namespace='/interview', room=sid)
+                        socketio.emit('controllerexit', {}, namespace='/wsinterview', room=sid)
                     # elif data['messagetype'] == "newpage":
                     #     sys.stderr.write("  Got new page for interview\n")
                     #     try:
@@ -120,10 +120,10 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
                     #     except:
                     #         sys.stderr.write("  newpage JSON parse error\n")
                     #         continue
-                    #     socketio.emit('newpage', {'obj': obj}, namespace='/interview', room=sid)
+                    #     socketio.emit('newpage', {'obj': obj}, namespace='/wsinterview', room=sid)
         sys.stderr.write('  exiting interview thread for sid ' + str(sid) + '\n')
 
-@socketio.on('start_being_controlled', namespace='/interview')
+@socketio.on('start_being_controlled', namespace='/wsinterview')
 def interview_start_being_controlled(message):
     #sys.stderr.write("received start_being_controlled\n")
     session_id = session.get('uid', None)
@@ -132,12 +132,12 @@ def interview_start_being_controlled(message):
     key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
     rr.publish(key, json.dumps(dict(message='start_being_controlled', key=re.sub(r'^da:input:uid:', 'da:session:uid:', key))))
 
-@socketio.on('message', namespace='/interview')
+@socketio.on('message', namespace='/wsinterview')
 def handle_message(message):
-    socketio.emit('mymessage', {'data': "Hello"}, namespace='/interview', room=request.sid)
+    socketio.emit('mymessage', {'data': "Hello"}, namespace='/wsinterview', room=request.sid)
     #sys.stderr.write('received message from ' + str(session.get('uid', 'NO UID')) + ': ' + message['data'] + "\n")
     
-@socketio.on('chat_log', namespace='/interview')
+@socketio.on('chat_log', namespace='/wsinterview')
 def chat_log(message):
     user_dict = get_dict()
     if user_dict is None:
@@ -159,26 +159,26 @@ def chat_log(message):
         secret = str(secret)    
     #sys.stderr.write("chat_log: " + str(repr(user_id)) + " " + str(repr(temp_user_id)) + "\n")
     messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, user_id, temp_user_id)
-    socketio.emit('chat_log', {'data': messages}, namespace='/interview', room=request.sid)
+    socketio.emit('chat_log', {'data': messages}, namespace='/wsinterview', room=request.sid)
     #sys.stderr.write("Interview: sending back " + str(len(messages)) + " messages\n")
 
-@socketio.on('transmit', namespace='/interview')
+@socketio.on('transmit', namespace='/wsinterview')
 def handle_message(message):
     #sys.stderr.write('received transmission from ' + str(session.get('uid', 'NO UID')) + ': ' + message['data'] + "\n")
     session_id = session.get('uid', None)
     if session_id is not None:
         rr.publish(session_id, json.dumps(dict(origin='client', room=request.sid, message=message['data'])))
 
-@socketio.on('terminate', namespace='/interview')
+@socketio.on('terminate', namespace='/wsinterview')
 def terminate_interview_connection():
     sys.stderr.write("terminate_interview_connection\n")
     # hopefully the disconnect will be triggered
     # if request.sid in threads:
     #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
-    socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
+    socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
     #disconnect()
 
-@socketio.on('chatmessage', namespace='/interview')
+@socketio.on('chatmessage', namespace='/wsinterview')
 def chat_message(data):
     nowtime = datetime.datetime.utcnow()
     session_id = session.get('uid', None)
@@ -230,19 +230,19 @@ def wait_for_channel(rr, channel):
     else:
         return True
 
-@socketio.on('connect', namespace='/interview')
+@socketio.on('connect', namespace='/wsinterview')
 def on_interview_connect():
     sys.stderr.write("Client connected on interview\n")
     join_room(request.sid)
     interview_connect()
     rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
 
-@socketio.on('connectagain', namespace='/interview')
+@socketio.on('connectagain', namespace='/wsinterview')
 def on_interview_reconnect(data):
     sys.stderr.write("Client reconnected on interview\n")
     interview_connect()
     rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
-    socketio.emit('reconnected', {}, namespace='/interview', room=request.sid)
+    socketio.emit('reconnected', {}, namespace='/wsinterview', room=request.sid)
     
 def interview_connect():
     session_id = session.get('uid', None)
@@ -256,13 +256,13 @@ def interview_connect():
             secret = str(secret)
         if user_dict is None:
             sys.stderr.write("user_dict did not exist.\n")
-            socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
+            socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             return
         
         chat_info = user_dict['_internal']['livehelp']
         if chat_info['availability'] == 'unavailable':
             sys.stderr.write("Socket started but chat is unavailable.\n")
-            socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
+            socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             return
         #sys.stderr.write('chat info is ' + str(chat_info) + "\n")
         if user_dict['_internal']['livehelp']['mode'] in ['peer', 'peerhelp']:
@@ -279,7 +279,7 @@ def interview_connect():
         channel_up = wait_for_channel(rr, request.sid)
         if not channel_up:
             sys.stderr.write("Channel did not come up.\n")
-            socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
+            socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             return
         lkey = 'da:ready:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         #sys.stderr.write("Searching: " + lkey + "\n")
@@ -289,7 +289,7 @@ def interview_connect():
             lkey_exists = False
         if lkey_exists is False and peer_ok is False:
             sys.stderr.write("Key does not exist: " + lkey + ".\n")
-            #socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
+            #socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             #return
         failed_to_find_partner = True
         found_help = False
@@ -298,7 +298,7 @@ def interview_connect():
             #sys.stderr.write("partner_keys is: " + str(type(partner_keys)) + " " + str(partner_keys) + "\n")
             if partner_keys is None and not peer_ok:
                 sys.stderr.write("No partner keys: " + lkey + ".\n")
-                socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
+                socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
                 return
             rr.delete(lkey)
             for pkey in partner_keys:
@@ -324,12 +324,12 @@ def interview_connect():
                         failed_to_find_partner = False
         if failed_to_find_partner and peer_ok is False:
             sys.stderr.write("Unable to reach any potential chat partners.\n")
-            #socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
+            #socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             #return
         key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         rr.set(key, request.sid)
 
-@socketio.on('disconnect', namespace='/interview')
+@socketio.on('disconnect', namespace='/wsinterview')
 def on_interview_disconnect():
     sys.stderr.write('Client disconnected from interview\n')
     yaml_filename = session.get('i', None)

@@ -1067,6 +1067,8 @@ class Question:
                 raise DAError("You cannot set the skip undefined directive if the type of question is not review." + self.idebug(data))
             self.skip_undefined = False
         if 'mandatory' in data:
+            if 'question' not in data and 'code' not in data and 'objects' not in data and 'attachment' not in data and 'data' not in data and 'data from code' not in data:
+                raise DAError("You cannot use the mandatory modifier on this type of block." + self.idebug(data))
             if data['mandatory'] is True:
                 self.is_mandatory = True
                 self.mandatory_code = None
@@ -3373,7 +3375,8 @@ class Question:
             result_list.append(result_dict)
         return(has_code, result_list)
     def mark_as_answered(self, user_dict):
-        user_dict['_internal']['answered'].add(self.name)
+        if self.is_mandatory or self.mandatory_code is not None:
+            user_dict['_internal']['answered'].add(self.name)
     def follow_multiple_choice(self, user_dict, interview_status):
         # logmessage("follow_multiple_choice")
         # if self.name:
@@ -4784,7 +4787,7 @@ class Interview:
                             variable_stack.remove(missing_var)
                         try:
                             eval(missing_var, user_dict)
-                            question.mark_as_answered(user_dict)
+                            #question.mark_as_answered(user_dict)
                             docassemble.base.functions.pop_current_variable()
                             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         except:
@@ -4802,11 +4805,11 @@ class Interview:
                             docassemble.base.functions.pop_event_stack(origMissingVariable)
                         exec_with_trap(question, user_dict)
                         interview_status.mark_tentative_as_answered(user_dict)
-                        #PPP
                         if missing_var in variable_stack:
                             variable_stack.remove(missing_var)
                         if question.question_type == 'event_code':
                             docassemble.base.functions.pop_current_variable()
+                            docassemble.base.functions.pop_event_stack(origMissingVariable)
                             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         try:
                             eval(missing_var, user_dict)
@@ -4814,7 +4817,7 @@ class Interview:
                                 exec("del __oldvariable__", user_dict)
                             if seeking_question:
                                 continue
-                            question.mark_as_answered(user_dict)
+                            #question.mark_as_answered(user_dict)
                             docassemble.base.functions.pop_current_variable()
                             docassemble.base.functions.pop_event_stack(origMissingVariable)
                             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})

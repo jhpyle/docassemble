@@ -3031,6 +3031,11 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         clientip = req.remote_addr
         method = req.method
         unique_id = str(request.cookies.get('session'))[5:15]
+        if unique_id == '':
+            if current_user.is_authenticated and not current_user.is_anonymous and current_user.email:
+                unique_id = str(current_user.email)
+            else:
+                unique_id = random_string(10)
     if secret is not None:
         secret = str(secret)
     return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': session.get('encrypted', True), 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'session_uid': unique_id}, 'headers': headers, 'clientip': clientip, 'method': method}
@@ -4362,11 +4367,29 @@ def get_variables():
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
         return jsonify(success=False)
-    variables = docassemble.base.functions.serializable_dict(user_dict)
-    variables['_internal'] = docassemble.base.functions.serializable_dict(user_dict['_internal'])
+    variables = docassemble.base.functions.serializable_dict(user_dict, include_internal=True)
+    #variables['_internal'] = docassemble.base.functions.serializable_dict(user_dict['_internal'])
     return jsonify(success=True, variables=variables, steps=steps, encrypted=is_encrypted, uid=session_id, i=yaml_filename)
 
-@app.route("/", methods=['POST', 'GET'])
+@app.route("/", methods=['GET'])
+def rootindex():
+    url = daconfig.get('root redirect url', None)
+    if url is not None:
+        return redirect(url)
+    yaml_filename = session.get('i', default_yaml_filename)
+    yaml_parameter = request.args.get('i', None)
+    if yaml_filename is None and yaml_parameter is None:
+        if len(daconfig['dispatch']):
+            return redirect(url_for('interview_start'))
+        yaml_filename = final_default_yaml_filename
+    the_args = dict()
+    for key, val in request.args.iteritems():
+        the_args[key] = val
+    if yaml_parameter is None and yaml_filename is not None:
+        the_args['i'] = yaml_filename
+    return redirect(url_for('index', **the_args))
+
+@app.route("/interview", methods=['POST', 'GET'])
 def index():
     if 'ajax' in request.form and int(request.form['ajax']):
         is_ajax = True
@@ -6325,10 +6348,10 @@ def index():
             return;
         }
         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-            socket = io.connect("http://" + document.domain + "/interview", {path: '/ws/socket.io'});
+            socket = io.connect("http://" + document.domain + "/wsinterview", {path: '/ws/socket.io'});
         }
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            socket = io.connect("https://" + document.domain + "/interview" + location.port, {path: '/ws/socket.io'});
+            socket = io.connect("https://" + document.domain + "/wsinterview" + location.port, {path: '/ws/socket.io'});
         }
         //console.log("daInitializeSocket: socket is " + socket);
         if (socket != null){
@@ -10697,10 +10720,10 @@ def update_package():
 #     var socket;
 #     $(document).ready(function(){
 #         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-#             socket = io.connect("http://" + document.domain + "/interview", {path: '/ws/socket.io'});
+#             socket = io.connect("http://" + document.domain + "/wsinterview", {path: '/ws/socket.io'});
 #         }
 #         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-#             socket = io.connect("https://" + document.domain + "/interview" + location.port, {path: '/ws/socket.io'});
+#             socket = io.connect("https://" + document.domain + "/wsinterview" + location.port, {path: '/ws/socket.io'});
 #         }
 #         if (typeof socket !== 'undefined') {
 #             socket.on('connect', function() {
@@ -17015,8 +17038,8 @@ def get_session_variables(yaml_filename, session_id, secret=None, simplify=True)
     if user_dict is None:
         raise Exception("Unable to obtain interview dictionary.")
     if simplify:
-        variables = docassemble.base.functions.serializable_dict(user_dict)
-        variables['_internal'] = docassemble.base.functions.serializable_dict(user_dict['_internal'])
+        variables = docassemble.base.functions.serializable_dict(user_dict, include_internal=True)
+        #variables['_internal'] = docassemble.base.functions.serializable_dict(user_dict['_internal'])
         return variables
     return user_dict
 
@@ -17130,6 +17153,7 @@ def create_new_interview(yaml_filename, secret, url_args=None, request=None):
     ci['session'] = session_id
     ci['encrypted'] = True
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
+    interview_status.checkin = True
     try:
         interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable as err:
@@ -17177,6 +17201,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     ci['session'] = session_id
     ci['encrypted'] = is_encrypted
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
+    interview_status.checkin = True
     try:
         if old_user_dict is not None:
             interview.assemble(user_dict, interview_status, old_user_dict)
@@ -17288,6 +17313,7 @@ def api_session_action():
     ci['session'] = session_id
     ci['encrypted'] = is_encrypted
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
+    interview_status.checkin = True
     try:
         interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable as err:
@@ -17850,11 +17876,14 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
     else:
         referer = None
         ipaddress = None
-    if the_vars is None:
-        try:
-            the_vars = docassemble.base.functions.all_variables()
-        except:
-            pass
+    if daconfig.get('error notification variables', DEBUG):
+        if the_vars is None:
+            try:
+                the_vars = docassemble.base.functions.all_variables(include_internal=True)
+            except:
+                pass
+    else:
+        the_vars = None
     json_filename = None
     if the_vars is not None and len(the_vars):
         try:

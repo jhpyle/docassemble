@@ -527,9 +527,9 @@ def html_filter(text, status=None, question=None, embedder=None, default_image_w
     if map_match.search(text):
         text = map_match.sub((lambda x: map_string(x.group(1), status)), text)
     # width="420" height="315"
-    text = re.sub(r'\[YOUTUBE ([^\]]+)\]', r'<div class="davideo davideo169"><iframe src="https://www.youtube.com/embed/\1" frameborder="0" allowfullscreen></iframe></div>', text)
-    text = re.sub(r'\[YOUTUBE4:3 ([^\]]+)\]', r'<div class="davideo davideo43"><iframe src="https://www.youtube.com/embed/\1" frameborder="0" allowfullscreen></iframe></div>', text)
-    text = re.sub(r'\[YOUTUBE16:9 ([^\]]+)\]', r'<div class="davideo davideo169"><iframe src="https://www.youtube.com/embed/\1" frameborder="0" allowfullscreen></iframe></div>', text)
+    text = re.sub(r'\[YOUTUBE ([^\]]+)\]', r'<div class="davideo davideo169"><iframe src="https://www.youtube.com/embed/\1?rel=0" frameborder="0" allowfullscreen></iframe></div>', text)
+    text = re.sub(r'\[YOUTUBE4:3 ([^\]]+)\]', r'<div class="davideo davideo43"><iframe src="https://www.youtube.com/embed/\1?rel=0" frameborder="0" allowfullscreen></iframe></div>', text)
+    text = re.sub(r'\[YOUTUBE16:9 ([^\]]+)\]', r'<div class="davideo davideo169"><iframe src="https://www.youtube.com/embed/\1?rel=0" frameborder="0" allowfullscreen></iframe></div>', text)
     # width="500" height="281" 
     text = re.sub(r'\[VIMEO ([^\]]+)\]', r'<div class="davideo davideo169"><iframe src="https://player.vimeo.com/video/\1?byline=0&portrait=0" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>', text)
     text = re.sub(r'\[VIMEO4:3 ([^\]]+)\]', r'<div class="davideo davideo43"><iframe src="https://player.vimeo.com/video/\1?byline=0&portrait=0" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>', text)

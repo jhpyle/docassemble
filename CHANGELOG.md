@@ -1,5 +1,23 @@
 # Change Log
 
+## [0.2.81] - 2018-07-31
+### Changed
+- Interviews are now served from `/interview` rather than `/`.  This
+  change is backward-compatible.
+- Error notification e-mails will no longer include the interview
+  variables as a JSON file unless `error notification variables` is
+  set to true in the Configuration.
+- Non-mandatory blocks no longer get tracked in the internal
+  dictionary as having been answered.
+### Added
+- The `root redirect url` Configuration directive.
+- The `include_internal` parameter of `all_variables()`.
+- Warning if `mandatory` is used on a block that does not support the
+  `mandatory` modifier.
+### Fixed
+- Missing unique IDs for API calls.
+- HTML typo in Logs page.
+
 ## [0.2.80] - 2018-07-24
 ### Added
 - The `/me` resource with information about the user.

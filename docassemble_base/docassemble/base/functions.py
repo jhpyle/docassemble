@@ -2166,7 +2166,7 @@ def variables_as_json():
     """Sends an HTTP response with all variables in JSON format."""
     raise ResponseError(None, all_variables=True)
 
-def all_variables(simplify=True, special=False):
+def all_variables(simplify=True, include_internal=False, special=False):
     """Returns the interview variables as a dictionary suitable for export to JSON or other formats."""
     if special == 'titles':
         return this_thread.interview.get_title(get_user_dict())
@@ -2176,7 +2176,7 @@ def all_variables(simplify=True, special=False):
         session_tags()
         return copy.deepcopy(this_thread.internal['tags'])
     if simplify:
-        return serializable_dict(get_user_dict())
+        return serializable_dict(get_user_dict(), include_internal=include_internal)
     return pickleable_objects(get_user_dict())
 
 def command(*pargs, **kwargs):
@@ -2888,10 +2888,12 @@ def phone_number_part(number, part, country=None):
 def dict_as_json(user_dict):
     return json.dumps(serializable_dict(user_dict))
 
-def serializable_dict(user_dict):
+def serializable_dict(user_dict, include_internal=False):
     result_dict = dict()
     for key, data in user_dict.iteritems():
-        if key in ['_internal', '__builtins__']:
+        if key == '_internal' and not include_internal:
+            continue
+        if key == '__builtins__':
             continue
         if type(data) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, file]:
             continue

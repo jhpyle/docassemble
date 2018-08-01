@@ -17,7 +17,7 @@
     </div>
   </li>
   <li class="nav-item">
-    <a class="nav-link" title="{{ word('Download this log file') }}"href="{{ url_for('logfile', filename=current_file) }}"><span class="fas fa-download" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Download') }}</a>
+    <a class="nav-link" title="{{ word('Download this log file') }}" href="{{ url_for('logfile', filename=current_file) }}"><span class="fas fa-download" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Download') }}</a>
   </li>
 </ul>
 <form action="{{ url_for('logs') }}" method="POST" role="form" id="form">
@@ -35,7 +35,6 @@
       <a title="{{ word('Refresh') }}" href="{{ url_for('logs', file=current_file) }}"><i class="fas fa-sync-alt"></i></a>
     </div>
   </div>
-  <div class="row
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.file_name, value=current_file) }}
 </form>

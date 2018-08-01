@@ -863,6 +863,10 @@ class DAList(DAObject):
             return self.elements[index]
         except:
             if self.auto_gather and hasattr(self, 'gathered'):
+                try:
+                    logmessage("list index out of range on " + unicode(self.instanceName))
+                except:
+                    pass
                 raise IndexError("list index out of range")
             elif self.object_type is None and not self.ask_object_type:
                 var_name = object.__getattribute__(self, 'instanceName') + '[' + str(index) + ']'
