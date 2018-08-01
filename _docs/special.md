@@ -30,7 +30,7 @@ Users start an interview by going to a URL.  A basic URL would look
 like this:
 
 {% highlight text %}
-http://example.com/da?i=docassemble.example_inc:data/questions/survey.yml
+http://example.com/interview?i=docassemble.example_inc:data/questions/survey.yml
 {% endhighlight %}
 
 Here, the only parameter is `i`, the interview file name.
@@ -40,7 +40,7 @@ interview code.  For example, if the user started the interview by
 clicking on the following link:
 
 {% highlight text %}
-http://example.com/da?i=docassemble.example_inc:data/questions/survey.yml&from=web
+http://example.com/interview?i=docassemble.example_inc:data/questions/survey.yml&from=web
 {% endhighlight %}
 
 then the interview would load as usual, and the interview code could
@@ -73,8 +73,8 @@ question: You came from the ${ url_args.get('from', 'unknown') }.
 
 You can test this out by trying the following links:
 
-* [{{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg.yml&from=web]({{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg.yml&from=web){:target="_blank"}
-* [{{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg.yml&from=moon]({{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg.yml&from=moon){:target="_blank"}
+* [{{ site.demourl }}/interview?i=docassemble.demo:data/questions/testurlarg.yml&from=web]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/testurlarg.yml&from=web){:target="_blank"}
+* [{{ site.demourl }}/interview?i=docassemble.demo:data/questions/testurlarg.yml&from=moon]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/testurlarg.yml&from=moon){:target="_blank"}
 
 As soon as the interview loads, the parameters will no longer appear
 in the browser's location bar.  Nevertheless, the parameters remain
@@ -98,7 +98,7 @@ subquestion: |
 {% endhighlight %}
 
 You can test this out by trying the following link:
-[{{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder]({{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder){:target="_blank"}.
+[{{ site.demourl }}/interview?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder){:target="_blank"}.
 
 The following parameter names are not available for use as URL
 parameters because they are used for other purposes by

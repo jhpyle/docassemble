@@ -216,7 +216,7 @@ include:
 ---
 {% endhighlight %}
 
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/bestnumber/interview.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/bestnumber/interview.yml){:target="_blank"}.)
 
 # Creating documents in languages other than English
 

@@ -164,6 +164,45 @@ outside the context of an HTTP request.  For example, if you have a
 a media attachment, the URL for the media attachment will be unknown
 unless it is set in the configuration.
 
+## <a name="root redirect url"></a>Redirecting the root of the server
+
+By default, if the user accesses the root URL of the server (which is
+`/` unless configured differently using [`url root`]), the user is
+redirected to:
+
+* The URL indicated by `root redirect url`, if it is defined in the
+  Configuration, but if it is not defined then the user is redirected
+  to
+* Their current interview, if they have started one, but if they have
+  not started an interview already, then they are directed to
+* The [`default interview`], if it is defined, but if it is not
+  defined then the user is redirected to
+* A list of available interviews, if [`dispatch`] is set up, but if
+  not then the user is redirected to
+* A factory default interview.
+
+If you want the user to be directed to some other URL, you can define
+the `root redirect url` directive:
+
+{% highlight yaml %}
+root redirect url: https://example.com/site/intro.html
+{% endhighlight %}
+
+In this example, if the user access the root path, they will be
+redirected to a web site.
+
+The `root redirect url` can also be a relative path:
+
+{% highlight yaml %}
+root redirect url: /site/intro.html
+{% endhighlight %}
+
+This can be useful if you want to operate a static web site on the
+same domain as your **docassemble** server.  To do this, you will need
+to configure your web server to handle the `/site/` path, or operate
+**docassemble** on a non-standard port and set up a reverse proxy that
+redirects traffic to the non-standard port.
+
 ## <a name="dispatch"></a>Interview shortcuts
 
 The `dispatch` directive allows users to start interviews with
@@ -195,8 +234,8 @@ this:
 
 {% highlight html %}
 <ul class="dastart">
-  <li><a href="/?i=docassemble.demo%3Adata%2Fquestions%2Fquestions.yml">Demonstration interview</a></li>
-  <li><a href="/?i=docassemble.base%3Adata%2Fquestions%2Fexamples%2Fmadlibs.yml">Mad libs</a></li>
+  <li><a href="/interview?i=docassemble.demo%3Adata%2Fquestions%2Fquestions.yml">Demonstration interview</a></li>
+  <li><a href="/interview?i=docassemble.base%3Adata%2Fquestions%2Fexamples%2Fmadlibs.yml">Mad libs</a></li>
 </ul>
 {% endhighlight %}
 
@@ -1155,6 +1194,26 @@ notification to this e-mail address.  If possible, the e-mail will
 contain the error message.
 
 Information about errors is also available in the [Logs].
+
+## <a name="error notification variables"></a>Whether to include interview variables in error notification
+
+If `error notification variables` is set to true, then when an error
+notification e-mail is sent, the interview variables will be attached
+as a JSON file.
+
+The default value is the value of [`debug`]; that is, the variables
+will be included if the server is a development server, but not
+included if the server is a production server.
+
+Putting the interviews variables into a file and e-mailing them lowers
+security, especially when server-side encryption is being used.
+
+{% highlight yaml %}
+error notification variables: True
+{% endhighlight %}
+
+In the case of some errors, obtaining the interview variables is not
+possible; in that case, the variables will not be attached.
 
 ## <a name="error help"></a>Help text to display when there is an error
 
@@ -2413,11 +2472,11 @@ initiate a conversation by sending the SMS message "help" to the
 [Twilio] phone number will be started into the
 `docassemble.base:data/questions/examples/sms.yml` interview.
 
-The `default interview` configuration allows you to set an interview
+The [`default interview`] configuration allows you to set an interview
 that will be used in case the user's initial message does not match up
-with a `dispatch` entry.  If you do not set a `default interview`, the
+with a `dispatch` entry.  If you do not set a [`default interview`], the
 global [`default interview`] will be used.  If you want unknown
-messages to be ignored, set `default interview` to `null`.
+messages to be ignored, set [`default interview`] to `null`.
 
 ### <a name="multiple twilio"></a>Multiple Twilio configurations
 
@@ -2803,3 +2862,4 @@ and Facebook API keys.
 [address autocomplete]: {{ site.baseurl }}/docs/fields.html#address autocomplete
 [`debug`]: #debug
 [Logs]: {{ site.baseurl }}/docs/admin.html#logs
+[`url root`]: #url root

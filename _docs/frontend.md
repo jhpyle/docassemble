@@ -48,7 +48,7 @@ value in your POST request:
 * `ZmF2b3JpdGVfZnJ1aXQ=`: `apple`
 
 The POST request needs to go to the interview URL, which will look like
-`https://docassemble.example.com/?i=docassemble.yourpackage:data/questions/yourinterview.yml`.
+`https://docassemble.example.com/interview?i=docassemble.yourpackage:data/questions/yourinterview.yml`.
 
 In addition to including keys and values of variables, your requests
 should include the parameter `json=1`, so that the server knows to

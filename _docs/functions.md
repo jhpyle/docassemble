@@ -378,6 +378,13 @@ If you want the raw [Python] dictionary, you can call
 save the result of this function to your interview, because then your
 interview dictionary will double in size.
 
+**docassemble** keeps a dictionary called `_internal` in the interview
+variables and uses it for a variety of internal purposes.  By default,
+it is not included in the output of [`all_variables()`].  If you want
+`_internal` to be included, set the optional keyword parameter
+`include_internal` to `True`.  This has parameter has no effect when
+`simplify` is `False`.
+
 The [`all_variables()`] function also has three special behaviors:
 
 * `all_variables(special='titles')` will return a [Python dictionary]
@@ -532,7 +539,7 @@ code: |
 Here is a link that runs this interview.  Notice how the name "Fred" is
 embedded in the URL.  The result is an immediate PDF document.
 
-> [{{ site.demourl }}?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred]({{ site.demourl }}?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred){:target="_blank"}
+> [{{ site.demourl }}/interview?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred]({{ site.demourl }}/interview?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred){:target="_blank"}
 
 ## <a name="json_response"></a>json_response()
 
@@ -5849,7 +5856,7 @@ $(document).on('daPageLoad', function(){
 [Google Sheet]: https://sheets.google.com
 [Fruits and veggies]: https://docs.google.com/spreadsheets/d/1Lrm75Rq-C4wrftZnmwLJaKh_VPP3xe1iYfDP95e-UMs/edit?usp=sharing
 [`google_sheets` module]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/google_sheets.py
-[try out this interview]: https://demo.docassemble.org/?i=docassemble.demo:data/questions/examples/google-sheet.yml
+[try out this interview]: https://demo.docassemble.org/interview?i=docassemble.demo:data/questions/examples/google-sheet.yml
 [`main_document.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/main_document.docx
 [`sub_document.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/sub_document.docx
 [`main_doc_params.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/main_doc_params.docx

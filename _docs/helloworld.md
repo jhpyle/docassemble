@@ -51,7 +51,7 @@ You should see:
 
 ![Hello world interview]({{ site.baseurl }}/img/tutorial-hello-world-interview-01.png)
 
-(If you do not have a server yet, you can [try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/hello.yml){:target="_blank"}.)
+(If you do not have a server yet, you can [try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/hello.yml){:target="_blank"}.)
 
 # Adding a question
 
@@ -72,7 +72,7 @@ fields:
 ---
 {% endhighlight %}
 
-(If you do not have your own server yet, you can [try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/hello2.yml){:target="_blank"}.)
+(If you do not have your own server yet, you can [try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/hello2.yml){:target="_blank"}.)
 
 It should now ask you "What is your planet's name?" and then greet
 your world by its name.
@@ -130,7 +130,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/hello3.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/hello3.yml){:target="_blank"}.)
 
 Note that the order in which the [question] and [code] blocks appear
 does not determine the order in which questions are asked.  This is
@@ -196,7 +196,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/hello4.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/hello4.yml){:target="_blank"}.)
 
 This creates a document "from scratch" that is available in PDF or RTF
 format.  The content of the document is contained in the `content`
@@ -281,7 +281,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/hello6.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/hello6.yml){:target="_blank"}.)
 
 For more information about assembling downloadable documents, see the
 [documents] section.
@@ -356,7 +356,7 @@ Now, when you run the interview, you can see that the image
 
 ![Question with decoration]({{ site.baseurl }}/img/playground-interview-with-image.png)
 
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/hello5.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/hello5.yml){:target="_blank"}.)
 
 For more ideas about how you can extend your interview, check out the
 examples area of the [Playground].
@@ -452,7 +452,7 @@ Now, users can run the interview using a different URL.  If your
 server is `interview.example.com`, users will be able to run the
 interview by visiting a URL like:
 
-> https://interview.example.com/?i=docassemble.helloworld:data/questions/hello.yml
+> https://interview.example.com/interview?i=docassemble.helloworld:data/questions/hello.yml
 
 Previously, the URL to your interview ended with something like
 `?i=docassemble.playground1:hello.yml`.  That is a link to the

@@ -132,13 +132,14 @@ special features, for example by adding help text or icons.
 
 # <a name="invocation"></a>How you run a **docassemble** interview
 
-Users start an interview by going to its URL, which is the URL of your
-server with the `i` parameter set to the name of the interview.
+Users start an interview by going to its URL, which is the
+`/interview` path on your server with the `i` URL parameter set to the
+name of the interview.
 
 For example, the [demo interview], which is hosted on the server
 `demo.docassemble.org`, can be accessed with this URL.
 
-[{{ site.demourl }}?i=docassemble.demo:data/questions/questions.yml]({{ site.demourl }}?i=docassemble.demo:data/questions/questions.yml){:target="_blank"}
+[{{ site.demourl }}/interview?i=docassemble.demo:data/questions/questions.yml]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/questions.yml){:target="_blank"}
 
 Here, the interview file name is
 `docassemble.demo:data/questions/questions.yml`.  This tells
@@ -146,13 +147,13 @@ Here, the interview file name is
 and then within that package, look for the file `questions.yml`
 located in the subdirectory `data/questions`.
 
-You can make your own [packages] in the [Playground] and then install
-them on the same server or a different server.  If the name of your
-server is `interview.example.com`, the name of your package is
-`docassemble.mypackage`, and the name of your interview file is
-`myinterview.yml`, your users can access the interview at:
+You can make your own [packages] and then install them on your server.
+If the name of your server is `interview.example.com`, the name of
+your package is `docassemble.mypackage`, and the name of your
+interview file is `myinterview.yml`, your users can access the
+interview at:
 
-> https://interview.example.com/?i=docassemble.mypackage:data/questions/myinterview.yml
+> https://interview.example.com/interview?i=docassemble.mypackage:data/questions/myinterview.yml
 
 Note that while you are using an interview, the URL in the location
 bar will change.  It will end with `#page1`, then `#page2`, then
@@ -160,16 +161,19 @@ bar will change.  It will end with `#page1`, then `#page2`, then
 effect except to allow the user to click the browser's back button in
 order to go back one screen.
 
-There is also a special page of the site, located at `/list`, which
-displays a [list of interviews] available on your server.
+If you want to use **docassemble** to give users a list of interviews
+from which to choose, there is also a special page of the site,
+located at `/list`, which displays a [list of interviews] available on
+your server.
 
 > https://interview.example.com/list
 
-You can configure this list using the [`dispatch`] configuration
-directive.  The list of interviews can also be [embedded] into a page
-of another web site.  You can also replace the default `/list` page
-with an interview using the [`dispatch interview`] configuration
-directive.  Within that interview, you can use the
+This list is not automatically-generated.  You need to configure the
+list using the [`dispatch`] configuration directive.  The list of
+interviews can also be [embedded] into a page of another web site.
+This page is highly [configurable].  You can also replace the default
+`/list` page with an interview using the [`dispatch interview`]
+configuration directive.  Within that interview, you can use the
 [`interview_menu()`] function within that interview to present the
 list of interviews in whatever way you want.
 
@@ -179,27 +183,56 @@ access specific interviews at human-readable URLs like:
 > https://interview.example.com/start/eviction<br>
 > https://interview.example.com/start/namechange
 
-By default, if the user visits the main URL for the site, e.g.,
+If the user visits the main (or "root") URL for the site, e.g.,
 `https://interview.example.com`, the user will be redirected to the
-`/list` page.  You can change this if you want.  If you set set the
-[`default interview`] configuration directive, and then the interview
-will be accessible at:
+URL indicated by the [`root redirect url`] configuration directive.  A
+typical way to use this feature is to direct users to a web site
+outside of **docassemble** where they can find out information about
+the services you offer.
+
+If you don't have a [`root redirect url`] set, the user will be
+redirected to `/interview` and will start the interview indicated by
+the [`default interview`] configuration directive.
+
+This can be useful when you have one primary interview on your server
+and you want users to be able to start it by visiting an easy-to-type
+URL such as:
 
 > https://interview.example.com
 
+If you have set [`root redirect url`], your [`default interview`]
+interview will still be accessible at:
+
+> https://interview.example.com/interview
+
+If you do not have a [`default interview`], but you have configured a
+`/list` page using the [`dispatch`] configuration directive, then the
+user who visits the "root" URL of your site will be redirected to
+`/list`.
+
 However, if the user had previously been using another interview
 during the same browser session, going to
-`https://interview.example.com/` will resume the original session.  If
-you want to provide a way for users to access other interviews, you
-can use the [`menu_items` special variable] within an interview to
-provide options on the pull-down menu for visiting other parts of the
-site.
+`https://interview.example.com/` (without a [`root redirect url`]) or
+`https://interview.example.com/interview` will resume the original
+session.
+
+If you want your users who are in the middle of an interview to be
+able to begin a different interview, you can enable [`show dispatch
+link`] in the [configuration], and then in the menu, the user will see
+a link called "Available Interviews," which directs to your `/list`
+page.  You can also use the [`menu_items` special variable] within an
+interview to provide options on the pull-down menu for starting other
+interviews.  Within the body of an interview question, you can insert
+a link to another interview using the [`interview_url()`] function
+with an `i` parameter indicating the interview.
+
+## <a name="iframe"></a>Embedding the interview into a web page
 
 You can embed an interview into a web page by inserting an [iframe]
 into the [HTML] of the page.
 
 {% highlight html %}
-<iframe style="width: 500px; height: 700px;" src="https://demo.docassemble.org/?i=docassemble.demo:data/questions/questions.yml&reset=1"></iframe>
+<iframe style="width: 500px; height: 700px;" src="https://demo.docassemble.org/interview?i=docassemble.demo:data/questions/questions.yml&reset=1"></iframe>
 {% endhighlight %}
 
 You should adjust the width and height of the [iframe] based on what
@@ -209,6 +242,8 @@ and on mobile.  Since embedded interviews are often less than ideal for
 mobile users, you can use the [`go full screen`] feature to cause the
 interview to "go full screen" on the user's device once the user
 starts interacting with it.
+
+## <a name="reset"></a>Starting an interview from the beginning
 
 If you add `&reset=1` to the end of an interview URL, this means that
 whenever the link is clicked (or the [iframe] is drawn), the interview
@@ -601,6 +636,9 @@ For more information about [YAML], see the [YAML specification].
 [`interview_menu()`]: {{ site.baseurl }}/docs/functions.html#interview_menu
 [`menu_items` special variable]: {{ site.baseurl }}/docs/special.html#menu_items
 [configured otherwise]: {{ site.baseurl }}/docs/config.html#session list interview
+[`root redirect url`]: {{ site.baseurl }}/docs/config.html#root redirect url
 [`command()`]: {{ site.baseurl }}/docs/functions.html#command
 [`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
+[configurable]: {{ site.baseurl }}/docs/config.html#customization
+[`show dispatch link`]: {{ site.baseurl }}/docs/config.html#show dispatch link

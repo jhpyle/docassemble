@@ -193,7 +193,7 @@ You will then install that [package] on the production server by
 logging into the production server as an administrator and going to
 "Package Management" from the menu.  Your users will access the
 interviews at links like
-`https://docassemble.example.com?i=docassemble.bankruptcy:data/questions/chapter7.yml`,
+`https://docassemble.example.com/interview?i=docassemble.bankruptcy:data/questions/chapter7.yml`,
 where `docassemble.example.com` is the address of your production
 server, `docassemble.bankruptcy` is the name of your [package], and
 `chapter7.yml` is the main [YAML] file of your interview.
@@ -527,7 +527,7 @@ probably cause errors.
 To run interviews in your Playground, you can use links like 
 
 {% highlight text %}
-http://localhost/?i=docassemble.playground1:interview.yml&cache=0&reset=1
+http://localhost/interview?i=docassemble.playground1:interview.yml&cache=0&reset=1
 {% endhighlight %}
 
 The `docassemble.playground1` part refers to the Playground of user 1,

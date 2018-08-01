@@ -83,7 +83,7 @@ to have a distinction between your "development" version and your
    button.  This will install the `docassemble.johnsmithlaw` package
    on your server.
 5. Your users can now access your interview at a URL that ends with
-   `/?i=docassemble.johnsmithlaw:data/questions/custody.yml`.
+   `/interview?i=docassemble.johnsmithlaw:data/questions/custody.yml`.
 6. Now you can continue making changes to the `custody.yml` interview
    in the [Playground], and even if you break something, your users
    will not get an error, because they will be using the installed
@@ -92,7 +92,7 @@ to have a distinction between your "development" version and your
    ["Packages" folder] and press "Install" again.
 8. Your users will still use the same URL to access the interview (one
    that ends with
-   `/?i=docassemble.johnsmithlaw:data/questions/custody.yml`), but now
+   `/interview?i=docassemble.johnsmithlaw:data/questions/custody.yml`), but now
    they will be using the new version of your interview.
 
 For more information, see [how you run a **docassemble** interview],
@@ -181,7 +181,7 @@ you refer to as `docassemble.baseball.baseballstats` must be a file
 
 When installed on the server, the interview `hitters.yml` can be run
 by going to a link like
-`https://example.com?i=docassemble.baseball:data/questions/hitters.yml`.
+`https://example.com/interview?i=docassemble.baseball:data/questions/hitters.yml`.
 
 In your own interviews, you can include resources from this package by
 writing things like the following:
@@ -350,7 +350,7 @@ Once a **docassemble** extension package is installed, you can start
 using its interviews.  For example, if you installed
 `docassemble.baseball`, and there was an interview file in that
 package called `questions.yml`, you would point your browser to
-`http://localhost/?i=docassemble.baseball:data/questions/questions.yml`
+`http://localhost/interview?i=docassemble.baseball:data/questions/questions.yml`
 (substituting the actual domain and base URL of your **docassemble**
 site).  Note that a URL like this is different from the URL you see
 when you are running an interview in the [Playground] ([see

@@ -44,7 +44,7 @@ The output returned is in [JSON] format:
 [
   {
     "filename": "docassemble.base:data/questions/examples/combobox.yml", 
-    "link": "http://localhost/?i=docassemble.base%3Adata%2Fquestions%2Fexamples%2Fcombobox.yml", 
+    "link": "http://localhost/interview?i=docassemble.base%3Adata%2Fquestions%2Fexamples%2Fcombobox.yml", 
     "package": "docassemble.base", 
     "status_class": null, 
     "subtitle": null, 
@@ -54,7 +54,7 @@ The output returned is in [JSON] format:
   }, 
   {
     "filename": "docassemble.demo:data/questions/questions.yml", 
-    "link": "http://localhost/?i=docassemble.demo%3Adata%2Fquestions%2Fquestions.yml", 
+    "link": "http://localhost/interview?i=docassemble.demo%3Adata%2Fquestions%2Fquestions.yml", 
     "package": "docassemble.demo", 
     "status_class": null, 
     "subtitle": null, 
