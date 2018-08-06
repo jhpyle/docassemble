@@ -1,9 +1,4 @@
 language: python
-services:
-- docker
-jobs:
-  include:
-  - stage: build
-    if: type = push
-    script:
-    - docker build .
+services: docker
+if: type = push
+script: docker build .
