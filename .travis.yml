@@ -1,0 +1,4 @@
+language: python
+services: docker
+if: type = push
+script: docker build .
