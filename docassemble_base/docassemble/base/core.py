@@ -2237,6 +2237,11 @@ class DAFileList(DAList):
             if element.ok:
                 result += element.num_pages()
         return result        
+    def slurp(self, auto_decode=True):
+        """Returns the contents of the first file."""
+        if len(self.elements) == 0:
+            return None
+        return self.elements[0].slurp()
     def show(self, width=None):
         """Inserts markup that displays each element in the list as an image.
         Takes an optional keyword argument width.

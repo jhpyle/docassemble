@@ -6,6 +6,7 @@
   snippet of document context.
 ### Added
 - Initial support for Travis CI deployment.
+- Method `.slurp()` for `DAFileList`.
 ### Fixed
 - Setting of text fields to `None` when the value is the string
   `"None"`.
