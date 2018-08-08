@@ -4,6 +4,25 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.82](https://github.com/jhpyle/docassemble/releases/tag/v0.2.82) - 2018-08-08
+
+### Changed
+- Some exceptions raised by Jinja2 will now be accompanied by a
+  snippet of document context.
+
+### Added
+- Initial support for Travis CI deployment.
+- Method `.slurp()` for `DAFileList`.
+
+### Fixed
+- Setting of text fields to `None` when the value is the string
+  `"None"`.
+- Vertical alignment of section labels in horizontal mode.
+- User text causing Pandoc to enter LaTeX math mode.
+- Reconstruction of certain types of bookmarks after adding signature
+  to PDF.
+- Addresses that normalize without a street address.
+
 ## [0.2.81](https://github.com/jhpyle/docassemble/releases/tag/v0.2.81) - 2018-07-31
 
 ### Changed
