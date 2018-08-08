@@ -1362,7 +1362,9 @@ div.danavnested {
     padding-left: 20px;
 }
 
-div.danav-horiz {
+div.danav-horiz a.danavlink {
+    align-self: flex-end !important;
+    text-align: center;
 }
 
 div.danavnested-horiz {

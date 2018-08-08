@@ -210,6 +210,19 @@ def set_field(step, label, value):
         pass
     elem.send_keys(value)
 
+@step('I set the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) "([^"]+)" to "([^"]*)"')
+def set_nth_field(step, ordinal, label, value):
+    try:
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(1+2*(number_from_ordinal[ordinal] - 1)) + ']').get_attribute("for"))
+    except:
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])[' + str(1+2*(number_from_ordinal[ordinal] - 1)) + ']/parent::label').get_attribute("for"))
+    try:
+        elem.clear()
+    except:
+        pass
+    elem.send_keys(value)
+    elem.send_keys("\t")
+
 @step('I select "([^"]+)" in the combobox')
 def set_combobox(step, value):
     togglers = world.browser.find_elements_by_xpath("//button[contains(@class, 'dacomboboxtoggle')]")
@@ -236,6 +249,17 @@ def set_combobox_text(step, value):
 @step('I select "([^"]+)" as the "([^"]+)"')
 def select_option(step, value, label):
     elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+    found = False
+    for option in elem.find_elements_by_tag_name('option'):
+        if option.text == value:
+            found = True
+            option.click()
+            break
+    assert found
+
+@step('I select "([^"]+)" as the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) "([^"]+)"')
+def select_nth_option(step, value, ordinal, label):
+    elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(1+2*(number_from_ordinal[ordinal] - 1)) + ']').get_attribute("for"))
     found = False
     for option in elem.find_elements_by_tag_name('option'):
         if option.text == value:

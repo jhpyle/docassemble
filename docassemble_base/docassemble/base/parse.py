@@ -2716,6 +2716,7 @@ class Question:
                         docx_template = docassemble.base.file_docx.DocxTemplate(options['docx_template_file'].path())
                         the_env = custom_jinja_env()
                         the_xml = docx_template.get_xml()
+                        the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
                         the_xml = docx_template.patch_xml(the_xml)
                         parsed_content = the_env.parse(the_xml)
                     except TemplateError as the_error:
@@ -2724,6 +2725,9 @@ class Question:
                                 the_error.filename = os.path.basename(options['docx_template_file'].path())
                             except:
                                 pass
+                        if hasattr(the_error, 'lineno') and the_error.lineno is not None:
+                            line_number = max(the_error.lineno - 4, 0)
+                            the_error.docx_context = map(lambda x: re.sub(r'<[^>]+>', '', x), the_xml.splitlines()[line_number:(line_number + 7)])
                         raise the_error
                     for key in jinja2meta.find_undeclared_variables(parsed_content):
                         if not key.startswith('_'):

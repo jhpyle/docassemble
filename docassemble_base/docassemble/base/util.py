@@ -946,14 +946,22 @@ class Address(DAObject):
             self.norm.location.known = True
             self.norm.location.latitude = results.latitude
             self.norm.location.longitude = results.longitude
-            self.norm.location.description = self.norm.block()
+            try:
+                self.norm.location.description = self.norm.block()
+            except:
+                logmessage("Normalized address was incomplete")
+                self.geolocate_success = False
             self.norm.geolocate_response = results.raw
             self.norm_long.geolocated = True
             self.norm_long.location.gathered = True
             self.norm_long.location.known = True
             self.norm_long.location.latitude = results.latitude
             self.norm_long.location.longitude = results.longitude
-            self.norm_long.location.description = self.norm_long.block()
+            try:
+                self.norm_long.location.description = self.norm_long.block()
+            except:
+                logmessage("Normalized address was incomplete")
+                self.geolocate_success = False
             self.norm_long.geolocate_response = results.raw
         else:
             logmessage("geolocate: Valid not ok.")

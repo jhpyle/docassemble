@@ -5020,7 +5020,7 @@ def index():
             set_to_empty = empty_fields[orig_key]
         else:
             #logmessage("orig_key " + str(orig_key) + " is not set to empty")
-            set_to_empty = False
+            set_to_empty = None #used to be False
         #logmessage("Searching key " + str(key))
         if match_brackets.search(key):
             match = match_inside_and_outside_brackets.search(key)
@@ -5262,6 +5262,7 @@ def index():
                     data = data.strip()
                     #logmessage("data is " + data)
                 if data == "None" and set_to_empty is not None:
+                    logmessage("setting None; set_to_empty is " + unicode(set_to_empty))
                     test_data = None
                     data = "None"
                 else:
@@ -14256,11 +14257,11 @@ def server_error(the_error):
         # if hasattr(the_error, 'lineno') and the_error.lineno is not None:
         #     errmess += "; lineno: " + unicode(the_error.lineno)
         if hasattr(the_error, 'name') and the_error.name is not None:
-            errmess += "; name: " + unicode(the_error.name)
+            errmess += "\nName: " + unicode(the_error.name)
         if hasattr(the_error, 'filename') and the_error.filename is not None:
-            errmess += "; filename: " + unicode(the_error.filename)
-        # if hasattr(the_error, 'source') and the_error.source is not None:
-        #     errmess += "; source: " + unicode(the_error.source)
+            errmess += "\nFilename: " + unicode(the_error.filename)
+        if hasattr(the_error, 'docx_context'):
+            errmess += "\n\nContext:\n" + "\n".join(map(lambda x: "  " + x, the_error.docx_context))
         the_trace = traceback.format_exc()
         try:
             logmessage(errmess)

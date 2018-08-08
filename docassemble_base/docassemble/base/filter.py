@@ -469,6 +469,7 @@ def pdf_filter(text, metadata=None, question=None):
     text = re.sub(r'\[TARGET ([^\]]+)\]', '', text)
     text = re.sub(r'\[YOUTUBE[^ ]* ([^\]]+)\]', '', text)
     text = re.sub(r'\[VIMEO[^ ]* ([^\]]+)\]', '', text)
+    text = re.sub(r'\$\$+', '$', text)
     text = re.sub(r'\\clearpage *\\clearpage', r'\\clearpage', text)
     text = re.sub(r'\[BORDER\]\s*\[(BEGIN_TWOCOL|BEGIN_CAPTION|TIGHTSPACING|SINGLESPACING|DOUBLESPACING|START_INDENTATION|STOP_INDENTATION|NOINDENT|FLUSHLEFT|FLUSHRIGHT|CENTER|BOLDCENTER|INDENTBY[^\]]*)\]', r'[\1] [BORDER]', text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\[START_INDENTATION\]', r'\\setlength{\\parindent}{\\myindentamount}\\setlength{\\RaggedRightParindent}{\\parindent}', text)    

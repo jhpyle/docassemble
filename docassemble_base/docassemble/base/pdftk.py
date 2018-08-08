@@ -392,7 +392,7 @@ class DAPdfFileWriter(pypdf.PdfFileWriter):
         action = pypdf.generic.DictionaryObject()
         zoomArgs = []
         for a in args:
-            if a is not None:
+            if a is not None and a.__class__.__name__ != 'NullObject':
                 zoomArgs.append(pypdf.generic.NumberObject(a))
             else:
                 zoomArgs.append(pypdf.generic.NullObject())
