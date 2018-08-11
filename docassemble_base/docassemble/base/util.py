@@ -2120,15 +2120,14 @@ def pdf_concatenate(*pargs, **kwargs):
     the new PDF.
 
     """
-    pdf_file = DAFile()._set_instance_name_for_function()
     paths = list()
     get_pdf_paths([x for x in pargs], paths)
     if len(paths) == 0:
         raise DAError("pdf_concatenate: no valid files to concatenate")
     pdf_path = docassemble.base.pdftk.concatenate_files(paths, pdfa=kwargs.get('pdfa', False), password=kwargs.get('password', None))
-    filename = kwargs.get('filename', 'file.pdf')
-    pdf_file.initialize(filename=filename)
-    shutil.move(pdf_path, pdf_file.path())
+    pdf_file = DAFile()._set_instance_name_for_function()
+    pdf_file.initialize(filename=kwargs.get('filename', 'file.pdf'))
+    pdf_file.copy_into(pdf_path)
     pdf_file.retrieve()
     pdf_file.commit()
     return pdf_file

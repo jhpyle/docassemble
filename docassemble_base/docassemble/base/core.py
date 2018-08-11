@@ -1936,10 +1936,10 @@ class DAFile(DAObject):
     def set_mimetype(self, mimetype):
         """Sets the MIME type of the file"""
         self.mimetype = mimetype
-        #if mimetype == 'image/jpeg':
-        #    self.extension = 'jpg'
-        #else:
-        self.extension = re.sub(r'^\.', '', mimetypes.guess_extension(mimetype))
+        if mimetype == 'image/jpeg':
+            self.extension = 'jpg'
+        else:
+            self.extension = re.sub(r'^\.', '', mimetypes.guess_extension(mimetype))
     def __str__(self):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
@@ -2014,23 +2014,23 @@ class DAFile(DAObject):
         the_path = self.path()
         if not os.path.isfile(the_path):
             raise Exception("File does not exist yet.")
-        with open(path, 'rU') as f:
+        with open(the_path, 'rU') as f:
             return(f.readlines())
     def write(self, content):
         """Writes the given content to the file, replacing existing contents."""
         self.retrieve()
-        the_path = self.path()
-        with open(path, 'w') as f:
+        the_path = self.file_info['path']
+        with open(the_path, 'w') as f:
             f.write(content)
     def copy_into(self, filename):
         """Makes the contents of the file the same as those of the given filename."""
         self.retrieve()
-        shutil.copyfile(filename, self.path())
+        shutil.copyfile(filename, self.file_info['path'])
     def from_url(self, url):
         """Makes the contents of the file the contents of the given URL."""
         self.retrieve()
         cookiefile = tempfile.NamedTemporaryFile(suffix='.txt')
-        the_path = self.path()
+        the_path = self.file_info['path']
         f = open(the_path, 'wb')
         c = pycurl.Curl()
         c.setopt(c.URL, url)
