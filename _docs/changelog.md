@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.83](https://github.com/jhpyle/docassemble/releases/tag/v0.2.83) - 2018-08-11
+
+### Changed
+- Playground UI highlights most recently edited files.
+
+### Fixed
+- Writing to `DAFile`s.
+
 ## [0.2.82](https://github.com/jhpyle/docassemble/releases/tag/v0.2.82) - 2018-08-08
 
 ### Changed
