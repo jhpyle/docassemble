@@ -23,13 +23,13 @@
                 <div class="dropdown-menu heightlim">
                   {%- if any_files %}
                   {%- for file in editable_files %}
-                  {%- if file == current_file %}
+                  {%- if file['name'] == current_file %}
                   <a class="dropdown-item active" href="#">
-                    <i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ file }}
+                    <i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ file['name'] }}
                   </a>
                   {%- else %}
-                  <a class="dropdown-item" href="?file={{ file }}">
-                    <i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ file }}
+                  <a class="dropdown-item" href="?file={{ file['name'] }}">
+                    <span style="opacity: {{ file['opacity'] }}"><i class="fas fa-file fa-fw" aria-hidden="true"></i></span>&nbsp;{{ file['name'] }}
                   </a>
                   {%- endif %}
                   {%- endfor %}

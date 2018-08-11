@@ -12248,6 +12248,7 @@ def playground_files():
             else:
                 flash(word('You need to type in a name for the file'), 'error')                
     files = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+
     editable_files = list()
     convertible_files = list()
     trainable_files = dict()
@@ -12258,22 +12259,24 @@ def playground_files():
             if section == 'sources' and re.match(r'ml-.*\.json', a_file):
                 trainable_files[a_file] = re.sub(r'^ml-|\.json$', '', a_file)
             else:
-                editable_files.append(a_file)
+                editable_files.append(dict(name=a_file, modtime=os.path.getmtime(os.path.join(area.directory, a_file))))
+    assign_opacity(editable_files)
+    editable_file_listing = [x['name'] for x in editable_files]
     for a_file in files:
         extension, mimetype = get_ext_and_mimetype(a_file)
         b_file = os.path.splitext(a_file)[0] + '.md'
-        if b_file not in editable_files and ((mimetype and mimetype in convertible_mimetypes) or (extension and extension in convertible_extensions)):
+        if b_file not in editable_file_listing and ((mimetype and mimetype in convertible_mimetypes) or (extension and extension in convertible_extensions)):
             convertible_files.append(a_file)
-    if the_file and not is_new and the_file not in editable_files:
+    if the_file and not is_new and the_file not in editable_file_listing:
         the_file = ''
     if not the_file and not is_new:
-        if 'playground' + section in session and session['playground' + section] in editable_files:
+        if 'playground' + section in session and session['playground' + section] in editable_file_listing:
             the_file = session['playground' + section]
         else:
             if 'playground' + section in session:
                 del session['playground' + section]
             if len(editable_files):
-                the_file = editable_files[0]
+                the_file = sorted(editable_files, key=lambda x: x['modtime'])[-1]['name']
             else:
                 if section == 'modules':
                     the_file = 'test.py'
@@ -12281,7 +12284,7 @@ def playground_files():
                     the_file = 'test.json'
                 else:
                     the_file = 'test.md'
-    if the_file in editable_files:
+    if the_file in editable_file_listing:
         session['playground' + section] = the_file
     if the_file != '':
         extension, mimetype = get_ext_and_mimetype(the_file)
@@ -12727,21 +12730,23 @@ def playground_packages():
     editable_files = list()
     mode = "yaml"
     for a_file in files:
-        editable_files.append(a_file)
+        editable_files.append(dict(name=a_file, modtime=os.path.getmtime(os.path.join(area['playgroundpackages'].directory, a_file))))
+    assign_opacity(editable_files)
+    editable_file_listing = [x['name'] for x in editable_files]
     if request.method == 'GET' and not the_file and not is_new:
-        if 'playgroundpackages' in session and session['playgroundpackages'] in editable_files:
+        if 'playgroundpackages' in session and session['playgroundpackages'] in editable_file_listing:
             the_file = session['playgroundpackages']
         else:
             if 'playgroundpackages' in session:
                 del session['playgroundpackages']
             if len(editable_files):
-                the_file = editable_files[0]
+                the_file = sorted(editable_files, key=lambda x: x['modtime'])[-1]['name']
             else:
                 the_file = ''
     if the_file != '' and not user_can_edit_package(pkgname='docassemble.' + the_file):
         flash(word('Sorry, that package name,') + ' ' + the_file + word(', is already in use by someone else'), 'error')
         validated = False
-    if request.method == 'GET' and the_file in editable_files:
+    if request.method == 'GET' and the_file in editable_file_listing:
         session['playgroundpackages'] = the_file
     if the_file == '' and len(file_list['playgroundpackages']) and not is_new:
         the_file = file_list['playgroundpackages'][0]
@@ -13724,6 +13729,16 @@ def ensure_ml_file_exists(interview, yaml_file):
                 os.utime(source_path, None)
             source_dir.finalize()
 
+def assign_opacity(files):
+    if len(files) == 1:
+        files[0]['opacity'] = 1.0
+    else:
+        indexno = 0.0
+        max_indexno = float(len(files) - 1)
+        for file_dict in sorted(files, key=lambda x: x['modtime']):
+            file_dict['opacity'] = round(0.2 + 0.8*(indexno/max_indexno), 2)
+            indexno += 1.0
+            
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -13800,9 +13815,11 @@ def playground_page():
             flash(word('You need to type in a name for the interview'), 'error')
             is_new = True
     the_file = re.sub(r'[^A-Za-z0-9\_\-\. ]', '', the_file)
-    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)])
+    files = sorted([dict(name=f, modtime=os.path.getmtime(os.path.join(playground.directory, f))) for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)], key=lambda x: x['name'])
+    file_listing = [x['name'] for x in files]
+    assign_opacity(files)
     content = ''
-    if the_file and not is_new and the_file not in files:
+    if the_file and not is_new and the_file not in file_listing:
         the_file = ''
     is_default = False
     if request.method == 'GET' and not the_file and not is_new:
@@ -13812,16 +13829,16 @@ def playground_page():
             if 'playgroundfile' in session:
                 del session['playgroundfile']
             if len(files):
-                the_file = files[0]
+                the_file = sorted(files, key=lambda x: x['modtime'])[-1]['name']
             else:
                 the_file = 'test.yml'
                 is_default = True
                 content = default_playground_yaml
-    if the_file in files:
+    if the_file in file_listing:
         session['playgroundfile'] = the_file
     active_file = the_file
     if 'variablefile' in session:
-        if session['variablefile'] in files:
+        if session['variablefile'] in file_listing:
             active_file = session['variablefile']
         else:
             del session['variablefile']
@@ -13877,7 +13894,9 @@ def playground_page():
                     flash(word("Changed name of interview"), 'success')
                 if os.path.isfile(old_filename):
                     os.remove(old_filename)
-                    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)])
+                    files = sorted([dict(name=f, modtime=os.path.getmtime(os.path.join(playground.directory, f))) for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)], key=lambda x: x['name'])
+                    file_listing = [x['name'] for x in files]
+                    assign_opacity(files)
             the_time = formatted_current_time()
             should_save = True
             the_content = re.sub(r'\r\n', r'\n', form.playground_content.data)
@@ -13962,7 +13981,7 @@ def playground_page():
     interview = interview_source.get_interview()
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
     variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
-    pulldown_files = list(files)
+    pulldown_files = [x['name'] for x in files]
     define_examples()
     if is_fictitious or is_new or is_default:
         new_active_file = word('(New file)')
@@ -13975,7 +13994,7 @@ var exampleData;
 var originalFileName = """ + json.dumps(the_file) + """;
 var isNew = """ + json.dumps(is_new) + """;
 var vocab = """ + json.dumps(vocab_list) + """;
-var existingFiles = """ + json.dumps(files) + """;
+var existingFiles = """ + json.dumps(file_listing) + """;
 var currentFile = """ + json.dumps(the_file) + """;
 var attrs_showing = Object();
 

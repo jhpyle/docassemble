@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.2.83] - 2018-08-11
+### Changed
+- Playground UI highlights most recently edited files.
+### Fixed
+- Writing to `DAFile`s.
+
 ## [0.2.82] - 2018-08-08
 ### Changed
 - Some exceptions raised by Jinja2 will now be accompanied by a

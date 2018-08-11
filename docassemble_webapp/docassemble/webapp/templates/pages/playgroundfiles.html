@@ -43,7 +43,7 @@
             {%- for file in files %}
               <tr>
                 <td><a tabindex="20" target="_blank" href="{{ url_for('playground_' + section, userid=userid, filename=file) }}">{{ file }}</a></td>
-                <td style="text-align:right;">{% if file in editable_files %}<a tabindex="20" class="btn btn-success btn-sm" href="?section={{ section }}&file={{ file }}">{{ word('Edit') }}</a>&nbsp;{% endif %}{% if file in trainable_files %}<a tabindex="20" class="btn btn-success btn-sm" href="{{ url_for('train', package=playground_package, file=trainable_files[file]) }}">{{ word('Train') }}</a>&nbsp;{% endif %}{% if file in convertible_files %}<a tabindex="20" class="btn btn-info btn-sm" href="?section={{ section }}&convert={{ file }}">{{ word('Convert to .md') }}</a>&nbsp;{% endif %}<a tabindex="20" class="btn btn-danger btn-sm" href="?section={{ section }}&delete={{ file }}">{{ word('Delete') }}</a></td>
+                <td style="text-align:right;">{% if file in editable_files %}<a tabindex="20" class="btn btn-success btn-sm" href="?section={{ section }}&file={{ file['name'] }}">{{ word('Edit') }}</a>&nbsp;{% endif %}{% if file['name'] in trainable_files %}<a tabindex="20" class="btn btn-success btn-sm" href="{{ url_for('train', package=playground_package, file=trainable_files[file['name']]) }}">{{ word('Train') }}</a>&nbsp;{% endif %}{% if file['name'] in convertible_files %}<a tabindex="20" class="btn btn-info btn-sm" href="?section={{ section }}&convert={{ file['name'] }}">{{ word('Convert to .md') }}</a>&nbsp;{% endif %}<a tabindex="20" class="btn btn-danger btn-sm" href="?section={{ section }}&delete={{ file['name'] }}">{{ word('Delete') }}</a></td>
               </tr>
             {% endfor %}
             </tbody>
@@ -80,10 +80,10 @@
                 <div class="dropdown-menu heightlim">
                   {%- if any_files %}
                   {%- for file in editable_files %}
-                  {%- if file == current_file %}
-                  <a class="dropdown-item active" href="#"><i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ file }}</a>
+                  {%- if file['name'] == current_file %}
+                  <a class="dropdown-item active" href="#"><i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ file['name'] }}</a>
                   {%- else %}
-                  <a class="dropdown-item" href="?section={{ section }}&file={{ file }}"><i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ file }}</a>
+                  <a class="dropdown-item" href="?section={{ section }}&file={{ file['name'] }}"><span style="opacity: {{ file['opacity'] }}"><i class="fas fa-file fa-fw" aria-hidden="true"></i></span>&nbsp;{{ file['name'] }}</a>
                   {%- endif %}
                   {%- endfor %}
                   {%- else %}
@@ -106,7 +106,7 @@
                 </div>
               </div>
               <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="580">{{ content }}</textarea>
-              <div class="form-actions mt-2">
+              <div class="form-actions mt-2 ml-1">
                 {{ render_submit_field(formtwo.submit, tabindex=600, class="btn btn-primary " + config['BUTTON_CLASS'], data={'disable-button': 0}) }}
                 {% if is_new == 'False' %}<a tabindex="610" class="btn btn-danger {{ config['BUTTON_CLASS'] }}" href="?section={{ section }}&delete={{ current_file }}">{{ word('Delete') }}</a>{% endif %}
               </div>
