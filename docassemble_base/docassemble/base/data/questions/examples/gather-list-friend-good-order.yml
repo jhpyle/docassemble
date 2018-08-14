@@ -45,6 +45,7 @@ question: |
   ${ friend[i].possessive('birthdate') }?
 fields:
   - Birthdate: friend[i].birthdate
+    datatype: date
 ---
 question: |
   What is

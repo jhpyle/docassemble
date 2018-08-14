@@ -12,6 +12,7 @@ import tempfile
 import types
 import time
 import stat
+import pyPdf
 from docassemble.base.functions import server, word
 import docassemble.base.functions
 from docassemble.base.pandoc import MyPandoc
@@ -725,13 +726,22 @@ def image_as_rtf(match, question=None):
             return '[reference to file type that cannot be displayed]'
     if 'width' in file_info:
         return rtf_image(file_info, width, False)
-    elif file_info['extension'] == 'pdf':
+    elif file_info['extension'] in ('pdf', 'docx', 'rtf', 'doc', 'odt'):
         output = ''
         if not width_supplied:
             #logmessage("image_as_rtf: Adding page break\n")
             width = DEFAULT_PAGE_WIDTH
             #output += '\\page '
         #logmessage("image_as_rtf: maxpage is " + unicode(int(file_info['pages'])) + "\n")
+        if not os.path.isfile(file_info['path'] + '.pdf'):
+            if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt') and not os.path.isfile(file_info['path'] + '.pdf'):
+                server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
+        if 'pages' not in file_info:
+            try:
+                reader = pyPdf.PdfFileReader(open(file_info['path'] + '.pdf'))
+                file_info['pages'] = reader.getNumPages()
+            except:
+                file_info['pages'] = 1
         max_pages = 1 + int(file_info['pages'])
         formatter = '%0' + unicode(len(unicode(max_pages))) + 'd'
         for page in range(1, max_pages):
@@ -750,8 +760,7 @@ def image_as_rtf(match, question=None):
             page_file['path'] = file_info['path'] + 'page-' + formatter % page
             page_file['fullpath'] = page_file['path'] + '.png'
             if not os.path.isfile(page_file['fullpath']):
-                #logmessage("Calling make_png_for_pdf")
-                server.fg_make_png_for_pdf_path(file_info['path'], 'page', page=page)
+                server.fg_make_png_for_pdf_path(file_info['path'] + '.pdf', 'page')
             if os.path.isfile(page_file['fullpath']):
                 im = PIL.Image.open(page_file['fullpath'])
                 page_file['width'], page_file['height'] = im.size
@@ -887,7 +896,16 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
             return ('[ERROR: File reference ' + unicode(file_reference) + ' cannot be displayed]')
         if file_info.get('extension', '') in ['png', 'jpg', 'gif', 'svg', 'jpe', 'jpeg']:
             return('<img class="daicon daimageref" style="' + width_string + '" src="' + the_url + '"/>')
-        elif file_info['extension'] == 'pdf':
+        elif file_info['extension'] in ('pdf', 'docx', 'rtf', 'doc', 'odt'):
+            if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt') and not os.path.isfile(file_info['path'] + '.pdf'):
+                server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
+                server.fg_make_png_for_pdf_path(file_info['path'] + ".pdf", 'screen', page=1)
+            if 'pages' not in file_info:
+                try:
+                    reader = pyPdf.PdfFileReader(open(file_info['path'] + '.pdf'))
+                    file_info['pages'] = reader.getNumPages()
+                except:
+                    file_info['pages'] = 1
             image_url = server.url_finder(file_reference, size="screen", page=1, _question=question)
             if image_url is None:
                 return ('[ERROR: File reference ' + unicode(file_reference) + ' cannot be displayed]')
@@ -946,8 +964,12 @@ def image_include_string(match, emoji=False, question=None):
             return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
         if 'extension' in file_info:
-            if file_info['extension'] in ['png', 'jpg', 'pdf', 'eps', 'jpe', 'jpeg']:
+            if file_info['extension'] in ['png', 'jpg', 'pdf', 'eps', 'jpe', 'jpeg', 'docx', 'rtf', 'doc', 'odt']:
                 if file_info['extension'] == 'pdf':
+                    output = '\\includepdf[pages={-}]{' + file_info['path'] + '.pdf}'
+                elif file_info['extension'] in ('docx', 'rtf', 'doc', 'odt'):
+                    if not os.path.isfile(file_info['path'] + '.pdf'):
+                        server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
                     output = '\\includepdf[pages={-}]{' + file_info['path'] + '.pdf}'
                 else:
                     if emoji:
@@ -974,6 +996,11 @@ def image_include_docx(match, question=None):
             return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
         if 'extension' in file_info:
+            if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt'):
+                if not os.path.isfile(file_info['path'] + '.pdf'):
+                    server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
+                output = '![](' + file_info['path'] + '.pdf){width=' + width + '}'
+                return(output)
             if file_info['extension'] in ['png', 'jpg', 'gif', 'pdf', 'eps', 'jpe', 'jpeg']:
                 output = '![](' + file_info['path'] + '){width=' + width + '}'
                 return(output)

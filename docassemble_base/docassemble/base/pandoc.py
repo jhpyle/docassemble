@@ -7,6 +7,8 @@ import tempfile
 import shutil
 import sys
 import re
+import time
+import random
 from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
 from docassemble.base.pdfa import pdf_to_pdfa
@@ -181,11 +183,17 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None):
     from_file = os.path.join(tempdir, "file." + in_format)
     to_file = os.path.join(tempdir, "file.pdf")
     shutil.copyfile(in_file, from_file)
-    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'pdf', from_file]
-    p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
-    result = p.wait()
-    if not os.path.isfile(to_file):
+    tries = 0
+    while tries < 5:
+        subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'pdf', from_file]
+        p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
+        result = p.wait()
+        if os.path.isfile(to_file):
+            break
         result = 1
+        tries += 1
+        time.sleep(2 + tries*random.random())
+        continue
     if result == 0:
         if pdfa:
             pdf_to_pdfa(to_file)

@@ -2901,6 +2901,11 @@ def fg_make_png_for_pdf_path(path, prefix, page=None):
         resolution = PNG_SCREEN_RESOLUTION
     docassemble.base.ocr.make_png_for_pdf_path(path, prefix, resolution, PDFTOPPM_COMMAND, page=page)
 
+def fg_make_pdf_for_word_path(path, extension):
+    success = docassemble.base.pandoc.word_to_pdf(path, extension, path + ".pdf")
+    if not success:
+        raise DAError("fg_make_pdf_for_word_path: unable to make PDF from " + path + " using extension " + extension + " and writing to " + path + ".pdf")
+    
 def task_ready(task_id):
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=task_id)
     if result.ready():
@@ -18018,7 +18023,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          remove_user_privilege=remove_user_privilege,
                                          file_set_attributes=file_set_attributes,
                                          fg_make_png_for_pdf=fg_make_png_for_pdf,
-                                         fg_make_png_for_pdf_path=fg_make_png_for_pdf_path)
+                                         fg_make_png_for_pdf_path=fg_make_png_for_pdf_path,
+                                         fg_make_pdf_for_word_path=fg_make_pdf_for_word_path)
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
 #docassemble.base.parse.set_url_finder(get_url_from_file_reference)

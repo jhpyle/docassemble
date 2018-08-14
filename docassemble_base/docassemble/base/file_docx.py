@@ -2,7 +2,7 @@ import re
 from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document, Subdoc
 from docx.shared import Mm, Inches, Pt
 import docx.opc.constants
-from docassemble.base.functions import server
+from docassemble.base.functions import server, this_thread, package_template_filename
 import docassemble.base.filter
 from xml.sax.saxutils import escape as html_escape
 from types import NoneType
@@ -74,3 +74,24 @@ class InlineHyperlink(object):
         return self._insert_link()
     def __str__(self):
         return self._insert_link()
+
+def include_docx_template(template_file, **kwargs):
+    """Include the contents of one docx file inside another docx file."""
+    if this_thread.evaluation_context is None:
+        return 'ERROR: not in a docx file'
+    if template_file.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection'):
+        template_path = template_file.path()
+    else:
+        template_path = package_template_filename(template_file, package=this_thread.current_package)
+    sd = this_thread.docx_template.new_subdoc()
+    sd.subdocx = Document(template_path)
+    sd.subdocx._part = sd.docx._part
+    first_paragraph = sd.subdocx.paragraphs[0]
+    for key, val in kwargs.iteritems():
+        if hasattr(val, 'instanceName') and val.__class__.__name__.startswith('DA'):
+            the_repr = val.instanceName
+        else:
+            the_repr = '"' + re.sub(r'\n', '', unicode(val).encode('utf-8').encode('base64')) + '".decode("base64").decode("utf-8")'
+        first_paragraph.insert_paragraph_before(str("{%%p set %s = %s %%}" % (key, the_repr)))
+    this_thread.docx_include_count += 1
+    return sd

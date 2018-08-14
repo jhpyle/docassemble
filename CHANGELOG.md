@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.84] - 2018-08-13
+### Changed
+- Word processing files and text files can now be included in
+  documents in the same way that images can.
+- Reducing a `DAFileCollection` to text no longer attempts to show all
+  versions in the collection, but only includes one.
+
 ## [0.2.83] - 2018-08-11
 ### Changed
 - Playground UI highlights most recently edited files.

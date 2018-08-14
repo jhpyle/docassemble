@@ -14,7 +14,7 @@ from docassemble.base.functions import possessify, possessify_long, a_prepositio
 import docassemble.base.functions
 import docassemble.base.file_docx
 from docassemble.webapp.files import SavedFile
-from docxtpl import InlineImage
+from docxtpl import InlineImage, Subdoc
 import tempfile
 import time
 import stat
@@ -2140,13 +2140,21 @@ class DAFile(DAObject):
         optional keyword argument width.
 
         """
-        #logmessage("show")
         if not self.ok:
             return(u'')
         if hasattr(self, 'number') and hasattr(self, 'extension') and self.extension == 'pdf' and wait:
             self.page_path(1, 'page')
+        if self.mimetype == 'text/markdown':
+            the_template = DATemplate(content=self.slurp())
+            return unicode(the_template)
+        elif self.mimetype == 'text/plain':
+            the_content = self.slurp()
+            return the_content
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
-            return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.docx_template, width=width)
+            if self.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+                return docassemble.base.file_docx.include_docx_template(self)
+            else:
+                return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.docx_template, width=width)
         else:
             if width is not None:
                 return(u'[FILE ' + unicode(self.number) + u', ' + unicode(width) + u']')
@@ -2174,7 +2182,6 @@ class DAFileCollection(DAObject):
         self.info = dict()
     def _extension_list(self):
         if hasattr(self, 'info') and 'formats' in self.info:
-            # logmessage("Returning formats")
             return self.info['formats']
         return ['pdf', 'docx', 'rtf']
     def num_pages(self):
@@ -2213,13 +2220,13 @@ class DAFileCollection(DAObject):
         """
         the_files = [getattr(self, ext).show(**kwargs) for ext in self._extension_list() if hasattr(self, ext)]
         for the_file in the_files:
-            if isinstance(the_file, InlineImage):
+            if isinstance(the_file, InlineImage) or isinstance(the_file, Subdoc):
                 return the_file
         return u' '.join(the_files)
     def __str__(self):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
-        return " ".join([unicode(getattr(self, ext)) for ext in self._extension_list() if hasattr(self, ext)])
+        return unicode(self._first_file())
 
 class DAFileList(DAList):
     """Used internally by docassemble to refer to a list of files, such as
@@ -2251,7 +2258,7 @@ class DAFileList(DAList):
         for element in sorted(self.elements):
             if element.ok:
                 new_image = element.show(width=width)
-                if isinstance(new_image, InlineImage):
+                if isinstance(new_image, InlineImage) or isinstance(new_image, Subdoc):
                     return new_image
                 output += new_image
         return output
@@ -2285,7 +2292,10 @@ class DAStaticFile(DAObject):
 
         """
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
-            return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.docx_template, width=width)
+            if self.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+                return docassemble.base.file_docx.include_docx_template(self)
+            else:
+                return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.docx_template, width=width)
         else:
             if width is not None:
                 return('[FILE ' + str(self.filename) + ', ' + str(width) + ']')
