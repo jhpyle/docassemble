@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.84](https://github.com/jhpyle/docassemble/releases/tag/v0.2.84) - 2018-08-13
+
+### Changed
+- Word processing files and text files can now be included in
+  documents in the same way that images can.
+- Reducing a `DAFileCollection` to text no longer attempts to show all
+  versions in the collection, but only includes one.
+
 ## [0.2.83](https://github.com/jhpyle/docassemble/releases/tag/v0.2.83) - 2018-08-11
 
 ### Changed

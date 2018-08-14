@@ -307,6 +307,34 @@ For example, this interview provides a QR code that directs the user to
 See also the [`qr_code()`] function, which allows you to insert the
 `[QR ...]` markup using [Python].
 
+# <a name="inserting other"></a>Inserting other types of files
+
+Just as you can insert images with `[FILE
+docassemble.crimesolver:mugshot.jpg]` or `${ user_picture }`, you can
+also insert other types of files.
+
+If you insert a text file (MIME type `text/plain`), the raw contents
+of the file will be inserted.
+
+If you insert a [Markdown] file (MIME type `text/markdown`), the
+contents of the file will be treated as a [`DATemplate`].
+
+The behavior when you insert a PDF file depends on the context:
+
+* In a `question`, the user will see a thumbnail of the first page of
+  the document, and clicking the thumbnail will open the PDF file.
+* In a [document] created by converting [Markdown] to PDF, the PDF
+  pages will be inserted into the document.
+* When assembling documents in other formats, the pages of the PDF
+  will be converted to images and inserted into the document in the
+  same way images are inserted.
+
+When you insert a word processing file, the file will be converted to
+PDF and inserted into the document the way a PDF file is inserted.
+However, if you include a .docx file inside a .docx file created using
+[`docx template file`], the result is like that of calling
+[`include_docx_template()`].
+
 # <a name="tables"></a>Inserting tables
 
 Tables can be inserted in the format known as [PHP Markdown Extra].
@@ -379,6 +407,7 @@ information about this feature, see the section on
 [Processing interim user input]: {{ site.baseurl }}/docs/background.html#target
 [Embedding fields within a paragraph]: {{ site.baseurl }}/docs/fields.html#embed
 [`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
+[document]: {{ site.baseurl }}/docs/documents.html
 [documents]: {{ site.baseurl }}/docs/documents.html
 [modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [Mako]: http://www.makotemplates.org/
@@ -422,3 +451,6 @@ information about this feature, see the section on
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [Microsoft Word templates]: {{ site.baseurl}}/docs/documents.html#docx template file
 [Jinja2]: http://jinja.pocoo.org/docs/2.9/
+[`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
+[`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
+[`include_docx_template()`]: {{ site.baseurl }}/docs/functions.html#include_docx_template
