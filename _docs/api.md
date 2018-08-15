@@ -1040,7 +1040,7 @@ Response on success: [204]
 
 Body of response: empty.
 
-## <a name="session_retrieve"></a>Retrieve an interview session
+## <a name="session_retrieve"></a>Retrieve a stored file
 
 Description: Retrieves a stored file
 
