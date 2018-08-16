@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.85](https://github.com/jhpyle/docassemble/releases/tag/v0.2.85) - 2018-08-15
+
+### Fixed
+- Problem with screen reader flagging help text with Markdown
+  formatting as a defined term.
+- Problem with Internet Explorer passing through commas in numeric
+  values.
+
 ## [0.2.84](https://github.com/jhpyle/docassemble/releases/tag/v0.2.84) - 2018-08-13
 
 ### Changed
