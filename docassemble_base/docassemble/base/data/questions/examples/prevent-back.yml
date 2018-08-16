@@ -15,7 +15,17 @@ question: |
   Your application for ${ service }
   has been submitted.
 need: app_submitted
+field: first_screen_after
 mandatory: True
+---
+question: |
+  Your application will be carefully considered.
+field: second_screen_after
+mandatory: True
+---
+mandatory: True
+question: |
+  You will hear from us in six weeks.
 ---
 question: |
   For what service would you like

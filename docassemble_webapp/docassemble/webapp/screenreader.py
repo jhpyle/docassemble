@@ -1,6 +1,5 @@
 from bs4 import BeautifulSoup
 from docassemble.base.functions import word
-#from docassemble.base.logger import logmessage
 import re
 
 __all__ = ['to_text']
@@ -28,7 +27,7 @@ def to_text(html_doc):
         previous = words
     terms = dict()
     for s in soup.find_all('a'):
-        if s.has_attr('class') and s.attrs['class'][0] == 'daterm' and s.has_attr('data-content'):
+        if s.has_attr('class') and s.attrs['class'][0] == 'daterm' and s.has_attr('data-content') and s.string is not None:
             terms[s.string] = s.attrs['data-content']
     if len(terms):
         output += word("Terms used in this question:") + "\n"

@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.85] - 2018-08-15
+### Fixed
+- Problem with screen reader flagging help text with Markdown
+  formatting as a defined term.
+- Problem with Internet Explorer passing through commas in numeric
+  values.
+
 ## [0.2.84] - 2018-08-13
 ### Changed
 - Word processing files and text files can now be included in

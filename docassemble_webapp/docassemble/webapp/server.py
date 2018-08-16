@@ -5242,6 +5242,8 @@ def index():
             elif known_datatypes[real_key] in ('number', 'float', 'currency', 'range'):
                 if data == '':
                     data = 0.0
+                if isinstance(data, basestring):
+                    data = re.sub(r',', '', data)
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[real_key] in ('object', 'object_radio'):
@@ -5342,6 +5344,8 @@ def index():
             elif known_datatypes[orig_key] in ('number', 'float', 'currency', 'range'):
                 if data == '':
                     data = 0.0
+                if isinstance(data, basestring):
+                    data = re.sub(r',', '', data)
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[orig_key] in ('object', 'object_radio'):
