@@ -675,6 +675,51 @@ documentation for [lettuce].  You may also wish to read about
 the [Behavior-Driven Development] concept in general before starting
 to use [lettuce].
 
+# Contributing to Docassemble
+
+If you would like to contribute to developing docassemble, you will need to set up a code development environment. This will require you to [install from source], so you won't be able to use the [Docker] image. Once you have completed the [install from source] instructions and have docassemble running, you can make changes to the source code. This wont effect anything until you install those changes.
+
+The first time that you want to install your changes you need to run:
+
+{% highlight text %}
+cd ~/docassemble
+vi requirements.txt
+{% endhighlight %}
+
+And paste the following into requirements.txt:
+
+{% highlight text %}
+./docassemble
+./docassemble_base
+./docassemble_webapp
+./docassemble_demo
+{% endhighlight %}
+
+This will be used everytime you install the updated source code.
+
+To install those updates run:
+
+{% highlight text %}
+sudo su www-data
+source /usr/share/docassemble/local/bin/activate
+pip install --no-deps --no-index --upgrade -r requirements.txt
+exit
+{% endhighlight %}
+
+Then you need to restart the web server:
+
+{% highlight text %}
+sudo touch /usr/share/docassemble/webapp/docassemble.wsgi where requirements.txt
+{% endhighlight %}
+
+If you are running background processes then you need to restart both the web server and Celery:
+
+{% highlight text %}
+supervisorctl start reset
+{% endhighlight %}
+
+Once you're ready to, commit and push your changes up to the [GitHub repository] for review.
+
 [selenium]: http://selenium-python.readthedocs.io/getting-started.html
 [Behavior-Driven Development]: https://en.wikipedia.org/wiki/Behavior-driven_development
 [install chromedriver]: https://chromedriver.storage.googleapis.com/index.html?path=2.33/
@@ -744,3 +789,4 @@ to use [lettuce].
 [Python packages]: https://docs.python.org/2/tutorial/modules.html#packages
 [GitHub repository]: {{ site.github.repository_url }}
 [sshfs]: https://en.wikipedia.org/wiki/SSHFS
+[install from source]: https://docassemble.org/docs/installation.html#packages
