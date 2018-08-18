@@ -18,7 +18,7 @@
     <link rel="manifest" href="{{ url_for('favicon_manifest_json') }}">
     <link rel="mask-icon" href="{{ url_for('favicon_safari_pinned_tab') }}" color="{{ config['FAVICON_MASK_COLOR'] }}">
     <meta name="theme-color" content="{{ config['FAVICON_THEME_COLOR'] }}">
-    <script defer src="{{ url_for('static', filename='fontawesome/js/fontawesome-all.min.js') }}"></script>
+    <script defer src="{{ url_for('static', filename='fontawesome/js/all.min.js') }}"></script>
   </head>
   <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} pad-for-navbar">
     <nav class="navbar fixed-top navbar-expand-md navbar-dark bg-dark">

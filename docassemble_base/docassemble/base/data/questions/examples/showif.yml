@@ -1,6 +1,6 @@
 metadata:
-  title: Hide fields
-  short title: Hide fields
+  title: Show fields with code
+  short title: Code show if
   documentation: "https://docassemble.org/docs/fields.html#show if"
 ---
 question: |

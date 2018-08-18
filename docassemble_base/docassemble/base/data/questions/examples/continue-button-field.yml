@@ -1,0 +1,20 @@
+metadata:
+  title: Continue button variable
+  short title: Continue
+  documentation: "https://docassemble.org/docs/fields.html#continue button field"
+  example start: 1
+  example end: 2
+---
+question: |
+  Welcome to the interview!
+subquestion: |
+  Your participation means a lot to us.
+fields:
+  - Your phone number: phone_number
+continue button field: user_saw_intro
+---
+question: Result of question
+subquestion: |
+  `user_saw_intro` is
+  `${ user_saw_intro }`
+mandatory: True

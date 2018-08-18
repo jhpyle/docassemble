@@ -1,0 +1,94 @@
+metadata:
+  title: Show fields with JavaScript
+  short title: JS Show
+  documentation: "https://docassemble.org/docs/fields.html#js show if"
+  example start: 1
+  example end: 4
+---
+question: |
+  Please fill in the following information.
+subquestion: |
+  Try setting "Favorite fruit" to 
+  "apple" or "mango" (and unfocus the 
+  field) to see what happens.
+fields:
+  - Favorite fruit: fruit
+  - Favorite vegetable: vegetable
+  - Favorite fungus: mushroom
+    js show if: |
+      val("fruit") == "apple"
+  - Favorite spice: spice
+    js hide if: |
+      val("fruit") == "mango"
+---
+question: |
+  Please fill in the following information.
+subquestion: |
+  See what happens when you set 
+  "Favorite cuisine" to "Chinese food."
+fields:
+  - Favorite cuisine: cuisine
+    choices:
+      - Chinese food
+      - French food
+      - Belgian food
+  - Favorite dish: dish
+    js show if: |
+      val('cuisine') == "Chinese food"
+---
+question: |
+  Please fill in the following information.
+fields:
+  - "Do you watch TV?": watches_tv
+    datatype: yesnoradio
+  - Favorite TV show: tv_show
+    js show if: |
+      val('watches_tv') == true
+  - "I listen to the radio": listens_to_radio
+    datatype: yesno
+  - Favorite radio station: radio_station
+    js show if: |
+      val('listens_to_radio') == true
+  - Favorite modulation type: favorite_modulation
+    datatype: radio
+    choices:
+      - FM
+      - AM
+    js show if: |
+      val('listens_to_radio') == true      
+  - Favorite antenna style: favorite_antenna
+    js show if: |
+      val('favorite_modulation') == 'FM'
+---
+question: |
+  Please fill in the following information.
+subquestion: |
+  Try selecting Apple and Plum.
+fields:
+  - Select the fruits you like: liked_fruits
+    datatype: checkboxes
+    choices:
+      - Apple
+      - Peach
+      - Pear
+      - Plum
+  - Favorite way to eat apples and plums: apple_plum_dish
+    js show if: |
+      val("liked_fruits['Apple']") && val("liked_fruits['Plum']")
+---
+question: |
+  Thank you for that information.
+subquestion: |
+  You like ${ fruit },
+  ${ cuisine }.
+  
+  % if watches_tv:
+  Your favorite TV show is ${ tv_show }.
+  % endif
+
+  % if listens_to_radio:
+  Your favorite radio station is ${ radio_station }.
+  % endif
+  
+  You like ${ liked_fruits.true_values() }.
+mandatory: True

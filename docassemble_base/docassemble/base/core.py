@@ -483,7 +483,9 @@ class DAList(DAObject):
         self._trigger_gather()
         if isinstance(other, DAList):
             other._trigger_gather()
-            return self.elements + other.elements
+            the_list = DAList(elements=self.elements + other.elements, gathered=True, auto_gather=False)
+            the_list.set_random_instance_name()
+            return the_list
         return self.elements + other
     def index(self, *pargs, **kwargs):
         """Returns the first index at which a given item may be found."""

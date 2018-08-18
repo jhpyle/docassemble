@@ -1928,6 +1928,12 @@ class Question:
                         self.interview.reconsider.update(self.fields_used)
         if 'fields' in data:
             self.question_type = 'fields'
+            if 'continue button field' in data:
+                if type(data['continue button field']) not in (str, unicode):
+                    raise DAError("A continue button field must be plain text." + self.idebug(data))
+                if self.scan_for_variables:
+                    self.fields_used.add(data['continue button field'])
+                self.fields_saveas = data['continue button field']
             if type(data['fields']) is dict:
                 data['fields'] = [data['fields']]
             if type(data['fields']) is not list:
@@ -1979,7 +1985,22 @@ class Question:
                                 else:
                                     field_info['required'] = {'compute': compile(field[key], '<required code>', 'eval'), 'sourcecode': field[key]}
                                     self.find_fields_in(field[key])
+                            elif key == 'js show if' or key == 'js hide if':
+                                if not isinstance(field[key], basestring):
+                                    raise DAError("A js show if or js hide if expression must be a string" + self.idebug(data))
+                                js_info = dict()
+                                if key == 'js show if':
+                                    js_info['sign'] = True
+                                else:
+                                    js_info['sign'] = False
+                                js_info['expression'] = field[key]
+                                js_info['vars'] = list(set(re.findall(r'val\(\'([^\)]+)\'\)', field[key]) + re.findall(r'val\("([^\)]+)"\)', field[key])))
+                                if 'extras' not in field_info:
+                                    field_info['extras'] = dict()
+                                field_info['extras']['show_if_js'] = js_info
                             elif key == 'show if' or key == 'hide if':
+                                if 'js show if' in field or 'js hide if' in field:
+                                    raise DAError("You cannot mix js show if and non-js show if" + self.idebug(data))
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 if type(field[key]) is dict:
@@ -2210,6 +2231,9 @@ class Question:
                     else:
                         raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
                     field_number += 1
+        else:
+            if 'continue button field' in data:
+                raise DAError("A continue button field can only be used with a fields directive." + self.idebug(data))
         if 'review' in data:
             self.question_type = 'review'
             if type(data['review']) is dict:

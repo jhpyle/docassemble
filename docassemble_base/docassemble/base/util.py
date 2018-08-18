@@ -2157,8 +2157,8 @@ def recurse_zip_params(param, root, files):
                 the_file = getattr(param, 'rtf', None)
             if the_file is None:
                 the_file = getattr(param, 'tex', None)
-            if the_file is not None:
-                recurse_zip_params(the_file, root, files=files)
+        if the_file is not None:
+            recurse_zip_params(the_file, root, files=files)
     elif isinstance(param, DAStaticFile) or isinstance(param, DAFile):
         files.append((root + param.filename, param.path()))
     else:

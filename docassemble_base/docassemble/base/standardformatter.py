@@ -740,6 +740,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         checkbox_validation = False
         if status.subquestionText:
             sub_question_text = markdown_to_html(status.subquestionText, status=status, indent=18, embedder=embed_input)
+        if hasattr(status.question, 'fields_saveas'):
+            datatypes[safeid(status.question.fields_saveas)] = "boolean"
         field_list = status.get_field_list()
         saveas_to_use = dict()
         saveas_by_number = dict()
@@ -750,7 +752,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 note_fields[field.number] = '                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, embedder=embed_input) + '</div></div>\n'
             if hasattr(field, 'saveas'):
                 varnames[safeid('_field_' + str(field.number))] = field.saveas
-                if (hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras) or (hasattr(field, 'disableothers') and field.disableothers):
+                if (hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or 'show_if_js' in field.extras)) or (hasattr(field, 'disableothers') and field.disableothers):
                     the_saveas = safeid('_field_' + str(field.number))
                 else:
                     the_saveas = field.saveas
@@ -803,6 +805,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         fieldlist.append('                <div class="showif" data-saveas="' + escape_id(field.saveas) + '" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(unicode(status.extras['show_if_val'][field.number])) + '>\n')
                     else:
                         fieldlist.append('                <div class="showif" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(unicode(status.extras['show_if_val'][field.number])) + '>\n')
+                if 'show_if_js' in field.extras:
+                    if hasattr(field, 'saveas'):
+                        fieldlist.append('                <div class="jsshowif" data-saveas="' + escape_id(field.saveas) + '" data-jsshowif=' + myb64doublequote(json.dumps(field.extras['show_if_js'])) + '>\n')
+                    else:
+                        fieldlist.append('                <div class="jsshowif" data-jsshowif=' + myb64doublequote(json.dumps(field.extras['show_if_js'])) + '>\n')
             if hasattr(field, 'datatype'):
                 if field.datatype == 'html':
                     fieldlist.append('                <div class="form-group row' + req_tag +'"><div class="col-md-12"><note>' + status.extras['html'][field.number].rstrip() + '</note></div></div>\n')
@@ -844,7 +851,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 varnames[safeid('_field_' + str(field.number))] = field.saveas
                 #the_saveas = saveas_to_use[field.saveas]
                 the_saveas = saveas_by_number[field.number]
-                if (hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras) or (hasattr(field, 'disableothers') and field.disableothers):
+                if (hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or 'show_if_js' in field.extras)) or (hasattr(field, 'disableothers') and field.disableothers):
                     label_saveas = the_saveas
                 else:
                     label_saveas = field.saveas                        
@@ -1002,7 +1009,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     fieldlist.append('                <div class="form-group row' + req_tag + '"><div class="offset-md-4 col-md-8 fieldpart nolabel">' + input_for(status, field) + '</div></div>\n')
                 else:
                     fieldlist.append('                <div class="form-group row' + req_tag + '"><label for="' + escape_id(label_saveas) + '" class="col-md-4 col-form-label datext-right">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-md-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
-            if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras:
+            if hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or 'show_if_js' in field.extras):
                 fieldlist.append('                </div>\n')
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n              <fieldset>\n'
@@ -1036,7 +1043,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             #status.extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
         output += status.submit
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '                <div class="form-actions">' + back_button + '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '</div>\n'
+        if hasattr(status.question, 'fields_saveas'):
+            output += '                <div class="form-actions">' + back_button + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(safeid(status.question.fields_saveas)) + '" value="True">' + continue_label + '</button>' + help_button + '</div>\n'
+        else:
+            output += '                <div class="form-actions">' + back_button + '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '</div>\n'
         #output += question_name_tag(status.question)
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
@@ -1700,7 +1710,7 @@ def input_for(status, field, wide=False, embedded=False):
         placeholdertext = ' placeholder=' + json.dumps(unicode(status.hints[field.number].replace('\n', ' ')))
     else:
         placeholdertext = ''
-    if (hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras and hasattr(field, 'saveas')) or (hasattr(field, 'disableothers') and field.disableothers):
+    if (hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or ('show_if_js' in field.extras)) and hasattr(field, 'saveas')) or (hasattr(field, 'disableothers') and field.disableothers):
         saveas_string = safeid('_field_' + str(field.number))
     else:
         saveas_string = field.saveas

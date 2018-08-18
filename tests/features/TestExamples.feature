@@ -6236,3 +6236,86 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "You have 1.01002121 ounces of gold."
     And I should see the phrase "You have 2.012 ounces of silver"
+
+  Scenario: Test the interview "Continue button variable"
+    Given I start the interview "docassemble.base:data/questions/examples/continue-button-field.yml"
+    Then I should see the phrase "Welcome to the interview!"
+    And I set "Your phone number" to "202-555-2323"
+    And I click the button "Continue"
+    Then I should see the phrase "user_saw_intro is True"
+
+  Scenario: Test the interview "Show fields with JavaScript"
+    Given I start the interview "docassemble.base:data/questions/examples/jsshowif.yml"
+    Then I should see the phrase "Please fill in the following information."
+    And I should not see the phrase "Favorite fungus"
+    And I set "Favorite fruit" to "apple"
+    And I unfocus
+    And I wait 1 second
+    Then I should see the phrase "Favorite fungus"
+    And I set "Favorite fruit" to "mango"
+    And I unfocus
+    And I wait 1 second
+    Then I should not see the phrase "Favorite fungus"
+    And I should not see the phrase "Favorite spice"
+    And I set "Favorite fruit" to "banana"
+    And I unfocus
+    And I wait 1 second
+    Then I should see the phrase "Favorite spice"
+    And I set "Favorite vegetable" to "potato"
+    And I set "Favorite spice" to "coriander"
+    And I click the button "Continue"
+    Then I should see the phrase "Please fill in the following information."
+    And I should not see the phrase "Favorite dish"
+    And I select "Chinese food" as the "Favorite cuisine"
+    And I wait 1 second
+    Then I should see the phrase "Favorite dish"
+    And I set "Favorite dish" to "lo mein"
+    And I click the button "Continue"
+    Then I should see the phrase "Please fill in the following information."
+    And I should not see the phrase "Favorite TV show"
+    And I should not see the phrase "Favorite radio station"
+    And I should not see the phrase "Favorite modulation type"
+    And I should not see the phrase "Favorite antenna style"
+    And I click the option "Yes" under "Do you watch TV?"
+    And I wait 1 second
+    And I set "Favorite TV show" to "Chips"
+    And I click the option "I listen to the radio"
+    And I wait 1 second
+    Then I should see the phrase "Favorite radio station"
+    And I should see the phrase "Favorite modulation type"
+    And I set "Favorite radio station" to "WABC"
+    And I click the option "AM" under "Favorite modulation type"
+    And I wait 1 second
+    Then I should not see the phrase "Favorite antenna style"
+    And I click the option "FM" under "Favorite modulation type"
+    And I wait 1 second
+    Then I should see the phrase "Favorite antenna style"
+    And I set "Favorite antenna style" to "rooftop"
+    And I click the button "Continue"
+    Then I should see the phrase "Please fill in the following information."
+    And I should not see the phrase "Favorite way to eat apples and plums"
+    And I click the option "Apple" under "Select the fruits you like"
+    And I wait 1 second
+    Then I should not see the phrase "Favorite way to eat apples and plums"
+    And I click the option "Plum" under "Select the fruits you like"
+    And I wait 1 second
+    Then I should see the phrase "Favorite way to eat apples and plums"
+    And I click the option "Plum" under "Select the fruits you like"
+    And I wait 1 second
+    Then I should not see the phrase "Favorite way to eat apples and plums"
+    And I click the button "Continue"
+    Then I should see the phrase "Thank you for that information."
+    And I should see the phrase "You like banana, Chinese food."
+    And I should see the phrase "Your favorite TV show is Chips."
+    And I should see the phrase "Your favorite radio station is WABC."
+    And I should see the phrase "You like Apple."
+
+  Scenario: Test the interview "Field value"
+    Given I start the interview "docassemble.base:data/questions/examples/val.yml"
+    Then I should see the phrase "What do you want for dessert?"
+    And I set "Dessert" to "apple pie"
+    And I unfocus
+    And I click the button "Eat it"
+    Then I should see the phrase "What do you want for dessert besides apple pie?"
+    And I click the button "Continue"
+    Then I should see the phrase "Your last dessert was apple pie."
