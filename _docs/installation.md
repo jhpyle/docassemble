@@ -214,6 +214,7 @@ The latest version of the [Perl Audio Converter] can be installed by doing:
 sudo apt-get -q -y remove pacpl
 git clone git://git.code.sf.net/p/pacpl/code pacpl-code 
 cd pacpl-code
+autoreconf
 ./configure
 make
 sudo make install
