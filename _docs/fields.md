@@ -604,6 +604,42 @@ field instead of showing it.
 
 {% include side-by-side.html demo="hideif-boolean" %}
 
+### <a name="js show if"></a>`js show if`
+
+Sometimes you might want to do more complicated evaluations with
+on-screen variables than you can do with `show if` and `hide if`.
+When you use the `show if` and `hide if` field modifiers to refer to
+fields that are on the screen, you are able to test whether the fields
+are true, or have particular values, but you cannot do anything more
+complex, such as test whether the value is one of two values, or
+the values of two fields.
+
+The `js show if` and `js hide if` features allow you to use any
+arbitrary [JavaScript] expression to determine whether a field should
+be shown or not.  In these expressions, the special [JavaScript]
+function [`val()`] is used to obtain the values of fields.  Given the
+name of an on-screen field as a string, the [`val()`] function
+returns the current value of that field.
+
+{% include side-by-side.html demo="jsshowif" %}
+
+The string that is passed to [`val()`] must perfectly match the
+variable name that is used in the underlying [`question`].
+
+The field will be shown or hidden whenever any of the variables
+referenced with [`val()`] change.  Thus, if your [JavaScript]
+expression does not use [`val()`], it will not be triggered except at
+the time the screen loads.  Your expression is parsed, but is not
+evaluated, when determining what fields your expression references
+with [`val()`].  Thus, if you pass something other than a literal
+string to [`val()`], you may find that the showing or hiding is not
+triggered, even though [`val()`] would return the appropriate value.
+
+### <a name="js hide if"></a>`js hide if`
+
+This works just like [`js show if`](#js show if), except that it hides
+the field instead of showing it.
+
 ### <a name="disable others"></a>`disable others`
 
 If `disable others` is set to `True`, then when the user changes the
@@ -1232,6 +1268,20 @@ types.  Here is an example that illustrates all of the possible
 attributes of the [`Address`] object that can be set by [Place Autocomplete].
 
 {% include side-by-side.html demo="address-autocomplete-test" %}
+
+## <a name="continue button field"></a>Setting a variable with the Continue button
+
+When the user presses the Continue button on a `question` containing
+`fields`, all of the variables listed under `fields` are set.
+Sometimes, it is useful for the `question` to also set a single
+variable to `True`, much like the [simple "continue" button that sets
+a variable](#field) question does.
+
+If you want your `fields` question to set a variable to `True` when
+the user presses "Continue," add a `continue button field` line to
+the `question` indicating the variable that should be set to True.
+
+{% include side-by-side.html demo="continue-button-field" %}
 
 ## <a name="bigexample"></a>A comprehensive example
 
@@ -1898,3 +1948,5 @@ why this needs to be done manually as opposed to automatically:
 [`date`]: #date
 [`number`]: #number
 [`.geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate
+[JavaScript]: https://en.wikipedia.org/wiki/JavaScript
+[`val()`]: {{ site.baseurl }}/docs/functions.html#js_val

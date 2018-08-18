@@ -4315,7 +4315,7 @@ The [Bootstrap] color names are as follows:
 </div>
 </div>
 
-You can also use the [Javascript] function [`flash()`] to display
+You can also use the [JavaScript] function [`flash()`] to display
 notifications like this.
 
 ## <a name="encode_name"></a>encode_name()
@@ -5354,16 +5354,16 @@ you use [gspread]'s `append_row()` method to write to a spreadsheet.
 
 # <a name="javascript"></a>Javascript functions
 
-If you know how to program in [Javascript], you can include
+If you know how to program in [JavaScript], you can include
 browser-side code in your interviews using [`script`], [`html`], and
 [`css`] elements within a [`fields`] block, or you can put
-[Javascript] and [CSS]<span></span> [static files] in your [packages]
+[JavaScript] and [CSS]<span></span> [static files] in your [packages]
 and bring them into your interview using the [`javascript`] and
 [`css`]({{ site.baseurl }}/docs/initial.html) directives within a
 [`features`] block.
 
-The following [Javascript] functions are available for your use in
-your [Javascript] code.
+The following [JavaScript] functions are available for your use in
+your [JavaScript] code.
 
 ## <a name="flash"></a>flash()
 
@@ -5392,6 +5392,17 @@ The available priorities are:
 
 If no priority is supplied, `'info'` is used.
 
+## <a name="js_val"></a>val()
+
+If you need the value of one of the variables on the screen, you can
+call `val()`, passing as the sole parameter the variable name of the
+field as a string.  The variable name must be written exactly as it
+appears in the underlying [`question`].
+
+{% include side-by-side.html demo="val" %}
+
+This function is essential for using the [`js show if`] feature.
+
 ## <a name="js_url_action"></a>url_action()
 
 The `url_action()` function, like its [Python namesake](#url_action),
@@ -5409,7 +5420,7 @@ The `url_action_perform()` function is like
 URL that would run the action if accessed, it actually causes the
 user's web browser to run the action.
 
-The [Javascript] function takes two arguments:
+The [JavaScript] function takes two arguments:
 
 1. The [action] to take.  This corresponds with the name of an
    [`event`] in your interview.
@@ -5423,9 +5434,9 @@ The `url_action_call()` function is like
 [`url_action()`](#js_url_action), except it makes an [Ajax] call to
 the URL and runs a callback function when the server responds to the
 request.  In combination with [`json_response()`], this can allow you
-to write [Javascript] code that interacts with "[API]s" with your interview.
+to write [JavaScript] code that interacts with "[API]s" with your interview.
 
-The [Javascript] function takes three arguments:
+The [JavaScript] function takes three arguments:
 
 1. The [action] to take.  This corresponds with the name of an
    [`event`] in your interview.
@@ -5444,12 +5455,12 @@ This example takes advantage of the [CSS] classes `btn` and
 classes.
 
 Note that [Ajax] interactions with the interview are possible without
-writing any [Javascript] code; see the [`check in` feature].
+writing any [JavaScript] code; see the [`check in` feature].
 
 ## <a name="js_get_interview_variables"></a>get_interview_variables()
 
 If you would like to work with all of the variables in the interview
-in your [Javascript] code, you can do so with the
+in your [JavaScript] code, you can do so with the
 `get_interview_variables()` function, which sends an [Ajax] call to
 the server to retrieve the contents of the interview dictionary.
 
@@ -5478,7 +5489,7 @@ get_interview_variables(function(data){
 
 ## <a name="js_daPageLoad"></a>Running Javascript at page load time
 
-When your [Javascript] code is imported through the [`javascript`]
+When your [JavaScript] code is imported through the [`javascript`]
 feature, it is necessary to wrap the code in a `daPageLoad` trigger.
 Otherwise, the code will only be executed on the first page load, not
 when the user navigates from screen to screen.
@@ -5677,7 +5688,7 @@ $(document).on('daPageLoad', function(){
 [`pycountry` package]: https://pypi.python.org/pypi/pycountry
 [`send_sms()`]: #send_sms
 [flash]: http://flask.pocoo.org/docs/0.11/patterns/flashing/
-[Javascript]: https://en.wikipedia.org/wiki/JavaScript
+[JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
 [`javascript`]: {{ site.baseurl }}/docs/initial.html#javascript
@@ -5880,3 +5891,4 @@ $(document).on('daPageLoad', function(){
 [`raise`]: https://docs.python.org/2.7/tutorial/errors.html#raising-exceptions
 [`validation code`]: {{ site.baseurl }}/docs/fields.html#validation code
 [Google Sheets API]: https://developers.google.com/sheets/api/
+[`js show if`]: {{ site.baseurl }}/docs/fields.html#js show if

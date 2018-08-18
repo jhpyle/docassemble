@@ -375,6 +375,19 @@
     My favorite animal is the ${ favorite_animal }, too!
   buttons:
     - Exit: exit
+"append-list": "objects:\n  - person: DAList.using(object_type=Individual, there_are_any=True)\n\
+  \  - doctor: Individual\n---\nquestion: |\n  What is the name of the ${ ordinal(i)\
+  \ } person?\nfields:\n  - First name: person[i].name.first\n  - Last name: person[i].name.last\n\
+  ---\nquestion: |\n  What ${ person[i].possessive('age') }?\nfields:\n  - Age in\
+  \ years: person[i].age\n    datatype: integer\n---\nquestion: |\n  Is there another\
+  \ person?\nyesno: person.there_is_another\n---\nquestion: |\n  Who is your doctor?\n\
+  fields:\n  - \"Someone already mentioned\": doctor\n    datatype: object\n    choices:\n\
+  \      - person\n    disable others: True\n  - First name: doctor.name.first\n \
+  \ - Last name: doctor.name.last\n---\nmandatory: True\ncode: |\n  person.gather()\n\
+  \  need(doctor.name.first, doctor.name.last)\n  if doctor not in person:\n    person.append(doctor,\
+  \ set_instance_name=True)\n  finish_screen\n---\nevent: finish_screen\nquestion:\
+  \ All done\nsubquestion: |\n  The people are:\n    \n  % for y in person:\n  * ${\
+  \ y } is ${ y.age } years old.\n  % endfor"
 "as-datetime": "question: |\n  The Delorean will go back in time to \n  ${ as_datetime('11/5/1955').year\
   \ }.\nmandatory: True"
 "assemble-in-background": |-
@@ -1378,6 +1391,20 @@
   subquestion: |
     When you are ready to begin, press
     Continue.
+"continue-button-field": |-
+  question: |
+    Welcome to the interview!
+  subquestion: |
+    Your participation means a lot to us.
+  fields:
+    - Your phone number: phone_number
+  continue button field: user_saw_intro
+  ---
+  question: Result of question
+  subquestion: |
+    `user_saw_intro` is:
+    "${ user_saw_intro }"
+  mandatory: True
 "continue-button-label": |-
   question: |
     What is your favorite fruit?
@@ -1399,12 +1426,18 @@
 "continue-special": |-
   modules:
     - docassemble.base.util
+"copy-deep": |-
+  objects:
+    - orig_company: DAObject
+  ---
+  code: |
+    other_company = orig_company.copy_deep('other_company')
 "copy-shallow": |-
   objects:
     - orig_company: DAObject
   ---
   code: |
-    other_company = orig_company.shallow_copy('other_company')
+    other_company = orig_company.copy_shallow('other_company')
 "country": |-
   question: |
     Where do you live?
@@ -4359,6 +4392,7 @@
     ${ friend[i].possessive('birthdate') }?
   fields:
     - Birthdate: friend[i].birthdate
+      datatype: date
   ---
   question: |
     What is
@@ -5238,6 +5272,29 @@
         }
       });
     </script>
+"jsshowif": "question: |\n  Please fill in the following information.\nsubquestion:\
+  \ |\n  Try setting \"Favorite fruit\" to \n  \"apple\" or \"mango\" (and unfocus\
+  \ the \n  field) to see what happens.\nfields:\n  - Favorite fruit: fruit\n  - Favorite\
+  \ vegetable: vegetable\n  - Favorite fungus: mushroom\n    js show if: |\n     \
+  \ val(\"fruit\") == \"apple\"\n  - Favorite spice: spice\n    js hide if: |\n  \
+  \    val(\"fruit\") == \"mango\"\n---\nquestion: |\n  Please fill in the following\
+  \ information.\nsubquestion: |\n  See what happens when you set \n  \"Favorite cuisine\"\
+  \ to \"Chinese food.\"\nfields:\n  - Favorite cuisine: cuisine\n    choices:\n \
+  \     - Chinese food\n      - French food\n      - Belgian food\n  - Favorite dish:\
+  \ dish\n    js show if: |\n      val('cuisine') == \"Chinese food\"\n---\nquestion:\
+  \ |\n  Please fill in the following information.\nfields:\n  - \"Do you watch TV?\"\
+  : watches_tv\n    datatype: yesnoradio\n  - Favorite TV show: tv_show\n    js show\
+  \ if: |\n      val('watches_tv') == true\n  - \"I listen to the radio\": listens_to_radio\n\
+  \    datatype: yesno\n  - Favorite radio station: radio_station\n    js show if:\
+  \ |\n      val('listens_to_radio') == true\n  - Favorite modulation type: favorite_modulation\n\
+  \    datatype: radio\n    choices:\n      - FM\n      - AM\n    js show if: |\n\
+  \      val('listens_to_radio') == true      \n  - Favorite antenna style: favorite_antenna\n\
+  \    js show if: |\n      val('favorite_modulation') == 'FM'\n---\nquestion: |\n\
+  \  Please fill in the following information.\nsubquestion: |\n  Try selecting Apple\
+  \ and Plum.\nfields:\n  - Select the fruits you like: liked_fruits\n    datatype:\
+  \ checkboxes\n    choices:\n      - Apple\n      - Peach\n      - Pear\n      -\
+  \ Plum\n  - Favorite way to eat apples and plums: apple_plum_dish\n    js show if:\
+  \ |\n      val(\"liked_fruits['Apple']\") && val(\"liked_fruits['Plum']\")"
 "label": |-
   question: |
     What are your favorite things to eat?
@@ -9247,6 +9304,21 @@
   code: |
     if not user_logged_in():
       command('leave', url=url_of('login', next=interview_url()))
+"val": |-
+  question: |
+    What do you want for
+    dessert<span id="the_dessert"></span>?
+  fields:
+    - Dessert: dessert
+    - html: |
+        <a href="#" id="show_me" class="btn btn-primary">Eat it</a>
+  script: |
+    <script>
+      $("#show_me").click(function(){
+        $("#the_dessert").html(" besides " + val('dessert'));
+        return false;
+      });
+    </script>
 "valid-formats": |-
   question: Your document is ready.
   attachment:

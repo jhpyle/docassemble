@@ -4,6 +4,20 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.86](https://github.com/jhpyle/docassemble/releases/tag/v0.2.86) - 2018-08-17
+
+### Added
+- The `js show if` and `js hide if` field modifiers.
+- The `continue button field` feature.
+
+### Changed
+- Upgraded Font Awesome to 5.2.0.
+- Two `DAList`s added together will yield a `DAList`.
+
+### Fixed
+- `zip_file()` returned an empty archive when given a
+  `DAFileCollection`.
+
 ## [0.2.85](https://github.com/jhpyle/docassemble/releases/tag/v0.2.85) - 2018-08-15
 
 ### Fixed

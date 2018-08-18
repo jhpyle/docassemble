@@ -662,7 +662,7 @@ The default value is `medium`.
 ## <a name="default icons"></a>Using standard sets of icons
 
 [Font Awesome] is enabled on all pages. **docassemble** includes the
-free version (5.0.7) of [Font Awesome].  This allows you to refer to
+free version (5.2.0) of [Font Awesome].  This allows you to refer to
 [Font Awesome] icons using raw HTML.
 
 In addition, **docassemble** allows you to use Google's [Material
