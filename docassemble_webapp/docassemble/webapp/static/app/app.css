@@ -1902,13 +1902,13 @@ div.constraintlist div + div {
     /* width: 100%; */
     /* max-width: 540px; */
 }
-.dasignature > .navbar {
+.dasignature > div > .navbar {
     display: none;
 }
-.dasignature > .daright {
+.dasignature > div > .daright {
     display: none;
 }
-.dasignature > .daattributions {
+.dasignature > div > .daattributions {
     display: none;
 }
 .sighidesmall {
@@ -1925,13 +1925,13 @@ div.constraintlist div + div {
     body.dasignature {
 	padding-top: 60px;
     }
-    .dasignature > .navbar {
+    .dasignature > div > .navbar {
         display: block;
     }
-    .dasignature > .daright {
+    .dasignature > div > > .daright {
         display: block;
     }
-    .dasignature > .daattributions {
+    .dasignature > div > .daattributions {
         display: block;
     }
     /* .sighidesmall { */
