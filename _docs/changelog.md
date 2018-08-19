@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.87](https://github.com/jhpyle/docassemble/releases/tag/v0.2.87) - 2018-08-19
+
+### Changed
+- Moved interview HTML into a `<div>` to provide compatibility with
+  add-ons.
+
 ## [0.2.86](https://github.com/jhpyle/docassemble/releases/tag/v0.2.86) - 2018-08-17
 
 ### Added
