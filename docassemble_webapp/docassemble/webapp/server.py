@@ -6163,7 +6163,7 @@ def index():
           priority = 'info'
         }
         if (!$("#flash").length){
-          $("body").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+          $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
         }
         $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>');
         if (priority == 'success'){
@@ -6376,7 +6376,7 @@ def index():
         $(newDiv).html(""" + json.dumps(word("Your screen is being controlled by an operator.")) + """)
         $(newDiv).attr('id', "controlAlert");
         $(newDiv).css("display", "none");
-        $(newDiv).appendTo($("body"));
+        $(newDiv).appendTo($("#dabody"));
         if (mode == 'animated'){
           $(newDiv).slideDown();
         }
@@ -6768,7 +6768,7 @@ def index():
         if (do_iframe_upload){
           $("#uploadiframe").remove();
           var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
-          $("body").append(iframe);
+          $("#dabody").append(iframe);
           $(form).attr("target", "uploadiframe");
           iframe.bind('load', function(){
             setTimeout(function(){
@@ -6813,7 +6813,7 @@ def index():
         if (newFileList.length > 0){
           $("#uploadiframe").remove();
           var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
-          $("body").append(iframe);
+          $("#dabody").append(iframe);
           $(form).attr("target", "uploadiframe");
           iframe.bind('load', function(){
             setTimeout(function(){
@@ -6852,7 +6852,7 @@ def index():
         checkinInterval = setInterval(daCheckin, checkinSeconds);
       }
       function daProcessAjaxError(xhr, status, error){
-        $("body").html(xhr.responseText);
+        $("#dabody").html(xhr.responseText);
       }
       function addScriptToHead(src){
         var head = document.getElementsByTagName("head")[0];
@@ -6879,7 +6879,7 @@ def index():
         if ("activeElement" in document){
           document.activeElement.blur();
         }
-        $("body").html(data);
+        $("#dabody").html(data);
       }
       function daProcessAjax(data, form, doScroll){
         daInformedChanged = false;
@@ -6891,7 +6891,7 @@ def index():
           if ("activeElement" in document){
             document.activeElement.blur();
           }
-          $("body").html(data.body);
+          $("#dabody").html(data.body);
           $("body").removeClass();
           $("body").addClass(data.bodyclass);
           $("meta[name=viewport]").attr('content', "width=device-width, initial-scale=1");
@@ -7128,7 +7128,7 @@ def index():
               var command = data.commands[i];
               if (command.extra == 'flash'){
                 if (!$("#flash").length){
-                  $("body").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+                  $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
                 }
                 $("#flash").append('<div class="alert alert-info alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + command.value + '</div>');
                 //console.log("command is " + command.value);
@@ -7311,7 +7311,7 @@ def index():
       }
       function showSpinner(){
         if ($("#question").length > 0){
-          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"></i></span></div></div></div></div>').appendTo("body");
+          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"></i></span></div></div></div></div>').appendTo("#dabody");
         }
         else{
           var newSpan = document.createElement('span');
@@ -7334,8 +7334,8 @@ def index():
         contents = contents.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/ /g, '&nbsp;');
         $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('#question');
         $("#dawidth").css('min-width', $(this).css('min-width'));
-        $("#dawidth").css('background-color', $("body").css('background-color'));
-        $("#dawidth").css('color', $("body").css('background-color'));
+        $("#dawidth").css('background-color', $("#dabody").css('background-color'));
+        $("#dawidth").css('color', $("#dabody").css('background-color'));
         $(this).width($('#dawidth').width() + 16);
         setTimeout(function(){
           $("#dawidth").remove();
@@ -8300,7 +8300,7 @@ def index():
         start_output += global_css
         if len(interview_status.extra_css):
             start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
-        start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n'
+        start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n  <div id="dabody">\n'
     output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
     if the_nav_bar != '':
         output += the_nav_bar
@@ -8377,7 +8377,7 @@ def index():
         output += '      </div>' + "\n"
     output += '    </div>'
     if not is_ajax:
-        end_output = scripts + global_js + "\n" + indent_by("".join(interview_status.extra_scripts).strip(), 4).rstrip() + "\n  </body>\n</html>"
+        end_output = scripts + global_js + "\n" + indent_by("".join(interview_status.extra_scripts).strip(), 4).rstrip() + "\n  </div>\n  </body>\n</html>"
     #logmessage(output.encode('utf8'))
     #logmessage("Request time interim: " + str(g.request_time()))
     if 'uid' in session and 'i' in session:
@@ -8942,7 +8942,7 @@ def observer():
         socket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, parameters: JSON.stringify($("#daform").serializeArray())});
       }
       function daProcessAjaxError(xhr, status, error){
-        $("body").html(xhr.responseText);
+        $("#dabody").html(xhr.responseText);
       }
       function addScriptToHead(src){
         var head = document.getElementsByTagName("head")[0];
@@ -9012,8 +9012,8 @@ def observer():
         contents = contents.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/ /g, '&nbsp;');
         $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('#question');
         $("#dawidth").css('min-width', $(this).css('min-width'));
-        $("#dawidth").css('background-color', $("body").css('background-color'));
-        $("#dawidth").css('color', $("body").css('background-color'));
+        $("#dawidth").css('background-color', $("#dabody").css('background-color'));
+        $("#dawidth").css('color', $("#dabody").css('background-color'));
         $(this).width($('#dawidth').width() + 16);
         setTimeout(function(){
           $("#dawidth").remove();
@@ -9027,7 +9027,7 @@ def observer():
           priority = 'info'
         }
         if (!$("#flash").length){
-          $("body").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+          $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
         }
         $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>');
         if (priority == 'success'){
@@ -9319,7 +9319,7 @@ def observer():
             });
             socket.on('newpage', function(incoming) {
                 var data = incoming.obj;
-                $("body").html(data.body);
+                $("#dabody").html(data.body);
                 $("body").removeClass();
                 $("body").addClass(data.bodyclass);
                 daInitialize(1);
@@ -9405,9 +9405,9 @@ def observer():
         obj = dict()
     output = standard_html_start(interview_language=obj.get('lang', 'en'), debug=DEBUG, bootstrap_theme=obj.get('bootstrap_theme', None))
     output += obj.get('global_css', '') + "\n" + indent_by("".join(obj.get('extra_css', list())), 4)
-    output += '\n    <title>' + word('Observation') + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody pad-for-navbar') + '">\n'
+    output += '\n    <title>' + word('Observation') + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody pad-for-navbar') + '">\n  <div id="dabody">\n  '
     output += obj.get('body', '')
-    output += standard_scripts() + observation_script + "\n    " + "".join(obj.get('extra_scripts', list())) + "\n  </body>\n</html>"
+    output += standard_scripts() + observation_script + "\n    " + "".join(obj.get('extra_scripts', list())) + "\n  </div>\n  </body>\n</html>"
     response = make_response(output.encode('utf8'), '200 OK')
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     return response
@@ -9495,7 +9495,7 @@ def monitor():
           $(newDiv).addClass("top-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 col-centered");
           $(newDiv).html(message)
           $(newDiv).css("display", "none");
-          $(newDiv).appendTo($("body"));
+          $(newDiv).appendTo($("#dabody"));
           $(newDiv).slideDown();
           setTimeout(function(){
             $(newDiv).slideUp(300, function(){
@@ -14478,7 +14478,7 @@ def server_error(the_error):
           priority = 'info'
         }
         if (!$("#flash").length){
-          $("body").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+          $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
         }
         $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>');
         if (priority == 'success'){

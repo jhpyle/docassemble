@@ -64,11 +64,11 @@ body.dainactive .form-control{
     background-color: #f2dede;
 }
 
-body.dainactive > .navbar-dark {
+body.dainactive > div > .navbar-dark {
     background-image: linear-gradient(to bottom,#883c3c 0,#522 100%);
 }
 
-body.dacontrolled > .navbar-dark {
+body.dacontrolled > div > .navbar-dark {
     background-image: linear-gradient(to bottom,#883c3c 0,#522 100%);
 }
 
@@ -1813,7 +1813,7 @@ div.constraintlist div + div {
 	-ms-touch-action: none;
 	-webkit-tap-highlight-color: rgba(0,0,0,0);
     }
-    body.dasignature > div.container > div.row > div.col {
+    body.dasignature > div > div.container > div.row > div.col {
 	padding: 0;
     }
     /* .dasignature section { */
@@ -1902,13 +1902,13 @@ div.constraintlist div + div {
     /* width: 100%; */
     /* max-width: 540px; */
 }
-.dasignature > .navbar {
+.dasignature > div > .navbar {
     display: none;
 }
-.dasignature > .daright {
+.dasignature > div > .daright {
     display: none;
 }
-.dasignature > .daattributions {
+.dasignature > div > .daattributions {
     display: none;
 }
 .sighidesmall {
@@ -1925,13 +1925,13 @@ div.constraintlist div + div {
     body.dasignature {
 	padding-top: 60px;
     }
-    .dasignature > .navbar {
+    .dasignature > div > .navbar {
         display: block;
     }
-    .dasignature > .daright {
+    .dasignature > div > > .daright {
         display: block;
     }
-    .dasignature > .daattributions {
+    .dasignature > div > .daattributions {
         display: block;
     }
     /* .sighidesmall { */

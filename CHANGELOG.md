@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.87] - 2018-08-19
+### Changed
+- Moved interview HTML into a `<div>` to provide compatibility with
+  add-ons.
+
 ## [0.2.86] - 2018-08-17
 ### Added
 - The `js show if` and `js hide if` field modifiers.
