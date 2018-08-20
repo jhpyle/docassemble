@@ -2927,6 +2927,8 @@ def safe_json(the_object, level=0):
         return serial
     if isinstance(the_object, decimal.Decimal):
         return float(the_object)
+    if isinstance(the_object, DANav):
+        return dict(past=list(the_object.past), current=the_object.current)
     from docassemble.base.core import DAObject
     if isinstance(the_object, DAObject):
         new_dict = dict()
@@ -3196,7 +3198,7 @@ def get_user_secret(username, password):
 
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
     """Returns the interview dictionary for the given interview session."""
-    return server.get_session_variables(yaml_filename, session_id, secret=secret, simplify=True)
+    return server.get_session_variables(yaml_filename, session_id, secret=secret, simplify=simplify)
 
 def set_session_variables(yaml_filename, session_id, variables, secret=None):
     """Sets variables in the interview dictionary for the given interview session."""

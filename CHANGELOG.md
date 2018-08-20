@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.88] - 2018-08-20
+### Fixed
+- The recent version of WTForms is incompatible; set to 2.1.
+- The `simplify` parameter of `get_session_variables()` was fixed to `True`.
+
 ## [0.2.87] - 2018-08-19
 ### Changed
 - Moved interview HTML into a `<div>` to provide compatibility with
