@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.89] - 2018-08-20
+### Fixed
+- Template and static file deletion in Playground.
+- Setting the instance name of items that are already in a list.
+
 ## [0.2.88] - 2018-08-20
 ### Fixed
 - The recent version of WTForms is incompatible; set to 2.1.
