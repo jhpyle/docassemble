@@ -563,7 +563,10 @@ interview dictionary in [JSON] format.
 {% include side-by-side.html demo="variables_as_json" %}
 
 The `variables_as_json()` function simplifies the interview variables
-in the same way that the [`all_variables()`] function does.
+in the same way that the [`all_variables()`] function does.  Like
+[`all_variables()`], it takes an optional keyword argument
+`include_internal`, which is `False` by default, but when `True`,
+includes internal variables in the output.
 
 ## <a name="command"></a>command()
 
