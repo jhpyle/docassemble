@@ -150,6 +150,8 @@ class ResponseError(Exception):
             self.url = kwargs['url'];
         if 'all_variables' in kwargs:
             self.all_variables = kwargs['all_variables'];
+            if 'include_internal' in kwargs:
+                self.include_internal = kwargs['include_internal']
         if 'content_type' in kwargs:
             self.content_type = kwargs['content_type'];
     def __str__(self):

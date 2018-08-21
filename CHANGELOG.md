@@ -1,9 +1,18 @@
 # Change Log
 
 ## [0.2.89] - 2018-08-20
+### Changed
+- The `variables_as_json()` function now accepts `include_internal` as
+  a keyword parameter.
+- The `variables_as_json()` function now produces pretty-printed JSON
+  output.
+- Only ordinary users will see flash messages about switching to a
+  different interview.
 ### Fixed
 - Template and static file deletion in Playground.
 - Setting the instance name of items that are already in a list.
+- Non-mandatory questions were being marked as answered in the
+  internal dictionary.
 
 ## [0.2.88] - 2018-08-20
 ### Fixed

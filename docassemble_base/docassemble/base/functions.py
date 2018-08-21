@@ -2162,9 +2162,9 @@ def json_response(data):
     """Sends data in JSON format as an HTTP response."""
     raise ResponseError(json.dumps(data, sort_keys=True, indent=2) + "\n", content_type="application/json")
 
-def variables_as_json():
+def variables_as_json(include_internal=False):
     """Sends an HTTP response with all variables in JSON format."""
-    raise ResponseError(None, all_variables=True)
+    raise ResponseError(None, all_variables=True, include_internal=include_internal)
 
 def all_variables(simplify=True, include_internal=False, special=False):
     """Returns the interview variables as a dictionary suitable for export to JSON or other formats."""
@@ -2885,8 +2885,8 @@ def phone_number_part(number, part, country=None):
     else:
         return ''
 
-def dict_as_json(user_dict):
-    return json.dumps(serializable_dict(user_dict))
+def dict_as_json(user_dict, include_internal=False):
+    return json.dumps(serializable_dict(user_dict, include_internal=include_internal), sort_keys=True, indent=2)
 
 def serializable_dict(user_dict, include_internal=False):
     result_dict = dict()

@@ -124,7 +124,11 @@ def run_cron(cron_type):
                                 release_lock(item['key'], item['filename'])
                                 if interview_status.question.question_type == "response":
                                     if hasattr(interview_status.question, 'all_variables'):
-                                        sys.stdout.write(docassemble.webapp.backend.dict_as_json(user_dict).encode('utf8') + "\n")
+                                        if hasattr(interview_status.question, 'include_internal'):
+                                            include_internal = interview_status.question.include_internal
+                                        else:
+                                            include_internal = False
+                                        sys.stdout.write(docassemble.webapp.backend.dict_as_json(user_dict, include_internal=include_internal).encode('utf8') + "\n")
                                     elif not hasattr(interview_status.question, 'binaryresponse'):
                                         sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
                         except Exception as err:
