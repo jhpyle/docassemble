@@ -1402,8 +1402,8 @@
   ---
   question: Result of question
   subquestion: |
-    `user_saw_intro` is:
-    "${ user_saw_intro }"
+    `user_saw_intro` is
+    `${ user_saw_intro }`
   mandatory: True
 "continue-button-label": |-
   question: |

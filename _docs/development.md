@@ -675,50 +675,150 @@ documentation for [lettuce].  You may also wish to read about
 the [Behavior-Driven Development] concept in general before starting
 to use [lettuce].
 
-# Contributing to Docassemble
+# Workflow for making changes to the core docassemble code
 
-If you would like to contribute to developing docassemble, you will need to set up a code development environment. This will require you to [install from source], so you won't be able to use the [Docker] image. Once you have completed the [install from source] instructions and have docassemble running, you can make changes to the source code. This wont effect anything until you install those changes.
+If you want to make changes to the **docassemble** code, clone the
+[GitHub repository]:
 
-The first time that you want to install your changes you need to run:
-
-{% highlight text %}
-cd ~/docassemble
-vi requirements.txt
+{% highlight bash %}
+git clone {{ site.github.clone_url }}
 {% endhighlight %}
 
-And paste the following into requirements.txt:
+The source code of **docassemble** will be in the `docassemble`
+directory.
 
-{% highlight text %}
-./docassemble
-./docassemble_base
-./docassemble_webapp
-./docassemble_demo
+In order to test your changes, it helps to have a convenient workflow
+for installing your changed code.  Theoretically, your workflow could
+involve running [`docker build`] to build a [Docker] container, but
+that would probably be overkill.  Most of the time, you will make
+changes to [Python] code, rather than system files.  To test your
+code, you will only need to install the [Python] packages and then
+restart the three services that use those packages (the web server,
+[Celery] server, and web sockets server).
+
+The first complication is that the machine on which it is convenient
+for you edit files may not be the machine where you are running
+**docassemble**.  You may wish to edit the files on your laptop, but
+you have **docassemble** running in a [Docker] container on your
+laptop, or on another machine entirely.
+
+There are a variety of ways to get around this problem.  If your local
+machine uses Linux, you can follow the [installation] instructions and
+run **docassemble** without [Docker].  Then your source code will be
+on the same machine as your server, and you can run `pip` directly on
+your source files.
+
+Another alternative is to fork the **docassemble** [GitHub repository]
+and use [GitHub] as a means of transmitting all of your code changes
+from your local machine to your server.  You can use `git add`, `git
+commit`, `git push` on your local machine to publish a change, and
+then, on the server, you can use `git clone` to make a copy of your
+repository on the remote machine (and use `git pull` to update it).
+Then on the server you can run `pip` to install the updated versions
+of your packages.
+
+If you are using [Docker] on your local machine, you can use a [Docker
+volume] to share your code with your container.  If you cloned the
+**docassemble** [GitHub repository], then from the directory in which the
+`docassemble` directory is located, launch your [Docker] container by
+running something like:
+
+{% highlight bash %}
+docker run \
+--env WWWUID=`id -u` --env WWWGID=`id -g` \
+-v `pwd`/docassemble:/tmp/docassemble \
+-d -p 80:80 jhpyle/docassemble
 {% endhighlight %}
 
-This will be used everytime you install the updated source code.
+Then you can [`docker exec`] into the container and run `cd
+/tmp/docassemble` to go to the directory in which the docassemble
+source code is located.
 
-To install those updates run:
+The second complication is that you need to install the [Python]
+packages in the right place, using the right file permissions.  On
+your server, your **docassemble** server will be running in a [Python
+virtual environment] located in `/usr/share/docassemble/local` (unless
+you significantly deviated from the standard installation procedures).
+The files in this folder will all be owned by `www-data`.  The
+[Apache] web server process that runs the **docassemble** code runs as
+this user.  The files in the virtual environment are owned by
+`www-data` so that you can use the web application to install and
+upgrade [Python] packages.  If you change the ownership of any of the
+files in `/usr/share/docassemble/local` to `root` or another user, you
+may get errors in the web application.  When using `pip` from the
+command line to install your own version of the **docassemble**
+packages, you need to first become `www-data` by running `su www-data`
+as root.  Then you need to tell `pip` that you are using a specific
+[Python virtual environment] by running `source
+/usr/share/docassemble/local/bin/activate`.  Then, you can run `pip`
+to install your altered version of the **docassemble** code.  This
+line will install all the packages:
 
-{% highlight text %}
-sudo su www-data
-source /usr/share/docassemble/local/bin/activate
-pip install --no-deps --no-index --upgrade -r requirements.txt
-exit
+{% highlight bash %}
+pip install --no-deps --no-index --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo ./docassemble
 {% endhighlight %}
 
-Then you need to restart the web server:
+The `--no-deps` and `--no-index` flags speed up the installation
+process because they cause `pip` not to go on the internet to update
+all the dependency packages.
 
-{% highlight text %}
-sudo touch /usr/share/docassemble/webapp/docassemble.wsgi where requirements.txt
-{% endhighlight %}
+After you run `pip`, you need to restart the services that use the
+[Python] code.  If you are only going to test your code using the web
+server, and you aren't going to use background tasks, it is enough to
+run `touch /usr/share/docassemble/webapp/docassemble.wsgi` as the
+`www-data` user.  This updates the timestamp on the root file of the
+web application.  Updating the timestamp causes the web server to
+recompile the [Python] code from scratch.  Restarting the [Apache]
+service also does that, but it is slower.
 
-If you are running background processes then you need to restart both the web server and Celery:
+If you want to ensure that all the code on your server uses the new
+versions of the [Python] packages, you can run the following as `root`
+(or with `sudo`):
 
-{% highlight text %}
+{% highlight bash %}
 supervisorctl start reset
 {% endhighlight %}
 
-Once you're ready to, commit and push your changes up to the [GitHub repository] for review.
+This will do `touch /usr/share/docassemble/webapp/docassemble.wsgi`
+and will also restart [Celery] and the web sockets server.
+
+Then you can test your changes.
+
+These are significant barriers to a smooth workflow of testing changes
+to **docassemble** code, but with the help of shell scripts, you
+should be able to make the process painless.
+
+Here is one set of scripts that could be used.  You can run the script
+`compile.sh` as yourself.  It will ask you for the `root` password,
+and then it will run the second script, `www-compile.sh`, as
+`www-data` after switching into the [Python virtual environment].
+
+Here are the contents of `compile.sh`:
+
+{% highlight bash %}
+#! /bin/bash
+su -c '/bin/bash --init-file ./www-compile.sh -i' www-data" root
+{% endhighlight %}
+
+Here are the contents of `www-compile.sh`:
+
+{% highlight bash %}
+#! /bin/bash
+source /etc/profile
+source /usr/share/docassemble/local/bin/activate
+pip install --no-deps --no-index --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo ./docassemble && touch /usr/share/docassemble/webapp/docassemble.wsgi
+history -s "source /usr/share/docassemble/local/bin/activate"
+history -s "pip install --no-deps --no-index --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo ./docassemble && touch /usr/share/docassemble/webapp/docassemble.wsgi"
+{% endhighlight %}
+
+When `compile.sh` runs, it will leave you logged in as `www-data` in
+the virtual environment.  It also populates the shell history so that
+to run `pip` again and reset the web server, all you need to do is
+press "up arrow" followed by "enter."  This is then the process for
+re-installing your changes to the **docassemble** [Python] code.
+
+These scripts might not work for you in your specific situation, but
+some variation on them may be helpful.
 
 [selenium]: http://selenium-python.readthedocs.io/getting-started.html
 [Behavior-Driven Development]: https://en.wikipedia.org/wiki/Behavior-driven_development
@@ -789,4 +889,10 @@ Once you're ready to, commit and push your changes up to the [GitHub repository]
 [Python packages]: https://docs.python.org/2/tutorial/modules.html#packages
 [GitHub repository]: {{ site.github.repository_url }}
 [sshfs]: https://en.wikipedia.org/wiki/SSHFS
-[install from source]: https://docassemble.org/docs/installation.html#packages
+[installation]: https://docassemble.org/docs/installation.html
+[GitHub repository]: {{ site.github.repository_url }}
+[`docker build`]: https://docs.docker.com/engine/reference/commandline/build/
+[`docker exec`]: https://docs.docker.com/engine/reference/commandline/exec/
+[Celery]: http://www.celeryproject.org/
+[Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
+[Python virtual environment]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
