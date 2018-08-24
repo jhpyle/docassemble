@@ -99,25 +99,26 @@ def include_docx_template(template_file, **kwargs):
     this_thread.docx_include_count += 1
     return sd
 
+html_names =    {
+    'em': False,
+    'code': False,
+    'strong': False,
+    'h1': False,
+    'h2': False,
+    'h3': False,
+    'h4': False,
+    'u': False,
+    'a': False,
+    'href': '',
+    'strike': False,
+    'ol': False,
+    'ul': False,
+    'li': False,
+    'blockquote': False
+}
+
 def add_to_rt(tpl, rt, parsed):
     while (len(list(parsed)) > 0):
-        html_names =    {
-            'em': False,
-            'code': False,
-            'strong': False,
-            'h1': False,
-            'h2': False,
-            'h3': False,
-            'h4': False,
-            'u': False,
-            'a': False,
-            'href': '',
-            'strike': False,
-            'ol': False,
-            'ul': False,
-            'li': False,
-            'blockquote': False
-        }
         html_out = parsed.popleft()
         parent_depth = 0
         print(html_out)
@@ -210,7 +211,11 @@ def html_linear_parse(soup):
         descendants.extendleft(from_children)
     return parsed
 
-def markdown_to_docx(mdown_dict, docx_tpl):
+def markdown_to_docx(text, tpl):
+    soup = BeautifulSoup('<html>' + docassemble.base.filter.markdown_to_html(text, do_terms=False) + '</html>', 'lxml')
+    return add_to_rt(tpl, RichText(''), html_linear_parse(soup))
+
+def test_markdown_to_docx(mdown_dict, docx_tpl):
     '''
         This function expects two arguments.
         mdown_dict:
@@ -237,3 +242,4 @@ def markdown_to_docx(mdown_dict, docx_tpl):
         jinja_tags[mdown_key] = rt
     tpl.render(jinja_tags)
     return tpl
+
