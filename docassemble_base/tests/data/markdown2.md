@@ -7,9 +7,9 @@ Or, if you prefer, __use two underscores instead__.
 
 Plus list
 
-+   Candy.
-+   Gum.
-+   Booze.
++   *Candy.*
++   **Gum.** only one format per bullet point
++   [Booze.](http://example.com/)
 
 Minust list
 
@@ -22,3 +22,11 @@ Ordered
 1.  Red
 2.  Green
 3.  Blue
+
+Paragraph List (these don't work)
+
+*   A list item.
+
+    With multiple paragraphs.
+
+*   Another item in the list.
