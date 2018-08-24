@@ -4479,6 +4479,8 @@ def index():
             session['i'] = yaml_filename
             if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN:
                 show_flash = True
+            if current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate'):
+                show_flash = False
             if session_parameter is None:
                 #logmessage("index: change in yaml filename detected and session_parameter is None")
                 if show_flash:
@@ -5724,7 +5726,10 @@ def index():
                 for key in request.form['informed'].split(','):
                     user_dict['_internal']['informed'][the_user_id][key] = 1
             if changed and '_question_name' in post_data and post_data['_question_name'] not in user_dict['_internal']['answers']:
-                user_dict['_internal']['answered'].add(post_data['_question_name'])
+                try:
+                    interview.questions_by_name[post_data['_question_name']].mark_as_answered(user_dict)
+                except:
+                    logmessage("index: question name could not be found")
             #logmessage("start: event_stack is " + repr(user_dict['_internal']['event_stack']))
             if '_event' in post_data and 'event_stack' in user_dict['_internal']:
                 events_list = json.loads(myb64unquote(post_data['_event']))
@@ -5858,7 +5863,11 @@ def index():
             return jsonify(action='resubmit', csrf_token=generate_csrf())
         else:
             if hasattr(interview_status.question, 'all_variables'):
-                response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict).encode('utf8'), '200 OK')
+                if hasattr(interview_status.question, 'include_internal'):
+                    include_internal = interview_status.question.include_internal
+                else:
+                    include_internal = False
+                response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf8'), '200 OK')
             elif hasattr(interview_status.question, 'binaryresponse'):
                 response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
             else:
@@ -7626,9 +7635,14 @@ def index():
             if (the_hash.hasOwnProperty(key)){
               var checkboxName = atob(key);
               var baseName = checkboxName;
+              bracketPart = checkboxName.replace(/^.*(\[['"][^\]]*['"]\])$/, "$1");
               checkboxName = checkboxName.replace(/^.*\[['"]([^\]]*)['"]\]$/, "$1");
               if (checkboxName != baseName){
                 baseName = baseName.replace(/^(.*)\[.*/, "$1");
+                var transBaseName = baseName;
+                if (($("[name='" + key + "']").length == 0) && (typeof varlookup[btoa(transBaseName)] != "undefined")){
+                   transBaseName = atob(varlookup[btoa(transBaseName)]);
+                }
                 var convertedName;
                 try {
                   convertedName = atob(checkboxName);
@@ -7636,9 +7650,9 @@ def index():
                 catch (e) {
                   continue;
                 }
-                varlookup[btoa(baseName + "['" + convertedName + "']")] = key;
-                varlookup[btoa(baseName + "[u'" + convertedName + "']")] = key;
-                varlookup[btoa(baseName + '["' + convertedName + '"]')] = key;
+                varlookup[btoa(baseName + "['" + convertedName + "']")] = btoa(transBaseName + bracketPart);
+                varlookup[btoa(baseName + "[u'" + convertedName + "']")] = btoa(transBaseName + bracketPart);
+                varlookup[btoa(baseName + '["' + convertedName + '"]')] = btoa(transBaseName + bracketPart);
               }
             }
           }
@@ -7731,12 +7745,14 @@ def index():
             showIfVar = varlookup[showIfVar];
             showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           }
+          //console.log("showIfVar is now " + showIfVar);
           var showIfVal = $(this).data('showif-val');
           var saveAs = $(this).data('saveas');
           //var isSame = (saveAs == showIfVar);
           var showIfDiv = this;
           //console.log("Processing saveAs " + atob(saveAs) + " with showIfVar " + atob(showIfVar));
           var showHideDiv = function(speed){
+            //console.log("showHideDiv for saveAs " + atob(saveAs) + " with showIfVar " + showIfVar);
             var theVal;
             var showifParents = $(this).parents(".showif");
             if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
@@ -12624,7 +12640,7 @@ def playground_files():
         modes = [mode]
     for the_mode in modes:
         cm_mode += '\n    <script src="' + url_for('static', filename="codemirror/mode/" + the_mode + "/" + ('damarkdown' if the_mode == 'markdown' else the_mode) + ".js") + '"></script>'
-    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>' + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
+    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>' + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
 
 @app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
 @login_required
@@ -16495,7 +16511,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 return resp
         if changed and next_field is None and question.name not in user_dict['_internal']['answers']:
             logmessage("do_sms: setting internal answers for " + str(question.name))
-            user_dict['_internal']['answered'].add(question.name)
+            question.mark_as_answered(user_dict)
         interview.assemble(user_dict, interview_status)
         logmessage("do_sms: back from assemble 2; had been seeking variable " + str(interview_status.sought))
         logmessage("do_sms: question is now " + str(interview_status.question.name))
@@ -17387,7 +17403,11 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         release_lock(session_id, yaml_filename)
     if interview_status.question.question_type == "response":
         if hasattr(interview_status.question, 'all_variables'):
-            response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict).encode('utf8'), '200 OK')
+            if hasattr(interview_status.question, 'include_internal'):
+                include_internal = interview_status.question.include_internal
+            else:
+                include_internal = False
+            response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf8'), '200 OK')
         elif hasattr(interview_status.question, 'binaryresponse'):
             response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
         else:
@@ -17495,7 +17515,11 @@ def api_session_action():
     release_lock(session_id, yaml_filename)
     if interview_status.question.question_type == "response":
         if hasattr(interview_status.question, 'all_variables'):
-            response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict).encode('utf8'), '200 OK')
+            if hasattr(interview_status.question, 'include_internal'):
+                include_internal = interview_status.question.include_internal
+            else:
+                include_internal = False
+            response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf8'), '200 OK')
         elif hasattr(interview_status.question, 'binaryresponse'):
             response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
         else:

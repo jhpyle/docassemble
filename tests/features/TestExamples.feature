@@ -6319,3 +6319,24 @@ Feature: Example interviews
     Then I should see the phrase "What do you want for dessert besides apple pie?"
     And I click the button "Continue"
     Then I should see the phrase "Your last dessert was apple pie."
+
+  Scenario: Test the interview "Nested checkbox show if"
+    Given I start the interview "docassemble.base:data/questions/examples/showif-nested-checkbox.yml"
+    Then I should see the phrase "Please fill in the following information."
+    Then I should not see the phrase "Do you like apples?"
+    Then I should not see the phrase "Favorite varieties"
+    Then I should not see the phrase "Why do you like Fuji apples?"
+    And I click the "Yes" option under "Do you like fruit?"
+    And I wait 1 second
+    Then I should not see the phrase "Favorite varieties"
+    Then I should not see the phrase "Why do you like Fuji apples?"
+    And I click the "Yes" option under "Do you like apples?"
+    And I wait 1 second
+    Then I should not see the phrase "Why do you like Fuji apples?"
+    And I click the "Gala" option under "Favorite varieties"
+    And I wait 1 second
+    Then I should not see the phrase "Why do you like Fuji apples?"
+    And I click the "Fuji" option under "Favorite varieties"
+    And I wait 1 second
+    And I set "Why do you like Fuji apples?" to "because they are good in pies"
+    And I click the button "Continue"

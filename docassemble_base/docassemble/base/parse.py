@@ -1548,6 +1548,8 @@ class Question:
         elif 'all_variables' in data:
             self.question_type = 'response'
             self.all_variables = True
+            if 'include_internal' in data:
+                self.include_internal = data['include_internal']
             self.content = TextObject('all_variables')
         elif 'response filename' in data:
             self.question_type = 'sendfile'
@@ -1577,6 +1579,8 @@ class Question:
             self.question_type = 'redirect'
             self.content = TextObject(definitions + unicode(data['redirect url']), names_used=self.mako_names)
         if 'response' in data or 'binaryresponse' in data or 'all_variables' in data:
+            if 'include_internal' in data:
+                self.include_internal = data['include_internal']
             if 'content type' in data:
                 self.content_type = TextObject(definitions + unicode(data['content type']), names_used=self.mako_names)
             else:
@@ -2005,8 +2009,8 @@ class Question:
                                     field_info['extras'] = dict()
                                 if type(field[key]) is dict:
                                     if 'variable' in field[key] and 'is' in field[key]:
-                                        field_info['extras']['show_if_var'] = safeid(field[key]['variable'])
-                                        field_info['extras']['show_if_val'] = TextObject(definitions + unicode(field[key]['is']), names_used=self.mako_names)
+                                        field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
+                                        field_info['extras']['show_if_val'] = TextObject(definitions + unicode(field[key]['is']).strip(), names_used=self.mako_names)
                                     elif 'code' in field[key]:
                                         field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')
                                         self.find_fields_in(field[key]['code'])
@@ -2015,7 +2019,7 @@ class Question:
                                 elif type(field[key]) is list:
                                     raise DAError("The keys of '" + key + "' cannot be a list" + self.idebug(data))
                                 elif type(field[key]) in (str, unicode):
-                                    field_info['extras']['show_if_var'] = safeid(field[key])
+                                    field_info['extras']['show_if_var'] = safeid(field[key].strip())
                                     field_info['extras']['show_if_val'] = TextObject('True')
                                 else:
                                     raise DAError("Invalid variable name in show if/hide if")
@@ -4409,6 +4413,8 @@ class Interview:
                     elif hasattr(qError, 'url') and qError.url is not None:
                         question_data['redirect url'] = qError.url
                     elif hasattr(qError, 'all_variables') and qError.all_variables:
+                        if hasattr(qError, 'include_internal'):
+                            question_data['include_internal'] = qError.include_internal
                         question_data['content type'] = 'application/json'
                         question_data['all_variables'] = True
                     if hasattr(qError, 'content_type') and qError.content_type:
@@ -4960,6 +4966,8 @@ class Interview:
                 elif hasattr(qError, 'url') and qError.url is not None:
                     question_data['redirect url'] = qError.url
                 elif hasattr(qError, 'all_variables') and qError.all_variables:
+                    if hasattr(qError, 'include_internal'):
+                        question_data['include_internal'] = qError.include_internal
                     question_data['content type'] = 'application/json'
                     question_data['all_variables'] = True
                 if hasattr(qError, 'content_type') and qError.content_type:

@@ -7,9 +7,7 @@ import docassemble.base.filter
 from xml.sax.saxutils import escape as html_escape
 from types import NoneType
 from docassemble.base.logger import logmessage
-import markdown
 from bs4 import BeautifulSoup
-
 
 def image_for_docx(number, question, tpl, width=None):
     file_info = server.file_finder(number, convert={'svg': 'png'}, question=question)
@@ -99,90 +97,62 @@ def include_docx_template(template_file, **kwargs):
     this_thread.docx_include_count += 1
     return sd
 
-def markdown_to_docx(mdown_dict, docx_tpl):
-    '''
-        This function expects two arguments.
-        mdown_dict:
-            mdown_dict is a dictionary. Its keys are jinja2 tags
-            that are to be used to fill the docx_tpl. Its values are
-            the markdown to be converted into docx to fill those tags.
-        docx_tpl:
-            docx_tpl is the path to the docx template filled with
-            jinja2 tags. If a tag is not contained within mdown_dict
-            when the template is rendered then that tag will simply
-            be rendered as empty.
-        
-        It returns a docxtpl DocxTemplate object that is a filled docx_tpl.
-    '''
+html_names =    {
+    'p': None,
+    'em': True,
+    'strong': True,
+    'u': True,
+    'strike': True,
+    'a': True,
+    'code': True,
+    'h1': 60,
+    'h2': 40,
+    'h3': 40,
+    'h4': 20,
+    'br': None,
+    'ol': None,
+    'ul': None,
+    'li': None
+}
 
-    html_names =    {
-            'p': None,
-            'em': True,
-            'strong': True,
-            'u': True,
-            'strike': True,
-            'a': True,
-            'code': True,
-            'h1': 60,
-            'h2': 40,
-            'h3': 40,
-            'h4': 20,
-            'br': None,
-            'ol': None,
-            'ul': None,
-            'li': None
-        }
-
-    jinja_tags = {}
-    tpl = DocxTemplate(docx_tpl)
-
-    for mdown_key, mdown_value in mdown_dict.items():
-
-        html_doc = markdown.markdown(mdown_value)
-        
-        rt = RichText('')
-
-        soup = BeautifulSoup(html_doc, 'lxml')
-
-        html_tag = soup.find("html")
-
-        for html_element in html_tag.next_elements:
-            if (html_element.name):
-                for html_key, html_value in html_names.items():
-                    if(html_element.name == html_key):
-                        if(html_element.name == 'p'):
-                            rt.add('\n' + html_element.text + ' ')
-                        elif(html_element.name == 'em'):
-                            rt.add(html_element.text, italic=html_value)
-                            rt.add(' ')
-                        elif(html_element.name == 'strong'):
-                            rt.add(html_element.text, bold=html_value)
-                            rt.add(' ')
-                        elif(html_element.name == 'u'):
-                            rt.add(html_element.text, underline=html_value)
-                            rt.add(' ')
-                        elif(html_element.name == 'strike'):
-                            rt.add(html_element.text, strike=html_value)
-                            rt.add(' ')
-                        elif(html_element.name == 'a'):
-                            rt.add(html_element.text,
-                                url_id=tpl.build_url_id(html_element['href']), underline=html_value)
-                            rt.add(' ')
-                        elif(html_element.name == 'code'):
-                            rt.add(html_element.text, italic=html_value)
-                            rt.add(' ')
-                        elif(html_element.name == 'h1' or html_element.name == 'h2'
-                            or html_element.name == 'h3' or html_element.name == 'h4'):
-                            rt.add('\n')
-                            rt.add(html_element.text, size=html_value)
-                            rt.add('\n')
-                        elif(html_key == 'br' or html_key == 'ol' or html_key == 'ul'):
-                            rt.add('\n')
-                        elif(html_key == 'li'):
-                            rt.add('-' + html_element.text + '\n')
-
-        jinja_tags[mdown_key] = rt
-
-    tpl.render(jinja_tags)
-    
-    return tpl
+def markdown_to_docx(text, tpl):
+    # Credits: epompeii
+    rt = RichText('')
+    soup = BeautifulSoup('<html>' + docassemble.base.filter.markdown_to_html(text, do_terms=False) + '</html>', 'lxml')
+    html_tag = soup.find("html")
+    for html_element in html_tag.next_elements:
+        if (html_element.name):
+            for html_key, html_value in html_names.items():
+                if(html_element.name == html_key):
+                    if(html_element.name == 'p'):
+                        rt.add('\a' + html_element.text + ' ')
+                    elif(html_element.name == 'em'):
+                        rt.add(html_element.text, italic=html_value)
+                        rt.add(' ')
+                    elif(html_element.name == 'strong'):
+                        rt.add(html_element.text, bold=html_value)
+                        rt.add(' ')
+                    elif(html_element.name == 'u'):
+                        rt.add(html_element.text, underline=html_value)
+                        rt.add(' ')
+                    elif(html_element.name == 'strike'):
+                        rt.add(html_element.text, strike=html_value)
+                        rt.add(' ')
+                    elif(html_element.name == 'a'):
+                        rt.add(html_element.text,
+                               url_id=tpl.build_url_id(html_element['href']), underline=html_value)
+                        rt.add(' ')
+                    elif(html_element.name == 'code'):
+                        rt.add(html_element.text, italic=html_value)
+                        rt.add(' ')
+                    elif(html_element.name == 'h1' or html_element.name == 'h2'
+                        or html_element.name == 'h3' or html_element.name == 'h4'):
+                        rt.add('\n')
+                        rt.add(html_element.text, size=html_value)
+                        rt.add('\n')
+                    elif(html_key == 'br' or html_key == 'ol' or html_key == 'ul'):
+                        rt.add('\n')
+                    elif(html_key == 'li'):
+                        rt.add('-' + html_element.text + '\n')
+    logmessage(unicode(rt))
+    return rt

@@ -231,7 +231,7 @@ class DAObject(object):
         return self
     def fix_instance_name(self, old_instance_name, new_instance_name):
         """Substitutes a different instance name for the object and its subobjects."""
-        self.instanceName = re.sub(r'^' + old_instance_name, new_instance_name, self.instanceName)
+        self.instanceName = re.sub(r'^' + re.escape(old_instance_name), new_instance_name, self.instanceName)
         for aname in self.__dict__:
             if isinstance(getattr(self, aname), DAObject):
                 getattr(self, aname).fix_instance_name(old_instance_name, new_instance_name)
@@ -509,6 +509,12 @@ class DAList(DAObject):
     #         if item_object_type is not None and complete_attribute is not None:
     #             getattr(elem, complete_attribute)
     #     return True
+    def fix_instance_name(self, old_instance_name, new_instance_name):
+        """Substitutes a different instance name for the object and its subobjects."""
+        for item in self.elements:
+            if isinstance(item, DAObject):
+                item.fix_instance_name(old_instance_name, new_instance_name)
+        return super(DAList, self).fix_instance_name(old_instance_name, new_instance_name)
     def _set_instance_name_recursively(self, thename):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
         indexno = 0
@@ -567,8 +573,6 @@ class DAList(DAObject):
         for parg in pargs:
             if isinstance(parg, DAObject) and (set_instance_name or (not parg.has_nonrandom_instance_name)):
                 parg.fix_instance_name(parg.instanceName, self.instanceName + '[' + str(len(self.elements)) + ']')
-                #parg.has_nonrandom_instance_name = True
-                #parg.instanceName = self.instanceName + '[' + str(len(self.elements)) + ']'
             self.elements.append(parg)
             something_added = True
         if something_added and len(self.elements) > 0 and hasattr(self, 'there_are_any'):
@@ -1018,6 +1022,12 @@ class DADict(DAObject):
             else:
                 self.gathered
         return
+    def fix_instance_name(self, old_instance_name, new_instance_name):
+        """Substitutes a different instance name for the object and its subobjects."""
+        for key, value in self.elements.iteritems():
+            if isinstance(value, DAObject):
+                value.fix_instance_name(old_instance_name, new_instance_name)
+        return super(DADict, self).fix_instance_name(old_instance_name, new_instance_name)
     def _set_instance_name_recursively(self, thename):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
         #logmessage("DICT instance name recursive for " + str(self.instanceName) + " to " + str(thename))
@@ -2422,6 +2432,7 @@ class DATemplate(DAObject):
     def __unicode__(self):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             return unicode(docassemble.base.filter.docx_template_filter(self.content))
+            #return unicode(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.docx_template))
         return(unicode(self.content))
     def __str__(self):
         return unicode(self).encode('utf-8')

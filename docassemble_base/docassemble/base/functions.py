@@ -2162,9 +2162,9 @@ def json_response(data):
     """Sends data in JSON format as an HTTP response."""
     raise ResponseError(json.dumps(data, sort_keys=True, indent=2) + "\n", content_type="application/json")
 
-def variables_as_json():
+def variables_as_json(include_internal=False):
     """Sends an HTTP response with all variables in JSON format."""
-    raise ResponseError(None, all_variables=True)
+    raise ResponseError(None, all_variables=True, include_internal=include_internal)
 
 def all_variables(simplify=True, include_internal=False, special=False):
     """Returns the interview variables as a dictionary suitable for export to JSON or other formats."""
@@ -2885,8 +2885,8 @@ def phone_number_part(number, part, country=None):
     else:
         return ''
 
-def dict_as_json(user_dict):
-    return json.dumps(serializable_dict(user_dict))
+def dict_as_json(user_dict, include_internal=False):
+    return json.dumps(serializable_dict(user_dict, include_internal=include_internal), sort_keys=True, indent=2)
 
 def serializable_dict(user_dict, include_internal=False):
     result_dict = dict()
@@ -2927,6 +2927,8 @@ def safe_json(the_object, level=0):
         return serial
     if isinstance(the_object, decimal.Decimal):
         return float(the_object)
+    if isinstance(the_object, DANav):
+        return dict(past=list(the_object.past), current=the_object.current)
     from docassemble.base.core import DAObject
     if isinstance(the_object, DAObject):
         new_dict = dict()
@@ -3196,7 +3198,7 @@ def get_user_secret(username, password):
 
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
     """Returns the interview dictionary for the given interview session."""
-    return server.get_session_variables(yaml_filename, session_id, secret=secret, simplify=True)
+    return server.get_session_variables(yaml_filename, session_id, secret=secret, simplify=simplify)
 
 def set_session_variables(yaml_filename, session_id, variables, secret=None):
     """Sets variables in the interview dictionary for the given interview session."""
