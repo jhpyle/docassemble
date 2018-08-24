@@ -7635,9 +7635,14 @@ def index():
             if (the_hash.hasOwnProperty(key)){
               var checkboxName = atob(key);
               var baseName = checkboxName;
+              bracketPart = checkboxName.replace(/^.*(\[['"][^\]]*['"]\])$/, "$1");
               checkboxName = checkboxName.replace(/^.*\[['"]([^\]]*)['"]\]$/, "$1");
               if (checkboxName != baseName){
                 baseName = baseName.replace(/^(.*)\[.*/, "$1");
+                var transBaseName = baseName;
+                if (($("[name='" + key + "']").length == 0) && (typeof varlookup[btoa(transBaseName)] != "undefined")){
+                   transBaseName = atob(varlookup[btoa(transBaseName)]);
+                }
                 var convertedName;
                 try {
                   convertedName = atob(checkboxName);
@@ -7645,9 +7650,9 @@ def index():
                 catch (e) {
                   continue;
                 }
-                varlookup[btoa(baseName + "['" + convertedName + "']")] = key;
-                varlookup[btoa(baseName + "[u'" + convertedName + "']")] = key;
-                varlookup[btoa(baseName + '["' + convertedName + '"]')] = key;
+                varlookup[btoa(baseName + "['" + convertedName + "']")] = btoa(transBaseName + bracketPart);
+                varlookup[btoa(baseName + "[u'" + convertedName + "']")] = btoa(transBaseName + bracketPart);
+                varlookup[btoa(baseName + '["' + convertedName + '"]')] = btoa(transBaseName + bracketPart);
               }
             }
           }
@@ -7740,12 +7745,14 @@ def index():
             showIfVar = varlookup[showIfVar];
             showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           }
+          //console.log("showIfVar is now " + showIfVar);
           var showIfVal = $(this).data('showif-val');
           var saveAs = $(this).data('saveas');
           //var isSame = (saveAs == showIfVar);
           var showIfDiv = this;
           //console.log("Processing saveAs " + atob(saveAs) + " with showIfVar " + atob(showIfVar));
           var showHideDiv = function(speed){
+            //console.log("showHideDiv for saveAs " + atob(saveAs) + " with showIfVar " + showIfVar);
             var theVal;
             var showifParents = $(this).parents(".showif");
             if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){

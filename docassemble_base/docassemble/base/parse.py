@@ -2009,8 +2009,8 @@ class Question:
                                     field_info['extras'] = dict()
                                 if type(field[key]) is dict:
                                     if 'variable' in field[key] and 'is' in field[key]:
-                                        field_info['extras']['show_if_var'] = safeid(field[key]['variable'])
-                                        field_info['extras']['show_if_val'] = TextObject(definitions + unicode(field[key]['is']), names_used=self.mako_names)
+                                        field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
+                                        field_info['extras']['show_if_val'] = TextObject(definitions + unicode(field[key]['is']).strip(), names_used=self.mako_names)
                                     elif 'code' in field[key]:
                                         field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')
                                         self.find_fields_in(field[key]['code'])
@@ -2019,7 +2019,7 @@ class Question:
                                 elif type(field[key]) is list:
                                     raise DAError("The keys of '" + key + "' cannot be a list" + self.idebug(data))
                                 elif type(field[key]) in (str, unicode):
-                                    field_info['extras']['show_if_var'] = safeid(field[key])
+                                    field_info['extras']['show_if_var'] = safeid(field[key].strip())
                                     field_info['extras']['show_if_val'] = TextObject('True')
                                 else:
                                     raise DAError("Invalid variable name in show if/hide if")

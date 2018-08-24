@@ -1,0 +1,41 @@
+metadata:
+  title: Nested checkbox show if
+  short title: Nested
+  documentation: "https://docassemble.org/docs/fields.html#show if"
+---
+question: |
+  Please fill in the following information.
+fields:
+  - "Do you like fruit?": likes_fruit
+    datatype: yesnoradio
+  - "Do you like apples?": likes_apples
+    datatype: yesnoradio
+    show if: likes_fruit
+  - "Favorite varieties": varieties_liked
+    datatype: checkboxes
+    choices:
+      - Fuji
+      - Granny Smith
+      - Gala
+      - Red Delicious
+    show if: likes_apples
+  - "Why do you like Fuji apples?": reason_for_liking_fuji_apples
+    show if: |
+      varieties_liked['Fuji']
+---
+question: |
+  Results
+subquestion: |
+  % if likes_fruit is True:
+  You like fruit.
+    % if likes_apples:
+  The varieties of apples you like are:
+  ${ varieties_liked.true_values() }.
+      % if varieties_liked['Fuji']:
+  You like Fuji apples because: ${ reason_for_liking_fuji_apples }.
+      % endif
+    % endif
+  % else:
+  You do not like fruit.
+  % endif
+mandatory: True

@@ -1,0 +1,49 @@
+metadata:
+  title: Markdown template in .docx
+  short title: "md, docx"
+  documentation: "https://docassemble.org/docs/documents.html#markdown template"
+  example start: 1
+  example end: 2
+---
+template: the_template
+content: |
+  This is *italic text*.
+  This is **bold text**.
+  This is __also bold text__.
+
+  > This is some block-quoted
+  > text
+
+  ### This is a heading
+
+  This is some regular text.
+
+  Here is a bullet list:
+
+  * Apple
+  * Peach
+  * Pear
+
+  Here is a numbered list:
+
+  1. Nutmeg
+  2. Celery
+  3. Oregano
+
+  Your favorite fruit is ${ favorite_fruit }.
+  
+  Here is a
+  [link to a web site](https://google.com).
+---
+mandatory: True
+question: |
+  Here is your document.
+attachment:
+  - name: Your attachment
+    filename: the_file
+    docx template file: markdown_template_demo.docx
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
