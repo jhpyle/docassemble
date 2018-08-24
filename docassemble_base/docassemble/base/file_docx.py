@@ -7,7 +7,6 @@ import docassemble.base.filter
 from xml.sax.saxutils import escape as html_escape
 from types import NoneType
 from docassemble.base.logger import logmessage
-import markdown
 from bs4 import BeautifulSoup, NavigableString
 from collections import deque
 
