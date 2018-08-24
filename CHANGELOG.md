@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.90] - 2018-08-23
+### Fixed
+- Problem with checkboxes inside a `show if`.
+
 ## [0.2.89] - 2018-08-20
 ### Changed
 - The `variables_as_json()` function now accepts `include_internal` as
