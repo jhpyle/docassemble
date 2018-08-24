@@ -7,6 +7,8 @@ import docassemble.base.filter
 from xml.sax.saxutils import escape as html_escape
 from types import NoneType
 from docassemble.base.logger import logmessage
+from bs4 import BeautifulSoup, NavigableString
+from collections import deque
 
 def image_for_docx(number, question, tpl, width=None):
     file_info = server.file_finder(number, convert={'svg': 'png'}, question=question)
@@ -95,4 +97,148 @@ def include_docx_template(template_file, **kwargs):
         first_paragraph.insert_paragraph_before(str("{%%p set %s = %s %%}" % (key, the_repr)))
     this_thread.docx_include_count += 1
     return sd
+
+html_names =    {
+    'em': False,
+    'code': False,
+    'strong': False,
+    'h1': False,
+    'h2': False,
+    'h3': False,
+    'h4': False,
+    'u': False,
+    'a': False,
+    'href': '',
+    'strike': False,
+    'ol': False,
+    'ul': False,
+    'li': False,
+    'blockquote': False
+}
+
+def add_to_rt(tpl, rt, parsed):
+    while (len(list(parsed)) > 0):
+        html_out = parsed.popleft()
+        parent_depth = 0
+        print(html_out)
+        for parent in html_out.parents:
+            print(parent.name)
+            parent_depth += 1
+
+            for html_key, html_value in html_names.items():
+                if (parent.name ==  html_key):
+                    html_names[html_key] = True
+                    if (html_key == 'a'):
+                        html_names['href'] = parent.get('href')
+        rtf_pretext = ''
+        if (html_names['code']):
+            html_names['em'] = True
+        if (html_names['li']):
+            rtf_pretext += '\t- '
+        if (html_names['blockquote']):
+            rtf_pretext += '\t'
+        if (html_names['a']):
+            rt.add(rtf_pretext + html_out, italic=html_names['em'],
+                bold=html_names['strong'], underline=True, strike=html_names['strike'],
+                url_id=tpl.build_url_id(html_names['href']))
+        elif (html_names['h1']):
+            if (html_names['a']):
+                rt.add(rtf_pretext + html_out, italic=html_names['em'],
+                    bold=True, underline=True, strike=html_names['strike'],
+                    url_id=tpl.build_url_id(html_names['href']), size=60)
+            else:
+                rt.add(rtf_pretext + html_out, italic=html_names['em'],
+                    bold=True, underline=html_names['u'], strike=html_names['strike'], size=60)
+        elif (html_names['h2']):
+            if (html_names['a']):
+                rt.add(rtf_pretext + html_out, italic=html_names['em'],
+                    bold=True, underline=True, strike=html_names['strike'],
+                    url_id=tpl.build_url_id(html_names['href']), size=40)
+            else:
+                rt.add(rtf_pretext + html_out, italic=html_names['em'],
+                    bold=True, underline=html_names['u'], strike=html_names['strike'], size=40)
+        elif (html_names['h3']):
+            if (html_names['a']):
+                rt.add(rtf_pretext + html_out, italic=html_names['em'],
+                    bold=True, underline=True, strike=html_names['strike'],
+                    url_id=tpl.build_url_id(html_names['href']), size=30)
+            else:
+                rt.add(rtf_pretext + html_out, italic=html_names['em'],
+                    bold=True, underline=html_names['u'], strike=html_names['strike'], size=30)
+        elif (html_names['h4']):
+            if (html_names['a']):
+                rt.add(rtf_pretext + html_out, italic=html_names['em'],
+                    bold=True, underline=True, strike=html_names['strike'],
+                    url_id=tpl.build_url_id(html_names['href']), size=20)
+            else:
+                rt.add(rtf_pretext + html_out, italic=html_names['em'],
+                    bold=True, underline=html_names['u'], strike=html_names['strike'], size=20)
+        else:
+            rt.add(rtf_pretext + html_out, italic=html_names['em'],
+                bold=html_names['strong'], underline=html_names['u'], strike=html_names['strike'])
+    return rt
+
+def get_children(descendants, parsed):
+    subelement = False
+    descendants_buff = deque()
+    if (isinstance(descendants, NavigableString)):
+            parsed.append(descendants)
+    else:
+        for child in descendants.children:
+            if (child.name == None):
+                if (subelement == False):
+                    parsed.append(child)
+                else:
+                    descendants_buff.append(child)
+            else:
+                if (subelement == False):
+                    subelement = True
+                    descendants_buff.append(child)
+                else:
+                    descendants_buff.append(child)
+    descendants_buff.reverse()
+    return descendants_buff
+
+def html_linear_parse(soup):
+    html_tag = soup.html
+    descendants = deque()
+    descendants.appendleft(html_tag)
+    parsed = deque()
+    while (len(list(descendants)) > 0 ):
+        child = descendants.popleft()
+        from_children = get_children(child, parsed)
+        descendants.extendleft(from_children)
+    return parsed
+
+def markdown_to_docx(text, tpl):
+    soup = BeautifulSoup('<html>' + docassemble.base.filter.markdown_to_html(text, do_terms=False) + '</html>', 'lxml')
+    return add_to_rt(tpl, RichText(''), html_linear_parse(soup))
+
+def test_markdown_to_docx(mdown_dict, docx_tpl):
+    '''
+        This function expects two arguments.
+        mdown_dict:
+            mdown_dict is a dictionary. Its keys are jinja2 tags
+            that are to be used to fill the docx_tpl. Its values are
+            the markdown to be converted into docx to fill those tags.
+        docx_tpl:
+            docx_tpl is the path to the docx template filled with
+            jinja2 tags. If a tag is not contained within mdown_dict
+            when the template is rendered then that tag will simply
+            be rendered as empty.
+        
+        It returns a docxtpl DocxTemplate object that is a filled docx_tpl.
+    '''
+    jinja_tags = {}
+    tpl = DocxTemplate(docx_tpl)
+    for mdown_key, mdown_value in mdown_dict.items():
+        html_doc = markdown.markdown(mdown_value)
+        rt = RichText('')
+        soup = BeautifulSoup(html_doc, 'lxml')
+        html_parsed = deque()
+        html_parsed = html_linear_parse(soup)
+        rt = add_to_rt(tpl, rt, html_parsed)
+        jinja_tags[mdown_key] = rt
+    tpl.render(jinja_tags)
+    return tpl
 
