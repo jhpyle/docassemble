@@ -2931,13 +2931,14 @@ In the list of dictionaries returned by the function, the keys of each
 dictionary are:
 
 * `dict`: the interview dictionary for the session.
-* `email`: the e-mail address of the user who started the interview, if the
-  user was logged in.
-* `user_id`: the user ID of the user who started the interview, if the
-  user was logged in.
-* `temp_user_id`: the temporary user ID of the anonymous user who
-  started the interview, if the user was not logged in.  (Note that
-  these IDs do not correspond to the IDs of logged-in users.)
+* `email`: the e-mail address of the logged-in user associated with the
+  interview, if any.
+* `user_id`: the user ID of the logged-in user associated with the interview, if
+  any.
+* `temp_user_id`: the temporary user ID of the anonymous user
+  associated with the interview, if the user was not logged in.  (Note
+  that these IDs do not correspond in any way with the IDs of
+  logged-in users.)
 * `filename`: the filename of the interview, e.g.,
   `docassemble.demo:data/questions/questions.yml`
 * `metadata`: the metadata of the interview as a dictionary.
@@ -2955,7 +2956,7 @@ dictionary are:
   from being resumed, or the interview is not able to be decrypted.
 
 The following question will display a list of the titles of each
-interview session belonging to the current user:
+interview session associated with the current user:
 
 {% highlight yaml %}
 question: Sessions
@@ -3037,6 +3038,15 @@ ID of the session.
 This function can be useful in interviews that replace the standard
 list of user sessions.  See the [`session list interview`]
 configuration directive for more information.
+
+Note that more than one user can be associated with any given
+interview session.  Unless server-side encryption prevents it, any
+user who has the session ID of a session can join that interview by
+visiting a URL with the `i` and `session` parameters set.  This will
+associate the user with the interview session.  Thus, if an interview
+session has been joined by more than one user, it will show up
+multiple times in the list returned by
+`interview_list(user_id='all')`.
 
 For [API] versions of this function, see [`/api/interviews`],
 [`/api/user/interviews`], and [`/api/user/<user_id>/interviews`].

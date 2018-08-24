@@ -512,7 +512,7 @@ and the [`/api/user/<user_id>/interviews`](#user_user_id_interviews_delete) meth
 ## <a name="user_interviews"></a>List interviews of the user
 
 Description: Provides a filterable list of interview sessions stored
-on the system where the owner of the API started the interview.
+on the system where the owner of the API is associated with the session.
 
 Path: `/api/user/interviews`
 
@@ -535,7 +535,13 @@ Method: [DELETE]
 Required privileges: none.
 
 This works just like the [DELETE] method of [`/api/interviews`],
-except it only deletes interviews belonging to the owner of the API.
+except it only deletes interview sessions associated with the owner of
+the API.
+
+Note that if an interview associated with the owner of the API is also
+associated with another user, the actual underlying interview will not
+be removed from the system.  It will only disappear from the system if
+there is only one user associated with the interview.
 
 ## <a name="user_user_id_interviews"></a>List interview sessions of another user
 

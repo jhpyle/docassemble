@@ -8456,6 +8456,26 @@
       show if: likes_apples
     - "Why do you like Fuji apples?": reason_for_liking_fuji_apples
       show if: likes_fuji
+"showif-nested-checkbox": |-
+  question: |
+    Please fill in the following information.
+  fields:
+    - "Do you like fruit?": likes_fruit
+      datatype: yesnoradio
+    - "Do you like apples?": likes_apples
+      datatype: yesnoradio
+      show if: likes_fruit
+    - "Favorite varieties": varieties_liked
+      datatype: checkboxes
+      choices:
+        - Fuji
+        - Granny Smith
+        - Gala
+        - Red Delicious
+      show if: likes_apples
+    - "Why do you like Fuji apples?": reason_for_liking_fuji_apples
+      show if: |
+        varieties_liked['Fuji']
 "shuffle": |-
   question: |
     For which of the following obscure
@@ -9649,6 +9669,14 @@
   \ user.legume_picks['String beans'] \\\n     and user.legume_picks['Peanut'] \\\n\
   \     and not user.legume_picks['Mango'] \\\n     and not user.legume_picks['Potato']:\n\
   \    user.knows_legumes = True\n  else:\n    user.knows_legumes = False"
+"markdown-template": "template: the_template\ncontent: |\n  This is *italic text*.\n\
+  \  This is **bold text**.\n  This is __also bold text__.\n\n  > This is some block-quoted\n\
+  \  > text\n\n  ### This is a heading\n\n  This is some regular text.\n\n  Here is\
+  \ a bullet list:\n\n  * Apple\n  * Peach\n  * Pear\n\n  Here is a numbered list:\n\
+  \n  1. Nutmeg\n  2. Celery\n  3. Oregano\n\n  Your favorite fruit is ${ favorite_fruit\
+  \ }.\n  \n  Here is a\n  [link to a web site](https://google.com).\n---\nmandatory:\
+  \ True\nquestion: |\n  Here is your document.\nattachment:\n  - name: Your attachment\n\
+  \    filename: the_file\n    docx template file: markdown_template_demo.docx"
 "multi-user": "modules:\n  - docassemble.base.util\n---\nobjects:\n  firstparty: Individual\n\
   \  secondparty: Individual\n---\ninitial: true\ncode: |\n  multi_user = True\n \
   \ if user_logged_in():\n    if not defined('firstparty.email'):\n      firstparty.email\

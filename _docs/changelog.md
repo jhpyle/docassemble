@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.90](https://github.com/jhpyle/docassemble/releases/tag/v0.2.90) - 2018-08-23
+
+### Fixed
+- Problem with checkboxes inside a `show if`.
+
 ## [0.2.89](https://github.com/jhpyle/docassemble/releases/tag/v0.2.89) - 2018-08-20
 
 ### Changed
