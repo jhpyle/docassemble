@@ -120,9 +120,7 @@ def add_to_rt(tpl, rt, parsed):
         }
         html_out = parsed.popleft()
         parent_depth = 0
-        print(html_out)
         for parent in html_out.parents:
-            print(parent.name)
             parent_depth += 1
 
             for html_key, html_value in html_names.items():
