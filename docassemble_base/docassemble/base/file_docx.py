@@ -129,7 +129,7 @@ def add_to_rt(tpl, rt, parsed):
         if (html_names['code']):
             html_names['em'] = True
         if (html_names['li']):
-            rt.add('\t -')
+            rt.add('\t - ')
         if (html_names['blockquote']):
             rt.add('\t')
         if (html_names['a']):
