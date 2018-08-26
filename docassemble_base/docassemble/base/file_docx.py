@@ -119,12 +119,7 @@ html_names =    {
 def add_to_rt(tpl, rt, parsed):
     while (len(list(parsed)) > 0):
         html_out = parsed.popleft()
-        parent_depth = 0
-        print(html_out)
         for parent in html_out.parents:
-            print(parent.name)
-            parent_depth += 1
-
             for html_key, html_value in html_names.items():
                 if (parent.name ==  html_key):
                     html_names[html_key] = True
@@ -134,9 +129,9 @@ def add_to_rt(tpl, rt, parsed):
         if (html_names['code']):
             html_names['em'] = True
         if (html_names['li']):
-            rtf_pretext += '\t- '
+            rt.add('\t - ')
         if (html_names['blockquote']):
-            rtf_pretext += '\t'
+            rt.add('\t')
         if (html_names['a']):
             rt.add(rtf_pretext + html_out, italic=html_names['em'],
                 bold=html_names['strong'], underline=True, strike=html_names['strike'],
@@ -241,4 +236,3 @@ def test_markdown_to_docx(mdown_dict, docx_tpl):
         jinja_tags[mdown_key] = rt
     tpl.render(jinja_tags)
     return tpl
-
