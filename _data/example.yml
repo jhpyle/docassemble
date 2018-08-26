@@ -4755,6 +4755,21 @@
     The default time zone is
     ${ get_default_timezone() }.
   mandatory: True
+"getField": |-
+  question: |
+    What do you want for
+    dessert<span id="the_dessert"></span>?
+  fields:
+    - Dessert: dessert
+    - html: |
+        <a href="#" id="show_me" class="btn btn-primary">Eat it</a>
+  script: |
+    <script>
+      $("#show_me").click(function(){
+        $("#the_dessert").html(" besides " + getField('dessert').value);
+        return false;
+      });
+    </script>
 "googlechart": |-
   features:
     javascript: https://www.gstatic.com/charts/loader.js
@@ -8408,6 +8423,44 @@
     changed.
   buttons:
     - Restart: restart
+"setField": |-
+  question: |
+    What groceries should we buy for
+    tomorrow's breakfast?
+  subquestion: |
+    <a id="decide" href="#" class="btn btn-sm btn-primary">Decide for me</a>
+  fields:
+    - Cold cereal: cold_cereal
+      choices:
+        - Lucky Charms
+        - Cheerios
+        - Froot Loops
+        - Corn Flakes
+    - Hot cereal: hot_cereal
+      input type: radio
+      choices:
+        - Oatmeal
+        - Cream of wheat
+        - Bran
+    - Juice: juice_varieties
+      datatype: checkboxes
+      choices:
+        - Apple
+        - Orange
+        - Grapefruit
+    - Other: other_groceries
+  script: |
+    <script>
+      $("#decide").click(function(){
+        setField("cold_cereal", "Lucky Charms");
+        setField("hot_cereal", "Cream of wheat");
+        setField("juice_varieties['Apple']", true);
+        setField("juice_varieties['Orange']", true);
+        setField("juice_varieties['Grapefruit']", false);
+        setField("other_groceries", "Bread and jam");
+        return false;
+      });
+    </script>
 "showif": |-
   question: |
     Please fill in the following information.

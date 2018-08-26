@@ -5416,6 +5416,24 @@ appears in the underlying [`question`].
 
 This function is essential for using the [`js show if`] feature.
 
+## <a name="js_getField"></a>getField()
+
+The `getField()` function is similar to `val()`, except that instead
+of returning the value of the input element, it returns the element
+itself.
+
+{% include side-by-side.html demo="getField" %}
+
+## <a name="js_setField"></a>setField()
+
+The `setField()` function sets the value of a field.  The first
+parameter is the the variable name of the field, as a string.  The
+second parameter is the value that the variable should have.  The
+variable name must be written exactly as it appears in the underlying
+[`question`].
+
+{% include side-by-side.html demo="setField" %}
+
 ## <a name="js_url_action"></a>url_action()
 
 The `url_action()` function, like its [Python namesake](#url_action),

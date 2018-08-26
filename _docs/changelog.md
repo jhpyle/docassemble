@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.91](https://github.com/jhpyle/docassemble/releases/tag/v0.2.91) - 2018-08-25
+
+### Added
+- The `getField()` and `setField()` JavaScript functions.
+
+### Fixed
+- The `fields` version of `background_response()` could not set radio
+  buttons.
+
 ## [0.2.90](https://github.com/jhpyle/docassemble/releases/tag/v0.2.90) - 2018-08-23
 
 ### Fixed
@@ -41,6 +50,7 @@ short_title: Change Log
 
 ### Added
 - The `js show if` and `js hide if` field modifiers.
+- The `val()` JavaScript function.
 - The `continue button field` feature.
 
 ### Changed
