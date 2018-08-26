@@ -4083,15 +4083,8 @@ def checkin():
             parameters = dict()
             form_parameters = request.form.get('parameters', None)
             if form_parameters is not None:
-                form_parameters = json.loads(form_parameters)
-                for param in form_parameters:
-                    if param['name'] in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or param['name'].startswith('_ignore'):
-                        continue
-                    try:
-                        parameters[from_safeid(param['name'])] = param['value']
-                    except:
-                        logmessage("checkin: failed to unpack " + str(param['name']))
-            #logmessage("Action was " + str(do_action) + " and parameters were " + str(parameters))
+                parameters = json.loads(form_parameters)
+            #logmessage("Action was " + str(do_action) + " and parameters were " + repr(parameters))
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters)))
@@ -6099,21 +6092,23 @@ def index():
       var daQuestionID = """ + json.dumps(question_id) + """;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
+      var fieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action'];
       var varlookup;
+      var varlookuprev;
       var valLookup;
-      function val(showIfVar){
-        if (typeof valLookup[showIfVar] == "undefined"){
-          var showIfVarEscaped = btoa(showIfVar);//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof varlookup[btoa(showIfVar)] != "undefined"){
-            showIfVar = varlookup[btoa(showIfVar)];
-            showIfVarEscaped = showIfVar;//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+      function getField(fieldName){
+        if (typeof valLookup[fieldName] == "undefined"){
+          var fieldNameEscaped = btoa(fieldName);//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          if ($("[name='" + fieldNameEscaped + "']").length == 0 && typeof varlookup[btoa(fieldName)] != "undefined"){
+            fieldName = varlookup[btoa(fieldName)];
+            fieldNameEscaped = fieldName;//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           }
-          var varList = $("[name='" + showIfVarEscaped + "']");
+          var varList = $("[name='" + fieldNameEscaped + "']");
           if (varList.length == 0){
-            varList = $("input[type='radio'][name='" + showIfVarEscaped + "']");
+            varList = $("input[type='radio'][name='" + fieldNameEscaped + "']");
           }
           if (varList.length == 0){
-            varList = $("input[type='checkbox'][name='" + showIfVarEscaped + "']");
+            varList = $("input[type='checkbox'][name='" + fieldNameEscaped + "']");
           }
           if (varList.length > 0){
             elem = varList[0];
@@ -6123,7 +6118,58 @@ def index():
           }
         }
         else {
-          elem = valLookup[showIfVar];
+          elem = valLookup[fieldName];
+        }
+        return elem;
+      }
+      function setField(fieldName, val){
+        var elem = getField(fieldName);
+        if (elem == null){
+          console.log('setField: reference to non-existent field ' + fieldName);
+          return;
+        }
+        if ($(elem).attr('type') == "checkbox"){
+          if (val){
+            if ($(elem).prop('checked') != true){
+              $(elem).prop('checked', true);
+              $(elem).trigger('change');
+            }
+          }
+          else{
+            if ($(elem).prop('checked') != false){
+              $(elem).prop('checked', false);
+              $(elem).trigger('change');
+            }
+          }
+        }
+        else if ($(elem).attr('type') == "radio"){
+          var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          var wasSet = false;
+          $("input[name='" + fieldNameEscaped + "']").each(function(){
+            if ($(this).val() == val){
+              if ($(this).prop('checked') != true){
+                $(this).prop('checked', true);
+                $(this).trigger('change');
+              }
+              wasSet = true;
+              return false;
+            }
+          });
+          if (!wasSet){
+            console.log('setField: could not set radio button ' + fieldName + ' to ' + val);
+          }
+        }
+        else{
+          if ($(elem).val() != val){
+            $(elem).val(val);
+            $(elem).trigger('change');
+          }
+        }
+      }
+      function val(fieldName){
+        var elem = getField(fieldName);
+        if (elem == null){
+          return null;
         }
         var showifParents = $(elem).parents(".jsshowif");
         if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
@@ -6138,8 +6184,8 @@ def index():
           }
         }
         else if ($(elem).attr('type') == "radio"){
-          var showIfVarEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
+          var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          theVal = $("input[name='" + fieldNameEscaped + "']:checked").val();
           if (typeof(theVal) == 'undefined'){
             theVal = null;
           }
@@ -6157,7 +6203,25 @@ def index():
         }
         return theVal;
       }
-
+      function formAsJSON(){
+        var formData = $("#daform").serializeArray();
+        var data = Object();
+        var n = formData.length;
+        for (var i = 0; i < n; ++i){
+          var key = formData[i]['name'];
+          var val = formData[i]['value'];
+          if ($.inArray(key, fieldsToSkip) != -1 || key.startsWith('_ignore')){
+            continue;
+          }
+          if (typeof varlookuprev[key] != "undefined"){
+            data[atob(varlookuprev[key])] = val;
+          }
+          else{
+            data[atob(key)] = val;
+          }
+        }
+        return JSON.stringify(data);
+      }
       var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
       function preloadImage(url){
         var img = new Image();
@@ -6537,27 +6601,40 @@ def index():
                         if (type == 'checkbox'){
                             if (name in valArray){
                                 if (valArray[name] == 'True'){
-                                    $(this).prop('checked', true);
+                                    if ($(this).prop('checked') != true){
+                                        $(this).prop('checked', true);
+                                        $(this).trigger('change');
+                                    }
                                 }
                                 else{
-                                    $(this).prop('checked', false);
+                                    if ($(this).prop('checked') != false){
+                                        $(this).prop('checked', false);
+                                        $(this).trigger('change');
+                                    }
                                 }
                             }
                             else{
-                                $(this).prop('checked', false);
+                                if ($(this).prop('checked') != false){
+                                    $(this).prop('checked', false);
+                                    $(this).trigger('change');
+                                }
                             }
-                            $(this).trigger('change');
                         }
                         else if (type == 'radio'){
                             if (name in valArray){
                                 if (valArray[name] == $(this).val()){
-                                    $(this).prop('checked', true);
+                                    if ($(this).prop('checked') != true){
+                                        $(this).prop('checked', true);
+                                        $(this).trigger('change');
+                                    }
                                 }
                                 else{
-                                    $(this).prop('checked', false);
+                                    if ($(this).prop('checked') != false){
+                                        $(this).prop('checked', false);
+                                        $(this).trigger('change');
+                                    }
                                 }
                             }
-                            $(this).trigger('change');
                         }
                         else if ($(this).data().hasOwnProperty('sliderMax')){
                             $(this).slider('setValue', parseInt(valArray[name]));
@@ -6851,7 +6928,7 @@ def index():
       }
       function pushChanges(){
         //console.log("pushChanges");
-        if (checkinSeconds == 0){
+        if (checkinSeconds == 0 || daShowIfInProcess){
           return;
         }
         if (checkinInterval != null){
@@ -7152,13 +7229,7 @@ def index():
               else if (command.extra == 'fields'){
                 for (var key in command.value){
                   if (command.value.hasOwnProperty(key)){
-                    var elem = document.getElementById(btoa(key));
-                    if (elem == null){
-                      console.log("Could not find element with the id " + key);
-                    }
-                    else{
-                      document.getElementById(btoa(key)).value = command.value[key];
-                    }
+                    setField(key, command.value[key]);
                   }
                 }
               }
@@ -7278,15 +7349,15 @@ def index():
         var datastring;
         if ((daChatStatus != 'off') && $("#daform").length > 0 && !daBeingControlled){ // daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on' || daChatStatus == 'observeonly'
           if (daDoAction != null){
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: JSON.stringify($("#daform").serializeArray()), do_action: daDoAction});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: formAsJSON(), do_action: daDoAction});
           }
           else{
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: JSON.stringify($("#daform").serializeArray())});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: formAsJSON()});
           }
         }
         else{
           if (daDoAction != null){
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, do_action: daDoAction, parameters: JSON.stringify($("#daform").serializeArray())});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, do_action: daDoAction, parameters: formAsJSON()});
           }
           else{
             datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode});
@@ -7621,11 +7692,13 @@ def index():
           $('#questionlabel').tab('show');
         });
         varlookup = Object();
+        varlookuprev = Object();
         if ($("input[name='_varnames']").length){
           the_hash = $.parseJSON(atob($("input[name='_varnames']").val()));
           for (var key in the_hash){
             if (the_hash.hasOwnProperty(key)){
               varlookup[the_hash[key]] = key;
+              varlookuprev[key] = the_hash[key];
             }
           }
         }
@@ -7650,6 +7723,7 @@ def index():
                 catch (e) {
                   continue;
                 }
+                varlookuprev[btoa(transBaseName + bracketPart)] = btoa(baseName + "['" + convertedName + "']");
                 varlookup[btoa(baseName + "['" + convertedName + "']")] = btoa(transBaseName + bracketPart);
                 varlookup[btoa(baseName + "[u'" + convertedName + "']")] = btoa(transBaseName + bracketPart);
                 varlookup[btoa(baseName + '["' + convertedName + '"]')] = btoa(transBaseName + bracketPart);
@@ -9160,14 +9234,18 @@ def observer():
         });
         $("input.nota-checkbox").click(function(){
           $(this).parent().find('input.non-nota-checkbox').each(function(){
-            $(this).prop('checked', false);
-            $(this).trigger('change');
+            if ($(this).prop('checked') != false){
+              $(this).prop('checked', false);
+              $(this).trigger('change');
+            }
           });
         });
         $("input.non-nota-checkbox").click(function(){
           $(this).parent().find('input.nota-checkbox').each(function(){
-            $(this).prop('checked', false);
-            $(this).trigger('change');
+            if ($(this).prop('checked') != false){
+              $(this).prop('checked', false);
+              $(this).trigger('change');
+            }
           });
         });
         $("input.input-embedded").on('keyup', adjustInputWidth);
@@ -9374,27 +9452,40 @@ def observer():
                         if (type == 'checkbox'){
                             if (name in valArray){
                                 if (valArray[name] == 'True'){
-                                    $(this).prop('checked', true);
+                                    if ($(this).prop('checked') != true){
+                                        $(this).prop('checked', true);
+                                        $(this).trigger('change');
+                                    }
                                 }
                                 else{
-                                    $(this).prop('checked', false);
+                                    if ($(this).prop('checked') != false){
+                                        $(this).prop('checked', false);
+                                        $(this).trigger('change');
+                                    }
                                 }
                             }
                             else{
-                                $(this).prop('checked', false);
+                                if ($(this).prop('checked') != false){
+                                    $(this).prop('checked', false);
+                                    $(this).trigger('change');
+                                }
                             }
-                            $(this).trigger('change');
                         }
                         else if (type == 'radio'){
                             if (name in valArray){
                                 if (valArray[name] == $(this).val()){
-                                    $(this).prop('checked', true);
+                                    if ($(this).prop('checked') != true){
+                                        $(this).prop('checked', true);
+                                        $(this).trigger('change');
+                                    }
                                 }
                                 else{
-                                    $(this).prop('checked', false);
+                                    if ($(this).prop('checked') != false){
+                                        $(this).prop('checked', false);
+                                        $(this).trigger('change');
+                                    }
                                 }
                             }
-                            $(this).trigger('change');
                         }
                         else if ($(this).data().hasOwnProperty('sliderMax')){
                             $(this).slider('setValue', parseInt(valArray[name]));

@@ -6340,3 +6340,25 @@ Feature: Example interviews
     And I wait 1 second
     And I set "Why do you like Fuji apples?" to "because they are good in pies"
     And I click the button "Continue"
+
+  Scenario: Test the interview "Field element"
+    Given I start the interview "docassemble.base:data/questions/examples/getField.yml"
+    Then I should see the phrase "What do you want for dessert?"
+    And I set "Dessert" to "apple pie"
+    And I unfocus
+    And I click the button "Eat it"
+    Then I should see the phrase "What do you want for dessert besides apple pie?"
+    And I click the button "Continue"
+    Then I should see the phrase "Your last dessert was apple pie."
+
+  Scenario: Test the interview "Set field"
+    Given I start the interview "docassemble.base:data/questions/examples/setField.yml"
+    Then I should see the phrase "What groceries should we buy for tomorrow’s breakfast?"
+    And I click the button "Decide for me"
+    And I wait 1 second
+    And I click the button "Continue"
+    Then I should see the phrase "We will buy the following."
+    And I should see the phrase "Lucky Charms"
+    And I should see the phrase "Cream of wheat"
+    And I should see the phrase "Apple and Orange juice"
+    And I should see the phrase "Bread and jam"

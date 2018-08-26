@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.91] - 2018-08-25
+### Added
+- The `getField()` and `setField()` JavaScript functions.
+### Fixed
+- The `fields` version of `background_response()` could not set radio
+  buttons.
+
 ## [0.2.90] - 2018-08-23
 ### Fixed
 - Problem with checkboxes inside a `show if`.
@@ -31,6 +38,7 @@
 ## [0.2.86] - 2018-08-17
 ### Added
 - The `js show if` and `js hide if` field modifiers.
+- The `val()` JavaScript function.
 - The `continue button field` feature.
 ### Changed
 - Upgraded Font Awesome to 5.2.0.

@@ -1,0 +1,57 @@
+metadata:
+  title: Set field
+  documentation: "https://docassemble.org/docs/functions.html#js_setField"
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  What groceries should we buy for
+  tomorrow's breakfast?
+subquestion: |
+  <a id="decide" href="#" class="btn btn-sm btn-primary">Decide for me</a>
+fields:
+  - Cold cereal: cold_cereal
+    choices:
+      - Lucky Charms
+      - Cheerios
+      - Froot Loops
+      - Corn Flakes
+  - Hot cereal: hot_cereal
+    input type: radio
+    choices:
+      - Oatmeal
+      - Cream of wheat
+      - Bran
+  - Juice: juice_varieties
+    datatype: checkboxes
+    choices:
+      - Apple
+      - Orange
+      - Grapefruit
+  - Other: other_groceries
+script: |
+  <script>
+    $("#decide").click(function(){
+      setField("cold_cereal", "Lucky Charms");
+      setField("hot_cereal", "Cream of wheat");
+      setField("juice_varieties['Apple']", true);
+      setField("juice_varieties['Orange']", true);
+      setField("juice_varieties['Grapefruit']", false);
+      setField("other_groceries", "Bread and jam");
+      return false;
+    });
+  </script>
+---
+question: |
+  We will buy the following.
+subquestion: |
+  * ${ cold_cereal }
+  * ${ hot_cereal }
+  % if juice_varieties.any_true():
+  * ${ comma_list(juice_varieties.true_values()) } juice
+  % endif
+  * ${ other_groceries }
+mandatory: True
