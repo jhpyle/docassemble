@@ -1,0 +1,40 @@
+metadata:
+  title: Refresh
+  documentation: "https://docassemble.org/docs/background.html#target"
+  example start: 2
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  number_of_things = 3
+---
+question: |
+  Tell me which thing you want.
+fields:
+  - "How many things are there?": number_of_things
+    datatype: integer
+    min: 1
+    max: 10
+  - "Which thing do you want?": thing
+    input type: radio
+    code: |
+      range(1, number_of_things + 1)
+check in: set_number_of_things
+---
+event: set_number_of_things
+code: |
+  if number_of_things != int(action_argument('number_of_things')):
+    number_of_things = int(action_argument('number_of_things'))
+    if number_of_things < 1:
+      number_of_things = 1
+    elif number_of_things > 10:
+      number_of_things = 10
+    background_response('refresh')
+  background_response()
+---
+mandatory: True
+question: |
+  You picked thing ${ thing }.

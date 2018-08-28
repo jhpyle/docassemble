@@ -1914,7 +1914,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         logmessage("Section \"" + unicode(the_section) + "\" did not exist.")
     return output        
 
-def progress_bar(progress):
+def progress_bar(progress, interview):
     if progress is None:
         return('');
     progress = float(progress)
@@ -1922,7 +1922,11 @@ def progress_bar(progress):
         return('');
     if progress > 100:
         progress = 100
-    return('<div class="progress mt-2"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div>\n')
+    if hasattr(interview, 'show_progress_bar_percentage') and interview.show_progress_bar_percentage:
+        percentage = unicode(int(progress)) + '%'
+    else:
+        percentage = ''
+    return('<div class="progress mt-2"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;">' + percentage + '</div></div>\n')
 
 def get_unique_name(filename, secret):
     nowtime = datetime.datetime.utcnow()
@@ -4096,6 +4100,8 @@ def checkin():
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response['pargs'][0]), extra=the_response['pargs'][1]))
                 elif type(the_response) is list and len(the_response) == 2 and the_response[1] in ('javascript', 'flash', 'refresh', 'fields'):
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response[0]), extra=the_response[1]))
+                elif isinstance(the_response, basestring) and the_response == 'refresh':
+                    commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(None), extra='refresh'))
                 else:
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response), extra='backgroundresponse'))
             elif interview_status.question.question_type == "template" and interview_status.question.target is not None:
@@ -8301,7 +8307,7 @@ def index():
         if not already_there:
             user_dict['_internal']['event_stack'][session_uid].insert(0, next_action_to_set)
     if interview_status.question.interview.use_progress_bar:
-        the_progress_bar = progress_bar(user_dict['_internal']['progress'])
+        the_progress_bar = progress_bar(user_dict['_internal']['progress'], interview_status.question.interview)
     else:
         the_progress_bar = None
     if interview_status.question.interview.use_navigation:

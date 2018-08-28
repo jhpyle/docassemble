@@ -6362,3 +6362,31 @@ Feature: Example interviews
     And I should see the phrase "Cream of wheat"
     And I should see the phrase "Apple and Orange juice"
     And I should see the phrase "Bread and jam"
+  
+  Scenario: Test the interview "Refresh"
+    Given I start the interview "docassemble.base:data/questions/examples/ajax-refresh.yml"
+    Then I should see the phrase "Tell me which thing you want."
+    And I set "How many things are there?" to "5"
+    And I unfocus
+    And I wait 2 seconds
+    And I click the option "4" under "Which thing do you want?"
+    And I click the button "Continue"
+    Then I should see the phrase "You picked thing 4."
+
+  Scenario: Test the interview "Progress bar with %"
+    Given I start the interview "docassemble.base:data/questions/examples/progress-features-percentage.yml"
+    Then I should see the phrase "Are you doing well?"
+    And I should see the phrase "20%"
+    And I click the button "Yes"
+    Then I should see the phrase "Done with the interview."
+    And I should see the phrase "I am glad you are doing well."
+
+  Scenario: Test the interview "Flash message"
+    Given I start the interview "docassemble.base:data/questions/examples/ajax-flash.yml"
+    Then I should see the phrase "What is your favorite food?"
+    And I set "Favorite food" to "soup"
+    And I set "Favorite drink" to "water"
+    And I wait 1 second
+    Then I should see the phrase "What? You like SOUP?"
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite food is soup and your favorite drink is water."

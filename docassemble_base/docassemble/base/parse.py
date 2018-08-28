@@ -945,6 +945,8 @@ class Question:
                 self.interview.table_width = data['features']['table width']
             if 'progress bar' in data['features']:
                 self.interview.use_progress_bar = True if data['features']['progress bar'] else False
+            if 'show progress bar percentage' in data['features'] and data['features']['show progress bar percentage']:
+                self.interview.show_progress_bar_percentage = True
             if 'question back button' in data['features']:
                 self.interview.question_back_button = True if data['features']['question back button'] else False
             if 'question help button' in data['features']:

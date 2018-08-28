@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.92] - 2018-08-27
+### Added
+- The `show progress bar percentage` feature.
+### Changed
+- The `background_response()` function can be called using
+  `background_response('refresh')` to refresh the user's screen.
+
 ## [0.2.91] - 2018-08-25
 ### Added
 - The `getField()` and `setField()` JavaScript functions.
