@@ -7,7 +7,7 @@ short_title: Change Log
 ## [0.2.92](https://github.com/jhpyle/docassemble/releases/tag/v0.2.92) - 2018-08-27
 
 ### Added
-- The `progress bar percentage` feature.
+- The `show progress bar percentage` feature.
 
 ### Changed
 - The `background_response()` function can be called using
