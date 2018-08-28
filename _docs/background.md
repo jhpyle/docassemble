@@ -258,9 +258,14 @@ asks the user a question, this counts as an exception).
 
 ## <a name="background_response"></a>background_response()
 
-The `background_response()` function allows you to return information
-from a background action to the interview.  The information is
-accessed by using the `.get()` method on the "task" that was created.
+The `background_response()` function terminates a background process
+and returns information.  In can be called both from [background
+tasks] and from [`check in`] code (which is explained [later](#check
+in)).  It does different things depending on the context.
+
+When called from a [background task], the information you give it can
+be accessed from foreground code by using the `.get()` method on the
+"task" that was created.
 
 For example, in the interview above, the task is created like this:
 
@@ -294,6 +299,82 @@ example,
 question: |
   The answer is ${ the_task.get() }.
 {% endhighlight %}
+
+Note that once you call `background_response()`, your [`code`] block
+stops executing.  No lines of code that come after your call to
+`background_response()` will ever be run.
+
+Your background task code should always end with a call to
+`background_response()`.  Even if you don't need to return any
+response to the foreground code, calling `background_response()` with
+no arguments will safely wrap up your background task.  If your
+[`code`] does not conclude with `background_response()`,
+**docassemble** will attempt to run the [`initial`] and [`mandatory`]
+blocks in your interview.  Depending on the context, this might be
+harmless, or it might cause unwanted side effects.  At the very least,
+you will probably get a warning message in the logs if your
+[background task] concludes with an attempt to present a [`question`]
+to the user.
+
+The `background_response()` function is also used in the context of
+[processing interim user input] (described [below](#check in)).  In
+this context, it terminates `code` that runs on the server while the
+user is looking at and interacting with a screen.
+
+In this context, `background_response()` can be called in a variety of
+ways.  (All of these methods are explained with examples in the
+section on [processing interim user input].)
+
+The first way that it can be used is to populate `[TARGET ...]` areas
+on the screen.  If you only want to populate a single target area
+(e.g., `[TARGET mytarget]`), run:
+
+{% highlight python %}
+background_response(target='mytarget', content='Hello, world!')
+{% endhighlight %}
+
+If you want to populate multiple target areas (e.g., `[TARGET top_area]` and
+`[TARGET bottom_area]`), provide a list of dictionaries:
+
+{% highlight python %}
+background_response([{'target': 'top_area', 'content': "Hello, world!"}, {'target': 'bottom_area', 'content': 'Goodbye, world!'}])
+{% endhighlight %}
+
+Instead of writing HTML to areas of the screen, you can set the values
+of input fields:
+
+{% highlight python %}
+background_response({'favorite_fruit': 'apple', 'likes_vegetables': True}, 'fields')
+{% endhighlight %}
+
+The `background_response()` function can also be used to run
+literal [JavaScript] in the user's browser:
+
+{% highlight python %}
+background_response('alert("hello world!")', 'javascript')
+{% endhighlight %}
+
+It can also be used to show an informational message at the top of the
+user's screen:
+
+{% highlight python %}
+background_response('Hello, world', 'flash')
+{% endhighlight %}
+
+It can also cause a refresh of the user's screen:
+
+{% highlight python %}
+background_response('refresh')
+{% endhighlight %}
+
+When using these, make sure to avoid a situation where your code gets
+into an infinite loop and the `check in` task runs multiple times per
+second.  A `check in` call happens frequently: when the screen loads,
+when a [change] event is triggered on an input element, and every six
+seconds.  If your `background_response()` triggers a `check in` call,
+which then runs `background_response()` again, there will be an
+infinite loop.  Make sure to use the [JavaScript] console in your
+browser when testing your use of `background_response()`.
 
 ## <a name="background_response_action"></a>background_response_action()
 
@@ -507,7 +588,7 @@ users' perspective when using this feature; you would not want to
 annoy users by refreshing their screens while they are in the middle
 of entering information.
 
-The third way is to cause the user's browser to run [Javascript] code
+The third way is to cause the user's browser to run [JavaScript] code
 produced by your background process.
 
 The fourth way, if the screen has input fields in it, is to populate
@@ -540,8 +621,8 @@ was used to save the result of the background process to a variable
 {% include side-by-side.html demo="background_action_refresh" %}
 
 The next example is like the first, except the notification takes
-place through [Javascript] code created by the background process,
-which in this case uses the built-in [Javascript] function
+place through [JavaScript] code created by the background process,
+which in this case uses the built-in [JavaScript] function
 [`alert()`] to send a message to the user.
 
 {% include side-by-side.html demo="background_action_javascript" %}
@@ -603,10 +684,10 @@ variables during the [action] are saved.
 The "check in" process takes place:
 
 * Every six seconds, as well as
-* Every time a "change" event takes place on an input element.  For
+* Every time a [change] event takes place on an input element.  For
   text inputs, this happens when the "focus" leaves the text box, as
   it does when the user clicks outside the text box or presses the tab
-  key.
+  key.  The [change] event is not triggered from every keypress.
 
 In the above example, a counter is incremented each time the browser
 "checks in."  In addition, the current value of `favorite_food` is
@@ -614,6 +695,11 @@ tracked in a [Python set] called `drafts`.  The actual variable
 `favorite_food` is not set until the user presses "Continue," but the
 `track_drafts` code discovers the "draft" value by calling
 [`action_argument()`].
+
+Note that unlike [background tasks], [`code`] that runs from `check
+in` **can** directly make permenent changes to the interview answers.
+Because it has this privilege, [`code`] that runs from `check in` must
+run quickly (in less than four seconds).
 
 ## <a name="target"></a>Updating the screen
 
@@ -686,18 +772,40 @@ should be the values that you want the fields to have.  For example:
 
 {% include side-by-side.html demo="ajax-calc" %}
 
+By setting the second parameter to `'flash'` and the first parameter
+to a message, you can "flash" a message at the top of the user's
+screen.  In this example, a message is flashed as soon as the user
+enters a favorite fruit.
+
+{% include side-by-side.html demo="ajax-flash" %}
+
 Another way to communicate results to the user's screen is to use
-[Javascript].  If you call `background_response()` with some
-[Javascript] code (as text) as the first parameter and `'javascript'`
-as the second parameter, the [Javascript] code will be run in the browser.
+[JavaScript].  If you call `background_response()` with some
+[JavaScript] code (as text) as the first parameter and `'javascript'`
+as the second parameter, the [JavaScript] code will be run in the browser.
 
 {% include side-by-side.html demo="ajax-calc-javascript" %}
 
-This example uses the [`flash()`] function in [Javascript] to display
+This example uses the [`flash()`] function in [JavaScript] to display
 a message for the user.
 
 See the [Javascript functions] section for more information about
-things you can do with [Javascript].
+things you can do with [JavaScript].
+
+Another strategy is to use `check in` code to cause a refresh of the
+user's screen.  If your `check in` code ends with
+`background_response('refresh')`, the user's screen will reload the
+[`question`] from the server.  The following example shows how you can
+use this to dynamically update the list of choices in a radio button
+list.
+
+{% include side-by-side.html demo="ajax-refresh" %}
+
+It is important that your `check in` code does not call
+`background_response('refresh')` every single time it runs.
+Otherwise, you will cause an infinite loop of screen refreshing.  In
+this example, `background_response('refresh')` is only called when
+necessary (when the value of `number_of_things` changes).
 
 # <a name="scheduled"></a>Scheduled tasks
 
@@ -750,6 +858,7 @@ event: cron_daily
 code: |
   if task_not_yet_performed('20 day reminder') and date_difference(starting=filing_date).days > 20:
     send_email(to=email_address, template=reminder_email, task='20 day reminder')
+  response()
 ---
 {% endhighlight %}
 
@@ -826,6 +935,7 @@ event: cron_daily
 code: |
   if task_not_yet_performed('20 day reminder') and date_difference(starting=filing_date).days > 20:
     send_email(to=email_address, template=reminder_email, task='20 day reminder')
+  response()
 ---
 {% endhighlight %}
 
@@ -1171,7 +1281,7 @@ privileges and user identity of the [cron user].
 [`get_emails()`]: {{ site.baseurl }}/docs/functions.html#get_emails
 [Celery]: http://www.celeryproject.org/
 [Docker]: {{ site.baseurl }}/docs/docker.html
-[Javascript]: https://en.wikipedia.org/wiki/JavaScript
+[JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [Python]: https://www.python.org/
 [`action_argument()`]: {{ site.baseurl }}/docs/functions.html#action_argument
 [`action_arguments()`]: {{ site.baseurl }}/docs/functions.html#action_arguments
@@ -1242,6 +1352,8 @@ privileges and user identity of the [cron user].
 [`under`]: {{ site.baseurl }}/docs/questions.html#under
 [check in]: #check in
 [`check in`]: #check in
+[processes interim user input]: #check in
+[processing interim user input]: #check in
 [Python set]: https://docs.python.org/2/library/stdtypes.html#set
 [`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
 [HTML]: https://en.wikipedia.org/wiki/HTML
@@ -1267,3 +1379,4 @@ privileges and user identity of the [cron user].
 [`external hostname`]: {{ site.baseurl }}/docs/config.html#external hostname
 [MX record]: https://en.wikipedia.org/wiki/MX_record
 [port 25]: https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol
+[change]: https://developer.mozilla.org/en-US/docs/Web/Events/change

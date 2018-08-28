@@ -719,6 +719,11 @@ bar.
 
 {% include side-by-side.html demo="progress-features" %}
 
+If you want the progress bar to display the percentage, include `show
+progress bar percentage: True`:
+
+{% include side-by-side.html demo="progress-features-percentage" %}
+
 ## <a name="navigation bar"></a>Navigation bar
 
 The `navigation` feature controls whether a navigation bar is

@@ -195,6 +195,51 @@
       answer = float(action_argument('var_a')) * float(action_argument('var_b'))
       background_response('flash("Hint: C should be " + ' + str(answer) + ', "success")', 'javascript')
     background_response()
+"ajax-flash": |-
+  question: |
+    What is your favorite food?
+  fields:
+    - Favorite food: favorite_food
+    - Favorite drink: favorite_drink
+  check in: criticize_food
+  ---
+  code: |
+    favorite_food_interim = ''
+  ---
+  event: criticize_food
+  code: |
+    if action_argument('favorite_food') and action_argument('favorite_food') != favorite_food_interim:
+      favorite_food_interim = action_argument('favorite_food')
+      background_response("What? You like " + favorite_food_interim.upper() + "?", 'flash')
+    background_response()
+"ajax-refresh": |-
+  mandatory: True
+  code: |
+    number_of_things = 3
+  ---
+  question: |
+    Tell me which thing you want.
+  fields:
+    - "How many things are there?": number_of_things
+      datatype: integer
+      min: 1
+      max: 10
+    - "Which thing do you want?": thing
+      input type: radio
+      code: |
+        range(1, number_of_things + 1)
+  check in: set_number_of_things
+  ---
+  event: set_number_of_things
+  code: |
+    if number_of_things != int(action_argument('number_of_things')):
+      number_of_things = int(action_argument('number_of_things'))
+      if number_of_things < 1:
+        number_of_things = 1
+      elif number_of_things > 10:
+        number_of_things = 10
+      background_response('refresh')
+    background_response()
 "alarm-clock": |-
   modules:
     - docassemble.base.util
@@ -7221,6 +7266,10 @@
 "progress-features": |-
   features:
     progress bar: True
+"progress-features-percentage": |-
+  features:
+    progress bar: True
+    show progress bar percentage: True
 "progress-multi": |-
   mandatory: True
   code: |
