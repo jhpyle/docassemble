@@ -29,11 +29,12 @@ import sys
 import tzlocal
 import us
 import pycountry
+import random
 from user_agents import parse as ua_parse
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact']
 
 # debug = False
 # default_dialect = 'us'
@@ -3211,3 +3212,48 @@ def go_back_in_session(yaml_filename, session_id, secret=None):
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise Exception("You cannot go back in the current interview session")
     server.go_back_in_session(yaml_filename, session_id, secret=secret)
+
+def turn_to_ones(match):
+    string = match.group(1)
+    string = '@' * len(string)
+    return string
+    
+def redact(text):
+    """Return the given text except when the document is being assembled
+    in redacted mode, in which case redacted text should be
+    returned."""
+    if not this_thread.misc.get('redact', False):
+        logmessage("redact: not time to redact")
+        return text
+    logmessage("redact: redacting")
+    the_text = unicode(text)
+    the_text = re.sub(r'\[(NBSP|ENDASH|EMDASH|HYPHEN|CHECKBOX|PAGENUM|TOTALPAGES|SECTIONNUM)\]', 'x', the_text)
+    ref_text = the_text
+    ref_text = re.sub(r'\[(INDENTBY) [^\]]*\]', turn_to_ones)
+    ref_text = re.sub(r'\[(START_INDENTATION|STOP_INDENTATION|BEGIN_CAPTION|VERTICAL_LINE|END_CAPTION|BEGIN_TWOCOL|BREAK|END_TWOCOL|TIGHTSPACING|SINGLESPACING|DOUBLESPACING|ONEANDAHALFSPACING|TRIPLESPACING|BLANK|BLANKFILL|PAGEBREAK|SKIPLINE|VERTICALSPACE|NEWLINE|NEWPAR|BR|TAB|END|BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|CENTER|BOLDCENTER)\]', turn_to_ones)
+    ref_text = re.sub(r'[\n\r]', '@')
+    ref_text = re.sub(r'[^\@]', '#')
+    output = u''
+        
+    for indexno in range(len(the_text)):
+        if char in ("\n", "\r", "\t"):
+            output += char
+        elif re.match(r'[0-9\-]', char):
+            if this_thread.evaluation_context == 'pdf':
+                output += u'x'
+            else:
+                output += u'[REDACTION_SYMBOL ' + char + ']'
+        elif random.random() < 0.2:
+            if this_thread.evaluation_context == 'pdf':
+                output += u' '
+            else:
+                output += u'[REDACTION_SPACE]'
+        else:
+            if this_thread.evaluation_context == 'pdf':
+                output += u'x'
+            else:
+                if char == ']':
+                    output += u'[REDACTION_SYMBOL []'
+                else:
+                    output += u'[REDACTION_SYMBOL ' + char + ']'
+    return output

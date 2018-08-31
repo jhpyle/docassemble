@@ -2436,7 +2436,31 @@ class DATemplate(DAObject):
         return(unicode(self.content))
     def __str__(self):
         return unicode(self).encode('utf-8')
-    
+
+class DALazyTemplate(DAObject):
+    """The class used for Markdown templates.  A template block saves to
+    an object of this type.  The two attributes are "subject" and 
+    "content." """
+    @property
+    def subject(self):
+        return self.source_subject.text(self.user_dict).rstrip()
+    @property
+    def content(self):
+        return self.source_content.text(self.user_dict).rstrip()
+    @property
+    def decorations(self):
+        return [dec.text(self.user_dict).rstrip for dec in self.source_decorations]
+    def show(self, **kwargs):
+        """Displays the contents of the template."""
+        return unicode(self)
+    def __unicode__(self):
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+            #return unicode(docassemble.base.filter.docx_template_filter(self.content))
+            return unicode(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.docx_template))
+        return(unicode(self.content))
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
 def selections(*pargs, **kwargs):
     """Packs a list of objects in the appropriate format for including
     as code in a multiple-choice field."""

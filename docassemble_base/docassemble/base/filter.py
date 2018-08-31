@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 import re
 import os
@@ -195,6 +196,8 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
     text = re.sub(r'\[VIMEO[^ ]* ([^\]]+)\]', '', text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\s*\[VERTICAL_LINE\]\s*(.+?)\[END_CAPTION\]', rtf_caption_table, text, flags=re.DOTALL)
     text = re.sub(r'\[NBSP\]', r'\\~ ', text)
+    text = re.sub(r'\[REDACTION_SPACE\]', r'\\u9608\\\'3f\\zwbo', text)
+    text = re.sub(r'\[REDACTION_SYMBOL .\]', r'\\u9608\\\'3f', text)
     text = re.sub(r'\[ENDASH\]', r'{\\endash}', text)
     text = re.sub(r'\[EMDASH\]', r'{\\emdash}', text)
     text = re.sub(r'\[HYPHEN\]', r'-', text)
@@ -355,6 +358,8 @@ def docx_filter(text, metadata=None, question=None):
     text = re.sub(r'\[ONEANDAHALFSPACING\] *', '', text)
     text = re.sub(r'\[TRIPLESPACING\] *', '', text)
     text = re.sub(r'\[NBSP\]', ' ', text)
+    text = re.sub(r'\[REDACTION_SPACE\]', r'█​', text)
+    text = re.sub(r'\[REDACTION_SYMBOL .\]', r'█', text)
     text = re.sub(r'\[ENDASH\]', '--', text)
     text = re.sub(r'\[EMDASH\]', '---', text)
     text = re.sub(r'\[HYPHEN\]', '-', text)
@@ -412,6 +417,8 @@ def docx_template_filter(text):
     text = re.sub(r'\[ONEANDAHALFSPACING\] *', '', text)
     text = re.sub(r'\[TRIPLESPACING\] *', '', text)
     text = re.sub(r'\[NBSP\]', ' ', text)
+    text = re.sub(r'\[REDACTION_SPACE\]', r'█​', text)
+    text = re.sub(r'\[REDACTION_SYMBOL .\]', r'█', text)
     text = re.sub(r'\[ENDASH\]', '--', text)
     text = re.sub(r'\[EMDASH\]', '---', text)
     text = re.sub(r'\[HYPHEN\]', '-', text)
@@ -483,6 +490,8 @@ def pdf_filter(text, metadata=None, question=None):
     text = re.sub(r'\[ONEANDAHALFSPACING\]\s*', '\\onehalfspacing\\setlength{\\parindent}{\\myindentamount}\\setlength{\\RaggedRightParindent}{\\parindent}', text)
     text = re.sub(r'\[TRIPLESPACING\]\s*', '\\setlength{\\parindent}{\\myindentamount}\\setlength{\\RaggedRightParindent}{\\parindent}', text)
     text = re.sub(r'\[NBSP\]', r'\\myshow{\\nonbreakingspace}', text)
+    text = re.sub(r'\[REDACTION_SPACE\]', r'\\hspace{0pt}', text)
+    text = re.sub(r'\[REDACTION_SYMBOL (.)\]', r'\\redactsymbol{\1}', text)
     text = re.sub(r'\[ENDASH\]', r'\\myshow{\\myendash}', text)
     text = re.sub(r'\[EMDASH\]', r'\\myshow{\\myemdash}', text)
     text = re.sub(r'\[HYPHEN\]', r'\\myshow{\\myhyphen}', text)

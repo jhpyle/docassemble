@@ -2613,6 +2613,12 @@ class Question:
                 target['filename'] = ''
             if 'description' not in target:
                 target['description'] = ''
+            if 'redact' in target:
+                if isinstance(target['redact'], bool) or isinstance(target['redact'], NoneType):
+                    options['redact'] = target['redact']
+                else:
+                    options['redact'] = compile(target['redact'], '<expression>', 'eval')
+                    self.find_fields_in(target['redact'])
             if 'checkbox export value' in target and 'pdf template file' in target:
                 if type(target['checkbox export value']) not in (str, unicode):
                     raise DAError("A checkbox export value must be a string." + self.idebug(target))
@@ -3464,10 +3470,13 @@ class Question:
             except:
                 pass
             #logmessage("finalize_attachment: " + attachment['variable_name'] + " was not in cache")
+        logmessage("In finalize where redact is " + repr(result['redact']))
+        docassemble.base.functions.this_thread.misc['redact'] = result['redact']
         for doc_format in result['formats_to_use']:
             if doc_format in ('pdf', 'rtf', 'rtf to docx', 'tex', 'docx'):
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
+                        docassemble.base.functions.set_context('pdf')
                         the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'], password=result['password'])
                         result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
                         for key in ('images', 'data_strings', 'convert_to_pdf_a', 'password'):
@@ -3594,6 +3603,15 @@ class Question:
         if the_filename == '':
             the_filename = docassemble.base.functions.space_to_underscore(the_name)
         result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
+        if 'redact' in attachment['options']:
+            if isinstance(attachment['options']['redact'], CodeType):
+                result['redact'] = eval(attachment['options']['redact'], user_dict)
+            else:
+                result['redact'] = attachment['options']['redact']
+        else:
+            result['redact'] = False
+        logmessage("In prepare where redact is " + repr(result['redact']))
+        docassemble.base.functions.this_thread.misc['redact'] = result['redact']
         result['markdown'] = dict();
         result['content'] = dict();
         result['extension'] = dict();
@@ -4742,10 +4760,17 @@ class Interview:
                         actual_saveas = substitute_vars(from_safeid(question.fields[0].saveas), is_generic, the_x, iterators)
                         docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
                         #logmessage("Template1: saveas is " + actual_saveas)
-                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + repr(actual_saveas) + ", content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ', decorations=' + repr([dec['image'].text(user_dict).rstrip() for dec in decoration_list]) + ')'
+                        #string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + repr(actual_saveas) + ", content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ', decorations=' + repr([dec['image'].text(user_dict).rstrip() for dec in decoration_list]) + ')'
+                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DALazyTemplate(' + repr(actual_saveas) + ')'
                         #logmessage("Doing " + string)
                         exec(string, user_dict)
-                        #question.mark_as_answered(user_dict)
+                        the_object = eval(actual_saveas, user_dict)
+                        if the_object.__class__.__name__ != 'DALazyTemplate':
+                            raise DAError("askfor: failure to define template object")
+                        the_object.source_content = question.content
+                        the_object.source_subject = question.subcontent
+                        the_object.source_decorations = [dec['image'] for dec in decoration_list]
+                        the_object.user_dict = user_dict
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "table":
@@ -5097,10 +5122,11 @@ def substitute_vars(var, is_generic, the_x, iterators):
             var = re.sub(r'^x\b', the_x.instanceName, var)
     if len(iterators):
         for indexno in range(len(iterators)):
-            the_iterator = iterators[indexno]
-            if isinstance(the_iterator, basestring) and re.match(r'^-?[0-9]+$', the_iterator):
-                the_iterator = int(the_iterator)
-            var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + repr(the_iterator) + ']', var)
+            #the_iterator = iterators[indexno]
+            #if isinstance(the_iterator, basestring) and re.match(r'^-?[0-9]+$', the_iterator):
+            #    the_iterator = int(the_iterator)
+            #var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + repr(the_iterator) + ']', var)
+            var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + unicode(iterators[indexno]) + ']', var)
     return var
 
 def reproduce_basics(interview, new_interview):

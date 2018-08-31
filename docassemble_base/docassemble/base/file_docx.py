@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document, Subdoc
 from docx.shared import Mm, Inches, Pt
@@ -7,7 +8,7 @@ import docassemble.base.filter
 from xml.sax.saxutils import escape as html_escape
 from types import NoneType
 from docassemble.base.logger import logmessage
-from bs4 import BeautifulSoup, NavigableString
+from bs4 import BeautifulSoup, NavigableString, Tag
 from collections import deque
 
 def image_for_docx(number, question, tpl, width=None):
@@ -120,8 +121,8 @@ def add_to_rt(tpl, rt, parsed):
     while (len(list(parsed)) > 0):
         html_out = parsed.popleft()
         for parent in html_out.parents:
-            for html_key, html_value in html_names.items():
-                if (parent.name ==  html_key):
+            for html_key in html_names:
+                if (parent.name == html_key):
                     html_names[html_key] = True
                     if (html_key == 'a'):
                         html_names['href'] = parent.get('href')
@@ -177,7 +178,7 @@ def get_children(descendants, parsed):
     subelement = False
     descendants_buff = deque()
     if (isinstance(descendants, NavigableString)):
-            parsed.append(descendants)
+        parsed.append(descendants)
     else:
         for child in descendants.children:
             if (child.name == None):
@@ -199,7 +200,7 @@ def html_linear_parse(soup):
     descendants = deque()
     descendants.appendleft(html_tag)
     parsed = deque()
-    while (len(list(descendants)) > 0 ):
+    while (len(list(descendants)) > 0):
         child = descendants.popleft()
         from_children = get_children(child, parsed)
         descendants.extendleft(from_children)

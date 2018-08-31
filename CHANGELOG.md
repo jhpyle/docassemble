@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.93] - 2018-08-31
+### Fixed
+- Problem with `DATemplate` variables with string indices.
+
 ## [0.2.92] - 2018-08-27
 ### Added
 - The `show progress bar percentage` feature.
