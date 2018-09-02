@@ -19,6 +19,7 @@ import tempfile
 import time
 import stat
 import copy
+import random
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink']
 
@@ -2437,6 +2438,73 @@ class DATemplate(DAObject):
     def __str__(self):
         return unicode(self).encode('utf-8')
 
+def table_safe(text):
+    text = unicode(text)
+    text = re.sub(r'[\n\r\|]', ' ', text)
+    if re.match(r'[\-:]+', text):
+        text = '  ' + text + '  '
+    return text
+
+def text_of_table(table_info, user_dict):
+    table_content = "\n"
+    header_output = [table_safe(x.text(user_dict)) for x in table_info.header]
+    the_iterable = eval(table_info.row, user_dict)
+    if not hasattr(the_iterable, '__iter__'):
+        raise DAError("Error in processing table " + table_info.saveas + ": row value is not iterable")
+    if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and type(the_iterable.elements) in (list, dict) and docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
+        the_iterable = the_iterable.complete_elements()
+    indexno = 0
+    contents = list()
+    for item in the_iterable:
+        user_dict['row_item'] = item
+        user_dict['row_index'] = indexno
+        contents.append([table_safe(eval(x, user_dict)) for x in table_info.column])
+        indexno += 1
+    user_dict.pop('row_item', None)
+    user_dict.pop('row_index', None)
+    max_chars = [0 for x in header_output]
+    max_word = [0 for x in header_output]
+    for indexno in range(len(header_output)):
+        words = re.split(r'[ \n]', header_output[indexno])
+        if len(header_output[indexno]) > max_chars[indexno]:
+            max_chars[indexno] = len(header_output[indexno])
+        for content_line in contents:
+            words += re.split(r'[ \n]', content_line[indexno])
+            if len(content_line[indexno]) > max_chars[indexno]:
+                max_chars[indexno] = len(content_line[indexno])
+        for text in words:
+            if len(text) > max_word[indexno]:
+                max_word[indexno] = len(text)
+    max_chars_to_use = [min(x, table_info.table_width) for x in max_chars]
+    override_mode = False
+    while True:
+        new_sum = sum(max_chars_to_use)
+        old_sum = new_sum
+        if new_sum < table_info.table_width:
+            break
+        r = random.uniform(0, new_sum)
+        upto = 0
+        for indexno in range(len(max_chars_to_use)):
+            if upto + max_chars_to_use[indexno] >= r:
+                if max_chars_to_use[indexno] > max_word[indexno] or override_mode:
+                    max_chars_to_use[indexno] -= 1
+                    break
+            upto += max_chars_to_use[indexno]
+        new_sum = sum(max_chars_to_use)
+        if new_sum == old_sum:
+            override_mode = True
+    table_content += table_info.indent + "|".join(header_output) + "\n"
+    table_content += table_info.indent + "|".join(['-' * x for x in max_chars_to_use]) + "\n"
+    for content_line in contents:
+        table_content += table_info.indent + "|".join(content_line) + "\n"
+    if len(contents) == 0 and table_info.empty_message is not True:
+        if table_info.empty_message in (False, None):
+            table_content = "\n"
+        else:
+            table_content = table_info.empty_message.text(user_dict) + "\n"
+    table_content += "\n"
+    return table_content
+
 class DALazyTemplate(DAObject):
     """The class used for Markdown templates.  A template block saves to
     an object of this type.  The two attributes are "subject" and 
@@ -2446,6 +2514,8 @@ class DALazyTemplate(DAObject):
         return self.source_subject.text(self.user_dict).rstrip()
     @property
     def content(self):
+        if hasattr(self, 'table_info'):
+            return text_of_table(self.table_info, self.user_dict)
         return self.source_content.text(self.user_dict).rstrip()
     @property
     def decorations(self):

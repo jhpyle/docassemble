@@ -90,7 +90,7 @@ ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python
 ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python", "json": "json", "css": "css", "html": "htmlmixed"}
 
 default_yaml_filename = daconfig.get('default interview', None)
-final_default_yaml_filename = daconfig.get('default interview', 'docassemble.demo:data/questions/questions.yml')
+final_default_yaml_filename = daconfig.get('default interview', 'docassemble.demo:data/questions/default-interview.yml')
 keymap = daconfig.get('keymap', None)
 google_config = daconfig.get('google', dict())
 
@@ -1062,6 +1062,12 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'create_playground_package':
         remove_question_package(kwargs)
         return(url_for('create_playground_package', **kwargs))
+    elif file_reference == 'configuration':
+        remove_question_package(kwargs)
+        return(url_for('config_page', **kwargs))
+    elif file_reference == 'root':
+        remove_question_package(kwargs)
+        return(url_for('rootindex', **kwargs))
     if re.search('^[0-9]+$', file_reference):
         remove_question_package(kwargs)
         file_number = file_reference

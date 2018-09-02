@@ -32,6 +32,7 @@ import pycountry
 import random
 from user_agents import parse as ua_parse
 import phonenumbers
+from jinja2.runtime import Undefined
 locale.setlocale(locale.LC_ALL, '')
 
 __all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact']
@@ -291,12 +292,14 @@ def language_from_browser(*pargs):
 
 def country_name(country_code):
     """Given a two-digit country code, returns the country name."""
+    ensure_definition(country_code)
     return pycountry.countries.get(alpha_2=country_code).name
 
 def state_name(state_code, country_code=None):
     """Given a two-digit U.S. state abbreviation or the abbreviation of a
     subdivision of another country, returns the state/subdivision
     name."""
+    ensure_definition(state_code, country_code)
     if country_code is None:
         country_code = 'US'
     for subdivision in pycountry.subdivisions.get(country_code=country_code):
@@ -309,6 +312,7 @@ def state_name(state_code, country_code=None):
 def subdivision_type(country_code):
     """Returns the name of the most common country subdivision type for
     the given country code."""
+    ensure_definition(country_code)
     counts = dict()
     for subdivision in pycountry.subdivisions.get(country_code=country_code):
         if subdivision.parent_code is not None:
@@ -332,6 +336,7 @@ def countries_list():
 def states_list(country_code=None):
     """Returns a list of U.S. states or subdivisions of another country,
     suitable for use in a multiple choice field."""
+    ensure_definition(country_code)
     if country_code is None:
         country_code = 'US'
     mapping = dict()
@@ -1046,7 +1051,7 @@ def delete_record(key, id):
     """Deletes a record with the given key and id."""
     return server.delete_record(key, id)
 def url_of(file_reference, **kwargs):
-    """Returns a URL to a file within a docassemble package."""
+    """Returns a URL to a file within a docassemble package, or another page in the application."""
     if 'package' not in kwargs:
         kwargs['_package'] = get_current_package()
     if 'question' not in kwargs:
@@ -1348,6 +1353,7 @@ ordinal_functions = {
 
 def fix_punctuation(text, mark=None):
     """Ensures the text ends with punctuation."""
+    ensure_definition(text, mark)
     if mark is None:
         mark = '.'
     text = re.sub(r' +$', r'', text)
@@ -1358,6 +1364,7 @@ def fix_punctuation(text, mark=None):
 
 def item_label(num, level=None, punctuation=True):
     """Given an index and an outline level, returns I., II., A., etc."""
+    ensure_definition(num, level, punctuation)
     if level is None:
         level = 0
     level = int(float(level)) % 7
@@ -1386,6 +1393,7 @@ def item_label(num, level=None, punctuation=True):
 
 def alpha(num, case=None):
     """Given an index, returns A, B, C ... Z, AA, AB, etc."""
+    ensure_definition(num, case)
     if case is None:
         case = 'upper'
     div = num + 1
@@ -1400,6 +1408,7 @@ def alpha(num, case=None):
 
 def roman(num, case=None):
     """Given an index between 0 and 3999, returns a roman numeral between 1 and 4000."""
+    ensure_definition(num, case)
     if case is None:
         case = 'upper'
     num = num + 1
@@ -1594,6 +1603,7 @@ def comma_list_en(*pargs, **kwargs):
     """Returns the arguments separated by commas.  If the first argument is a list, 
     that list is used.  Otherwise, the arguments are treated as individual items.
     See also comma_and_list()."""
+    ensure_definition(*pargs, **kwargs)
     if 'comma_string' in kwargs:
         comma_string = kwargs['comma_string']
     else:
@@ -1611,6 +1621,7 @@ def comma_list_en(*pargs, **kwargs):
         return(comma_string.join(pargs))
 
 def comma_and_list_es(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
     if 'and_string' not in kwargs:
         kwargs['and_string'] = 'y'
     return comma_and_list_en(*pargs, **kwargs)
@@ -1620,6 +1631,7 @@ def comma_and_list_en(*pargs, **kwargs):
     that list is used.  Otherwise, the arguments are treated as individual items in the list.
     Use the optional argument oxford=False if you do not want a comma before the "and."
     See also comma_list()."""
+    ensure_definition(*pargs, **kwargs)
     if 'oxford' in kwargs and kwargs['oxford'] == False:
         extracomma = ""
     else:
@@ -1659,6 +1671,7 @@ def comma_and_list_en(*pargs, **kwargs):
 def need(*pargs):
     """Given one or more variables, this function instructs docassemble 
     to do what is necessary to define the variables."""
+    ensure_definition(*pargs)
     for argument in pargs:
         argument
     return True
@@ -1696,6 +1709,7 @@ def ordinal_number_default(i):
 
 def salutation_default(indiv, with_name=False, with_name_and_punctuation=False):
     """Returns Mr., Ms., etc. for an individual."""
+    ensure_definition(indiv, with_name, with_name_and_punctuation)
     used_gender = False
     if hasattr(indiv, 'salutation_to_use') and indiv.salutation_to_use is not None:
         salut = indiv.salutation_to_use
@@ -1739,6 +1753,7 @@ def ordinal_default(j, **kwargs):
 
 def nice_number_default(num, capitalize=False, language=None):
     """Returns the number as a word in the current language."""
+    ensure_definition(num, capitalize, language)
     if language is None:
         language = this_thread.language
     if language in nice_numbers:
@@ -1761,6 +1776,7 @@ def nice_number_default(num, capitalize=False, language=None):
         return unicode(locale.format("%.2f", float(num), grouping=True)).rstrip('0')
 
 def quantity_noun_default(num, noun, as_integer=True, capitalize=False, language=None):
+    ensure_definition(num, noun, as_integer, capitalize, language)
     if as_integer:
         num = int(round(num))
     result = nice_number(num, language=language) + " " + noun_plural(noun, num, language=language)
@@ -1770,6 +1786,7 @@ def quantity_noun_default(num, noun, as_integer=True, capitalize=False, language
         return result
 
 def capitalize_default(a, **kwargs):
+    ensure_definition(a)
     if a and (type(a) is str or type(a) is unicode) and len(a) > 1:
         return(a[0].upper() + a[1:])
     else:
@@ -1783,6 +1800,7 @@ def currency_default(value, decimals=True, **kwargs):
     """Returns the value as a currency, according to the conventions of the current locale.
     Use the optional keyword argument decimals=False if you do not want to see decimal places
     in the number."""
+    ensure_definition(value, decimals)
     obj_type = type(value).__name__
     if obj_type in ['FinancialList', 'PeriodicFinancialList']:
         value = value.total()
@@ -1802,6 +1820,7 @@ def currency_default(value, decimals=True, **kwargs):
 
 def prefix_constructor(prefix):
     def func(word, **kwargs):
+        ensure_definition(word, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(unicode(prefix)) + unicode(word)
         else:
@@ -1810,6 +1829,7 @@ def prefix_constructor(prefix):
 
 def double_prefix_constructor_reverse(prefix_one, prefix_two):
     def func(word_one, word_two, **kwargs):
+        ensure_definition(word_one, word_two, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(unicode(prefix_one)) + unicode(word_two) + unicode(prefix_two) + unicode(word_one)
         else:
@@ -1826,6 +1846,7 @@ def prefix_constructor_two_arguments(prefix, **kwargs):
 
 def middle_constructor(middle, **kwargs):
     def func(a, b, **kwargs):
+        ensure_definition(a, b, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(unicode(a)) + unicode(middle) + unicode(b)
         else:
@@ -1833,6 +1854,7 @@ def middle_constructor(middle, **kwargs):
     return func
 
 def possessify_en(a, b, **kwargs):
+    ensure_definition(a, b, **kwargs)
     if 'plural' in kwargs and kwargs['plural']:
         middle = "' "
     else:
@@ -1844,6 +1866,7 @@ def possessify_en(a, b, **kwargs):
 
 def a_preposition_b_default(a, b, **kwargs):
     #logmessage("Got here")
+    ensure_definition(a, b, **kwargs)
     if hasattr(a, 'preposition'):
         #logmessage("Has preposition")
         preposition = a.preposition
@@ -1855,6 +1878,7 @@ def a_preposition_b_default(a, b, **kwargs):
         return unicode(a) + unicode(' ' + preposition + ' ') + unicode(b)
 
 def verb_present_en(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
     new_args = list()
     for arg in pargs:
         new_args.append(unicode(arg))
@@ -1867,6 +1891,7 @@ def verb_present_en(*pargs, **kwargs):
         return(output)
     
 def verb_past_en(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
     new_args = list()
     for arg in pargs:
         new_args.append(arg)
@@ -1879,6 +1904,7 @@ def verb_past_en(*pargs, **kwargs):
         return(output)
 
 def noun_plural_en(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
     noun = noun_singular_en(pargs[0])
     if len(pargs) >= 2 and pargs[1] == 1:
         return unicode(noun)
@@ -1889,6 +1915,7 @@ def noun_plural_en(*pargs, **kwargs):
         return(output)
 
 def noun_singular_en(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
     if len(pargs) >= 2 and pargs[1] != 1:
         return pargs[0]
     output = pattern.en.singularize(unicode(pargs[0]))
@@ -1898,6 +1925,7 @@ def noun_singular_en(*pargs, **kwargs):
         return(output)
 
 def indefinite_article_en(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
     output = pattern.en.article(pargs[0].lower()) + " " + unicode(pargs[0])
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2038,6 +2066,7 @@ def language_function_constructor(term):
     if term not in language_functions:
         raise SystemError("term " + str(term) + " not in language_functions")
     def func(*args, **kwargs):
+        ensure_definition(*args, **kwargs)
         language = kwargs.get('language', None)
         if language is None:
             language = this_thread.language
@@ -2213,12 +2242,14 @@ def force_gather(*pargs):
     raise ForcedNameError(variable_name, gathering=True)
 
 def static_filename_path(filereference):
+    ensure_definition(filereference)
     result = package_data_filename(static_filename(filereference))
     #if result is None or not os.path.isfile(result):
     #    result = server.absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filereference)).path
     return(result)
 
 def static_filename(filereference):
+    ensure_definition(filereference)
     if re.search(r',', filereference):
         return(None)
     #filereference = re.sub(r'^None:data/static/', '', filereference)
@@ -2232,28 +2263,28 @@ def static_filename(filereference):
         parts[1] = 'data/static/' + parts[1]
     return(parts[0] + ':' + parts[1])
 
-def static_image(filereference, **kwargs):
+def static_image(filereference, width=None):
     """Inserts appropriate markup to include a static image.  If you know
     the image path, you can just use the "[FILE ...]" markup.  This function is
     useful when you want to assemble the image path programmatically.
     Takes an optional keyword argument "width"
     (e.g., static_image('docassemble.demo:crawling.png', width='2in'))."""
+    ensure_definition(filereference, width)
     filename = static_filename(filereference)
     if filename is None:
         return('ERROR: invalid image reference')
-    width = kwargs.get('width', None)
     if width is None:
         return('[FILE ' + filename + ']')
     else:
         return('[FILE ' + filename + ', ' + width + ']')
 
-def qr_code(string, **kwargs):
+def qr_code(string, width=None):
     """Inserts appropriate markup to include a QR code image.  If you know
     the string you want to encode, you can just use the "[QR ...]" markup.  
     This function is useful when you want to assemble the string programmatically.
     Takes an optional keyword argument "width"
     (e.g., qr_code('https://google.com', width='2in'))."""
-    width = kwargs.get('width', None)
+    ensure_definition(string, width)
     if width is None:
         return('[QR ' + string + ']')
     else:
@@ -2553,6 +2584,7 @@ def get_user_dict():
 
 def undefine(var):
     """Deletes the variable"""
+    unicode(var)
     if type(var) not in [str, unicode]:
         raise Exception("undefine() must be given a string, not " + str(var) + ", a " + str(var.__class__.__name__))
     try:
@@ -2596,6 +2628,7 @@ def dispatch(var):
 
 def define(var, val):
     """Sets the given variable, expressed as a string, to the given value."""
+    ensure_definition(var, val)
     if type(var) not in [str, unicode]:
         raise Exception("define() must be given a string as the variable name")
     user_dict = get_user_dict()
@@ -2611,6 +2644,7 @@ def define(var, val):
 
 def defined(var):
     """Returns true if the variable has already been defined.  Otherwise, returns false."""
+    unicode(var)
     if type(var) not in [str, unicode]:
         raise Exception("defined() must be given a string")
     try:
@@ -2684,6 +2718,7 @@ def defined(var):
 
 def value(var):
     """Returns the value of the variable given by the string 'var'."""
+    unicode(var)
     if type(var) not in [str, unicode]:
         raise Exception("value() must be given a string")
     try:
@@ -2777,7 +2812,7 @@ def value(var):
 def single_paragraph(text):
     """Reduces the text to a single paragraph.  Useful when using Markdown 
     to indent user-supplied text."""
-    return newlines.sub(' ', text)
+    return newlines.sub(' ', unicode(text))
 
 def quote_paragraphs(text):
     """Adds Markdown to quote all paragraphs in the text."""
@@ -2785,18 +2820,21 @@ def quote_paragraphs(text):
 
 def task_performed(task):
     """Returns True if the task has been performed at least once, otherwise False."""
+    ensure_definition(task)
     if task in this_thread.internal['tasks'] and this_thread.internal['tasks'][task]:
         return True
     return False
 
 def task_not_yet_performed(task):
     """Returns True if the task has never been performed, otherwise False."""
+    ensure_definition(task)
     if task_performed(task):
         return False
     return True
 
 def mark_task_as_performed(task):
     """Increases by 1 the number of times the task has been performed."""
+    ensure_definition(task)
     if not task in this_thread.internal['tasks']:
         this_thread.internal['tasks'][task] = 0
     this_thread.internal['tasks'][task] += 1
@@ -2804,12 +2842,14 @@ def mark_task_as_performed(task):
 
 def times_task_performed(task):
     """Returns the number of times the task has been performed."""
+    ensure_definition(task)
     if not task in this_thread.internal['tasks']:
         return 0
     return this_thread.internal['tasks'][task]
 
 def set_task_counter(task, times):
     """Allows you to manually set the number of times the task has been performed."""
+    ensure_definition(task, times)
     this_thread.internal['tasks'][task] = times
 
 def set_live_help_status(availability=None, mode=None, partner_roles=None):
@@ -2851,6 +2891,7 @@ def set_live_help_status(availability=None, mode=None, partner_roles=None):
 def phone_number_in_e164(number, country=None):
     """Given a phone number and a country code, returns the number in
     E.164 format.  Returns None if the number could not be so formatted."""
+    ensure_definition(number, country)
     if country is None:
         country = get_country()
     try:
@@ -2862,6 +2903,7 @@ def phone_number_in_e164(number, country=None):
         
 def phone_number_is_valid(number, country=None):
     """Given a phone number and a country code, returns True if the phone number is valid, otherwise False."""
+    ensure_definition(number, country)
     if country is None:
         country = get_country()
     try:
@@ -2873,6 +2915,7 @@ def phone_number_is_valid(number, country=None):
     return False
 
 def phone_number_part(number, part, country=None):
+    ensure_definition(number, part, country)
     if country is None:
         country = get_country()
     try:
@@ -2964,6 +3007,7 @@ def type_name(the_object):
 
 def plain(text, default=None):
     """Substitutes empty string or the value of the default parameter if the text is empty."""
+    ensure_definition(text, default)
     if text is None or text == '':
         if default is None:
             return ''
@@ -2973,6 +3017,7 @@ def plain(text, default=None):
 
 def bold(text, default=None):
     """Adds Markdown tags to make the text bold if it is not blank."""
+    ensure_definition(text, default)
     if text is None or text == '':
         if default is None:
             return ''
@@ -2982,6 +3027,7 @@ def bold(text, default=None):
 
 def italic(text, default=None):
     """Adds Markdown tags to make the text italic if it is not blank."""
+    ensure_definition(text, default)
     if text is None or text == '':
         if default is None:
             return ''
@@ -3000,6 +3046,7 @@ def indent(text, by=None):
     different number of spaces.
 
     """
+    ensure_definition(text, by)
     if by is None:
         by = 4
     text = " " * 4 + unicode(text)
@@ -3012,6 +3059,7 @@ def yesno(value, invert=False):
     This is used for populating PDF checkboxes.
 
     """
+    ensure_definition(value, invert)
     if value is None or value == '' or value.__class__.__name__ == 'DAEmpty':
         return ""
     if value:
@@ -3028,6 +3076,7 @@ def noyes(value, invert=False):
     checkboxes.
 
     """
+    ensure_definition(value, invert)
     if value is None or value == '' or value.__class__.__name__ == 'DAEmpty':
         return ""
     if value:
@@ -3040,6 +3089,7 @@ def noyes(value, invert=False):
 
 def split(text, breaks, index):
     """Splits text at particular breakpoints and returns the given piece."""
+    ensure_definition(text, breaks, index)
     text = re.sub(r'[\n\r]+', "\n", unicode(text).strip())
     if type(breaks) is not list:
         breaks = [breaks]
@@ -3093,6 +3143,7 @@ def showif(var, condition, alternative=''):
     condition is true, but otherwise returns empty text, or other alternative text.
 
     """
+    ensure_definition(var, condition, alternative)
     if condition:
         return value(var)
     return alternative
@@ -3213,47 +3264,69 @@ def go_back_in_session(yaml_filename, session_id, secret=None):
         raise Exception("You cannot go back in the current interview session")
     server.go_back_in_session(yaml_filename, session_id, secret=secret)
 
-def turn_to_ones(match):
-    string = match.group(1)
-    string = '@' * len(string)
-    return string
+def turn_to_at_sign(match):
+    return '@' * len(match.group(1))
     
 def redact(text):
-    """Return the given text except when the document is being assembled
-    in redacted mode, in which case redacted text should be
-    returned."""
-    if not this_thread.misc.get('redact', False):
-        logmessage("redact: not time to redact")
+    """Redact the given text from documents, except when redaction is turned off for the given file."""
+    if not this_thread.misc.get('redact', True):
         return text
-    logmessage("redact: redacting")
     the_text = unicode(text)
     the_text = re.sub(r'\[(NBSP|ENDASH|EMDASH|HYPHEN|CHECKBOX|PAGENUM|TOTALPAGES|SECTIONNUM)\]', 'x', the_text)
     ref_text = the_text
-    ref_text = re.sub(r'\[(INDENTBY) [^\]]*\]', turn_to_ones)
-    ref_text = re.sub(r'\[(START_INDENTATION|STOP_INDENTATION|BEGIN_CAPTION|VERTICAL_LINE|END_CAPTION|BEGIN_TWOCOL|BREAK|END_TWOCOL|TIGHTSPACING|SINGLESPACING|DOUBLESPACING|ONEANDAHALFSPACING|TRIPLESPACING|BLANK|BLANKFILL|PAGEBREAK|SKIPLINE|VERTICALSPACE|NEWLINE|NEWPAR|BR|TAB|END|BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|CENTER|BOLDCENTER)\]', turn_to_ones)
-    ref_text = re.sub(r'[\n\r]', '@')
-    ref_text = re.sub(r'[^\@]', '#')
+    ref_text = re.sub(r'(\[(INDENTBY) [^\]]*\])', turn_to_at_sign, ref_text)
+    ref_text = re.sub(r'(\[(START_INDENTATION|STOP_INDENTATION|BEGIN_CAPTION|VERTICAL_LINE|END_CAPTION|BEGIN_TWOCOL|BREAK|END_TWOCOL|TIGHTSPACING|SINGLESPACING|DOUBLESPACING|ONEANDAHALFSPACING|TRIPLESPACING|BLANK|BLANKFILL|PAGEBREAK|SKIPLINE|VERTICALSPACE|NEWLINE|NEWPAR|BR|TAB|END|BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|CENTER|BOLDCENTER)\])', turn_to_at_sign, ref_text)
+    ref_text = re.sub(r'(\<\/w\:t\>\<w\:br\/\>\<w\:t xml\:space\=\"preserve\"\>)', turn_to_at_sign, ref_text)
+    ref_text = re.sub(r'[\n\r\t]', '@', ref_text)
+    ref_text = re.sub(r'[^\@]', '#', ref_text)
     output = u''
-        
-    for indexno in range(len(the_text)):
-        if char in ("\n", "\r", "\t"):
-            output += char
-        elif re.match(r'[0-9\-]', char):
-            if this_thread.evaluation_context == 'pdf':
+    if this_thread.evaluation_context == 'pdf':
+        for indexno in range(len(the_text)):
+            char = the_text[indexno]
+            if ref_text[indexno] == '@':
+                output += char
+            elif re.match(r'[0-9\-]', char):
                 output += u'x'
-            else:
-                output += u'[REDACTION_SYMBOL ' + char + ']'
-        elif random.random() < 0.2:
-            if this_thread.evaluation_context == 'pdf':
+            elif random.random() < 0.2:
                 output += u' '
             else:
-                output += u'[REDACTION_SPACE]'
-        else:
-            if this_thread.evaluation_context == 'pdf':
                 output += u'x'
+    elif this_thread.evaluation_context == 'docx':
+        for indexno in range(len(the_text)):
+            char = the_text[indexno]
+            if ref_text[indexno] == '@':
+                output += char
+            elif char == ' ':
+                output += u'█​'
+            else:
+                output += u'█'
+    else:
+        current_word = ''
+        for indexno in range(len(the_text)):
+            char = the_text[indexno]
+            if ref_text[indexno] == '@':
+                if len(current_word):
+                    output += u'[REDACTION_WORD ' + unicode(current_word) + u']'
+                    current_word = ''
+                output += char
+            elif char == ' ':
+                if len(current_word):
+                    output += u'[REDACTION_WORD ' + unicode(current_word) + u']'
+                    current_word = ''
+                output += u'[REDACTION_SPACE]'
             else:
                 if char == ']':
-                    output += u'[REDACTION_SYMBOL []'
+                    current_word += '['
                 else:
-                    output += u'[REDACTION_SYMBOL ' + char + ']'
+                    current_word += char
+        if len(current_word):
+            output += u'[REDACTION_WORD ' + unicode(current_word) + u']'
     return output
+
+def ensure_definition(*pargs, **kwargs):
+    for val in pargs:
+        if isinstance(val, Undefined):
+            str(val)
+    for var, val in kwargs.iteritems():
+        if isinstance(val, Undefined):
+            str(val)

@@ -3,37 +3,13 @@ metadata:
   short title: Redact
   documentation: "https://docassemble.org/docs/functions.html#redact"
   example start: 3
-  example end: 4
+  example end: 3
 ---
 modules:
   - docassemble.base.util
 ---
 objects:
   - user: Individual
----
-template: petition_text
-content: |
-  Dear Judge,
-
-  My name is ${ user }.
-  I have a claim against
-  the defendant.  A big one.
-
-  My SSN is ${ redact(user.ssn) }.
-  My phone number is
-  ${ user.phone_number }.
-
-  My home address is:
-
-  ${ redact(user.address) }
-
-  I demand ${ currency(money_claimed) }.
-
-  Thank you.
-
-  Sincerely,
-
-  ${ user }
 ---
 mandatory: True
 question: |
@@ -48,22 +24,12 @@ subquestion: |
   record.
 attachments:
   - name: Unredacted petition
-    filename: petition_unredacted
     redact: False
-    valid formats:
-      - pdf
-      - rtf
-      - docx
-    content: |
-      ${ petition_text }
+    filename: petition_unredacted
+    docx template file: redact_demo.docx
   - name: Redacted petition
     filename: petition_redacted
-    valid formats:
-      - pdf
-      - rtf
-      - docx
-    content: |
-      ${ petition_text }
+    docx template file: redact_demo.docx
 ---
 question: |
   Tell me about yourself.

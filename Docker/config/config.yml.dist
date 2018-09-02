@@ -43,7 +43,7 @@ mail:
   server: localhost
   default sender: '"Administrator" <no-reply@example.com>'
 server administrator email: {{SERVERADMIN}}
-default interview: docassemble.demo:data/questions/questions.yml
+default interview: docassemble.base:data/questions/default-interview.yml
 language: en
 locale: en_US.utf8
 os locale: {{LOCALE}}

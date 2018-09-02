@@ -19,6 +19,7 @@ import docassemble.base.functions
 from docassemble.base.pandoc import MyPandoc
 from bs4 import BeautifulSoup
 import ruamel.yaml
+from pylatex.utils import escape_latex
 
 from docassemble.base.logger import logmessage
 from rtfng.object.picture import Image
@@ -139,6 +140,11 @@ def rtf_prefilter(text, metadata=dict()):
     text = re.sub(r'\[BEGIN_CAPTION\]\s+', '[BEGIN_CAPTION]\n\n', text)
     return(text)
 
+def repeat_along(chars, match):
+    output = chars * len(match.group(1))
+    logmessage("Output is " + repr(output))
+    return output    
+
 def rtf_filter(text, metadata=None, styles=None, question=None):
     if metadata is None:
         metadata = dict()
@@ -196,8 +202,8 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
     text = re.sub(r'\[VIMEO[^ ]* ([^\]]+)\]', '', text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\s*\[VERTICAL_LINE\]\s*(.+?)\[END_CAPTION\]', rtf_caption_table, text, flags=re.DOTALL)
     text = re.sub(r'\[NBSP\]', r'\\~ ', text)
-    text = re.sub(r'\[REDACTION_SPACE\]', r'\\u9608\\\'3f\\zwbo', text)
-    text = re.sub(r'\[REDACTION_SYMBOL .\]', r'\\u9608\\\'3f', text)
+    text = re.sub(r'\[REDACTION_SPACE\]', r'\\u9608\\zwbo', text)
+    text = re.sub(r'\[REDACTION_WORD ([^\]]+)\]', lambda x: repeat_along('\\u9608', x), text)
     text = re.sub(r'\[ENDASH\]', r'{\\endash}', text)
     text = re.sub(r'\[EMDASH\]', r'{\\emdash}', text)
     text = re.sub(r'\[HYPHEN\]', r'-', text)
@@ -332,6 +338,7 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
     return(text)
 
 def docx_filter(text, metadata=None, question=None):
+    logmessage('docx_filter')
     if metadata is None:
         metadata = dict()
     text = text + "\n\n"
@@ -358,8 +365,8 @@ def docx_filter(text, metadata=None, question=None):
     text = re.sub(r'\[ONEANDAHALFSPACING\] *', '', text)
     text = re.sub(r'\[TRIPLESPACING\] *', '', text)
     text = re.sub(r'\[NBSP\]', ' ', text)
-    text = re.sub(r'\[REDACTION_SPACE\]', r'█​', text)
-    text = re.sub(r'\[REDACTION_SYMBOL .\]', r'█', text)
+    text = re.sub(r'\[REDACTION_SPACE\]', u'█​', text)
+    text = re.sub(r'\[REDACTION_WORD ([^\]]+)\]', lambda x: repeat_along(u'█', x), text)
     text = re.sub(r'\[ENDASH\]', '--', text)
     text = re.sub(r'\[EMDASH\]', '---', text)
     text = re.sub(r'\[HYPHEN\]', '-', text)
@@ -388,6 +395,7 @@ def docx_filter(text, metadata=None, question=None):
     return(text)
 
 def docx_template_filter(text):
+    logmessage('docx_template_filter')
     if text == 'True':
         return True
     elif text == 'False':
@@ -418,7 +426,9 @@ def docx_template_filter(text):
     text = re.sub(r'\[TRIPLESPACING\] *', '', text)
     text = re.sub(r'\[NBSP\]', ' ', text)
     text = re.sub(r'\[REDACTION_SPACE\]', r'█​', text)
-    text = re.sub(r'\[REDACTION_SYMBOL .\]', r'█', text)
+    #text = re.sub(r'\[REDACTION_SPACE\]', r'', text)
+    text = re.sub(r'\[REDACTION_WORD ([^\]]+)\]', lambda x: repeat_along('█', x), text)
+    #text = re.sub(r'\[REDACTION_WORD ([^\]]+)\]', lambda x: repeat_along('X', x), text)
     text = re.sub(r'\[ENDASH\]', '--', text)
     text = re.sub(r'\[EMDASH\]', '---', text)
     text = re.sub(r'\[HYPHEN\]', '-', text)
@@ -459,6 +469,9 @@ def metadata_filter(text, doc_format):
         text = re.sub(r'\_([^\_]+?)\_*', r'\\begingroup\\itshape \1\\endgroup {}', text, flags=re.MULTILINE | re.DOTALL)
     return text
 
+def redact_latex(match):
+    return u'\\redactword{' + unicode(escape_latex(match.group(1))) + u'}'
+
 def pdf_filter(text, metadata=None, question=None):
     if metadata is None:
         metadata = dict()
@@ -490,8 +503,8 @@ def pdf_filter(text, metadata=None, question=None):
     text = re.sub(r'\[ONEANDAHALFSPACING\]\s*', '\\onehalfspacing\\setlength{\\parindent}{\\myindentamount}\\setlength{\\RaggedRightParindent}{\\parindent}', text)
     text = re.sub(r'\[TRIPLESPACING\]\s*', '\\setlength{\\parindent}{\\myindentamount}\\setlength{\\RaggedRightParindent}{\\parindent}', text)
     text = re.sub(r'\[NBSP\]', r'\\myshow{\\nonbreakingspace}', text)
-    text = re.sub(r'\[REDACTION_SPACE\]', r'\\hspace{0pt}', text)
-    text = re.sub(r'\[REDACTION_SYMBOL (.)\]', r'\\redactsymbol{\1}', text)
+    text = re.sub(r'\[REDACTION_SPACE\]', r'\\redactword{~}\\hspace{0pt}', text)
+    text = re.sub(r'\[REDACTION_WORD ([^\]]+)\]', redact_latex, text)
     text = re.sub(r'\[ENDASH\]', r'\\myshow{\\myendash}', text)
     text = re.sub(r'\[EMDASH\]', r'\\myshow{\\myemdash}', text)
     text = re.sub(r'\[HYPHEN\]', r'\\myshow{\\myhyphen}', text)
@@ -555,6 +568,8 @@ def html_filter(text, status=None, question=None, embedder=None, default_image_w
     text = re.sub(r'\[START_INDENTATION\] *', r'', text)
     text = re.sub(r'\[STOP_INDENTATION\] *', r'', text)
     text = re.sub(r'\[NBSP\]', r'&nbsp;', text)
+    text = re.sub(r'\[REDACTION_SPACE\]', '&#9608;&#8203;', text)
+    text = re.sub(r'\[REDACTION_WORD ([^\]]+)\]', lambda x: repeat_along('&#9608;', x), text)
     text = re.sub(r'\[ENDASH\]', r'&ndash;', text)
     text = re.sub(r'\[EMDASH\]', r'&mdash;', text)
     text = re.sub(r'\[HYPHEN\]', r'-', text)

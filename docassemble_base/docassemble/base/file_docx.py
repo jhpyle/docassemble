@@ -207,7 +207,10 @@ def html_linear_parse(soup):
     return parsed
 
 def markdown_to_docx(text, tpl):
-    soup = BeautifulSoup('<html>' + docassemble.base.filter.markdown_to_html(text, do_terms=False) + '</html>', 'lxml')
+    source_code = '<html>' + docassemble.base.filter.markdown_to_html(text, do_terms=False) + '</html>'
+    source_code = re.sub("\n", ' ', source_code)
+    source_code = re.sub(">\s+<", '><', source_code)
+    soup = BeautifulSoup(source_code, 'lxml')
     return add_to_rt(tpl, RichText(''), html_linear_parse(soup))
 
 def test_markdown_to_docx(mdown_dict, docx_tpl):
