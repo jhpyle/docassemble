@@ -525,8 +525,14 @@ def interview_url(**kwargs):
         url = get_config('root')
         if url is None:
             url = '/'
+        url += 'interview'
     else:
+        root_url = get_config('root')
+        if root_url is None:
+            root_url = '/'
+        root_url += 'interview'
         url = str(this_thread.internal['url'])
+        url = re.sub(r'(https?://[^/]+).*', r'\1', url) + root_url
     url += '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
     return url
 
@@ -668,9 +674,17 @@ def interview_url_action(action, **kwargs):
         args['session'] = this_thread.current_info['session']
     args['action'] = myb64quote(json.dumps({'action': action, 'arguments': kwargs}))
     if do_local:
-        url = ''
+        url = get_config('root')
+        if url is None:
+            url = '/'
+        url += 'interview'
     else:
+        root_url = get_config('root')
+        if root_url is None:
+            root_url = '/'
+        root_url += 'interview'
         url = str(this_thread.internal['url'])
+        url = re.sub(r'(https?://[^/]+).*', r'\1', url) + root_url
     url += '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
     return url
 
