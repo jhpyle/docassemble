@@ -17704,8 +17704,9 @@ def api_interviews():
 
 @app.route('/manage_api', methods=['GET', 'POST'])
 @login_required
-@roles_required(['admin', 'developer'])
 def manage_api():
+    if not current_user.has_role(*daconfig.get('api privileges', ['admin', 'developer'])):
+        abort(404)
     form = APIKey(request.form)
     action = request.args.get('action', None)
     api_key = request.args.get('key', None)
