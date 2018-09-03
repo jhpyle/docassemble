@@ -206,6 +206,13 @@ def html_linear_parse(soup):
         descendants.extendleft(from_children)
     return parsed
 
+def fix_newlines(html):
+    regex = re.compile(r"[^>]\n")
+    iterator = regex.finditer(html)
+    for newline in iterator:  
+        html = html[:newline.span()[0]+1] + " " + html[newline.span()[1]:]
+    return html
+
 def markdown_to_docx(text, tpl):
     source_code = '<html>' + docassemble.base.filter.markdown_to_html(text, do_terms=False) + '</html>'
     source_code = re.sub("\n", ' ', source_code)
@@ -231,7 +238,7 @@ def test_markdown_to_docx(mdown_dict, docx_tpl):
     jinja_tags = {}
     tpl = DocxTemplate(docx_tpl)
     for mdown_key, mdown_value in mdown_dict.items():
-        html_doc = markdown.markdown(mdown_value)
+        html_doc = fix_newlines(markdown.markdown(mdown_value))
         rt = RichText('')
         soup = BeautifulSoup(html_doc, 'lxml')
         html_parsed = deque()
