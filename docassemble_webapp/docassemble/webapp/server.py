@@ -8341,7 +8341,7 @@ def index():
             if question_type not in interview_status.screen_reader_text:
                 continue
             phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')
-            if not phrase:
+            if (not phrase) or len(phrase) < 10:
                 phrase = "The sky is blue."
             phrase = re.sub(r'[^A-Za-z 0-9\.\,\?\#\!\%\&\(\)]', r' ', phrase)
             readability[question_type] = [('Flesch Reading Ease', textstat.flesch_reading_ease(phrase)),
@@ -17428,7 +17428,6 @@ def api_session_new():
         
 def create_new_interview(yaml_filename, secret, url_args=None, request=None):
     session_id, user_dict = reset_session(yaml_filename, secret)
-    obtain_lock(session_id, yaml_filename)
     add_referer(user_dict)
     if url_args:
         for key, val in url_args.iteritems():
