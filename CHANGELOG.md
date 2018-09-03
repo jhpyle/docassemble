@@ -1,5 +1,35 @@
 # Change Log
 
+## [0.2.94] - 2018-09-02
+### Added
+- The `redact()` function and `redact` option on `attachment`s.
+### Changed
+- The `template` and `table` blocks now become `DALazyTemplate`
+  objects rather than `DATemplate` objects.  Their contents are
+  evaluated at the time they are reduced to text, not at the time they
+  are created.
+### Fixed
+- Problem with `currency()` and other functions when used from a `docx
+  template file` where undefined variables did not raise exceptions.
+
+## [0.2.93] - 2018-08-31
+### Fixed
+- Problem with `DATemplate` variables with string indices.
+
+## [0.2.92] - 2018-08-27
+### Added
+- The `show progress bar percentage` feature.
+### Changed
+- The `background_response()` function can be called using
+  `background_response('refresh')` to refresh the user's screen.
+
+## [0.2.91] - 2018-08-25
+### Added
+- The `getField()` and `setField()` JavaScript functions.
+### Fixed
+- The `fields` version of `background_response()` could not set radio
+  buttons.
+
 ## [0.2.90] - 2018-08-23
 ### Fixed
 - Problem with checkboxes inside a `show if`.
@@ -31,6 +61,7 @@
 ## [0.2.86] - 2018-08-17
 ### Added
 - The `js show if` and `js hide if` field modifiers.
+- The `val()` JavaScript function.
 - The `continue button field` feature.
 ### Changed
 - Upgraded Font Awesome to 5.2.0.

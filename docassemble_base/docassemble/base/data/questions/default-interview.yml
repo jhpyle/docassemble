@@ -1,0 +1,43 @@
+metadata:
+  title: Default interview
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+question: |
+  It works!
+subquestion: |
+  Your **docassemble** server is working.  Congratulations!
+
+  % if get_config('default interview') == 'docassemble.base:data/questions/default-interview.yml':
+  You are seeing this screen because your [Configuration] contains the
+  following directive:
+
+  `default interview: docassemble.base:data/questions/default-interview.yml`
+
+  Once you create an interview of your own, you will want to change
+  the `default interview` so that your end users will not see this
+  screen when they go to your site.  (There are also other ways to
+  configure what users see when they visit your site.)
+  % elif get_config('default interview') is None:
+  You are seeing this screen because your [Configuration] does not
+  contain a `default interview` directive.  This interview,
+  `docassemble.base:data/questions/default-interview.yml`, is a
+  "factory default" interview.
+
+  Once you create an interview of your own, you will want to add a
+  `default interview` directive so that your end users will not see
+  this screen when they go to your site.  (There are also other ways
+  to configure what users see when they visit your site.)
+  % endif
+
+  For help getting started with writing your first interview, see the
+  [Hello World section] of the documentation.
+
+  For more information about how to configure your **docassemble**
+  server, see the [Configuration section] of the documentation.
+
+  [Configuration]: ${ url_of('configuration') }
+  [Hello World section]: https://docassemble.org/docs/helloworld.html
+  [Configuration section]: https://docassemble.org/docs/config.html

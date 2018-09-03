@@ -1,0 +1,32 @@
+metadata:
+  title: Flash message
+  documentation: "https://docassemble.org/docs/background.html#check in"
+  example start: 2
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  What is your favorite food?
+fields:
+  - Favorite food: favorite_food
+  - Favorite drink: favorite_drink
+check in: criticize_food
+---
+code: |
+  favorite_food_interim = ''
+---
+event: criticize_food
+code: |
+  if action_argument('favorite_food') and action_argument('favorite_food') != favorite_food_interim:
+    favorite_food_interim = action_argument('favorite_food')
+    background_response("What? You like " + favorite_food_interim.upper() + "?", 'flash')
+  background_response()
+---
+mandatory: True
+question: |
+  Your favorite food is
+  ${ favorite_food }
+  and your favorite drink is
+  ${ favorite_drink }.

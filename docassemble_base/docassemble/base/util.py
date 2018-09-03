@@ -19,7 +19,7 @@ from docassemble.base.error import DAError, DAValidationError
 import docassemble.base.pdftk
 import docassemble.base.file_docx
 from docassemble.base.file_docx import include_docx_template
-from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_title, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, get_session_variables, set_session_variables, go_back_in_session, manage_privileges, salutation
+from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_title, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, get_session_variables, set_session_variables, go_back_in_session, manage_privileges, salutation, redact, ensure_definition
 from docassemble.base.core import DAObject, DAList, DADict, DASet, DAFile, DAFileCollection, DAStaticFile, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, DAEmpty, DALink, selections, objects_from_file
 from decimal import Decimal
 import sys
@@ -43,7 +43,7 @@ import shutil
 import subprocess
 from bs4 import BeautifulSoup
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_title', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_title', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact']
 
 #knn_machine_learner = DummyObject
 
@@ -197,6 +197,7 @@ def run_python_module(module, arguments=None):
 
 def today(timezone=None, format=None):
     """Returns today's date at midnight as a DADateTime object."""
+    ensure_definition(timezone, format)
     if timezone is None:
         timezone = get_default_timezone()
     val = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone))
@@ -220,6 +221,7 @@ def today(timezone=None, format=None):
 def month_of(the_date, as_word=False, language=None):
     """Interprets the_date as a date and returns the month.  
     Set as_word to True if you want the month as a word."""
+    ensure_definition(the_date, as_word, language)
     if language is None:
         language = get_language()
     try:
@@ -235,6 +237,7 @@ def month_of(the_date, as_word=False, language=None):
 
 def day_of(the_date, language=None):
     """Interprets the_date as a date and returns the day of month."""
+    ensure_definition(the_date, language)
     try:
         if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
             date = the_date
@@ -246,6 +249,7 @@ def day_of(the_date, language=None):
 
 def dow_of(the_date, as_word=False, language=None):
     """Interprets the_date as a date and returns the day of week as a number from 1 to 7 for Sunday through Saturday.  Set as_word to True if you want the day of week as a word."""
+    ensure_definition(the_date, as_word, language)
     if language is None:
         language = get_language()
     try:
@@ -262,6 +266,7 @@ def dow_of(the_date, as_word=False, language=None):
 
 def year_of(the_date, language=None):
     """Interprets the_date as a date and returns the year."""
+    ensure_definition(the_date, language)
     try:
         if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
             date = the_date
@@ -273,6 +278,7 @@ def year_of(the_date, language=None):
 
 def format_date(the_date, format='long', language=None):
     """Interprets the_date as a date and returns the date formatted for the current locale."""
+    ensure_definition(the_date, format, language)
     if language is None:
         language = get_language()
     if isinstance(the_date, DAEmpty):
@@ -288,6 +294,7 @@ def format_date(the_date, format='long', language=None):
 
 def format_datetime(the_date, format='long', language=None):
     """Interprets the_date as a date/time and returns the date/time formatted for the current locale."""
+    ensure_definition(the_date, format, language)
     if language is None:
         language = get_language()
     if isinstance(the_date, DAEmpty):
@@ -303,6 +310,7 @@ def format_datetime(the_date, format='long', language=None):
 
 def format_time(the_time, format='short', language=None):
     """Interprets the_time as a date/time and returns the time formatted for the current locale."""
+    ensure_definition(the_time, format, language)
     if language is None:
         language = get_language()
     if isinstance(the_time, DAEmpty):
@@ -374,6 +382,7 @@ def current_datetime(timezone=None):
     timezone is explicitly provided.
 
     """
+    ensure_definition(timezone)
     if timezone is None:
         timezone = get_default_timezone()
     return dd(pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone)))
@@ -381,6 +390,7 @@ def current_datetime(timezone=None):
 def as_datetime(the_date, timezone=None):
     """Converts the_date to a datetime.datetime object with a timezone.  Uses the
     default timezone unless another timezone is explicitly provided."""
+    ensure_definition(the_date, timezone)
     if timezone is None:
         timezone = get_default_timezone()
     if isinstance(the_date, datetime.date) and not isinstance(the_date, datetime.datetime):
@@ -406,12 +416,14 @@ def dt(obj):
 def date_interval(**kwargs):
     """Expresses a date and time interval.  Passes through all arguments 
     to dateutil.relativedelta.relativedelta."""
+    ensure_definition(**kwargs)
     return dateutil.relativedelta.relativedelta(**kwargs)
 
 def date_difference(starting=None, ending=None, timezone=None):
     """Calculates the difference between the date indicated by "starting" 
     and the date indicated by "ending."  Returns an object with attributes weeks, 
     days, hours, minutes, seconds, and delta."""
+    ensure_definition(starting, ending, timezone)
     if starting is None:
         starting = current_datetime()
     if ending is None:
@@ -491,6 +503,7 @@ def email_stringer(variable, first=False, include_name=False):
 
 def valid_datetime(the_datetime):
     """Returns True if the provided text represents a valid date or time."""
+    ensure_definition(the_datetime)
     if isinstance(the_datetime, datetime.date) or isinstance(the_datetime, datetime.time):
         return True
     try:
@@ -1488,6 +1501,7 @@ class PeriodicValue(Value):
         or 0 if the value does not exist."""
         if not self.exists:
             return 0
+        ensure_definition(period_to_use)
         return (Decimal(self.value) * Decimal(self.period)) / Decimal(period_to_use)
 
 class OfficeList(DAList):
@@ -1511,6 +1525,7 @@ class Organization(Person):
     def will_handle(self, problem=None, county=None):
         """Returns True or False depending on whether the organization 
         serves the given county and/or handles the given problem."""
+        ensure_definition(problem, county)
         if problem:
             if not (hasattr(self, 'handles') and problem in self.handles):
                 return False

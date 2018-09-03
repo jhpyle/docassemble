@@ -1,0 +1,22 @@
+metadata:
+  title: Progress bar with %
+  short title: Progress
+  documentation: "https://docassemble.org/docs/modifiers.html#progress"
+---
+features:
+  progress bar: True
+  show progress bar percentage: True
+---
+question: Are you doing well?
+yesno: user_is_well
+progress: 20
+---
+question: Done with the interview.
+subquestion: |
+  % if user_is_well:
+  I am glad you are doing well.
+  % else:
+  I am sorry to hear that!
+  % endif
+progress: 100
+mandatory: True

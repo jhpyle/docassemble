@@ -96,6 +96,7 @@ do
          "$file" = "help-damages" -o \
          "$file" = "progress" -o \
          "$file" = "progress-features" -o \
+         "$file" = "progress-features-percentage" -o \
 	 "$file" = "progress-multi" -o \
          "$file" = "response" -o \
          "$file" = "response-hello" -o \

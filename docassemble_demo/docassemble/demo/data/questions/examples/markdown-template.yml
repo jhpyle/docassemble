@@ -9,15 +9,21 @@ template: the_template
 content: |
   This is *italic text*.
   This is **bold text**.
-  This is __also bold text__.
+  This is __some *bold italic* text__.
+
+  **bold** at beginning of paragraph.
+
+  *italic* at beginning of paragraph.
 
   > This is some block-quoted
   > text
 
-  ### This is a heading
+  ## This is a heading
 
   This is some regular text.
 
+  ### Lists
+  
   Here is a bullet list:
 
   * Apple

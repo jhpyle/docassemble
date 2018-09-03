@@ -1,0 +1,60 @@
+metadata:
+  title: Redact text
+  short title: Redact
+  documentation: "https://docassemble.org/docs/functions.html#redact"
+  example start: 3
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+---
+mandatory: True
+question: |
+  Here is your document.
+subquestion: |
+  You need to print both copies
+  and file them in court.
+
+  The unredacted version goes
+  to the judge, and the redacted
+  version will go in the public
+  record.
+attachments:
+  - name: Unredacted petition
+    redact: False
+    filename: petition_unredacted
+    docx template file: redact_demo.docx
+  - name: Redacted petition
+    filename: petition_redacted
+    docx template file: redact_demo.docx
+---
+question: |
+  Tell me about yourself.
+fields:
+  - First name: user.name.first
+  - Last name: user.name.last
+  - Social Security number: user.ssn
+    default: 000-22-2299
+  - Phone number: user.phone_number
+    default: 202-555-6266
+---
+question: |
+  Where do you live?
+fields:
+  - Address: user.address.address
+    address autocomplete: True
+  - City: user.address.city
+  - State: user.address.state
+    code: |
+      states_list()
+  - Zip: user.address.zip
+    required: False
+---
+question: |
+  How much do you want to sue for?
+fields:
+  - Amount: money_claimed
+    datatype: currency

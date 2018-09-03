@@ -65,13 +65,6 @@ def process_audio_video_list(the_list, user_dict):
         output.append({'text': the_item['text'].text(user_dict), 'package': the_item['package'], 'type': the_item['type']})
     return output
 
-def table_safe(text):
-    text = unicode(text)
-    text = re.sub(r'[\n\r\|]', ' ', text)
-    if re.match(r'[\-:]+', text):
-        text = '  ' + text + '  '
-    return text
-
 def textify(data, user_dict):
     return list(map((lambda x: x.text(user_dict)), data))
 
@@ -945,6 +938,8 @@ class Question:
                 self.interview.table_width = data['features']['table width']
             if 'progress bar' in data['features']:
                 self.interview.use_progress_bar = True if data['features']['progress bar'] else False
+            if 'show progress bar percentage' in data['features'] and data['features']['show progress bar percentage']:
+                self.interview.show_progress_bar_percentage = True
             if 'question back button' in data['features']:
                 self.interview.question_back_button = True if data['features']['question back button'] else False
             if 'question help button' in data['features']:
@@ -2611,6 +2606,12 @@ class Question:
                 target['filename'] = ''
             if 'description' not in target:
                 target['description'] = ''
+            if 'redact' in target:
+                if isinstance(target['redact'], bool) or isinstance(target['redact'], NoneType):
+                    options['redact'] = target['redact']
+                else:
+                    options['redact'] = compile(target['redact'], '<expression>', 'eval')
+                    self.find_fields_in(target['redact'])
             if 'checkbox export value' in target and 'pdf template file' in target:
                 if type(target['checkbox export value']) not in (str, unicode):
                     raise DAError("A checkbox export value must be a string." + self.idebug(target))
@@ -3462,15 +3463,19 @@ class Question:
             except:
                 pass
             #logmessage("finalize_attachment: " + attachment['variable_name'] + " was not in cache")
+        #logmessage("In finalize where redact is " + repr(result['redact']))
+        docassemble.base.functions.this_thread.misc['redact'] = result['redact']
         for doc_format in result['formats_to_use']:
             if doc_format in ('pdf', 'rtf', 'rtf to docx', 'tex', 'docx'):
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
+                        docassemble.base.functions.set_context('pdf')
                         the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'], password=result['password'])
                         result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
                         for key in ('images', 'data_strings', 'convert_to_pdf_a', 'password'):
                             if key in result:
                                 del result[key]
+                        docassemble.base.functions.reset_context()
                     elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
                         #logmessage("field_data is " + str(result['field_data']))
                         docassemble.base.functions.set_context('docx', template=result['template'])
@@ -3592,6 +3597,14 @@ class Question:
         if the_filename == '':
             the_filename = docassemble.base.functions.space_to_underscore(the_name)
         result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
+        if 'redact' in attachment['options']:
+            if isinstance(attachment['options']['redact'], CodeType):
+                result['redact'] = eval(attachment['options']['redact'], user_dict)
+            else:
+                result['redact'] = attachment['options']['redact']
+        else:
+            result['redact'] = True
+        docassemble.base.functions.this_thread.misc['redact'] = result['redact']
         result['markdown'] = dict();
         result['content'] = dict();
         result['extension'] = dict();
@@ -3675,6 +3688,7 @@ class Question:
                                 else:
                                     result['field_data'][varname] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
                 elif doc_format == 'pdf' and 'fields' in attachment['options'] and 'pdf_template_file' in attachment['options']:
+                    docassemble.base.functions.set_context('pdf')
                     result['data_strings'] = []
                     result['images'] = []
                     if type(attachment['options']['fields']) is dict:
@@ -3723,8 +3737,8 @@ class Question:
                                     val = float_formatter % val
                                 else:
                                     val = unicode(val)
-                                val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
-                                val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
+                                val = re.sub(r'\s*\[(NEWLINE|BR)\]\s*', r'\n', val)
+                                val = re.sub(r'\s*\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]\s*', r'', val)
                                 m = re.search(r'\[FILE ([^\]]+)\]', val)
                                 if m:
                                     file_reference = re.sub(r'[ ,].*', '', m.group(1))
@@ -3786,6 +3800,7 @@ class Question:
                                     result['images'].append((key, file_info))
                                 else:
                                     result['data_strings'].append((key, val))
+                    docassemble.base.functions.reset_context()
                 else:
                     the_markdown = u""
                     if len(result['metadata']):
@@ -3859,6 +3874,9 @@ def is_threestate(field_data):
             if type(entry['key'].original_text) is not bool and type(entry['key'].original_text) is not NoneType:
                 return False
     return True
+
+class TableInfo(object):
+    pass
 
 class Interview:
     def __init__(self, **kwargs):
@@ -4739,83 +4757,38 @@ class Interview:
                             decoration_list = question.decorations
                         actual_saveas = substitute_vars(from_safeid(question.fields[0].saveas), is_generic, the_x, iterators)
                         docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
-                        #logmessage("Template1: saveas is " + actual_saveas)
-                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + repr(actual_saveas) + ", content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ', decorations=' + repr([dec['image'].text(user_dict).rstrip() for dec in decoration_list]) + ')'
-                        #logmessage("Doing " + string)
+                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DALazyTemplate(' + repr(actual_saveas) + ')'
                         exec(string, user_dict)
-                        #question.mark_as_answered(user_dict)
+                        the_object = eval(actual_saveas, user_dict)
+                        if the_object.__class__.__name__ != 'DALazyTemplate':
+                            raise DAError("askfor: failure to define template object")
+                        the_object.source_content = question.content
+                        the_object.source_subject = question.subcontent
+                        the_object.source_decorations = [dec['image'] for dec in decoration_list]
+                        the_object.user_dict = user_dict
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "table":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        table_info = TableInfo()
+                        table_info.header = question.fields[0].extras['header']
+                        table_info.row = question.fields[0].extras['row']
+                        table_info.column = question.fields[0].extras['column']
+                        table_info.indent = " " * (4 * int(question.fields[0].extras['indent']))
+                        table_info.table_width = self.table_width
+                        table_info.empty_message = question.fields[0].extras['empty_message']
+                        table_info.saveas = from_safeid(question.fields[0].saveas)
+                        actual_saveas = substitute_vars(table_info.saveas, is_generic, the_x, iterators)
+                        docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
                         string = "import docassemble.base.core"
                         exec(string, user_dict)
-                        table_content = "\n"
-                        header = question.fields[0].extras['header']
-                        row = question.fields[0].extras['row']
-                        column = question.fields[0].extras['column']
-                        indent = " " * (4 * int(question.fields[0].extras['indent']))
-                        header_output = [table_safe(x.text(user_dict)) for x in header]
-                        the_iterable = eval(row, user_dict)
-                        if not hasattr(the_iterable, '__iter__'):
-                            raise DAError("Error in processing table " + from_safeid(question.fields[0].saveas) + ": row value is not iterable")
-                        if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and type(the_iterable.elements) in (list, dict) and docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
-                            the_iterable = the_iterable.complete_elements()
-                        indexno = 0
-                        contents = list()
-                        for item in the_iterable:
-                            user_dict['row_item'] = item
-                            user_dict['row_index'] = indexno
-                            contents.append([table_safe(eval(x, user_dict)) for x in column])
-                            indexno += 1
-                        user_dict.pop('row_item', None)
-                        user_dict.pop('row_index', None)
-                        max_chars = [0 for x in header_output]
-                        max_word = [0 for x in header_output]
-                        for indexno in range(len(header_output)):
-                            words = re.split(r'[ \n]', header_output[indexno])
-                            if len(header_output[indexno]) > max_chars[indexno]:
-                                max_chars[indexno] = len(header_output[indexno])
-                            for content_line in contents:
-                                words += re.split(r'[ \n]', content_line[indexno])
-                                if len(content_line[indexno]) > max_chars[indexno]:
-                                    max_chars[indexno] = len(content_line[indexno])
-                            for text in words:
-                                if len(text) > max_word[indexno]:
-                                    max_word[indexno] = len(text)
-                        max_chars_to_use = [min(x, self.table_width) for x in max_chars]
-                        override_mode = False
-                        while True:
-                            new_sum = sum(max_chars_to_use)
-                            old_sum = new_sum
-                            if new_sum < self.table_width:
-                                break
-                            r = random.uniform(0, new_sum)
-                            upto = 0
-                            for indexno in range(len(max_chars_to_use)):
-                                if upto + max_chars_to_use[indexno] >= r:
-                                    if max_chars_to_use[indexno] > max_word[indexno] or override_mode:
-                                        max_chars_to_use[indexno] -= 1
-                                        break
-                                upto += max_chars_to_use[indexno]
-                            new_sum = sum(max_chars_to_use)
-                            if new_sum == old_sum:
-                                override_mode = True
-                        table_content += indent + "|".join(header_output) + "\n"
-                        table_content += indent + "|".join(['-' * x for x in max_chars_to_use]) + "\n"
-                        for content_line in contents:
-                            table_content += indent + "|".join(content_line) + "\n"
-                        if len(contents) == 0 and question.fields[0].extras['empty_message'] is not True:
-                            if question.fields[0].extras['empty_message'] in (False, None):
-                                table_content = "\n"
-                            else:
-                                table_content = question.fields[0].extras['empty_message'].text(user_dict) + "\n"
-                        table_content += "\n"
-                        actual_saveas = substitute_vars(from_safeid(question.fields[0].saveas), is_generic, the_x, iterators)
-                        docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
-                        #logmessage("Template2: saveas is " + actual_saveas)
-                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + repr(actual_saveas) + ", content=" + repr(table_content) + ")"
+                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DALazyTemplate(' + repr(actual_saveas) + ')'
                         exec(string, user_dict)
+                        the_object = eval(actual_saveas, user_dict)
+                        if the_object.__class__.__name__ != 'DALazyTemplate':
+                            raise DAError("askfor: failure to define template object")
+                        the_object.table_info = table_info
+                        the_object.user_dict = user_dict
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == 'attachments':
@@ -5095,10 +5068,11 @@ def substitute_vars(var, is_generic, the_x, iterators):
             var = re.sub(r'^x\b', the_x.instanceName, var)
     if len(iterators):
         for indexno in range(len(iterators)):
-            the_iterator = iterators[indexno]
-            if isinstance(the_iterator, basestring) and re.match(r'^-?[0-9]+$', the_iterator):
-                the_iterator = int(the_iterator)
-            var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + repr(the_iterator) + ']', var)
+            #the_iterator = iterators[indexno]
+            #if isinstance(the_iterator, basestring) and re.match(r'^-?[0-9]+$', the_iterator):
+            #    the_iterator = int(the_iterator)
+            #var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + repr(the_iterator) + ']', var)
+            var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + unicode(iterators[indexno]) + ']', var)
     return var
 
 def reproduce_basics(interview, new_interview):

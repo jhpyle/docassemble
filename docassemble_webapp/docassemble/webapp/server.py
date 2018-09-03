@@ -90,7 +90,7 @@ ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python
 ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python", "json": "json", "css": "css", "html": "htmlmixed"}
 
 default_yaml_filename = daconfig.get('default interview', None)
-final_default_yaml_filename = daconfig.get('default interview', 'docassemble.demo:data/questions/questions.yml')
+final_default_yaml_filename = daconfig.get('default interview', 'docassemble.demo:data/questions/default-interview.yml')
 keymap = daconfig.get('keymap', None)
 google_config = daconfig.get('google', dict())
 
@@ -1062,6 +1062,12 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'create_playground_package':
         remove_question_package(kwargs)
         return(url_for('create_playground_package', **kwargs))
+    elif file_reference == 'configuration':
+        remove_question_package(kwargs)
+        return(url_for('config_page', **kwargs))
+    elif file_reference == 'root':
+        remove_question_package(kwargs)
+        return(url_for('rootindex', **kwargs))
     if re.search('^[0-9]+$', file_reference):
         remove_question_package(kwargs)
         file_number = file_reference
@@ -1914,7 +1920,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         logmessage("Section \"" + unicode(the_section) + "\" did not exist.")
     return output        
 
-def progress_bar(progress):
+def progress_bar(progress, interview):
     if progress is None:
         return('');
     progress = float(progress)
@@ -1922,7 +1928,11 @@ def progress_bar(progress):
         return('');
     if progress > 100:
         progress = 100
-    return('<div class="progress mt-2"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div>\n')
+    if hasattr(interview, 'show_progress_bar_percentage') and interview.show_progress_bar_percentage:
+        percentage = unicode(int(progress)) + '%'
+    else:
+        percentage = ''
+    return('<div class="progress mt-2"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;">' + percentage + '</div></div>\n')
 
 def get_unique_name(filename, secret):
     nowtime = datetime.datetime.utcnow()
@@ -4083,15 +4093,8 @@ def checkin():
             parameters = dict()
             form_parameters = request.form.get('parameters', None)
             if form_parameters is not None:
-                form_parameters = json.loads(form_parameters)
-                for param in form_parameters:
-                    if param['name'] in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or param['name'].startswith('_ignore'):
-                        continue
-                    try:
-                        parameters[from_safeid(param['name'])] = param['value']
-                    except:
-                        logmessage("checkin: failed to unpack " + str(param['name']))
-            #logmessage("Action was " + str(do_action) + " and parameters were " + str(parameters))
+                parameters = json.loads(form_parameters)
+            #logmessage("Action was " + str(do_action) + " and parameters were " + repr(parameters))
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters)))
@@ -4103,6 +4106,8 @@ def checkin():
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response['pargs'][0]), extra=the_response['pargs'][1]))
                 elif type(the_response) is list and len(the_response) == 2 and the_response[1] in ('javascript', 'flash', 'refresh', 'fields'):
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response[0]), extra=the_response[1]))
+                elif isinstance(the_response, basestring) and the_response == 'refresh':
+                    commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(None), extra='refresh'))
                 else:
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response), extra='backgroundresponse'))
             elif interview_status.question.question_type == "template" and interview_status.question.target is not None:
@@ -6099,21 +6104,23 @@ def index():
       var daQuestionID = """ + json.dumps(question_id) + """;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
+      var fieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action'];
       var varlookup;
+      var varlookuprev;
       var valLookup;
-      function val(showIfVar){
-        if (typeof valLookup[showIfVar] == "undefined"){
-          var showIfVarEscaped = btoa(showIfVar);//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof varlookup[btoa(showIfVar)] != "undefined"){
-            showIfVar = varlookup[btoa(showIfVar)];
-            showIfVarEscaped = showIfVar;//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+      function getField(fieldName){
+        if (typeof valLookup[fieldName] == "undefined"){
+          var fieldNameEscaped = btoa(fieldName);//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          if ($("[name='" + fieldNameEscaped + "']").length == 0 && typeof varlookup[btoa(fieldName)] != "undefined"){
+            fieldName = varlookup[btoa(fieldName)];
+            fieldNameEscaped = fieldName;//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           }
-          var varList = $("[name='" + showIfVarEscaped + "']");
+          var varList = $("[name='" + fieldNameEscaped + "']");
           if (varList.length == 0){
-            varList = $("input[type='radio'][name='" + showIfVarEscaped + "']");
+            varList = $("input[type='radio'][name='" + fieldNameEscaped + "']");
           }
           if (varList.length == 0){
-            varList = $("input[type='checkbox'][name='" + showIfVarEscaped + "']");
+            varList = $("input[type='checkbox'][name='" + fieldNameEscaped + "']");
           }
           if (varList.length > 0){
             elem = varList[0];
@@ -6123,7 +6130,58 @@ def index():
           }
         }
         else {
-          elem = valLookup[showIfVar];
+          elem = valLookup[fieldName];
+        }
+        return elem;
+      }
+      function setField(fieldName, val){
+        var elem = getField(fieldName);
+        if (elem == null){
+          console.log('setField: reference to non-existent field ' + fieldName);
+          return;
+        }
+        if ($(elem).attr('type') == "checkbox"){
+          if (val){
+            if ($(elem).prop('checked') != true){
+              $(elem).prop('checked', true);
+              $(elem).trigger('change');
+            }
+          }
+          else{
+            if ($(elem).prop('checked') != false){
+              $(elem).prop('checked', false);
+              $(elem).trigger('change');
+            }
+          }
+        }
+        else if ($(elem).attr('type') == "radio"){
+          var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          var wasSet = false;
+          $("input[name='" + fieldNameEscaped + "']").each(function(){
+            if ($(this).val() == val){
+              if ($(this).prop('checked') != true){
+                $(this).prop('checked', true);
+                $(this).trigger('change');
+              }
+              wasSet = true;
+              return false;
+            }
+          });
+          if (!wasSet){
+            console.log('setField: could not set radio button ' + fieldName + ' to ' + val);
+          }
+        }
+        else{
+          if ($(elem).val() != val){
+            $(elem).val(val);
+            $(elem).trigger('change');
+          }
+        }
+      }
+      function val(fieldName){
+        var elem = getField(fieldName);
+        if (elem == null){
+          return null;
         }
         var showifParents = $(elem).parents(".jsshowif");
         if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
@@ -6138,8 +6196,8 @@ def index():
           }
         }
         else if ($(elem).attr('type') == "radio"){
-          var showIfVarEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
+          var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          theVal = $("input[name='" + fieldNameEscaped + "']:checked").val();
           if (typeof(theVal) == 'undefined'){
             theVal = null;
           }
@@ -6157,7 +6215,25 @@ def index():
         }
         return theVal;
       }
-
+      function formAsJSON(){
+        var formData = $("#daform").serializeArray();
+        var data = Object();
+        var n = formData.length;
+        for (var i = 0; i < n; ++i){
+          var key = formData[i]['name'];
+          var val = formData[i]['value'];
+          if ($.inArray(key, fieldsToSkip) != -1 || key.startsWith('_ignore')){
+            continue;
+          }
+          if (typeof varlookuprev[key] != "undefined"){
+            data[atob(varlookuprev[key])] = val;
+          }
+          else{
+            data[atob(key)] = val;
+          }
+        }
+        return JSON.stringify(data);
+      }
       var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
       function preloadImage(url){
         var img = new Image();
@@ -6537,27 +6613,40 @@ def index():
                         if (type == 'checkbox'){
                             if (name in valArray){
                                 if (valArray[name] == 'True'){
-                                    $(this).prop('checked', true);
+                                    if ($(this).prop('checked') != true){
+                                        $(this).prop('checked', true);
+                                        $(this).trigger('change');
+                                    }
                                 }
                                 else{
-                                    $(this).prop('checked', false);
+                                    if ($(this).prop('checked') != false){
+                                        $(this).prop('checked', false);
+                                        $(this).trigger('change');
+                                    }
                                 }
                             }
                             else{
-                                $(this).prop('checked', false);
+                                if ($(this).prop('checked') != false){
+                                    $(this).prop('checked', false);
+                                    $(this).trigger('change');
+                                }
                             }
-                            $(this).trigger('change');
                         }
                         else if (type == 'radio'){
                             if (name in valArray){
                                 if (valArray[name] == $(this).val()){
-                                    $(this).prop('checked', true);
+                                    if ($(this).prop('checked') != true){
+                                        $(this).prop('checked', true);
+                                        $(this).trigger('change');
+                                    }
                                 }
                                 else{
-                                    $(this).prop('checked', false);
+                                    if ($(this).prop('checked') != false){
+                                        $(this).prop('checked', false);
+                                        $(this).trigger('change');
+                                    }
                                 }
                             }
-                            $(this).trigger('change');
                         }
                         else if ($(this).data().hasOwnProperty('sliderMax')){
                             $(this).slider('setValue', parseInt(valArray[name]));
@@ -6851,7 +6940,7 @@ def index():
       }
       function pushChanges(){
         //console.log("pushChanges");
-        if (checkinSeconds == 0){
+        if (checkinSeconds == 0 || daShowIfInProcess){
           return;
         }
         if (checkinInterval != null){
@@ -7152,13 +7241,7 @@ def index():
               else if (command.extra == 'fields'){
                 for (var key in command.value){
                   if (command.value.hasOwnProperty(key)){
-                    var elem = document.getElementById(btoa(key));
-                    if (elem == null){
-                      console.log("Could not find element with the id " + key);
-                    }
-                    else{
-                      document.getElementById(btoa(key)).value = command.value[key];
-                    }
+                    setField(key, command.value[key]);
                   }
                 }
               }
@@ -7278,15 +7361,15 @@ def index():
         var datastring;
         if ((daChatStatus != 'off') && $("#daform").length > 0 && !daBeingControlled){ // daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on' || daChatStatus == 'observeonly'
           if (daDoAction != null){
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: JSON.stringify($("#daform").serializeArray()), do_action: daDoAction});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: formAsJSON(), do_action: daDoAction});
           }
           else{
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: JSON.stringify($("#daform").serializeArray())});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: formAsJSON()});
           }
         }
         else{
           if (daDoAction != null){
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, do_action: daDoAction, parameters: JSON.stringify($("#daform").serializeArray())});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, do_action: daDoAction, parameters: formAsJSON()});
           }
           else{
             datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode});
@@ -7621,11 +7704,13 @@ def index():
           $('#questionlabel').tab('show');
         });
         varlookup = Object();
+        varlookuprev = Object();
         if ($("input[name='_varnames']").length){
           the_hash = $.parseJSON(atob($("input[name='_varnames']").val()));
           for (var key in the_hash){
             if (the_hash.hasOwnProperty(key)){
               varlookup[the_hash[key]] = key;
+              varlookuprev[key] = the_hash[key];
             }
           }
         }
@@ -7650,6 +7735,7 @@ def index():
                 catch (e) {
                   continue;
                 }
+                varlookuprev[btoa(transBaseName + bracketPart)] = btoa(baseName + "['" + convertedName + "']");
                 varlookup[btoa(baseName + "['" + convertedName + "']")] = btoa(transBaseName + bracketPart);
                 varlookup[btoa(baseName + "[u'" + convertedName + "']")] = btoa(transBaseName + bracketPart);
                 varlookup[btoa(baseName + '["' + convertedName + '"]')] = btoa(transBaseName + bracketPart);
@@ -8227,7 +8313,7 @@ def index():
         if not already_there:
             user_dict['_internal']['event_stack'][session_uid].insert(0, next_action_to_set)
     if interview_status.question.interview.use_progress_bar:
-        the_progress_bar = progress_bar(user_dict['_internal']['progress'])
+        the_progress_bar = progress_bar(user_dict['_internal']['progress'], interview_status.question.interview)
     else:
         the_progress_bar = None
     if interview_status.question.interview.use_navigation:
@@ -8255,7 +8341,7 @@ def index():
             if question_type not in interview_status.screen_reader_text:
                 continue
             phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')
-            if not phrase:
+            if (not phrase) or len(phrase) < 10:
                 phrase = "The sky is blue."
             phrase = re.sub(r'[^A-Za-z 0-9\.\,\?\#\!\%\&\(\)]', r' ', phrase)
             readability[question_type] = [('Flesch Reading Ease', textstat.flesch_reading_ease(phrase)),
@@ -9160,14 +9246,18 @@ def observer():
         });
         $("input.nota-checkbox").click(function(){
           $(this).parent().find('input.non-nota-checkbox').each(function(){
-            $(this).prop('checked', false);
-            $(this).trigger('change');
+            if ($(this).prop('checked') != false){
+              $(this).prop('checked', false);
+              $(this).trigger('change');
+            }
           });
         });
         $("input.non-nota-checkbox").click(function(){
           $(this).parent().find('input.nota-checkbox').each(function(){
-            $(this).prop('checked', false);
-            $(this).trigger('change');
+            if ($(this).prop('checked') != false){
+              $(this).prop('checked', false);
+              $(this).trigger('change');
+            }
           });
         });
         $("input.input-embedded").on('keyup', adjustInputWidth);
@@ -9374,27 +9464,40 @@ def observer():
                         if (type == 'checkbox'){
                             if (name in valArray){
                                 if (valArray[name] == 'True'){
-                                    $(this).prop('checked', true);
+                                    if ($(this).prop('checked') != true){
+                                        $(this).prop('checked', true);
+                                        $(this).trigger('change');
+                                    }
                                 }
                                 else{
-                                    $(this).prop('checked', false);
+                                    if ($(this).prop('checked') != false){
+                                        $(this).prop('checked', false);
+                                        $(this).trigger('change');
+                                    }
                                 }
                             }
                             else{
-                                $(this).prop('checked', false);
+                                if ($(this).prop('checked') != false){
+                                    $(this).prop('checked', false);
+                                    $(this).trigger('change');
+                                }
                             }
-                            $(this).trigger('change');
                         }
                         else if (type == 'radio'){
                             if (name in valArray){
                                 if (valArray[name] == $(this).val()){
-                                    $(this).prop('checked', true);
+                                    if ($(this).prop('checked') != true){
+                                        $(this).prop('checked', true);
+                                        $(this).trigger('change');
+                                    }
                                 }
                                 else{
-                                    $(this).prop('checked', false);
+                                    if ($(this).prop('checked') != false){
+                                        $(this).prop('checked', false);
+                                        $(this).trigger('change');
+                                    }
                                 }
                             }
-                            $(this).trigger('change');
                         }
                         else if ($(this).data().hasOwnProperty('sliderMax')){
                             $(this).slider('setValue', parseInt(valArray[name]));
@@ -17325,7 +17428,6 @@ def api_session_new():
         
 def create_new_interview(yaml_filename, secret, url_args=None, request=None):
     session_id, user_dict = reset_session(yaml_filename, secret)
-    obtain_lock(session_id, yaml_filename)
     add_referer(user_dict)
     if url_args:
         for key, val in url_args.iteritems():
@@ -17601,8 +17703,9 @@ def api_interviews():
 
 @app.route('/manage_api', methods=['GET', 'POST'])
 @login_required
-@roles_required(['admin', 'developer'])
 def manage_api():
+    if not current_user.has_role(*daconfig.get('api privileges', ['admin', 'developer'])):
+        abort(404)
     form = APIKey(request.form)
     action = request.args.get('action', None)
     api_key = request.args.get('key', None)
