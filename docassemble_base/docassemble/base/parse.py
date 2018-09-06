@@ -5477,4 +5477,8 @@ def ampersand_filter(value):
 def custom_jinja_env():
     env = Environment(undefined=StrictUndefined, extensions=[AmpersandExtension])
     env.filters['ampersand_filter'] = ampersand_filter
+    env.filters['markdown'] = markdown_filter
     return env
+
+def markdown_filter(text):
+    return docassemble.base.file_docx.markdown_to_docx(unicode(text), docassemble.base.functions.this_thread.docx_template)

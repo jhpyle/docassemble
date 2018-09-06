@@ -11,8 +11,11 @@ from docassemble.base.logger import logmessage
 from bs4 import BeautifulSoup, NavigableString, Tag
 from collections import deque
 
-def image_for_docx(number, question, tpl, width=None):
-    file_info = server.file_finder(number, convert={'svg': 'png'}, question=question)
+def image_for_docx(fileref, question, tpl, width=None):
+    if fileref.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DALocalFile'):
+        file_info = dict(fullpath=fileref.path())
+    else:
+        file_info = server.file_finder(fileref, convert={'svg': 'png'}, question=question)
     if 'fullpath' not in file_info:
         return '[FILE NOT FOUND]'
     if width is not None:
@@ -82,7 +85,7 @@ def include_docx_template(template_file, **kwargs):
     """Include the contents of one docx file inside another docx file."""
     if this_thread.evaluation_context is None:
         return 'ERROR: not in a docx file'
-    if template_file.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection'):
+    if template_file.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DALocalFile'):
         template_path = template_file.path()
     else:
         template_path = package_template_filename(template_file, package=this_thread.current_package)
@@ -214,11 +217,16 @@ def fix_newlines(html):
     return html
 
 def markdown_to_docx(text, tpl):
-    source_code = '<html>' + docassemble.base.filter.markdown_to_html(text, do_terms=False) + '</html>'
-    source_code = re.sub("\n", ' ', source_code)
-    source_code = re.sub(">\s+<", '><', source_code)
+    #source_code = fix_newlines(markdown.markdown(text))
+    source_code = fix_newlines(docassemble.base.filter.markdown_to_html(text, do_terms=False))
+    #source_code = re.sub("\n", ' ', source_code)
+    #source_code = re.sub(">\s+<", '><', source_code)
+    rt = RichText('')
     soup = BeautifulSoup(source_code, 'lxml')
-    return add_to_rt(tpl, RichText(''), html_linear_parse(soup))
+    html_parsed = deque()
+    html_parsed = html_linear_parse(soup)
+    rt = add_to_rt(tpl, rt, html_parsed)
+    return rt
 
 def test_markdown_to_docx(mdown_dict, docx_tpl):
     '''

@@ -19,6 +19,7 @@ import docassemble.base.functions
 from docassemble.base.pandoc import MyPandoc
 from bs4 import BeautifulSoup
 import ruamel.yaml
+import docassemble.base.file_docx
 from pylatex.utils import escape_latex
 
 from docassemble.base.logger import logmessage
@@ -395,7 +396,7 @@ def docx_filter(text, metadata=None, question=None):
     return(text)
 
 def docx_template_filter(text):
-    logmessage('docx_template_filter')
+    #logmessage('docx_template_filter')
     if text == 'True':
         return True
     elif text == 'False':
@@ -403,11 +404,11 @@ def docx_template_filter(text):
     elif text == 'None':
         return None
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
-    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', '', text)
-    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', '', text)
-    text = re.sub(r'\[FILE ([^,\]]+)\]', '', text)
-    text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', '', text)
-    text = re.sub(r'\[QR ([^\]]+)\]', '', text)
+    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_include_docx(x, question=question), text)
+    text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_docx_template, text)
+    text = re.sub(r'\[QR ([^\]]+)\]', qr_include_docx_template, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
     text = replace_fields(text)
     # text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
@@ -543,11 +544,12 @@ def html_filter(text, status=None, question=None, embedder=None, default_image_w
     # else:
     #     text = re.sub(r'\[FIELD ([^\]]+)\]', 'ERROR: FIELD cannot be used here', text)
     text = re.sub(r'\[TARGET ([^\]]+)\]', target_html, text)
-    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, emoji=True, question=question), text)
-    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, question=question), text)
-    text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_url_string(x, question=question, default_image_width=default_image_width), text)
-    text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_url_string, text)
-    text = re.sub(r'\[QR ([^,\]]+)\]', qr_url_string, text)
+    if docassemble.base.functions.this_thread.evaluation_context != 'docx':
+        text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, emoji=True, question=question), text)
+        text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, question=question), text)
+        text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_url_string(x, question=question, default_image_width=default_image_width), text)
+        text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_url_string, text)
+        text = re.sub(r'\[QR ([^,\]]+)\]', qr_url_string, text)
     if map_match.search(text):
         text = map_match.sub((lambda x: map_string(x.group(1), status)), text)
     # width="420" height="315"
@@ -1510,3 +1512,45 @@ def replace_fields(string, status=None, embedder=None):
         else:
             string = string.replace(field_string, embedder(status, field_string))
     return string
+
+def image_include_docx_template(match, question=None):
+    file_reference = match.group(1)
+    try:
+        width = match.group(2)
+        width = re.sub(r'^(.*)px', convert_pixels, width)
+        if width == "full":
+            width = '100%'
+    except:
+        width = DEFAULT_IMAGE_WIDTH
+    file_info = server.file_finder(file_reference, convert={'svg': 'eps'}, question=question)
+    if 'mimetype' in file_info:
+        if re.search(r'^(audio|video)', file_info['mimetype']):
+            return '[reference to file type that cannot be displayed]'
+    if 'path' in file_info:
+        if 'mimetype' in file_info:
+            if file_info['mimetype'] in ('text/markdown', 'text/plain'):
+                with open(file_info['fullpath'], 'rU') as f:
+                    contents = (f.read().decode('utf8'))
+                if file_info['mimetype'] == 'text/plain':
+                    return contents
+                else:
+                    return docassemble.base.file_docx.markdown_to_docx(contents, docassemble.base.functions.this_thread.docx_template)
+            if file_info['mimetype'] == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+                return unicode(docassemble.base.file_docx.include_docx_template(docassemble.base.functions.DALocalFile(file_info['fullpath'])))
+            else:
+                return unicode(docassemble.base.file_docx.image_for_docx(file_reference, question, docassemble.base.functions.this_thread.docx_template, width=width))
+    return '[reference to file that could not be found]'
+
+def qr_include_docx_template(match):
+    string = match.group(1)
+    try:
+        width = match.group(2)
+        width = re.sub(r'^(.*)px', convert_pixels, width)
+        if width == "full":
+            width = '100%'
+    except:
+        width = DEFAULT_IMAGE_WIDTH
+    im = qrcode.make(string)
+    the_image = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False)
+    im.save(the_image.name)
+    return unicode(docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(the_image.name), None, docassemble.base.functions.this_thread.docx_template, width=width))

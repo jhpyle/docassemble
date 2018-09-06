@@ -2432,8 +2432,9 @@ class DATemplate(DAObject):
         return unicode(self)
     def __unicode__(self):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
-            return unicode(docassemble.base.filter.docx_template_filter(self.content))
-            #return unicode(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.docx_template))
+            #return unicode(self.content)
+            #return unicode(docassemble.base.filter.docx_template_filter(self.content))
+            return unicode(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.docx_template))
         return(unicode(self.content))
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -2525,6 +2526,7 @@ class DALazyTemplate(DAObject):
         return unicode(self)
     def __unicode__(self):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+            #return unicode(self.content)
             #return unicode(docassemble.base.filter.docx_template_filter(self.content))
             return unicode(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.docx_template))
         return(unicode(self.content))

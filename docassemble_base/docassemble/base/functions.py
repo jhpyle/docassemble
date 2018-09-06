@@ -3344,3 +3344,9 @@ def ensure_definition(*pargs, **kwargs):
     for var, val in kwargs.iteritems():
         if isinstance(val, Undefined):
             str(val)
+
+class DALocalFile(object):
+    def __init__(self, local_path):
+        self.local_path = local_path
+    def path(self):
+        return self.local_path

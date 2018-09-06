@@ -22,6 +22,8 @@ content: |
 
   This is some regular text.
 
+  This line has a br.[BR] This is the second line.
+
   ### Lists
   
   Here is a bullet list:
@@ -40,6 +42,10 @@ content: |
   
   Here is a
   [link to a web site](https://google.com).
+
+  Here is a picture:
+
+  [FILE house.png]
 ---
 mandatory: True
 question: |

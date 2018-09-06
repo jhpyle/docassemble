@@ -10,6 +10,7 @@ docassemble_webapp/build
 *.egg-info
 docassemble/dist
 docassemble_base/dist
+docassemble_base/docassemble/base/markdown_docx.py
 docassemble_demo/dist
 docassemble_webapp/dist
 make_session_store.py
