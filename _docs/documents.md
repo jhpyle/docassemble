@@ -1273,6 +1273,19 @@ With `language: en`, the output is:
 
 > This customer would like to order fries and a Coke.
 
+# <a name="redact"></a>Redacting information from documents
+
+If you want to assemble a document but redact certain pieces of
+information from it, you can use the [`redact()`] function on the
+parts you want redacted, and the text will be replaced with black
+rectangles.  If you want to produce an unredacted version of the same
+document, assemble it with `redact: False`.
+
+{% include side-by-side.html demo="redact" %}
+
+For more information about this feature, see the documentation for the
+[`redact()`] function.
+
 # <a name="enable emailing"></a>Enabling the e-mailing of documents
 
 Most internet service providers block e-mail communications as part of
@@ -1431,3 +1444,4 @@ interview, see the [`cache documents` feature].
 [Mailgun API]: {{ site.baseurl }}/docs/configuration.html#mailgun api
 [Mailgun]: https://www.mailgun.com/
 [ZIP file]: https://en.wikipedia.org/wiki/Zip_(file_format)
+[`redact()`]: {{ site.baseurl }}/docs/functions.html#redact

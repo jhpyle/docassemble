@@ -729,6 +729,43 @@ A call to `fix_punctuation(reason)` will return:
 
 {% include side-by-side.html demo="fix-punctuation" %}
 
+## <a name="redact"></a>redact()
+
+The `redact()` function is used when preparing redacted and unredacted
+versions of a document.  For example, instead of referring to
+`client.ssn` in a document, you can refer to `redact(client.ssn)`.
+Then, in the final document, a redaction mark will be included instead
+of the client's Social Security number.  However, if the document is
+assembled with [`redact: False`], the Social Security number will be
+included.
+
+Here is an example of `redact()` being used when generating a PDF and
+RTF file from [Markdown]:
+
+{% include side-by-side.html demo="redact" %}
+
+Here is the same example, but with a [`docx template file`] named
+[redact_demo.docx]:
+
+{% include demo-side-by-side.html demo="redact-docx" %}
+
+Here is the same example, but with a [`pdf template file`] named
+[redact_demo.pdf]:
+
+{% include demo-side-by-side.html demo="redact-pdf" %}
+
+The `redact()` function is intended to be called the markup of
+documents, as demonstrated in the various examples above.  It is only
+in this context that the `redact()` function knows whether you have
+set `redact: False` or not.  The `redact()` function can be from other
+contexts, but the result may not be what you want; for example, you
+may see redactions even though you set `redact: False`.  If you define
+a variable `ssn_text = redact(user.ssn)`, and the `ssn_text` variable
+is already defined by the time **docassemble** gets around to
+assembling a document with the `redact` option set to `False`, then
+your "unredacted" document will contain a redacted Social Security
+number.
+
 # <a name="actions"></a>Functions for interacting with the interview using URLs
 
 ## <a name="url_action"></a><a name="process_action"></a>url_action() and process_action()
@@ -1015,6 +1052,8 @@ The `url_of()` function also has a few special uses.
 * `url_of('dispatch')` returns a URL to the page listing the
   interviews defined in the [`dispatch`] directive of the [Configuration].
 * `url_of('playground')` returns a URL to the [Playground].
+* `url_of('configuration')` returns a URL to the [Configuration] page.
+* `url_of('root')` returns the root URL of your server.
 
 # <a name="qrfunctions"></a>QR code functions
 
@@ -5215,6 +5254,65 @@ modules:
 ---
 {% endhighlight %}
 
+## <a name="jinja2"></a>A caveat regardings functions called from docx templates
+
+If you write your own functions and they are called from markup inside
+`docx template file` functions, beware that [Jinja2] will send your
+functions objects in place of arguments when the arguments are
+undefined.  For example, consider a a template that contains:
+
+{% highlight text %}
+{% raw %}
+{%p if claiming_damages %}
+You owe me {{ currency(compute_damages(amount_owed, demand_interest)) }}.
+{% endif %}
+{% endraw %}
+{% endhighlight %}
+
+If `demand_interest` is undefined, and `claiming_damages` is true,
+**docassemble** should seek out a block that defines `amount_owed`.
+However, when [Jinja2] sees that `demand_interest` is undefined, it
+creates an object `amount_owed` of the class
+`jinja2.runtime.Undefined`.  If the only way `compute_damages()` acts
+upon `demand_interest` is by evaluating the conditional expression
+`demand_interest is True`, the expression will evaluate to `False`,
+even though your interview has not actually defined
+`demand_interest`.
+
+This is different to how [Python] normally works.  Normally, if the
+code is `compute_damages(amount_owed, demand_interest)` and
+`demand_interest` is undefined, a [`NameError`] is raised before
+`compute_damages()` is even called.
+
+The behavior of [Jinja2] might not be a problem if your function does
+arithmetic with the variable, calls `unicode()` on the variable or
+does other things with the variable that access its "value"; in those
+situations, an exception will be raised and **docassemble** will seek
+out a definition of the undefined variable.  However, if your function
+uses [`try`/`except`] on the operations, this exception may not be
+passed on to **docassemble**.
+
+To get around this problem, you can include the following in your
+module file:
+
+{% highlight python %}
+from docassemble.base.functions import ensure_definition
+{% endhighlight %}
+
+Then at the start of every function that might be called from
+[Jinja2], run the function's parameters through `ensure_definition`:
+
+{% highlight python %}
+def compute_damages(amount_owed, demand_interest):
+    ensure_definition(amount_owed, demand_interest)
+    ...
+{% endhighlight %}
+
+The `ensure_definition()` function checks to see if each of its
+arguments (both positional and named) are `Undefined`, and if so, it
+raises an exception that will cause **docassemble** to seek out the
+appropriate definition.
+
 # <a name="google sheets example"></a>Example module: using Google Sheets
 
 This section explains an example of something you might do with a
@@ -5541,6 +5639,7 @@ $(document).on('daPageLoad', function(){
 [Mako]: http://www.makotemplates.org/
 [Content-Type header]: https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 [Documents]: {{ site.baseurl }}/docs/documents.html
+[documents]: {{ site.baseurl }}/docs/documents.html
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [Flask-Mail]: https://pythonhosted.org/Flask-Mail/
 [HTML]: https://en.wikipedia.org/wiki/HTML
@@ -5791,6 +5890,7 @@ $(document).on('daPageLoad', function(){
 [tesseract-ocr-all]: https://packages.debian.org/stretch/tesseract-ocr-all
 [`raw field variables`]: {{ site.baseurl }}/docs/documents.html#raw field variables
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
+[`pdf template file`]: {{ site.baseurl }}/docs/documents.html#pdf template file
 [assembled]: {{ site.baseurl }}/docs/documents.html#docx template file
 [`.comma_and_list()`]: {{ site.baseurl }}/docs/objects.html#DAList.comma_and_list
 [gathered]: {{ site.baseurl }}/docs/groups.html#gathering
@@ -5923,3 +6023,8 @@ $(document).on('daPageLoad', function(){
 [`validation code`]: {{ site.baseurl }}/docs/fields.html#validation code
 [Google Sheets API]: https://developers.google.com/sheets/api/
 [`js show if`]: {{ site.baseurl }}/docs/fields.html#js show if
+[redact_demo.docx]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/redact_demo.docx
+[redact_demo.pdf]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/redact_demo.pdf
+[`NameError`]: https://docs.python.org/2/library/exceptions.html#exceptions.NameError
+[`try`/`except`]: https://docs.python.org/2.7/tutorial/errors.html#handling-exceptions
+[`redact: False`]: {{ site.baseurl }}/docs/documents.html#redact

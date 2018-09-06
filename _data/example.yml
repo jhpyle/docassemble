@@ -7598,6 +7598,60 @@
   code: |
     cat_food_cans_needed = number_of_cats * 4
   reconsider: True
+"redact": |-
+  template: petition_text
+  content: |
+    Dear Judge,
+
+    My name is ${ user }.
+    I have a claim against
+    the defendant.  A big one.
+
+    My SSN is ${ redact(user.ssn) }.
+    My phone number is
+    ${ user.phone_number }.
+
+    My home address is:
+
+    ${ redact(user.address) }
+
+    I demand ${ currency(money_claimed) }.
+
+    Thank you.
+
+    Sincerely,
+
+    ${ user }
+  ---
+  mandatory: True
+  question: |
+    Here is your document.
+  subquestion: |
+    You need to print both copies
+    and file them in court.
+
+    The unredacted version goes
+    to the judge, and the redacted
+    version will go in the public
+    record.
+  attachments:
+    - name: Unredacted petition
+      filename: petition_unredacted
+      redact: False
+      valid formats:
+        - pdf
+        - rtf
+        - docx
+      content: |
+        ${ petition_text }
+    - name: Redacted petition
+      filename: petition_redacted
+      valid formats:
+        - pdf
+        - rtf
+        - docx
+      content: |
+        ${ petition_text }
 "redis": "objects:\n  r: DARedis\n---\nmandatory: True\ncode: |\n  key = r.key('my_variable')\n\
   \  r.set(key, 'hello world')\n---\nmandatory: True\nquestion: |\n  Value has been\
   \ retrieved from\n  the redis server.\nsubquestion: |\n  The key is `${ key }`.\n\
@@ -9772,13 +9826,16 @@
   \     and not user.legume_picks['Mango'] \\\n     and not user.legume_picks['Potato']:\n\
   \    user.knows_legumes = True\n  else:\n    user.knows_legumes = False"
 "markdown-template": "template: the_template\ncontent: |\n  This is *italic text*.\n\
-  \  This is **bold text**.\n  This is __also bold text__.\n\n  > This is some block-quoted\n\
-  \  > text\n\n  ### This is a heading\n\n  This is some regular text.\n\n  Here is\
-  \ a bullet list:\n\n  * Apple\n  * Peach\n  * Pear\n\n  Here is a numbered list:\n\
-  \n  1. Nutmeg\n  2. Celery\n  3. Oregano\n\n  Your favorite fruit is ${ favorite_fruit\
-  \ }.\n  \n  Here is a\n  [link to a web site](https://google.com).\n---\nmandatory:\
-  \ True\nquestion: |\n  Here is your document.\nattachment:\n  - name: Your attachment\n\
-  \    filename: the_file\n    docx template file: markdown_template_demo.docx"
+  \  This is **bold text**.\n  This is __some *bold italic* text__.\n\n  **bold**\
+  \ at beginning of paragraph.\n\n  *italic* at beginning of paragraph.\n\n  > This\
+  \ is some block-quoted\n  > text\n\n  ## This is a heading\n\n  This is some regular\
+  \ text.\n\n  This line has a br.[BR] This is the second line.\n\n  ### Lists\n \
+  \ \n  Here is a bullet list:\n\n  * Apple\n  * Peach\n  * Pear\n\n  Here is a numbered\
+  \ list:\n\n  1. Nutmeg\n  2. Celery\n  3. Oregano\n\n  Your favorite fruit is ${\
+  \ favorite_fruit }.\n  \n  Here is a\n  [link to a web site](https://google.com).\n\
+  \n  Here is a picture:\n\n  [FILE house.png]\n---\nmandatory: True\nquestion: |\n\
+  \  Here is your document.\nattachment:\n  - name: Your attachment\n    filename:\
+  \ the_file\n    docx template file: markdown_template_demo.docx"
 "multi-user": "modules:\n  - docassemble.base.util\n---\nobjects:\n  firstparty: Individual\n\
   \  secondparty: Individual\n---\ninitial: true\ncode: |\n  multi_user = True\n \
   \ if user_logged_in():\n    if not defined('firstparty.email'):\n      firstparty.email\
@@ -10038,6 +10095,60 @@
   ---\nmandatory: true\nquestion: |\n  The imported data\nsubquestion: |\n  % for\
   \ item in raw_data:\n  The `inventory` of\n  \"${ item.title }\" is:\n  \n  > `${\
   \ item.inventory }`\n  \n  % endfor"
+"redact-docx": |-
+  mandatory: True
+  question: |
+    Here is your document.
+  subquestion: |
+    You need to print both copies
+    and file them in court.
+
+    The unredacted version goes
+    to the judge, and the redacted
+    version will go in the public
+    record.
+  attachments:
+    - name: Unredacted petition
+      redact: False
+      filename: petition_unredacted
+      docx template file: redact_demo.docx
+    - name: Redacted petition
+      filename: petition_redacted
+      docx template file: redact_demo.docx
+"redact-pdf": |-
+  mandatory: True
+  question: |
+    Here is your document.
+  subquestion: |
+    You need to print both copies
+    and file them in court.
+
+    The unredacted version goes
+    to the judge, and the redacted
+    version will go in the public
+    record.
+  attachments:
+    - name: Unredacted petition
+      redact: False
+      filename: petition_unredacted
+      pdf template file: redact_demo.pdf
+      field code:
+        - today_date: today()
+        - name: user
+        - ssn: redact(user.ssn)
+        - phone: user.phone_number
+        - address: redact(user.address)
+        - money: currency(money_claimed)
+    - name: Redacted petition
+      filename: petition_redacted
+      pdf template file: redact_demo.pdf
+      field code:
+        - today_date: today()
+        - name: user
+        - ssn: redact(user.ssn)
+        - phone: user.phone_number
+        - address: redact(user.address)
+        - money: currency(money_claimed)
 "run-python-module": |-
   code: |
     output, return_code = run_python_module('hello.py')

@@ -4,6 +4,31 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.94](https://github.com/jhpyle/docassemble/releases/tag/v0.2.94) - 2018-09-05
+
+### Added
+- The `redact()` function and `redact` option on `attachment`s.
+
+### Changed
+- The `template` and `table` blocks now become `DALazyTemplate`
+  objects rather than `DATemplate` objects.  Their contents are
+  evaluated at the time they are reduced to text, not at the time they
+  are created.
+
+### Fixed
+- Problem with `currency()` and other functions when used from a `docx
+  template file` where undefined variables did not raise exceptions.
+- The `create_new_interview()` function caused unnecessary 4 second delay.
+- Users with `user` privileges could not access API key management.
+- The `interview_url()` function was returning a URL based on how the
+  current request was made, rather than the actual URL for getting to
+  an interview.
+
+## [0.2.93](https://github.com/jhpyle/docassemble/releases/tag/v0.2.93) - 2018-08-31
+
+### Fixed
+- Problem with `DATemplate` variables with string indices.
+
 ## [0.2.92](https://github.com/jhpyle/docassemble/releases/tag/v0.2.92) - 2018-08-27
 
 ### Added

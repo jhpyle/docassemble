@@ -45,7 +45,7 @@ twilio:
   dispatch:
     color: docassemble.base:data/questions/examples/buttons-code-color.yml
     doors: docassemble.base:data/questions/examples/doors.yml
-  default interview: docassemble.demo:data/questions/questions.yml
+  default interview: docassemble.base:data/questions/default-interview.yml
 {% endhighlight %}
 
 The `sms: True` line tells **docassemble** that you intend to use the

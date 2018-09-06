@@ -47,7 +47,7 @@ mail:
   password: Null
   server: localhost
   default sender: '"Administrator" <no-reply@example.com>'
-default interview: docassemble.demo:data/questions/questions.yml
+default interview: docassemble.demo:data/questions/default-interview.yml
 language: en
 locale: en_US.utf8
 default admin account:
@@ -179,7 +179,8 @@ redirected to:
   defined then the user is redirected to
 * A list of available interviews, if [`dispatch`] is set up, but if
   not then the user is redirected to
-* A factory default interview.
+* A factory default interview 
+  (`docassemble.base:data/questions/default-interview.yml`).
 
 If you want the user to be directed to some other URL, you can define
 the `root redirect url` directive:
@@ -1094,7 +1095,7 @@ If this directive is not set, **docassemble** will redirect to a page
 showing a [list of available interviews] determined by the
 [`dispatch`] directive.  However, if the [`dispatch`] directive is not
 defined, users will be directed to the demonstration interview,
-`docassemble.demo:data/questions/questions.yml`.
+`docassemble.base:data/questions/default-interview.yml`.
 
 ## <a name="flask log"></a><a name="celery flask log"></a>Flask log file location
 
@@ -2086,13 +2087,14 @@ up through [Let's Encrypt], you can set the following in your
 [Configuration].
 
 {% highlight yaml %}
+external hostname: docassemble.example.com
 use https: True
 use lets encrypt: True
 lets encrypt email: jsmith@example.com
 {% endhighlight %}
 
 These variables are typically set through the environment variables
-[`USEHTTPS`], [`USELETSENCRYPT`], and [`LETSENCRYPTEMAIL`] when the
+[`DAHOSTNAME`], [`USEHTTPS`], [`USELETSENCRYPT`], and [`LETSENCRYPTEMAIL`] when the
 `docker run` command is run for the first time.  You can change the
 `use https`, `use lets encrypt`, and `lets encrypt email` variables on
 a running server, but they will only be effective if you restart the
@@ -2106,7 +2108,13 @@ to be configured to send `Access-Control-Allow-Origin` headers in
 order to permit [Cross-Origin Resource Sharing].  If you set it to
 `*`, resource sharing will be allowed to any origin.  Or, you could
 set it to, e.g., `api.example.com` to limit sharing to a particular
-domain.  This variable is only used if **docassemble** is running on
+domain.
+
+{% highlight yaml %}
+cross site domain: api.example.com
+{% endhighlight %}
+
+This variable is only used if **docassemble** is running on
 [Docker].
 
 If you change this variable, you need to do a complete restart of the
@@ -2452,7 +2460,7 @@ twilio:
   dispatch:
     color: docassemble.base:data/questions/examples/buttons-code-color.yml
     doors: docassemble.base:data/questions/examples/doors.yml
-  default interview: docassemble.demo:data/questions/questions.yml
+  default interview: docassemble.base:data/questions/default-interview.yml
 {% endhighlight %}
 
 The `sms: True` line tells **docassemble** that you intend to use the
@@ -2510,7 +2518,7 @@ twilio:
     dispatch:
       color: docassemble.base:data/questions/examples/buttons-code-color.yml
       doors: docassemble.base:data/questions/examples/doors.yml
-    default interview: docassemble.demo:data/questions/questions.yml
+    default interview: docassemble.base:data/questions/default-interview.yml
   - name: bankruptcy
     sms: True
     voice: False
