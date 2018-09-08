@@ -16,8 +16,12 @@ content: |
   *italic* at beginning of paragraph.
 
   > This is some block-quoted
-  > text
-
+  > text that goes on for many many
+  > lines and you might wonder
+  > if it will ever even stop
+  > because it keeps going on and 
+  > on.
+  
   ## This is a heading
 
   This is some regular text.

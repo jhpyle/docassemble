@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import re
-import markdown
 from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document, Subdoc
 from docx.shared import Mm, Inches, Pt
 import docx.opc.constants
@@ -226,8 +225,8 @@ def html_linear_parse(soup):
     return parsed
 
 def markdown_to_docx(text, tpl):
-    #source_code = fix_newlines(markdown.markdown(text))
-    source_code = fix_newlines(docassemble.base.filter.markdown_to_html(text, do_terms=False))
+    source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
+    source_code = re.sub(r'(?<!\>)\n', ' ', source_code)
     #source_code = re.sub("\n", ' ', source_code)
     #source_code = re.sub(">\s+<", '><', source_code)
     rt = RichText('')
@@ -236,32 +235,3 @@ def markdown_to_docx(text, tpl):
     html_parsed = html_linear_parse(soup)
     rt = add_to_rt(tpl, rt, html_parsed)
     return rt
-
-def test_markdown_to_docx(mdown_dict, docx_tpl):
-    '''
-        This function expects two arguments.
-        mdown_dict:
-            mdown_dict is a dictionary. Its keys are jinja2 tags
-            that are to be used to fill the docx_tpl. Its values are
-            the markdown to be converted into docx to fill those tags.
-        docx_tpl:
-            docx_tpl is the path to the docx template filled with
-            jinja2 tags. If a tag is not contained within mdown_dict
-            when the template is rendered then that tag will simply
-            be rendered as empty.
-        
-        It returns a docxtpl DocxTemplate object that is a filled docx_tpl.
-    '''
-    jinja_tags = {}
-    tpl = DocxTemplate(docx_tpl)
-    for mdown_key, mdown_value in mdown_dict.items():
-        html_doc = re.sub(r'(?<!\>)\n', ' ',
-            markdown.markdown(mdown_value))
-        rt = RichText('')
-        soup = BeautifulSoup(html_doc, 'lxml')
-        html_parsed = deque()
-        html_parsed = html_linear_parse(soup)
-        rt = add_to_rt(tpl, rt, html_parsed)
-        jinja_tags[mdown_key] = rt
-    tpl.render(jinja_tags)
-    return tpl
