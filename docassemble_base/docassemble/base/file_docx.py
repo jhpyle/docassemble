@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import markdown
 from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document, Subdoc
 from docx.shared import Mm, Inches, Pt
 import docx.opc.constants
@@ -102,49 +103,62 @@ def include_docx_template(template_file, **kwargs):
     this_thread.docx_include_count += 1
     return sd
 
-html_names =    {
-    'em': False,
-    'code': False,
-    'strong': False,
-    'h1': False,
-    'h2': False,
-    'h3': False,
-    'h4': False,
-    'u': False,
-    'a': False,
-    'href': '',
-    'strike': False,
-    'ol': False,
-    'ul': False,
-    'li': False,
-    'blockquote': False
-}
-
 def add_to_rt(tpl, rt, parsed):
+    list_tab = False
+    block_tab = False
     while (len(list(parsed)) > 0):
+        html_names =    {
+            'em': False,
+            'code': False,
+            'strong': False,
+            'h1': False,
+            'h2': False,
+            'h3': False,
+            'h4': False,
+            'u': False,
+            'a': False,
+            'strike': False,
+            'ol': False,
+            'ul': False,
+            'li': False,
+            'blockquote': False
+        }
+        href = ''
         html_out = parsed.popleft()
         for parent in html_out.parents:
-            for html_key in html_names:
-                if (parent.name == html_key):
+            for html_key, html_value in html_names.items():
+                if (parent.name ==  html_key):
                     html_names[html_key] = True
                     if (html_key == 'a'):
-                        html_names['href'] = parent.get('href')
+                        href = parent.get('href')
         rtf_pretext = ''
         if (html_names['code']):
             html_names['em'] = True
-        if (html_names['li']):
-            rt.add('\t - ')
+        if (html_names['ol'] or html_names['ul']):
+            if (html_out == '\n'):
+                list_tab = True
+            elif (list_tab == True):
+                rt.add('\t- ')
+                list_tab = False
+        else:
+            list_tab = False
         if (html_names['blockquote']):
-            rt.add('\t')
+            if (html_out == '\n'):
+                block_tab = True
+            elif (block_tab == True):
+                rt.add('\t')
+                block_tab = False
+        else:
+            block_tab = False
         if (html_names['a']):
             rt.add(rtf_pretext + html_out, italic=html_names['em'],
                 bold=html_names['strong'], underline=True, strike=html_names['strike'],
-                url_id=tpl.build_url_id(html_names['href']))
+                url_id=tpl.build_url_id(href))
         elif (html_names['h1']):
             if (html_names['a']):
                 rt.add(rtf_pretext + html_out, italic=html_names['em'],
                     bold=True, underline=True, strike=html_names['strike'],
-                    url_id=tpl.build_url_id(html_names['href']), size=60)
+                    url_id=tpl.build_url_id(href), size=60)
             else:
                 rt.add(rtf_pretext + html_out, italic=html_names['em'],
                     bold=True, underline=html_names['u'], strike=html_names['strike'], size=60)
@@ -152,7 +166,7 @@ def add_to_rt(tpl, rt, parsed):
             if (html_names['a']):
                 rt.add(rtf_pretext + html_out, italic=html_names['em'],
                     bold=True, underline=True, strike=html_names['strike'],
-                    url_id=tpl.build_url_id(html_names['href']), size=40)
+                    url_id=tpl.build_url_id(href), size=40)
             else:
                 rt.add(rtf_pretext + html_out, italic=html_names['em'],
                     bold=True, underline=html_names['u'], strike=html_names['strike'], size=40)
@@ -160,7 +174,7 @@ def add_to_rt(tpl, rt, parsed):
             if (html_names['a']):
                 rt.add(rtf_pretext + html_out, italic=html_names['em'],
                     bold=True, underline=True, strike=html_names['strike'],
-                    url_id=tpl.build_url_id(html_names['href']), size=30)
+                    url_id=tpl.build_url_id(href), size=30)
             else:
                 rt.add(rtf_pretext + html_out, italic=html_names['em'],
                     bold=True, underline=html_names['u'], strike=html_names['strike'], size=30)
@@ -168,7 +182,7 @@ def add_to_rt(tpl, rt, parsed):
             if (html_names['a']):
                 rt.add(rtf_pretext + html_out, italic=html_names['em'],
                     bold=True, underline=True, strike=html_names['strike'],
-                    url_id=tpl.build_url_id(html_names['href']), size=20)
+                    url_id=tpl.build_url_id(href), size=20)
             else:
                 rt.add(rtf_pretext + html_out, italic=html_names['em'],
                     bold=True, underline=html_names['u'], strike=html_names['strike'], size=20)
@@ -211,13 +225,6 @@ def html_linear_parse(soup):
         descendants.extendleft(from_children)
     return parsed
 
-def fix_newlines(html):
-    regex = re.compile(r"[^>]\n")
-    iterator = regex.finditer(html)
-    for newline in iterator:  
-        html = html[:newline.span()[0]+1] + " " + html[newline.span()[1]:]
-    return html
-
 def markdown_to_docx(text, tpl):
     #source_code = fix_newlines(markdown.markdown(text))
     source_code = fix_newlines(docassemble.base.filter.markdown_to_html(text, do_terms=False))
@@ -248,7 +255,8 @@ def test_markdown_to_docx(mdown_dict, docx_tpl):
     jinja_tags = {}
     tpl = DocxTemplate(docx_tpl)
     for mdown_key, mdown_value in mdown_dict.items():
-        html_doc = fix_newlines(markdown.markdown(mdown_value))
+        html_doc = re.sub(r'(?<!\>)\n', ' ',
+            markdown.markdown(mdown_value))
         rt = RichText('')
         soup = BeautifulSoup(html_doc, 'lxml')
         html_parsed = deque()
