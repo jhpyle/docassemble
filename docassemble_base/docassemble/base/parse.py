@@ -2701,6 +2701,14 @@ class Question:
                 target['fields'] = dict()
                 field_mode = 'manual'
             elif 'docx template file' in target:
+                if 'update references' in target:
+                    if type(target['update references']) is bool:
+                        options['update_references'] = target['update references']
+                    elif type(target['update references']) in (str, unicode):
+                        options['update_references'] = compile(target['update references'], '<expression>', 'eval')
+                        self.find_fields_in(target['update references'])
+                    else:
+                        raise DAError('Unknown data type in attachment "update references".' + self.idebug(target))
                 if 'fields' in target:
                     field_mode = 'manual'
                 else:
@@ -3456,7 +3464,7 @@ class Question:
                         if hasattr(the_file, 'number'):
                             result['file'][doc_format] = the_file.number
                 #logmessage("finalize_attachment: returning " + attachment['variable_name'] + " from cache")
-                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'password'):
+                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'password', 'update_references'):
                     if key in result:
                         del result[key]
                 return result
@@ -3472,7 +3480,7 @@ class Question:
                         docassemble.base.functions.set_context('pdf')
                         the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'], password=result['password'])
                         result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
-                        for key in ('images', 'data_strings', 'convert_to_pdf_a', 'password'):
+                        for key in ('images', 'data_strings', 'convert_to_pdf_a', 'password', 'update_references'):
                             if key in result:
                                 del result[key]
                         docassemble.base.functions.reset_context()
@@ -3498,13 +3506,15 @@ class Question:
                         docassemble.base.functions.reset_context()
                         docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                         the_template.save(docx_file.name)
+                        if result['update_references']:
+                            docassemble.base.pandoc.update_references(docx_file.name)
                         if 'docx' in result['formats_to_use']:
                             result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)
                         if 'pdf' in result['formats_to_use']:
                             pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
                             docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'])
                             result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
-                        for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'password']:
+                        for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'password', 'update_references']:
                             if key in result:
                                 del result[key]
                 else:
@@ -3631,6 +3641,13 @@ class Question:
                 result['convert_to_pdf_a'] = eval(attachment['options']['pdf_a'], user_dict)
         else:
             result['convert_to_pdf_a'] = self.interview.use_pdf_a
+        if 'update_references' in attachment['options']:
+            if type(attachment['options']['update_references']) is bool:
+                result['update_references'] = attachment['options']['update_references']
+            else:
+                result['update_references'] = eval(attachment['options']['update_references'], user_dict)
+        else:
+            result['update_references'] = False
         if 'password' in attachment['options']:
             result['password'] = attachment['options']['password'].text(user_dict)
         else:
@@ -4902,7 +4919,7 @@ class Interview:
                 docassemble.base.functions.pop_current_variable()
                 return(question_result)
             except UndefinedError as the_exception:
-                logmessage("UndefinedError: " + unicode(the_exception))
+                #logmessage("UndefinedError: " + unicode(the_exception))
                 docassemble.base.functions.reset_context()
                 newMissingVariable = extract_missing_name(the_exception)
                 if newMissingVariable not in questions_tried:

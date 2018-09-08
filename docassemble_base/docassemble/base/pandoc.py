@@ -18,6 +18,8 @@ style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])'
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
 PANDOC_ENGINE = '--latex-engine=' + daconfig.get('pandoc engine', 'pdflatex')
 LIBREOFFICE_PATH = daconfig.get('libreoffice', 'libreoffice')
+LIBREOFFICE_MACRO_PATH = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
+
 convertible_mimetypes = {"application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx", "application/vnd.oasis.opendocument.text": "odt"}
 convertible_extensions = {"docx": "docx", "odt": "odt"}
 if daconfig.get('libreoffice', 'libreoffice') is not None:
@@ -268,4 +270,20 @@ def get_rtf_styles(filename):
             styles[heading_number] = style_string
     return styles
     
+def update_references(filename):
+    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.PysIndexer(' + filename + ')']
+    p = subprocess.Popen(subprocess_arguments, cwd=tempfile.gettempdir())
+    result = p.wait()
+    if result != 0:
+        return False
+    return True
 
+if not os.path.isfile(LIBREOFFICE_MACRO_PATH):
+    logmessage("No LibreOffice macro path exists")
+    temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf")
+    word_file = docassemble.base.functions.package_template_filename('docassemble.demo:data/templates/template_test.docx')
+    word_to_pdf(word_file, 'docx', temp_file.name, pdfa=False, password=None)
+    del temp_file
+    del word_file
+if os.path.isfile(LIBREOFFICE_MACRO_PATH):
+    shutil.copyfile(docassemble.base.functions.package_template_filename('docassemble.base:data/macros/Module1.xba'), LIBREOFFICE_MACRO_PATH)

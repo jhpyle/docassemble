@@ -6444,3 +6444,11 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Unredacted petition"
     And I should see the phrase "Redacted petition"
+
+  Scenario: Test the interview "Update references"
+    Given I start the interview "docassemble.demo:data/questions/examples/update-references.yml"
+    Then I should see the phrase "How verbose are you?"
+    And I click the button "Continue"
+    Then I should see the phrase "Do you want to include a jurisdiction section?"
+    And I click the button "No"
+    Then I should see the phrase "Here is your document"

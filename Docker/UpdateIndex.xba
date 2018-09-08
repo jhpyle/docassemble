@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE script:module PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "module.dtd">
+<script:module xmlns:script="http://openoffice.org/2000/script" script:name="Module1" script:language="StarBasic">REM  *****  BASIC  *****
+
+sub PysIndexer(sDocUrl as string)
+
+dim oDocument as object
+dim dispatcher as object
+
+dim propExp(0) as new com.sun.star.beans.PropertyValue
+
+dim sNewUrl as string
+
+if fileExists(sDocUrl) then
+    oDocument = starDesktop.loadComponentFromUrl(convertToUrl(sDocUrl), "_blank", 0, array())
+
+    dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+    dispatcher.executeDispatch(oDocument.CurrentController.Frame, ".uno:UpdateAllIndexes", "", 0, Array())
+
+    propExp(0).Name = "FilterName"
+    propExp(0).Value = "writer_pdf_Export"
+
+    GlobalScope.BasicLibraries.LoadLibrary("Tools")
+
+    sNewUrl = GetFileNameWithoutExtension(sDocUrl) & ".pdf"
+
+    oDocument.storeToURL(convertToUrl(sNewUrl), propExp())
+end if
+
+end sub
+</script:module>

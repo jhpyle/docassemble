@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.95] - 2018-09-08
+### Added
+- The `update references` setting on `attachment`s.
+
 ## [0.2.94] - 2018-09-05
 ### Added
 - The `redact()` function and `redact` option on `attachment`s.

@@ -1,0 +1,33 @@
+metadata:
+  title: Update references
+  short title: Refs
+  documentation: "https://docassemble.org/docs/documents.html#update references"
+  example start: 1
+  example end: 1
+---
+mandatory: True
+question: Here is your document
+attachment:
+  name: Brief
+  filename: brief
+  update references: True
+  docx template file: doc-with-toc.docx
+---
+question: |
+  Do you want to include a jurisdiction section?
+yesno: use_jd
+---
+question: |
+  How verbose are you?
+fields:
+  - no label: verbosity
+    datatype: range
+    min: 1
+    max: 5
+---
+code: |
+  intro = "Hello and welcome to the document.  " * 55
+  jurisdiction = "Jurisdiction is proper.  " * 60
+  discussion = "Here are citations to lots of cases.  " * 80 * int(verbosity)
+  conclusion = "You are persuaded now.  " * 30
+  

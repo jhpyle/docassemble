@@ -180,6 +180,8 @@ def add_to_rt(tpl, rt, parsed):
 def get_children(descendants, parsed):
     subelement = False
     descendants_buff = deque()
+    if descendants is None:
+        return descendants_buff
     if (isinstance(descendants, NavigableString)):
         parsed.append(descendants)
     else:
