@@ -1218,6 +1218,23 @@ example:
 
 {% include side-by-side.html demo="document-links-limited" %}
 
+# <a name="update references"></a>Using tables of contents and other references in .docx files
+
+If you are using `docx template file` and your template file uses a
+table of contents or other page references that will change depending
+on how the document is assembled, set `update references` to `True`.
+
+{% include demo-side-by-side.html demo="update-references" %}
+
+This will cause [LibreOffice] to update all of the references in the
+document before saving it and converting it to PDF.
+
+You can also set `update references` to a [Python] expression.  If the
+expression evaluates to a `True` value, the references will be updated.
+
+If `update references` is not specified, the default behavior is not
+to update the references.
+
 # <a name="pdfa"></a>Producing PDF/A files
 
 If you want the [PDF] file produced by an attachment to be in

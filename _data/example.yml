@@ -10275,6 +10275,14 @@
   question: Map of you and your enemy
   subquestion: |
     ${ map_of(user, enemy) }
+"update-references": |-
+  mandatory: True
+  question: Here is your document
+  attachment:
+    name: Brief
+    filename: brief
+    update references: True
+    docx template file: doc-with-toc.docx
 "validation-code": |-
   question: |
     There are 10 fruit in all.

@@ -50,9 +50,12 @@ Service] ("[ECS]"), see the [scalability] section.
 [Docker] can be run on a Windows PC, a Mac, an on-site Linux machine,
 or a Linux-based virtual machine in the cloud.  Since **docassemble**
 is a web application, the ideal platform is a Linux virtual machine in
-the cloud.  You can test out **docassemble** on a PC or a Mac, but for
-serious, long-term deployment, it is probably worthwhile to run it in
 the cloud.
+
+You can test out **docassemble** on a PC or a Mac, but for serious,
+long-term deployment, it is worthwhile to run it in the cloud, or on a
+dedicated on-premises server.  Running [Docker] on a machine that
+shuts down or restarts frequently could lead to [database corruption].
 
 If you have never deployed a Linux-based virtual machine in the cloud
 before, this might be a good opportunity to learn.  The ability to use
@@ -113,6 +116,19 @@ systemctl start docker`, or `sudo service docker start`.
 
 # <a name="single server arrangement"></a>Quick start
 
+If you just want to test out **docassemble** for the first time,
+follow the instructions in this section, and you'll get
+**docassemble** up and running quickly in a [Docker] container,
+whether you are using a laptop or [AWS].
+
+However, you should think of this as an educational exercise; don't
+start using the container for serious development work.  For a serious
+implementation, you will want to go through additional setup steps,
+such as configuring [HTTPS] for encryption and [data storage] for the
+safe, long-term storage of development data and user data.
+
+## <a name="starting"></a>Starting
+
 Once [Docker] is installed, you can install and run **docassemble** from the command line.
 
 To get a command line on Windows, run [Windows PowerShell].
@@ -121,8 +137,6 @@ To get a command line on a Mac, launch the [Terminal] application.
 
 To get a command line on a virtual machine in the cloud, follow your
 provider's instructions for using [SSH] to connect to your machine.
-
-## <a name="starting"></a>Starting
 
 From the command line, simply type in:
 
@@ -319,8 +333,6 @@ Log files on the container that you might wish to check include:
 
 Enter `exit` to leave the container and get back to your standard
 command prompt.
-
-
 
 # <a name="configuration options"></a>Configuration options
 
@@ -1731,3 +1743,4 @@ line), as the containers depend on the images.
 [Logs]: {{ site.baseurl }}/docs/admin.html#logs
 [Supervisor]: http://supervisord.org/
 [syslog-ng]: https://en.wikipedia.org/wiki/Syslog-ng
+[database corruption]: #shutdown

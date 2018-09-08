@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.95](https://github.com/jhpyle/docassemble/releases/tag/v0.2.95) - 2018-09-08
+
+### Added
+- The `update references` setting on `attachment`s.
+
 ## [0.2.94](https://github.com/jhpyle/docassemble/releases/tag/v0.2.94) - 2018-09-05
 
 ### Added
