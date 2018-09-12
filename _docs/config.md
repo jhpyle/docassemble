@@ -103,7 +103,9 @@ Setting `debug` to `True` enables the following features:
   to generate the current question, an explanation of the path the
   interview took to get to the current question, and [readability
   statistics] for the question and the help text.
-* Viewing [LaTeX] and [Markdown] source in document attachments.
+* Viewing [Markdown] source in document attachments.
+
+This can be overridden using the [`debug` feature].
 
 ## <a name="allow demo"></a>Allowing sample interviews in production mode
 
@@ -2396,6 +2398,12 @@ For more information about how to obtain these keys, see the
 [installation] page's sections on [Facebook], [Twitter], [Google],
 [Auth0], and [Azure].
 
+Note that in [YAML], dictionary keys must be unique.  So you can only
+have one `ouath:` line in your configuration.  Put all of your
+[OAuth2] configuration details (for Google logins, Google Drive
+integration, OneDrive integration, etc.) within a single `oauth`
+directive.
+
 ## <a name="googledrive"></a>Google Drive configuration
 
 To enable the [Google Drive synchronization] feature, add
@@ -2414,10 +2422,23 @@ For more information about obtaining these keys, see the
 [Google Drive]({{ site.baseurl }}/docs/installation.html#google drive)
 section of the [installation] page.
 
-Note that in [YAML], dictionary keys must be unique.  So you can
-only have one `ouath:` line in your configuration.  Put all of your
-[OAuth2] configuration details (for Google logins, Google Drive
-integration, etc.) within a single `oauth` directive.
+## <a name="onedrive"></a>OneDrive configuration
+
+To enable the [OneDrive synchronization] feature, add
+a `onedrive` entry to your [`oauth`](#oauth) configuration with
+your [OAuth2] keys for [OneDrive].
+
+{% highlight yaml %}
+oauth:
+  onedrive:
+    enable: True
+    id: 7df57ca4-d736-84b3-9aec-746c63b8e88d
+    secret: "xcyTW522[bip)BIWXY92YsT"
+{% endhighlight %}
+
+For more information about obtaining these keys, see the 
+[OneDrive]({{ site.baseurl }}/docs/installation.html#onedrive)
+section of the [installation] page.
 
 ## <a name="github"></a>GitHub configuration
 
@@ -2788,9 +2809,11 @@ and Facebook API keys.
 [load balancer]: {{ site.baseurl }}/docs/scalability.html
 [forwards]: {{ site.baseurl }}/docs/docker.html#forwarding
 [Google Drive synchronization]: {{ site.baseurl }}/docs/playground.html#google drive
+[OneDrive synchronization]: {{ site.baseurl }}/docs/playground.html#onedrive
 [GitHub integration]: {{ site.baseurl }}/docs/packages.html#github
 [OAuth2]: https://oauth.net/2/
 [Google Drive]: https://drive.google.com
+[OneDrive]: https://onedrive.live.com/about/en-us/
 [Mailgun]: https://www.mailgun.com/
 [DNS]: https://en.wikipedia.org/wiki/Domain_Name_System
 [phone login]: #phone login
@@ -2881,3 +2904,4 @@ and Facebook API keys.
 [`debug`]: #debug
 [Logs]: {{ site.baseurl }}/docs/admin.html#logs
 [`url root`]: #url root
+[`debug` feature]: {{ site.baseurl }}/docs/initial.html#debug

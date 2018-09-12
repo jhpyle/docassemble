@@ -703,6 +703,25 @@ For more information about managing training data, see the
 
 The `features` block sets some optional features of the interview.
 
+## <a name="debug"></a>Whether debugging features are available
+
+If the [`debug` directive] in the [Configuration] is `True`, then by
+default, the navigation bar will contain a "Source" link that shows
+information about how the interview arrived at the question being
+shown.  If the [`debug` directive] is `False`, then this will not be
+shown.
+
+This can be overridden in the `features` by setting `debug` to `True`
+or `False` depending on the behavior you want.
+
+The following example demonstrates turning the `debug` feature off.
+
+{% include side-by-side.html demo="debug-mode" %}
+
+On the server that hosts the demonstration interviews, the [`debug`
+directive] is `True`, so the "Source" link is normally shown.  Setting
+`debug: False` makes the "Source" link disappear.
+
 ## <a name="centered"></a>Whether interview is centered
 
 If you do not want your interview to be centered on the screen, set
@@ -1166,3 +1185,5 @@ features:
 [`javascript`]: #javascript
 [`error help`]: {{ site.baseurl}}/docs/config.html#error help
 [Configuration]: {{ site.baseurl}}/docs/config.html
+[`debug` directive]: {{ site.baseurl}}/docs/config.html#debug
+[Markdown]: https://daringfireball.net/projects/markdown/

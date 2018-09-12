@@ -1902,6 +1902,9 @@
   subquestion: |
     I hope you had a good time!
   sets: all_done
+"debug-mode": |-
+  features:
+    debug: True
 "declarative": |-
   objects:
     injury_location: Address
@@ -9828,14 +9831,16 @@
 "markdown-template": "template: the_template\ncontent: |\n  This is *italic text*.\n\
   \  This is **bold text**.\n  This is __some *bold italic* text__.\n\n  **bold**\
   \ at beginning of paragraph.\n\n  *italic* at beginning of paragraph.\n\n  > This\
-  \ is some block-quoted\n  > text\n\n  ## This is a heading\n\n  This is some regular\
-  \ text.\n\n  This line has a br.[BR] This is the second line.\n\n  ### Lists\n \
-  \ \n  Here is a bullet list:\n\n  * Apple\n  * Peach\n  * Pear\n\n  Here is a numbered\
-  \ list:\n\n  1. Nutmeg\n  2. Celery\n  3. Oregano\n\n  Your favorite fruit is ${\
-  \ favorite_fruit }.\n  \n  Here is a\n  [link to a web site](https://google.com).\n\
-  \n  Here is a picture:\n\n  [FILE house.png]\n---\nmandatory: True\nquestion: |\n\
-  \  Here is your document.\nattachment:\n  - name: Your attachment\n    filename:\
-  \ the_file\n    docx template file: markdown_template_demo.docx"
+  \ is some block-quoted\n  > text that goes on for many many\n  > lines and you might\
+  \ wonder\n  > if it will ever even stop\n  > because it keeps going on and \n  >\
+  \ on.\n  \n  ## This is a heading\n\n  This is some regular text.\n\n  This line\
+  \ has a br.[BR] This is the second line.\n\n  ### Lists\n  \n  Here is a bullet\
+  \ list:\n\n  * Apple\n  * Peach\n  * Pear\n\n  Here is a numbered list:\n\n  1.\
+  \ Nutmeg\n  2. Celery\n  3. Oregano\n\n  Your favorite fruit is ${ favorite_fruit\
+  \ }.\n  \n  Here is a\n  [link to a web site](https://google.com).\n\n  Here is\
+  \ a picture:\n\n  [FILE house.png]\n---\nmandatory: True\nquestion: |\n  Here is\
+  \ your document.\nattachment:\n  - name: Your attachment\n    filename: the_file\n\
+  \    docx template file: markdown_template_demo.docx"
 "multi-user": "modules:\n  - docassemble.base.util\n---\nobjects:\n  firstparty: Individual\n\
   \  secondparty: Individual\n---\ninitial: true\ncode: |\n  multi_user = True\n \
   \ if user_logged_in():\n    if not defined('firstparty.email'):\n      firstparty.email\

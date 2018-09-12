@@ -839,7 +839,7 @@ and click "Google Drive synchronization" to connect their
 Users will be redirected to a special page from Google where they
 will be asked if they with to give your server access to their
 [Google Drive].  When a user consents to this, he or she will see a
-"GD" button in the [Playground] that, when pressed, will synchronize
+"Sync" button in the [Playground] that, when pressed, will synchronize
 the contents of the user's [Playground] with a folder on the user's
 [Google Drive].
 
@@ -868,6 +868,46 @@ When you have your "Client ID" and "Client secret," go to the
 After the configuration is changed and the system restarts, users with
 `developer` or `admin` [privileges] will be able to go to their
 "Profile" and click "Google Drive synchronization."
+
+## <a name="onedrive"></a>Setting up OneDrive integration
+
+To enable the [OneDrive synchronization] feature, you need to sign in
+to the [Microsoft Application Registration Portal] and create an
+application.  Make a note of your "Application ID."  Under "Application
+Secrets," click "Generate New Password."  Make a note of the password.
+
+Under "Platforms," click "Add Platform" and add a "web" platform.
+Under "Redirect URLs," add `https://example.com/onedrive_callback`
+substituting your own server URL for `https://example.com`.
+
+Under "Microsoft Graph Permissions," add the permissions of
+`Files.ReadWrite.All` and `User.Read`.
+
+Under "Profile," provide a logo and URLs for your home page, terms of
+service, and privacy statement.  Note that the only people who will
+see these things are your developers.
+
+Then press "Save" to save your application.
+
+Then, go to your [Configuration].  Edit the [`onedrive`] directive
+under `oauth`.  Set the `id` to the "Application ID" you obtained
+earlier, and set the `secret` to the "Password" you obtained earlier.
+Note that you may need to put quotes around the password in order
+to avoid [YAML] problems.
+
+When this is enabled, users on your server who have the [privileges]
+of `admin` or `developer` will be able to go to their "Profile" page
+and click "OneDrive synchronization" to connect their [OneDrive] with
+their account on your **docassemble** server.  Users will be
+redirected to a special page from Microsoft where they will be asked
+if they with to give your server access to their [OneDrive].  When a
+user consents to this, he or she will see a "Sync" button in the
+[Playground] that, when pressed, will synchronize the contents of the
+user's [Playground] with a folder on the user's [OneDrive].
+
+If you enable both [Google Drive synchronization] and [OneDrive
+synchronization], users will be able to choose either, but not both.
+Enabling one will disable the other.
 
 ## <a name="github"></a>Setting up GitHub integration
 
@@ -930,17 +970,18 @@ link.
 When interview authors click this link and they choose to associate
 their [GitHub] account with their account on your **docassemble**
 server, **docassemble** stores an access token in [Redis] for the
-user.  This allows **docassemble** to authenticate with the
-[GitHub API].  **docassemble** also creates an SSH private key and an
-SSH public key annotated with the e-mail address associated with the
+user.  This allows **docassemble** to authenticate with the [GitHub
+API].  **docassemble** also creates an SSH private key and an SSH
+public key annotated with the e-mail address associated with the
 user's [GitHub] account.  These SSH keys are stored in the same
 directory in the Playground as the files for [Playground] packages, so
-they will appear in [Google Drive] if [Google Drive synchronization]
-is enabled, and they will be stored in the cloud if cloud
-[data storage] is enabled.  Using the [GitHub API], **docassemble**
-stores the public key in the user's [GitHub] account, using the name
-of the application as specified in the [configuration] as the value of
-[`appname`] (which defaults to `docassemble`).
+they will appear in [Google Drive] or [OneDrive] if [Google Drive
+synchronization] or [OneDrive synchronization] is enabled, and they
+will be stored in the cloud if cloud [data storage] is enabled.  Using
+the [GitHub API], **docassemble** stores the public key in the user's
+[GitHub] account, using the name of the application as specified in
+the [configuration] as the value of [`appname`] (which defaults to
+`docassemble`).
 
 ## <a name="email"></a>Setting up e-mail sending
 
@@ -1536,6 +1577,7 @@ All of these system administration headaches can be avoided by
 [certbot instructions]: https://certbot.eff.org/all-instructions/
 [certbot]: https://certbot.eff.org/
 [Google Drive synchronization]: {{ site.baseurl }}/docs/playground.html#google drive
+[OneDrive synchronization]: {{ site.baseurl }}/docs/playground.html#onedrive
 [MailChimp]: https://mailchimp.com/
 [Mailgun]: https://www.mailgun.com/
 [Google Apps]: https://support.google.com/a/answer/176600?hl=en
@@ -1548,8 +1590,8 @@ All of these system administration headaches can be avoided by
 [commit]: https://git-scm.com/docs/git-commit
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [privileges]: {{ site.baseurl }}/docs/users.html
-[Google Drive]: https://drive.google.com
 [Google Drive API]: https://developers.google.com/drive/v3/web/about-sdk
+[OneDrive API]: https://docs.microsoft.com/en-us/onedrive/developer/rest-api/
 [GitHub integration]: {{ site.baseurl }}/docs/packages.html#github
 [`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
 [DNS]: https://en.wikipedia.org/wiki/Domain_Name_System
@@ -1564,6 +1606,7 @@ All of these system administration headaches can be avoided by
 [Debian stretch]: https://wiki.debian.org/DebianStretch
 [npm]: https://www.npmjs.com
 [`googledrive`]: {{ site.baseurl }}/docs/config.html#googledrive
+[`onedrive`]: {{ site.baseurl }}/docs/config.html#onedrive
 [pip]: https://pip.pypa.io/en/stable/
 [OAuth]: https://oauth.net/1/
 [alembic]: http://alembic.zzzcomputing.com/en/latest/
@@ -1571,4 +1614,7 @@ All of these system administration headaches can be avoided by
 [`server administrator email`]: {{ site.baseurl }}/docs/config.html#server administrator email
 [Google APIs]: https://developers.google.com/apis-explorer/#p/
 [Google Drive]: https://drive.google.com
+[OneDrive]: https://onedrive.live.com/about/en-us/
 [Auth0]: https://auth0.com/
+[Microsoft Application Registration Portal]: https://apps.dev.microsoft.com
+[YAML]: https://en.wikipedia.org/wiki/YAML

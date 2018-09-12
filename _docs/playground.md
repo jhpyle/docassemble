@@ -469,8 +469,9 @@ seconds.  Or if you edit an interview [YAML] file and press "Save" and
 then press the "sync" button, your changes will appear in the file on
 your laptop in a few seconds.
 
-Google Drive synchronization requires setup.  See [`googledrive`] in
-the [configuration] for instructions.
+Google Drive synchronization requires setup.  See [Google Drive setup]
+in the [installation] section and [`googledrive`] in the
+[configuration] section for instructions.
 
 Once those steps have been completed, anyone with a developer or
 administrator account can go to their Profile from the menu and click
@@ -550,6 +551,31 @@ you may find your files in an inconsistent state.  If you have a file
 open for editing locally but then you make changes to the same file in
 the web interface and press Sync, Google Drive might not be able to
 copy the modified file to your local drive.
+
+# <a name="onedrive"></a>OneDrive integration
+
+OneDrive integration works just like [Google Drive integration]
+feature described in the previous section, except it works with
+Microsoft's [OneDrive].
+
+An advantage of [OneDrive] is that you can use [Word Online] to edit a
+.docx file for a document assembly template, and store it in the
+"templates" folder of your [OneDrive], and then use it with [`docx
+template file`] from an interview in your Playground.  The editing of
+both the [YAML] file and the Word file can all take place within the
+same web browser.
+
+To enable OneDrive integration on your server, follow the [OneDrive
+setup] instructions in the [installation] section.  See [`onedrive`]
+in the [configuration] for instructions.
+
+As with [Google Drive integration], be careful not to go too fast when
+using the OneDrive integration.  For example, if you use [Word Online]
+to edit a document, note that after you stop editing, the top of the
+screen says "Saving..." and after a few moments this becomes "Saved."
+If you go into the Playground and press "Sync" while the Word document
+is still in the process of being saved, you might not get the results
+you expect.
 
 # <a name="infiniteloops"></a>Recovering from infinite loops
 
@@ -639,10 +665,18 @@ Then the editing screen will load.
 [GitHub]: https://github.com/
 [packages section]: {{ site.baseurl }}/docs/packages.html#github
 [Google Drive]: https://drive.google.com
+[OneDrive]: https://onedrive.live.com/about/en-us/
 [Emacs]: https://www.gnu.org/software/emacs/
 [Notepad++]: http://notepad-plus-plus.org/
 [Sublime Text]: http://www.sublimetext.com/
 [`googledrive`]: {{ site.baseurl }}/docs/config.html#googledrive
+[`onedrive`]: {{ site.baseurl }}/docs/config.html#onedrive
 [Google Docs]: https://docs.google.com
 [GitHub configuration]: {{ site.baseurl }}/docs/config.html#github
 [PyPI configuration]: {{ site.baseurl }}/docs/config.html#pypi
+[Google Drive integration]: #google drive
+[installation]: {{ site.baseurl }}/docs/installation.html
+[OneDrive setup]: {{ site.baseurl }}/docs/installation.html#onedrive
+[Google Drive setup]: {{ site.baseurl }}/docs/installation.html#google drive
+[`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
+[Word Online]: https://office.live.com/start/Word.aspx
