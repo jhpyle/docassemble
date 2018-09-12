@@ -9,8 +9,6 @@
     <meta name="google-signin-client_id" content="{{ config['OAUTH_CREDENTIALS']['google']['id'] }}">
 {%- endif %}{{ extra_meta }}
     <title>{% if tab_title %}{{ tab_title }}{% else %}{{ config['APP_NAME'] }}{% endif %}</title>
-    <link href="{% if config['BOOTSTRAP_THEME'] %}{{ config['BOOTSTRAP_THEME'] }}{% else %}{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}{% endif %}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='app/app.css') }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
     <link rel="shortcut icon" href="{{ url_for('favicon') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('apple_touch_icon') }}">
     <link rel="icon" type="image/png" href="{{ url_for('favicon_md') }}" sizes="32x32">
@@ -18,7 +16,9 @@
     <link rel="manifest" href="{{ url_for('favicon_manifest_json') }}">
     <link rel="mask-icon" href="{{ url_for('favicon_safari_pinned_tab') }}" color="{{ config['FAVICON_MASK_COLOR'] }}">
     <meta name="theme-color" content="{{ config['FAVICON_THEME_COLOR'] }}">
-    <script defer src="{{ url_for('static', filename='fontawesome/js/all.min.js') }}"></script>
+    <script defer src="{{ url_for('static', filename='fontawesome/js/all.js') }}"></script>
+    <link href="{% if config['BOOTSTRAP_THEME'] %}{{ config['BOOTSTRAP_THEME'] }}{% else %}{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}{% endif %}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='app/app.css') }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
   </head>
   <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} pad-for-navbar">
     <nav class="navbar fixed-top navbar-expand-md navbar-dark bg-dark">

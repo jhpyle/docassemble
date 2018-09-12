@@ -70,9 +70,11 @@
 "Configure": Null
 "Confirmation Date": Null
 "Connected to Google Drive": Null
+"Connected to OneDrive": Null
 "Continue": Null
 "Control": Null
 "could not connect to Google Drive": Null
+"could not connect to OneDrive": Null
 "Could not create new key": Null
 "Country code": Null
 "Created new Markdown file called ": Null
@@ -169,7 +171,6 @@
 "Go back to the main Playground page": Null
 "Go back to the previous question": Null
 "Go": Null
-"Google Drive folder was set.": Null
 "Google Drive is not configured": Null
 "Google Drive is not linked.": Null
 "Google Drive": Null
@@ -269,6 +270,8 @@
 "(Not a DAFile or DAFileList object)": Null
 "(Not a readable image file)": Null
 "Note": Null
+"Note that if you connect to a Google Drive folder, you will disable your connection to OneDrive.": Null
+"Note that if you connect to a OneDrive folder, you will disable your connection to Google Drive.": Null
 "?": Null
 ".": Null
 "Observation": Null
@@ -276,6 +279,9 @@
 "OCR succeeded": Null
 "offline": Null
 "ok": Null
+"OneDrive is not configured": Null
+"OneDrive is not linked.": Null
+"OneDrive": Null
 "operator": Null
 "operators": Null
 "Organization": Null
@@ -378,6 +384,7 @@
 "Select file": Null
 "Select...": Null
 "Select one": Null
+"Select the folder from your OneDrive that you want to be synchronized with the Playground.": Null
 "Send confirmation email": Null
 "Send": Null
 "Server did not respond to request for update.": Null
@@ -441,6 +448,8 @@
 "The package was unpacked into the Playground.": Null
 "The package you specified could not be downloaded from PyPI as a tar.gz file.": Null
 "The package you specified could not be downloaded from PyPI.": Null
+"The previously selected OneDrive folder does not exist.": Null
+"The previously selected OneDrive folder was deleted.": Null
 "The privilege could not be added because it already exists.": Null
 "The privilege was added.": Null
 "There are unsaved changes.  Are you sure you wish to leave this page?": Null
@@ -617,6 +626,8 @@
 "Your information was saved.": Null
 "Your new API key, known internally as": Null
 "Your password is insecure and needs to be changed": Null
+"Your Playground is connected to your Google Drive.": Null
+"Your Playground is connected to your OneDrive.": Null
 "Your request was submitted.": Null
 "Your screen is being controlled by an operator.": Null
 "yourself": Null

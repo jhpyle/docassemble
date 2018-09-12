@@ -1,0 +1,16 @@
+{% extends 'base_templates/flask_wide_base.html' %}
+
+{% block content %}
+{% from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
+<h1>{{ word('Synchronizing with OneDrive') }}</h1>
+<div class="alert alert-info" role="alert" id="notification">
+  {{ word('Please wait.  Files are syncing.') }}
+</div>
+<div id="resultsContainer" style="display: none">
+  <p id="resultsArea">
+  </p>
+  <div class="form-actions vspace">
+    <a role="button" class="btn btn-secondary {{ config['BUTTON_CLASS'] }} btn-warning" href="{{ next_page }}">{{ word("Return") }}</a>
+  </div>
+</div>
+{% endblock %}

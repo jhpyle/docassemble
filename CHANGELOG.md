@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.96] - 2018-09-12
+### Added
+- Integration between Microsoft OneDrive and the Playground.
+- The `debug` directive inside `features`.
+### Changed
+- Upgraded Font Awesome to 5.3.1.
+
 ## [0.2.95] - 2018-09-08
 ### Added
 - The `update references` setting on `attachment`s.

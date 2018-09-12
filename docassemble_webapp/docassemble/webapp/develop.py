@@ -112,6 +112,12 @@ class PlaygroundPackagesForm(FlaskForm):
 class GoogleDriveForm(FlaskForm):
     folder = SelectField(word('Folder'))
     submit = SubmitField(word('Save'))
+    cancel = SubmitField(word('Cancel'))
+
+class OneDriveForm(FlaskForm):
+    folder = SelectField(word('Folder'))
+    submit = SubmitField(word('Save'))
+    cancel = SubmitField(word('Cancel'))
 
 class GitHubForm(FlaskForm):
     configure = SubmitField(word('Configure'))

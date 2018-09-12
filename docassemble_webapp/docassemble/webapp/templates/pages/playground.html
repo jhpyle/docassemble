@@ -64,6 +64,13 @@
     </a>
   </li>
   {%- endif %}
+  {%- if use_od %}
+  <li class="nav-item" role="presentation">
+    <a class="nav-link" tabindex="7" href="{{ url_for('sync_with_onedrive', next=url_for('playground_page')) }}" title="{{ word('Sync with OneDrive') }}">
+      <i class="fab fa-windows" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Sync') }}
+    </a>
+  </li>
+  {%- endif %}
 </ul>
 <form action="{{ url_for('playground_page') }}" method="POST" class="form pgform" role="form" id="form" autocomplete="off">
   {{ form.hidden_tag() }}

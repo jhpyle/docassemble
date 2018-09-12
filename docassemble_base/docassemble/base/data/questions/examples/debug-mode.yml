@@ -1,0 +1,30 @@
+metadata:
+  title: Debug mode
+  short title: debug
+  documentation: "https://docassemble.org/docs/initial.html#debug"
+  example start: 1
+  example end: 1
+---
+features:
+  debug: False
+---
+question: |
+  Welcome to the interview.
+field: intro
+---
+mandatory: True
+need: intro
+question: |
+  Thanks for completing the interview!
+subquestion: |
+  Notice that there was no "Source" link
+  in the navigation bar during this
+  interview.
+
+  Notice also that the only two tabs
+  below are "Download" and "Preview."
+attachment:
+  name: A document
+  filename: document
+  content: |
+    Hello, world!

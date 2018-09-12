@@ -410,7 +410,7 @@ def custom_register():
         if user_manager.auto_login_after_register:
             return flask_user.views._do_login_user(user, safe_reg_next)
         else:
-            return redirect(url_for('user.login') + '?next=' + quote(safe_reg_next))
+            return redirect(url_for('user.login') + '?next=' + urllib.quote(safe_reg_next))
 
     # Process GET or invalid POST
     if is_json:
@@ -720,7 +720,7 @@ from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
 #from flask_wtf.csrf import generate_csrf
-from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey, AddinUploadForm
+from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, OneDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey, AddinUploadForm
 import flask_user.signals
 import flask_user.translations
 import flask_user.views
@@ -802,6 +802,7 @@ app.config['USE_TWITTER_LOGIN'] = False
 app.config['USE_AUTH0_LOGIN'] = False
 app.config['USE_AZURE_LOGIN'] = False
 app.config['USE_GOOGLE_DRIVE'] = False
+app.config['USE_ONEDRIVE'] = False
 app.config['USE_PHONE_LOGIN'] = False
 app.config['USE_GITHUB'] = False
 if daconfig.get('password login', True) is False:
@@ -836,6 +837,10 @@ if 'oauth' in daconfig:
         app.config['USE_GOOGLE_DRIVE'] = True
     else:
         app.config['USE_GOOGLE_DRIVE'] = False
+    if 'onedrive' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['onedrive'] and daconfig['oauth']['onedrive']['enable'] is False):
+        app.config['USE_ONEDRIVE'] = True
+    else:
+        app.config['USE_ONEDRIVE'] = False
     if 'github' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['github'] and daconfig['oauth']['github']['enable'] is False):
         app.config['USE_GITHUB'] = True
     else:
@@ -1595,10 +1600,9 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootst
         bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">'
     else:
         bootstrap_part = '\n    <link href="' + bootstrap_theme + '" rel="stylesheet">'
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">' + bootstrap_part + '\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.js') + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
-    output += '\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.min.js') + '"></script>'
     return output
 
 def process_file(saved_file, orig_file, mimetype, extension, initial=True):
@@ -3280,7 +3284,7 @@ class AzureSignIn(OAuthSignIn):
              'last_name': me.get('surname', None),
              'name': me.get('displayName', me.get('userPrincipalName', None))}
         )
-
+    
 class Auth0SignIn(OAuthSignIn):
     def __init__(self):
         super(Auth0SignIn, self).__init__('auth0')
@@ -4806,7 +4810,7 @@ def index():
     #g.interview = interview
     if not interview.from_cache and len(interview.mlfields):
         ensure_training_loaded(interview)
-    debug_mode = DEBUG or yaml_filename.startswith('docassemble.playground')
+    debug_mode = interview.debug
     # if should_assemble and '_action_context' in post_data:
     #     action = json.loads(myb64unquote(post_data['_action_context']))
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface), tracker=user_dict['_internal']['tracker'])
@@ -11638,6 +11642,35 @@ def set_gd_folder(folder):
     if folder is None:
         r.delete(key)
     else:
+        set_od_folder(None)
+        r.set(key, folder)
+
+def get_od_flow():
+    app_credentials = current_app.config['OAUTH_CREDENTIALS'].get('onedrive', dict())
+    client_id = app_credentials.get('id', None)
+    client_secret = app_credentials.get('secret', None)
+    if client_id is None or client_secret is None:
+        raise DAError('OneDrive is not configured.')
+    flow = oauth2client.client.OAuth2WebServerFlow(
+        client_id=client_id,
+        client_secret=client_secret,
+        scope='files.readwrite.all user.read offline_access',
+        redirect_uri=url_for('onedrive_callback', _external=True),
+        response_type='code',
+        auth_uri='https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+        token_uri='https://login.microsoftonline.com/common/oauth2/v2.0/token')
+    return flow
+
+def get_od_folder():
+    key = 'da:onedrive:mapping:userid:' + str(current_user.id)
+    return r.get(key)
+
+def set_od_folder(folder):
+    key = 'da:onedrive:mapping:userid:' + str(current_user.id)
+    if folder is None:
+        r.delete(key)
+    else:
+        set_gd_folder(None)
         r.set(key, folder)
 
 class RedisCredStorage(oauth2client.client.Storage):
@@ -11845,7 +11878,214 @@ def gd_sync_wait():
       });
     </script>"""
     return render_template('pages/gd_sync_wait.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Synchronizing'), page_title=word('Synchronizing'), next_page=next_url)
-    
+
+@app.route('/onedrive_callback', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def onedrive_callback():
+    for key in request.args:
+        logmessage("onedrive_callback: argument " + str(key) + ": " + str(request.args[key]))
+    if 'code' in request.args:
+        flow = get_od_flow()
+        credentials = flow.step2_exchange(request.args['code'])
+        storage = RedisCredStorage(app='onedrive')
+        storage.put(credentials)
+        error = None
+    elif 'error' in request.args:
+        error = request.args['error']
+    else:
+        error = word("could not connect to OneDrive")
+    if error:
+        flash(word('There was a OneDrive error: ' + error), 'error')
+        return redirect(url_for('interview_list'))
+    else:
+        flash(word('Connected to OneDrive'), 'success')
+    return redirect(url_for('onedrive_page'))
+
+def trash_od_file(section, filename):
+    if section == 'template':
+        section = 'templates'
+    the_folder = get_od_folder()
+    if the_folder is None:
+        logmessage('trash_od_file: folder not configured')
+        return False
+    storage = RedisCredStorage(app='onedrive')
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        logmessage('trash_od_file: credentials missing or expired')
+        return False
+    http = credentials.authorize(httplib2.Http())
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllib.quote(the_folder), "GET")
+    if int(r['status']) != 200:
+        trashed = True
+    else:
+        info = json.loads(content)
+        #logmessage("Found " + repr(info))
+        if info.get('deleted', None):
+            trashed = True
+        else:
+            trashed = False
+    if trashed is True or 'folder' not in info:
+        logmessage('trash_od_file: folder did not exist')
+        return False
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllib.quote(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
+    subdir = None
+    while True:
+        if int(r['status']) != 200:
+            logmessage('trash_od_file: could not obtain subfolders')
+            return False
+        info = json.loads(content)
+        #logmessage("Found " + repr(info))
+        for item in info['value']:
+            if item.get('deleted', None) or 'folder' not in item:
+                continue
+            if item['name'] == section:
+                subdir = item['id']
+                break
+        if subdir is not None or "@odata.nextLink" not in info:
+            break
+        r, content = http.request(info["@odata.nextLink"], "GET")
+    if subdir is None:
+        logmessage('trash_od_file: could not obtain subfolder')
+        return False
+    id_of_filename = None
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + unicode(subdir) + "/children?$select=id,name,deleted,folder", "GET")
+    while True:
+        if int(r['status']) != 200:
+            logmessage('trash_od_file: could not obtain contents of subfolder')
+            return False
+        info = json.loads(content)
+        #logmessage("Found " + repr(info))
+        for item in info['value']:
+            if item.get('deleted', None) or 'folder' in item:
+                continue
+            if item['name'] == filename:
+                id_of_filename = item['id']
+                break
+        if id_of_filename is not None or "@odata.nextLink" not in info:
+            break
+        r, content = http.request(info["@odata.nextLink"], "GET")
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + unicode(id_of_filename), "DELETE")
+    if int(r['status']) != 204:
+        logmessage('trash_od_file: could not delete ')
+        return False
+    logmessage('trash_od_file: file ' + str(filename) + ' trashed from '  + str(section))
+    return True
+
+@app.route('/sync_with_onedrive', methods=['GET'])
+@login_required
+@roles_required(['admin', 'developer'])
+def sync_with_onedrive():
+    next = request.args.get('next', url_for('playground_page'))
+    if app.config['USE_ONEDRIVE'] is False:
+        flash(word("OneDrive is not configured"), "error")
+        return redirect(url_for('interview_list'))
+    storage = RedisCredStorage(app='onedrive')
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        flow = get_gd_flow()
+        uri = flow.step1_get_authorize_url()
+        return redirect(uri)
+    task = docassemble.webapp.worker.sync_with_onedrive.delay(current_user.id)
+    session['taskwait'] = task.id
+    return redirect(url_for('od_sync_wait', next=next))
+
+@app.route('/odsyncing', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def od_sync_wait():
+    next_url = request.args.get('next', url_for('playground_page'))
+    my_csrf = generate_csrf()
+    script = """
+    <script>
+      var checkinInterval = null;
+      var resultsAreIn = false;
+      function daRestartCallback(data){
+        //console.log("Restart result: " + data.success);
+      }
+      function daRestart(){
+        $.ajax({
+          type: 'POST',
+          url: """ + json.dumps(url_for('restart_ajax')) + """,
+          data: 'csrf_token=""" + my_csrf + """&action=restart',
+          success: daRestartCallback,
+          dataType: 'json'
+        });
+        return true;
+      }
+      function daSyncCallback(data){
+        if (data.success){
+          if (data.status == 'finished'){
+            resultsAreIn = true;
+            if (data.ok){
+              $("#notification").html(""" + json.dumps(word("The synchronization was successful.")) + """);
+              $("#notification").removeClass("alert-info");
+              $("#notification").removeClass("alert-danger");
+              $("#notification").addClass("alert-success");
+            }
+            else{
+              $("#notification").html(""" + json.dumps(word("The synchronization was not successful.")) + """);
+              $("#notification").removeClass("alert-info");
+              $("#notification").removeClass("alert-success");
+              $("#notification").addClass("alert-danger");
+            }
+            $("#resultsContainer").show();
+            $("#resultsArea").html(data.summary);
+            if (checkinInterval != null){
+              clearInterval(checkinInterval);
+            }
+            if (data.restart){
+              daRestart();
+            }
+          }
+          else if (data.status == 'failed' && !resultsAreIn){
+            resultsAreIn = true;
+            $("#notification").html(""" + json.dumps(word("There was an error with the synchronization.")) + """);
+            $("#notification").removeClass("alert-info");
+            $("#notification").removeClass("alert-success");
+            $("#notification").addClass("alert-danger");
+            $("#resultsContainer").show();
+            if (data.error_message){
+              $("#resultsArea").html(data.error_message);
+            }
+            else if (data.summary){
+              $("#resultsArea").html(data.summary);
+            }
+            if (checkinInterval != null){
+              clearInterval(checkinInterval);
+            }
+          }
+        }
+        else if (!resultsAreIn){
+          $("#notification").html(""" + json.dumps(word("There was an error.")) + """);
+          $("#notification").removeClass("alert-info");
+          $("#notification").removeClass("alert-success");
+          $("#notification").addClass("alert-danger");
+          if (checkinInterval != null){
+            clearInterval(checkinInterval);
+          }
+        }
+      }
+      function daSync(){
+        if (resultsAreIn){
+          return;
+        }
+        $.ajax({
+          type: 'POST',
+          url: """ + json.dumps(url_for('checkin_sync_with_onedrive')) + """,
+          data: 'csrf_token=""" + my_csrf + """',
+          success: daSyncCallback,
+          dataType: 'json'
+        });
+        return true;
+      }
+      $( document ).ready(function() {
+        //console.log("page loaded");
+        checkinInterval = setInterval(daSync, 2000);
+      });
+    </script>"""
+    return render_template('pages/od_sync_wait.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Synchronizing'), page_title=word('Synchronizing'), next_page=next_url)
+
 # @app.route('/old_sync_with_google_drive', methods=['GET', 'POST'])
 # @login_required
 # @roles_required(['admin', 'developer'])
@@ -11885,7 +12125,36 @@ def checkin_sync_with_google_drive():
             return jsonify(success=True, status='failed', error_message=str(the_result), restart=False)
     else:
         return jsonify(success=True, status='waiting', restart=False)
-    
+
+@app.route('/checkin_sync_with_onedrive', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def checkin_sync_with_onedrive():
+    if 'taskwait' not in session:
+        return jsonify(success=False)
+    result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['taskwait'])
+    if result.ready():
+        if 'taskwait' in session:
+            del session['taskwait']
+        the_result = result.get()
+        if type(the_result) is ReturnValue:
+            if the_result.ok:
+                logmessage("checkin_sync_with_onedrive: success")
+                return jsonify(success=True, status='finished', ok=the_result.ok, summary=add_br(the_result.summary), restart=the_result.restart)
+            elif hasattr(the_result, 'error'):
+                logmessage("checkin_sync_with_onedrive: failed return value is " + str(the_result.error))
+                return jsonify(success=True, status='failed', error_message=str(the_result.error), restart=False)
+            elif hasattr(the_result, 'summary'):
+                return jsonify(success=True, status='failed', summary=add_br(the_result.summary), restart=False)
+            else:
+                return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(the_result)), restart=False)
+        else:
+            logmessage("checkin_sync_with_onedrive: failed return value is a " + str(type(the_result)))
+            logmessage("checkin_sync_with_onedrive: failed return value is " + str(the_result))
+            return jsonify(success=True, status='failed', error_message=str(the_result), restart=False)
+    else:
+        return jsonify(success=True, status='waiting', restart=False)
+
 # @app.route('/do_sync_with_google_drive', methods=['GET', 'POST'])
 # @login_required
 # @roles_required(['admin', 'developer'])
@@ -12060,6 +12329,8 @@ def google_drive_page():
         flash(word("Google Drive is not configured"), "error")
         return redirect(url_for('interview_list'))
     form = GoogleDriveForm(request.form)
+    if request.method == 'POST' and form.cancel.data:
+        return redirect(url_for('user.profile'))
     storage = RedisCredStorage(app='googledrive')
     credentials = storage.get()
     if not credentials or credentials.invalid:
@@ -12094,16 +12365,16 @@ def google_drive_page():
                                               fields='id').execute()
             new_folder = new_file.get('id', None)
             set_gd_folder(new_folder)
-            fix_subdirs(service, new_folder)
+            gd_fix_subdirs(service, new_folder)
             if new_folder is not None:
                 active_folder = dict(id=new_folder, name='docassemble')
                 items.append(active_folder)
                 item_ids.append(new_folder)
-            flash(word("Google Drive folder was set."), 'success')
+            flash(word("Your Playground is connected to your Google Drive."), 'success')
         elif form.folder.data in item_ids:
-            flash(word("Google Drive folder was set."), 'success')
+            flash(word("Your Playground is connected to your Google Drive."), 'success')
             set_gd_folder(form.folder.data)
-            fix_subdirs(service, form.folder.data)
+            gd_fix_subdirs(service, form.folder.data)
         else:
             flash(word("The supplied folder " + unicode(form.folder.data) + "could not be found."), 'error')
             set_gd_folder(None)
@@ -12136,13 +12407,15 @@ def google_drive_page():
         items.append(active_folder)
         item_ids.append(-1)
     if the_folder is not None:
-        fix_subdirs(service, the_folder)
+        gd_fix_subdirs(service, the_folder)
     if the_folder is None:
         the_folder = ''
     description = 'Select the folder from your Google Drive that you want to be synchronized with the Playground.'
-    return render_template('pages/googledrive.html', version_warning=version_warning, bodyclass='adminbody', header=word('Google Drive'), tab_title=word('Google Drive'), items=items, the_folder=the_folder, page_title=word('Google Drive'), form=form)
+    if app.config['USE_ONEDRIVE'] is True and get_od_folder() is not None:
+        description += '  ' + word('Note that if you connect to a Google Drive folder, you will disable your connection to OneDrive.')
+    return render_template('pages/googledrive.html', version_warning=version_warning, description=description, bodyclass='adminbody', header=word('Google Drive'), tab_title=word('Google Drive'), items=items, the_folder=the_folder, page_title=word('Google Drive'), form=form)
 
-def fix_subdirs(service, the_folder):
+def gd_fix_subdirs(service, the_folder):
     subdirs = list()
     page_token = None
     while True:
@@ -12162,6 +12435,127 @@ def fix_subdirs(service, the_folder):
         }
         new_file = service.files().create(body=file_metadata,
                                           fields='id').execute()
+
+@app.route('/onedrive', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def onedrive_page():
+    if app.config['USE_ONEDRIVE'] is False:
+        flash(word("OneDrive is not configured"), "error")
+        return redirect(url_for('user.profile'))
+    form = OneDriveForm(request.form)
+    if request.method == 'POST' and form.cancel.data:
+        return redirect(url_for('user.profile'))
+    storage = RedisCredStorage(app='onedrive')
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        flow = get_od_flow()
+        uri = flow.step1_get_authorize_url()
+        logmessage("one_drive_page: uri is " + str(uri))
+        return redirect(uri)
+    items = [dict(id='', name=word('-- Do not link --'))]
+    http = credentials.authorize(httplib2.Http())
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/root/children?$select=id,name,deleted,folder", "GET")
+    while True:
+        if int(r['status']) != 200:
+            flash("Error: could not connect to OneDrive; response code was " + unicode(r['status']) + ".   " + unicode(content), 'danger')
+            return redirect(url_for('user.profile'))
+        info = json.loads(content)
+        for item in info['value']:
+            if 'folder' not in item:
+                continue
+            items.append(dict(id=item['id'], name=item['name']))
+        if "@odata.nextLink" not in info:
+            break
+        r, content = http.request(info["@odata.nextLink"], "GET")
+    item_ids = [x['id'] for x in items if x['id'] != '']
+    if request.method == 'POST' and form.submit.data:
+        if form.folder.data == '':
+            set_od_folder(None)
+            storage.locked_delete()
+            flash(word("OneDrive is not linked."), 'success')
+        elif form.folder.data == -1 or form.folder.data == '-1':
+            headers = {'Content-Type': 'application/json'}
+            info = dict()
+            info['name'] = 'docassemble'
+            info['folder'] = dict()
+            info["@microsoft.graph.conflictBehavior"] = "overwrite"
+            r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/root/children", "POST", headers=headers, body=json.dumps(info))
+            if int(r['status']) == 201:
+                new_item = json.loads(content)
+                set_od_folder(new_item['id'])
+                od_fix_subdirs(http, new_item['id'])
+                flash(word("Your Playground is connected to your OneDrive."), 'success')
+            else:
+                flash(word("Could not create folder.  " + unicode(content)), 'danger')
+        elif form.folder.data in item_ids:
+            set_od_folder(form.folder.data)
+            od_fix_subdirs(http, form.folder.data)
+            flash(word("Your Playground is connected to your OneDrive."), 'success')
+        else:
+            flash(word("The supplied folder " + unicode(form.folder.data) + "could not be found."), 'danger')
+            set_od_folder(None)
+        return redirect(url_for('user.profile'))
+    the_folder = get_od_folder()
+    active_folder = None
+    if the_folder is not None:
+        r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + unicode(the_folder), "GET")
+        if int(r['status']) != 200:
+            set_od_folder(None)
+            flash(word("The previously selected OneDrive folder does not exist.") + "  " + unicode(the_folder) + " " + unicode(content) + " status: " + repr(r['status']), "info")
+            return redirect(url_for('onedrive_page'))
+        info = json.loads(content)
+        logmessage("Found " + repr(info))
+        if info.get('deleted', None):
+            set_od_folder(None)
+            flash(word("The previously selected OneDrive folder was deleted."), "info")
+            return redirect(url_for('onedrive_page'))
+        active_folder = dict(id=the_folder, name=info.get('name', 'no name'))
+        if the_folder not in item_ids:
+            items.append(active_folder)
+            item_ids.append(the_folder)
+    if the_folder is None:
+        for item in items:
+            if (item['name'].lower() == 'docassemble'):
+                active_folder = item
+                break
+    if active_folder is None:
+        active_folder = dict(id=-1, name='docassemble')
+        items.append(active_folder)
+        item_ids.append(-1)
+    if the_folder is not None:
+        od_fix_subdirs(http, the_folder)
+    if the_folder is None:
+        the_folder = ''
+    description = word('Select the folder from your OneDrive that you want to be synchronized with the Playground.')
+    if app.config['USE_GOOGLE_DRIVE'] is True and get_gd_folder() is not None:
+        description += '  ' + word('Note that if you connect to a OneDrive folder, you will disable your connection to Google Drive.')
+    return render_template('pages/onedrive.html', version_warning=version_warning, bodyclass='adminbody', header=word('OneDrive'), tab_title=word('OneDrive'), items=items, the_folder=the_folder, page_title=word('OneDrive'), form=form, description=Markup(description))
+
+def od_fix_subdirs(http, the_folder):
+    subdirs = set()
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + unicode(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
+    while True:
+        if int(r['status']) != 200:
+            raise DAError("od_fix_subdirs: could not get contents of folder")
+        info = json.loads(content)
+        logmessage("Found " + repr(info))
+        for item in info['value']:
+            if 'folder' in item:
+                subdirs.add(item['name'])
+        if "@odata.nextLink" not in info:
+            break
+        r, content = http.request(info["@odata.nextLink"], "GET")
+    todo = set(['questions', 'static', 'sources', 'templates', 'modules'])
+    for folder_name in (todo - subdirs):
+        headers = {'Content-Type': 'application/json'}
+        data = dict()
+        data['name'] = folder_name
+        data['folder'] = dict()
+        data["@microsoft.graph.conflictBehavior"] = "rename"
+        r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + unicode(the_folder) + "/children", "POST", headers=headers, body=json.dumps(data))
+        if int(r['status']) != 201:
+            raise DAError("od_fix_subdirs: could not create subfolder " + folder_name + ' in ' + unicode(the_folder) + '.  ' + unicode(content) + ' status: ' + unicode(r['status']))
 
 @app.route('/config', methods=['GET', 'POST'])
 @login_required
@@ -12357,10 +12751,15 @@ def playground_office_addin():
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_files():
+    if app.config['USE_ONEDRIVE'] is False or get_od_folder() is None:
+        use_od = False
+    else:
+        use_od = True
     if app.config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
         use_gd = False
     else:
         use_gd = True
+        use_od = False
     form = PlaygroundFilesForm(request.form)
     formtwo = PlaygroundFilesEditForm(request.form)
     if 'ajax' in request.form and int(request.form['ajax']):
@@ -12418,6 +12817,11 @@ def playground_files():
                         trash_gd_file(section, argument)
                     except Exception as the_err:
                         logmessage("playground_files: unable to delete file on Google Drive.  " + str(the_err))
+                elif use_od:
+                    try:
+                        trash_od_file(section, argument)
+                    except Exception as the_err:
+                        logmessage("playground_files: unable to delete file on OneDrive.  " + str(the_err))
                 flash(word("Deleted file: ") + argument, "success")
                 for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
                     r.incr(key)
@@ -12743,7 +13147,7 @@ def playground_files():
         modes = [mode]
     for the_mode in modes:
         cm_mode += '\n    <script src="' + url_for('static', filename="codemirror/mode/" + the_mode + "/" + ('damarkdown' if the_mode == 'markdown' else the_mode) + ".js") + '"></script>'
-    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>' + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
+    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>' + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
 
 @app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
 @login_required
@@ -14011,12 +14415,18 @@ def playground_page():
     if 'ajax' in request.form and int(request.form['ajax']):
         is_ajax = True
         use_gd = False
+        use_od = False
     else:
         is_ajax = False
+        if app.config['USE_ONEDRIVE'] is False or get_od_folder() is None:
+            use_od = False
+        else:
+            use_od = True
         if app.config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
             use_gd = False
         else:
             use_gd = True
+            use_od = False
         if request.method == 'GET' and needs_to_change_password():
             return redirect(url_for('user.change_password', next=url_for('playground_page')))
     fileform = PlaygroundUploadForm(request.form)
@@ -14147,6 +14557,11 @@ def playground_page():
                         trash_gd_file('questions', form.playground_name.data)
                     except Exception as the_err:
                         logmessage("playground_page: unable to delete file on Google Drive.  " + str(the_err))
+                if use_od:
+                    try:
+                        trash_od_file('questions', form.playground_name.data)
+                    except Exception as the_err:
+                        logmessage("playground_page: unable to delete file on OneDrive.  " + str(the_err))
                 if 'variablefile' in session and (session['variablefile'] == the_file or session['variablefile'] == form.playground_name.data):
                     del session['variablefile']
                 return redirect(url_for('playground_page'))
@@ -14503,7 +14918,7 @@ $( document ).ready(function() {
     else:
         kbOpt = ''
         kbLoad = ''
-    return render_template('pages/playground.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\u00a0\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
+    return render_template('pages/playground.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\u00a0\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';
 
@@ -14527,7 +14942,7 @@ def page_not_found_error(the_error):
 
 @app.errorhandler(Exception)
 def server_error(the_error):
-    if DEBUG and hasattr(the_error, 'interview') and hasattr(the_error, 'interview_status'):
+    if hasattr(the_error, 'interview') and the_error.interview.debug and hasattr(the_error, 'interview_status'):
         the_history = get_history(the_error.interview, the_error.interview_status)
     else:
         the_history = None

@@ -5,6 +5,7 @@ from docassemble.base.config import daconfig, hostname
 from celery import Celery, chord
 from celery.result import result_from_tuple, AsyncResult
 import celery
+import copy
 import sys
 import socket
 import importlib
@@ -14,7 +15,14 @@ import httplib2
 import strict_rfc3339
 import oauth2client.client
 import time
+import json
+import iso8601
+import datetime
+import pytz
+from requests.utils import quote
 from docassemble.webapp.files import SavedFile
+
+ONEDRIVE_CHUNK_SIZE = 2000000
 
 class WorkerController(object):
     pass
@@ -309,6 +317,327 @@ def sync_with_google_drive(user_id):
     except Exception as e:
         return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with Google Drive: " + str(e), restart=False)
 
+def try_request(*pargs, **kwargs):
+    start_time = time.time()
+    args = [arg for arg in pargs]
+    http = args.pop(0)
+    tries = 1
+    while tries < 5:
+        r, content = http.request(*args, **kwargs)
+        if int(r['status']) != 504:
+            break
+        sys.stderr.write("Got a 504 after try " + unicode(tries) + "\n")
+        time.sleep(2*tries)
+        tries += 1
+    sys.stderr.write("try_request: duration was %.2f seconds\n" % (time.time() - start_time, ))
+    return r, content
+
+def epoch_from_iso(datestring):
+    return (iso8601.parse_date(datestring) - datetime.datetime(1970,1,1, tzinfo=pytz.utc)).total_seconds()
+
+def iso_from_epoch(seconds):
+    return datetime.datetime.utcfromtimestamp(seconds).replace(tzinfo=pytz.utc).isoformat().replace('+00:00', 'Z')
+
+@workerapp.task
+def sync_with_onedrive(user_id):
+    sys.stderr.write("sync_with_onedrive: starting\n")
+    if not hasattr(worker_controller, 'loaded'):
+        initialize_db()
+    sys.stderr.write("sync_with_onedrive: continuing\n")
+    storage = RedisCredStorage(worker_controller.r, user_id, app='onedrive')
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        sys.stderr.write("sync_with_onedrive: credentials failed\n")
+        return worker_controller.functions.ReturnValue(ok=False, error="credentials expired", restart=False)
+    try:
+        with worker_controller.flaskapp.app_context():
+            http = credentials.authorize(httplib2.Http())
+            #r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive", "GET")
+            #drive_id = json.loads(content)['id']
+            key = 'da:onedrive:mapping:userid:' + str(user_id)
+            the_folder = worker_controller.r.get(key)
+            r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(the_folder), "GET")
+            if int(r['status']) != 200:
+                trashed = True
+            else:
+                info = json.loads(content)
+                if 'deleted' in info:
+                    trashed = True
+                else:
+                    trashed = False
+            if trashed is True:
+                logmessage('trash_gd_file: folder did not exist')
+                return False
+            if trashed is True or 'folder' not in info:
+                return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive", restart=False)
+            local_files = dict()
+            local_modtimes = dict()
+            od_files = dict()
+            od_ids = dict()
+            od_modtimes = dict()
+            od_createtimes = dict()
+            od_deleted = dict()
+            sections_modified = set()
+            commentary = ''
+            subdirs = dict()
+            subdir_count = dict()
+            r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
+            while True:
+                if int(r['status']) != 200:
+                    return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive subfolders", restart=False)
+                info = json.loads(content)
+                for item in info['value']:
+                    if 'deleted' in item or 'folder' not in item:
+                        continue
+                    if item['name'] in ('static', 'templates', 'questions', 'modules', 'sources'):
+                        subdirs[item['name']] = item['id']
+                        subdir_count[item['name']] = item['folder']['childCount']
+                if "@odata.nextLink" not in info:
+                    break
+                r, content = try_request(http, info["@odata.nextLink"], "GET")
+            for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+                sys.stderr.write("sync_with_onedrive: processing " + section + "\n")
+                if section not in subdirs:
+                    worker_controller.functions.ReturnValue(ok=False, error="error accessing " + section + " in OneDrive", restart=False)
+                local_files[section] = set()
+                local_modtimes[section] = dict()
+                if section == 'questions':
+                    the_section = 'playground'
+                elif section == 'templates':
+                    the_section = 'playgroundtemplate'
+                else:
+                    the_section = 'playground' + section
+                area = SavedFile(user_id, fix=True, section=the_section)
+                for f in os.listdir(area.directory):
+                    local_files[section].add(f)
+                    local_modtimes[section][f] = os.path.getmtime(os.path.join(area.directory, f))
+                    #local_modtimes[section][f] = area.get_modtime(filename=f)
+                page_token = None
+                od_files[section] = set()
+                od_ids[section] = dict()
+                od_modtimes[section] = dict()
+                od_createtimes[section] = dict()
+                od_deleted[section] = set()
+                page_token = None
+                if subdir_count[section] == 0:
+                    sys.stderr.write("sync_with_onedrive: skipping " + section + " because empty on remote\n")
+                else:
+                    r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(subdirs[section]) + "/children?$select=id,name,deleted,fileSystemInfo", "GET")
+                    sys.stderr.write("sync_with_onedrive: processing " + section + ", which is " + unicode(subdirs[section]) + "\n")
+                    while True:
+                        if int(r['status']) != 200:
+                            return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive subfolder " + section + " " + unicode(r['status']) + ": " + unicode(content) + " looking for " + unicode(subdirs[section]), restart=False)
+                        info = json.loads(content)
+                        #sys.stderr.write("sync_with_onedrive: result was " + repr(info) + "\n")
+                        for the_file in info['value']:
+                            #sys.stderr.write("sync_with_onedrive: found a file " + repr(the_file) + "\n")
+                            if 'folder' in the_file:
+                                continue
+                            if re.search(r'^(\~|\.)', the_file['name']):
+                                continue
+                            od_ids[section][the_file['name']] = the_file['id']
+                            od_modtimes[section][the_file['name']] = epoch_from_iso(the_file['fileSystemInfo']['lastModifiedDateTime'])
+                            od_createtimes[section][the_file['name']] = epoch_from_iso(the_file['fileSystemInfo']['createdDateTime'])
+                            sys.stderr.write("OneDrive says modtime on " + unicode(the_file['name']) + " in " + section + " is " + unicode(the_file['fileSystemInfo']['lastModifiedDateTime']) + ", which is " + unicode(od_modtimes[section][the_file['name']]) + "\n")
+                            if the_file.get('deleted', None):
+                                od_deleted[section].add(the_file['name'])
+                                continue
+                            od_files[section].add(the_file['name'])
+                        if "@odata.nextLink" not in info:
+                            break
+                        r, content = try_request(http, info["@odata.nextLink"], "GET")
+                od_deleted[section] = od_deleted[section] - od_files[section]
+                for f in od_files[section]:
+                    sys.stderr.write("Considering " + unicode(f) + " on OD\n")
+                    if f in local_files[section]:
+                        sys.stderr.write("Local timestamp was " + unicode(local_modtimes[section][f]) + " while timestamp on OneDrive was " + unicode(od_modtimes[section][f]) + "\n")
+                    if f not in local_files[section] or od_modtimes[section][f] - local_modtimes[section][f] > 3:
+                        sys.stderr.write("Going to copy " + unicode(f) + " from OneDrive to local\n")
+                        sections_modified.add(section)
+                        commentary += "Copied " + unicode(f) + " from OneDrive.\n"
+                        the_path = os.path.join(area.directory, f)
+                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]) + "/content", "GET")
+                        with open(the_path, 'wb') as fh:
+                            fh.write(content)
+                        os.utime(the_path, (od_modtimes[section][f], od_modtimes[section][f]))
+                for f in local_files[section]:
+                    sys.stderr.write("Considering " + unicode(f) + ", which is a local file\n")
+                    if f in od_files[section]:
+                        sys.stderr.write("Local timestamp was " + unicode(local_modtimes[section][f]) + " while timestamp on OneDrive was " + unicode(od_modtimes[section][f]) + "\n")
+                    if f not in od_deleted[section]:
+                        sys.stderr.write("Considering " + unicode(f) + " is not in OneDrive deleted\n")
+                        if f not in od_files[section]:
+                            sys.stderr.write("Considering " + unicode(f) + " is not in OneDrive\n")
+                            the_path = os.path.join(area.directory, f)
+                            if os.path.getsize(the_path) == 0:
+                                sys.stderr.write("Found zero byte file: " + unicode(the_path) + "\n")
+                                continue
+                            sys.stderr.write("Copying " + unicode(f) + " to OneDrive.\n")
+                            commentary += "Copied " + unicode(f) + " to OneDrive.\n"
+                            extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
+                            the_modtime = iso_from_epoch(local_modtimes[section][f])
+                            sys.stderr.write("Setting OD modtime on new file " + unicode(f) + " to " + unicode(the_modtime) + " which is " + unicode(local_modtimes[section][f]) + "\n")
+                            data = dict()
+                            data['name'] = f
+                            data['description'] = ''
+                            data["fileSystemInfo"] = { "createdDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
+                            #data["fileSystemInfo"] = { "createdDateTime": the_modtime, "lastAccessedDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
+                            #data["@microsoft.graph.conflictBehavior"] = "replace"
+                            result = onedrive_upload(http, subdirs[section], data, the_path)
+                            if isinstance(result, worker_controller.functions.ReturnValue):
+                                return result
+                            od_files[section].add(f)
+                            od_ids[section][f] = result
+                            od_modtimes[section][f] = local_modtimes[section][f]
+                            od_createtimes[section][f] = local_modtimes[section][f]
+                        elif local_modtimes[section][f] - od_modtimes[section][f] > 3:
+                            sys.stderr.write("Considering " + unicode(f) + " is in OneDrive but local is more recent\n")
+                            the_path = os.path.join(area.directory, f)
+                            if os.path.getsize(the_path) == 0:
+                                sys.stderr.write("Found zero byte file during update: " + unicode(the_path) + "\n")
+                                continue
+                            commentary += "Updated " + unicode(f) + " on OneDrive.\n"
+                            extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
+                            the_modtime = iso_from_epoch(local_modtimes[section][f])
+                            sys.stderr.write("Updating on OneDrive and setting OD modtime on modified " + unicode(f) + " to " + unicode(the_modtime) + "\n")
+                            data = dict()
+                            data['name'] = f
+                            data['description'] = ''
+                            data["fileSystemInfo"] = { "createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime }
+                            #data["fileSystemInfo"] = { "createdDateTime": od_createtimes[section][f], "lastAccessedDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
+                            #data["@microsoft.graph.conflictBehavior"] = "replace"
+                            result = onedrive_upload(http, subdirs[section], data, the_path, new_item_id=od_ids[section][f])
+                            if isinstance(result, worker_controller.functions.ReturnValue):
+                                return result
+                            od_modtimes[section][f] = local_modtimes[section][f]
+                            sys.stderr.write("After update, timestamp on OneDrive is " + unicode(od_modtimes[section][f]) + "\n")
+                            sys.stderr.write("After update, timestamp on local system is " + unicode(os.path.getmtime(the_path)) + "\n")
+                for f in od_deleted[section]:
+                    sys.stderr.write("Considering " + unicode(f) + " is deleted on OneDrive\n")
+                    if f in local_files[section]:
+                        sys.stderr.write("Considering " + unicode(f) + " is deleted on OneDrive but exists locally\n")
+                        sys.stderr.write("Local timestamp was " + unicode(local_modtimes[section][f]) + " while timestamp on OneDrive was " + unicode(od_modtimes[section][f]) + "\n")
+                        if local_modtimes[section][f] - od_modtimes[section][f] > 3:
+                            sys.stderr.write("Considering " + unicode(f) + " is deleted on OneDrive but exists locally and needs to be undeleted on OD\n")
+                            commentary += "Undeleted and updated " + unicode(f) + " on OneDrive.\n"
+                            the_path = os.path.join(area.directory, f)
+                            extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
+                            the_modtime = iso_from_epoch(local_modtimes[section][f])
+                            sys.stderr.write("Setting OD modtime on undeleted file " + unicode(f) + " to " + unicode(the_modtime) + "\n")
+                            data = dict()
+                            data['name'] = f
+                            data['description'] = ''
+                            #data["fileSystemInfo"] = { "createdDateTime": od_createtimes[section][f], "lastAccessedDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
+                            data["fileSystemInfo"] = { "createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime }
+                            #data["@microsoft.graph.conflictBehavior"] = "replace"
+                            result = onedrive_upload(http, subdirs[section], data, the_path, new_item_id=od_ids[section][f])
+                            if isinstance(result, worker_controller.functions.ReturnValue):
+                                return result
+                            od_modtimes[section][f] = local_modtimes[section][f]
+                        else:
+                            sys.stderr.write("Considering " + unicode(f) + " is deleted on OneDrive but exists locally and needs to deleted locally\n")
+                            sections_modified.add(section)
+                            commentary += "Deleted " + unicode(f) + " from Playground.\n"
+                            the_path = os.path.join(area.directory, f)
+                            if os.path.isfile(the_path):
+                                area.delete_file(f)
+                for f in os.listdir(area.directory):
+                    the_path = os.path.join(area.directory, f)
+                    sys.stderr.write("Before finalizing, " + unicode(f) + " has a modtime of " + unicode(os.path.getmtime(the_path)) + "\n")
+                area.finalize()
+                for f in os.listdir(area.directory):
+                    if f not in od_files[section]:
+                        continue
+                    local_files[section].add(f)
+                    the_path = os.path.join(area.directory, f)
+                    local_modtimes[section][f] = os.path.getmtime(the_path)
+                    sys.stderr.write("After finalizing, " + unicode(f) + " has a modtime of " + unicode(local_modtimes[section][f]) + "\n")
+                    if abs(local_modtimes[section][f] - od_modtimes[section][f]) > 3:
+                        the_modtime = iso_from_epoch(local_modtimes[section][f])
+                        sys.stderr.write("post-finalize: updating OD modtime on file " + unicode(f) + " to " + unicode(the_modtime) + "\n")
+                        headers = { 'Content-Type': 'application/json' }
+                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]), "PATCH", headers=headers, body=json.dumps(dict(fileSystemInfo = { "createdDateTime": od_createtimes[section][f], "lastModifiedDateTime": the_modtime })))
+                        if int(r['status']) != 200:
+                            return worker_controller.functions.ReturnValue(ok=False, error="error updating OneDrive file in subfolder " + section + " " + unicode(r['status']) + ": " + unicode(content), restart=False)
+                        od_modtimes[section][f] = local_modtimes[section][f]
+            for key in worker_controller.r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
+                worker_controller.r.incr(key)
+            if commentary != '':
+                sys.stderr.write(commentary + "\n")
+        if 'modules' in sections_modified:
+            do_restart = True
+        else:
+            do_restart = False
+        return worker_controller.functions.ReturnValue(ok=True, summary=commentary, restart=do_restart)
+    except Exception as e:
+        return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e), restart=False)
+
+def onedrive_upload(http, folder_id, data, the_path, new_item_id=None):
+    headers = { 'Content-Type': 'application/json' }
+    if new_item_id is None:
+        is_new = True
+        item_data = copy.deepcopy(data)
+        item_data['file'] = dict()
+        the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + '/children'
+        r, content = try_request(http, the_url, 'POST', headers=headers, body=json.dumps(item_data))
+        if int(r['status']) != 201:
+            return worker_controller.functions.ReturnValue(ok=False, error="error creating shell file for OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content) + " and url was " + the_url + " and body was " + json.dumps(data), restart=False)
+        new_item_id = json.loads(content)['id']
+        sys.stderr.write("Created shell " + quote(new_item_id) + " with " + repr(item_data) + "\n")
+    else:
+        is_new = False    
+    the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(new_item_id) + '/createUploadSession'
+    r, content = try_request(http, the_url, 'POST')
+    if int(r['status']) != 200:
+        return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content) + " and url was " + the_url, restart=False)
+    sys.stderr.write("Upload session created.\n")
+    upload_url = json.loads(content)["uploadUrl"].encode('utf-8')
+    sys.stderr.write("Upload url obtained.\n")
+    total_bytes = os.path.getsize(the_path)
+    start_byte = 0
+    with open(the_path, 'rb') as fh:
+        while start_byte < total_bytes:
+            num_bytes = min(ONEDRIVE_CHUNK_SIZE, total_bytes - start_byte)
+            custom_headers = { 'Content-Length': unicode(num_bytes), 'Content-Range': 'bytes ' + unicode(start_byte) + '-' + unicode(start_byte + num_bytes - 1) + '/' + unicode(total_bytes), 'Content-Type': 'application/octet-stream' }
+            #sys.stderr.write("url is " + repr(upload_url) + " and headers are " + repr(custom_headers) + "\n")
+            r, content = try_request(http, upload_url, 'PUT', headers=custom_headers, body=fh.read(num_bytes))
+            sys.stderr.write("Sent request\n")
+            start_byte += num_bytes
+            if start_byte == total_bytes:
+                sys.stderr.write("Reached end\n")
+                if int(r['status']) not in (200, 201):
+                    sys.stderr.write("Error1\n")
+                    sys.stderr.write(unicode(r['status']) + "\n")
+                    sys.stderr.write(content)
+                    return worker_controller.functions.ReturnValue(ok=False, error="error uploading file to OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content), restart=False)
+            else:
+                if int(r['status']) != 202:
+                    sys.stderr.write("Error2\n")
+                    sys.stderr.write(unicode(r['status']) + "\n")
+                    sys.stderr.write(content)
+                    return worker_controller.functions.ReturnValue(ok=False, error="error during upload of file to OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content), restart=False)
+                sys.stderr.write("Got 202\n")
+    item_data = copy.deepcopy(data)
+    if 'fileSystemInfo' in item_data and 'createdDateTime' in item_data['fileSystemInfo']:
+        del item_data['fileSystemInfo']['createdDateTime']
+    sys.stderr.write("Patching with " + repr(item_data) + " to " + "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id) + " and headers " + repr(headers) + "\n")
+    r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id), "PATCH", headers=headers, body=json.dumps(item_data))
+    sys.stderr.write("PATCH request sent\n")
+    if int(r['status']) != 200:
+        return worker_controller.functions.ReturnValue(ok=False, error="error during updating of uploaded file to OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content), restart=False)
+    # tries = 1
+    # start_time = time.time()
+    # while tries < 3:
+    #     sys.stderr.write("Checking in on results " + "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id) + " at " + unicode(time.time() - start_time) + "\n")
+    #     r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id), "GET")
+    #     if int(r['status']) != 200:
+    #         return worker_controller.functions.ReturnValue(ok=False, error="error during updating of uploaded file to OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content), restart=False)
+    #     sys.stderr.write("Metadata is now " + unicode(content) + "\n")
+    #     time.sleep(5)
+    #     tries += 1
+    sys.stderr.write("Returning " + unicode(new_item_id) + "\n")
+    return new_item_id
+    
 @workerapp.task
 def ocr_page(**kwargs):
     sys.stderr.write("ocr_page started in worker\n")

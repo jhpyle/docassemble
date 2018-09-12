@@ -6459,3 +6459,10 @@ Feature: Example interviews
     And I set "Fruit" to "peaches"
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
+
+  Scenario: Test the interview "Debug mode"
+    Given I start the interview "docassemble.base:data/questions/examples/debug-mode.yml"
+    Then I should not see the phrase "Source"
+    And I click the button "Continue"
+    Then I should see the phrase "Thanks for completing the interview!"
+    And I should not see the phrase "Markdown"

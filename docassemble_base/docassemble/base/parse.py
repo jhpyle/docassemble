@@ -889,7 +889,7 @@ class Question:
         self.from_source = kwargs.get('source', None)
         self.package = kwargs.get('package', None)
         self.interview = caller
-        if debug:
+        if self.interview.debug:
             self.source_code = kwargs.get('source_code', None)
         self.fields = []
         self.attachments = []
@@ -954,6 +954,8 @@ class Question:
                 self.interview.flush_left = True
             if 'maximum image size' in data['features']:
                 self.interview.max_image_size = eval(str(data['features']['maximum image size']))
+            if 'debug' in data['features'] and isinstance(data['features']['debug'], bool):
+                self.interview.debug = data['features']['debug']
             if 'cache documents' in data['features']:
                 self.interview.cache_documents = data['features']['cache documents']
             if 'loop limit' in data['features']:
@@ -3920,6 +3922,7 @@ class Interview:
         self.question_index = 0
         self.default_role = None
         self.title = None
+        self.debug = get_config('debug', True)
         self.use_progress_bar = False
         self.question_back_button = False
         self.question_help_button = False
@@ -4037,8 +4040,10 @@ class Interview:
             self.source = source
             #self.firstPath = source.path
             #self.rootDirectory = source.directory
-        if hasattr(source, 'package'):
+        if hasattr(source, 'package') and source.package:
             source_package = source.package
+            if source_package.startswith('docassemble.playground'):
+                self.debug = True
         else:
             source_package = None
         if hasattr(source, 'path'):
@@ -4283,7 +4288,7 @@ class Interview:
                     for question in self.questions_list:
                         if question.question_type == 'code' and (question.is_initial or (question.initial_code is not None and eval(question.initial_code, user_dict))):
                             #logmessage("Running some initial code:\n\n" + question.sourcecode)
-                            if debug:
+                            if self.debug:
                                 interview_status.seeking.append({'question': question, 'reason': 'initial', 'time': time.time()})
                             docassemble.base.functions.this_thread.current_question = question
                             exec_with_trap(question, user_dict)
@@ -4334,7 +4339,7 @@ class Interview:
                                             del user_dict["__object_type"]
                                 question.mark_as_answered(user_dict)
                             if question.question_type == 'code':
-                                if debug:
+                                if self.debug:
                                     interview_status.seeking.append({'question': question, 'reason': 'mandatory code', 'time': time.time()})
                                 #logmessage("Running some code:\n\n" + question.sourcecode)
                                 #logmessage("Question name is " + question.name)
@@ -4345,7 +4350,7 @@ class Interview:
                                     user_dict['_internal']['answered'].add(question.name)
                                     #logmessage("Question " + str(question.name) + " marked as answered")
                             elif hasattr(question, 'content') and question.name:
-                                if debug:
+                                if self.debug:
                                     interview_status.seeking.append({'question': question, 'reason': 'mandatory question', 'time': time.time()})
                                 if question.name and question.name in user_dict['_internal']['answers']:
                                     #logmessage("in answers")
@@ -4552,7 +4557,7 @@ class Interview:
                     break
                 except CodeExecute as code_error:
                     docassemble.base.functions.reset_context()
-                    #if debug:
+                    #if self.debug:
                     #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
                     #logmessage("I am going to execute " + str(code_error.compute))
                     exec(code_error.compute, user_dict)
@@ -4571,7 +4576,7 @@ class Interview:
                     docassemble.base.functions.wrap_up(user_dict)
                     raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
         except Exception as the_error:
-            if debug:
+            if self.debug:
                 the_error.interview = self
                 the_error.interview_status = interview_status
                 the_error.user_dict = docassemble.base.functions.serializable_dict(user_dict)
@@ -4581,7 +4586,7 @@ class Interview:
         if docassemble.base.functions.this_thread.prevent_going_back:
             interview_status.can_go_back = False
         docassemble.base.functions.wrap_up(user_dict)
-        if debug:
+        if self.debug:
             interview_status.seeking.append({'done': True, 'time': time.time()})
         #return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, old_user_dict, interview_status, **kwargs):
@@ -4594,7 +4599,7 @@ class Interview:
         current_question = None
         follow_mc = kwargs.get('follow_mc', True)
         seeking = kwargs.get('seeking', list())
-        if debug:
+        if self.debug:
             seeking.append({'variable': missingVariable, 'time': time.time()})
         if recursion_depth > self.recursion_limit:
             raise DAError("There appears to be an infinite loop.  Variables in stack are " + ", ".join(variable_stack) + ".")
@@ -4670,7 +4675,7 @@ class Interview:
                         question = the_question.follow_multiple_choice(user_dict, interview_status)
                     else:
                         question = the_question
-                    if debug:
+                    if self.debug:
                         seeking.append({'question': question, 'reason': 'considering', 'time': time.time()})
                     if len(question.condition) > 0:
                         if is_generic:
@@ -4686,7 +4691,7 @@ class Interview:
                                 break
                         if not condition_success:
                             continue
-                    if debug:
+                    if self.debug:
                         seeking.append({'question': question, 'reason': 'asking', 'time': time.time()})
                     if question.question_type == "data":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
@@ -5038,7 +5043,7 @@ class Interview:
             except CodeExecute as code_error:
                 # logmessage("CodeExecute")
                 docassemble.base.functions.reset_context()
-                #if debug:
+                #if self.debug:
                 #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
                 #logmessage("Going to execute " + str(code_error.compute) + " where missing_var is " + str(missing_var))
                 exec(code_error.compute, user_dict)
