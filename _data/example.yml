@@ -1904,7 +1904,7 @@
   sets: all_done
 "debug-mode": |-
   features:
-    debug: True
+    debug: False
 "declarative": |-
   objects:
     injury_location: Address
@@ -3475,6 +3475,9 @@
 "fields-choices-dropdown": "question: | \n  What type of shoes do you wear?\nfields:\n\
   \  - Shoe Type: target_variable\n    choices: \n      - Sneakers\n      - Sandals\n\
   \      - Clogs\n      - Other"
+"fields-choices-dropdown-input-type": "question: | \n  What type of shoes do you wear?\n\
+  fields:\n  - Shoe Type: target_variable\n    input type: dropdown\n    choices:\
+  \ \n      - Sneakers\n      - Sandals\n      - Clogs\n      - Other"
 "fields-code": "objects:\n  - people: DAList.using(object_type=Individual, ask_number=True)\n\
   ---\nquestion: |\n  How many people are there?\nfields:\n  - Number: people.target_number\n\
   \    datatype: integer\n    min: 1\n    max: 10\n---\nsets:\n  - people[i].name.first\n\
@@ -9366,8 +9369,7 @@
     improve your cultural literacy.
 "upload": "question: |\n  Please upload a picture of yourself.\nfields:\n  - Picture:\
   \ user_picture\n    datatype: file\n---\nquestion: |\n  You're so adorable, Fran\xE7\
-  ois!\nsubquestion: |\n  ${ user_picture }\nmandatory: True\n# ---\n# features:\n\
-  #   maximum image size: 150"
+  ois!\nsubquestion: |\n  ${ user_picture }\nmandatory: True"
 "upload-max-image-size": |-
   question: |
     Please upload a picture of yourself.

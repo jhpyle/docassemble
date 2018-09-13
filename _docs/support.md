@@ -24,14 +24,14 @@ hardest part about using it is figuring out how to deploy it on the
 internet.
 
 If deployment is a barrier, you can use the [Docassemble Toolkit], a
-hosting and support service provided by [community.lawyer], a Public
-Benefit Corporation based in Brookyln, New York.
+hosting and support service provided by [Community.lawyer], a Public
+Benefit Corporation based in Brookyln, New York.  [Community.lawyer]
+also offers [Law Guides], an app-creation service powered by
+**docassemble**.
 
-# Training
-
-In-person training will be available at [Docacon 2018], a one-day
-**docassemble** conference to be held on June 22, 2018 in Chicago,
-Illinois.
+One way to deploy **docassemble** interviews is by using [HelpSelf
+Legal], a service that allows you to create **docassemble** interviews
+without writing code directly.
 
 # Tutorials
 
@@ -39,7 +39,10 @@ Illinois.
 
 [Quinten Steenhuis] and Rina Padua of [Greater Boston Legal Services]
 developed [a tutorial on developing an interview that automates a Word
-document to create a motion to dismiss](https://gblsma.github.io/docassemble-MotionTutorial/).
+document to create a motion to
+dismiss](https://gblsma.github.io/docassemble-MotionTutorial/).
+Quinten has also written an article on [Object-oriented Programming
+for Document Assembly Developers].
 
 # Video guides
 
@@ -56,7 +59,6 @@ that not all error messages represent bugs; it might be the case that
 you misconfigured your system or you have a mistake in your code.  It
 is a good idea to ask a question about the error message first.
 
-[Docacon 2018]: https://twitter.com/search?q=%23docacon18
 [Microsoft Azure]: https://azure.microsoft.com/
 [Slack]: https://slack.com
 [submit an issue on GitHub]: https://github.com/jhpyle/docassemble/issues
@@ -68,4 +70,7 @@ is a good idea to ask a question about the error message first.
 [Rina Padua]: https://github.com/Rinapadua
 [Greater Boston Legal Services]: https://www.gbls.org/
 [Docassemble Toolkit]: https://community.lawyer/docassemble
-[community.lawyer]: https://community.lawyer/
+[Community.lawyer]: https://community.lawyer/
+[Object-oriented Programming for Document Assembly Developers]: https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/
+[Law Guides]: https://community.lawyer/lawguides
+[HelpSelf Legal]: https://www.helpselflegal.com/

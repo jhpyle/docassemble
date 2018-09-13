@@ -39,6 +39,27 @@ referring to the attribute `fish1` of the object `fried`)
 * `beneficiary#1` (punctuation marks other than `_` are not allowed)
 * `applicant_résumé` (only plain alphabet characters can be used)
 
+If you find yourself using variable names like `automobile_one` and
+`automobile_two`, you should learn about [groups] and
+[generalizing](#general).  It would make more sense to work with
+variables `automobile[0]` and `automobile[1]`, or `automobile[i]`.
+
+If you find yourself using variable names like `employment_income`,
+`self_employment_income`, and `retirement_income`, you should learn
+about the [`DADict`] (a type of [group]).  It would make more sense to
+work with variables like `income['employment']`,
+`income['self-employment']`, and `income['retirement']`.  Then you
+could [generalize](#general) the questions you ask.
+
+And if you find yourself using variable names like
+`defendant_spouse_ssn` and `defendant_spouse_date_of_birth`, you
+should learn about [objects].  It would make more sense to work with
+variables like `defendant.spouse.ssn` and
+`defendant.spouse.birthdate`.  There are many advantages of working
+with objects, such as being able to write `defendant.age_in_years()`
+and `defendant.spouse.age_in_years()` to calculate the ages of people
+based on their birthdates.
+
 See [reserved variable names] for a list of variable names that you
 cannot use because they conflict with built-in names that [Python] and
 **docassemble** use.
@@ -254,75 +275,7 @@ A [`question`] with a `field` and no `buttons` will offer the user a
 "Continue" button.  When the user presses "Continue," the variable
 indicated by `field` will be set to `True`.
 
-# <a name="uploads"></a>Uploads
-
-## <a name="uploading"></a>Storing files as variables
-
-Users can upload files, and the files are stored as a variable in **docassemble**.
-
-{% include side-by-side.html demo="upload" %}
-
-Note that this question uses the [`fields`] statement, which is
-explained in more detail [below](#fields).
-
-When set, the variable `user_picture` will be a special [object] of
-type [`DAFileList`].  For instructions about how to make use of
-uploaded files, see [inserting images].
-
-## <a name="signature"></a>Gathering the user's signature into a file variable
-
-The `signature` directive presents a special screen in which the user
-can sign his or her name with the trackpad or other pointing device.
-
-{% include side-by-side.html demo="signature" %}
-
-On the screen, the [`question`] text appears first, then the
-[`subquestion`] text, then the signature area appears, and then the
-`under` text appears.
-
-In this example, the `user_signature` variable will be set to an
-object of type [`DAFile`].  This variable can be included in the same
-way that a document upload can be included.  For example:
-
-{% highlight yaml %}
----
-question: |
-  Is this your signature?
-subquestion: |
-  ${ user_signature }
-yesno: user_signature_verified
----
-{% endhighlight %}
-
-or, if you want to control the width of the image:
-
-{% highlight yaml %}
----
-question: |
-  Is this your signature?
-subquestion: |
-  ${ user_signature.show(width='1in') }
-yesno: user_signature_verified
----
-{% endhighlight %}
-
-Signatures can be also be inserted into assembled [documents] in the
-same way.  They can also be inserted into [.docx fill-in forms] and
-[PDF fill-in forms].
-
-On a small screen, users need as much of the screen as possible to
-write their signature.  For this reason, **docassemble** will reduce
-the size of the navigation bar and put the [`question`] text into the
-navigation bar.  For this reason, you should make sure your
-[`question`] text is very brief -- no longer than "Sign your name."
-You should also make the [`subquestion`] text as brief as possible.
-Although you may be developing your app on a desktop or laptop
-monitor, your users are probably using smartphones, so test your app
-on a smartphone.
-
 # <a name="fields"></a>Setting multiple variables with one screen
-
-## Creating a list of fields
 
 The `fields` statement is used to present the user with a list of
 fields.
@@ -342,365 +295,64 @@ the key; if the key is uses one of the names listed below, it will be
 treated as a modifier; if it is anything else, it will be treated as a
 label.
 
-## <a name="customizingfields"></a>Customizing each field
+# <a name="data types"></a><a name="input types"></a>Data types and input types in [`fields`]
 
-The following are the keys that have special meaning:
-
-### <a name="summary datatype"></a>`datatype`
-
-`datatype` affects how the data will be collected, validated and
-stored.  For a full explanation of how this is used, see
-[below](#datatype).
-
-### <a name="input type"></a>`input type`
-
-The `input type` is similar to `datatype`.  It is used in situations
-where the `datatype` might be [`date`], [`number`], etc., but you want
-the field to use a particular type of multiple-choice input element,
-such as a list of [radio buttons](#radio) or [a combobox](#combobox).
-
-### <a name="required"></a>`required`
-
-`required` affects whether the field will be optional or required.  If
-a field is required, it will be marked with a red asterisk, and input
-validation will be enforced to make sure the user provides a value.
-
-If the user skips a non-required field, the variable will be blank for
-text-based fields and `None` for multiple-choice and yes/no fields.
-
-Some `datatype`s are never marked with a red asterisk.  For example,
-[`range`](#range) and [`yesno`](#fields yesno) fields are set to real
-values by default, so the user cannot actuall skip the question.
-
-The value of `required` can be `True` or `False`.  By default, all
-fields are required, so you never need to write `required: True`
-unless you want to.
-
-{% include side-by-side.html demo="optional-field" %}
-
-Instead of writing `True` or `False`, you can write [Python] code.
-This code will be evaluated for whether it turns out to be true or
-false.  For example, instead of `True` or `False`, you could use the
-name of a variable that is defined by a [`yesno`] question (as long as
-that variable was defined before the screen loads; the red asterisk
-cannot be toggled in real time within the browser).
-
-{% include side-by-side.html demo="required-code" %}
-
-### <a name="hint"></a>`hint`
-
-You can guide users as to how they should fill out a text field by
-showing greyed-out text in a text box that disappears when the user
-starts typing in the information.  In HTML, this text is known as the
-[placeholder].  You can set this text for a text field by setting
-`hint`.  You can use [Mako] templates.
-
-{% include side-by-side.html demo="text-hint" %}
-
-The `hint` is also used to provide the default text the user sees when
-they fill out a [multiple-choice dropdown] or a [`combobox`] input
-element within a [`fields`] question.
-
-### <a name="help"></a>`help`
-
-You can provide contextual help to the user regarding the meaning of a
-field using the `help` modifier.  The label will be green to indicate
-that it can be clicked on, and the value of `help` will appear on the
-screen when the user clicks the green text.  You can use [Mako]
-templates.
-
-{% include side-by-side.html demo="text-help" %}
-
-### <a name="default"></a>`default`
-
-You can provide a default value to a field using `default`.  You can
-also use [Mako] templates.
-
-{% include side-by-side.html demo="text-default" %}
-
-### <a name="choices"></a>`choices`
-
-The `choices` modifier is used with multiple-choice fields.  It must
-refer to a list of possible options.  Can be a list of key/value pairs
-(key is what the variable will be set to; value is the label seen by
-the user) or a list of plain text items (in which case the label and
-the variable value are the same).
-
-{% include side-by-side.html demo="fields-choices" %}
-
-When the [`datatype`] is [`object`], [`object_radio`], or
-[`object_checkboxes`], `choices` indicates a list of objects from
-which the user will choose.  For more information about using objects
-in multiple choice questions, see the
-[section on selecting objects](#objects), below.
-
-### <a name="code"></a>`code`
-
-If you have a multiple-choice question and you want to reuse the same
-selections several times, you do not need to type in the whole list
-every time.  You can define a variable to contain the list and a
-[`code`] block that defines the variable.
-
-Adding `code` to a field makes it a multiple-choice question.  The
-`code` itself refers to [Python] code that generates a list of
-possible options for a multiple choice field.
-
-{% include side-by-side.html demo="fields-mc" %}
-
-The [Python] code runs at the time the question is asked.  Therefore,
-you can use the `code` feature to create multiple-choice questions
-that have dynamically-created lists of choices.
-
-The [Python] code needs to be a single expression.  The result of the
-expression can take several forms.
-
-It can be a [list] of single-item [dictionaries], as in the example above.
-
-It can be a [dictionary] (in which case you cannot control the order
-of items):
-
-{% include side-by-side.html demo="fields-mc-2" %}
-
-It can be a [list] of text items (in which case the values and labels will be
-the same):
-
-{% include side-by-side.html demo="fields-mc-3" %}
-
-It can be a [list] of two-element [list]s:
-
-{% include side-by-side.html demo="fields-mc-4" %}
-
-You can specify a default by including a three-element list where the
-third element is `True` if the choice should be selected by default.
-
-{% include side-by-side.html demo="fields-mc-5" %}
-
-You can include "help text" for a choice by including a fourth element
-in one of the lists, where the element contains the help text you want
-to be available.  The user can see the help text by touching the
-question mark button.
-
-{% include side-by-side.html demo="fields-mc-6" %}
-
-If your code is a [list] of dictionaries, you can include a
-`'default'` key in the dictionary indicating a true or false value
-that represents whether the choice should be selected by default.
-
-{% include side-by-side.html demo="fields-mc-7" %}
-
-Similarly, you can include help text in a [list] of dictionaries by
-including a `'help'` key in the dictionary indicating the help text
-that should be available to the user.
-
-{% include side-by-side.html demo="fields-mc-8" %}
-
-### <a name="exclude"></a>`exclude`
-
-If you build the list of choices with `code`, you can exclude items
-from the list using `exclude`, where the value of `exclude` is
-[Python] code.
-
-{% include side-by-side.html demo="fields-mc-exclude" %}
-
-In this example, the value of `exclude` is a single variable.  If
-given a list of things, it will exclude any items that are in the list.
-
-### <a name="none of the above"></a>`none of the above`
-
-If you use [`datatype: checkboxes`](#fields checkboxes), then by
-default a "None of the above" choice is added.
-
-{% include side-by-side.html demo="fields-checkboxes-nota" %}
-
-You can turn off the "None of the above" choice by setting the 
-`none of the above` option to `False`.
-
-{% include side-by-side.html demo="fields-checkboxes-nota-false" %}
-
-You can also change the phrase from "None of the above" to something
-else, even a [Mako] expression.  Just set `none of the above` to the
-text you want to be displayed.
-
-{% include side-by-side.html demo="fields-mc-nota" %}
-
-### <a name="emptychoices"></a>When the list of choices is empty
-
-If the list of choices for a multiple choice question is empty,
-**docassemble** will try to deal with the situation gracefully.  If
-there is only a single field listed under `fields`, or the question is
-a [standalone multiple choice question](#field with buttons), then the
-variable that will be set by the user's selection will be set to
-`None`, and the question (or the field, if there are other fields
-listed under `fields`) will be skipped.
-
-If the `datatype` is `checkboxes`, the variable will be set to an
-empty [`DADict`] (a type of [dictionary] specific to **docassemble**).
-If the `datatype` is `object_checkboxes`, the variable will be set to
-an empty [`DAList`] (a type of [list] specific to **docassemble**).
-
-### <a name="shuffle"></a>`shuffle`
-
-`shuffle` can be used on multiple-choice fields (defined with
-[`code`](#code) or [`choices`](#choices)).  When `True`, it randomizes
-the order of the list of choices; the default is not to "shuffle" the
-list.
-
-{% include side-by-side.html demo="shuffle" %}
-
-### <a name="show if"></a>`show if`
-
-You can use the `show if` modifier if you want the field to be hidden
-under certain conditions.  There are three methods of using `show if`,
-which have different syntax.
-
-Using the first method, the field will appear or disappear in the web
-browser depending on the value of another field in the `fields` list.
-Under this method, `show if` refers to a [YAML] dictionary with two
-keys: `variable` and `is`, where `variable` refers to the variable
-name of the other field, and `is` refers to the value of the other
-field that will cause this field to be shown.
-
-This can be useful when you have a multiple-choice field that has an
-"other" option, where you want to capture a text field but only if the
-user selects the "other" option.
-
-{% include side-by-side.html demo="other" %}
-
-The second method is like the first, but is for the special case where
-the other field in `fields` is a yes/no variable.  Under this method,
-`show if` refers to the other field's variable name.  If that variable
-is true, the field will be shown, and if it is not true, the field
-will be hidden.
-
-{% include side-by-side.html demo="showif-boolean" %}
-
-If a `show if` statement refers to a variable that is itself hidden by a
-`show if`, then the condition is considered to be false.
-
-{% include side-by-side.html demo="showif-nested" %}
-
-Under the third method, the field is either shown or not shown on the
-screen when it loads, and it stays that way.  You can use [Python]
-code to control whether the field is shown or not.  Unlike
-the first method, you are not limited to using variables that are part
-of the `fields` list; you can use any [Python] code; however, you
-cannot refer to any of the variables that are defined by the current
-question.  Under this method, `show if` must refer to a [YAML]
-dictionary with one key, `code`, where `code` contains [Python] code.
-The code will be evaluated and if it evaluates to a positive value,
-the field will be shown.
-
-{% include side-by-side.html demo="showif" %}
-
-With all of these methods, if any field is not visible on the screen
-when the user presses the Continue button, no variable will be set to
-anything for that field; it as if the field was never part of the
-`question`.
-
-### <a name="hide if"></a>`hide if`
-
-This works just like [`show if`](#show if), except that it hides the
-field instead of showing it.
-
-{% include side-by-side.html demo="hideif-boolean" %}
-
-### <a name="js show if"></a>`js show if`
-
-Sometimes you might want to do more complicated evaluations with
-on-screen variables than you can do with `show if` and `hide if`.
-When you use the `show if` and `hide if` field modifiers to refer to
-fields that are on the screen, you are able to test whether the fields
-are true, or have particular values, but you cannot do anything more
-complex, such as test whether the value is one of two values, or
-the values of two fields.
-
-The `js show if` and `js hide if` features allow you to use any
-arbitrary [JavaScript] expression to determine whether a field should
-be shown or not.  In these expressions, the special [JavaScript]
-function [`val()`] is used to obtain the values of fields.  Given the
-name of an on-screen field as a string, the [`val()`] function
-returns the current value of that field.
-
-{% include side-by-side.html demo="jsshowif" %}
-
-The string that is passed to [`val()`] must perfectly match the
-variable name that is used in the underlying [`question`].
-
-The field will be shown or hidden whenever any of the variables
-referenced with [`val()`] change.  Thus, if your [JavaScript]
-expression does not use [`val()`], it will not be triggered except at
-the time the screen loads.  Your expression is parsed, but is not
-evaluated, when determining what fields your expression references
-with [`val()`].  Thus, if you pass something other than a literal
-string to [`val()`], you may find that the showing or hiding is not
-triggered, even though [`val()`] would return the appropriate value.
-
-### <a name="js hide if"></a>`js hide if`
-
-This works just like [`js show if`](#js show if), except that it hides
-the field instead of showing it.
-
-### <a name="disable others"></a>`disable others`
-
-If `disable others` is set to `True`, then when the user changes the
-value of the field to something, all the other fields in the question
-will be disabled.
-
-{% include side-by-side.html demo="disable-others" %}
-
-Alternatively, `disable others` can be set to a list of variables on
-the same screen that should be disabled.
-
-{% include side-by-side.html demo="disable-others-list" %}
-
-### <a name="note"></a>`note`
-
-The value of `note` is [Markdown] text that will appear on the screen;
-useful for providing guidance to the user on how to enter information.
-
-{% include side-by-side.html demo="note" %}
-
-### <a name="html"></a>`html`
-
-The `html` directive is like [`note`](#note), except the format is
-expected to be raw [HTML].  It can be used in combination with the
-[`css`] and [`script`] modifiers.
-
-{% include side-by-side.html demo="html" %}
-
-### <a name="no label"></a>`no label`
-
-If you use `no label` as the label for your variable, the label will
-be omitted.  On wide screens, the field will fill more of the width of
-the screen if the label is set to `no label`.
-
-{% include side-by-side.html demo="no-label-field" %}
-
-To keep the width of the field normal, but have a blank label, use
-`""` as the label.
-
-{% include side-by-side.html demo="blank-label-field" %}
-
-### <a name="label"></a>`label` and `field`
-
-Instead of expressing your labels and variable names in the form of `-
-Label: variable_name`, you can specify a label using the `label` key
-and the variable name using the `field` key.
-
-{% include side-by-side.html demo="label" %}
-
-## <a name="datatype"></a>Data types
-
-Within a [`fields`] question, there are many possible `datatype`
+Within a [`fields`] question, there are many possible [`datatype`]
 values, which affect what the user sees and how the input is stored in
-a variable.    The following sections describe the available
-`datatype`s and `input type`s.
+a variable.
+
+The possible values of [`datatype`] are:
+
+* [`area`](#area)
+* [`user`](#camera)
+* [`camera`](#camera)
+* [`environment`](#camera)
+* [`camcorder`](#camera)
+* [`checkboxes`](#fields checkboxes)
+* [`currency`](#currency)
+* [`date`](#date)
+* [`datetime`](#datetime)
+* [`email`](#email)
+* [`file`](#file)
+* [`files`](#files)
+* [`integer`](#integer)
+* [`microphone`](#microphone)
+* [`ml`](#ml)
+* [`mlarea`](#mlarea)
+* [`noyes`](#fields noyes)
+* [`noyesmaybe`](#fields noyesmaybe)
+* [`noyesradio`](#fields noyesradio)
+* [`noyeswide`](#fields noyeswide)
+* [`number`](#number)
+* [`object`](#object)
+* [`object_checkboxes`](#object_checkboxes)
+* [`password`](#password)
+* [`range`](#range)
+* [`text`](#text) (the default)
+* [`time`](#time)
+* [`yesno`](#fields yesno)
+* [`yesnomaybe`](#fields yesnomaybe)
+* [`yesnoradio`](#fields yesnoradio)
+* [`yesnowide`](#fields yesno)
+
+In most cases, [`datatype`] controls both the user interface and the
+format in which the data is stored.  But for certain multiple choice
+questions, you can use [`datatype`] to indicate how you want the data
+stored, and use [`input type`] to indicate the type of user interface
+to use. The possible values of [`input type`] are:
+
+* [`dropdown`](#select) (the default)
+* [`radio`](#radio)
+* [`combobox`](#combobox)
+
+The following subsections describe the available [`datatype`]s and [`input
+type`]s that you can assign to a field within a [`fields`] directive.
 
 ## <a name="plaintext"></a>Plain text
 
 <a name="text"></a>A `datatype: text` provides a single-line text
-input box.  This is the default, so you never need to specify it
-unless you want to.
+input box.  This is the default `datatype`, so you never need to
+specify it unless you want to.
 
 {% include side-by-side.html demo="text-field" %}
 
@@ -831,11 +483,11 @@ widget controls work:
 
 {% include side-by-side.html demo="number-field-step" %}
 
-## <a name="currencysec"></a>Currency
+## <a name="currency"></a>Currency
 
-<a name="currency"></a>`datatype: currency` indicates that the input
-should be a valid numeric value.  In addition, the input box shows a
-currency symbol based on locale defined in the [configuration].
+`datatype: currency` indicates that the input should be a valid
+numeric value.  In addition, the input box shows a currency symbol
+based on locale defined in the [configuration].
 
 {% include side-by-side.html demo="money-field" %}
 
@@ -843,12 +495,12 @@ The variable will be set to a number, just as if `datatype: number`
 was used.  For information about how to display currency values, see
 the [`currency()`] function.
 
-## <a name="sliders"></a>Sliders
+## <a name="range"></a>Sliders
 
-<a name="range"></a>`datatype: range` shows a slider that the user can use to
-select a number within a given range.  The range must be supplied by
-providing `min` and `max` values.  An option `step` value can also be
-provided, the default of which is 1.
+`datatype: range` shows a slider that the user can use to select a
+number within a given range.  The range must be supplied by providing
+`min` and `max` values.  An option `step` value can also be provided,
+the default of which is 1.
 
 {% include side-by-side.html demo="range" %}
 
@@ -859,7 +511,7 @@ You can also include an optional `scale`, which you can set to
 
 ## <a name="file"></a><a name="files"></a>File uploads
 
-Using the `file` or `files` datatypes within a `fields` list, you can
+Using the `file` or `files` datatypes within a [`fields`] list, you can
 allow users to upload one or more files.
 
 `datatype: file` indicates that the user can upload a single file.
@@ -921,6 +573,9 @@ except for recording an audio clip.
 Whether these special data types do anything different from the `file`
 data type is dependent on the web browser.  Mobile browsers are the
 most likely to respond to these features.
+
+For more information about uploading files, and for instructions on
+uploading signature images, see the [Uploads](#uploads) subsection.
 
 ## <a name="fields yesno"></a><a name="fields noyes"></a>Yes/no fields
 
@@ -1037,10 +692,23 @@ This also works if your code returns a [list] of [list]s:
 
 If you provide a list of [`choices`](#choices) or some
 choice-generating [`code`](#code) for a field within a list of
-`fields`, the user will see a dropdown.  The variable will be set to
+[`fields`], the user will see a dropdown.  The variable will be set to
 the value of the selected choice.
 
 {% include side-by-side.html demo="fields-choices-dropdown" %}
+
+You can also include `input type: dropdown`:
+
+{% include side-by-side.html demo="fields-choices-dropdown-input-type" %}
+
+The `input type: dropdown` does not actually have any effect, since
+`dropdown` is the default `input type`.  (The other options for `input
+type` are [`radio`](#radio) and [`combobox`](#combobox).)
+
+The [`code`](#code) option, which uses [Python] code to generate the
+list of choices, is often used in combination with
+[`exclude`](#exclude), which excludes one or more items from the list
+of choices.
 
 ## <a name="combobox"></a>Multiple-choice combobox
 
@@ -1129,7 +797,7 @@ the list of villains.
 
 {% include side-by-side.html demo="object-checkboxes-default" %}
 
-## <a name="ml"></a>Machine learning
+## <a name="ml"></a><a name="mlarea"></a>Machine learning
 
 From the user's perspective, `datatype: ml` works just like `datatype:
 text` (which is the default if no `datatype` is indicated), and
@@ -1144,6 +812,357 @@ that is "trained" to classify user input.
 
 For more information about how to use machine learning variables, see
 the [machine learning section].
+
+# <a name="fields options"></a>Options for [`fields`] items
+
+The following are the keys that have special meaning within a list
+item under [`fields`].
+
+## <a name="datatype"></a>`datatype`
+
+`datatype` affects how the data will be collected, validated and
+stored.  For a full explanation of how this is used, see [above](#data
+types).
+
+## <a name="inputtype"></a>`input type`
+
+The `input type` is similar to `datatype`.  It is used in situations
+where the `datatype` might be [`date`], [`number`], etc., but you want
+the field to use a particular type of multiple-choice input element,
+such as a list of [radio buttons](#radio) or [a combobox](#combobox).
+For a full explanation of how this is used, see [above](#input types).
+
+## <a name="required"></a>`required`
+
+`required` affects whether the field will be optional or required.  If
+a field is required, it will be marked with a red asterisk, and input
+validation will be enforced to make sure the user provides a value.
+
+If the user skips a non-required field, the variable will be blank for
+text-based fields and `None` for multiple-choice and yes/no fields.
+
+Some `datatype`s are never marked with a red asterisk.  For example,
+[`range`](#range) and [`yesno`](#fields yesno) fields are set to real
+values by default, so the user cannot actuall skip the question.
+
+The value of `required` can be `True` or `False`.  By default, all
+fields are required, so you never need to write `required: True`
+unless you want to.
+
+{% include side-by-side.html demo="optional-field" %}
+
+Instead of writing `True` or `False`, you can write [Python] code.
+This code will be evaluated for whether it turns out to be true or
+false.  For example, instead of `True` or `False`, you could use the
+name of a variable that is defined by a [`yesno`] question (as long as
+that variable was defined before the screen loads; the red asterisk
+cannot be toggled in real time within the browser).
+
+{% include side-by-side.html demo="required-code" %}
+
+## <a name="hint"></a>`hint`
+
+You can guide users as to how they should fill out a text field by
+showing greyed-out text in a text box that disappears when the user
+starts typing in the information.  In HTML, this text is known as the
+[placeholder].  You can set this text for a text field by setting
+`hint`.  You can use [Mako] templates.
+
+{% include side-by-side.html demo="text-hint" %}
+
+The `hint` is also used to provide the default text the user sees when
+they fill out a [multiple-choice dropdown] or a [`combobox`] input
+element within a [`fields`] question.
+
+## <a name="help"></a>`help`
+
+You can provide contextual help to the user regarding the meaning of a
+field using the `help` modifier.  The label will be green to indicate
+that it can be clicked on, and the value of `help` will appear on the
+screen when the user clicks the green text.  You can use [Mako]
+templates.
+
+{% include side-by-side.html demo="text-help" %}
+
+## <a name="default"></a>`default`
+
+You can provide a default value to a field using `default`.  You can
+also use [Mako] templates.
+
+{% include side-by-side.html demo="text-default" %}
+
+## <a name="choices"></a>`choices`
+
+The `choices` modifier is used with multiple-choice fields.  It must
+refer to a list of possible options.  Can be a list of key/value pairs
+(key is what the variable will be set to; value is the label seen by
+the user) or a list of plain text items (in which case the label and
+the variable value are the same).
+
+{% include side-by-side.html demo="fields-choices" %}
+
+When the [`datatype`] is [`object`], [`object_radio`], or
+[`object_checkboxes`], `choices` indicates a list of objects from
+which the user will choose.  For more information about using objects
+in multiple choice questions, see the
+[section on selecting objects](#objects), below.
+
+## <a name="code"></a>`code`
+
+If you have a multiple-choice question and you want to reuse the same
+selections several times, you do not need to type in the whole list
+every time.  You can define a variable to contain the list and a
+[`code`] block that defines the variable.
+
+Adding `code` to a field makes it a multiple-choice question.  The
+`code` itself refers to [Python] code that generates a list of
+possible options for a multiple choice field.
+
+{% include side-by-side.html demo="fields-mc" %}
+
+The [Python] code runs at the time the question is asked.  Therefore,
+you can use the `code` feature to create multiple-choice questions
+that have dynamically-created lists of choices.
+
+The [Python] code needs to be a single expression.  The result of the
+expression can take several forms.
+
+It can be a [list] of single-item [dictionaries], as in the example above.
+
+It can be a [dictionary] (in which case you cannot control the order
+of items):
+
+{% include side-by-side.html demo="fields-mc-2" %}
+
+It can be a [list] of text items (in which case the values and labels will be
+the same):
+
+{% include side-by-side.html demo="fields-mc-3" %}
+
+It can be a [list] of two-element [list]s:
+
+{% include side-by-side.html demo="fields-mc-4" %}
+
+You can specify a default by including a three-element list where the
+third element is `True` if the choice should be selected by default.
+
+{% include side-by-side.html demo="fields-mc-5" %}
+
+You can include "help text" for a choice by including a fourth element
+in one of the lists, where the element contains the help text you want
+to be available.  The user can see the help text by touching the
+question mark button.
+
+{% include side-by-side.html demo="fields-mc-6" %}
+
+If your code is a [list] of dictionaries, you can include a
+`'default'` key in the dictionary indicating a true or false value
+that represents whether the choice should be selected by default.
+
+{% include side-by-side.html demo="fields-mc-7" %}
+
+Similarly, you can include help text in a [list] of dictionaries by
+including a `'help'` key in the dictionary indicating the help text
+that should be available to the user.
+
+{% include side-by-side.html demo="fields-mc-8" %}
+
+## <a name="exclude"></a>`exclude`
+
+If you build the list of choices with `code`, you can exclude items
+from the list using `exclude`, where the value of `exclude` is
+[Python] code.
+
+{% include side-by-side.html demo="fields-mc-exclude" %}
+
+In this example, the value of `exclude` is a single variable.  If
+given a list of things, it will exclude any items that are in the list.
+
+## <a name="none of the above"></a>`none of the above`
+
+If you use [`datatype: checkboxes`](#fields checkboxes), then by
+default a "None of the above" choice is added.
+
+{% include side-by-side.html demo="fields-checkboxes-nota" %}
+
+You can turn off the "None of the above" choice by setting the 
+`none of the above` option to `False`.
+
+{% include side-by-side.html demo="fields-checkboxes-nota-false" %}
+
+You can also change the phrase from "None of the above" to something
+else, even a [Mako] expression.  Just set `none of the above` to the
+text you want to be displayed.
+
+{% include side-by-side.html demo="fields-mc-nota" %}
+
+## <a name="shuffle"></a>`shuffle`
+
+`shuffle` can be used on multiple-choice fields (defined with
+[`code`](#code) or [`choices`](#choices)).  When `True`, it randomizes
+the order of the list of choices; the default is not to "shuffle" the
+list.
+
+{% include side-by-side.html demo="shuffle" %}
+
+## <a name="show if"></a>`show if`
+
+You can use the `show if` modifier if you want the field to be hidden
+under certain conditions.  There are three methods of using `show if`,
+which have different syntax.
+
+Using the first method, the field will appear or disappear in the web
+browser depending on the value of another field in the [`fields`] list.
+Under this method, `show if` refers to a [YAML] dictionary with two
+keys: `variable` and `is`, where `variable` refers to the variable
+name of the other field, and `is` refers to the value of the other
+field that will cause this field to be shown.
+
+This can be useful when you have a multiple-choice field that has an
+"other" option, where you want to capture a text field but only if the
+user selects the "other" option.
+
+{% include side-by-side.html demo="other" %}
+
+The second method is like the first, but is for the special case where
+the other field in [`fields`] is a yes/no variable.  Under this method,
+`show if` refers to the other field's variable name.  If that variable
+is true, the field will be shown, and if it is not true, the field
+will be hidden.
+
+{% include side-by-side.html demo="showif-boolean" %}
+
+If a `show if` statement refers to a variable that is itself hidden by a
+`show if`, then the condition is considered to be false.
+
+{% include side-by-side.html demo="showif-nested" %}
+
+Under the third method, the field is either shown or not shown on the
+screen when it loads, and it stays that way.  You can use [Python]
+code to control whether the field is shown or not.  Unlike
+the first method, you are not limited to using variables that are part
+of the [`fields`] list; you can use any [Python] code; however, you
+cannot refer to any of the variables that are defined by the current
+question.  Under this method, `show if` must refer to a [YAML]
+dictionary with one key, `code`, where `code` contains [Python] code.
+The code will be evaluated and if it evaluates to a positive value,
+the field will be shown.
+
+{% include side-by-side.html demo="showif" %}
+
+With all of these methods, if any field is not visible on the screen
+when the user presses the Continue button, no variable will be set to
+anything for that field; it as if the field was never part of the
+`question`.
+
+## <a name="hide if"></a>`hide if`
+
+This works just like [`show if`](#show if), except that it hides the
+field instead of showing it.
+
+{% include side-by-side.html demo="hideif-boolean" %}
+
+## <a name="js show if"></a>`js show if`
+
+Sometimes you might want to do more complicated evaluations with
+on-screen variables than you can do with `show if` and `hide if`.
+When you use the `show if` and `hide if` field modifiers to refer to
+fields that are on the screen, you are able to test whether the fields
+are true, or have particular values, but you cannot do anything more
+complex, such as test whether the value is one of two values, or
+the values of two fields.
+
+The `js show if` and `js hide if` features allow you to use any
+arbitrary [JavaScript] expression to determine whether a field should
+be shown or not.  In these expressions, the special [JavaScript]
+function [`val()`] is used to obtain the values of fields.  Given the
+name of an on-screen field as a string, the [`val()`] function
+returns the current value of that field.
+
+{% include side-by-side.html demo="jsshowif" %}
+
+The string that is passed to [`val()`] must perfectly match the
+variable name that is used in the underlying [`question`].
+
+The field will be shown or hidden whenever any of the variables
+referenced with [`val()`] change.  Thus, if your [JavaScript]
+expression does not use [`val()`], it will not be triggered except at
+the time the screen loads.  Your expression is parsed, but is not
+evaluated, when determining what fields your expression references
+with [`val()`].  Thus, if you pass something other than a literal
+string to [`val()`], you may find that the showing or hiding is not
+triggered, even though [`val()`] would return the appropriate value.
+
+## <a name="js hide if"></a>`js hide if`
+
+This works just like [`js show if`](#js show if), except that it hides
+the field instead of showing it.
+
+## <a name="disable others"></a>`disable others`
+
+If `disable others` is set to `True`, then when the user changes the
+value of the field to something, all the other fields in the question
+will be disabled.
+
+{% include side-by-side.html demo="disable-others" %}
+
+Alternatively, `disable others` can be set to a list of variables on
+the same screen that should be disabled.
+
+{% include side-by-side.html demo="disable-others-list" %}
+
+## <a name="note"></a>`note`
+
+The value of `note` is [Markdown] text that will appear on the screen;
+useful for providing guidance to the user on how to enter information.
+
+{% include side-by-side.html demo="note" %}
+
+## <a name="html"></a>`html`
+
+The `html` directive is like [`note`](#note), except the format is
+expected to be raw [HTML].  It can be used in combination with the
+[`css`] and [`script`] modifiers.
+
+{% include side-by-side.html demo="html" %}
+
+## <a name="no label"></a>`no label`
+
+If you use `no label` as the label for your variable, the label will
+be omitted.  On wide screens, the field will fill more of the width of
+the screen if the label is set to `no label`.
+
+{% include side-by-side.html demo="no-label-field" %}
+
+To keep the width of the field normal, but have a blank label, use
+`""` as the label.
+
+{% include side-by-side.html demo="blank-label-field" %}
+
+## <a name="label"></a>`label` and `field`
+
+Instead of expressing your labels and variable names in the form of `-
+Label: variable_name`, you can specify a label using the `label` key
+and the variable name using the `field` key.
+
+{% include side-by-side.html demo="label" %}
+
+# <a name="misc features"><a>Other features of [`fields`]
+
+## <a name="emptychoices"></a>When the list of choices is empty
+
+If the list of choices for a multiple choice question is empty,
+**docassemble** will try to deal with the situation gracefully.  If
+there is only a single field listed under [`fields`], or the question is
+a [standalone multiple choice question](#field with buttons), then the
+variable that will be set by the user's selection will be set to
+`None`, and the question (or the field, if there are other fields
+listed under [`fields`]) will be skipped.
+
+If the `datatype` is `checkboxes`, the variable will be set to an
+empty [`DADict`] (a type of [dictionary] specific to **docassemble**).
+If the `datatype` is `object_checkboxes`, the variable will be set to
+an empty [`DAList`] (a type of [list] specific to **docassemble**).
 
 ## <a name="min"></a><a name="input validation"></a>Input validation
 
@@ -1272,22 +1291,16 @@ attributes of the [`Address`] object that can be set by [Place Autocomplete].
 ## <a name="continue button field"></a>Setting a variable with the Continue button
 
 When the user presses the Continue button on a `question` containing
-`fields`, all of the variables listed under `fields` are set.
+[`fields`], all of the variables listed under [`fields`] are set.
 Sometimes, it is useful for the `question` to also set a single
 variable to `True`, much like the [simple "continue" button that sets
 a variable](#field) question does.
 
-If you want your `fields` question to set a variable to `True` when
+If you want your [`fields`] question to set a variable to `True` when
 the user presses "Continue," add a `continue button field` line to
 the `question` indicating the variable that should be set to True.
 
 {% include side-by-side.html demo="continue-button-field" %}
-
-## <a name="bigexample"></a>A comprehensive example
-
-Here is a lengthy example that illustrates many of these features.
-
-{% include side-by-side.html demo="fields" %}
 
 ## <a name="objects"></a>Assigning existing objects to variables
 
@@ -1312,7 +1325,7 @@ would not be able to do that.  Instead, you would want
 as you would refer to `client.birthdate`.
 
 You can accomplish this by setting [`datatype`] to `object` within a
-`fields` list, where the [`choices`](#choices) are the names of the objects from
+[`fields`] list, where the [`choices`](#choices) are the names of the objects from
 which to choose.  (Optionally, you can set a `default` value, which is
 also the name of a variable.)
 
@@ -1383,13 +1396,13 @@ has no effect when embedded fields are not being used.
 
 ## <a name="fields code"></a>Generating fields with code
 
-You can use [Python] code to generate items inside a `fields`.  To do
-so, simply add an entry under `fields` that contains `code` (and
+You can use [Python] code to generate items inside a [`fields`].  To do
+so, simply add an entry under [`fields`] that contains `code` (and
 nothing more).  The contents of `code` will be evaluated as a [Python]
 expression.
 
 The expression must evaluate to a list of dictionaries, and the format
-must be the Python equivalent of a regular `fields` item, which you
+must be the Python equivalent of a regular [`fields`] item, which you
 would normally express in [YAML].
 
 For example, if you want the fields to be like this:
@@ -1424,7 +1437,7 @@ Note that it is necessary to use the [`sets`] modifier on the question
 to manually indicate that the question will define
 `people[i].name.first`.  Normally, **docassemble** automatically
 detects what variables a question is capable of defining, but when the
-`fields` are dynamically generated with code, it is not able to do so.
+[`fields`] are dynamically generated with code, it is not able to do so.
 
 Note also that this example uses the [`label` and `field`] method for
 indicating the label and the variable name for each field.  This is
@@ -1496,6 +1509,81 @@ which can look messier, and then you have to worry about what to do if
 the `key` string contains an apostrophe; will that cause a syntax
 error?  The [`repr()`] function takes care of this problem by
 producing a robust [Python] representation of the string.
+
+## <a name="bigexample"></a>A comprehensive example
+
+Here is a lengthy example that illustrates many of the features of
+[`fields`].
+
+{% include side-by-side.html demo="fields" %}
+
+# <a name="uploads"></a>Uploads
+
+## <a name="uploading"></a>Storing files as variables
+
+Users can upload files, and the files are stored as a variable in
+**docassemble**.
+
+{% include side-by-side.html demo="upload" %}
+
+Note that this question uses the [`fields`] statement, which is
+explained in more detail [above](#fields).  Specifically, it uses the
+[`file`](#file) data type.
+
+When set, the variable `user_picture` will be a special [object] of
+type [`DAFileList`].  For more information about how to make use of
+uploaded files, see [inserting images].
+
+## <a name="signature"></a>Gathering the user's signature into a file variable
+
+The `signature` directive presents a special screen in which the user
+can sign his or her name with the trackpad or other pointing device.
+
+{% include side-by-side.html demo="signature" %}
+
+On the screen, the [`question`] text appears first, then the
+[`subquestion`] text, then the signature area appears, and then the
+`under` text appears.
+
+In this example, the `user_signature` variable will be set to an
+object of type [`DAFile`].  This variable can be included in the same
+way that a document upload can be included.  For example:
+
+{% highlight yaml %}
+---
+question: |
+  Is this your signature?
+subquestion: |
+  ${ user_signature }
+yesno: user_signature_verified
+---
+{% endhighlight %}
+
+or, if you want to control the width of the image:
+
+{% highlight yaml %}
+---
+question: |
+  Is this your signature?
+subquestion: |
+  ${ user_signature.show(width='1in') }
+yesno: user_signature_verified
+---
+{% endhighlight %}
+
+Signatures can be also be inserted into assembled [documents] in the
+same way.  They can also be inserted into [.docx fill-in forms] and
+[PDF fill-in forms].
+
+On a small screen, users need as much of the screen as possible to
+write their signature.  For this reason, **docassemble** will reduce
+the size of the navigation bar and put the [`question`] text into the
+navigation bar.  For this reason, you should make sure your
+[`question`] text is very brief -- no longer than "Sign your name."
+You should also make the [`subquestion`] text as brief as possible.
+Although you may be developing your app on a desktop or laptop
+monitor, your users are probably using smartphones, so test your app
+on a smartphone.
 
 # <a name="general"></a>Generalizing questions
 
@@ -1648,7 +1736,7 @@ user can press to revisit an answer:
 
 {% include side-by-side.html demo="review-2" %}
 
-In addition, the `review` block, like the `fields` block, allows you
+In addition, the `review` block, like the [`fields`] block, allows you
 to use `note` and `html` entries.
 
 If these are modified with the optional `show if` modifier, they will
@@ -1863,6 +1951,7 @@ why this needs to be done manually as opposed to automatically:
 [`validationfuncs.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/validationfuncs.py
 [`validationfuncstwo.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/validationfuncstwo.py
 [`yesno`]: #yesno
+[group]: {{ site.baseurl }}/docs/groups.html
 [groups]: {{ site.baseurl }}/docs/groups.html
 [groups section]: {{ site.baseurl }}/docs/groups.html
 [Python constant]: https://docs.python.org/2/library/constants.html
@@ -1950,3 +2039,4 @@ why this needs to be done manually as opposed to automatically:
 [`.geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [`val()`]: {{ site.baseurl }}/docs/functions.html#js_val
+[`input type`]: #input type

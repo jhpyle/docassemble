@@ -9,6 +9,11 @@ short_title: Objects
 [Python] allows [object-oriented programming] and so does
 **docassemble**.
 
+Object-oriented programming can seem complicated at first, but it
+actually makes programming much easier.  For an easy-to-read
+introduction to object-oriented programming, see [Object-oriented
+Programming for Document Assembly Developers] by [Quinten Steenhuis].
+
 Here is a non-object-oriented way of saying hello to the user by name:
 
 {% include side-by-side.html demo="hello-not-oop" %}
@@ -3867,3 +3872,5 @@ of the original [`DADateTime`] object.  See
 [Google Cloud Storage]: https://cloud.google.com/storage/docs/reference/libraries
 [LibreOffice]: https://www.libreoffice.org/
 [`service account credentials`]: {{ site.baseurl }}/docs/config.html#service account credentials
+[Object-oriented Programming for Document Assembly Developers]: https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/
+[Quinten Steenhuis]: https://www.nonprofittechy.com/about/

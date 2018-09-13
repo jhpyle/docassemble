@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.97](https://github.com/jhpyle/docassemble/releases/tag/v0.2.97) - 2018-09-
+
+### Fixed
+- Google Maps JavaScript was loading synchronously, which slowed down
+  loading.
+- A `choices` list could not contain a list of numeric, boolean,
+  or `NoneType` values.
+
 ## [0.2.96](https://github.com/jhpyle/docassemble/releases/tag/v0.2.96) - 2018-09-12
 
 ### Added

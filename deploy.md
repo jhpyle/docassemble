@@ -11,8 +11,9 @@ internet.
 
 The easiest way to deploy **docassemble** is to use [Docassemble
 Toolkit], a hosting and support service provided by
-[community.lawyer], a Public Benefit Corporation based in Brookyln,
-New York.
+[Community.lawyer], a Public Benefit Corporation based in Brookyln,
+New York.  [Community.lawyer] also offers [Law Guides], an
+app-creation service powered by **docassemble**.
 
 If you want to deploy **docassemble** yourself, the easiest way is to
 install it using [Docker] on whatever machine you wish to use.
@@ -25,9 +26,15 @@ it, but hosting a server on the internet will cost money (between $10
 and $300 per month depending on what your performance, availability,
 and support needs are).
 
+Another way to deploy **docassemble** interviews is by using [HelpSelf
+Legal], a service that allows you to create **docassemble** interviews
+without writing code directly.
+
 [clusters]: {{ site.baseurl }}/docs/scalability.html 
 [Docassemble Toolkit]: https://community.lawyer/docassemble
-[community.lawyer]: https://community.lawyer/
+[Community.lawyer]: https://community.lawyer/
 [install]: {{ site.baseurl }}/docs/installation.html
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [Amazon Web Services]: https://aws.amazon.com
+[HelpSelf Legal]: https://www.helpselflegal.com/
+[Law Guides]: https://community.lawyer/lawguides

@@ -31,7 +31,7 @@ As much as [Docker] simplifies the process of installing
 "running," "stopping," and "starting" containers.  If you are not
 familiar with [Docker] or with hosting web applications, and you want
 to get up and running fast, you may want to use [Docassemble Toolkit],
-a support service provided by [community.lawyer], a Public Benefit
+a support service provided by [Community.lawyer], a Public Benefit
 Corporation based in Brookyln, New York.  [Docassemble Toolkit]
 provides an encrypted **docassemble** server hosted on [Amazon Web
 Services].  This saves you from needing to figure out [Docker], [Let's
@@ -1736,7 +1736,7 @@ line), as the containers depend on the images.
 [e-mailing the interview]: {{ site.baseurl }}/docs/background.html#email
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [Docassemble Toolkit]: https://community.lawyer/docassemble
-[community.lawyer]: https://community.lawyer/
+[Community.lawyer]: https://community.lawyer/
 [virtual machine]: https://en.wikipedia.org/wiki/Virtual_machine
 [upgrading]: #upgrading
 [`Dockerfile`]: {{ site.github.repository_url }}/blob/master/Dockerfile
