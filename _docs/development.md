@@ -697,7 +697,7 @@ restart the three services that use those packages (the web server,
 [Celery] server, and web sockets server).
 
 The first complication is that the machine on which it is convenient
-for you edit files may not be the machine where you are running
+for you to edit files may not be the machine where you are running
 **docassemble**.  You may wish to edit the files on your laptop, but
 you have **docassemble** running in a [Docker] container on your
 laptop, or on another machine entirely.
