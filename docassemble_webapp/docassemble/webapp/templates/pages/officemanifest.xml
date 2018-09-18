@@ -1,106 +1,91 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <OfficeApp
-          xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
-          xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
-          xsi:type="TaskPaneApp">
-  <Id>{{ guid }}</Id>
-  <Version>{{ office_app_version }}</Version>
-  <ProviderName>{{ config['APP_NAME'] }}</ProviderName>
-  <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="{{ word('Docassemble') }}" />
-  <Description DefaultValue="{{ word('Connects Word to the docassemble Playground.') }}"/>
-  <IconUrl DefaultValue="{{ url_for('static', filename='office/cat-in-circle-32.png', _external=True) }}" />
-  <HighResolutionIconUrl DefaultValue="{{ url_for('static', filename='office/cat-in-circle-80.png', _external=True) }}"/>
-  <!--If you plan to submit this add-in to the Office Store, uncomment the SupportUrl element below-->
-  <!--<SupportUrl DefaultValue="[Insert the URL of a page that provides support information for the app]">-->
-  <AppDomains>
-    <AppDomain>docassemble.org</AppDomain>
-  </AppDomains>
-  <Hosts>
-    <Host Name="Document" />
-  </Hosts>
-  <DefaultSettings>
-    <SourceLocation DefaultValue="{{ url_for('playground_office_taskpane', _external=True) }}" />
-  </DefaultSettings>
-  <Permissions>ReadWriteDocument</Permissions>
-  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+    xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+    xsi:type="TaskPaneApp">
+    <Id>{{ guid }}</Id>
+    <Version>{{ office_app_version }}</Version>
+    <ProviderName>{{ config['APP_NAME'] }}</ProviderName>
+    <DefaultLocale>en-US</DefaultLocale>
+    <DisplayName DefaultValue="{{ word('Docassemble') }}" />
+    <Description DefaultValue="{{ word('Connects Word to the docassemble Playground.') }}"/>
+    <IconUrl DefaultValue="{{ url_for('static', filename='office/cat-in-circle-32.png', _external=True) }}" />
+    <HighResolutionIconUrl DefaultValue="{{ url_for('static', filename='office/cat-in-circle-80.png', _external=True) }}"/>
+    <!--If you plan to submit this add-in to the Office Store, uncomment the SupportUrl element below-->
+    <!--<SupportUrl DefaultValue="[Insert the URL of a page that provides support information for the app]">-->
+    <AppDomains>
+        <AppDomain>docassemble.org</AppDomain>
+    </AppDomains>
     <Hosts>
-      <Host xsi:type="Document">
-        <DesktopFormFactor>
-          <GetStarted>
-            <Title resid="DA.GetStarted.Title"/>
-            <Description resid="DA.GetStarted.Description"/>
-            <LearnMoreUrl resid="DA.GetStarted.LearnMoreUrl"/>
-          </GetStarted>
-          <FunctionFile resid="DA.DesktopFunctionFile.Url" />
-          <ExtensionPoint xsi:type="PrimaryCommandSurface">
-            <OfficeTab id="TabHome">
-              <Group id="DA.Group1">
-                <Label resid="DA.Group1Label" />
-                <Icon>
-                  <bt:Image size="16" resid="DA.tpicon_16x16" />
-                  <bt:Image size="32" resid="DA.tpicon_32x32" />
-                  <bt:Image size="80" resid="DA.tpicon_80x80" />
-                </Icon>
-                <Control xsi:type="Button" id="DA.TaskpaneButton">
-                  <Label resid="DA.TaskpaneButton.Label" />
-                  <Supertip>
-                    <Title resid="DA.TaskpaneButton.Label" />
-                    <Description resid="DA.TaskpaneButton.Tooltip" />
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="DA.tpicon_16x16" />
-                    <bt:Image size="32" resid="DA.tpicon_32x32" />
-                    <bt:Image size="80" resid="DA.tpicon_80x80" />
-                  </Icon>
-                  <Action xsi:type="ShowTaskpane">
-                    <TaskpaneId>ButtonId1</TaskpaneId>
-                    <SourceLocation resid="DA.Taskpane.Url" />
-                  </Action>
-                </Control>
-		<Control xsi:type="Button" id="msgReadFunctionButton">
-		  <Label resid="funcReadButtonLabel" />
-		  <Supertip>
-		    <Title resid="funcReadSuperTipTitle" />
-		    <Description resid="funcReadSuperTipDescription" />
-		  </Supertip>
-		  <Icon>
-		    <bt:Image size="16" resid="blue-icon-16" />
-		    <bt:Image size="32" resid="blue-icon-32" />
-		    <bt:Image size="80" resid="blue-icon-80" />
-		  </Icon>
-		  <Action xsi:type="ExecuteFunction">
-		    <FunctionName>getSubject</FunctionName>
-		  </Action>
-		</Control>		
-              </Group>
-            </OfficeTab>
-          </ExtensionPoint>
-        </DesktopFormFactor>
-      </Host>
+        <Host Name="Document" />
     </Hosts>
-    <Resources>
-      <bt:Images>
-        <bt:Image id="DA.tpicon_16x16" DefaultValue="{{ url_for('static', filename='office/cat-in-circle-16.png', _external=True) }}" />
-        <bt:Image id="DA.tpicon_32x32" DefaultValue="{{ url_for('static', filename='office/cat-in-circle-32.png', _external=True) }}" />
-        <bt:Image id="DA.tpicon_80x80" DefaultValue="{{ url_for('static', filename='office/cat-in-circle-80.png', _external=True) }}" />
-      </bt:Images>
-      <bt:Urls>
-        <bt:Url id="DA.Taskpane.Url" DefaultValue="{{ url_for('playground_office_taskpane', _external=True) }}" />
-        <bt:Url id="DA.GetStarted.LearnMoreUrl" DefaultValue="https://docassemble.org/docs/officeaddin.html" />
-        <bt:Url id="DA.DesktopFunctionFile.Url" DefaultValue="{{ url_for('playground_office_functionfile', _external=True) }}" />
-      </bt:Urls>
-      <bt:ShortStrings>
-        <bt:String id="DA.TaskpaneButton.Label" DefaultValue="{{ word('Playground sidebar') }}" />
-        <bt:String id="DA.Group1Label" DefaultValue="{{ word('Docassemble') }}" />
-        <bt:String id="DA.GetStarted.Title" DefaultValue="{{ word('Docassemble add-in') }}" />
-      </bt:ShortStrings>
-      <bt:LongStrings>
-        <bt:String id="DA.TaskpaneButton.Tooltip" DefaultValue="Click to open" />
-        <bt:String id="DA.GetStarted.Description" DefaultValue="{{ word('You can open the Playground sidebar here') }}" />
-      </bt:LongStrings>
-    </Resources>
-  </VersionOverrides>
+    <DefaultSettings>
+        <SourceLocation DefaultValue="{{ url_for('playground_office_taskpane', _external=True) }}" />
+    </DefaultSettings>
+    <Permissions>ReadWriteDocument</Permissions>
+    <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+        <Hosts>
+            <Host xsi:type="Document">
+                <DesktopFormFactor>
+                    <GetStarted>
+                        <Title resid="DA.GetStarted.Title"/>
+                        <Description resid="DA.GetStarted.Description"/>
+                        <LearnMoreUrl resid="DA.GetStarted.LearnMoreUrl"/>
+                    </GetStarted>
+                    <FunctionFile resid="DA.DesktopFunctionFile.Url" />
+                    <ExtensionPoint xsi:type="PrimaryCommandSurface">
+                        <OfficeTab id="TabHome">
+                            <Group id="DA.Group1">
+                                <Label resid="DA.Group1Label" />
+                                <Icon>
+                                    <bt:Image size="16" resid="DA.tpicon_16x16" />
+                                    <bt:Image size="32" resid="DA.tpicon_32x32" />
+                                    <bt:Image size="80" resid="DA.tpicon_80x80" />
+                                </Icon>
+                                <Control xsi:type="Button" id="DA.TaskpaneButton">
+                                    <Label resid="DA.TaskpaneButton.Label" />
+                                    <Supertip>
+                                        <Title resid="DA.TaskpaneButton.Label" />
+                                        <Description resid="DA.TaskpaneButton.Tooltip" />
+                                    </Supertip>
+                                    <Icon>
+                                        <bt:Image size="16" resid="DA.tpicon_16x16" />
+                                        <bt:Image size="32" resid="DA.tpicon_32x32" />
+                                        <bt:Image size="80" resid="DA.tpicon_80x80" />
+                                    </Icon>
+                                    <Action xsi:type="ShowTaskpane">
+                                        <TaskpaneId>ButtonId1</TaskpaneId>
+                                        <SourceLocation resid="DA.Taskpane.Url" />
+                                    </Action>
+                                </Control>
+                            </Group>
+                        </OfficeTab>
+                    </ExtensionPoint>
+                </DesktopFormFactor>
+            </Host>
+        </Hosts>
+        <Resources>
+            <bt:Images>
+                <bt:Image id="DA.tpicon_16x16" DefaultValue="{{ url_for('static', filename='office/cat-in-circle-16.png', _external=True) }}" />
+                <bt:Image id="DA.tpicon_32x32" DefaultValue="{{ url_for('static', filename='office/cat-in-circle-32.png', _external=True) }}" />
+                <bt:Image id="DA.tpicon_80x80" DefaultValue="{{ url_for('static', filename='office/cat-in-circle-80.png', _external=True) }}" />
+            </bt:Images>
+            <bt:Urls>
+                <bt:Url id="DA.Taskpane.Url" DefaultValue="{{ url_for('playground_office_taskpane', _external=True) }}" />
+                <bt:Url id="DA.GetStarted.LearnMoreUrl" DefaultValue="https://docassemble.org/docs/officeaddin.html" />
+                <bt:Url id="DA.DesktopFunctionFile.Url" DefaultValue="{{ url_for('playground_office_functionfile', _external=True) }}" />
+            </bt:Urls>
+            <bt:ShortStrings>
+                <bt:String id="DA.TaskpaneButton.Label" DefaultValue="{{ word('Playground sidebar') }}" />
+                <bt:String id="DA.Group1Label" DefaultValue="{{ word('Docassemble') }}" />
+                <bt:String id="DA.GetStarted.Title" DefaultValue="{{ word('Docassemble add-in') }}" />
+            </bt:ShortStrings>
+            <bt:LongStrings>
+                <bt:String id="DA.TaskpaneButton.Tooltip" DefaultValue="Click to open" />
+                <bt:String id="DA.GetStarted.Description" DefaultValue="{{ word('You can open the Playground sidebar here') }}" />
+            </bt:LongStrings>
+        </Resources>
+    </VersionOverrides>
 </OfficeApp>

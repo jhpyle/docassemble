@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.98] - 2018-09-17
+### Fixed
+- Error in Word manifest XML file.
+
 ## [0.2.97] - 2018-09-17
 ### Added
 - Playground "Variables, etc." for the Word task pane.
