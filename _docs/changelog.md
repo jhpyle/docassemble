@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.2.98](https://github.com/jhpyle/docassemble/releases/tag/v0.2.98) - 2018-09-17
+
+### Fixed
+- Error in Word manifest XML file.
+
 ## [0.2.97](https://github.com/jhpyle/docassemble/releases/tag/v0.2.97) - 2018-09-17
 
 ### Added
