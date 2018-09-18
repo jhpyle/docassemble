@@ -1,0 +1,22 @@
+metadata:
+  title: Multiple choice pulldown
+  short title: Multiple choice pulldown
+  documentation: "https://docassemble.org/docs/fields.html#select"
+  example start: 1
+  example end: 1
+---
+question: | 
+  What type of shoes do you wear?
+fields:
+  - Shoe Type: target_variable
+    input type: dropdown
+    choices: 
+      - Sneakers
+      - Sandals
+      - Clogs
+      - Other    
+---
+question: Result of question
+subquestion: |
+  target_variable is: "${ target_variable }"
+mandatory: True

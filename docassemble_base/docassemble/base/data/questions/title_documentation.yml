@@ -49,6 +49,13 @@ static:
     Playground and that are available for use through the "image sets," "images,"
     "decoration," and "[FILE]" features.
   url: "https://docassemble.org/docs/functions.html#url_of"
+jinja2:
+  title: Jinja2 template language
+  doc: >-
+    Jinja2 is a popular open-source templating language.  It is
+    used in .docx template files for inserting variables and expressing
+    logic.
+  url: "https://docassemble.org/docs/documents.html#docx%20template%20file"
 sources:
   title: Source files
   doc: >-

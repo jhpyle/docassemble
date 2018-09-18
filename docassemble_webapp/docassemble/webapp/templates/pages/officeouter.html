@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{{ tab_title }}</title>
+        <script defer src="{{ url_for('static', filename='fontawesome/js/all.js') }}"></script>
+        <link href="{% if config['BOOTSTRAP_THEME'] %}{{ config['BOOTSTRAP_THEME'] }}{% else %}{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}{% endif %}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='office/office.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='app/app.css') }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
+        <script defer src="{{ url_for('static', filename='fontawesome/js/all.js') }}"></script>
+        <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.debug.js"></script>
+    </head>
+    <body>
+        <div id="daServerDiv" class="container" style="display:none;">
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="daServer">{{ word("Your docassemble server") }}</label>
+                        <input id="daServer" class="form-control" type="text" value="{{ defaultDaServer }}">
+                    </div>
+                    <button id="serverConnect" class="btn btn-primary {{ config['BUTTON_CLASS'] }}">{{ word("Connect") }}</button>
+                </div>
+            </div>
+        </div>
+        <div id="iframeDiv" class="iframeDiv" style="display:none;">
+            <iframe id="server" src="{{ url_for('static', filename='app/blank.html') }}" /></iframe>
+        </div>
+        <div id="variablesDiv" style="display:none;">
+            <div id="playgroundbox" class="card bg-light">
+                <div class="card-header">
+                    <span>{{ word('Interview:') }}&nbsp;</span>
+                    <span class="select-wrapper">
+                        <select tabindex="130" id="daVariables" class="playground-select"></select>
+                    </span>
+                    <a id="uploadbutton" href="#" class="btn btn-sm btn-primary float-right uploadbutton" title="{{ word('Upload this .docx file to the Templates folder') }}"><i class="fas fa-upload"></i></a>
+                    <a id="uploadspinner" style="display:none;" tabindex="0" class="btn btn-sm btn-primary float-right uploadbutton" title="{{ word('Please wait.  File is being uploaded') }}"><i class="fas fa-spinner fa-spin"></i></a>
+                    <div id="autocompletediv" style="display:none">
+                        <select title="{{ word('When you type inside Jinja2 brackets, auto-complete options will appear here.') }}" class="form-control form-control-sm mt-1" id="autocomplete" multiple="" size="2">
+                            <option value="" title="{{ word('When you type inside Jinja2 brackets, auto-complete options will appear here.') }}" disabled>{{ word("Autocomplete") }}</option>
+                        </select>
+                    </div>                    
+                </div>
+                <div class="card-body wordplayground" id="daplaygroundcard">
+                    <table id="daplaygroundtable" class="daplaygroundtable">
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="changeServerDiv" class="text-center mt-2" style="display:none;">
+          <button id="serverChange" class="btn btn-secondary {{ config['BUTTON_CLASS'] }}">{{ word("Use a different server") }}</button>
+        </div>
+        <script src="{{ url_for('static', filename='app/jquery.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='app/js.cookie.js') }}"></script>
+        <script src="{{ url_for('static', filename='popper/umd/popper.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='popper/umd/tooltip.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='office/polyfill.js') }}"></script>
+        <script>
+          var defaultServer = "{{ defaultDaServer }}";
+          var fileErrorMessage = "{{ word("There was a problem uploading the file.") }}";
+          var fileSuccessMessage = "{{ word("The file was uploaded to the Templates folder.") }}";
+        </script>
+        <script src="{{ url_for('static', filename='office/word.js') }}"></script>{{ extra_js }}
+    </body>
+</html>

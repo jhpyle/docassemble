@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import mimetypes
 import traceback
 import re
@@ -812,6 +813,19 @@ def recursive_eval_textobject(target, user_dict, question, tpl):
         return docassemble.base.file_docx.transform_for_docx(text, question, tpl)
     else:
         raise DAError("recursive_eval_textobject: expected a TextObject, but found a " + str(type(target)))
+
+def fix_quotes(match):
+    instring = match.group(1)
+    n = len(instring)
+    output = ''
+    for i in range(n):
+        if instring[i] == u'\u201c' or instring[i] == u'\u201d':
+            output += '"'
+        elif instring[i] == u'\u2018' or instring[i] == u'\u2019':
+            output += "'"
+        else:
+            output += instring[i]
+    return output
 
 def docx_variable_fix(variable):
     variable = re.sub(r'\\', '', variable)
@@ -2756,6 +2770,7 @@ class Question:
                         the_env = custom_jinja_env()
                         the_xml = docx_template.get_xml()
                         the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
+                        the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
                         the_xml = docx_template.patch_xml(the_xml)
                         parsed_content = the_env.parse(the_xml)
                     except TemplateError as the_error:
@@ -5216,8 +5231,10 @@ def process_selections_manual(data):
                     result.append(the_item)
             if type(entry) is list:
                 result.append(dict(key=TextObject(entry[0]), label=TextObject(entry[1])))
-            elif type(entry) is str or type(entry) is unicode:
+            elif isinstance(entry, basestring):
                 result.append(dict(key=TextObject(entry), label=TextObject(entry)))
+            elif type(entry) in (int, float, bool, NoneType):
+                result.append(dict(key=TextObject(unicode(entry)), label=TextObject(unicode(entry))))
     elif type(data) is dict:
         for key, value in sorted(data.items(), key=operator.itemgetter(1)):
             result.append(dict(key=TextObject(value), label=TextObject(key)))
@@ -5474,7 +5491,7 @@ def parse_var_name(var):
         final_parts = (var, '')
     return dict(valid=True, objects=objects, bracket_objects=bracket_objects, final_parts=final_parts)
 
-class AmpersandExtension(Extension):
+class DAExtension(Extension):
     def filter_stream(self, stream):
         in_var = False
         met_pipe = False
@@ -5491,13 +5508,18 @@ class AmpersandExtension(Extension):
                 met_pipe = True
             yield token
 
+class DAEnvironment(Environment):
+    def from_string(self, source, **kwargs):
+        source = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, source)
+        return super(DAEnvironment, self).from_string(source, **kwargs)
+
 def ampersand_filter(value):
     if value.__class__.__name__ in ('DAFile', 'DALink'): #, 'InlineImage', 'RichText', 'Listing', 'Document', 'Subdoc'
         return value
     return re.sub(r'&(?!#\d{4};|amp;)', '&amp;', unicode(value))
 
 def custom_jinja_env():
-    env = Environment(undefined=StrictUndefined, extensions=[AmpersandExtension])
+    env = DAEnvironment(undefined=StrictUndefined, extensions=[DAExtension])
     env.filters['ampersand_filter'] = ampersand_filter
     env.filters['markdown'] = markdown_filter
     return env

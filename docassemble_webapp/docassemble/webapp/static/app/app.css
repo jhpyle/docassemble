@@ -815,6 +815,21 @@ select.playground-select {
     outline: 0;
 }
 
+a.uploadbutton {
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+/* a.uploadbutton { */
+/*     display: inline-block; */
+/*     background: url(upload.svg) no-repeat right; */
+/*     background-size: 1em 1em; */
+/*     padding: 2px 2px 2px 2px; */
+/*     width: 1.2em; */
+/*     height: 1.2em; */
+/*     cursor: pointer; */
+/* } */
+
 /* a.darunbutton { */
 /*     color: white; */
 /*     font-size: 14px; */
@@ -2008,3 +2023,7 @@ div.constraintlist div + div {
 /* 	text-decoration: underline; */
 /*     } */
 /* } */
+
+.wordplayground .dasearchicon {
+    display: none;
+}

@@ -1,0 +1,6 @@
+div.iframeDiv iframe {
+    border: 0;
+    height: 1200px;
+    width: 100%;
+    border-style: none;
+}

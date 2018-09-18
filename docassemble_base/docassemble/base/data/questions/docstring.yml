@@ -124,228 +124,366 @@ n:
     This is a special variable that is used in questions that populate lists.
   iterable: False
 list:
+  exclude: true
   doc: |
     This is a built-in Python data type that expresses an ordered list of things.
 dict:
+  exclude: true
   doc: |
     This is a built-in Python data type that expresses a dictionary or hash data structure.
 str:
+  exclude: true
   doc: |
     This is a built-in Python function that converts an expression to a string.
+  insert: "str()"
 len:
   doc: |
     This is a built-in Python function that returns the length of a list or other data structure.
+  insert: "len()"
 sorted:
   doc: |
     This is a built-in Python function that sorts a list in alphabetical order.
+  insert: "sorted()"
 map:
+  exclude: true
   doc: |
     This is a built-in Python function that applies a function to each member of a list and returns a list.
+  insert: "map()"
 abs:
+  exclude: true
   doc: |
     This is a built-in Python function that returns the absolute value of a number.
+  insert: "abs()"
 all:
+  exclude: true
   doc: |
     This is a built-in Python function that returns True if all the values of a given list are True.
+  insert: "all()"
 any:
+  exclude: true
   doc: |
     This is a built-in Python function that returns True if any of the values of a given list are True.
+  insert: "any()"
 basestring:
+  exclude: true
   doc: |
-    This is a built-in Python function.
+    This is a built-in Python type.
 bin:
+  exclude: true
   doc: |
     This is a built-in Python function that converts an integer to a binary string.
+  insert: "bin()"
 bool:
+  exclude: true
   doc: |
     This is a built-in Python function that returns True or False depending on whether the argument evaluates to true or false.
+  insert: "bool()"
 bytearray:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "bytearray()"
 callable:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "callable()"
 chr:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "chr()"
 classmethod:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "classmethod()"
 cmp:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "cmp()"
 compile:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "compile()"
 complex:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "complex()"
 delattr:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "delattr()"
 dir:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "dir()"
 divmod:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "divmod()"
 enumerate:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "enumerate()"
 eval:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "eval()"
 execfile:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "execfile()"
 file:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "file()"
 filter:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "filter()"
 float:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "float()"
 format:
   doc: |
     This is a built-in Python function.
+  insert: "format()"
 frozenset:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "frozenset()"
 getattr:
   doc: |
     This is a built-in Python function.
+  insert: "getattr()"
 globals:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "globals()"
 hasattr:
   doc: |
     This is a built-in Python function.
+  insert: "hasattr()"
 hash:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "hash()"
 help:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "help()"
 hex:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "hex()"
 id:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "id()"
 input:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "input()"
 int:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "int()"
 isinstance:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "isinstance()"
 issubclass:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "issubclass()"
 iter:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "iter()"
 locals:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "locals()"
 long:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "long()"
 memoryview:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "memoryview()"
 min:
   doc: |
     This is a built-in Python function.
+  insert: "min()"
+max:
+  doc: |
+    This is a built-in Python function.
+  insert: "min()"
 next:
+  exclude: true
   doc: |
-    This is a built-in Python function.
+    This is a built-in Python statement.
 object:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "object()"
 oct:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "oct()"
 open:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "open()"
 ord:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "ord()"
 pow:
   doc: |
     This is a built-in Python function.
+  insert: "pow()"
 print:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "print()"
 property:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "property()"
 range:
   doc: |
     This is a built-in Python function.
+  insert: "range()"
 raw_input:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "raw_input()"
 reduce:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "reduce()"
 reload:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "reload()"
 repr:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "repr()"
 reversed:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "reversed()"
 round:
   doc: |
     This is a built-in Python function.
+  insert: "round()"
 set:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "set()"
 setattr:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "setattr()"
 slice:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "insert()"
 staticmethod:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "staticmethod()"
 sum:
   doc: |
     This is a built-in Python function.
+  insert: "sum()"
 super:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "super()"
 tuple:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "tuple()"
 type:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "type()"
 unichr:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "unichr()"
 unicode:
   doc: |
     This is a built-in Python function.
+  insert: "unicode()"
 vars:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "vars()"
 xrange:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "xrange()"
 zip:
+  exclude: true
   doc: |
     This is a built-in Python function.
+  insert: "zip()"
 self:
+  exclude: true
   doc: |
     This is a built-in Python variable.
 row_item:

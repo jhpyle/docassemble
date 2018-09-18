@@ -94,7 +94,8 @@
 "Description": Null
 "Developer Access": Null
 "Disable": Null
-"Docassemble Template Builder": Null
+"Docassemble Office Add-in": Null
+"Docassemble Playground": Null
 "Documentation": Null
 "Document": Null
 "docx_message": Null
@@ -217,6 +218,7 @@
 "is not within the range.": Null
 "is": Null
 "it": Null
+"Jinja2 help template": Null
 "Join": Null
 "JSON file": Null
 "Language": Null
@@ -277,6 +279,7 @@
 "Observation": Null
 "Observe": Null
 "OCR succeeded": Null
+"Office Add-in": Null
 "offline": Null
 "ok": Null
 "OneDrive is not configured": Null
@@ -423,7 +426,6 @@
 "system": Null
 "System": Null
 "Telephone assistance": Null
-"Template Builder": Null
 "Template files": Null
 "Templates": Null
 "Terms used in this question:": Null
@@ -548,6 +550,7 @@
 "User": Null
 "User Profile": Null
 "Uses two-factor authentication": Null
+"Using Jinja2": Null
 "Utilities": Null
 "Valid characters are: A-Z, a-z, 0-9, hyphen": Null
 "Valid characters are: A-Z, a-z, 0-9": Null

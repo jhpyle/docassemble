@@ -587,7 +587,8 @@ def logout():
 #     return render_template(user_manager.login_template, page_title=word('Sign In'), tab_title=word('Sign In'), form=login_form, login_form=login_form, register_form=register_form)
 
 def unauthenticated():
-    flash(word("You need to log in before you can access") + " " + word(request.path), 'error')
+    if not request.args.get('nm', False):
+        flash(word("You need to log in before you can access") + " " + word(request.path), 'error')
     the_url = url_for('user.login', next=fix_http(request.url))
     return redirect(the_url)
 
@@ -754,7 +755,7 @@ from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipien
 from user_agents import parse as ua_parse
 import docassemble.base.ocr
 from jinja2.exceptions import TemplateError
-#import uuid
+import uuid
 from bs4 import BeautifulSoup
 
 mimetypes.add_type('application/x-yaml', '.yml')
@@ -2490,7 +2491,7 @@ def get_ml_info(varname, default_package, default_file):
         the_varname = varname
     return (the_package, the_file, the_varname)
         
-def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=False):
+def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=False, show_messages=True, show_jinja_help=False):
     user_dict = fresh_dictionary()
     has_no_endpoint = False
     if 'uid' not in session:
@@ -2627,7 +2628,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                         method['doc'] += '<br>'
                     method['doc'] += "<a target='_blank' href='" + documentation_dict[var + '.' + method['name']] + "'>" + view_doc_text + "</a>"                
     content = ''
-    if has_error:
+    if has_error and show_messages:
         error_style = 'danger'
         if error_type is DAErrorNoEndpoint:
             error_style = 'warning'
@@ -2639,6 +2640,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         else:
             message_to_use = title_documentation['generic error']['doc']
         content += '\n                  <tr><td class="playground-warning-box"><div class="alert alert-' + error_style + '">' + message_to_use + '</div></td></tr>'
+    vocab_dict = dict()
     vocab_set = (names_used | functions | classes | modules | fields_used | set([key for key in base_name_info if not re.search(r'\.', key)]) | set([key for key in name_info if not re.search(r'\.', key)]) | set(templates) | set(static) | set(sources) | set(avail_modules) | set(interview.images.keys()))
     vocab_set = set([i for i in vocab_set if not extraneous_var.search(i)])
     names_used = names_used.difference( functions | classes | modules | set(avail_modules) )
@@ -2765,6 +2767,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         content += '\n                  <tr><td><h4>' + word('Undefined names') + infobutton('undefined') + '</h4></td></tr>'
         for var in sorted(undefined_names):
             content += '\n                  <tr><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-danger btn-sm playground-variable">' + var + '</a></td></tr>'
+            vocab_dict[var] = var
     if len(names_used):
         content += '\n                  <tr><td><h4>' + word('Variables') + infobutton('variables') + '</h4></td></tr>'
         has_parent = dict()
@@ -2799,6 +2802,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 class_type = 'primary'
                 title = ''
             content += '\n                  <tr' + hide_it + '><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="btn btn-sm btn-' + class_type + ' playground-variable">' + var + '</a>'
+            vocab_dict[var] = var
             if var in has_children:
                 content += '&nbsp;<a tabindex="0" class="dashowattributes" role="button" data-name="' + noquote(var) + '" title=' + json.dumps(attr_documentation) + '><i class="fas fa-ellipsis-h"></i></a>'
             if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
@@ -2826,6 +2830,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         content += '\n                  <tr><td><h4>' + word('Functions') + infobutton('functions') + '</h4></td></tr>'
         for var in sorted(functions):
             content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-warning playground-variable">' + name_info[var]['tag'] + '</a>'
+            vocab_dict[var] = name_info[var]['insert']
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
                 content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
             content += '</td></tr>'
@@ -2833,6 +2838,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         content += '\n                  <tr><td><h4>' + word('Classes') + infobutton('classes') + '</h4></td></tr>'
         for var in sorted(classes):
             content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-info playground-variable">' + name_info[var]['name'] + '</a>'
+            vocab_dict[var] = name_info[var]['insert']
             if name_info[var]['bases']:
                 content += '&nbsp;<span data-ref="' + noquote(name_info[var]['bases'][0]) + '" class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
             if name_info[var]['doc']:
@@ -2842,6 +2848,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 content += '<div style="display: none;" id="XMETHODX' + var + '"><table><tbody>'
                 for method_info in name_info[var]['methods']:
                     content += '<tr><td><a tabindex="0" data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="btn btn-sm btn-warning playground-variable">' + method_info['tag'] + '</a>'
+                    #vocab_dict[method_info['name']] = method_info['insert']
                     if method_info['doc']:
                         content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(method_info['name']) + '"><i class="fas fa-info-circle"></i></a>'
                     content += '</td></tr>'
@@ -2851,6 +2858,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         content += '\n                  <tr><td><h4>' + word('Modules defined') + infobutton('modules') + '</h4></td></tr>'
         for var in sorted(modules):
             content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-success playground-variable">' + name_info[var]['name'] + '</a>'
+            vocab_dict[var] = name_info[var]['insert']
             if name_info[var]['doc']:
                 content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(var) + '"><i class="fas fa-info-circle"></i></a>'
             content += '</td></tr>'
@@ -2858,21 +2866,25 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         content += '\n                  <tr><td><h4>' + word('Modules available in Playground') + infobutton('playground_modules') + '</h4></td></tr>'
         for var in avail_modules:
             content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="btn btn-sm btn-success playground-variable">.' + noquote(var) + '</a>'
+            vocab_dict[var] = var
             content += '</td></tr>'
     if len(templates):
         content += '\n                  <tr><td><h4>' + word('Templates') + infobutton('templates') + '</h4></td></tr>'
         for var in templates:
             content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
+            vocab_dict[var] = var
             content += '</td></tr>'
     if len(static):
         content += '\n                  <tr><td><h4>' + word('Static files') + infobutton('static') + '</h4></td></tr>'
         for var in static:
             content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
+            vocab_dict[var] = var
             content += '</td></tr>'
     if len(sources):
         content += '\n                  <tr><td><h4>' + word('Source files') + infobutton('sources') + '</h4></td></tr>'
         for var in sources:
             content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
+            vocab_dict[var] = var
             content += '</td></tr>'
     if len(interview.images):
         content += '\n                  <tr><td><h4>' + word('Decorations') + infobutton('decorations') + '</h4></td></tr>'
@@ -2889,9 +2901,16 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 if show_images:
                     content += '<img class="daimageicon" src="' + the_ref + '">&nbsp;'
                 content += '<a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-primary playground-variable">' + noquote(var) + '</a>'
+            vocab_dict[var] = var
             content += '</td></tr>'
-    content += "\n                  <tr><td><br><em>" + word("Type Ctrl-space to autocomplete.") + "</em></td><tr>"
-    return content, sorted(vocab_set)
+    if show_messages:
+        content += "\n                  <tr><td><br><em>" + word("Type Ctrl-space to autocomplete.") + "</em></td><tr>"
+    if show_jinja_help:
+        content += "\n                  <tr><td><h4 class=\"mt-2\">" + word("Using Jinja2") + infobutton('jinja2') + "</h4>\n                  " + re.sub("table-striped", "table-bordered", docassemble.base.util.markdown_to_html(word("Jinja2 help template"), trim=False, do_terms=False, indent=18)) + "</td><tr>"
+    for item in base_name_info:
+        if item not in vocab_dict and not base_name_info.get('exclude', False):
+            vocab_dict[item] = base_name_info.get('insert', item)
+    return content, sorted(vocab_set), vocab_dict
 
 def make_png_for_pdf(doc, prefix, page=None):
     if prefix == 'page':
@@ -5984,7 +6003,7 @@ def index():
         else:
             ga_id = None
         if api_key is not None:
-            scripts += "\n" + '    <script src="https://maps.googleapis.com/maps/api/js?key=' + api_key + '&libraries=places"></script>'
+            scripts += "\n" + '    <script async src="https://maps.googleapis.com/maps/api/js?key=' + api_key + '&libraries=places"></script>'
         if ga_id is not None:
             scripts += """
     <script async src="https://www.googletagmanager.com/gtag/js?id=""" + ga_id + """"></script>
@@ -6258,7 +6277,7 @@ def index():
         if (priority == 'success'){
           setTimeout(function(){
             $("#flash .alert-success").hide(300, function(){
-              $(self).remove();
+              $(this).remove();
             });
           }, 3000);
         }
@@ -12701,6 +12720,17 @@ def playground_download(userid, filename):
         return(response)
     abort(404)
 
+@app.route('/officefunctionfile', methods=['GET', 'POST'])
+def playground_office_functionfile():
+    return render_template('pages/officefunctionfile.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), parent_origin=daconfig.get('office addin url', 'https://demo.docassemble.org')), 200
+
+@app.route('/officetaskpane', methods=['GET', 'POST'])
+def playground_office_taskpane():
+    defaultDaServer = daconfig.get('url root', None)
+    if defaultDaServer is None:
+        defaultDaServer = request.url_root
+    return render_template('pages/officeouter.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), defaultDaServer=defaultDaServer, extra_js=Markup("\n        <script>" + indent_by(variables_js(office_mode=True), 9) + "        </script>")), 200
+
 @app.route('/officeaddin', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -12710,6 +12740,8 @@ def playground_office_addin():
         files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
         return jsonify(success=True, files=files)
     pg_var_file = request.args.get('pgvars', None)
+    #logmessage("playground_office_addin: YAML file is " + unicode(pg_var_file))
+    use_html = request.args.get('html', False)
     uploadform = AddinUploadForm(request.form)
     if request.method == 'POST':
         area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
@@ -12727,15 +12759,21 @@ def playground_office_addin():
                 break
         area.write_content(codecs.decode(content[start_index:], 'base64'), filename=filename)
         area.finalize()
-        if pg_var_file is None or pg_var_file == '':
-            return jsonify({'success': True, 'variables_json': [], 'vocab_list': []})
+        if use_html:
+            if pg_var_file is None:
+                pg_var_file = ''
+        else:
+            if pg_var_file is None or pg_var_file == '':
+                return jsonify({'success': True, 'variables_json': [], 'vocab_list': []})
     if pg_var_file is not None:
         playground = SavedFile(current_user.id, fix=True, section='playground')
         files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
         if pg_var_file in files:
+            #logmessage("playground_office_addin: file " + unicode(pg_var_file) + " was found")
             interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + pg_var_file)
             interview_source.set_testing(True)
         else:
+            #logmessage("playground_office_addin: file " + unicode(pg_var_file) + " was not found")
             if pg_var_file == '':
                 pg_var_file = 'test.yml'
             content = "modules:\n  - docassemble.base.util\n---\nmandatory: True\nquestion: hi"
@@ -12743,9 +12781,14 @@ def playground_office_addin():
         interview = interview_source.get_interview()
         ensure_ml_file_exists(interview, pg_var_file)
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + pg_var_file, req=request, action=None))
-        variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True)
-        return jsonify({'success': True, 'variables_json': variables_json, 'vocab_list': list(vocab_list)})
-    return render_template('pages/officeaddin.html', page_title=word("Docassemble Template Builder"), tab_title=word("Template Builder"), parent_origin=daconfig.get('office addin url', 'https://gbls.github.io'), form=uploadform), 200
+        if use_html:
+            variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, show_messages=False, show_jinja_help=True)
+            return jsonify({'success': True, 'variables_html': variables_html, 'vocab_list': list(vocab_list), 'vocab_dict': vocab_dict})
+        else:
+            variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True)
+            return jsonify({'success': True, 'variables_json': variables_json, 'vocab_list': list(vocab_list)})
+    parent_origin = re.sub(r'^(https?://[^/]+)/.*', r'\1', daconfig.get('office addin url', request.base_url))
+    return render_template('pages/officeaddin.html', page_title=word("Docassemble Office Add-in"), tab_title=word("Office Add-in"), parent_origin=parent_origin, form=uploadform), 200
 
 @app.route('/playgroundfiles', methods=['GET', 'POST'])
 @login_required
@@ -14220,25 +14263,25 @@ function update_search(event){
 
 """
     
-def variables_js(form=None):
-    if form is None:
-        form = 'form'
-    return """
-function activateVariables(){
-  $(".playground-variable").on("click", function(event){
-    daCodeMirror.replaceSelection($(this).data("insert"), "around");
-    daCodeMirror.focus();
+def variables_js(form=None, office_mode=False):
+    output = """
+function activatePopovers(){
+  $(function () {
+    $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
   });
+}
 
+function activateVariables(){
   $(".daparenthetical").on("click", function(event){
     var reference = $(this).data("ref");
     //console.log("reference is " + reference);
     var target = $('[data-name="' + reference + '"]').first();
-    if (target != null){
+    if (target.length > 0){
+      //console.log("target is " + target);
       //console.log("scrolltop is now " + $('#daplaygroundcard').scrollTop());
-      //console.log("Scrolling to " + target.position().top);
+      //console.log("Scrolling to " + target.parent().parent().position().top);
       $('#daplaygroundcard').animate({
-          scrollTop: target.position().top
+          scrollTop: target.parent().parent().position().top
       }, 1000);
     }
     event.preventDefault();
@@ -14267,6 +14310,15 @@ function activateVariables(){
     $('tr[data-parent="' + basename + '"]').each(function(){
       $(this).toggle();
     });
+  });"""
+    if office_mode:
+        return output + "\n}"
+    if form is None:
+        form = 'form'
+    output += """
+  $(".playground-variable").on("click", function(event){
+    daCodeMirror.replaceSelection($(this).data("insert"), "around");
+    daCodeMirror.focus();
   });
 
   $(".dasearchicon").on("click", function(event){
@@ -14341,13 +14393,8 @@ function variablesReady(){
   });
 }
 
-function activatePopovers(){
-  $(function () {
-    $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
-  });
-}
-
 """
+    return output
 
 @app.route('/playgroundvariables', methods=['POST'])
 @login_required
@@ -14375,7 +14422,7 @@ def playground_variables():
         interview = interview_source.get_interview()
         ensure_ml_file_exists(interview, active_file)
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-        variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False)
+        variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False)
         return jsonify(success=True, variables_html=variables_html, vocab_list=vocab_list)
     return jsonify(success=False, reason=2)
 
@@ -14539,7 +14586,7 @@ def playground_page():
     #         interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
     #     interview = interview_source.get_interview()
     #     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-    #     variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
+    #     variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
     #     if is_ajax:
     #         return jsonify(variables_html=variables_html, vocab_list=vocab_list)
     if request.method == 'POST' and the_file != '' and form.validate():
@@ -14622,7 +14669,7 @@ def playground_page():
                 interview = interview_source.get_interview()
                 ensure_ml_file_exists(interview, active_file)
                 interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-                variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
+                variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
                 if form.submit.data:
                     flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.', 'success', is_ajax=is_ajax)
                 else:
@@ -14660,7 +14707,7 @@ def playground_page():
             interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
     interview = interview_source.get_interview()
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-    variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
+    variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
     pulldown_files = [x['name'] for x in files]
     define_examples()
     if is_fictitious or is_new or is_default:
@@ -15305,11 +15352,11 @@ def utilities():
                         fields_output += "---"
                     else:
                         fields_output = word("Error: no fields could be found in the file")
-        # if form.officeaddin_submit.data:
-        #     resp = make_response(render_template('pages/officemanifest.xml', guid=str(uuid.uuid4())))
-        #     resp.headers['Content-type'] = 'text/xml; charset=utf-8'
-        #     resp.headers['Content-Disposition'] = 'attachment; filename="manifest.xml"'
-        #     return resp
+        if form.officeaddin_submit.data:
+            resp = make_response(render_template('pages/officemanifest.xml', office_app_version=form.officeaddin_version.data, guid=str(uuid.uuid4())))
+            resp.headers['Content-type'] = 'text/xml; charset=utf-8'
+            resp.headers['Content-Disposition'] = 'attachment; filename="manifest.xml"'
+            return resp
     extra_js = """
     <script>
       $('#pdfdocxfile').on('change', function(){
@@ -17787,7 +17834,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             exec(unicode(key) + ' = ' + repr(val), user_dict)
     except Exception as the_err:
         release_lock(session_id, yaml_filename)
-        raise Exception("Problem setting variables:" + str(the_err))
+        raise Exception("Problem deleting variables:" + str(the_err))
     if literal_variables is not None:
         exec('import docassemble.base.core', user_dict)
         for key, val in literal_variables.iteritems():
@@ -17798,7 +17845,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
                 exec('del ' + unicode(key), user_dict)
         except Exception as the_err:
             release_lock(session_id, yaml_filename)
-            raise Exception("Problem setting variables:" + str(the_err))
+            raise Exception("Problem deleting variables: " + str(the_err))
     if return_question:
         try:
             data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted)
@@ -18720,9 +18767,12 @@ documentation_dict = get_documentation_dict()
 base_name_info = get_name_info()
 for val in base_name_info:
     base_name_info[val]['name'] = val
-    base_name_info[val]['insert'] = val
+    if 'insert' not in base_name_info[val]:
+        base_name_info[val]['insert'] = val
     if 'show' not in base_name_info[val]:
         base_name_info[val]['show'] = False
+    if 'exclude' not in base_name_info[val]:
+        base_name_info[val]['exclude'] = False
 
 #docassemble.base.functions.set_chat_partners_available(chat_partners_available)
 

@@ -1,0 +1,16 @@
+metadata:
+  title: A/B Test
+  short title: A/B
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  import random
+  if random.random() < 0.5:
+    command('exit', url=interview_url(i="docassemble.demo:data/questions/questions.yml"))
+  else:
+    command('exit', url=interview_url(i="docassemble.demo:data/questions/examples/redact-docx.yml"))

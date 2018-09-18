@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ tab_title }}</title>
+  </head>
+  <body>
+    <p>{{ word('Connected to server.') }}</p>
+    <form action="" method="POST" class="form" role="form">
+      {{ form.hidden_tag() }}
+    </form>
+    <script>
+      var parentOrigin = "{{ parent_origin }}";
+    </script>
+    <script type="text/javascript" src="{{ url_for('static', filename='app/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='office/officefunctionfile.js') }}"></script>
+  </body>
+</html>

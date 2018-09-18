@@ -14,3 +14,33 @@ en:
   "/user/profile": your user profile
   "/updatepackage": the package update page
   "/officeaddin": your server
+  "Jinja2 help template": |
+    ##### Insert variable
+    
+    Your favorite fruit is &#123;&#123; favorite_fruit &#125;&#125;.
+    
+    ##### If/else
+    
+    &#123;&#37;p if likes_fruit &#37;&#125; [BR]
+    You like fruit. [BR]
+    &#123;&#37;p else &#37;&#125; [BR]
+    You must be a vegetable person. [BR]
+    &#123;&#37;p endif &#37;&#125;
+    
+    ##### Inline if/else
+    
+    You &#123;&#37; if likes_fruit &#37;&#125;like&#123;&#37; else &#37;&#125;don't like&#123;&#37; endif &#37;&#125; fruit.
+    
+    ##### Loop
+    
+    * &#123;&#37;p for item in fruits_liked &#37;&#125; [BR]
+    * You like &#123;&#123; item &#125;&#125;. [BR]
+    * &#123;&#37;p endfor &#37;&#125;
+    
+    ##### Table
+    
+    Name                            | Age                                            |
+    --------------------------------|------------------------------------------------|
+    &#123;&#37;tr for child in children &#37;&#125;                                  |
+    &#123;&#123; child &#125;&#125; | &#123;&#123; child.age_in_years() &#125;&#125; |
+    &#123;&#37;tr endfor &#37;&#125;                                                 |

@@ -39,14 +39,16 @@
   <div class="form-actions">
     {{ render_submit_field(form.language_submit, tabindex=120) }}
   </div>
-</form>{#
-<h3 class="page-header">{{ word('Download Office Add-in Manifest File') }}</h3>
+</form>
+
+<h3 class="page-header">{{ word('Download Office add-in manifest file') }}</h3>
 
 <form action="{{ url_for('utilities') }}" method="POST" role="form">
   {{ form.hidden_tag() }}
   <div class="form-actions">
+    {{ render_field(form.officeaddin_version, tabindex=115) }}
     {{ render_submit_field(form.officeaddin_submit, tabindex=120) }}
   </div>
 </form>
-#}
+
 {% endblock %}

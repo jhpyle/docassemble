@@ -143,7 +143,7 @@ def rtf_prefilter(text, metadata=dict()):
 
 def repeat_along(chars, match):
     output = chars * len(match.group(1))
-    logmessage("Output is " + repr(output))
+    #logmessage("Output is " + repr(output))
     return output    
 
 def rtf_filter(text, metadata=None, styles=None, question=None):

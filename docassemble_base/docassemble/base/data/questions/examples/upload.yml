@@ -15,6 +15,3 @@ question: |
 subquestion: |
   ${ user_picture }
 mandatory: True
-# ---
-# features:
-#   maximum image size: 150

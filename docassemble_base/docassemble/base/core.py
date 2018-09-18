@@ -2308,7 +2308,7 @@ class DAStaticFile(DAObject):
             if self.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return docassemble.base.file_docx.include_docx_template(self)
             else:
-                return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.docx_template, width=width)
+                return docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(self.path()), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.docx_template, width=width)
         else:
             if width is not None:
                 return('[FILE ' + str(self.filename) + ', ' + str(width) + ']')
