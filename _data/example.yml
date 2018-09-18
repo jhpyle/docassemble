@@ -9685,6 +9685,14 @@
   subquestion: |
     ${ zip_file(user_picture, {'assets': [coins_picture, 'cow.jpg'] }, filename="Image files.zip") }
 
+"ab-test": |-
+  mandatory: true
+  code: |
+    import random
+    if random.random() < 0.5:
+      command('exit', url=interview_url(i="docassemble.demo:data/questions/questions.yml"))
+    else:
+      command('exit', url=interview_url(i="docassemble.demo:data/questions/examples/redact-docx.yml"))
 "bootstrap-theme": |-
   features:
     bootstrap theme: lumen.min.css
@@ -9976,6 +9984,9 @@
       inhabitant_count = 2
     else:
       inhabitant_count = 2000 + favorite_number * 45
+"quotes-in-code": |-
+  objects:
+    - favorite: DADict
 "random-forest": |-
   mandatory: True
   code: |

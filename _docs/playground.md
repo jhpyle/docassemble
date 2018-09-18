@@ -577,6 +577,82 @@ If you go into the Playground and press "Sync" while the Word document
 is still in the process of being saved, you might not get the results
 you expect.
 
+# <a name="word addin"></a>Microsoft Word sidebar
+
+If you use [`docx template file`] and you edit your templates using
+Microsoft Word, you can install a sidebar into Microsoft Word that
+functions much like the [Variables, etc.](#variables) area of the
+Playground.
+
+To enable this in Microsoft Word, first [download the XML manifest
+file].  This small data file represents an "add-in" for Microsoft
+Word.
+
+The sidebar works both in Word Online and in the desktop version of
+Word, using this XML file.
+
+The way that you enable the add-in is different whether you are using
+Word Online or the desktop version, but in both cases, the sidebar is
+web-based.  (The desktop version of Word runs an embedded version of
+Internet Explorer in order to display the sidebar.)  If you upgrade
+your server, this will also upgrade the functionality of the sidebar.
+You should not need to change the manifest file unless you change the
+location of your server.
+
+## Installing the sidebar in Word Online
+
+To use the Playground sidebar in Word Online, go to the Admin "app,"
+also known as the "Microsoft 365 admin center."  Under "Settings,"
+select "Services & add-ins."  Click "+ Deploy Add-In."  It should take
+you to a dialog box where you can upload an XML file.  Select "I have
+the manifest file (.xml) on this device," click "Browse," and then
+select the XML manifest file that you downloaded from your
+**docassemble** server.
+
+If you are using Word Online as part of an organization, your system
+administrator may need to carry out these steps for you.  The system
+administrator can choose to enable the add-in for all users or just
+you.  Note that it may take a few minutes for the installation to
+become effective.
+
+Once the add-in is installed, you can open a Word file.  To show the
+sidebar, go to the "Insert" menu and select "Office Add-ins."  The
+Office Add-ins dialog box has four tabs.  If your add-in installed
+correctly, you should be able to find the "Docassemble Playground"
+add-in under one of these tabs.  Select it and click the "Add" button.
+
+Unfortunately, Word does not remember what add-ins you were using from
+one session to another, so every time you open the Word file, you will
+need to go to the "Insert" menu to activate the Playground sidebar.
+
+## Installing the sidebar in the desktop version of Word
+
+Save the XML manifest file to a folder on a network drive.
+
+In Word, go to File -> Options -> Trust Center -> Trust Center
+Settings -> Trusted Add-in Catalogs.  Under "Catalog url," type in the
+address of the folder on the network drive, and click "Add catalog."
+Then press ok.
+
+Once the add-in is installed, you can open a Word file.  To show the
+sidebar, go to the "Insert" menu and select "My Add-ins."  Under
+the "Shared Folder" tab, select "Docassemble Playground," and click
+"Insert."
+
+Unfortunately, Word does not remember what add-ins you were using from
+one session to another, so every time you open the Word file, you will
+need to go to the "Insert" menu to activate the Playground sidebar.
+
+## Using the Playground sidebar
+
+The Word sidebar behaves much like the [Variables, etc.](#variables)
+area.  There is an upload button in the upper-right-hand corner that
+will upload the document you are editing to the Templates folder of
+the Playground.  After the upload, it will refresh the sidebar, so
+that if the interview you are using references the template you are
+editing, the variables that you are referencing in the .docx file will
+be reflected in the sidebar.
+
 # <a name="infiniteloops"></a>Recovering from infinite loops
 
 If you accidentially write code that gets into an infinite loop, the
@@ -680,3 +756,4 @@ Then the editing screen will load.
 [Google Drive setup]: {{ site.baseurl }}/docs/installation.html#google drive
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [Word Online]: https://office.live.com/start/Word.aspx
+[download the XML manifest file]: {{ site.baseurl }}/docs/admin.html#word addin manifest

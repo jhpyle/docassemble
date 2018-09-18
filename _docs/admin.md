@@ -254,6 +254,19 @@ will pass through all of the words defined in existing [`words`]
 files, and will only try to translate phrases that do not already
 exist in existing [`words`] files.
 
+### <a name="word addin manifest"></a>Word add-in manifest XML file
+
+The third utility is "Download Office add-in manifest file."  You will
+need this if you want to enable a [Playground]-like task pane inside
+Microsoft Word.
+
+In Microsoft Office, third party add-ins are enabled through XML
+"manifest" files.  Through this utility, you can download a manifest
+file that is customized for your server.  You need to download this
+XML file and then install it in your Microsoft Office setup.
+
+For more instructions on how to do this, see the [Word add-in section].
+
 ## <a name="user list"></a>User List
 
 The "User List" is available to users with `admin` privileges.  It
@@ -514,4 +527,5 @@ For tips on troubleshooting your **docassemble** system, see the
 [how you run a **docassemble** interview]: {{ site.baseurl }}/docs/interviews.html#invocation
 [phone login]: {{ site.baseurl }}/docs/config.html#phone login
 [Slack]: https://slack.com
-[logrotate]: PPP
+[logrotate]: https://manpages.debian.org/jessie/logrotate/logrotate.8.en.html
+[Word add-in section]: {{ site.baseurl }}/docs/playground.html#word addin
