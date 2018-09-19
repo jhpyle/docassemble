@@ -2323,6 +2323,48 @@ celery processes: 15
 This value will be passed directly to [Celery]'s [`worker_concurrency`]
 configuration variable.
 
+## <a name="office addin url"></a>Microsoft Word sidebar
+
+You will need to set `office addin url` if you are running a
+[Microsoft Word sidebar] from a location other than your own server.
+
+As a security measure, when a [Microsoft Word sidebar] communicates
+with your server, your **docassemble** server will only allow
+communications that come from a particular hostname on the internet.
+
+The `office addin url` directive in the Configuration specifies which
+hostname is allowed.
+
+{% highlight yaml %}
+office addin url: https://sidebar.example.com
+{% endhighlight %}
+
+This means that your server will only allow [Microsoft Word sidebar]
+communications that originate from https://sidebar.example.com.
+
+If you don't set `office addin url`, the value of [`url root`] will be
+used, and if [`url root`] is not set, the URL will be discerned from
+the HTTP request.  However, if your server is behind a proxy, this
+latter method may not be accurate, so should [`url root`] in order for
+the [Microsoft Word sidebar] to work correctly.
+
+Note that a Word sidebar is just a web page that consists of an [HTML]
+file with some [CSS] and [JavaScript] files associated with it.  These
+files can be hosted on any site on the internet as long as HTTPS is in
+use.  (Microsoft requires HTTPS.)  When your Microsoft Word
+application accesses this web page, you can click the "Use a different
+server" button to instruct the sidebar to access the [Playground] on
+any server to which you have access.  Then the [JavaScript] on the page
+will communicate directly with that server and pass information back
+and forth between Microsoft Word and the [Playground] on the server.
+
+Your **docassemble** server can serve as the host for the web page.
+If your server's hostname is https://interviews.example.com, then the
+sidebar will be available at
+https://interviews.example.com/officetaskpane.  If you create an [XML
+manifest file] for the sidebar from the [Utilities] page of your
+server, you will see this URL embedded in the XML.
+
 ## <a name="timezone"></a>Setting the time zone
 
 Functions like [`as_datetime()`] that deal with dates will use a
@@ -2905,3 +2947,6 @@ and Facebook API keys.
 [Logs]: {{ site.baseurl }}/docs/admin.html#logs
 [`url root`]: #url root
 [`debug` feature]: {{ site.baseurl }}/docs/initial.html#debug
+[Microsoft Word sidebar]: {{ site.baseurl }}/docs/playground.html#word addin
+[Utilities]: {{ site.baseurl }}/docs/admin.html#utilities
+[XML manifest file]: {{ site.baseurl }}/docs/admin.html#word addin manifest

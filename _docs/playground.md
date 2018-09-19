@@ -71,6 +71,17 @@ main interview files will consist only of "mandatory" code blocks.
 Improvements you make to the questions will be available automatically
 to all interviews.
 
+### Inserting names into the editor
+
+You can also insert names into the text editor by clicking the button
+for the name in the list in the [Variables, etc.] area of the
+Playground.
+
+When you are using the text editor, you can start typing a name and
+then press Ctrl-space to autocomplete the name.  This can help if you
+have long variable names in your interview and you can't remember
+their literal spelling, or you can't remember the name of a function.
+
 ## <a name="templates"></a>The Templates folder
 
 Within your Playground there are five "folders" where you can upload,
@@ -581,12 +592,14 @@ you expect.
 
 If you use [`docx template file`] and you edit your templates using
 Microsoft Word, you can install a sidebar into Microsoft Word that
-functions much like the [Variables, etc.](#variables) area of the
+functions much like the [Variables, etc.] area of the
 Playground.
 
-To enable this in Microsoft Word, first [download the XML manifest
-file].  This small data file represents an "add-in" for Microsoft
-Word.
+![Sidebar in Word Online]({{ site.baseurl }}/img/playground-word-online-sidebar.png){: .maybe-full-width }
+
+To enable this in Microsoft Word, first go to [Utilities] and
+[download the XML manifest file].  This small data file represents an
+"add-in" for Microsoft Word.
 
 The sidebar works both in Word Online and in the desktop version of
 Word, using this XML file.
@@ -599,7 +612,7 @@ your server, this will also upgrade the functionality of the sidebar.
 You should not need to change the manifest file unless you change the
 location of your server.
 
-## Installing the sidebar in Word Online
+## <a name="word addin online install"></a>Installing the sidebar in Word Online
 
 To use the Playground sidebar in Word Online, go to the Admin "app,"
 also known as the "Microsoft 365 admin center."  Under "Settings,"
@@ -625,7 +638,7 @@ Unfortunately, Word does not remember what add-ins you were using from
 one session to another, so every time you open the Word file, you will
 need to go to the "Insert" menu to activate the Playground sidebar.
 
-## Installing the sidebar in the desktop version of Word
+## <a name="word addin desktop install"></a>Installing the sidebar in the desktop version of Word
 
 Save the XML manifest file to a folder on a network drive.
 
@@ -643,15 +656,47 @@ Unfortunately, Word does not remember what add-ins you were using from
 one session to another, so every time you open the Word file, you will
 need to go to the "Insert" menu to activate the Playground sidebar.
 
-## Using the Playground sidebar
+## <a name="word addin other xml"></a>Using XML manifest files other than your own
 
-The Word sidebar behaves much like the [Variables, etc.](#variables)
-area.  There is an upload button in the upper-right-hand corner that
-will upload the document you are editing to the Templates folder of
-the Playground.  After the upload, it will refresh the sidebar, so
-that if the interview you are using references the template you are
-editing, the variables that you are referencing in the .docx file will
-be reflected in the sidebar.
+It is possible to run a Word sidebar without using an [XML manifest
+file] that you create using [Utilities].  You might do this if you use
+an XML manifest file created by someone else, or if you install an
+add-in using the Microsoft Office "[Store]."
+
+If you run a sidebar from a source other than your server, you will
+need to set the [`office addin url`] directive in your [Configuration]
+in order to give the other server permission to access the
+Playground.
+
+## <a name="word addin using"></a>Using the Playground sidebar
+
+The Word sidebar behaves much like the [Variables, etc.]
+area.  There is an upload button ![upload button]({{ site.baseurl
+}}/img/playground-word-online-sidebar-upload.png) in the
+upper-right-hand corner that will upload the document you are editing
+to the [Templates folder] of the Playground.  After the upload, it
+will refresh the sidebar.  This can be helpful because if the
+interview you are working on uses the .docx template you are editing,
+the variables that you are referencing in the .docx file will be
+reflected in the sidebar.
+
+### <a name="word addin autocomplete"></a>Autocomplete
+
+If you are using Word Online, the sidebar supports an "autocomplete"
+feature.  As you are typing, the sidebar looks at what you are typing.
+If it sees that you are writing a [Jinja2] expression, it will offer
+auto-complete suggestions in the white box in the sidebar.  You can
+click one of the choices in the white box to complete the name.  To
+make the white box bigger, click the scrollbar.  The values offered by
+the "autocomplete" feature are the same as the buttons listed under
+[Variables, etc.] in the Playground (some built-in Python functions
+are also available).
+
+### <a name="word addin jinja2"></a>Assistance with using Jinja2
+
+If you scroll to the bottom of the sidebar, you will see a brief
+explanation of [Jinja2], the templating language that is used in .docx
+template files.
 
 # <a name="infiniteloops"></a>Recovering from infinite loops
 
@@ -673,7 +718,7 @@ them after 60-90 seconds.
 If the interview with the infinite loop is in the Playground, and the
 code with the infinite loop runs at the beginning of the interview,
 the editing screen will not load at all.  This is due to the fact that
-the Playground page's [Variables, etc.](#variables) feature needs to
+the Playground page's [Variables, etc.] feature needs to
 run the interview in order to figure out what variables are in use.
 To get around this, you need to edit the URL that accesses the
 interview.  If your interview is `myinterview.yml`, the URL that edits
@@ -757,3 +802,9 @@ Then the editing screen will load.
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [Word Online]: https://office.live.com/start/Word.aspx
 [download the XML manifest file]: {{ site.baseurl }}/docs/admin.html#word addin manifest
+[XML manifest file]: {{ site.baseurl }}/docs/admin.html#word addin manifest
+[Store]: https://appsource.microsoft.com
+[Jinja2]: {{ site.baseurl }}/docs/documents.html#docx template file
+[Variables, etc.]: #variables
+[Utilities]: {{ site.baseurl }}/docs/admin.html#utilities
+[`office addin url`]: {{ site.baseurl }}/docs/config.html#office addin url
