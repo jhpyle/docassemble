@@ -1,13 +1,16 @@
-code: |
-  answer = 5/0
----
 metadata:
   title: Error help
+  documentation: "https://docassemble.org/docs/initial.html#error help"
+---
+metadata:
   error help: |
     We are sorry.
     An error has occurred.
     Please contact
     [the administrator](mailto:admin@example.com).
+---
+code: |
+  answer = 5/0
 ---
 mandatory: True
 question: |

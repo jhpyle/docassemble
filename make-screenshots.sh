@@ -107,6 +107,7 @@ do
          "$file" = "bootstrap-theme" -o \
          "$file" = "flash" -o \
          "$file" = "log" -o \
+         "$file" = "show-login" -o \
          "$file" = "branch-error" -o \
          "$file" = "error-help" -o \
          "$file" = "set-title" -o \

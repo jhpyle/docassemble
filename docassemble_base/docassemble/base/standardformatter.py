@@ -534,8 +534,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         continue_label = word('Continue')        
     # if status.question.script is not None:
     #     status.extra_scripts.append(status.question.script)
-    if status.question.interview.question_back_button and status.question.can_go_back and steps > 1:
-        back_button = '\n                  <button class="btn btn-secondary ' + BUTTON_CLASS + ' " id="questionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '><i class="fas fa-chevron-left"></i> ' + status.question.back() + '</button>'
+    back_button_val = status.extras.get('back_button', None)
+    if (back_button_val or (back_button_val is None and status.question.interview.question_back_button)) and status.question.can_go_back and steps > 1:
+        back_button = '\n                  <button class="btn btn-secondary ' + BUTTON_CLASS + ' " id="questionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '><i class="fas fa-chevron-left"></i> '
+        if status.extras['back_button_label'] is not None:
+            back_button += status.extras['back_button_label']
+        else:
+            back_button += status.question.back()
+        back_button += '</button>'
     else:
         back_button = ''
     if status.question.interview.question_help_button and len(status.helpText) and status.question.helptext is not None:

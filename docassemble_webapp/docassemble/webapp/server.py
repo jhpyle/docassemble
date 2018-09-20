@@ -8426,7 +8426,7 @@ def index():
         if len(interview_status.extra_css):
             start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
         start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n  <div id="dabody">\n'
-    output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
+    output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
     if the_nav_bar != '':
         output += the_nav_bar
     output += content
@@ -12722,7 +12722,7 @@ def playground_download(userid, filename):
 
 @app.route('/officefunctionfile', methods=['GET', 'POST'])
 def playground_office_functionfile():
-    return render_template('pages/officefunctionfile.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), parent_origin=daconfig.get('office addin url', 'https://demo.docassemble.org')), 200
+    return render_template('pages/officefunctionfile.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), parent_origin=daconfig.get('office addin url', daconfig.get('url root', request.base_url))), 200
 
 @app.route('/officetaskpane', methods=['GET', 'POST'])
 def playground_office_taskpane():
@@ -12787,7 +12787,7 @@ def playground_office_addin():
         else:
             variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True)
             return jsonify({'success': True, 'variables_json': variables_json, 'vocab_list': list(vocab_list)})
-    parent_origin = re.sub(r'^(https?://[^/]+)/.*', r'\1', daconfig.get('office addin url', request.base_url))
+    parent_origin = re.sub(r'^(https?://[^/]+)/.*', r'\1', daconfig.get('office addin url', daconfig.get('url root', request.base_url)))
     return render_template('pages/officeaddin.html', page_title=word("Docassemble Office Add-in"), tab_title=word("Office Add-in"), parent_origin=parent_origin, form=uploadform), 200
 
 @app.route('/playgroundfiles', methods=['GET', 'POST'])
@@ -15029,7 +15029,7 @@ def server_error(the_error):
     if hasattr(the_error, 'user_dict'):
         the_vars = the_error.user_dict
     if hasattr(the_error, 'interview'):
-        special_error_markdown = the_error.interview.get_metadata().get('error help', None)
+        special_error_markdown = the_error.interview.consolidated_metadata.get('error help', None)
     else:
         special_error_markdown = None
     if special_error_markdown is None:
@@ -15997,11 +15997,11 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             continue
         if is_valid:
             interview_title = interview.get_title(dictionary)
-            metadata = interview.get_metadata()
+            metadata = copy.deepcopy(interview.consolidated_metadata)
             tags = interview.get_tags(dictionary)
         elif interview_valid:
             interview_title = interview.get_title(dict(_internal=dict()))
-            metadata = interview.get_metadata()
+            metadata = copy.deepcopy(interview.consolidated_metadata)
             tags = interview.get_tags(dictionary)
             if 'full' not in interview_title:
                 interview_title['full'] = word("Interview answers cannot be decrypted")

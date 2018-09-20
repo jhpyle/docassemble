@@ -1,3 +1,10 @@
+metadata:
+  title: Curly quotes in Jinja2
+  short title: Curly
+  documentation: "https://docassemble.org/docs/documents.html#docx template file"
+  example start: 5
+  example end: 5
+---
 modules:
   - docassemble.base.util
 ---
@@ -12,7 +19,7 @@ fields:
 question: |
   What is your favorite vegetable?
 fields:
-  - Fruit: favorite['vegetable']
+  - Vegetable: favorite['vegetable']
 ---
 mandatory: True
 question: |

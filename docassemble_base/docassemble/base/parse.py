@@ -919,6 +919,7 @@ class Question:
         self.subcontent = None
         self.reload_after = None
         self.continuelabel = None
+        self.backbuttonlabel = None
         self.helplabel = None
         self.progress = None
         self.section = None
@@ -1050,6 +1051,13 @@ class Question:
             self.language = self.from_source.get_language()
         if 'prevent going back' in data and data['prevent going back']:
             self.can_go_back = False
+        if 'back button' in data:
+            if type(data['back button']) in (bool, NoneType):
+                self.back_button = data['back button']
+            else:
+                self.back_button = compile(data['back button'], '<back button>', 'eval')
+        else:
+            self.back_button = None
         if 'usedefs' in data:
             defs = list()
             if type(data['usedefs']) is list:
@@ -1073,6 +1081,8 @@ class Question:
             if 'review' not in data:
                 raise DAError("You cannot set a resume button label if the type of question is not review." + self.idebug(data))
             self.continuelabel = TextObject(definitions + unicode(data['resume button label']), names_used=self.mako_names)
+        if 'back button label' in data:
+            self.backbuttonlabel = TextObject(definitions + unicode(data['back button label']), names_used=self.mako_names)
         if 'skip undefined' in data:
             if 'review' not in data:
                 raise DAError("You cannot set the skip undefined directive if the type of question is not review." + self.idebug(data))
@@ -2891,6 +2901,10 @@ class Question:
             continuelabel = self.continuelabel.text(user_dict)
         else:
             continuelabel = None
+        if self.backbuttonlabel is not None:
+            extras['back_button_label'] = self.backbuttonlabel.text(user_dict)
+        else:
+            extras['back_button_label'] = None
         if self.helptext is not None:
             if self.helplabel is not None:
                 helplabel = self.helplabel.text(user_dict)
@@ -2930,6 +2944,11 @@ class Question:
         helptexts = dict()
         labels = dict()
         extras['required'] = dict()
+        if hasattr(self, 'back_button'):
+            if type(self.back_button) in (bool, NoneType):
+                extras['back_button'] = self.back_button
+            else:
+                extras['back_button'] = eval(self.back_button, user_dict)
         if self.reload_after is not None:
             number = str(self.reload_after.text(user_dict))
             if number not in ("False", "false", "Null", "None", "none", "null"):
@@ -3962,6 +3981,8 @@ class Interview:
         self.imports_util = False
         self.table_width = 65
         self.success = True
+        self.scan_for_emojis = False
+        self.consolidated_metadata = dict()
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
     def ordered(self, the_list):
@@ -3992,12 +4013,6 @@ class Interview:
         if self.bootstrap_theme is None:
             return None
         result = docassemble.base.functions.server.url_finder(self.bootstrap_theme, _package=self.source.package)
-        return result
-    def get_metadata(self):
-        result = dict()
-        for metadata in self.metadata:
-            for key, val in metadata.iteritems():
-                result[key] = val
         return result
     def get_tags(self, user_dict):
         if 'tags' in user_dict['_internal']:
@@ -4142,8 +4157,9 @@ class Interview:
         self.sorter = self.make_sorter()
         if len(self.images) > 0 or get_config('default icons', None) in ('material icons', 'font awesome'):
             self.scan_for_emojis = True
-        else:
-            self.scan_for_emojis = False
+        for metadata in self.metadata:
+            for key, val in metadata.iteritems():
+                self.consolidated_metadata[key] = val
     def make_sorter(self):
         lookup_dict = self.orderings_by_question
         class K(object):

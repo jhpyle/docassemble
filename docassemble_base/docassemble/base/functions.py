@@ -2215,7 +2215,7 @@ def all_variables(simplify=True, include_internal=False, special=False):
     if special == 'titles':
         return this_thread.interview.get_title(get_user_dict())
     if special == 'metadata':
-        return this_thread.interview.get_metadata()
+        return copy.deepcopy(this_thread.interview.consolidated_metadata)
     if special == 'tags':
         session_tags()
         return copy.deepcopy(this_thread.internal['tags'])

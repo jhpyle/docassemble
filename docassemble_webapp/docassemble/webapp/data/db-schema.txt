@@ -67,6 +67,23 @@ tempuser|id|integer||nextval('tempuser_id_seq'::regclass)
 user_roles|id|integer||nextval('user_roles_id_seq'::regclass)
 user_roles|user_id|integer||
 user_roles|role_id|integer||
+userdict|indexno|integer||nextval('userdict_indexno_seq'::regclass)
+userdict|filename|text||
+userdict|key|character varying|250|
+userdict|dictionary|text||
+userdict|user_id|integer||
+userdict|encrypted|boolean||true
+userdict|modtime|timestamp without time zone||
+user_invite|id|integer||nextval('user_invite_id_seq'::regclass)
+user_invite|email|character varying|255|
+user_invite|role_id|integer||
+user_invite|invited_by_user_id|integer||
+user_invite|token|character varying|100|''::character varying
+userdictkeys|indexno|integer||nextval('userdictkeys_indexno_seq'::regclass)
+userdictkeys|filename|text||
+userdictkeys|key|character varying|250|
+userdictkeys|user_id|integer||
+userdictkeys|temp_user_id|integer||
 install|id|integer||nextval('install_id_seq'::regclass)
 install|hostname|text||
 install|version|integer||
@@ -83,6 +100,26 @@ email|return_path_addr|text||
 email|subject|text||
 email|datetime_message|timestamp without time zone||
 email|datetime_received|timestamp without time zone||
+user|id|integer||nextval('user_id_seq'::regclass)
+user|social_id|character varying|255|
+user|nickname|character varying|255|
+user|email|character varying|255|
+user|confirmed_at|timestamp without time zone||
+user|active|boolean||false
+user|first_name|character varying|255|''::character varying
+user|last_name|character varying|255|''::character varying
+user|country|character varying|3|
+user|subdivisionfirst|character varying|255|
+user|subdivisionsecond|character varying|255|
+user|subdivisionthird|character varying|255|
+user|organization|character varying|255|
+user|timezone|character varying|64|
+user|language|character varying|64|
+user|password|character varying|255|''::character varying
+user|otp_secret|character varying|255|
+user|pypi_username|character varying|255|
+user|pypi_password|character varying|255|
+user|modified_at|timestamp without time zone||
 chatlog|id|integer||nextval('chatlog_id_seq'::regclass)
 chatlog|filename|text||
 chatlog|key|character varying|250|
@@ -109,40 +146,3 @@ user_auth|id|integer||nextval('user_auth_id_seq'::regclass)
 user_auth|user_id|integer||
 user_auth|password|character varying|255|''::character varying
 user_auth|reset_password_token|character varying|100|''::character varying
-user_invite|id|integer||nextval('user_invite_id_seq'::regclass)
-user_invite|email|character varying|255|
-user_invite|role_id|integer||
-user_invite|invited_by_user_id|integer||
-user_invite|token|character varying|100|''::character varying
-userdict|indexno|integer||nextval('userdict_indexno_seq'::regclass)
-userdict|filename|text||
-userdict|key|character varying|250|
-userdict|dictionary|text||
-userdict|user_id|integer||
-userdict|encrypted|boolean||true
-userdict|modtime|timestamp without time zone||
-user|id|integer||nextval('user_id_seq'::regclass)
-user|social_id|character varying|255|
-user|nickname|character varying|255|
-user|email|character varying|255|
-user|confirmed_at|timestamp without time zone||
-user|active|boolean||false
-user|first_name|character varying|255|''::character varying
-user|last_name|character varying|255|''::character varying
-user|country|character varying|3|
-user|subdivisionfirst|character varying|255|
-user|subdivisionsecond|character varying|255|
-user|subdivisionthird|character varying|255|
-user|organization|character varying|255|
-user|timezone|character varying|64|
-user|language|character varying|64|
-user|password|character varying|255|''::character varying
-user|otp_secret|character varying|255|
-user|pypi_username|character varying|255|
-user|pypi_password|character varying|255|
-user|modified_at|timestamp without time zone||
-userdictkeys|indexno|integer||nextval('userdictkeys_indexno_seq'::regclass)
-userdictkeys|filename|text||
-userdictkeys|key|character varying|250|
-userdictkeys|user_id|integer||
-userdictkeys|temp_user_id|integer||

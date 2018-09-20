@@ -1,0 +1,17 @@
+metadata:
+  title: Hide login
+  short title: Login
+  documentation: "https://docassemble.org/docs/initial.html#show login"
+---
+metadata:
+  show login: False
+---
+mandatory: True
+question: |
+  Welcome to the interview.
+subquestion: |
+  Note that there is no link in
+  the corner to allow you to log
+  in.
+  
+  
