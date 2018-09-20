@@ -1412,8 +1412,10 @@ show login: False
 
 The default behavior is to show the "Sign in or sign up to save
 answers" link.  If `show login` is `False`, users will see an "Exit"
-option.  The behavior of this is configurable in the interview
-[`metadata`].
+option.  The appearance and behavior of the "Exit" option is
+configurable in the interview [`metadata`] using the directives [`exit
+link`] and [`exit label`].  There is also a [`show login` metadata
+directive] that contols this feature on a per-interview basis.
 
 ## <a name="show profile link"></a>Hiding the profile link
 
@@ -2947,6 +2949,9 @@ and Facebook API keys.
 [Logs]: {{ site.baseurl }}/docs/admin.html#logs
 [`url root`]: #url root
 [`debug` feature]: {{ site.baseurl }}/docs/initial.html#debug
+[`exit link`]: {{ site.baseurl }}/docs/initial.html#exit link
+[`exit label`]: {{ site.baseurl }}/docs/initial.html#exit label
 [Microsoft Word sidebar]: {{ site.baseurl }}/docs/playground.html#word addin
 [Utilities]: {{ site.baseurl }}/docs/admin.html#utilities
 [XML manifest file]: {{ site.baseurl }}/docs/admin.html#word addin manifest
+[`show login` metadata directive]: {{ site.baseurl }}/docs/initial.html#show login

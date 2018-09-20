@@ -856,6 +856,8 @@ asked under certain conditions.  You can use the
 
 # <a name="multiple interviews"></a>Combining multiple interviews into one
 
+## <a name="multiple interviews umbrella"></a>Using an umbrella YAML file
+
 If you have multiple interviews and you want the user to choose which
 interview to run, you could offer the multiple interviews as a single
 interview, where there is an "umbrella" [YAML] file that [`include`]s
@@ -881,6 +883,8 @@ interview except for any [`mandatory`] blocks that would define an
 interview endpoint; that function is reserved for the "umbrella"
 interview.
 
+## <a name="multiple interviews links"></a>Using hyperlinks
+
 There are other ways to offer users a choice of interviews.  For
 example, you can use the [`interview_url()`] function with the `i`
 optional keyword parameter to point users from one interview to
@@ -893,8 +897,34 @@ You might also offer these hyperlinks in the menu, using the
 
 {% include side-by-side.html demo="menu-items-refer" %}
 
-You can also use the [`dispatch`] configuration directive to
-provide a list of interviews available on your server.
+You can also use the [`dispatch`] configuration directive in
+combination with [`show dispatch link`] to allow the user to access a
+list of interviews available on your server by selecting "Available
+Interviews" from the menu.
+
+## <a name="multiple interviews redirect"></a>A/B testing with redirects
+
+The hyperlinks described in the previous subsection can also be used
+with the [`command()`] function to automatically redirect the user to
+a particular interview, for example for the purposes of A/B testing.
+
+The following interview seamlessly redirects the user to either the
+[demo interview] or the [example interview for the `redact()`
+function], depending on a computational coin flip.
+
+{% include demo-side-by-side.html demo="ab-test" %}
+
+The use of `'exit'` in the [`command()`] function is important here
+because it will cause this brief interview session to be deleted from
+the list of interviews, since its sole purpose is to redirect the
+user.
+
+An interview like this might also log some data for purposes of
+collecting metrics, perhaps using [Redis].  In the interviews being
+A/B tested, metrics could be logged using [Redis] or the [Google
+Analytics feature].
+
+## <a name="subinterview"></a>Using multiple endpoints in a single interview
 
 <a name="subinterview"></a>Another way to offer an "interview inside
 an interview" is to populate variables and then delete them.
@@ -1052,3 +1082,9 @@ forget others.
 [`if` modifier]: {{ site.baseurl}}/docs/modifiers.html#if
 [`scan for variables` modifier]: {{ site.baseurl}}/docs/modifiers.html#scan for variables
 [restart button]: {{ site.baseurl}}/docs/questions.html#special buttons
+[`command()`]: {{ site.baseurl }}/docs/functions.html#command
+[demo interview]: https://demo.docassemble.org/interview?i=docassemble.demo:data/questions/questions.yml
+[example interview for the `redact()` function]: https://demo.docassemble.org/interview?i=docassemble.demo:data/questions/examples/redact-docx.yml
+[`show dispatch link`]: {{ site.baseurl }}/docs/config.html#show dispatch link
+[Redis]: {{ site.baseurl }}/docs/functions.html#redis
+[Google Analytics feature]: {{ site.baseurl }}/docs/config.html#google analytics

@@ -321,6 +321,30 @@ the same thing from [Python] code.  This may be more useful than the
 `prevent going back` modifier if the need to prevent the user from
 clicking the back button depends on the outcome of a process.
 
+# <a name="back button"></a>Adding a back button inside the question
+
+You can add a "Back" button to the buttons at the bottom of the screen
+by setting the `back button` modifier.
+
+{% include side-by-side.html demo="question-back-button-sometimes" %}
+
+If `back button` is set to `True` or to [Python] code that evaluates
+to a true value, then the button will be shown.
+
+You can configure this on an interview-wide basis by setting the
+[`question back button`] feature.
+
+# <a name="back button label"></a>Changing the text of the back button
+
+When you add a "Back" button to the buttons at the bottom of the
+screen by setting the [`back button`] modifier or the [`question back
+button`] feature, you can change the text of the button using the
+`back button label` modifier.
+
+{% include side-by-side.html demo="question-back-button-sometimes-label" %}
+
+The text of the label can include [Mako] templating.
+
 # <a name="terms"></a><a name="auto terms"></a>Vocabulary `terms` and `auto terms`
 
 Using the modifiers `terms` or `auto terms`, you can specify the
@@ -884,3 +908,5 @@ by **docassemble**, so it can contain any valid [YAML].
 [inline icons]: {{ site.baseurl}}/docs/markup.html#emoji
 [`interview help`]: {{ site.baseurl}}/docs/initial.html#interview help
 [`question help button`]: {{ site.baseurl}}/docs/initial.html#question help button
+[`question back button`]: {{ site.baseurl}}/docs/initial.html#question back button
+[`back button`]: #back button

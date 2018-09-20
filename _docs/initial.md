@@ -47,21 +47,22 @@ These titles can be overridden using the [`set_title()` function].
 The `metadata` block and the [`set_title()` function] can be used to
 modify other aspects of the navigation bar.
 
-If an `exit link` is provided, the behavior of the "Exit" link can be
-modified.  (The "Exit" menu option is displayed when the
-[`show login`] directive is set to `False`.) The value can be either
-`exit` or `leave.` If it is `exit`, then when the user clicks the
-link, they will be logged out (if they are logged in) and their
-interview answers will be deleted from the server.  If it is `leave`,
-the user will be logged out (if they are logged in), but the interview
-answers will not be deleted from the server.  It can be important to
-keep the interview answers on the server if [background tasks] are
-still running.
+<a name="exit link"></a>If an `exit link` is provided, the behavior of
+the "Exit" link can be modified.  (The "Exit" menu option is displayed
+when the [`show login` configuration directive] is set to `False` or
+the [`show login` metadata directive] in an interview is set to
+`False`.)  The value can be either `exit` or `leave.` If it is `exit`,
+then when the user clicks the link, they will be logged out (if they
+are logged in) and their interview answers will be deleted from the
+server.  If it is `leave`, the user will be logged out (if they are
+logged in), but the interview answers will not be deleted from the
+server.  It can be important to keep the interview answers on the
+server if [background tasks] are still running.
 
-If `exit label` is provided, the given text will be used in place of
-the word "Exit" on the "Exit" menu option.  This text is passed through the
-[`word()`] function, so that it can be translated into different
-languages.
+<a name="exit label"></a>If `exit label` is provided, the given text
+will be used in place of the word "Exit" on the "Exit" menu option.
+This text is passed through the [`word()`] function, so that it can be
+translated into different languages.
 
 If you set `unlisted: True` for an interview that has an entry in the
 [`dispatch`] list in your [configuration], the interview will be
@@ -83,6 +84,17 @@ You can also customize these values with the [`set_title()`] function.
 on any error screen that appears to the user during the interview.
 You can also provide this text on a server-wide basis using the
 [`error help`] directive in the [Configuration].
+
+{% include side-by-side.html demo="error-help" %}
+
+<a name="show login">The [`metadata`] block also accepts the directive
+`show login`, which can be `true` or `false`.  This controls whether
+the user sees a "Sign in or sign up to save answers" link in the upper
+right-hand corner during the interview.  If `show login` is not
+specified in the [`metadata`], the [Configuration] directive [`show
+login`] determines whether this link is available.
+
+{% include side-by-side.html demo="show-login" %}
 
 # <a name="objects"></a>Creating `objects`
 
@@ -784,6 +796,9 @@ feature to `True` (the default is `False`).
 
 {% include side-by-side.html demo="question-back-button" %}
 
+You can also place a "Back" button inside the body of a question on
+some questions but not others, using the [`back button`] modifier.
+
 ## <a name="question help button"></a>Help tab style
 
 When [`interview help`] is available, or the [`help`] modifier is
@@ -1164,7 +1179,7 @@ features:
 [`objects_from_file()` function]: {{ site.baseurl}}/docs/functions.html#objects_from_file
 [`data`]: #data
 [`set_title()` function]: {{ site.baseurl}}/docs/functions.html#set_title
-[`show login`]: {{ site.baseurl }}/docs/config.html#show login
+[`show login` configuration directive]: {{ site.baseurl }}/docs/config.html#show login
 [`url_of()`]: {{ site.baseurl}}/docs/functions.html#url_of
 [`menu_items` special variable]: {{ site.baseurl}}/docs/special.html#menu_items
 [background tasks]: {{ site.baseurl}}/docs/background.html#background
@@ -1187,3 +1202,6 @@ features:
 [Configuration]: {{ site.baseurl}}/docs/config.html
 [`debug` directive]: {{ site.baseurl}}/docs/config.html#debug
 [Markdown]: https://daringfireball.net/projects/markdown/
+[`back button`]: {{ site.baseurl}}/docs/modifiers.html#back button
+[`show login` metadata directive]: #show login
+[`show login`]: {{ site.baseurl}}/docs/config.html#show login

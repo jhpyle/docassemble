@@ -743,17 +743,6 @@ The output will be:
 > 1. item2
 > 2. item3
 
-If your interview uses [dictionary] data structures, you may need to
-change the "[auto-format]" settings of your word processor so that
-"straight quotes" are used instead of "curly quotes" within [Jinja2]
-syntax.  This will fail:
-
-![curly quotes]({{ site.baseurl }}/img/jinja2-curly-quotes.png)
-
-But this will correct the problem:
-
-![straight quotes]({{ site.baseurl }}/img/jinja2-straight-quotes.png)
-
 <a name="signature docx"></a>Images can be inserted into .docx files.
 This is illustrated in the example above: the variable
 `user.signature` is a graphics image (an image of the user's signature
@@ -1443,7 +1432,6 @@ interview, see the [`cache documents` feature].
 [generate]: #list field names
 [`signature` block]: {{ site.baseurl }}/docs/fields.html#signature
 [dictionary]: {{ site.baseurl }}/docs/groups.html#gather dictionary
-[auto-format]: https://support.office.com/en-us/article/Change-curly-quotes-to-straight-quotes-and-vice-versa-017963a0-bc5f-486b-9c9d-0ec511a8fb8f
 [`pdf/a` features setting]: {{ site.baseurl }}/docs/initial.html#pdfa
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A

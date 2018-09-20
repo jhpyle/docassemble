@@ -2975,7 +2975,6 @@
     - Restart: restart
 "error-help": |-
   metadata:
-    title: Error help
     error help: |
       We are sorry.
       An error has occurred.
@@ -7363,6 +7362,17 @@
   features:
     question back button: True
     navigation back button: False
+"question-back-button-sometimes": |-
+  question: Is the sky blue?
+  yesno: sky_is_blue
+  back button: |
+    not user_is_well
+"question-back-button-sometimes-label": |-
+  question: Is the sky blue?
+  yesno: sky_is_blue
+  back button: True
+  back button label: |
+    Wait, go back
 "question-help-button": |-
   features:
     question help button: True
@@ -8570,6 +8580,9 @@
         return false;
       });
     </script>
+"show-login": |-
+  metadata:
+    show login: False
 "showif": |-
   question: |
     Please fill in the following information.
@@ -9690,9 +9703,10 @@
   code: |
     import random
     if random.random() < 0.5:
-      command('exit', url=interview_url(i="docassemble.demo:data/questions/questions.yml"))
+      url = interview_url(i="docassemble.demo:data/questions/questions.yml")
     else:
-      command('exit', url=interview_url(i="docassemble.demo:data/questions/examples/redact-docx.yml"))
+      url = interview_url(i="docassemble.demo:data/questions/examples/redact-docx.yml")
+    command('exit', url=url)
 "bootstrap-theme": |-
   features:
     bootstrap theme: lumen.min.css
@@ -9985,8 +9999,13 @@
     else:
       inhabitant_count = 2000 + favorite_number * 45
 "quotes-in-code": |-
-  objects:
-    - favorite: DADict
+  mandatory: True
+  question: |
+    Here is your document.
+  attachment:
+    - name: Fruit and vegetable summary
+      filename: fruit_vegetable
+      docx template file: quotes-in-code.docx
 "random-forest": |-
   mandatory: True
   code: |
