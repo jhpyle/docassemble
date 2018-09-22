@@ -559,12 +559,8 @@ container for the new configuration to take effect.
   by setting the `SERVERADMIN` environment variable to the e-mail
   address you want to use.  See the [`server administrator email`]
   configuration directive.
-* <a name="URLROOT"></a>`URLROOT`: If users access **docassemble** at
-  https://docassemble.example.com, set `URLROOT` to
-  `https://docassemble.example.com`.  See the [`url root`]
-  configuration directive.
 * <a name="POSTURLROOT"></a>`POSTURLROOT`: If users access
-  **docassemble** at https://docassemble.example.com/da, set `URLROOT`
+  **docassemble** at https://docassemble.example.com/da, set `POSTURLROOT`
   to `/da/`.  The trailing slash is important.  If users access
   **docassemble** at https://docassemble.example.com, you can ignore
   this.  The default value is `/`.  See the [`root`] configuration
@@ -1307,7 +1303,6 @@ Set the contents of `env.list` to:
 {% highlight text %}
 BEHINDHTTPSLOADBALANCER=true
 DAHOSTNAME=justice.example.com
-URLROOT=https://justice.example.com
 POSTURLROOT=/da/
 {% endhighlight %}
 

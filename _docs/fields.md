@@ -1184,13 +1184,13 @@ adding the following to the definition of a field:
 {% include side-by-side.html demo="min" %}
 
 * <a name="minlength"></a>`minlength`: require a minimum number of
-  characters in a textbox, number of checkboxes checked, etc.  This is
-  passed directly to the
-  [jQuery Validation Plugin](http://jqueryvalidation.org/minlength-method).
+  characters in a textbox, number of checkboxes checked, etc.  This
+  uses the [jQuery Validation
+  Plugin](http://jqueryvalidation.org/minlength-method).
 * <a name="maxlength"></a>`maxlength`: require a maximum number of
-  characters in a textbox, number of checkboxes checked, etc.  This is
-  passed directly to the
-  [jQuery Validation Plugin](http://jqueryvalidation.org/maxlength-method).
+  characters in a textbox, number of checkboxes checked, etc.  This
+  uses the [jQuery Validation
+  Plugin](http://jqueryvalidation.org/maxlength-method).
 
 {% include side-by-side.html demo="minlength" %}
 
@@ -1249,9 +1249,14 @@ see if the value does not validate.  If 4 does divide the input value
 by a whole number, the function returns `True`, which indicates that
 the input is valid.
 
-One limitation of these validation functions is that they can only
-test for characteristics inherent in the variable being validated;
-they cannot compare the variable to other variables.
+Note that the `validate` modifier is not available for use with fields
+having `datatype: checkboxes`.  (However, note that you can use
+[`minlength`] and [`maxlength`] to require a certain number of
+checkboxes to be checked when [`none of the above`] is disabled.)
+
+A more general limitation of these validation functions is that they
+can only test for characteristics inherent in the variable being
+validated; they cannot compare the variable to other variables.
 
 <a name="validation code"></a>You can get around this restriction
 using the `validation code` modifier.
@@ -2040,3 +2045,6 @@ why this needs to be done manually as opposed to automatically:
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [`val()`]: {{ site.baseurl }}/docs/functions.html#js_val
 [`input type`]: #input type
+[`minlength`]: #minlength
+[`maxlength`]: #maxlength
+[`none of the above`]: #none of the above

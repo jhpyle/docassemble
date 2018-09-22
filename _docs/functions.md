@@ -4149,6 +4149,7 @@ time rather than one page at a time.  For a large document,
 | `ukr`      | Ukranian            |
 | `vie`      | Vietnamese          |
 |------------|---------------------|
+{: .table }
 
 The `language` parameter is flexible; you can set it to a language
 code that [Tesseract] supports (e.g., `eng`, `chi-sim`, `chi-tra`,

@@ -743,6 +743,41 @@ The output will be:
 > 1. item2
 > 2. item3
 
+The `p` prefix in `{% raw %}{%p ... %}{% endraw %}` means "process the
+Jinja2 in this paragraph, but don't actually include this paragraph in
+the assembled document."
+
+You will need to do something similar when using [tables](#docx
+tables) in your .docx file.  For example, when using a "for" loop over
+the rows of a table, you would include two extra rows:
+
+| Name                                               | Age                                             |
+|----------------------------------------------------|------------------------------------------------ |
+| {% raw %}{%tr for child in children %}{% endraw %}                                                   |
+| {% raw %}{{ child }}{% endraw %}                   | {% raw %}{{ child.age_in_years() }}{% endraw %} |
+| {% raw %}{%tr endfor %}{% endraw %}                                                                  |
+{: .table .table-bordered }
+
+The `tr` prefix in `{% raw %}{%tr ... %}{% endraw %}` means "process
+the Jinja2 in this row, but don't actually include this row in the
+assembed document."
+
+When using a "for" loop over the columns of a table, you would include
+extra columns:
+
+| Name                               | {% raw %}{%tc for inc_type in inc_types %}{% endraw %} | {% raw %}{{ inc_type }}{% endraw %}                           | {% raw %}{%tc endfor %}{% endraw %} |
+|------------------------------------|--------------------------------------------------------|---------------------------------------------------------------| ------------------------------------|
+| {% raw %}{{ grantor }}{% endraw %} | {% raw %}{%tc for inc_type in inc_types %}{% endraw %} | {% raw %}{{ currency(grantor.income[inc_type]) }}{% endraw %} | {% raw %}{%tc endfor %}{% endraw %} |
+| {% raw %}{{ grantee }}{% endraw %} | {% raw %}{%tc for inc_type in inc_types %}{% endraw %} | {% raw %}{{ currency(grantee.income[inc_type]) }}{% endraw %} | {% raw %}{%tc endfor %}{% endraw %} |
+{: .table .table-bordered }
+
+The `tc` prefix in `{% raw %}{%tc ... %}{% endraw %}` means "process
+the Jinja2 in this table cell, but don't actually include this table
+cell in the row."
+
+For more information about tables in .docx files, see the [subsection
+on tables](#docx tables) below.
+
 <a name="signature docx"></a>Images can be inserted into .docx files.
 This is illustrated in the example above: the variable
 `user.signature` is a graphics image (an image of the user's signature
@@ -827,6 +862,17 @@ the .docx file.
 For more information about gathering items into a [`DADict`] object,
 see the [Dictionary] subsection of the [Groups] section of the
 documentation.
+
+Your .docx tables can also loop over the columns of a table.
+
+![table columns template source]({{ site.baseurl }}/img/docx-table-columns-template.png){: .maybe-full-width }
+
+![table columns template result]({{ site.baseurl }}/img/docx-table-columns-assembled.png){: .maybe-full-width }
+
+The following example, which uses the template [docx-table-columns.docx],
+illustrates this.
+
+{% include side-by-side.html demo="docx-table-columns" %}
 
 ### <a name="particfields"></a>Passing values only for particular fields
 
@@ -1392,6 +1438,7 @@ interview, see the [`cache documents` feature].
 [`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
 [`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
+[`DAStaticFile`]: {{ site.baseurl }}/docs/objects.html#DAStaticFile
 [`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
 [`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
@@ -1450,3 +1497,4 @@ interview, see the [`cache documents` feature].
 [Mailgun]: https://www.mailgun.com/
 [ZIP file]: https://en.wikipedia.org/wiki/Zip_(file_format)
 [`redact()`]: {{ site.baseurl }}/docs/functions.html#redact
+[docx-table-columns.docx]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/docx-table-columns.docx

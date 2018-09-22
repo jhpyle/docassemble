@@ -232,7 +232,7 @@
   ---
   event: set_number_of_things
   code: |
-    if number_of_things != int(action_argument('number_of_things')):
+    if action_argument('number_of_things') and number_of_things != int(action_argument('number_of_things')):
       number_of_things = int(action_argument('number_of_things'))
       if number_of_things < 1:
         number_of_things = 1
@@ -2453,6 +2453,15 @@
           - flour
           - sugar
       - preparation_time: 48 hours
+"docx-table-columns": |-
+  mandatory: True
+  question: |
+    Here is a summary of the income of the
+    grantor and grantee.
+  attachment:
+    - name: Income summary
+      filename: income_summary
+      docx template file: docx-table-columns.docx
 "docx-template": |-
   question: |
     Here is your document.
