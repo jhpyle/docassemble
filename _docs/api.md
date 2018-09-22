@@ -639,6 +639,8 @@ Method: [GET]
 Parameters:
 
  - `key`: the API key.
+ - `username`: the user name of the user whos secret you wish to retrieve.
+ - `password`: the password of the user whos secret you wish to retrieve.
 
 Required privileges: none.
 
