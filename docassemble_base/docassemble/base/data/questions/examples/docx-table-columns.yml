@@ -1,0 +1,68 @@
+metadata:
+  title: Looping over columns in .docx
+  short title: Columns
+  documentation: "https://docassemble.org/docs/documents.html#docx template file"
+  example start: 8
+  example end: 8
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - grantor: Individual
+  - grantee: Individual
+---
+generic object: Individual
+objects:
+  - x.income: DADict
+---
+question: |
+  Looping over the columns of a table
+subquestion: |
+  This interview will fill fields in
+  a .docx template.  You can
+  [download the template] to see what
+  it looks like.
+  
+  [download the template]: ${ url_of('docx-table-columns.docx') }
+field: introduction_shown
+---
+generic object: Individual
+question: |
+  What is the name of the ${ x.object_name() }?
+fields:
+  - First name: x.name.first
+  - Last name: x.name.last
+---
+question: |
+  Which income types do ${ grantor } or ${ grantee } receive?
+fields:
+  - Types of income: income_types
+    datatype: checkboxes
+    choices:
+      - Retirement
+      - Employment
+      - Self-employment
+      - Benefits
+    none of the above: False
+    minlength: 1
+---
+code: |
+  inc_types = income_types.true_values()
+---
+generic object: Individual
+question: |
+  How much does ${ x } receive from ${ i }?
+fields:
+  - Income: x.income[i]
+    datatype: currency
+---
+mandatory: True
+need: introduction_shown
+question: |
+  Here is a summary of the income of the
+  grantor and grantee.
+attachment:
+  - name: Income summary
+    filename: income_summary
+    docx template file: docx-table-columns.docx

@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.3.0] - 2018-09-20
+### Fixed
+- The `minlength` and `maxlength` modifiers did not work on
+  `checkboxes`.
+- The `insert_docx_template()` function was not intercepting all
+  parameters of class `DAObject` and passing them as objects.
+
 ## [0.2.99] - 2018-09-19
 ### Added
 - The `back button` and `back button label` modifiers.

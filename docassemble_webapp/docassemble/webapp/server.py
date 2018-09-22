@@ -5120,6 +5120,7 @@ def index():
                     imported_core = True
                 if method == 'attribute':
                     attribute_name = parse_result['final_parts'][1][1:]
+                    #logmessage("Checkbox object is " + attribute_name)
                     if datatype == 'checkboxes':
                         commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
                     elif datatype == 'object_checkboxes':
@@ -5127,12 +5128,14 @@ def index():
                     vars_set.add(core_key_name)
                 elif method == 'index':
                     index_name = parse_result['final_parts'][1][1:-1]
+                    #logmessage("Checkbox object is " + index_name)
                     if datatype == 'checkboxes':
                         commands.append(core_key_name + ".initializeObject(" + repr(index_name) + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
                     elif datatype == 'object_checkboxes':
                         commands.append(core_key_name + ".initializeObject(" + repr(index_name) + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
                     vars_set.add(core_key_name)
                 else:
+                    #logmessage("Checkbox object is " + whole_key)
                     if datatype == 'checkboxes':
                         commands.append(whole_key + ' = docassemble.base.core.DADict(' + repr(whole_key) + ', auto_gather=False, gathered=True)')
                     elif datatype == 'object_checkboxes':
@@ -5299,7 +5302,7 @@ def index():
                     data = data.strip()
                     #logmessage("data is " + data)
                 if data == "None" and set_to_empty is not None:
-                    logmessage("setting None; set_to_empty is " + unicode(set_to_empty))
+                    #logmessage("setting None; set_to_empty is " + unicode(set_to_empty))
                     test_data = None
                     data = "None"
                 else:
@@ -8213,17 +8216,37 @@ def index():
           return false;
         }
       }, """ + json.dumps(word("Please check at least one.")) + """);
-      $.validator.addMethod('checkbox', function(value, element, params){
+      $.validator.addMethod('checkatleast', function(value, element, params){
         if ($(element).attr('name') != '_ignore' + params[0]){
           return true;
         }
-        if ($('.dafield' + params[0] + ':checked').length > 0){
+        if ($('.dafield' + params[0] + ':checked').length >= params[1]){
           return true;
         }
         else{
           return false;
         }
-      }, """ + json.dumps(word("Please select one.")) + """);
+      }, function(params, element){
+        if (params[1] == 1){
+          return """ + json.dumps(word("Please select one.")) + """;
+        }
+        else{
+          return """ + json.dumps(word("Please select at least")) + """ + " " + params[1] + ".";
+        }
+      });
+      $.validator.addMethod('checkatmost', function(value, element, params){
+        if ($(element).attr('name') != '_ignore' + params[0]){
+          return true;
+        }
+        if ($('.dafield' + params[0] + ':checked').length > params[1]){
+          return false;
+        }
+        else{
+          return true;
+        }
+      }, function(params, element){
+        return """ + json.dumps(word("Please select no more than")) + """ + " " + params[1] + ".";
+      });
       $.validator.addMethod('mindate', function(value, element, params){
         try {
           var date = new Date(value);

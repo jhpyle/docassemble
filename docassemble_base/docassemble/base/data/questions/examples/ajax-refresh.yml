@@ -26,7 +26,7 @@ check in: set_number_of_things
 ---
 event: set_number_of_things
 code: |
-  if number_of_things != int(action_argument('number_of_things')):
+  if action_argument('number_of_things') and number_of_things != int(action_argument('number_of_things')):
     number_of_things = int(action_argument('number_of_things'))
     if number_of_things < 1:
       number_of_things = 1

@@ -94,7 +94,7 @@ def include_docx_template(template_file, **kwargs):
     sd.subdocx._part = sd.docx._part
     first_paragraph = sd.subdocx.paragraphs[0]
     for key, val in kwargs.iteritems():
-        if hasattr(val, 'instanceName') and val.__class__.__name__.startswith('DA'):
+        if hasattr(val, 'instanceName'):
             the_repr = val.instanceName
         else:
             the_repr = '"' + re.sub(r'\n', '', unicode(val).encode('utf-8').encode('base64')) + '".decode("base64").decode("utf-8")'

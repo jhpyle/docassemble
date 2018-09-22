@@ -41,6 +41,7 @@ Feature: Example interviews
 
   Scenario: Test the interview "Text alignment"
     Given I start the interview "docassemble.base:data/questions/examples/alignment.yml"
+    Then I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Checkbox method"
     Given I start the interview "docassemble.base:data/questions/examples/all-false.yml"
@@ -132,12 +133,14 @@ Feature: Example interviews
     Then I should see the phrase "The first document"
     And I should see the phrase "The second document"
     And I should see the phrase "The third document"
+    And I should see the phrase "The following documents have been created for you."
 
   Scenario: Test the interview "Attachment"
     Given I start the interview "docassemble.base:data/questions/examples/attachment-simple.yml"
     And I wait 4 seconds
     Then I should see the phrase "A hello world document"
     And I should see the phrase "A document with a classic message"
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Allowing documents to be e-mailed"
     Given I start the interview "docassemble.base:data/questions/examples/attachment.yml"
@@ -348,8 +351,9 @@ Feature: Example interviews
     And I click the button "No belly button"
     Then I should see the phrase "target_variable is: “No belly button”"
 
-  # Scenario: Test the interview "Capitalize"
-  #   Given I start the interview "docassemble.base:data/questions/examples/capitalize.yml"
+  Scenario: Test the interview "Capitalize"
+    Given I start the interview "docassemble.base:data/questions/examples/capitalize.yml"
+    Then I should see the phrase "Green is your favorite color, but green is not your favorite color of eggs."
 
   # Scenario: Test the interview "Complaint for Child Support"
   #   Given I start the interview "docassemble.base:data/questions/examples/chat-example-1.yml"
@@ -363,60 +367,113 @@ Feature: Example interviews
   # Scenario: Test the interview "Live chat"
   #   Given I start the interview "docassemble.base:data/questions/examples/chat.yml"
 
-  # Scenario: Test the interview "Checking in"
-  #   Given I start the interview "docassemble.base:data/questions/examples/check-in.yml"
+  Scenario: Test the interview "Checking in"
+    Given I start the interview "docassemble.base:data/questions/examples/check-in.yml"
+    Then I should see the phrase "What is your favorite food?"
+    And I set "Favorite food" to "potatoes"
+    And I unfocus
+    And I wait 2 seconds
+    And I set "Favorite food" to "tomatoes"
+    And I unfocus
+    And I wait 2 seconds
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite food"
+    And I should see the phrase "potatoes"
+    And I should see the phrase "tomatoes"
 
-  # Scenario: Test the interview "Dropdown"
-  #   Given I start the interview "docassemble.base:data/questions/examples/choices-dropdown.yml"
+  Scenario: Test the interview "Dropdown"
+    Given I start the interview "docassemble.base:data/questions/examples/choices-dropdown.yml"
+    Then I should see the phrase "What type of shoes do you wear?"
+    And I choose "Sneakers"
+    And I click the button "Continue"
+    Then I should see the phrase "Result of question"
+    And I should see the phrase "Sneakers"
 
-  # Scenario: Test the interview "Radio buttons from code"
-  #   Given I start the interview "docassemble.base:data/questions/examples/choices-from-code.yml"
+  Scenario: Test the interview "Radio buttons from code"
+    Given I start the interview "docassemble.base:data/questions/examples/choices-from-code.yml"
+    Then I should see the phrase "What type of shoes do you wear?"
+    And I click the button "Continue"
+    Then I should see the phrase "Result of question"
+    And I should see the phrase "other"
 
-  # Scenario: Test the interview "Choices with icons"
-  #   Given I start the interview "docassemble.base:data/questions/examples/choices-icons.yml"
+  Scenario: Test the interview "Choices with icons"
+    Given I start the interview "docassemble.base:data/questions/examples/choices-icons.yml"
+    Then I should see the phrase "What is the most important question to ask?"
 
-  # Scenario: Test the interview "Radio buttons with default"
-  #   Given I start the interview "docassemble.base:data/questions/examples/choices-with-default-item.yml"
+  Scenario: Test the interview "Radio buttons with default"
+    Given I start the interview "docassemble.base:data/questions/examples/choices-with-default-item.yml"
+    Then I should see the phrase "What type of shoes do you wear?"
+    And I click the button "Continue"
+    Then I should see the phrase "Result of question"
+    And I should see the phrase "sandals"
 
-  # Scenario: Test the interview "Radio buttons with default"
-  #   Given I start the interview "docassemble.base:data/questions/examples/choices-with-default.yml"
+  Scenario: Test the interview "Radio buttons with default"
+    Given I start the interview "docassemble.base:data/questions/examples/choices-with-default.yml"
+    Then I should see the phrase "What type of shoes do you wear?"
+    And I click the button "Continue"
+    Then I should see the phrase "Result of question"
+    And I should see the phrase "Sandals"
 
-  # Scenario: Test the interview "Radio buttons with help"
-  #   Given I start the interview "docassemble.base:data/questions/examples/choices-with-help.yml"
+  Scenario: Test the interview "Radio buttons with help"
+    Given I start the interview "docassemble.base:data/questions/examples/choices-with-help.yml"
+    Then I should see the phrase "What type of shoes do you wear?"
+    And I click the button "Continue"
+    Then I should see the phrase "Result of question"
+    And I should see the phrase "other"
 
-  # Scenario: Test the interview "Radio buttons"
-  #   Given I start the interview "docassemble.base:data/questions/examples/choices.yml"
+  Scenario: Test the interview "Radio buttons"
+    Given I start the interview "docassemble.base:data/questions/examples/choices.yml"
+    Then I should see the phrase "What type of shoes do you wear?"
+    And I click the "Sneakers" option
+    And I click the button "Continue"
+    Then I should see the phrase "Result of question"
+    And I should see the phrase "Sneakers"
 
   # Scenario: Test the interview "Classifier"
   #   Given I start the interview "docassemble.base:data/questions/examples/classify.yml"
 
-  # Scenario: Test the interview "Two plus two"
-  #   Given I start the interview "docassemble.base:data/questions/examples/code-example-01.yml"
+  Scenario: Test the interview "Two plus two"
+    Given I start the interview "docassemble.base:data/questions/examples/code-example-01.yml"
+    Then I should see the phrase "The answer is 4."
 
-  # Scenario: Test the interview "Two plus three"
-  #   Given I start the interview "docassemble.base:data/questions/examples/code-example-02.yml"
+  Scenario: Test the interview "Two plus three"
+    Given I start the interview "docassemble.base:data/questions/examples/code-example-02.yml"
+    Then I should see the phrase "The answer is 5."
 
-  # Scenario: Test the interview "Two plus three"
-  #   Given I start the interview "docassemble.base:data/questions/examples/code-example-03.yml"
+  Scenario: Test the interview "Two plus three"
+    Given I start the interview "docassemble.base:data/questions/examples/code-example-03.yml"
+    Then I should see the phrase "The answer is 5."
 
-  # Scenario: Test the interview "Two plus two in template"
-  #   Given I start the interview "docassemble.base:data/questions/examples/code-example-04.yml"
+  Scenario: Test the interview "Two plus two in template"
+    Given I start the interview "docassemble.base:data/questions/examples/code-example-04.yml"
+    Then I should see the phrase "The answer is 4."
 
-  # Scenario: Test the interview "Arithmetic"
-  #   Given I start the interview "docassemble.base:data/questions/examples/code-example-05.yml"
+  Scenario: Test the interview "Arithmetic"
+    Given I start the interview "docassemble.base:data/questions/examples/code-example-05.yml"
+    Then I should see the phrase "The answer is 766."
 
-  # Scenario: Test the interview "Arithmetic without spaces"
-  #   Given I start the interview "docassemble.base:data/questions/examples/code-example-06.yml"
+  Scenario: Test the interview "Arithmetic without spaces"
+    Given I start the interview "docassemble.base:data/questions/examples/code-example-06.yml"
+    Then I should see the phrase "The answer is 766."
 
-  # Scenario: Test the interview "If/then/else"
-  #   Given I start the interview "docassemble.base:data/questions/examples/code-example-07.yml"
+  Scenario: Test the interview "If/then/else"
+    Given I start the interview "docassemble.base:data/questions/examples/code-example-07.yml"
+    Then I should see the phrase "The answer is 82."
 
-  # Scenario: Test the interview "If/then/else in code"
-  #   Given I start the interview "docassemble.base:data/questions/examples/code-example-08.yml"
+  Scenario: Test the interview "If/then/else in code"
+    Given I start the interview "docassemble.base:data/questions/examples/code-example-08.yml"
+    Then I should see the phrase "The answer is 82."
 
-  # Scenario: Test the interview "Code"
-  #   Given I start the interview "docassemble.base:data/questions/examples/code.yml"
-
+  Scenario: Test the interview "Code"
+    Given I start the interview "docassemble.base:data/questions/examples/code.yml"
+    Then I should see the phrase "How many peaches do you have?"
+    And I set the text box to "2"
+    And I click the button "Continue"
+    Then I should see the phrase "How many pears do you have?"
+    And I set the text box to "1"
+    And I click the button "Continue"
+    Then I should see the phrase "You have 3 pieces of fruit."
+    
   # Scenario: Test the interview "Comments"
   #   Given I start the interview "docassemble.base:data/questions/examples/comment-weather.yml"
 
@@ -2918,6 +2975,7 @@ Feature: Example interviews
   Scenario: Test the interview "PDF/A files"
     Given I start the interview "docassemble.base:data/questions/examples/pdf-a.yml"
     Then I should see the phrase "If you open the PDF file and look at its properties, you will see that it is a PDF/A file."
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "PDF fill-in with code"
     Given I start the interview "docassemble.base:data/questions/examples/pdf-fill-code.yml"
@@ -2954,6 +3012,7 @@ Feature: Example interviews
     Then I should see the phrase "Do you like toast?"
     And I click the button "Yes"
     Then I should see the phrase "Here is your PDF form"
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "PDF fill-in with signature"
     Given I start the interview "docassemble.base:data/questions/examples/pdf-fill-signature.yml"
@@ -2971,7 +3030,9 @@ Feature: Example interviews
     Then I should see the phrase "Please sign your name below."
     And I wait 5 seconds
     And I click inside the signature area
-    And I click the button "Continue"    
+    And I click the button "Continue"
+    Then I should see the phrase "You have now transferred everything you own to Amy Jones."
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "PDF fill-in"
     Given I start the interview "docassemble.base:data/questions/examples/pdf-fill.yml"
@@ -2991,6 +3052,7 @@ Feature: Example interviews
     Then I should see the phrase "Do you like toast?"
     And I click the button "Yes"
     Then I should see the phrase "Here is your PDF form"
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Fill fields with code in Mako"
     Given I start the interview "docassemble.base:data/questions/examples/pdf-template-alt-1.yml"
@@ -3010,6 +3072,7 @@ Feature: Example interviews
     And I set "Zip" to "02001"
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Fill fields with field code"
     Given I start the interview "docassemble.base:data/questions/examples/pdf-template-alt-2.yml"
@@ -3029,6 +3092,7 @@ Feature: Example interviews
     And I set "Zip" to "02001"
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Fill fields with code"
     Given I start the interview "docassemble.base:data/questions/examples/pdf-template-alt-3.yml"
@@ -3048,6 +3112,7 @@ Feature: Example interviews
     And I set "Zip" to "02001"
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Fill fields with code"
     Given I start the interview "docassemble.base:data/questions/examples/pdf-template-alt-4.yml"
@@ -3067,6 +3132,7 @@ Feature: Example interviews
     And I set "Zip" to "02001"
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Periodic amount"
     Given I start the interview "docassemble.base:data/questions/examples/periodic-amount.yml"
@@ -4189,6 +4255,7 @@ Feature: Example interviews
   Scenario: Test the interview "Output formats"
     Given I start the interview "docassemble.base:data/questions/examples/valid-formats.yml"
     Then I should see the phrase "Your document is ready."
+    And I should see the phrase "The following document has been created for you."    
     And I should not see the phrase "RTF"
     And I click the link "Markdown"
     Then I should see the phrase "Hello, world!"
@@ -4604,6 +4671,7 @@ Feature: Example interviews
     Then I should see the phrase "Do you like toast?"
     And I click the button "Yes"
     Then I should see the phrase "Here is your PDF form"
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Data structure from code"
     Given I start the interview "docassemble.base:data/questions/examples/data-code.yml"
@@ -4680,6 +4748,7 @@ Feature: Example interviews
   Scenario: Test the interview "DOCX format from RTF"
     Given I start the interview "docassemble.base:data/questions/examples/document-docx-from-rtf.yml"
     Then I should see the phrase "Here is your document."
+    And I should see the phrase "The following document has been created for you."
     And I click the link "Markdown"
     Then I should see the phrase "benefits plan G-432."
 
@@ -4711,6 +4780,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
     And I should see the phrase "Your letter"
+    And I should see the phrase "The following document has been created for you."
 
   # Scenario: Test the interview ""
   #   Given I start the interview "docassemble.base:data/questions/examples/dual-dict.yml"
@@ -4947,8 +5017,9 @@ Feature: Example interviews
     And I click inside the signature area
     And I click the button "Continue"
     Then I should see the phrase "Congratulations!"
-    Then I should see the phrase "You have now transferred everything you own to Preston Nelson."
-    Then I should see the phrase "Transfer of Ownership"
+    And I should see the phrase "You have now transferred everything you own to Preston Nelson."
+    And I should see the phrase "Transfer of Ownership"
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Postpopulate lists"
     Given I start the interview "docassemble.base:data/questions/examples/postpopulate-list.yml"
@@ -5158,6 +5229,7 @@ Feature: Example interviews
     And I set "Favorite fruit" to "kiwi"
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "hello world"
     Given I start the interview "docassemble.demo:data/questions/hello.yml"
@@ -5663,6 +5735,7 @@ Feature: Example interviews
     Then I should see the phrase "Hyperlinks"
     And I should see the phrase "Hyperlink demonstration"
     And I should see the phrase "You can find all the information you need at Docassemble."
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Progress meter"
     Given I start the interview "docassemble.base:data/questions/examples/progress-multi.yml"
@@ -5717,6 +5790,7 @@ Feature: Example interviews
     Then I should see the phrase "Give me some information."
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
+    And I should see the phrase "The following document has been created for you."
 
   # Scenario: Test the interview "Get files from Google Drive"
   #   Given I start the interview "docassemble.demo:data/questions/examples/google-drive.yml"
@@ -6370,6 +6444,7 @@ Feature: Example interviews
     And I unfocus
     And I wait 2 seconds
     And I click the option "4" under "Which thing do you want?"
+    And I wait 2 seconds
     And I click the button "Continue"
     Then I should see the phrase "You picked thing 4."
 
@@ -6408,6 +6483,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Unredacted petition"
     And I should see the phrase "Redacted petition"
+    And I should see the phrase "The following documents have been created for you."
 
   Scenario: Test the interview "Redact text DOCX"
     Given I start the interview "docassemble.demo:data/questions/examples/redact-docx.yml"
@@ -6426,6 +6502,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Unredacted petition"
     And I should see the phrase "Redacted petition"
+    And I should see the phrase "The following documents have been created for you."
 
   Scenario: Test the interview "Redact text PDF"
     Given I start the interview "docassemble.demo:data/questions/examples/redact-pdf.yml"
@@ -6444,6 +6521,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Unredacted petition"
     And I should see the phrase "Redacted petition"
+    And I should see the phrase "The following documents have been created for you."
 
   Scenario: Test the interview "Update references"
     Given I start the interview "docassemble.demo:data/questions/examples/update-references.yml"
@@ -6452,6 +6530,7 @@ Feature: Example interviews
     Then I should see the phrase "Do you want to include a jurisdiction section?"
     And I click the button "No"
     Then I should see the phrase "Here is your document"
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Markdown template in .docx"
     Given I start the interview "docassemble.demo:data/questions/examples/markdown-template.yml"
@@ -6459,6 +6538,7 @@ Feature: Example interviews
     And I set "Fruit" to "peaches"
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
+    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Debug mode"
     Given I start the interview "docassemble.base:data/questions/examples/debug-mode.yml"
@@ -6508,3 +6588,35 @@ Feature: Example interviews
     And I set "Vegetable" to "turnips"
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
+    And I should see the phrase "The following document has been created for you."
+
+  Scenario: Test the interview "Looping over columns in .docx"
+    Given I start the interview "docassemble.base:data/questions/examples/docx-table-columns.yml"
+    Then I should see the phrase "Looping over the columns of a table"
+    And I click the button "Continue"
+    Then I should see the phrase "What is the name of the grantor?"
+    And I set "First name" to "John"
+    And I set "Last name" to "Smith"
+    And I click the button "Continue"
+    Then I should see the phrase "What is the name of the grantee?"
+    And I set "First name" to "Jane"
+    And I set "Last name" to "Smith"
+    And I click the button "Continue"
+    Then I should see the phrase "Which income types do John Smith or Jane Smith receive?"
+    And I click the option "Employment" under "Types of income"
+    And I click the option "Benefits" under "Types of income"
+    And I click the button "Continue"
+    Then I should see the phrase "How much does John Smith receive"
+    And I set "Income" to "0"
+    And I click the button "Continue"
+    Then I should see the phrase "How much does John Smith receive"
+    And I set "Income" to "405"
+    And I click the button "Continue"
+    Then I should see the phrase "How much does Jane Smith receive"
+    And I set "Income" to "106"
+    And I click the button "Continue"
+    Then I should see the phrase "How much does Jane Smith receive"
+    And I set "Income" to "76"
+    And I click the button "Continue"
+    Then I should see the phrase "Here is a summary of the income of the grantor and grantee."
+    And I should see the phrase "The following document has been created for you."

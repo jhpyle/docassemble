@@ -902,42 +902,32 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         validation_rules['groups'] = dict()
                     validation_rules['groups'][the_saveas + '_group'] = ' '.join(uncheck_list + [the_saveas])
                     validation_rules['ignore'] = None
-                    
-                for key in ('minlength', 'maxlength'):
-                    if hasattr(field, 'extras') and key in field.extras and key in status.extras:
-                        #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
-                        validation_rules['rules'][the_saveas][key] = int(status.extras[key][field.number])
-                        if key == 'minlength':
-                            validation_rules['messages'][the_saveas][key] = word("You must type at least") + " " + str(status.extras[key][field.number]) + " " + word("characters")
-                        elif key == 'maxlength':
-                            validation_rules['messages'][the_saveas][key] = word("You cannot type more than") + " " + str(status.extras[key][field.number]) + " " + word("characters")
+                if field.datatype not in ('checkboxes', 'object_checkboxes'):
+                    for key in ('minlength', 'maxlength'):
+                        if hasattr(field, 'extras') and key in field.extras and key in status.extras:
+                            #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
+                            validation_rules['rules'][the_saveas][key] = int(status.extras[key][field.number])
+                            if key == 'minlength':
+                                validation_rules['messages'][the_saveas][key] = word("You must type at least") + " " + str(status.extras[key][field.number]) + " " + word("characters")
+                            elif key == 'maxlength':
+                                validation_rules['messages'][the_saveas][key] = word("You cannot type more than") + " " + str(status.extras[key][field.number]) + " " + word("characters")
             if hasattr(field, 'inputtype'):
                 if field.inputtype in ['yesnoradio', 'noyesradio', 'radio']:
                     validation_rules['ignore'] = None
                 elif field.inputtype == 'combobox':
                     validation_rules['ignore'] = list()
             if hasattr(field, 'datatype'):
-                if field.datatype in ('checkboxes', 'object_checkboxes') and hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
-                    validation_rules['rules']['_ignore' + str(field.number)] = dict(checkbox=[str(field.number)])
-                    #validation_rules['messages']['_ignore' + str(field.number)] = dict(checkbox=word("Please select one."))
+                if field.datatype in ('checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and status.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras)))):
+                    if hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
+                        validation_rules['rules']['_ignore' + str(field.number)] = dict(checkatleast=[str(field.number), 1])
+                    else:
+                        checkbox_rules = dict()
+                        if 'minlength' in field.extras and 'minlength' in status.extras:
+                            checkbox_rules['checkatleast'] = [str(field.number), status.extras['minlength'][field.number]]
+                        if 'maxlength' in field.extras and 'maxlength' in status.extras:
+                            checkbox_rules['checkatmost'] = [str(field.number), status.extras['maxlength'][field.number]]
+                        validation_rules['rules']['_ignore' + str(field.number)] = checkbox_rules
                     validation_rules['ignore'] = None
-                # if field.datatype in ('checkboxes', 'object_checkboxes') and hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
-                #     #validation_rules['rules'][the_saveas]['checkboxgroup'] = dict(name=the_saveas, foobar=2)
-                #     #validation_rules['messages'][the_saveas]['checkboxgroup'] = word("You need to select one.")
-                #     if 'groups' not in validation_rules:
-                #         validation_rules['groups'] = dict()
-                #     if field.choicetype in ['compute', 'manual']:
-                #         pairlist = list(status.selectcompute[field.number])
-                #     else:
-                #         raise Exception("Unknown choicetype " + field.choicetype)
-                #     name_list = [safeid(from_safeid(the_saveas) + "[" + myb64quote(pairlist[indexno]['key']) + "]") for indexno in range(len(pairlist))]
-                #     for the_name in name_list:
-                #         validation_rules['rules'][the_name] = dict(require_from_group=[1, '.dafield' + str(field.number)])
-                #         validation_rules['messages'][the_name] = dict(require_from_group=word("Please select one."))
-                #     validation_rules['rules']['_ignore' + str(field.number)] = dict(require_from_group=[1, '.dafield' + str(field.number)])
-                #     validation_rules['messages']['_ignore' + str(field.number)] = dict(require_from_group=word("Please select one."))
-                #     validation_rules['groups'][the_saveas] = " ".join(name_list + ['_ignore' + str(field.number)])
-                #     validation_rules['ignore'] = None
                 if field.datatype == 'object_radio':
                     validation_rules['ignore'] = None
                 if field.datatype == 'date':
@@ -1826,6 +1816,8 @@ def input_for(status, field, wide=False, embedded=False):
                     inner_fieldlist.append('<input class="dafield' + str(field.number) + ' checkbox-embedded nota-checkbox" id="_ignore' + str(field.number) + '" type="checkbox" name="_ignore' + str(field.number) + '"' + disable_others_data + '/>&nbsp;<label for="_ignore' + str(field.number) + '">' + formatted_item + '</label>')
                 else:
                     inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="' + 'dafield' + str(field.number) + ' nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' type="checkbox" name="_ignore' + str(field.number) + '" ' + ischecked + disable_others_data + '/>')
+            elif (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras))):
+                inner_fieldlist.append('<input value="" type="hidden" name="_ignore' + str(field.number) + '"/>')
             if embedded:
                 output += u' '.join(inner_fieldlist) + '</span>'
             else:
