@@ -4,7 +4,7 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.3.0](https://github.com/jhpyle/docassemble/releases/tag/v0.3.0) - 2018-09-23
+## [0.2.100](https://github.com/jhpyle/docassemble/releases/tag/v0.2.100) - 2018-09-23
 
 ### Added
 - The `forget_result_of()` and `re_run_logic()` functions.
