@@ -267,6 +267,10 @@ calls for either `car_model` or `car_make`, the question should be
 tried.  When the user clicks on one of the buttons, the code will be
 executed and the variables will be set.
 
+To undo a user's choice on a [`question`] that embeds blocks, tag the
+[`question`] with an [`id`] and call the [`forget_result_of()`]
+function with the ID.
+
 # <a name="field"></a>A simple "continue" button that sets a variable
 
 {% include side-by-side.html demo="continue-participation" %}
@@ -1113,10 +1117,25 @@ the same screen that should be disabled.
 
 ## <a name="note"></a>`note`
 
-The value of `note` is [Markdown] text that will appear on the screen;
-useful for providing guidance to the user on how to enter information.
+The value of `note` is [Markdown] text that will appear on the screen.
+This is useful for providing guidance to the user on how to enter
+information.
+
+If the `note` is by itself as its own "field" in the list of `fields`,
+the text appears along with the other fields:
 
 {% include side-by-side.html demo="note" %}
+
+However, if the `note` is used as a modifier for a field, the note
+will appear to the right of field on wide screens.  On small screens,
+the note will appear after the field:
+
+{% include side-by-side.html demo="side-note" %}
+
+On wide screens, the location of each `note`s is based on the location
+of the field itself.  This means that if you have `note`s on two
+adjacent fields, and one of the `note`s is lengthy, the `note`s could
+overlap on the screen.  Therefore, make sure to keep your notes short.
 
 ## <a name="html"></a>`html`
 
@@ -1124,7 +1143,16 @@ The `html` directive is like [`note`](#note), except the format is
 expected to be raw [HTML].  It can be used in combination with the
 [`css`] and [`script`] modifiers.
 
+If the `html` is by itself as its own "field" in the list of `fields`,
+the HTML will appear along with the other fields:
+
 {% include side-by-side.html demo="html" %}
+
+However, if the `html` is used as a modifier for a field, the HTML
+will appear to the right of field on wide screens.  On small screens,
+the HTML will appear after the field:
+
+{% include side-by-side.html demo="side-html" %}
 
 ## <a name="no label"></a>`no label`
 
@@ -1751,6 +1779,12 @@ variable that has not been defined yet, they will be omitted.
 
 {% include side-by-side.html demo="review-3" %}
 
+If you include `note` and `html` as modifiers of an item under
+`review`, the text will appear to the right of the item on wide
+screens.  On small screens, the HTML will appear after the item.
+
+{% include side-by-side.html demo="review-side-note" %}
+
 The `review` block allows you to add `help` text to an entry, in
 which case the text is shown underneath the hyperlink.  If this text
 expects a variable to be defined that has not actually been defined,
@@ -2048,3 +2082,5 @@ why this needs to be done manually as opposed to automatically:
 [`minlength`]: #minlength
 [`maxlength`]: #maxlength
 [`none of the above`]: #none of the above
+[`forget_result_of()`]: {{ site.baseurl}}/docs/functions.html#forget_result_of
+[`id`]: {{ site.baseurl }}/docs/modifiers.html#id

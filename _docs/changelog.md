@@ -4,13 +4,24 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.3.0](https://github.com/jhpyle/docassemble/releases/tag/v0.3.0) - 2018-09-20
+## [0.3.0](https://github.com/jhpyle/docassemble/releases/tag/v0.3.0) - 2018-09-23
+
+### Added
+- The `forget_result_of()` and `re_run_logic()` functions.
+- Additional test interviews.
+
+### Changed
+- `note` and `html` can now be used to insert text in the right
+  column, along side a field.
 
 ### Fixed
 - The `minlength` and `maxlength` modifiers did not work on
   `checkboxes`.
 - The `insert_docx_template()` function was not intercepting all
   parameters of class `DAObject` and passing them as objects.
+- Too many line breaks in .docx address block.
+- Static file videos did not work.
+- Static file videos were static width.
 
 ## [0.2.99](https://github.com/jhpyle/docassemble/releases/tag/v0.2.99) - 2018-09-19
 
@@ -941,9 +952,9 @@ short_title: Change Log
 ## [0.2.13](https://github.com/jhpyle/docassemble/releases/tag/v0.2.13) - 2017-12-24
 
 ### Added
-- Ability to change the `password complexity` requirements in the 
+- Ability to change the `password complexity` requirements in the
   Configuration.
-- Ability to control whether registering users must retype their 
+- Ability to control whether registering users must retype their
   passwords.
 
 ## [0.2.12](https://github.com/jhpyle/docassemble/releases/tag/v0.2.12) - 2017-12-24
@@ -1000,7 +1011,7 @@ short_title: Change Log
 - Error when uploading Zip file to Playground packages folder.
 - Problem setting boolean character of yesno variables that are
   specified using brackets.
-- Problem with referring to `get_url_from_file_reference()` outside of 
+- Problem with referring to `get_url_from_file_reference()` outside of
   request context.
 
 ## [0.2.4](https://github.com/jhpyle/docassemble/releases/tag/v0.2.4) - 2017-12-06
@@ -1036,13 +1047,13 @@ short_title: Change Log
 ## [0.2.1](https://github.com/jhpyle/docassemble/releases/tag/v0.2.1) - 2017-11-30
 
 ### Changed
-- The hard-coded limit on JSON nesting depth, which was mentioned 
+- The hard-coded limit on JSON nesting depth, which was mentioned
   in the 0.2.0 changes, has been changed from 6 to 20.
 
 ### Fixed
-- Apache could not start unless Docker container started with a 
+- Apache could not start unless Docker container started with a
   `DAHOSTNAME`.
-- GitHub push using GitHub integration failed because of an SSH 
+- GitHub push using GitHub integration failed because of an SSH
   issue.
 
 ## [0.2.0](https://github.com/jhpyle/docassemble/releases/tag/v0.2.0) - 2017-11-29
@@ -1052,7 +1063,7 @@ short_title: Change Log
 
 ### Changed
 - The `all_variables()` and `variables_as_json()` functions now
-  contain a limitation on nesting depth.  The limit is hard-coded at 
+  contain a limitation on nesting depth.  The limit is hard-coded at
   6 levels, after which values will be "null."  This is to prevent
   exceptions being triggered by circular references.
 - Setting Google Drive Synchronization folder to "Do not link" will
@@ -1085,10 +1096,10 @@ short_title: Change Log
 ### Changed
 - Multiple choice questions in `fields` will set boolean `True` or
   `False` if those are the only options.
-- Additional headers are set to enable cross-site resource sharing 
+- Additional headers are set to enable cross-site resource sharing
   if the CROSSSITEDOMAIN variable is set.
 - Apache configuration files in Docker are configured differently;
-  existing site configuration files will not be overwritten and 
+  existing site configuration files will not be overwritten and
   configuration options are now implemented as Apache variables.
 - `DAList` objects now work with the `+` operator; a regular list can
   be added to a `DAList` but not the other way around.
@@ -1218,7 +1229,7 @@ short_title: Change Log
 ## [0.1.86](https://github.com/jhpyle/docassemble/releases/tag/v0.1.86) - 2017-11-01
 
 ### Added
-- `decoration size`, `decoration units`, `button icon size`, 
+- `decoration size`, `decoration units`, `button icon size`,
   `button icon units`, and `button size` configuration options.
 - `encode_name()` and `decode_name()`.
 
@@ -1232,7 +1243,7 @@ short_title: Change Log
 ## [0.1.85](https://github.com/jhpyle/docassemble/releases/tag/v0.1.85) - 2017-10-29
 
 ### Added
-- Option for `google maps api key` in the `google` section of the 
+- Option for `google maps api key` in the `google` section of the
   configuration.
 
 ### Changed
@@ -1295,7 +1306,7 @@ short_title: Change Log
 
 ### Fixed
 - PDF page retrieval index error.
-- File permissions issue in S3 that prevents server restart.  S3 users 
+- File permissions issue in S3 that prevents server restart.  S3 users
   must upgrade the Docker image.
 - Incorrect timestamps when downloading from persistent cloud storage.
 
@@ -1314,7 +1325,7 @@ short_title: Change Log
   used as a literal `group_id`.  Rather, an argument `'fruit'` it will
   be converted into a group_id of the form
   `docassemble.packagename:data/sources/ml-interviewname.json:fruit`.
-  You can still set a literal `group_id` using the keyword parameter 
+  You can still set a literal `group_id` using the keyword parameter
   `group_id`.
 - When an `initial_file` is given to a `MachineLearner` object, two
   different formats can be used: an array, or a dictionary of arrays.
@@ -1356,7 +1367,7 @@ short_title: Change Log
 - `set_data()` and `get_data()` methods for `DARedis`.
 
 ### Fixed
-- `DAFile` initialize function now handles keyword arguments as 
+- `DAFile` initialize function now handles keyword arguments as
   advertised.
 
 ## [0.1.74](https://github.com/jhpyle/docassemble/releases/tag/v0.1.74) - 2017-10-15
@@ -1633,7 +1644,7 @@ short_title: Change Log
   as attachment downloads.
 
 ### Changed
-- In Google Drive synchronization, .tmp and .gdoc files are now 
+- In Google Drive synchronization, .tmp and .gdoc files are now
   ignored.
 
 ### Fixed
@@ -1660,7 +1671,7 @@ short_title: Change Log
 
 ### Fixed
 - Multiple choice questions where list of selections is empty.
-- SMS interface for multiple choice questions where list of 
+- SMS interface for multiple choice questions where list of
   selections is empty.
 
 ## [0.1.45](https://github.com/jhpyle/docassemble/releases/tag/v0.1.45) - 2017-08-31

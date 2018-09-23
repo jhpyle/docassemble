@@ -122,6 +122,48 @@ del favorite_fruit
 The difference is that when using `del`, the variable must first
 exist.
 
+## <a name="forget_result_of"></a>forget_result_of()
+
+If you want a [`question`] with [embedded blocks] to be asked again,
+or you want a [`mandatory`] block to run again, you need to run
+`forget_result_of()` on the [`id`] of the block.
+
+The `forget_result_of()` function takes one or more [`id`]s of blocks
+as input and causes the results of those blocks to be forgotten.  If
+the [`id`] does not exist, or if the block has not yet been processed,
+no error will be raised.
+
+This example illustrates using `forget_result_of()` in conjunction
+with `del` to ask a series of questions again, where some of the
+questions contained embedded blocks.
+
+{% include side-by-side.html demo="forget-result-of" %}
+
+The `forget_result_of()` function can also be used to reset a
+[`mandatory`] block so that it will be run again.
+
+{% include side-by-side.html demo="forget-result-of-mandatory" %}
+
+After resetting a `mandatory` block, you may want to call
+[`re_run_logic()`].  Otherwise, the `mandatory` block will not have a
+chance to run again until the next time the screen loads.
+
+## <a name="re_run_logic"></a>re_run_logic()
+
+The `re_run_logic()` function causes code to stop executing and causesa
+the interview logic to restart from the beginning.  You might want to
+use this in cases when, after you make changes to variables, you want
+the [`initial`] and not-yet-completed [`mandatory`] blocks to be
+re-run in light of the changes you made.
+
+If you use this, be careful that you do not create an infinite loop.
+When the blocks are re-run, the result should not be encountering the
+`re_run_logic()` function again, but should be something else, like
+asking the user a question.
+
+For an example of this in action, see the code example in the
+[`forget_result_of()`] subsection.
+
 ## <a name="need"></a>need()
 
 The `need()` function takes one or more variables as arguments and
@@ -6029,3 +6071,7 @@ $(document).on('daPageLoad', function(){
 [`NameError`]: https://docs.python.org/2/library/exceptions.html#exceptions.NameError
 [`try`/`except`]: https://docs.python.org/2.7/tutorial/errors.html#handling-exceptions
 [`redact: False`]: {{ site.baseurl }}/docs/documents.html#redact
+[`forget_result_of()`]: #forget_result_of
+[`re_run_logic()`]: #re_run_logic
+[`id`]: {{ site.baseurl }}/docs/modifiers.html#id
+[embedded blocks]: {{ site.baseurl }}/docs/fields.html#code button

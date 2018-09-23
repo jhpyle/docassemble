@@ -1469,8 +1469,32 @@
   buttons:
     Continue: continue
 "continue-special": |-
-  modules:
-    - docassemble.base.util
+  id: favorite_food stage 2
+  question: |
+    Ok, are any of these your favorite food?
+  choices:
+    - Strawberries:
+        code: |
+          favorite_food = 'strawberries'
+    - Grapes:
+        code: |
+          favorite_food = 'grapes'
+    - Kiwi:
+        code: |
+          favorite_food = 'kiwi'
+    - Something else: continue
+  ---
+  id: favorite_food stage 1
+  question: |
+    What is your favorite food?
+  choices:
+    - Apples:
+        code: |
+          favorite_food = 'apples'
+    - Oranges:
+        code: |
+          favorite_food = 'oranges'
+    - Something else: continue
 "copy-deep": |-
   objects:
     - orig_company: DAObject
@@ -2454,14 +2478,12 @@
           - sugar
       - preparation_time: 48 hours
 "docx-table-columns": |-
-  mandatory: True
+  generic object: Individual
   question: |
-    Here is a summary of the income of the
-    grantor and grantee.
-  attachment:
-    - name: Income summary
-      filename: income_summary
-      docx template file: docx-table-columns.docx
+    How much does ${ x } receive from ${ i }?
+  fields:
+    - Income: x.income[i]
+      datatype: currency
 "docx-template": |-
   question: |
     Here is your document.
@@ -3985,6 +4007,89 @@
   event: gather_it
   code: |
     force_gather('favorite_food')
+"forget-result-of": |-
+  id: favorite_food stage 2
+  question: |
+    Ok, are any of these your favorite food?
+  choices:
+    - Strawberries:
+        code: |
+          favorite_food = 'strawberries'
+    - Grapes:
+        code: |
+          favorite_food = 'grapes'
+    - Kiwi:
+        code: |
+          favorite_food = 'kiwi'
+    - Something else: continue
+  ---
+  id: favorite_food stage 1
+  question: |
+    What is your favorite food?
+  choices:
+    - Apples:
+        code: |
+          favorite_food = 'apples'
+    - Oranges:
+        code: |
+          favorite_food = 'oranges'
+    - Something else: continue
+  ---
+  event: reset_favorite_food
+  code: |
+    del favorite_food
+    forget_result_of("favorite_food stage 1", "favorite_food stage 2")
+"forget-result-of-mandatory": |-
+  mandatory: True
+  code: |
+    favorite_fruit = "apple"
+    favorite_vegetable = "turnip"
+  id: initialize
+  ---
+  mandatory: True
+  code: |
+    while not results_correct:
+      favorites_asked
+      favorites_reported
+      del results_correct
+      del favorites_asked
+      del favorites_reported
+      forget_result_of('initialize')
+      re_run_logic()
+    final_screen
+  ---
+  question: |
+    Results
+  subquestion: |
+    You said your favorite fruit is
+    ${ favorite_fruit } and
+    your favorite vegetable is
+    ${ favorite_vegetable }.
+
+    Is this correct?
+  yesno: results_correct
+  ---
+  question: |
+    What are your favorites?
+  fields:
+    - Favorite fruit: favorite_fruit
+    - Favorite vegetable: favorite_vegetable
+  continue button field: favorites_asked
+  ---
+  question: |
+    Your favorites
+  subquestion: |
+    You said your favorite fruit is
+    ${ favorite_fruit } and
+    your favorite vegetable is
+    ${ favorite_vegetable }.
+
+    Press Continue to reset.
+  field: favorites_reported
+  ---
+  event: final_screen
+  question: |
+    We are done.
 "formatting": "question: |\n  Here is your document.\nsubquestion: |\n  It illustrates\
   \ some document-related\n  features.\nallow emailing: False\nattachments:\n  - name:\
   \ A test document\n    filename: test_document\n    valid formats:\n      - pdf\n\
@@ -8009,6 +8114,39 @@
   \      was ${ vegetable }.\n  - Revisit fungus: fungi\n    button: |\n      You\
   \ said your favorite fungus \n      was ${ fungi }.\nfield: answers_reviewed\n---\n\
   mandatory: True\ncode: |\n  fruit\n  vegetable\n  fungi\n  answers_reviewed\n  final_screen"
+"review-side-note": |-
+  question: |
+    Review your answers
+  review:
+    - note: |
+        Welcome to the review of answers.
+    - note: |
+        #### Your identity
+      show if: user.name.first
+    - Change your name: user.name.first
+      help: |
+        You said your name was
+        **${ user.name }**.
+      note: |
+        Do not use a pseudonym, please.
+    - note: |
+        #### Your favorite foods
+      show if: fruit
+    - Revisit Fruit: fruit
+      button: |
+        You said you liked ${ fruit }.
+      note: |
+        This should be a tasty fruit.
+    - Revisit Vegetable: vegetable
+      button: |
+        You said you liked ${ vegetable }.
+    - Revisit Fungus: fungi
+      button: |
+        You said you liked ${ fungi }.
+    - note: |
+        We suspect you prefer
+        ${ fruit } to ${ vegetable }.
+  field: answers_reviewed
 "right": "features:\n  centered: False\n---\nquestion: |\n  What is the airspeed velocity\
   \ of an\n  unladen swallow?\nfields:\n  - Velocity: swallow_velocity\nright: |\n\
   \  ### Note\n    \n  If you did not catch this\n  movie reference, you need to\n\
@@ -8674,6 +8812,28 @@
         - Felicia Fellowes
         - Miranda Moore
         - Zachariah Zephyr
+"side-html": |-
+  question: |
+    What is 2+2?
+  fields:
+    Answer: answer
+    choices:
+      - 3
+      - 4
+      - 5
+    html: |
+      <span style="color: green;">Hint: 2 + 2 = 4.</span>
+"side-note": |-
+  question: |
+    What is 2+2?
+  fields:
+    Answer: answer
+    choices:
+      - 3
+      - 4
+      - 5
+    note: |
+      Hint: 2 + 2 = 4.
 "signature": |-
   question: |
     Sign your name

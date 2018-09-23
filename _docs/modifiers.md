@@ -614,6 +614,9 @@ version of an interview.  So a user that starts
 use the same [YAML] file, even when users who started later are using
 `docassemble.tax:data/questions/tax-controversy-v3.yml`.
 
+The `id` of a question needs to be set in order to use the
+[`forget_result_of()`] function.
+
 # <a name="sets"></a>Manually indicating that a block sets a variable
 
 Usually, **docassemble** can figure out which variables a block is
@@ -910,3 +913,4 @@ by **docassemble**, so it can contain any valid [YAML].
 [`question help button`]: {{ site.baseurl}}/docs/initial.html#question help button
 [`question back button`]: {{ site.baseurl}}/docs/initial.html#question back button
 [`back button`]: #back button
+[`forget_result_of()`]: {{ site.baseurl}}/docs/functions.html#forget_result_of
