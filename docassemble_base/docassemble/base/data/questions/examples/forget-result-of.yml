@@ -1,8 +1,9 @@
 metadata:
-  title: Continue option
-  documentation: "https://docassemble.org/docs/questions.html#continue"
+  title: Redo multiple choice
+  short title: Redo
+  documentation: "https://docassemble.org/docs/functions.html#forget_result_of"
   example start: 3
-  example end: 4
+  example end: 5
 ---
 modules:
   - docassemble.base.util

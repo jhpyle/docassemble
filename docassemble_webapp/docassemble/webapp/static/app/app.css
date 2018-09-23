@@ -1626,6 +1626,11 @@ div.danavbar {
 	height: 100%;
 }
 
+video {
+    width: 100% !important;
+    height: auto !important;
+}
+
 .daspaceafter {
     margin-bottom: 10px;
 }
@@ -2026,4 +2031,21 @@ div.constraintlist div + div {
 
 .wordplayground .dasearchicon {
     display: none;
+}
+
+@media (max-width: 991px) {
+    .rlap-parent {
+	margin-bottom: 0 !important;
+    }
+}
+
+@media (min-width: 992px) {
+    .rlap-parent {
+	position: relative;
+    }
+    .rlap {
+	position: absolute;
+	margin-left: 100%;
+	width: 50%;
+    }
 }

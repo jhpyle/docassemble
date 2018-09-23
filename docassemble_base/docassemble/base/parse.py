@@ -1980,6 +1980,8 @@ class Question:
                             continue
                         if 'datatype' in field and field['datatype'] in ('radio', 'object', 'object_radio', 'combobox', 'checkboxes', 'object_checkboxes') and not ('choices' in field or 'code' in field):
                             raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
+                        if 'note' in field and 'html' in field:
+                            raise DAError("You cannot include both note and html in a field." + self.idebug(data))
                         for key in field:
                             if key == 'default' and 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'object_checkboxes'):
                                 continue
@@ -2135,19 +2137,13 @@ class Question:
                                         for x in field['exclude']:
                                             self.find_fields_in(x)
                                             field_info['selections']['exclude'].append(compile(x, '<expression>', 'eval'))
-                            elif key == 'note':
-                                field_info['type'] = 'note'
-                                if 'extras' not in field_info:
-                                    field_info['extras'] = dict()
-                                field_info['extras']['note'] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
-                            elif key in ('min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width'):
+                            elif key in ('note', 'html'):
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
-                            elif key == 'html':
+                            elif key in ('min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width'):
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
-                                field_info['type'] = 'html'
                                 field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
                             # elif key in ('css', 'script'):
                             #     if 'extras' not in field_info:
@@ -2181,8 +2177,9 @@ class Question:
                                 if invalid_variable_name(field[key]):
                                     raise DAError("Missing or invalid variable name " + repr(field[key]) + " for key " + repr(key) + "." + self.idebug(data))
                                 field_info['saveas'] = field[key]
-                        if 'type' in field_info and field_info['type'] in ('checkboxes', 'object_checkboxes') and 'nota' not in field_info:
-                            field_info['nota'] = True
+                        if 'type' in field_info:
+                            if field_info['type'] in ('checkboxes', 'object_checkboxes') and 'nota' not in field_info:
+                                field_info['nota'] = True
                         if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ('object', 'object_radio', 'object_checkboxes'):
                             if 'choices' not in field:
                                 raise DAError("You need to have a choices element if you want to set a variable to an object." + self.idebug(data))
@@ -2249,10 +2246,14 @@ class Question:
                             else:
                                 if self.scan_for_variables:
                                     self.fields_used.add(field_info['saveas'])
-                        elif 'type' in field_info and field_info['type'] in ('note', 'html'): #, 'script', 'css'
+                        elif 'note' in field or 'html' in field:
+                            if 'note' in field:
+                                field_info['type'] = 'note'
+                            else:
+                                field_info['type'] = 'html'
                             self.fields.append(Field(field_info))
                         else:
-                            raise DAError("A field was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(data))
+                            raise DAError("A field was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(data) + " and field_info was " + repr(field_info))
                     else:
                         raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
                     field_number += 1
@@ -2276,21 +2277,17 @@ class Question:
                     elif key == 'help':
                         if type(field[key]) is not dict and type(field[key]) is not list:
                             field_info[key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
-                        if 'button' in field or 'note' in field or 'html' in field: #or 'css' in field or 'script' in field:
-                            raise DAError("In a review block, you cannot mix help text with note, or html items." + self.idebug(data)) #, css, or script
+                        if 'button' in field: #or 'css' in field or 'script' in field:
+                            raise DAError("In a review block, you cannot mix help text with a button item." + self.idebug(data)) #, css, or script
                     elif key == 'button':
                         if type(field[key]) is not dict and type(field[key]) is not list:
                             field_info['help'] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
                             field_info['type'] = 'button'
-                    elif key == 'note':
-                        field_info['type'] = 'note'
+                    elif key in ('note', 'html'):
+                        if 'type' not in field_info:
+                            field_info['type'] = key
                         if 'extras' not in field_info:
                             field_info['extras'] = dict()
-                        field_info['extras']['note'] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
-                    elif key == 'html':
-                        if 'extras' not in field_info:
-                            field_info['extras'] = dict()
-                        field_info['type'] = 'html'
                         field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
                     elif key == 'show if':
                         if type(field[key]) is not list:
@@ -2422,6 +2419,8 @@ class Question:
                             self.find_fields_in(the_saveas)
                         if 'action' in field:
                             field_info['action'] = dict(action=field['action'], arguments=dict())
+                    if 'type' in field_info and field_info['type'] in ('note', 'html') and 'label' in field_info:
+                        del field_info['type']
                 if len(field_info['data']):
                     if 'saveas_code' not in field_info:
                         field_info['saveas_code'] = []
@@ -3711,7 +3710,7 @@ class Question:
                                     if type(item) is dict:
                                         new_field_data.update(item)
                                 the_field_data = new_field_data
-                            result['field_data'] = new_field_data
+                            result['field_data'] = the_field_data
                         if 'code' in attachment['options']:
                             additional_dict = eval(attachment['options']['code'], user_dict)
                             if type(additional_dict) is dict:

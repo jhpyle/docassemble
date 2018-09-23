@@ -91,6 +91,14 @@ def start_interview(step, interview_name):
     do_wait()
     world.browser.get(world.da_path + "/?i=" + interview_name + '&reset=1')
     world.browser.wait_for_it()
+    elems = world.browser.find_elements_by_xpath('//h1[text()="Error"]')
+    assert len(elems) == 0
+
+@step('I start the possibly error-producing interview "([^"]+)"')
+def start_error_interview(step, interview_name):
+    do_wait()
+    world.browser.get(world.da_path + "/?i=" + interview_name + '&reset=1')
+    world.browser.wait_for_it()
 
 @step('I click the back button')
 def click_back_button(step):
@@ -314,13 +322,13 @@ def set_mc_option_under(step, option, label):
         span = div.find_element_by_xpath('.//span[text()[contains(.,"' + option + '")]]')
     option_label = span.find_element_by_xpath("..")
     option_label.click()
-        
+
 @step('I click the "([^"]+)" option')
 def set_mc_option(step, choice):
     try:
-        span_elem = world.browser.find_element_by_xpath('//span[text()="' + choice + '"]')
+        span_elem = world.browser.find_element_by_xpath('//form[@id="daform"]//span[text()="' + choice + '"]')
     except NoSuchElementException:
-        span_elem = world.browser.find_element_by_xpath('//span[text()[contains(.,"' + choice + '")]]')
+        span_elem = world.browser.find_element_by_xpath('//form[@id="daform"]//span[text()[contains(.,"' + choice + '")]]')
     label_elem = span_elem.find_element_by_xpath("..")
     label_elem.click()
 
@@ -333,7 +341,7 @@ def set_mc_option_under_pre(step, option, label):
         span = div.find_element_by_xpath('.//span[text()[contains(.,"' + option + '")]]')
     option_label = span.find_element_by_xpath("..")
     option_label.click()
-        
+
 @step('I click the option "([^"]+)"')
 def set_mc_option_pre(step, choice):
     try:

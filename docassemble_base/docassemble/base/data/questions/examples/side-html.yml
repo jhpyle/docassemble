@@ -1,0 +1,25 @@
+metadata:
+  title: HTML on side
+  short title: HTML
+  documentation: "https://docassemble.org/docs/fields.html#html"
+---
+question: |
+  What is 2+2?
+fields:
+  Answer: answer
+  choices:
+    - 3
+    - 4
+    - 5
+  html: |
+    <span style="color: green;">Hint: 2 + 2 = 4.</span>
+---
+question: |
+  Thank you.
+subquestion: |
+  % if answer == "4":
+  You are brilliant!
+  % else:
+  How could you get this wrong?
+  % endif
+mandatory: True

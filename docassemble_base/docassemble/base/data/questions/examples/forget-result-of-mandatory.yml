@@ -1,0 +1,60 @@
+metadata:
+  title: Redo mandatory
+  short title: Redo
+  documentation: "https://docassemble.org/docs/functions.html#forget_result_of"
+  example start: 2
+  example end: 7
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  favorite_fruit = "apple"
+  favorite_vegetable = "turnip"
+id: initialize
+---
+mandatory: True
+code: |
+  while not results_correct:
+    favorites_asked
+    favorites_reported
+    del results_correct
+    del favorites_asked
+    del favorites_reported
+    forget_result_of('initialize')
+    re_run_logic()
+  final_screen
+---
+question: |
+  Results
+subquestion: |
+  You said your favorite fruit is
+  ${ favorite_fruit } and
+  your favorite vegetable is
+  ${ favorite_vegetable }.
+
+  Is this correct?
+yesno: results_correct
+---
+question: |
+  What are your favorites?
+fields:
+  - Favorite fruit: favorite_fruit
+  - Favorite vegetable: favorite_vegetable
+continue button field: favorites_asked
+---
+question: |
+  Your favorites
+subquestion: |
+  You said your favorite fruit is
+  ${ favorite_fruit } and
+  your favorite vegetable is
+  ${ favorite_vegetable }.
+
+  Press Continue to reset.
+field: favorites_reported
+---
+event: final_screen
+question: |
+  We are done.

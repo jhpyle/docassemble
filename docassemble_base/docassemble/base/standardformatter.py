@@ -211,10 +211,10 @@ def as_sms(status, links=None, menu_items=None):
                     continue
                 if the_field.datatype in ['html', 'note'] and field is not None:
                     continue
-                if the_field.datatype in ['note']:
+                if the_field.datatype == 'note':
                     info_message = to_text(markdown_to_html(status.extras['note'][the_field.number], status=status), terms, links, status)
                     continue
-                if the_field.datatype in ['html']:
+                if the_field.datatype == 'html':
                     info_message = to_text(status.extras['html'][the_field.number].rstrip(), terms, links, status)
                     continue
             #logmessage("field number is " + str(the_field.number))
@@ -688,6 +688,18 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     elif status.question.question_type == "review":
         fieldlist = list()
         for field in status.get_field_list():
+            if 'html' in status.extras and field.number in status.extras['html']:
+                side_note_content = status.extras['html'][field.number].rstrip()
+            elif 'note' in status.extras and field.number in status.extras['note']:
+                side_note_content = markdown_to_html(status.extras['note'][field.number], status=status, strip_newlines=True)
+            else:
+                side_note_content = None
+            if side_note_content is not None:
+                side_note = '<div class="col rlap">' + side_note_content + '</div>'
+                side_note_parent = ' rlap-parent'
+            else:
+                side_note = ''
+                side_note_parent = ''
             if not status.extras['ok'][field.number]:
                 continue
             if hasattr(field, 'extras'):
@@ -697,18 +709,18 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 #     status.extra_css.append(status.extras['css'][field.number])
             if hasattr(field, 'datatype'):
                 if field.datatype == 'html' and 'html' in status.extras and field.number in status.extras['html']:
-                    fieldlist.append('                <div class="form-group row' + req_tag +'"><div class="col-md-12"><note>' + status.extras['html'][field.number].rstrip() + '</note></div></div>\n')
+                    fieldlist.append('                <div class="form-group row' + req_tag +'"><div class="col-md-12"><note>' + side_note_content + '</note></div></div>\n')
                     continue
                 elif field.datatype == 'note' and 'note' in status.extras and field.number in status.extras['note']:
-                    fieldlist.append('                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, strip_newlines=True) + '</div></div>\n')
+                    fieldlist.append('                <div class="row"><div class="col-md-12">' + side_note_content + '</div></div>\n')
                     continue
                 # elif field.datatype in ['script', 'css']:
                 #     continue
                 elif field.datatype == 'button' and hasattr(field, 'label') and field.number in status.helptexts:
-                    fieldlist.append('                <div class="row"><div class="col-md-12"><a tabindex="0" class="btn btn-sm btn-success review-action review-action-button" data-action=' + myb64doublequote(json.dumps(field.action)) + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
+                    fieldlist.append('                <div class="row' + side_note_parent + '"><div class="col-md-12"><a tabindex="0" class="btn btn-sm btn-success review-action review-action-button" data-action=' + myb64doublequote(json.dumps(field.action)) + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div>' + side_note + '</div>\n')
                     continue
             if hasattr(field, 'label'):
-                fieldlist.append('                <div class="form-group row"><div class="col-md-12"><a tabindex="0" class="review-action" data-action=' + myb64doublequote(json.dumps(field.action)) + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a></div></div>\n')
+                fieldlist.append('                <div class="form-group row' + side_note_parent + '"><div class="col-md-12"><a tabindex="0" class="review-action" data-action=' + myb64doublequote(json.dumps(field.action)) + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a></div>' + side_note + '</div>\n')
                 if field.number in status.helptexts:
                     fieldlist.append('                <div class="row"><div class="col-md-12">' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
         output += status.pre
@@ -752,10 +764,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         saveas_to_use = dict()
         saveas_by_number = dict()
         for field in field_list:
+            if 'html' in status.extras and field.number in status.extras['html']:
+                note_fields[field.number] = status.extras['html'][field.number].rstrip()
+            elif 'note' in status.extras and field.number in status.extras['note']:
+                note_fields[field.number] = markdown_to_html(status.extras['note'][field.number], status=status, embedder=embed_input)
             if hasattr(field, 'address_autocomplete') and field.address_autocomplete and hasattr(field, 'saveas'):
                 autocomplete_id = field.saveas
-            if hasattr(field, 'datatype') and field.datatype == 'note':
-                note_fields[field.number] = '                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, embedder=embed_input) + '</div></div>\n'
             if hasattr(field, 'saveas'):
                 varnames[safeid('_field_' + str(field.number))] = field.saveas
                 if (hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or 'show_if_js' in field.extras)) or (hasattr(field, 'disableothers') and field.disableothers):
@@ -769,6 +783,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if the_saveas not in validation_rules['messages']:
                     validation_rules['messages'][the_saveas] = dict()
         for field in field_list:
+            if field.number in note_fields:
+                side_note = '<div class="col rlap">' + note_fields[field.number] + '</div>'
+                side_note_parent = ' rlap-parent'
+            else:
+                side_note = ''
+                side_note_parent = ''
             if hasattr(field, 'disableothers') and field.disableothers and type(field.disableothers) is list:
                 if 'disableothers' not in status.extras:
                     status.extras['disableothers'] = dict()
@@ -818,10 +838,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         fieldlist.append('                <div class="jsshowif" data-jsshowif=' + myb64doublequote(json.dumps(field.extras['show_if_js'])) + '>\n')
             if hasattr(field, 'datatype'):
                 if field.datatype == 'html':
-                    fieldlist.append('                <div class="form-group row' + req_tag +'"><div class="col-md-12"><note>' + status.extras['html'][field.number].rstrip() + '</note></div></div>\n')
+                    fieldlist.append('                <div class="form-group row' + req_tag +'"><div class="col-md-12"><note>' + note_fields[field.number] + '</note></div></div>\n')
                     #continue
                 elif field.datatype == 'note':
-                    fieldlist.append(note_fields[field.number])
+                    fieldlist.append('                <div class="row"><div class="col-md-12">' + note_fields[field.number] + '</div></div>\n')
                     #fieldlist.append('                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, strip_newlines=True) + '</div></div>\n')
                     #continue
                 # elif field.datatype in ['script', 'css']:
@@ -996,15 +1016,15 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 continue
             if hasattr(field, 'label'):
                 if status.labels[field.number] == 'no label':
-                    fieldlist.append('                <div class="form-group row' + req_tag + '"><div class="col widecol">' + input_for(status, field, wide=True) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group row' + side_note_parent + req_tag + '"><div class="col widecol">' + input_for(status, field, wide=True) + '</div>' + side_note + '</div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
-                    fieldlist.append('                <div class="form-group row yesnospacing"><div class="col widecol">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group row yesnospacing ' + side_note_parent + '"><div class="col widecol">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
-                    fieldlist.append('                <div class="form-group row yesnospacing' + req_tag +'"><div class="offset-md-4 col-md-8">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group row yesnospacing' + side_note_parent + req_tag +'"><div class="offset-md-4 col-md-8">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
                 elif status.labels[field.number] == '':
-                    fieldlist.append('                <div class="form-group row' + req_tag + '"><div class="offset-md-4 col-md-8 fieldpart nolabel">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group row' + side_note_parent + req_tag + '"><div class="offset-md-4 col-md-8 fieldpart nolabel">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
                 else:
-                    fieldlist.append('                <div class="form-group row' + req_tag + '"><label for="' + escape_id(label_saveas) + '" class="col-md-4 col-form-label datext-right">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-md-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group row' + side_note_parent + req_tag + '"><label for="' + escape_id(label_saveas) + '" class="col-md-4 col-form-label datext-right">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-md-8 fieldpart">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
             if hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or 'show_if_js' in field.extras):
                 fieldlist.append('                </div>\n')
         output += status.pre

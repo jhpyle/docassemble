@@ -339,7 +339,6 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
     return(text)
 
 def docx_filter(text, metadata=None, question=None):
-    logmessage('docx_filter')
     if metadata is None:
         metadata = dict()
     text = text + "\n\n"
@@ -443,7 +442,7 @@ def docx_template_filter(text):
     text = re.sub(r'\[SECTIONNUM\] *', '', text)
     text = re.sub(r'\[SKIPLINE\] *', '</w:t><w:br/><w:t xml:space="preserve">', text)
     text = re.sub(r'\[VERTICALSPACE\] *', '</w:t><w:br/><w:br/><w:t xml:space="preserve">', text)
-    text = re.sub(r'\[NEWLINE\] *', '</w:t><w:br/><w:br/><w:t xml:space="preserve">', text)
+    text = re.sub(r'\[NEWLINE\] *', '</w:t><w:br/><w:t xml:space="preserve">', text)
     text = re.sub(r'\n *\n', '[NEWPAR]', text)
     text = re.sub(r'\n', ' ', text)
     text = re.sub(r'\[NEWPAR\] *', '</w:t><w:br/><w:br/><w:t xml:space="preserve">', text)
@@ -1255,7 +1254,7 @@ def video_control(files):
     for d in files:
         if type(d) in (str, unicode, types.NoneType):
             return unicode(d)
-    output = '<video width="320" height="240" controls="controls">' + "\n"
+    output = '<video controls="controls">' + "\n"
     for d in files:
         if type(d) is list:
             if d[0] is None:
@@ -1404,7 +1403,8 @@ def get_video_urls(the_video, question=None):
             file_info = server.file_finder(full_file, question=question)
             if 'fullpath' in file_info:
                 url = server.url_finder(full_file, _question=question)
-                output.append([url, mimetype])
+                if url is not None:
+                    output.append([url, mimetype])
     return output
 
 def to_text(html_doc, terms, links, status):

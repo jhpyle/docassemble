@@ -104,6 +104,9 @@ do
          "$file" = "ml-export" -o \
          "$file" = "ml-export-yaml" -o \
          "$file" = "live_chat" -o \
+         "$file" = "review-side-note" -o \
+         "$file" = "side-html" -o \
+         "$file" = "side-note" -o \
          "$file" = "bootstrap-theme" -o \
          "$file" = "flash" -o \
          "$file" = "log" -o \

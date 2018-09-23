@@ -1,0 +1,76 @@
+metadata:
+  title: Notes on review side
+  short title: Note
+  documentation: "https://docassemble.org/docs/fields.html#note"
+  example start: 4
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+---
+mandatory: True
+code: |
+  fruit = "apples"
+  vegetable = "turnips"
+  user.name.first = "John"
+  user.name.last = "Doe"
+---
+question: |
+  Review your answers
+review:
+  - note: |
+      Welcome to the review of answers.
+  - note: |
+      #### Your identity
+    show if: user.name.first
+  - Change your name: user.name.first
+    help: |
+      You said your name was
+      **${ user.name }**.
+    note: |
+      Do not use a pseudonym, please.
+  - note: |
+      #### Your favorite foods
+    show if: fruit
+  - Revisit Fruit: fruit
+    button: |
+      You said you liked ${ fruit }.
+    note: |
+      This should be a tasty fruit.
+  - Revisit Vegetable: vegetable
+    button: |
+      You said you liked ${ vegetable }.
+  - Revisit Fungus: fungi
+    button: |
+      You said you liked ${ fungi }.
+  - note: |
+      We suspect you prefer
+      ${ fruit } to ${ vegetable }.
+field: answers_reviewed
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - no label: fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - no label: vegetable
+---
+question: |
+  What is your favorite fungi?
+fields:
+  - no label: fungi
+---
+mandatory: True
+code: |
+  answers_reviewed
+  all_done
+---
+event: all_done
+question: |
+  You are done with the interview.
