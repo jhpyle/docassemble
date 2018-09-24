@@ -1129,12 +1129,38 @@ the_file.write(contents)
 any existing contents of the file with the contents of the file given
 as an argument.
 
+{% highlight python %}
+the_file.copy_into(other_file.path())
+{% endhighlight %}
+
 <a name="DAFile.from_url"></a>The `.from_url()` method overwrites
 any existing contents of the file with the contents of the given URL.
 
 {% highlight python %}
-the_file.copy_into(other_file.path())
+the_file.from_url("http://some.remote.url/file.pdf")
 {% endhighlight %}
+
+In order to initialize a file with contents from a remote source so that
+it can be used locally, a good approach is to use an `objects` block and
+then initialize the file, giving it the desired file extension, and then
+`retrieve` it (thus setting the required file_info attributes):
+
+{% highlight python %}
+---
+objects:
+  - pdf_file: DAFile
+---
+...
+---
+code: |
+  pdf_file.initialize(extension="pdf")
+  pdf_file.from_url("https://some.remote.url/the_file.pdf") 
+  pdf_file.retrieve()
+---
+{% endhighlight %}
+
+At this point, you'll be able to work with the file as if it had been
+uploaded by a user from within the same interview.
 
 <a name="DAFile.commit"></a>The `.commit()` method ensures that
 changes to the file are stored permanently.  Under normal
