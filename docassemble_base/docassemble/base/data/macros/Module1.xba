@@ -24,10 +24,6 @@ sub PysIndexer(sDocUrl as string)
 dim oDocument as object
 dim dispatcher as object
 
-dim propExp(0) as new com.sun.star.beans.PropertyValue
-
-dim sNewUrl as string
-
 if FileExists(sDocUrl) then
 
 ' TEst
@@ -37,6 +33,38 @@ if FileExists(sDocUrl) then
     dispatcher.executeDispatch(oDocument.CurrentController.Frame, ".uno:UpdateAllIndexes", "", 0, Array())
 
     oDocument.store()
+
+end if
+    
+Wait 400
+ThisComponent.close(True)
+Wait 400
+starDesktop.terminate
+
+end sub
+
+sub PysIndexerPdf(sDocUrl as string, sPdfURL as string)
+
+' Test
+dim oDocument as object
+dim dispatcher as object
+
+dim propExp(0) as new com.sun.star.beans.PropertyValue
+
+if FileExists(sDocUrl) then
+
+' TEst
+
+    oDocument = starDesktop.loadComponentFromUrl(convertToUrl(sDocUrl), "_blank", 0, array())
+    dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+    dispatcher.executeDispatch(oDocument.CurrentController.Frame, ".uno:UpdateAllIndexes", "", 0, Array())
+
+    propExp(0).Name = "FilterName"
+    propExp(0).Value = "writer_pdf_Export"
+
+    GlobalScope.BasicLibraries.LoadLibrary("Tools")
+
+    oDocument.storeToURL(convertToUrl(sPdfURL), propExp())
 
 end if
     

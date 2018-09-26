@@ -2035,10 +2035,16 @@ class DAFile(DAObject):
         the_path = self.file_info['path']
         with open(the_path, 'w') as f:
             f.write(content)
-    def copy_into(self, filename):
-        """Makes the contents of the file the same as those of the given filename."""
         self.retrieve()
-        shutil.copyfile(filename, self.file_info['path'])
+    def copy_into(self, other_file):
+        """Makes the contents of the file the same as those of another file."""
+        if isinstance(other_file, DAFile) or isinstance(other_file, DAFileList) or isinstance(other_file, DAFileCollection) or isinstance(other_file, DAStaticFile):
+            filepath = other_file.path()
+        else:
+            filepath = other_file
+        self.retrieve()
+        shutil.copyfile(filepath, self.file_info['path'])
+        self.retrieve()
     def from_url(self, url):
         """Makes the contents of the file the contents of the given URL."""
         self.retrieve()
@@ -2049,10 +2055,11 @@ class DAFile(DAObject):
         c.setopt(c.URL, url)
         c.setopt(c.FOLLOWLOCATION, True)
         c.setopt(c.WRITEDATA, f)
-        c.setopt(pycurl.USERAGENT, 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36')
+        c.setopt(pycurl.USERAGENT, docassemble.base.functions.server.daconfig.get('user agent', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36'))
         c.setopt(pycurl.COOKIEFILE, cookiefile.name)
         c.perform()
         c.close()
+        self.retrieve()
     def _make_pdf_thumbnail(self, page):
         """Creates a page image for the first page of a PDF file."""
         if not hasattr(self, 'file_info'):

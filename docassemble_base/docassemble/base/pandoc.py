@@ -180,14 +180,17 @@ class MyPandoc(object):
             self.output_content = p.communicate(self.input_content.encode('utf8'))[0]
         return
 
-def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None):
+def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_references=False):
     tempdir = tempfile.mkdtemp()
     from_file = os.path.join(tempdir, "file." + in_format)
     to_file = os.path.join(tempdir, "file.pdf")
     shutil.copyfile(in_file, from_file)
     tries = 0
     while tries < 5:
-        subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'pdf', from_file]
+        if update_references:
+            subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.PysIndexerPdf(' + from_file + ',' + to_file + ')']
+        else:
+            subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'pdf', from_file]
         p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
         result = p.wait()
         if os.path.isfile(to_file):
@@ -195,6 +198,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None):
         result = 1
         tries += 1
         time.sleep(2 + tries*random.random())
+        logmessage("Retrying libreoffice with " + repr(subprocess_arguments))
         continue
     if result == 0:
         if pdfa:

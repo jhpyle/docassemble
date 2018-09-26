@@ -1,6 +1,7 @@
 metadata:
   title: Adding object to list
   short title: Append
+  documentation: "https://docassemble.org/docs/objects.html#DAList.append"
   example start: 2
   example end: 8
 ---
@@ -54,4 +55,3 @@ subquestion: |
   % for y in person:
   * ${ y } is ${ y.age } years old.
   % endfor
-    

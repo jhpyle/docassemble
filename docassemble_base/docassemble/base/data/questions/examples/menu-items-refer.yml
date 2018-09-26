@@ -1,6 +1,7 @@
 metadata:
   title: Several interviews in one
   short title: Multi-interview
+  documentation: "https://docassemble.org/docs/logic.html#multiple interviews links"
   example start: 2
   example end: 3
 ---

@@ -1,0 +1,28 @@
+metadata:
+  title: Temporary URL
+  short title: URL
+  documentation: "https://docassemble.org/docs/objects.html#DAFile.url_for"
+  example start: 1
+  example end: 2
+---
+mandatory: True
+question: |
+  This interview is all done.
+subquestion: |
+  To start your case,
+  [download your pleading]
+  in the next sixty seconds,
+  print it, and take it
+  to clerk's office at the
+  court.
+
+  [download your pleading]: ${ complaint.pdf.url_for(temporary=True, seconds=60) }
+---
+attachment:
+  filename: complaint
+  name: Complaint
+  variable name: complaint
+  content: |
+    This is a complaint.
+
+    Blah, blah, blah

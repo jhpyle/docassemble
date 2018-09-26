@@ -1,6 +1,17 @@
 # Change Log
 
-## [0.3.0] - 2018-09-23
+## [0.2.101] - 2018-09-25
+### Changed
+- The `.copy_into()` method of `DAFile` now accepts `DAFile`,
+  `DAStaticFile`, `DAFileList`, and `DAFileCollection` objects as
+  the argument, as well as the direct file path of the other file.
+### Fixed
+- Problem with converting to PDF after `update references` for some
+  tables of contents.
+- The `.copy_into()` and `.from_url()` methods now update PDF and
+  image information after the file contents change.
+
+## [0.2.100] - 2018-09-23
 ### Added
 - The `forget_result_of()` and `re_run_logic()` functions.
 - Additional test interviews.
