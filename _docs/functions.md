@@ -1104,6 +1104,8 @@ The `url_of()` function also has a few special uses.
 The `qr_code()` function allows you to include the `[QR ...]` [markup] statement
 using [Python].
 
+{% include side-by-side.html demo="qr-code" %}
+
 These two questions are equivalent:
 
 {% highlight yaml %}
@@ -1696,6 +1698,8 @@ The `interface()` function returns `'web'` if the user is accessing
 the interview through a web browser and `'sms'` if the user is using
 [SMS].  If the web interface is used, but `&json=1` is added to the
 URL, then `interface()` will return `'json'`.
+
+{% include side-by-side.html demo="interface" %}
 
 Sometimes interviews are accessed by [background processes].
 `interface()` will return `'cron'` if the interview is being accessed
@@ -2614,6 +2618,8 @@ If `things` is a [Python list] with the elements
 
 If the locale is `US.utf8`, `currency(45.2)` returns `$45.20`.
 
+{% include side-by-side.html demo="currency" %}
+
 `currency(45)` returns `$45.00`, but `currency(45, decimals=False)`
 returns `$45`.
 
@@ -2717,6 +2723,8 @@ untouched.
 
 * `ordinal_number(8)` returns `eighth`.
 * `ordinal_number(11)` returns `11th`.
+
+{% include side-by-side.html demo="ordinal-number" %}
 
 This function can be customized with
 `docassemble.base.util.update_ordinal_numbers()` and

@@ -552,6 +552,10 @@ is usually preferable because it provides an order in which the fields
 should be evaluated; if you only provide a single dictionary, the
 items will be evaluated in a random order.
 
+The section below on [using code to find a template file] explains how
+you can use code to determine what template file to use with `pdf
+template file`.
+
 ### <a name="editable"></a>Making PDF files non-editable
 
 By default, the PDF files created by filling in
@@ -813,6 +817,10 @@ The `docx-jinja2-demo.docx` file looks like this:
 
 For more information on using [Jinja2] in .docx templates, see the
 documentation of [`python-docx-template`].
+
+The section below on [using code to find a template file] explains how
+you can use code to determine what template file to use with `docx
+template file`.
 
 ### <a name="include_docx_template"></a>Inserting other .docx files into .docx templates
 
@@ -1200,11 +1208,12 @@ file, set `valid formats` to `docx` only.
 
 # <a name="template file code"></a>Using code to find a template file
 
-Typically, when you refer to a filename in an `attachments` block, you
-refer to a file in the `data/templates` directory of a [package], or the
-["Templates" folder] of the [Playground].
+Typically, when you refer to a filename in an `attachments` block
+using `pdf template file` or `docx template file`, you refer to a file
+in the `data/templates` directory of a [package], or the ["Templates"
+folder] of the [Playground].
 
-Alternatively, you can refer to filenames using code.
+Alternatively, you can refer to files using code.
 
 {% include side-by-side.html demo="template-code" %}
 
@@ -1498,3 +1507,4 @@ interview, see the [`cache documents` feature].
 [ZIP file]: https://en.wikipedia.org/wiki/Zip_(file_format)
 [`redact()`]: {{ site.baseurl }}/docs/functions.html#redact
 [docx-table-columns.docx]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/docx-table-columns.docx
+[using code to find a template file]: #template file code

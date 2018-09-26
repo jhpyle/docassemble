@@ -148,10 +148,8 @@ need to include them from the [`docassemble.base.util`] module by
 writing the following somewhere in your interview:
 
 {% highlight yaml %}
----
 modules:
   - docassemble.base.util
----
 {% endhighlight %}
 
 Unless otherwise instructed, you can assume that all of the classes
@@ -365,7 +363,6 @@ attribute is defined.  The attribute name must be provided as quoted
 text.  For example:
 
 {% highlight yaml %}
----
 objects:
   - client: Individual
 ---
@@ -386,7 +383,6 @@ several attributes but you want to access them programmatically.  For
 example:
 
 {% highlight yaml %}
----
 mandatory: True
 question: |
   Your address.
@@ -395,7 +391,6 @@ subquestion: |
   Your ${ part } is ${ client.address.attr(part) }.
   
   % endfor
----
 {% endhighlight %}
 
 Note that because `None` is returned when the attribute is not
@@ -404,12 +399,10 @@ definition for the attribute.  If you want to trigger this process,
 use the built-in [Python] function [`getattr()`].
 
 {% highlight yaml %}
----
 code: |
   for characteristic in ['eye_color', 'hair_color', 'weight']:
     getattr(client.child[i], characteristic)
   client.child[i].complete = True
----
 {% endhighlight %}
 
 As discussed below, the [`Individual`] object has interesting methods
@@ -454,6 +447,8 @@ False
 True
 {% endhighlight %}
 
+{% include side-by-side.html demo="copy-shallow" %}
+
 <a name="DAObject.copy_deep"></a>The `copy_deep()` method creates a
 copy of the object its sub-objects and gives it, and all of its
 sub-objects, new intrinsic names.
@@ -470,6 +465,8 @@ False
 >>> new_object.sub_object is old_object.sub_object
 False
 {% endhighlight %}
+
+{% include side-by-side.html demo="copy-deep" %}
 
 ## <a name="DAList"></a>DAList
 
@@ -524,14 +521,12 @@ could add a [`generic object`] question that is specific to the
 recipients that were added with `appendObject()`.  For example:
 
 {% highlight yaml %}
----
 generic object: Individual
 question: |
   The ${ ordinal(i) } ${ x.object_name() } must have a name.  What is it?
 fields:
   - First Name: x[i].name.first
   - Last Name: x[i].name.last
----
 {% endhighlight %}
 
 The names of the fourth and fifth recipients are capable of being
@@ -809,7 +804,6 @@ For most purposes, your code can treat a `DADict` object just like a
 [Python dictionary].
 
 {% highlight yaml %}
----
 objects:
   things: DADict
 ---
@@ -833,7 +827,6 @@ code: |
   description = ''
   for key, value in things.iteritems():
     description += "* " + key + ": " + value + "\n"
----
 {% endhighlight %}
 
 <a name="DADict.all_true"></a><a name="DADict.all_false"></a><a name="DADict.any_true"></a><a name="DADict.any_false"></a>The
@@ -900,14 +893,12 @@ A `DASet` is like a [`DADict`] and a [`DAList`], except it acts like a
 [Python] "[set]."
 
 {% highlight yaml %}
----
 objects:
   issues: DASet
 ---
 code: |
   if user_needs_to_apply:
     issues.add('application')
----
 {% endhighlight %}
 
 `DASet`s use the same methods that [`DAList`]s use, except for
@@ -1042,6 +1033,24 @@ will only allow access to the file to the current user.
 
 {% include side-by-side.html demo="dafile-url-for" %}
 
+However, if you have set the `private` attribute to `False` by calling
+`.set_attributes(private=False)` on the object, than the URL obtained
+from `.url_for()` will be accessible to anyone, regardless of whether
+they are logged in.  For more information, see
+[`.set_attributes()`](#DAFile.set_attributes).
+
+The `.url_for()` method can also be used to generate a temporary URL
+where anyone who knows the URL can access the file, regardless of
+whether they are logged in, regardless of whether the server uses
+cloud [data storage], and regardless of whether the `private`
+attribute is `True` or `False`.  To obtain such a URL, include
+`temporary=True` as a keyword parameter.  By default, the URL will
+expire after 30 seconds.  To extend this time, include the optional
+keyword parameter `seconds`.  This example creates a URL that expires
+in 60 seconds.
+
+{% include side-by-side.html demo="dafile-url-for-temporary" %}
+
 <a name="DAFile.retrieve"></a>The `.retrieve()` command ensures that a
 stored file is ready for use on the system.  Calling `.retrieve` is
 necessary because if **docassemble** is configured to use [Amazon S3]
@@ -1055,19 +1064,20 @@ allows you to set two characteristics of the uploaded document:
 
 * `private`: the default value of this attribute is `True`, which
   means that other interviews and other interview sessions cannot
-  access the contents of the file, even if they know the `.number` or
-  have the `DAFile` object itself.  You will need to set the `private`
-  attribute to `False` if you want other sessions to be able to access
-  the file.  For example, you might store a [`DAFile`] object in
-  [storage] and retrieve it within other interviews at a later time.
-  The contents of the file will not be accessible unless you set
-  `private` to `False`.
+  access the contents of the file, even if they know the `.number`, or
+  have the `DAFile` object itself, or have a URL to the file obtained
+  from [`.url_for()`](#DAFile.url_for).  You will need to set the
+  `private` attribute to `False` if you want other sessions or other
+  people to be able to access the file.  For example, you might store
+  a [`DAFile`] object in [storage] and retrieve it within other
+  interviews at a later time.  The contents of the file will not be
+  accessible unless you set `private` to `False`.
 * `persistent`: the default value of this attribute is `False`, which
   means that the file will be deleted when the interview session is
   deleted.  Interview sessions are deleted when the user presses an
   [exit button] or an [exit command] is run.  Interview sessions are
   also deleted when the session has been [inactive for a period].  You
-  can prevent the deletion of the files by setting the `persistent`
+  can prevent the deletion of a file by setting the `persistent`
   attribute to `True`.
   
 You can set these attributes with code like this:
@@ -1082,7 +1092,7 @@ code: |
   user_signature.set_attributes(persistent=True)
 {% endhighlight %}
 
-To see the values of the attributes for a variable like
+To read the values of the attributes for a variable like
 `user_signature`, refer to `user_signature.private` and
 `user_signature.persistent`, which are set by
 [`.retrieve()`](#DAFile.retrieve).  Setting these attributes directly
@@ -1130,37 +1140,35 @@ any existing contents of the file with the contents of the file given
 as an argument.
 
 {% highlight python %}
-the_file.copy_into(other_file.path())
+the_file.copy_into(other_file)
 {% endhighlight %}
+
+The `other_file` can be a path to a file on the system.  If
+`other_file` is a [`DAFile`], [`DAFileList`], [`DAFileCollection`], or
+[`DAStaticFile`], the file at `other_file.path()` will be used.
 
 <a name="DAFile.from_url"></a>The `.from_url()` method overwrites
 any existing contents of the file with the contents of the given URL.
 
 {% highlight python %}
-the_file.from_url("http://some.remote.url/file.pdf")
+the_file.from_url("https://example.com/file.pdf")
 {% endhighlight %}
 
-In order to initialize a file with contents from a remote source so that
-it can be used locally, a good approach is to use an `objects` block and
-then initialize the file, giving it the desired file extension, and then
-`retrieve` it (thus setting the required file_info attributes):
+In order to initialize a `DAFile` with contents from a remote source so that
+it can be used in an interview, first declare the object:
 
-{% highlight python %}
----
+{% highlight yaml %}
 objects:
   - pdf_file: DAFile
----
-...
----
-code: |
-  pdf_file.initialize(extension="pdf")
-  pdf_file.from_url("https://some.remote.url/the_file.pdf") 
-  pdf_file.retrieve()
----
 {% endhighlight %}
 
-At this point, you'll be able to work with the file as if it had been
-uploaded by a user from within the same interview.
+Then use [`code`] to initialize the object and set the contents:
+
+{% highlight yaml %}
+code: |
+  pdf_file.initialize(extension="pdf")
+  pdf_file.from_url("https://example.com/the_file.pdf") 
+{% endhighlight %}
 
 <a name="DAFile.commit"></a>The `.commit()` method ensures that
 changes to the file are stored permanently.  Under normal
@@ -1300,10 +1308,8 @@ The `DAStaticFile` object can be used like this:
 It can also be initialized like this:
 
 {% highlight yaml %}
----
 objects:
   - the_icon: DAStaticFile.using(filename='coins.png')
----
 {% endhighlight %}
 
 <a name="DAStaticFile.show"></a>The `.show()` method inserts markup that
@@ -1924,10 +1930,8 @@ like companies, government agencies, etc.  If you create an object of
 type `Person` by doing:
 
 {% highlight yaml %}
----
 objects:
   - opponent: Person
----
 {% endhighlight %}
 
 then you will create an object with the following built-in attributes:
@@ -2091,10 +2095,8 @@ for persons who you know are human beings.
 If you create an object of type `Individual` by doing:
 
 {% highlight yaml %}
----
 objects:
   - president: Individual
----
 {% endhighlight %}
 
 then you will create an object with the following built-in attributes:
@@ -2130,11 +2132,9 @@ methods, be sure to inform **docassemble** who the user is by
 inserting the following [initial block]:
 
 {% highlight yaml %}
----
 initial: True
 code: |
   set_info(user=user, role='user_role')
----
 {% endhighlight %}
 
 (If you include the [`basic-questions.yml`] file, this is done for you.)
@@ -2185,7 +2185,6 @@ name was auto-filled on the page.  The `.first_name_hint()` and
 an individual's name as follows:
 
 {% highlight yaml %}
----
 generic object: Individual
 question: |
   What is ${ x.object_possessive('name') }?
@@ -2200,7 +2199,6 @@ fields:
     required: False
     code: |
       name_suffix()
----
 {% endhighlight %}
 
 For an explanation of how [`.object_possessive()`] works, see the
@@ -2669,14 +2667,12 @@ The following example shows how to gather the user's latitude and
 longitude from the web browser.
 
 {% highlight yaml %}
----
 include:
   - basic-questions.yml
 ---
 initial: True
 code: |
   track_location = user.location.status()
----
 {% endhighlight %}
 
 Alternatively, if you do not want to include all of the questions and
@@ -2684,7 +2680,6 @@ code blocks of the [`basic-questions.yml`] file in your interview, you
 can do:
 
 {% highlight yaml %}
----
 modules:
   - docassemble.base.util
 ---
@@ -2695,7 +2690,6 @@ initial: True
 code: |
   set_info(user=user, role='user_role')
   track_location = user.location.status()
----
 {% endhighlight %}
 
 If all goes well, the user's latitude and longitude will be gathered
@@ -2705,7 +2699,6 @@ You can control when this happens in the interview by controlling when
 user for this:
 
 {% highlight yaml %}
----
 initial: True
 code: |
   set_info(user=user, role='user_role')
@@ -2716,7 +2709,6 @@ question: |
   We would like to gather information about your current location
   from your mobile device.  Is that ok with you?
 yesno: user_ok_with_sharing_location
----
 {% endhighlight %}
 
 [`track_location`] is a [special variable] that tells **docassemble**
@@ -2777,14 +2769,12 @@ value of `.amount()` is also returned when you pass a `Value` to the
 [`currency()`] function.  For example:
 
 {% highlight yaml %}
----
 question: |
   The value of your real estate holdings is
   ${ currency(real_estate_holdings) }.
   
   An identical way of writing this number is 
   ${ currency(real_estate_holdings.amount()) }.
----
 {% endhighlight %}
 
 ### <a name="PeriodicValue"></a>PeriodicValue
@@ -2910,7 +2900,6 @@ It has one method:
 Here is an example that demonstrates its use:
 
 {% highlight yaml %}
----
 modules:
   - docassemble.base.util
 ---
@@ -2969,7 +2958,6 @@ content: |
 
   Please go to [${ interview_url() }](${ interview_url() })
   to resume the interview.
----
 {% endhighlight %}
 
 The `send_email()` method's first argument is the special variable
@@ -2994,7 +2982,6 @@ If you wanted to initialize the variable `possession` as a [`DAList`]
 of [`Thing`]s, you could write
 
 {% highlight yaml %}
----
 objects:
   - possession: DAList
 ---
@@ -3008,20 +2995,16 @@ can be used to accomplish the same thing in a more compact way, so
 that you could instead write:
 
 {% highlight yaml %}
----
 objects:
   - possession: DAList.using(object_type=Thing)
----
 {% endhighlight %}
 
 You can use `using()` when indicating an `object_type`:
 
 {% highlight yaml %}
----
 objects:
   - client: Individual
   - possession: DAList.using(object_type=Thing.using(owner=client))
----
 {% endhighlight %}
 
 The result of this will be that `possession` is a [`DAList`] of
@@ -3046,10 +3029,8 @@ are aware of their first-given names.  All **docassemble** objects
 have an `.instanceName` attribute.  So if you do:
 
 {% highlight yaml %}
----
 objects:
   - user: Individual
----
 {% endhighlight %}
 
 then `user.instanceName` will be `'user'`, and
@@ -3058,10 +3039,8 @@ then `user.instanceName` will be `'user'`, and
 You can also initialize `user` in standard [Python] fashion:
 
 {% highlight yaml %}
----
 code: |
   user = Individual()
----
 {% endhighlight %}
 
 In this circumstance, **docassemble** uses some [magic] to set
@@ -3069,10 +3048,8 @@ In this circumstance, **docassemble** uses some [magic] to set
 example, the following does not work:
 
 {% highlight yaml %}
----
 code: |
   (user, advocate) = (Individual(), Individual())
----
 {% endhighlight %}
 
 If you ever get an error message in **docassemble** referring to
@@ -3086,10 +3063,8 @@ include the variable name as an argument to the object name.  For
 example:
 
 {% highlight yaml %}
----
 code: |
   (user, advocate) = (Individual('user'), Individual('advocate'))
----
 {% endhighlight %}
 
 Attribute initialization does not have this limitation.
@@ -3100,17 +3075,14 @@ not be overwritten unless you explicitly overwrite it.  For example,
 if you do:
 
 {% highlight yaml %}
----
 code: |
   user.name = IndividualName()
----
 {% endhighlight %}
 
 then `user.name.instanceName` will return `'user.name'`, as you would
 expect.  But if you do:
 
 {% highlight yaml %}
----
 code: |
   cool_name = IndividualName()
   cool_name.first = 'Groovy'
@@ -3118,7 +3090,6 @@ code: |
 ---
 code: |
   user.name = cool_name()
----
 {% endhighlight %}
 
 then `user.name.instanceName` will be `'cool_name'`, not `'user.name'`.
@@ -3126,11 +3097,9 @@ then `user.name.instanceName` will be `'cool_name'`, not `'user.name'`.
 You can manually correct this:
 
 {% highlight yaml %}
----
 code: |
   user.name = cool_name()
   user.name.instanceName = 'user.name'
----
 {% endhighlight %}
 
 The `.instanceName` is not simply an internal attribute; it is used by
@@ -3242,7 +3211,6 @@ generic object: Recipe
 sets: x.ingredients
 code: |
   x.initializeAttribute('ingredients', DAList)
----
 {% endhighlight %}
 
 However, it is often cleaner to put the object initialization into the
@@ -3258,10 +3226,8 @@ class Recipe(DAObject):
 Then, you would only need to write this in your interview file:
 
 {% highlight yaml %}
----
 objects:
   - dinner: Recipe
----
 {% endhighlight %}
 
 <a name="DAObject.init"></a>The `init()` function is a special
@@ -3321,7 +3287,6 @@ Then to change the `temperature_type` from an interview, you might
 write:
 
 {% highlight yaml %}
----
 modules:
   - docassemble.cooking.objects
 ---
@@ -3331,7 +3296,6 @@ code: |
     temperature_type = 'Kelvin'
   elif user_country in ['United States', 'Great Britain']:
     temperature_type = 'Fahrenheit'
-...
 {% endhighlight %}
 
 This would be effective at changing the `temperature_type` variable
@@ -3375,7 +3339,6 @@ one of the [`modules`] and then run [`set_info()`] in [`initial`]
 code:
 
 {% highlight yaml %}
----
 modules:
   - docassemble.base.util
   - docassemble.cooking.objects
@@ -3388,7 +3351,6 @@ code: |
     set_info(temperature_type='Fahrenheit')
   else:
     set_info(temperature_type='Celsius')
-...
 {% endhighlight %}
 
 The values set by [`set_info()`] are forgotten after the user's screen
@@ -3439,7 +3401,6 @@ set in `initial` code that will run every time a screen refreshes.
 Now in your interview you can do:
 
 {% highlight yaml %}
----
 modules:
   - docassemble.cooking.objects
 ---
@@ -3451,7 +3412,6 @@ code: |
     set_temperature_type('Fahrenheit')
   else:
     set_temperature_type('Celsius')
-...
 {% endhighlight %}
 
 Note that you do not need to worry about whether your global variables
@@ -3490,7 +3450,6 @@ class Recipe(DAObject):
 Then you could have this in your interview:
 
 {% highlight yaml %}
----
 question: |
   What kind of temperature system do you use?
 choices:
@@ -3498,7 +3457,6 @@ choices:
   - Fahrenheit
   - Kelvin
 field: temperature_type
----
 {% endhighlight %}
 
 and then in your question text you could write:
@@ -3552,7 +3510,6 @@ Note that the `can_practice_in()` method is only available for
 interview:
 
 {% highlight yaml %}
----
 objects:
   - user: Individual
 ---
@@ -3563,7 +3520,6 @@ question: |
   % else:
   You will need to hire a lawyer to take the case.
   % endif
----
 {% endhighlight %}
 
 then you would get an error because `can_practice_in()` is not a valid
