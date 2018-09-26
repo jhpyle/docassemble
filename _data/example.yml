@@ -1635,6 +1635,28 @@
       This is a complaint.
 
       Blah, blah, blah
+"dafile-url-for-temporary": |-
+  mandatory: True
+  question: |
+    This interview is all done.
+  subquestion: |
+    To start your case,
+    [download your pleading]
+    in the next sixty seconds,
+    print it, and take it
+    to clerk's office at the
+    court.
+
+    [download your pleading]: ${ complaint.pdf.url_for(temporary=True, seconds=60) }
+  ---
+  attachment:
+    filename: complaint
+    name: Complaint
+    variable name: complaint
+    content: |
+      This is a complaint.
+
+      Blah, blah, blah
 "dalink": |-
   objects:
     - the_link: DALink

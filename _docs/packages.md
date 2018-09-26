@@ -344,6 +344,23 @@ Once a version of a package is installed on [PyPI], it
 exists there permanently.  When you install a version of a package on
 [PyPI], the version will automatically increment.
 
+## <a name="package permissions"></a>Permissions on packages
+
+The "Package Management" system remembers which user installed which
+package.  Thus, if developer Fred installs a package called
+`docassemble.guardianship`, and developer George tries to install a
+package called `docassemble.guardianship`, George will get an error.
+These permissions do not apply to package dependencies, however.
+
+A user with `admin` privileges can install or uninstall any package.
+
+The purpose of the permission system is to facilitate the use of a
+single server by a team of developers by implementing some minor
+safeguards that prevent developers from interfering with each others'
+work.  It is not the case that each developer works in an insulated
+"sandbox."  All interviews on the system run with the same system
+[UID] (`www-data`).
+
 # <a name="running"></a>Running interviews from installed packages
 
 Once a **docassemble** extension package is installed, you can start
@@ -559,3 +576,4 @@ interviews that might have a very different purpose.
 [packaging your interview]: {{ site.baseurl }}/docs/hello.html#packaging
 [hello world]: {{ site.baseurl }}/docs/hello.html
 [development workflows]: {{ site.baseurl }}/docs/development.html
+[UID]: http://www.linfo.org/uid.html
