@@ -16,7 +16,26 @@ from docassemble.base.pdftk import pdf_encrypt
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
-PANDOC_ENGINE = '--latex-engine=' + daconfig.get('pandoc engine', 'pdflatex')
+
+def get_pandoc_version():
+    p = subprocess.Popen(
+        [PANDOC_PATH, '--version'],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE
+    )
+    version_content = p.communicate()[0]
+    version_content = re.sub(r'\n.*', '', version_content)
+    version_content = re.sub(r'^pandoc ', '', version_content)
+    return version_content
+    
+PANDOC_VERSION = get_pandoc_version()
+if PANDOC_VERSION.startswith('1'):
+    PANDOC_OLD = True
+    PANDOC_ENGINE = '--latex-engine=' + daconfig.get('pandoc engine', 'pdflatex')
+else:
+    PANDOC_OLD = False
+    PANDOC_ENGINE = '--pdf-engine=' + daconfig.get('pandoc engine', 'pdflatex')
+
 LIBREOFFICE_PATH = daconfig.get('libreoffice', 'libreoffice')
 LIBREOFFICE_MACRO_PATH = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
 
@@ -25,14 +44,6 @@ convertible_extensions = {"docx": "docx", "odt": "odt"}
 if daconfig.get('libreoffice', 'libreoffice') is not None:
     convertible_mimetypes.update({"application/msword": "doc", "application/rtf": "rtf"})
     convertible_extensions.update({"doc": "doc", "rtf": "rtf"})
-
-def set_pandoc_path(path):
-    global PANDOC_PATH
-    PANDOC_PATH = path
-
-def set_libreoffice_path(path):
-    global LIBREOFFICE_PATH
-    LIBREOFFICE_PATH = path
 
 #fontfamily: zi4, mathptmx, courier
 #\ttfamily
@@ -114,7 +125,10 @@ class MyPandoc(object):
         icc_profile_in_temp = os.path.join(tempfile.gettempdir(), 'sRGB_IEC61966-2-1_black_scaled.icc')
         if not os.path.isfile(icc_profile_in_temp):
             shutil.copyfile(docassemble.base.functions.standard_template_filename('sRGB_IEC61966-2-1_black_scaled.icc'), icc_profile_in_temp)
-        subprocess_arguments = [PANDOC_PATH, PANDOC_ENGINE, '--smart', '-M', 'latextmpdir=' + os.path.join('latex_convert', ''), '-M', 'pdfa=' + ('true' if self.pdfa else 'false')]
+        subprocess_arguments = [PANDOC_PATH, PANDOC_ENGINE]
+        if PANDOC_OLD:
+            subprocess_arguments.append("--smart")
+        subprocess_arguments.extend(['-M', 'latextmpdir=' + os.path.join('latex_convert', ''), '-M', 'pdfa=' + ('true' if self.pdfa else 'false')])
         if len(yaml_to_use) > 0:
             subprocess_arguments.extend(yaml_to_use)
         if self.template_file is not None:
@@ -167,7 +181,16 @@ class MyPandoc(object):
         if self.output_format in ("pdf", "tex", "rtf", "rtf to docx", "epub", "docx"):
             self.convert_to_file(question)
         else:
-            subprocess_arguments = [PANDOC_PATH, PANDOC_ENGINE, '--smart', '-M', 'latextmpdir=' + os.path.join('latex_convert', ''), '--from=%s' % self.input_format, '--to=%s' % self.output_format]
+            subprocess_arguments = [PANDOC_PATH, PANDOC_ENGINE]
+            if PANDOC_OLD:
+                input_format = self.input_format
+                subprocess_arguments.append("--smart")
+            else:
+                if self.input_format == 'markdown':
+                    input_format = "markdown+smart"
+                else:
+                    input_format = input_format
+            subprocess_arguments.extend(['-M', 'latextmpdir=' + os.path.join('latex_convert', ''), '--from=%s' % input_format, '--to=%s' % self.output_format])
             subprocess_arguments.extend(self.arguments)
             #logmessage("Arguments are " + str(subprocess_arguments))
             p = subprocess.Popen(
@@ -248,7 +271,13 @@ def word_to_markdown(in_file, in_format):
         in_file_to_use = in_file
         in_format_to_use = in_format
         tempdir = None
-    subprocess_arguments = [PANDOC_PATH, PANDOC_ENGINE, '--smart', '--from=%s' % str(in_format_to_use), '--to=markdown', str(in_file_to_use), '-o', str(temp_file.name)]
+    subprocess_arguments = [PANDOC_PATH, PANDOC_ENGINE]
+    if PANDOC_OLD:
+        subprocess_arguments.append("--smart")
+    else:
+        if in_format_to_use == 'markdown':
+            in_format_to_use = "markdown+smart"
+    subprocess_arguments.extend(['--from=%s' % str(in_format_to_use), '--to=markdown', str(in_file_to_use), '-o', str(temp_file.name)])
     result = subprocess.call(subprocess_arguments)
     if tempdir is not None:
         shutil.rmtree(tempdir)
