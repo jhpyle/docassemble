@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.2.102] - 2018-09-27
+### Changed
+- LibreOffice upgraded to version in jessie-backports.
+### Added
+- Options for `new_session` and `exit_logout` under buttons,
+  `command()`, and `url_of()`.
+### Fixed
+- Logging in with e-mail and password where e-mail already used for a
+  social login generated an exception.
+
 ## [0.2.101] - 2018-09-25
 ### Changed
 - The `.copy_into()` method of `DAFile` now accepts `DAFile`,

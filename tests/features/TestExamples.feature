@@ -7192,3 +7192,7 @@ Feature: Example interviews
     Then I should see the phrase "You said your favorite fruit is peaches and your favorite vegetable is potatoes."
     And I click the button "Continue"
     Then I should see the phrase "You said your favorite fruit is apple and your favorite vegetable is turnip."
+
+  Scenario: Test the interview "Temporary URL"
+    Given I start the interview "docassemble.base:data/questions/examples/dafile-url-for-temporary.yml"
+    Then I should see the phrase "This interview is all done."
