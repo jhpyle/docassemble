@@ -111,6 +111,7 @@ parameters because they are used for other purposes by
 * `from_list`
 * `i`
 * `index`
+* `new_session`
 * `question`
 * `reset`
 * `session`

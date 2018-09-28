@@ -620,18 +620,28 @@ an `exit`, `restart`, `leave` or `signin` button.
 
 The first argument to `command()` is one of the following:
 
-* `restart`: deletes the user's answers and puts them back at the
+* `'restart'`: deletes the user's answers and puts them back at the
   start of the interview.
-* `exit`: deletes the user's answers and redirects them to a web site
-* `leave`: redirects the user to a web site without deleting the
+* `'new_session'`: starts a new session for the same interview without
+  deleting the user's answers.
+* `'exit'`: deletes the user's answers and redirects them to a web site
+* `'logout'`: logs the user out and redirects them to a web site.
+* `'exit_logout'`: deletes the user's answers, logs the user out (if
+  logged in) and redirects them to a web site.
+* `'leave'`: redirects the user to a web site without deleting the
   user's answers.
-* `signin`: redirects the user to the sign-in screen.
+* `'signin'`: redirects the user to the sign-in screen.
 
 The optional keyword argument `url` provides a URL to which the user
-should be redirected.
+should be redirected.  The value of [`exitpage`] will be used if no
+`url` is provided.
 
 One use of `command()` is to delete interviews after a period of
 inactivity.  See [scheduled tasks] for more information.
+
+Note that the [special buttons] perform a similar function to
+`command()`.  See also the [starting an interview from the beginning]
+subsection for URL parameters that reset interview sessions.
 
 # <a name="texttransformation"></a>Text transformation functions
 
@@ -1082,9 +1092,21 @@ The `url_of()` function also has a few special uses.
   if there is a help tab.
 * `url_of('login')` returns a URL to the sign-in page.
 * `url_of('signin')` does the same thing as `url_of('login')`.
-* `url_of('logout')` returns a URL that logs the user out.
+* `url_of('restart')` returns a URL that will delete the current
+  session and restart it with the same URL parameters.
+* `url_of('new_session')` returns a URL that starts a new session of
+  the current interview, preserving the existing session.
 * `url_of('exit')` returns a URL that deletes the interview session
-  and exits.
+  and redirects to the URL at the `next` parameter, or to the
+  [`exitpage`] if there is no `next` parameter.
+* `url_of('logout')` returns a URL that logs the user out.
+* `url_of('exit_logout')` returns a URL that deletes the interview session,
+  logs the user out (if the user is logged in), and redirects to the
+  URL at the `next` parameter, or to the [`exitpage`] if there is no
+  `next` parameter.
+* `url_of('leave')` redirects to the URL at the `next` parameter, or to the
+  [`exitpage`] if there is no `next` parameter.  It does not log the
+  user out or delete the interview session.
 * `url_of('register')` returns a URL to the user registration page.
 * `url_of('profile')` returns a URL to the logged-in user's profile page.
 * `url_of('change_password')` returns a URL to a page where a logged-in user
@@ -6083,3 +6105,6 @@ $(document).on('daPageLoad', function(){
 [`re_run_logic()`]: #re_run_logic
 [`id`]: {{ site.baseurl }}/docs/modifiers.html#id
 [embedded blocks]: {{ site.baseurl }}/docs/fields.html#code button
+[special buttons]: {{ site.baseurl }}/docs/questions.html#special buttons
+[starting an interview from the beginning]: {{ site.baseurl }}/docs/interviews.html#reset
+[tags]: #session_tags

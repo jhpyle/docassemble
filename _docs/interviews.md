@@ -245,17 +245,35 @@ starts interacting with it.
 
 ## <a name="reset"></a>Starting an interview from the beginning
 
-If you add `&reset=1` to the end of an interview URL, this means that
-whenever the link is clicked (or the [iframe] is drawn), the interview
-will start at the beginning.  If `&reset=1` is omitted from the URL,
-then if the user clicks on the link after having already visited the
-same interview during the same browser session, then the user will be
-taken back to the "current" screen of the interview.
+The **docassemble** web application uses browser cookies to keep track
+of the user's current interview session.  If the user starts an
+interview, then navigates to a different page, and then navigates to
+`/interview` on the **docassemble** server with no URL parameters, or
+with an `i` parameter that is the same as the `i` parameter of the
+current interview session, the user will be redirected to where they left
+off in the previous session.
 
-If the user has started using one interview, and then clicks a link to
-start an interview with a different `i` parameter, this has the same
-effect as if `&reset=1` had been added; a fresh interview will be
+<a name="new_session"></a>If you want to be able to provide your users
+with a URL that always starts a fresh interview session, and will not
+resume an existing session, include `&new_session=1` in the URL.
+Whenever this link is clicked (or the [iframe] is drawn), the
+interview will start at the beginning, even if the user had just been
+in a session of the same interview.  The prior session, if any, is
+preserved.
+
+If you add `&reset=1` to the end of an interview URL, this will have
+the same effect as `&new_session=1`, but if the user had just been in
+a session with the same interview, that session will be deleted.
+In this cirumstance, adding `&reset=1` is like a "restart" operation.
+
+If the user is in interview session, and then clicks a link to an
+interview with a different `i` parameter, this has the same effect as
+if `&new_session=1` had been added; a fresh interview will always be
 started.
+
+For other session restarting options, see the `'restart'` and
+`'new_session'` options for the [`url_of()`] and [`command()`]
+functions, and the `restart` and `new_session` [special buttons].
 
 # <a name="howstored"></a>How answers are stored
 
@@ -321,6 +339,10 @@ Running [`command()`] with `'exit'` deletes the current interview
 session.  The `url` keyword parameter redirects the user to a
 particular page.  The function [`url_of()`] with the parameter
 `'login'` returns the URL for the **docassemble** login page.
+
+For other exiting options, see the `'exit'`, `'leave'`, `'logout'`, and
+`'exit_logout'` options for the [`url_of()`] and [`command()`]
+functions.
 
 # <a name="htauthor"></a>How to author your own interviews
 
@@ -642,3 +664,4 @@ For more information about [YAML], see the [YAML specification].
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [configurable]: {{ site.baseurl }}/docs/config.html#customization
 [`show dispatch link`]: {{ site.baseurl }}/docs/config.html#show dispatch link
+[special buttons]: {{ site.baseurl }}/docs/questions.html#special buttons

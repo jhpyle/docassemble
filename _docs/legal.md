@@ -33,10 +33,24 @@ include:
 ---
 {% endhighlight %}
 
+Note that if you include `docassemble.base.legal` or
+`basic-questions.yml`, you don't need to include
+`docassemble.base.util`, because all of the functionality of
+`docassemble.base.util` is incorporated by reference in `docassemble.base.legal`.
+
 The best way to understand what these resources offer is to read the
 source code of [`legal.py`] and [`basic-questions.yml`].
 
 # Classes for information about things in a court case
+
+The classes that are available in `docassemble.base.legal` are very
+basic, and the built-in functionality they currently provide might not
+be useful in your interviews.  However, it is still worthwhile for you
+to use these classes.  For example, if you write your own class that
+represents the courts of your jurisdiction, make the class a subclass
+of `Court`.  By subclassing and sharing code, the community of
+**docassemble** developers can develop a powerful set of object
+types.  Perhaps you can contribute your code to this project.
 
 ## <a name="Court"></a>Court
 
@@ -162,31 +176,33 @@ including `pleading.caption()` will require the following:
     * `pleading.case.court.name`
     * `pleading.title`
 
-# Adjusting for jurisdictional variation
+# <a name="jurisdictional"></a>Adjusting for jurisdictional variation
 
 **docassemble** is an ideal platform for legal interviews that are
 applicable in multiple jurisdictions.  The features of object-oriented
 programming are well-adapted to representing general rules that can be
 overridden by special cases, state rules that can be overriden by
-local rules, old law that is partially overridden by new law.
+local rules, old law that is partially superseded by new law.
 
 The features of software packaging and the nested importation of
 software libraries enable collaboration among legal experts.  For
 example, suppose Lawyer A is an expert in the general family law of
-California.  Lawyer B is an expert in how that law is applied in Los
-Angeles.  Lawyer C is an expert in how that law is applied in San
-Francisco.  Lawyer A can develop the package `docassemble.family-ca`
-containing classes and methods for applying California Family Law to
-the facts of cases.  Lawyer B can develop the package
-`docassemble.family-ca-la`, which imports `docassemble.family-ca` and
-makes modifications to the classes as necessary to express the local
-variations in Los Angeles.  Lawyer C can develop the package
-`docassemble.family-ca-sf`, which does the same for San Francisco.
-All three lawyers will take responsibility for maintaining their code.
+the state of California.  Lawyer B is an expert in how that law is
+applied in the city of Los Angeles, California.  Lawyer C is an expert
+in how that law is applied in the city of San Francisco, California.
+Lawyer A can develop the package `docassemble.us-ca-family` containing
+classes and methods for applying California Family Law to the facts of
+cases.  Lawyer B can develop the package `docassemble.us-ca-la-family`,
+which imports `docassemble.us-ca-family` and makes modifications to the
+classes as necessary to express the local variations in Los Angeles.
+Lawyer C can develop the package `docassemble.us-ca-sf-family`, which
+does the same for San Francisco.  All three lawyers will take
+responsibility for maintaining their code.
 
 Then, Lawyer D could develop a statewide interview for a family law
-pleading, using the packages `docassemble.family-ca` and
-`docassemble.family-ca-sf`.  Lawyer D would not need to research the
+pleading, using the packages `docassemble.us-ca-family`,
+`docassemble.family-us-ca-la`, `docassemble.family-us-ca-sf`, and any other
+packages that might exist.  Lawyer D would not need to research the
 special variations of law in San Francisco and Los Angeles because
 Lawyers B and C will do all that work; Lawyer D would just need to put
 the pieces together.
@@ -199,13 +215,33 @@ has already used `.drivers_license_id` to represent the same concept,
 Lawyer B should notice that Lawyer C has started to use
 `.drivers_license_id` and should use the same naming convention.  In
 order to facilitate collaboration, Lawyers B and C will need to
-document their work clearly and concisely.  They may also need to
-communicate with one another.  This communication could take place
-formally, for example through a committee that has meetings or
-conference calls, or it could take place informally, through an e-mail
-distribution list or a [Slack] channel.
+document their work clearly and concisely.  The `README.md` file in
+each **docassemble** package is a good place for this documentation to
+be located.  They may also need to communicate with one another.  This
+communication could take place formally, for example through a
+committee that has regular conference calls or in-person meetings, or
+it could take place informally, through an e-mail distribution list or
+a channel on the [**docassemble** Slack group].
 
-[Slack]: https://slack.com
+In an area like family law where each state's law is relatively
+similar, it may be worthwhile for a developer to work on a
+`docassemble.us-family` package, which would contain resources useful
+across many states.  For example, the task of asking clients about the
+members of their family is not particularly state-specific.  The
+`docassemble.us-family` package could contain "best practices" and
+carefully written plain language.  Once lawyers in California develop
+a robust set of family law applications, lawyers in Texas could take
+their work, adapt it for Texas, note what did not change, and put the
+code that did not change into the `docassemble.us-family` package.
+Then lawyers in New York would be able to follow a roadmap for
+developing family law applications for New York.
+
+The goal of **docassemble** is to enable a development environment
+similar to Drupal and Wordpress, in which a small number of developers
+work on the "core," while a large number of developers work on
+"modules."  Modules depend on other modules.
+
+[**docassemble** Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTAzYzY5NWExMzUxNTNhNjUyZjRkMDg0NGE2Yjc2YjI0OGNlMTcwNjhjYzRhMjljZWU0MTI2N2U0MTFlM2ZjNzg
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [`legal.py`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py

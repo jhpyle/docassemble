@@ -148,8 +148,10 @@ go back to the beginning, with all of the answers forgotten).
 There are six special button functions:
 
 * `restart`
+* `new_session`
 * `exit`
 * `logout`
+* `exit_logout`
 * `leave`
 * `continue`
 * `refresh`
@@ -159,6 +161,10 @@ There are six special button functions:
 except that any parameters that were originally passed through as URL
 parameters will be used again.  The user is redirected to the first
 question of the interview.
+
+<a name="new_session"></a>`new_session` does not disturb the current
+interview session, but starts a new session for the same interview.
+The original URL parameters are not used.
 
 <a name="exit"></a>`exit` means that the user's variable store will be
 erased and the user will be redirected either to the URL given by the
@@ -173,7 +179,9 @@ For example:
 
 [Mako] can be used in the `url` text.
 
-<a name="logout"></a>`logout` does the same thing as `exit`, except
+<a name="logout"></a>`logout` logs the user out, if the user is logged in.
+
+<a name="exit_logout"></a>`exit_logout` does the same thing as `exit`, except
 that it also logs the user out, if the user is logged in.
 
 <a name="leave"></a>`leave` works like `exit` except that the user's
@@ -211,6 +219,10 @@ buttons.
 {% include side-by-side.html demo="exit-choices" %}
 
 The functionality is the same.
+
+The [`command()`] function allows you to do similar things with Python
+code.  In addition, the [`url_of()`] function provides URLs that
+accomplish a similar purposes.
 
 ### <a name="special mixed"></a>Mixing special buttons with buttons that set a variable
 
@@ -310,3 +322,4 @@ more information, see [`event`], [`url_action()`],
 [multiple choice question]: #buttons
 [multiple-choice buttons that run code]: {{ site.baseurl }}/docs/fields.html#code button
 [`centered`]: {{ site.baseurl }}/docs/initial.html#centered
+[`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
