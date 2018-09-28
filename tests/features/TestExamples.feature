@@ -3,7 +3,7 @@ Feature: Example interviews
   to run the example interviews.
 
   Scenario: Set up the server
-    Given I am using the server "https://test102.docassemble.org"
+    Given I am using the server "https://test103.docassemble.org"
 
   # Scenario: Test the interview "File upload"
   #   Given I start the interview "docassemble.base:data/questions/examples/file.yml"

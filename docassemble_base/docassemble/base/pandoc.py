@@ -134,7 +134,10 @@ class MyPandoc(object):
         if self.template_file is not None:
             subprocess_arguments.extend(['--template=%s' % self.template_file])
         if self.reference_file is not None:
-            subprocess_arguments.extend(['--reference-docx=%s' % self.reference_file])
+            if PANDOC_OLD:
+                subprocess_arguments.extend(['--reference-docx=%s' % self.reference_file])
+            else:
+                subprocess_arguments.extend(['--reference-doc=%s' % self.reference_file])
         subprocess_arguments.extend(['-s', '-o', temp_outfile.name])
         subprocess_arguments.extend([temp_file.name])
         subprocess_arguments.extend(self.arguments)
