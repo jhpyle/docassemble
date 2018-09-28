@@ -579,6 +579,7 @@
 "You are not authorized to access": Null
 "You are now set up with two factor authentication.": Null
 "You can also follow this link: ": Null
+"You cannot log in this way.": Null
 "You cannot log in until your e-mail address has been confirmed.": Null
 "You cannot pull from GitHub and PyPI at the same time.  Please fill in one and leave the other blank.": Null
 "You cannot type more than": Null
@@ -610,6 +611,11 @@
 "You need to enter a valid date.": Null
 "You need to enter a valid time.": Null
 "You need to log in before you can access": Null
+"You need to log in with Auth0.": Null
+"You need to log in with Azure.": Null
+"You need to log in with Facebook.": Null
+"You need to log in with Google.": Null
+"You need to log in with Twitter.": Null
 "You need to select one.": Null
 "You need to select one or type in a new value.": Null
 "You need to supply a Git URL, upload a file, or supply the name of a package on PyPI.": Null

@@ -1028,9 +1028,18 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'register':
         remove_question_package(kwargs)
         return(url_for('user.register', **kwargs))
+    elif file_reference == 'leave':
+        remove_question_package(kwargs)
+        return(url_for('leave', **kwargs))
     elif file_reference == 'logout':
         remove_question_package(kwargs)
         return(url_for('user.logout', **kwargs))
+    elif file_reference == 'restart':
+        remove_question_package(kwargs)
+        return(url_for('restart_session', **kwargs))
+    elif file_reference == 'new_session':
+        remove_question_package(kwargs)
+        return(url_for('new_session', **kwargs))
     elif file_reference == 'help':
         return('javascript:show_help_tab()');
     elif file_reference == 'interview':
@@ -1042,6 +1051,9 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'exit':
         remove_question_package(kwargs)
         return(url_for('exit', **kwargs))
+    elif file_reference == 'exit_logout':
+        remove_question_package(kwargs)
+        return(url_for('exit_logout', **kwargs))
     elif file_reference == 'dispatch':
         remove_question_package(kwargs)
         return(url_for('interview_start', **kwargs))
@@ -3966,20 +3978,74 @@ def post_sign_in():
     session_id = session.get('uid', None)
     return redirect(url_for('interview_list'))
 
-@app.route("/leave", methods=['POST', 'GET'])
+@app.route("/leave", methods=['GET'])
 def leave():
+    the_exit_page = request.args.get('next', exit_page)
     if current_user.is_authenticated:
         flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
         logout_user()
-    delete_session()
-    response = redirect(exit_page)
-    response.set_cookie('visitor_secret', '', expires=0)
-    response.set_cookie('secret', '', expires=0)
-    response.set_cookie('session', '', expires=0)
-    return response
+    delete_session_for_interview()
+    #delete_session()
+    #response = redirect(exit_page)
+    #response.set_cookie('visitor_secret', '', expires=0)
+    #response.set_cookie('secret', '', expires=0)
+    #response.set_cookie('session', '', expires=0)
+    #return response
+    return redirect(the_exit_page)
 
-@app.route("/exit", methods=['POST', 'GET'])
+@app.route("/restart", methods=['GET'])
+def restart_session():
+    manual_checkout()
+    session_id = session.get('uid', None)
+    yaml_filename = session.get('i', None)
+    if session_id is None or yaml_filename is None:
+        return redirect(url_for('index'))
+    if 'visitor_secret' in request.cookies:
+        secret = request.cookies['visitor_secret']
+    else:
+        secret = request.cookies.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
+    try:
+        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+    except:
+        return redirect(url_for('index'))
+    url_args = user_dict['url_args']
+    url_args['reset'] = '1'
+    return redirect(url_for('index', **url_args))
+
+@app.route("/new_session", methods=['GET'])
+def new_session():
+    manual_checkout()
+    yaml_filename = session.get('i', None)
+    if yaml_filename is None:
+        return redirect(url_for('index'))
+    url_args = dict(i=yaml_filename, new_session='1')
+    return redirect(url_for('index', **url_args))
+
+@app.route("/exit", methods=['GET'])
 def exit():
+    session_id = session.get('uid', None)
+    yaml_filename = session.get('i', None)
+    the_exit_page = request.args.get('next', exit_page)
+    if 'key_logged' in session:
+        del session['key_logged']
+    if session_id is not None and yaml_filename is not None:
+        manual_checkout()
+        obtain_lock(session_id, yaml_filename)
+        reset_user_dict(session_id, yaml_filename)
+        release_lock(session_id, yaml_filename)
+    delete_session_for_interview()
+    #delete_session()
+    #response = redirect(the_exit_page)
+    #response.set_cookie('visitor_secret', '', expires=0)
+    #response.set_cookie('secret', '', expires=0)
+    #response.set_cookie('session', '', expires=0)
+    #return response
+    return redirect(the_exit_page)
+
+@app.route("/exit_logout", methods=['GET'])
+def exit_logout():
     session_id = session.get('uid', None)
     yaml_filename = session.get('i', None)
     the_exit_page = request.args.get('next', exit_page)
@@ -4468,6 +4534,7 @@ def index():
     #logmessage("index: secret is " + repr(secret))
     use_cache = int(request.args.get('cache', 1))
     reset_interview = int(request.args.get('reset', 0))
+    new_interview = int(request.args.get('new_session', 0))
     encrypted = session.get('encrypted', True)
     #logmessage("index: session says encrypted is " + str(encrypted))
     if secret is None:
@@ -4497,7 +4564,7 @@ def index():
         yaml_filename = yaml_parameter
         old_yaml_filename = session.get('i', None)
         #logmessage("index: old_yaml_filename is " + str(old_yaml_filename))
-        if old_yaml_filename != yaml_filename or reset_interview:
+        if old_yaml_filename != yaml_filename or reset_interview or new_interview:
             #logmessage("index: change in yaml filename detected")
             if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
                 raise DAError("Not authorized")
@@ -4505,7 +4572,7 @@ def index():
             if not yaml_filename.startswith('docassemble.playground'):
                 yaml_filename = re.sub(r':([^\/]+)$', r':data/questions/\1', yaml_filename)
             session['i'] = yaml_filename
-            if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN:
+            if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN and not new_interview:
                 show_flash = True
             if current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate'):
                 show_flash = False
@@ -4543,8 +4610,8 @@ def index():
             if show_flash:
                 flash(word(message), 'info')
     else:
-        if session_parameter is None and reset_interview:
-            if 'uid' in session:
+        if session_parameter is None and (reset_interview or new_interview):
+            if 'uid' in session and reset_interview:
                 reset_user_dict(session['uid'], yaml_filename)
             user_code, user_dict = reset_session(yaml_filename, secret, retain_code=False)
             add_referer(user_dict)
@@ -4652,7 +4719,7 @@ def index():
         for argname in request.args:
             if argname in ('i', 'json'):
                 continue
-            if argname in ('from_list', 'session', 'cache', 'reset'):
+            if argname in ('from_list', 'session', 'cache', 'reset', 'new_session'):
                 # 'filename', 'question', 'format', 'index', 'action'
                 need_to_reset = True
                 continue
@@ -5815,6 +5882,21 @@ def index():
     #    next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
     #else:
     #    next_action_review = None
+    if interview_status.question.question_type == "new_session":
+        manual_checkout()
+        referer = user_dict['_internal'].get('referer', None)
+        user_dict = fresh_dictionary()
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface))
+        release_lock(user_code, yaml_filename)
+        user_code, user_dict = reset_session(yaml_filename, secret)
+        save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
+        if 'visitor_secret' not in request.cookies:
+            save_user_dict_key(user_code, yaml_filename)
+            session['key_logged'] = True
+        steps = 1
+        changed = False
+        #logmessage("index: assemble 7.9")
+        interview.assemble(user_dict, interview_status)        
     if interview_status.question.question_type == "restart":
         manual_checkout()
         url_args = user_dict['url_args']
@@ -5868,9 +5950,9 @@ def index():
         else:
             response = do_redirect(exit_page, is_ajax, is_json)
         return response
-    if interview_status.question.question_type in ("exitlogout", "logout"):
+    if interview_status.question.question_type in ("exit_logout", "logout"):
         manual_checkout()
-        if interview_status.question.question_type == "exitlogout":
+        if interview_status.question.question_type == "exit_logout":
             reset_user_dict(user_code, yaml_filename)
         delete_session()
         release_lock(user_code, yaml_filename)
@@ -17107,12 +17189,12 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         r.set(key, pickle.dumps(sess_info))
     else:
         logmessage("do_sms: not accepting input.")    
-    if interview_status.question.question_type in ("restart", "exit", "logout"):
+    if interview_status.question.question_type in ("restart", "exit", "logout", "exit_logout", "new_session"):
         logmessage("do_sms: exiting because of restart or exit")
         if save:
             reset_user_dict(sess_info['uid'], sess_info['yaml_filename'], temp_user_id=sess_info['tempuser'])
         r.delete(key)
-        if interview_status.question.question_type == 'restart':
+        if interview_status.question.question_type in ('restart', 'new_session'):
             sess_info = dict(yaml_filename=sess_info['yaml_filename'], uid=get_unique_name(sess_info['yaml_filename'], sess_info['secret']), secret=sess_info['secret'], number=form["From"], encrypted=True, tempuser=sess_info['tempuser'], user_id=None)
             r.set(key, pickle.dumps(sess_info))
             form = dict(To=form['To'], From=form['From'], AccountSid=form['AccountSid'], Body=word('question'))

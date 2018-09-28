@@ -61,6 +61,24 @@ class MySignInForm(LoginForm):
                 connect.unbind_s()
                 result = super(MySignInForm, self).validate()
         else:
+            from flask import current_app
+            user_manager = current_app.user_manager
+            user, user_email = user_manager.find_user_by_email(self.email.data)
+            if user and (user.password is None or (user.social_id is not None and not user.social_id.startswith('local$'))):
+                self.email.errors = list(self.email.errors)
+                if user.social_id.startswith('google$'):
+                    self.email.errors.append(word("You need to log in with Google."))
+                elif user.social_id.startswith('azure$'):
+                    self.email.errors.append(word("You need to log in with Azure."))
+                elif user.social_id.startswith('auth0$'):
+                    self.email.errors.append(word("You need to log in with Auth0."))
+                elif user.social_id.startswith('twitter$'):
+                    self.email.errors.append(word("You need to log in with Twitter."))
+                elif user.social_id.startswith('facebook$'):
+                    self.email.errors.append(word("You need to log in with Facebook."))
+                else:
+                    self.email.errors.append(word("You cannot log in this way."))
+                return False
             result = super(MySignInForm, self).validate()
         if result is False:
             r.incr(key)
