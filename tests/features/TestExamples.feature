@@ -2,8 +2,8 @@ Feature: Example interviews
   In order to ensure docassemble is running properly, I want
   to run the example interviews.
 
-  Scenario: Set up the server
-    Given I am using the server "https://test103.docassemble.org"
+  # Scenario: Set up the server
+  #   Given I am using the server "http://localhost"
 
   # Scenario: Test the interview "File upload"
   #   Given I start the interview "docassemble.base:data/questions/examples/file.yml"
@@ -662,7 +662,7 @@ Feature: Example interviews
   Scenario: Test the interview "Difference between dates"
     Given I start the interview "docassemble.base:data/questions/examples/date-difference.yml"
     Then I should see the phrase "The length of time between my birthday and Christmas can be described several ways."
-    And I should see the phrase "222.0 days"
+    And I should see the phrase "5329.0 hours"
 
   Scenario: Test the interview "Date"
     Given I start the interview "docassemble.base:data/questions/examples/date-field.yml"

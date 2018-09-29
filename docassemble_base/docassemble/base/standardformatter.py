@@ -938,15 +938,28 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     validation_rules['ignore'] = list()
             if hasattr(field, 'datatype'):
                 if field.datatype in ('checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and status.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras)))):
-                    if hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
-                        validation_rules['rules']['_ignore' + str(field.number)] = dict(checkatleast=[str(field.number), 1])
-                    else:
+                    if hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras)):
                         checkbox_rules = dict()
-                        if 'minlength' in field.extras and 'minlength' in status.extras:
-                            checkbox_rules['checkatleast'] = [str(field.number), status.extras['minlength'][field.number]]
-                        if 'maxlength' in field.extras and 'maxlength' in status.extras:
-                            checkbox_rules['checkatmost'] = [str(field.number), status.extras['maxlength'][field.number]]
+                        if 'minlength' in field.extras and 'minlength' in status.extras and 'maxlength' in field.extras and 'maxlength' in status.extras and status.extras['minlength'][field.number] == status.extras['maxlength'][field.number] and status.extras['minlength'][field.number] > 0:
+                            if 'nota' not in status.extras:
+                                status.extras['nota'] = dict()
+                            status.extras['nota'][field.number] = False
+                            checkbox_rules['checkexactly'] = [str(field.number), status.extras['maxlength'][field.number]]
+                        else:
+                            if 'minlength' in field.extras and 'minlength' in status.extras:
+                                checkbox_rules['checkatleast'] = [str(field.number), status.extras['minlength'][field.number]]
+                                if int(status.extras['minlength'][field.number]) > 0:
+                                    if 'nota' not in status.extras:
+                                        status.extras['nota'] = dict()
+                                    status.extras['nota'][field.number] = False
+                            if 'maxlength' in field.extras and 'maxlength' in status.extras:
+                                checkbox_rules['checkatmost'] = [str(field.number), status.extras['maxlength'][field.number]]
                         validation_rules['rules']['_ignore' + str(field.number)] = checkbox_rules
+                    if hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
+                        if '_ignore' + str(field.number) not in validation_rules['rules']:
+                            validation_rules['rules']['_ignore' + str(field.number)] = dict()
+                        if 'checkatleast' not in validation_rules['rules']['_ignore' + str(field.number)]:
+                            validation_rules['rules']['_ignore' + str(field.number)]['checkatleast'] = [str(field.number), 1]
                     validation_rules['ignore'] = None
                 if field.datatype == 'object_radio':
                     validation_rules['ignore'] = None
@@ -1823,7 +1836,7 @@ def input_for(status, field, wide=False, embedded=False):
                 else:
                     inner_fieldlist.append(help_wrap('<div>' + markdown_to_html(pair['label'], status=status) + '</div>', helptext, status))
                 id_index += 1
-            if hasattr(field, 'nota') and 'nota' in status.extras and status.extras['nota'][field.number] is not False:
+            if 'nota' in status.extras and status.extras['nota'][field.number] is not False:
                 if defaultvalue_set and defaultvalue is None:
                     ischecked = ' checked'
                 else:

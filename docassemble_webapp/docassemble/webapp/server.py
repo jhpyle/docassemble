@@ -8329,6 +8329,19 @@ def index():
       }, function(params, element){
         return """ + json.dumps(word("Please select no more than")) + """ + " " + params[1] + ".";
       });
+      $.validator.addMethod('checkexactly', function(value, element, params){
+        if ($(element).attr('name') != '_ignore' + params[0]){
+          return true;
+        }
+        if ($('.dafield' + params[0] + ':checked').length != params[1]){
+          return false;
+        }
+        else{
+          return true;
+        }
+      }, function(params, element){
+        return """ + json.dumps(word("Please select exactly")) + """ + " " + params[1] + ".";
+      });
       $.validator.addMethod('mindate', function(value, element, params){
         try {
           var date = new Date(value);

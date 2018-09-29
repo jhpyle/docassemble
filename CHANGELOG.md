@@ -6,6 +6,9 @@
   to version 2.3.  LibreOffice upgraded to version in
   stretch-backports.  A system upgrade is required to realize these
   changes.
+### Changed
+- Setting a `minlength` on a `datatype: checkboxes` field turns off the
+  "None of the above" item.
 
 ## [0.2.102] - 2018-09-27
 ### Changed
