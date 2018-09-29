@@ -11,6 +11,7 @@ standard-header-includes:
   - \usepackage{array}
   - \usepackage{pdfpages}
   - \usepackage{lastpage}
+  - \usepackage{xspace}
   - \usepackage[none]{hyphenat}
   - \usepackage[linewidth=1pt]{mdframed}
   - \renewcommand{\headrulewidth}{0pt}
@@ -37,7 +38,7 @@ standard-header-includes:
   - \newcommand{\nonbreakingspace}{~}
   - \newcommand{\manualindent}{\hspace{0.5in}}
   - \newcommand{\manuallinebreak}{\\ }
-  - \newcommand{\myshow}[1]{#1}
+  - \newcommand{\myshow}[1]{#1\xspace}
   - \newcommand{\redactword}[1]{\rule[\dimexpr-\fontchardp\font`q]{\widthof{#1}}{\dimexpr\fontcharht\font`B+\fontchardp\font`q}}
   - \newcommand{\myskipline}{\vspace*{\myfontsize}}
   - \newcommand{\mynoindent}{\noindent}
