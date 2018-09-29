@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.3.0] - 2018-09-28
+### Changed
+- Upgraded OS from Debian stretch from Debian jessie.  Upgraded pandoc
+  to version 2.3.  LibreOffice upgraded to version in
+  stretch-backports.  A system upgrade is required to realize these
+  changes.
+
 ## [0.2.102] - 2018-09-27
 ### Changed
 - LibreOffice upgraded to version in jessie-backports.

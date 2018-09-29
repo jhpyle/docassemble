@@ -117,7 +117,7 @@ class MyPandoc(object):
         temp_outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix="." + str(self.output_extension), delete=False)
         temp_outfile.close()
         current_temp_dir = 'epsconv'
-        latex_conversion_directory = os.path.join(tempfile.gettempdir(), 'latex_convert')
+        latex_conversion_directory = os.path.join(tempfile.gettempdir(), 'conv')
         if not os.path.isdir(latex_conversion_directory):
             os.makedirs(latex_conversion_directory)
         if not os.path.isdir(latex_conversion_directory):
@@ -128,7 +128,7 @@ class MyPandoc(object):
         subprocess_arguments = [PANDOC_PATH, PANDOC_ENGINE]
         if PANDOC_OLD:
             subprocess_arguments.append("--smart")
-        subprocess_arguments.extend(['-M', 'latextmpdir=' + os.path.join('latex_convert', ''), '-M', 'pdfa=' + ('true' if self.pdfa else 'false')])
+        subprocess_arguments.extend(['-M', 'latextmpdir=' + os.path.join('.', 'conv'), '-M', 'pdfa=' + ('true' if self.pdfa else 'false')])
         if len(yaml_to_use) > 0:
             subprocess_arguments.extend(yaml_to_use)
         if self.template_file is not None:
@@ -176,7 +176,7 @@ class MyPandoc(object):
             raise IOError("Failed creating file: %s" % output_filename)
         return
     def convert(self, question):
-        latex_conversion_directory = os.path.join(tempfile.gettempdir(), 'latex_convert')
+        latex_conversion_directory = os.path.join(tempfile.gettempdir(), 'conv')
         if not os.path.isdir(latex_conversion_directory):
             os.makedirs(latex_conversion_directory)
         if not os.path.isdir(latex_conversion_directory):
@@ -193,7 +193,7 @@ class MyPandoc(object):
                     input_format = "markdown+smart"
                 else:
                     input_format = input_format
-            subprocess_arguments.extend(['-M', 'latextmpdir=' + os.path.join('latex_convert', ''), '--from=%s' % input_format, '--to=%s' % self.output_format])
+            subprocess_arguments.extend(['-M', 'latextmpdir=' + os.path.join('.', 'conv'), '--from=%s' % input_format, '--to=%s' % self.output_format])
             subprocess_arguments.extend(self.arguments)
             #logmessage("Arguments are " + str(subprocess_arguments))
             p = subprocess.Popen(
