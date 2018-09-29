@@ -60,7 +60,7 @@ adjustments to the [configuration].  **docassemble** has not been
 tested on Mac or Windows, but all the dependencies are likely to be
 available for native installation on those platforms.  (E.g., see
 [MacTex] for LaTeX on Mac, and [MiKTeX] for LaTeX on Windows.)
-However, it would probably take a lot of time to figure this out, any
+However, it would probably take a lot of time to figure this out, and
 why bother, when you can install **docassemble** on a Mac or PC using
 [Docker]?.
 
@@ -107,7 +107,7 @@ central server.
 
 In addition, if you want to be able to view consolidated log files
 when you use a [multi-server arrangement], a central log server needs
-to run, and the **docassemble** application servers need to run
+to be present, and the **docassemble** application servers need to run
 [syslog-ng] background processes that push log file entries to that
 central server.
 
@@ -127,10 +127,11 @@ services:
   e-mails;
 * [Twilio] for receiving text messages, sending text messages, sending
   faxes, and forwarding phone calls;
-* [VoiceRSS] for converting text to an audio file; and
+* [VoiceRSS] for converting text to an audio file;
 * [Google APIs] for autocompleting addresses, normalizing addresses,
-  drawing maps, translating text, and synchronizing files between the
-  [Playground] and a [Google Drive] folder;
+  drawing maps, translating text;
+* [Google APIs] or [OneDrive APIs] for [synchronizing files between the
+  [Playground] and a [Google Drive]/[OneDrive] folder.
 
 The authentication keys for these services can be set up in the
 [configuration].
@@ -186,46 +187,36 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   tesseract-ocr-vie build-essential nodejs exim4-daemon-heavy \
   libsvm3 libsvm-dev liblinear3 liblinear-dev libzbar-dev \
   cm-super libgs-dev ghostscript texlive-extra-utils \
-  libmysqlclient-dev python-passlib
+  default-libmysqlclient-dev python-passlib libsasl2-dev \
+  libldap2-dev ttf-mscorefonts-installer \
+  fonts-ebgaramond-extra ttf-liberation fonts-liberation
 {% endhighlight %}
 
 The libraries `libcurl4-openssl-dev` and `libssl-dev` are particularly
 important; **docassemble**'s [Python] dependencies will not install
 unless these libraries are present.
 
-**docassemble** depends on a recent version of the [pdfx] package
-for [LaTeX].
-
-{% highlight bash %}
-wget -O /tmp/pdfx.zip http://mirrors.ctan.org/macros/latex/contrib/pdfx.zip
-sudo unzip -o -d /usr/share/texlive/texmf-dist/tex/latex /tmp/pdfx.zip
-sudo texhash
-rm /tmp/pdfx.zip
-{% endhighlight %}
-
-**docassemble** depends on version 5.0.1 or later of the
-[Perl Audio Converter] and on version 1.17 or later of [Pandoc].  If
-your Linux distribution only provides earlier versions, you should
-install from the source.
-
-The latest version of the [Perl Audio Converter] can be installed by doing:
-
-{% highlight bash %}
-sudo apt-get -q -y remove pacpl
-git clone git://git.code.sf.net/p/pacpl/code pacpl-code 
-cd pacpl-code
-autoreconf
-./configure
-make
-sudo make install
-cd ..
-{% endhighlight %}
+You may need to make slight changes to to the package list above,
+depending on which distribution and version you are using.
 
 The latest version of [Pandoc] can be installed by doing:
 
 {% highlight bash %}
-wget https://github.com/jgm/pandoc/releases/download/1.19.2.1/pandoc-1.19.2.1-1-amd64.deb
-sudo dpkg -i pandoc-1.19.2.1-1-amd64.deb
+wget https://github.com/jgm/pandoc/releases/download/2.3/pandoc-2.3-1-amd64.deb
+sudo dpkg -i pandoc-2.3-1-amd64.deb
+{% endhighlight %}
+
+For best results, install an up-to-date version of [LibreOffice].  On
+Debian stretch, you can add the following to `/etc/apt/sources.list`:
+
+{% highlight text %}
+deb http://ftp.debian.org/debian stretch-backports main
+{% endhighlight %}
+
+and then upgrade [LibreOffice] by running:
+
+{% highlight text %}
+apt-get -q -y install -t stretch-backports libreoffice
 {% endhighlight %}
 
 On some systems, you may run into a situation where [LibreOffice]
@@ -1282,7 +1273,7 @@ following in the output of `ps ax`.
 [PostgreSQL] looks like this:
 
 {% highlight text %}
-  778 ?        S      0:00 /usr/lib/postgresql/9.5/bin/postgres -D /var/lib/postgresql/9.5/main -c config_file=/etc/postgresql/9.5/main/postgresql.conf
+  778 ?        S      0:00 /usr/lib/postgresql/9.6/bin/postgres -D /var/lib/postgresql/9.6/main -c config_file=/etc/postgresql/9.6/main/postgresql.conf
   787 ?        Ss     0:00 postgres: checkpointer process
   788 ?        Ss     0:00 postgres: writer process
   789 ?        Ss     0:00 postgres: wal writer process
@@ -1618,3 +1609,4 @@ All of these system administration headaches can be avoided by
 [Auth0]: https://auth0.com/
 [Microsoft Application Registration Portal]: https://apps.dev.microsoft.com
 [YAML]: https://en.wikipedia.org/wiki/YAML
+[OneDrive APIs]: https://onedrive.live.com/about/en-us/

@@ -527,5 +527,5 @@ For tips on troubleshooting your **docassemble** system, see the
 [how you run a **docassemble** interview]: {{ site.baseurl }}/docs/interviews.html#invocation
 [phone login]: {{ site.baseurl }}/docs/config.html#phone login
 [Slack]: https://slack.com
-[logrotate]: https://manpages.debian.org/jessie/logrotate/logrotate.8.en.html
+[logrotate]: https://manpages.debian.org/stretch/logrotate/logrotate.8.en.html
 [Word add-in section]: {{ site.baseurl }}/docs/playground.html#word addin

@@ -334,6 +334,9 @@ Log files on the container that you might wish to check include:
 Enter `exit` to leave the container and get back to your standard
 command prompt.
 
+For more information about troubleshooting **docassemble**, see
+the [debugging subsection] of the [installation] section.
+
 # <a name="configuration options"></a>Configuration options
 
 In the example [above](#single server arrangement), we started
@@ -1739,3 +1742,4 @@ line), as the containers depend on the images.
 [Supervisor]: http://supervisord.org/
 [syslog-ng]: https://en.wikipedia.org/wiki/Syslog-ng
 [database corruption]: #shutdown
+[debugging subsection]: {{ site.baseurl }}/docs/installation.html#debug
