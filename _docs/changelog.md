@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.1](https://github.com/jhpyle/docassemble/releases/tag/v0.3.1) - 2018-10-02
+
+### Changed
+- When a variable is force-asked or the goal of an action and a
+  `question` is not found, no error will be raised.  This facilitates
+  the use of optional follow-up questions in a `review` block.
+
+### Fixed
+- Aliased template variables generated pickle errors.
+
 ## [0.3.0](https://github.com/jhpyle/docassemble/releases/tag/v0.3.0) - 2018-09-28
 
 ### Changed
@@ -11,8 +21,6 @@ short_title: Change Log
   to version 2.3.  LibreOffice upgraded to version in
   stretch-backports.  A system upgrade is required to realize these
   changes.
-
-### Changed
 - Setting a `minlength` on a `datatype: checkboxes` field turns off the
   "None of the above" item.
 

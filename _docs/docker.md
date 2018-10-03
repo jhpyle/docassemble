@@ -1743,3 +1743,4 @@ line), as the containers depend on the images.
 [syslog-ng]: https://en.wikipedia.org/wiki/Syslog-ng
 [database corruption]: #shutdown
 [debugging subsection]: {{ site.baseurl }}/docs/installation.html#debug
+[Traefik]: https://traefik.io/

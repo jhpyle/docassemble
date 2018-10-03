@@ -1800,6 +1800,15 @@ gathered.
 
 {% include side-by-side.html demo="review-5" %}
 
+If there is a follow-up question that might need to come after the
+changing of a variable, you can list the follow-up variable in the
+`fields` list, even though it might not need to be asked.  You will
+need to tag the follow-up question with an [`if`] modifier; in order
+for the `review` block to skip the field when it is not required, it
+needs to find no [`question`]s that will define the variable.
+
+{% include side-by-side.html demo="review-conditional" %}
+
 You can also indicate more than one variable when using `show if`:
 
 {% include side-by-side.html demo="review-6" %}
@@ -2084,3 +2093,4 @@ why this needs to be done manually as opposed to automatically:
 [`none of the above`]: #none of the above
 [`forget_result_of()`]: {{ site.baseurl}}/docs/functions.html#forget_result_of
 [`id`]: {{ site.baseurl }}/docs/modifiers.html#id
+[`if`]: {{ site.baseurl }}/docs/modifiers.html#if

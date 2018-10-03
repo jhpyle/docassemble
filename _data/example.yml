@@ -8120,6 +8120,16 @@
   subquestion: |
     The answer is ${ d }.  You can
     [change this](${ url_action('review_answer') }).
+"review-conditional": "question: |\n  What is your favorite fruit?\nfield: favorite_fruit\n\
+  choices:\n  - Apple\n  - Orange\n  - Pear\n  - Peach\n---\nif: |\n  favorite_fruit\
+  \ == 'Apple'\nquestion: |\n  What is your favorite apple?\nfields:\n  - Favorite\
+  \ apple variety: favorite_apple\n---\nquestion: |\n  Result\nsubquestion: |\n  Your\
+  \ favorite fruit is ${ favorite_fruit }.\n  \n  % if favorite_fruit == 'Apple':\n\
+  \  Your favorite apple is ${ favorite_apple }.\n  % endif\nfield: results_shown\n\
+  ---\nquestion: |\n  Please review the results.\nreview:\n  - label: Edit\n    fields:\n\
+  \      - favorite_fruit\n      - favorite_apple\n    button: |\n      Your favorite\
+  \ fruit is ${ favorite_fruit }.\n      \n      % if favorite_fruit == 'Apple':\n\
+  \      Your favorite apple is ${ favorite_apple }.\n      % endif\nfield: results_reviewed"
 "review-edit-list": "mandatory: true\nquestion: |\n  Thank you for your answers!\n\
   subquestion: |\n  The people are ${ person } and your\n  favorite is ${ favorite\
   \ }.\n\n  You can\n  [edit your answers](${ url_action('review_interview') })\n\
