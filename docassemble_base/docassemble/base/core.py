@@ -2551,6 +2551,15 @@ class DALazyTemplate(DAObject):
     def __str__(self):
         return unicode(self).encode('utf-8')
 
+
+class DALazyTableTemplate(DALazyTemplate):
+    """The class used for tables."""
+    @property
+    def content(self):
+        if not hasattr(self, 'table_info'):
+            raise NameError("name '" + unicode(self.instanceName) + "' is not defined")
+        return text_of_table(self.table_info, self.user_dict)
+
 def selections(*pargs, **kwargs):
     """Packs a list of objects in the appropriate format for including
     as code in a multiple-choice field."""

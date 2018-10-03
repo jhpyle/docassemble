@@ -5096,7 +5096,7 @@ Feature: Example interviews
 
   Scenario: Test the interview "Object"
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/branch-error.yml"
-    Then I should see the phrase "Interview has an error. There was a reference to a variable 'long_branch.length' that could not be looked up in the question file or in any of the files incorporated by reference into the question file."
+    Then I should see the phrase "Interview has an error. There was a reference to a variable 'long_branch.length' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
 
   Scenario: Test the interview "Checkboxes within fields"
     Given I start the interview "docassemble.base:data/questions/examples/checkbox-dict-dict.yml"
@@ -5308,11 +5308,11 @@ Feature: Example interviews
 
   Scenario: Test the interview "Gather"
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/gather-fruit-incomplete.yml"
-    Then I should see the phrase "Interview has an error. There was a reference to a variable 'fruit.there_are_any' that could not be looked up in the question file or in any of the files incorporated by reference into the question file."
+    Then I should see the phrase "Interview has an error. There was a reference to a variable 'fruit.there_are_any' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
 
   Scenario: Test the interview "Mako for loops"
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/gather.yml"
-    Then I should see the phrase "Interview has an error. There was a reference to a variable 'witness.there_are_any' that could not be looked up in the question file or in any of the files incorporated by reference into the question file."
+    Then I should see the phrase "Interview has an error. There was a reference to a variable 'witness.there_are_any' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
 
   Scenario: Test the interview "Geolocate address"
     Given I start the interview "docassemble.base:data/questions/examples/geolocate.yml"
@@ -5527,7 +5527,7 @@ Feature: Example interviews
 
   Scenario: Test the interview "Questionless interview"
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/questionless.yml"
-    Then I should see the phrase "Interview has an error. There was a reference to a variable 'favorite_number' that could not be looked up in the question file or in any of the files incorporated by reference into the question file."
+    Then I should see the phrase "Interview has an error. There was a reference to a variable 'favorite_number' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
 
   # Scenario: Test the interview "Redis with objects"
   #   Given I start the interview "docassemble.base:data/questions/examples/redis-data.yml"
@@ -7196,3 +7196,32 @@ Feature: Example interviews
   Scenario: Test the interview "Temporary URL"
     Given I start the interview "docassemble.base:data/questions/examples/dafile-url-for-temporary.yml"
     Then I should see the phrase "This interview is all done."
+
+  Scenario: Test the interview "Review answers"
+    Given I start the interview "docassemble.base:data/questions/examples/review-conditional.yml"
+    Then I should see the phrase "What is your favorite fruit?"
+    And I click the "Apple" option
+    And I click the button "Continue"
+    Then I should see the phrase "What is your favorite apple?"
+    And I set "Favorite apple variety" to "Granny Smith"
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite fruit is Apple."
+    Then I should see the phrase "Your favorite apple is Granny Smith."
+    And I click the button "Continue"
+    Then I should see the phrase "Please review the results."
+    And I click the link "Edit"
+    Then I should see the phrase "What is your favorite fruit?"
+    And I click the "Orange" option
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite fruit is Orange."
+    And I click the link "Edit"
+    Then I should see the phrase "What is your favorite fruit?"
+    And I click the "Apple" option
+    And I click the button "Continue"
+    Then I should see the phrase "What is your favorite apple?"
+    And I set "Favorite apple variety" to "Red Delicious"
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite fruit is Apple."
+    Then I should see the phrase "Your favorite apple is Red Delicious."
+    And I click the button "Continue"
+    Then I should see the phrase "Thank you for your time."

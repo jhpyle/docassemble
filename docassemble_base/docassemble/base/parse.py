@@ -4842,11 +4842,19 @@ class Interview:
                         docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
                         string = "import docassemble.base.core"
                         exec(string, user_dict)
-                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DALazyTemplate(' + repr(actual_saveas) + ')'
-                        exec(string, user_dict)
-                        the_object = eval(actual_saveas, user_dict)
-                        if the_object.__class__.__name__ != 'DALazyTemplate':
-                            raise DAError("askfor: failure to define template object")
+                        found_object = False
+                        try:
+                            the_object = eval(actual_saveas, user_dict)
+                            if the_object.__class__.__name__ == 'DALazyTableTemplate':
+                                found_object = True
+                        except:
+                            pass
+                        if not found_object:
+                            string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DALazyTableTemplate(' + repr(actual_saveas) + ')'
+                            exec(string, user_dict)
+                            the_object = eval(actual_saveas, user_dict)
+                            if the_object.__class__.__name__ != 'DALazyTableTemplate':
+                                raise DAError("askfor: failure to define template object")
                         the_object.table_info = table_info
                         the_object.user_dict = user_dict
                         docassemble.base.functions.pop_current_variable()
@@ -4909,6 +4917,8 @@ class Interview:
                 if a_question_was_skipped:
                     raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
                 if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc:
+                    docassemble.base.functions.pop_current_variable()
+                    docassemble.base.functions.pop_event_stack(origMissingVariable)
                     return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                 raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
             except ForcedReRun as the_exception:
@@ -5123,6 +5133,8 @@ class Interview:
             #     new_question.name = "Question_Temp"
             #     return(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
         if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc:
+            docassemble.base.functions.pop_current_variable()
+            docassemble.base.functions.pop_event_stack(origMissingVariable)
             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
         raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
 

@@ -2438,6 +2438,8 @@ def process_action():
                     force_ask_nameerror(event_info['action'])
                     #logmessage("process_action: done with trying")
         #logmessage("process_action: returning")
+        if 'forgive_missing_question' in this_thread.misc:
+            del this_thread.misc['forgive_missing_question']
         return
     sys.stderr.write("process_action() continuing")
     the_action = this_thread.current_info['action']
@@ -2527,6 +2529,8 @@ def process_action():
             else:
                 #logmessage("process_action: doing a gather2: " + variable_name)
                 force_ask_nameerror(variable_name)
+        if 'forgive_missing_question' in this_thread.misc:
+            del this_thread.misc['forgive_missing_question']
         return
     #logmessage("process_action: calling force_ask")
     this_thread.misc['forgive_missing_question'] = True
@@ -2998,7 +3002,7 @@ def safe_json(the_object, level=0):
     if isinstance(the_object, DAObject):
         new_dict = dict()
         new_dict['_class'] = type_name(the_object)
-        if the_object.__class__.__name__ == 'DALazyTemplate':
+        if the_object.__class__.__name__ == 'DALazyTemplate' or the_object.__class__.__name__ == 'DALazyTableTemplate':
             if hasattr(the_object, 'instanceName'):
                 new_dict['instanceName'] = the_object.instanceName
             return new_dict
