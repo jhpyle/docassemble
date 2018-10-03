@@ -4809,11 +4809,19 @@ class Interview:
                             decoration_list = question.decorations
                         actual_saveas = substitute_vars(from_safeid(question.fields[0].saveas), is_generic, the_x, iterators)
                         docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
-                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DALazyTemplate(' + repr(actual_saveas) + ')'
-                        exec(string, user_dict)
-                        the_object = eval(actual_saveas, user_dict)
-                        if the_object.__class__.__name__ != 'DALazyTemplate':
-                            raise DAError("askfor: failure to define template object")
+                        found_object = False
+                        try:
+                            the_object = eval(actual_saveas, user_dict)
+                            if the_object.__class__.__name__ == 'DALazyTemplate':
+                                found_object = True
+                        except:
+                            pass
+                        if not found_object:
+                            string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DALazyTemplate(' + repr(actual_saveas) + ')'
+                            exec(string, user_dict)
+                            the_object = eval(actual_saveas, user_dict)
+                            if the_object.__class__.__name__ != 'DALazyTemplate':
+                                raise DAError("askfor: failure to define template object")
                         the_object.source_content = question.content
                         the_object.source_subject = question.subcontent
                         the_object.source_decorations = [dec['image'] for dec in decoration_list]
@@ -4900,7 +4908,9 @@ class Interview:
                         return question.ask(user_dict, old_user_dict, the_x, iterators, missing_var, origMissingVariable)
                 if a_question_was_skipped:
                     raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
-                raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
+                if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc:
+                    return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
+                raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
             except ForcedReRun as the_exception:
                 continue
             except NameError as the_exception:
@@ -5112,6 +5122,8 @@ class Interview:
             #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
             #     new_question.name = "Question_Temp"
             #     return(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
+        if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc:
+            return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
         raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
 
 def substitute_vars(var, is_generic, the_x, iterators):

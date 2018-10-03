@@ -2430,15 +2430,21 @@ def process_action():
                 #logmessage("process_action: adding " + event_info['action'] + " to current_info")
                 this_thread.current_info.update(event_info)
                 if event_info['action'].startswith('_da_'):
+                    #logmessage("process_action: forcing a re-run")
                     raise ForcedReRun()
                 else:
+                    #logmessage("process_action: forcing a nameerror")
+                    this_thread.misc['forgive_missing_question'] = True
                     force_ask_nameerror(event_info['action'])
+                    #logmessage("process_action: done with trying")
+        #logmessage("process_action: returning")
         return
-    #sys.stderr.write("process_action() continuing")
+    sys.stderr.write("process_action() continuing")
     the_action = this_thread.current_info['action']
     #logmessage("process_action: action is " + the_action)
     del this_thread.current_info['action']
     if the_action == '_da_force_ask' and 'variables' in this_thread.current_info['arguments']:
+        this_thread.misc['forgive_missing_question'] = True
         force_ask(*this_thread.current_info['arguments']['variables'])
     elif the_action == '_da_compute' and 'variables' in this_thread.current_info['arguments']:
         for variable_name in this_thread.current_info['arguments']['variables']:
@@ -2523,6 +2529,7 @@ def process_action():
                 force_ask_nameerror(variable_name)
         return
     #logmessage("process_action: calling force_ask")
+    this_thread.misc['forgive_missing_question'] = True
     force_ask(the_action)
 
 def url_action(action, **kwargs):
@@ -2991,6 +2998,10 @@ def safe_json(the_object, level=0):
     if isinstance(the_object, DAObject):
         new_dict = dict()
         new_dict['_class'] = type_name(the_object)
+        if the_object.__class__.__name__ == 'DALazyTemplate':
+            if hasattr(the_object, 'instanceName'):
+                new_dict['instanceName'] = the_object.instanceName
+            return new_dict
         for key, data in the_object.__dict__.iteritems():
             if key in ['has_nonrandom_instance_name', 'attrList']:
                 continue

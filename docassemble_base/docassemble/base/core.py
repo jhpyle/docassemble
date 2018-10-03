@@ -2517,16 +2517,27 @@ class DALazyTemplate(DAObject):
     """The class used for Markdown templates.  A template block saves to
     an object of this type.  The two attributes are "subject" and 
     "content." """
+    def __getstate__(self):
+        if hasattr(self, 'instanceName'):
+            return dict(instanceName=self.instanceName)
+        else:
+            return dict()
     @property
     def subject(self):
+        if not hasattr(self, 'source_subject'):
+            raise NameError("name '" + unicode(self.instanceName) + "' is not defined")
         return self.source_subject.text(self.user_dict).rstrip()
     @property
     def content(self):
+        if not hasattr(self, 'source_content'):
+            raise NameError("name '" + unicode(self.instanceName) + "' is not defined")
         if hasattr(self, 'table_info'):
             return text_of_table(self.table_info, self.user_dict)
         return self.source_content.text(self.user_dict).rstrip()
     @property
     def decorations(self):
+        if not hasattr(self, 'source_decorations'):
+            raise NameError("name '" + unicode(self.instanceName) + "' is not defined")
         return [dec.text(self.user_dict).rstrip for dec in self.source_decorations]
     def show(self, **kwargs):
         """Displays the contents of the template."""

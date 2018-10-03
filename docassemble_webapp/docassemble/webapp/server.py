@@ -15164,6 +15164,7 @@ def server_error(the_error):
                     flask_logtext = []
                 flask_logtext.append(line)
     orig_errmess = errmess
+    #errmess = the_error.__class__.__name__ + ": " + noquote(errmess)
     errmess = noquote(errmess)
     if re.search(r'\n', errmess):
         errmess = '<pre>' + errmess + '</pre>'
