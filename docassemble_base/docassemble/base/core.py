@@ -968,11 +968,16 @@ class DAList(DAObject):
             return(capitalize(output))
         else:
             return(output)
-    def item_actions(self, *pargs):
+    def item_actions(self, *pargs, **kwargs):
         """Returns HTML for editing the items in a list"""
         the_args = list(pargs)
         item = the_args.pop(0)
-        return '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=[item.instanceName + '.' + y for y in the_args]) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> <a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=item.instanceName) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+        index = the_args.pop(0)
+        output = ''
+        if kwargs.get('edit', True):
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=[item.instanceName + '.' + y for y in the_args]) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
+        if kwargs.get('delete', True):
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
     def add_action(self, message=None):
         """Returns HTML for adding an item to a list"""
         if message is None:
@@ -1595,6 +1600,22 @@ class DADict(DAObject):
     def pronoun_subjective(self, **kwargs):        
         """Same as pronoun()."""
         return self.pronoun(**kwargs)
+    def item_actions(self, *pargs, **kwargs):
+        """Returns HTML for editing the items in a dictionary"""
+        the_args = list(pargs)
+        item = the_args.pop(0)
+        index = the_args.pop(0)
+        output = ''
+        if kwargs.get('edit', True):
+            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=[item.instanceName + '.' + y for y in the_args]) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
+        if kwargs.get('delete', True):
+            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+        return output
+    def add_action(self, message=None):
+        """Returns HTML for adding an item to a dict"""
+        if message is None:
+            message = word("Add another")
+        return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn btn-sm btn-success"><i class="fas fa-plus-circle"></i> ' + unicode(message) + '</a>'
 
 class DASet(DAObject):
     """A base class for objects that behave like Python sets."""
@@ -2461,13 +2482,19 @@ def text_of_table(table_info, user_dict):
         raise DAError("Error in processing table " + table_info.saveas + ": row value is not iterable")
     if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and type(the_iterable.elements) in (list, dict) and docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
         the_iterable = the_iterable.complete_elements()
-    indexno = 0
     contents = list()
-    for item in the_iterable:
-        user_dict['row_item'] = item
-        user_dict['row_index'] = indexno
-        contents.append([table_safe(eval(x, user_dict)) for x in table_info.column])
-        indexno += 1
+    if hasattr(the_iterable, 'iteritems') and callable(the_iterable.iteritems):
+        for key in sorted(the_iterable):
+            user_dict['row_item'] = the_iterable[key]
+            user_dict['row_index'] = key
+            contents.append([table_safe(eval(x, user_dict)) for x in table_info.column])
+    else:
+        indexno = 0
+        for item in the_iterable:
+            user_dict['row_item'] = item
+            user_dict['row_index'] = indexno
+            contents.append([table_safe(eval(x, user_dict)) for x in table_info.column])
+            indexno += 1
     user_dict.pop('row_item', None)
     user_dict.pop('row_index', None)
     max_chars = [0 for x in header_output]
@@ -2531,8 +2558,6 @@ class DALazyTemplate(DAObject):
     def content(self):
         if not hasattr(self, 'source_content'):
             raise NameError("name '" + unicode(self.instanceName) + "' is not defined")
-        if hasattr(self, 'table_info'):
-            return text_of_table(self.table_info, self.user_dict)
         return self.source_content.text(self.user_dict).rstrip()
     @property
     def decorations(self):

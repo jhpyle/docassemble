@@ -123,13 +123,13 @@ def wrap_up(user_dict):
     while len(this_thread.open_files):
         file_object = this_thread.open_files.pop()
         file_object.commit()
-    while len(this_thread.template_vars):
-        saveas = this_thread.template_vars.pop()
-        #logmessage('wrap_up: deleting ' + saveas)
-        try:
-            exec('del ' + saveas, user_dict)
-        except:
-            pass
+    # while len(this_thread.template_vars):
+    #     saveas = this_thread.template_vars.pop()
+    #     #logmessage('wrap_up: deleting ' + saveas)
+    #     try:
+    #         exec('del ' + saveas, user_dict)
+    #     except:
+    #         pass
     # while len(this_thread.temporary_resources):
     #     the_resource = this_thread.temporary_resources.pop()
     #     if os.path.isdir(the_resource):
@@ -2441,7 +2441,7 @@ def process_action():
         if 'forgive_missing_question' in this_thread.misc:
             del this_thread.misc['forgive_missing_question']
         return
-    sys.stderr.write("process_action() continuing")
+    #sys.stderr.write("process_action() continuing")
     the_action = this_thread.current_info['action']
     #logmessage("process_action: action is " + the_action)
     del this_thread.current_info['action']
@@ -2482,17 +2482,32 @@ def process_action():
     elif the_action == '_da_list_remove':
         if 'action_item' in this_thread.current_info and 'action_list' in this_thread.current_info:
             try:
-                this_thread.current_info['action_list'].remove(this_thread.current_info['action_item'])
+                this_thread.current_info['action_list'].pop(this_thread.current_info['action_item'])
             except Exception as err:
                 logmessage("process_action: _da_list_remove error: " + unicode(err))
         raise ForcedReRun()
-    elif the_action == '_da_list_edit' and 'items' in this_thread.current_info['arguments']:
+    elif the_action == '_da_dict_remove':
+        if 'action_item' in this_thread.current_info and 'action_dict' in this_thread.current_info:
+            try:
+                this_thread.current_info['action_dict'].pop(this_thread.current_info['action_item'])
+            except Exception as err:
+                logmessage("process_action: _da_dict_remove error: " + unicode(err))
+        raise ForcedReRun()
+    elif the_action in ('_da_dict_edit', '_da_list_edit') and 'items' in this_thread.current_info['arguments']:
         force_ask(*this_thread.current_info['arguments']['items'])
     elif the_action == '_da_list_complete' and 'action_list' in this_thread.current_info:
         the_list = this_thread.current_info['action_list']
         the_list._validate(the_list.object_type, the_list.complete_attribute)
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and this_thread.internal['event_stack'][unique_id][0]['arguments']['list'] == the_list.instanceName:
+            this_thread.internal['event_stack'][unique_id].pop(0)
+        raise ForcedReRun()
+    elif the_action == '_da_dict_complete' and 'action_dict' in this_thread.current_info:
+        logmessage("_da_dict_complete")
+        the_dict = this_thread.current_info['action_dict']
+        the_dict._validate(the_dict.object_type, the_dict.complete_attribute)
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and this_thread.internal['event_stack'][unique_id][0]['arguments']['dict'] == the_dict.instanceName:
             this_thread.internal['event_stack'][unique_id].pop(0)
         raise ForcedReRun()
     elif the_action == '_da_list_add' and 'action_list' in this_thread.current_info:
@@ -2512,6 +2527,22 @@ def process_action():
         this_thread.current_info.update(the_action)
         raise ForcedReRun()
         #the_list._validate(the_list.object_type, the_list.complete_attribute)
+    elif the_action == '_da_dict_add' and 'action_dict' in this_thread.current_info:
+        logmessage("_da_dict_add")
+        the_dict = this_thread.current_info['action_dict']
+        the_dict.reset_gathered()
+        the_dict.there_is_another = True
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' not in this_thread.internal:
+            this_thread.internal['event_stack'] = dict()
+        if unique_id not in this_thread.internal['event_stack']:
+            this_thread.internal['event_stack'][unique_id] = list()
+        if len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and this_thread.internal['event_stack'][unique_id][0]['arguments']['dict'] == the_dict.instanceName:
+            this_thread.internal['event_stack'][unique_id].pop(0)
+        the_action = dict(action='_da_dict_complete', arguments=dict(dict=the_dict.instanceName))
+        this_thread.internal['event_stack'][unique_id].insert(0, the_action)
+        this_thread.current_info.update(the_action)
+        raise ForcedReRun()
     elif the_action == 'need':
         for key in ['variable', 'variables']:
             if key in this_thread.current_info['arguments']:

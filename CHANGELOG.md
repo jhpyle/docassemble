@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.3.2] - 2018-10-
+### Changed
+- Using `table` with a `DADict` now sets `row_index` to the key and
+  `row_item` to the value, and `DADict`s can be edited using tables.
+### Added
+- The `delete buttons` option when using `edit` on a `table`.
+### Fixed
+- URL for restarting interview session conflicted with another URL
+  when user logged in.
+
 ## [0.3.1] - 2018-10-02
 ### Changed
 - When a variable is force-asked or the goal of an action and a

@@ -3993,7 +3993,7 @@ def leave():
     #return response
     return redirect(the_exit_page)
 
-@app.route("/restart", methods=['GET'])
+@app.route("/restart_session", methods=['GET'])
 def restart_session():
     manual_checkout()
     session_id = session.get('uid', None)

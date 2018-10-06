@@ -1867,7 +1867,21 @@ class Question:
                 for attribute_name in data['edit']:
                     if type(attribute_name) not in (str, unicode):
                         raise DAError("The edit directive must be a list of attribute names" + self.idebug(data))
-                column.append(compile(data['rows'] + '.item_actions(row_item, ' + ', '.join([repr(y) for y in data['edit']]) + ')', '<column code>', 'eval'))
+                keyword_args = ''
+                if 'delete buttons' in data and not data['delete buttons']:
+                    keyword_args += ', delete=False'
+                column.append(compile(data['rows'] + '.item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ')', '<column code>', 'eval'))
+                if 'edit header' in data:
+                    if type(data['edit header']) not in (str, unicode):
+                        raise DAError("The edit header directive must be text" + self.idebug(data))
+                    if data['edit header'] == '':
+                        header.append(TextObject('&nbsp;'))
+                    else:
+                        header.append(TextObject(definitions + unicode(data['edit header']), names_used=self.mako_names))
+                else:
+                    header.append(TextObject(word("Actions")))
+            elif 'delete buttons' in data and data['delete buttons']:
+                column.append(compile(data['rows'] + '.item_actions(row_item, row_index, edit=False)', '<column code>', 'eval'))
                 if 'edit header' in data:
                     if type(data['edit header']) not in (str, unicode):
                         raise DAError("The edit header directive must be text" + self.idebug(data))
@@ -4307,6 +4321,10 @@ class Interview:
                         for the_key in ('list', 'item', 'items'):
                             if the_key in interview_status.current_info['arguments']:
                                 interview_status.current_info['action_' + the_key] = eval(interview_status.current_info['arguments'][the_key], user_dict)
+                    if interview_status.current_info['action'] in ('_da_dict_remove', '_da_dict_add', '_da_dict_complete'):
+                        for the_key in ('dict', 'item', 'items'):
+                            if the_key in interview_status.current_info['arguments']:
+                                interview_status.current_info['action_' + the_key] = eval(interview_status.current_info['arguments'][the_key], user_dict)
                 #else:
                 #    logmessage("assemble: there is no action in the current_info")
                 try:
@@ -4808,7 +4826,7 @@ class Interview:
                         else:
                             decoration_list = question.decorations
                         actual_saveas = substitute_vars(from_safeid(question.fields[0].saveas), is_generic, the_x, iterators)
-                        docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
+                        #docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
                         found_object = False
                         try:
                             the_object = eval(actual_saveas, user_dict)
@@ -4839,7 +4857,7 @@ class Interview:
                         table_info.empty_message = question.fields[0].extras['empty_message']
                         table_info.saveas = from_safeid(question.fields[0].saveas)
                         actual_saveas = substitute_vars(table_info.saveas, is_generic, the_x, iterators)
-                        docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
+                        #docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
                         string = "import docassemble.base.core"
                         exec(string, user_dict)
                         found_object = False
