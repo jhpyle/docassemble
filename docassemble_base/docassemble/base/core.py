@@ -2566,12 +2566,22 @@ class DALazyTemplate(DAObject):
         return [dec.text(self.user_dict).rstrip for dec in self.source_decorations]
     def show(self, **kwargs):
         """Displays the contents of the template."""
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+            content = unicode(self.content)
+            content = re.sub(r'^<w:r>', r'', content)
+            content = re.sub(r'^<w:rPr>.*?</w:rPr>', r'', content)
+            content = re.sub(r'^<w:t.*?>', r'', content)
+            content = re.sub(r'</w:r>$', r'', content)
+            content = re.sub(r'</w:t>$', r'', content)
+            return content
         return unicode(self)
     def __unicode__(self):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+            content = self.content
+            content = re.sub(r'\\_', r'\\\\_', content)
             #return unicode(self.content)
             #return unicode(docassemble.base.filter.docx_template_filter(self.content))
-            return unicode(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.docx_template))
+            return unicode(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.docx_template))
         return(unicode(self.content))
     def __str__(self):
         return unicode(self).encode('utf-8')
