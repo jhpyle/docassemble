@@ -40,7 +40,8 @@ review:
   - label: Edit
     fields:
       - favorite_fruit
-      - favorite_apple
+      - follow up:
+        - favorite_apple
     button: |
       Your favorite fruit is ${ favorite_fruit }.
       

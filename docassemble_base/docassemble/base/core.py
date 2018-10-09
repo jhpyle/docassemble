@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from docassemble.base.logger import logmessage
 from docassemble.base.generate_key import random_string
 import re
@@ -9,11 +10,13 @@ import shutil
 import inspect
 import yaml
 import pycurl
+import types
 import mimetypes
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article, force_gather, quantity_noun
 import docassemble.base.functions
 import docassemble.base.file_docx
 from docassemble.webapp.files import SavedFile
+from docassemble.base.error import LazyNameError
 from docxtpl import InlineImage, Subdoc
 import tempfile
 import time
@@ -450,9 +453,13 @@ class DAList(DAObject):
             else:
                 self.gathered
         return
-    def reset_gathered(self, recursive=False):
+    def reset_gathered(self, recursive=False, only_if_empty=False):
         """Indicates that there is more to be gathered"""
         #logmessage("reset_gathered on " + self.instanceName)
+        if only_if_empty and len(self.elements) > 0:
+            return
+        if len(self.elements) == 0 and hasattr(self, 'there_are_any'):
+            delattr(self, 'there_are_any')
         if hasattr(self, 'there_is_another'):
             delattr(self, 'there_is_another')
         if hasattr(self, 'gathered'):
@@ -871,7 +878,7 @@ class DAList(DAObject):
         except:
             if self.auto_gather and hasattr(self, 'gathered'):
                 try:
-                    logmessage("list index out of range on " + unicode(self.instanceName))
+                    logmessage("list index " + unicode(index) + " out of range on " + unicode(self.instanceName))
                 except:
                     pass
                 raise IndexError("list index out of range")
@@ -974,14 +981,22 @@ class DAList(DAObject):
         item = the_args.pop(0)
         index = the_args.pop(0)
         output = ''
+        if self.minimum_number is not None and len(self.elements) <= self.minimum_number:
+            can_delete = False
+        else:
+            can_delete = True
         if kwargs.get('edit', True):
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=[item.instanceName + '.' + y for y in the_args]) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
-        if kwargs.get('delete', True):
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=[item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
+        if kwargs.get('delete', True) and can_delete:
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+        return output
     def add_action(self, message=None):
         """Returns HTML for adding an item to a list"""
         if message is None:
-            message = word("Add another")
+            if len(self.elements) > 0:
+                message = word("Add another")
+            else:
+                message = word("Add an item")
         return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn btn-sm btn-success"><i class="fas fa-plus-circle"></i> ' + unicode(message) + '</a>'
 
 class DADict(DAObject):
@@ -1186,9 +1201,13 @@ class DADict(DAObject):
                     new_obj_parameters[key] = val
                 if parg not in self.elements:
                     self.initializeObject(parg, item_object_type, **new_obj_parameters)
-    def reset_gathered(self, recursive=False):
+    def reset_gathered(self, recursive=False, only_if_empty=False):
         """Indicates that there is more to be gathered"""
         #logmessage("reset_gathered on " + self.instanceName)
+        if only_if_empty and len(self.elements) > 0:
+            return
+        if len(self.elements) == 0 and hasattr(self, 'there_are_any'):
+            delattr(self, 'there_are_any')
         if hasattr(self, 'there_is_another'):
             delattr(self, 'there_is_another')
         if hasattr(self, 'gathered'):
@@ -1199,6 +1218,16 @@ class DADict(DAObject):
             delattr(self, 'new_object_type')
         if recursive:
             self._reset_gathered_recursively()
+    def slice(self, *pargs):
+        """Returns a shallow copy of the dictionary containing only the keys provided in the parameters."""
+        new_dict = copy.copy(self)
+        if len(pargs) == 1 and type(pargs[0]) is types.FunctionType:
+            the_func = pargs[0]
+            new_dict.elements = {key: self.elements[key] for key in self.elements if the_func(self.elements[key])}
+        else:
+            new_dict.elements = {key: self.elements[key] for key in pargs if key in self.elements}
+        new_dict.gathered = True
+        return new_dict
     def has_been_gathered(self):
         """Returns whether the dictionary has been gathered"""
         if hasattr(self, 'gathered'):
@@ -1607,14 +1636,17 @@ class DADict(DAObject):
         index = the_args.pop(0)
         output = ''
         if kwargs.get('edit', True):
-            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=[item.instanceName + '.' + y for y in the_args]) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
+            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=[item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if kwargs.get('delete', True):
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
         return output
     def add_action(self, message=None):
         """Returns HTML for adding an item to a dict"""
         if message is None:
-            message = word("Add another")
+            if len(self.elements) > 0:
+                message = word("Add another")
+            else:
+                message = word("Add an item")
         return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn btn-sm btn-success"><i class="fas fa-plus-circle"></i> ' + unicode(message) + '</a>'
 
 class DASet(DAObject):
@@ -1638,9 +1670,13 @@ class DASet(DAObject):
             else:
                 self.gathered
         return
-    def reset_gathered(self, recursive=False):
+    def reset_gathered(self, recursive=False, only_if_empty=False):
         """Indicates that there is more to be gathered"""
         #logmessage("reset_gathered: " + self.instanceName + ": del on there_is_another")
+        if only_if_empty and len(self.elements) > 0:
+            return
+        if len(self.elements) == 0 and hasattr(self, 'there_are_any'):
+            delattr(self, 'there_are_any')
         if hasattr(self, 'there_is_another'):
             delattr(self, 'there_is_another')
         if hasattr(self, 'gathered'):
@@ -2474,8 +2510,11 @@ def table_safe(text):
         text = '  ' + text + '  '
     return text
 
-def text_of_table(table_info, user_dict):
+def text_of_table(table_info, orig_user_dict, temp_vars):
     table_content = "\n"
+    user_dict = copy.copy(orig_user_dict)
+    user_dict.update(temp_vars)
+    #logmessage("i is " + unicode(user_dict['i']))
     header_output = [table_safe(x.text(user_dict)) for x in table_info.header]
     the_iterable = eval(table_info.row, user_dict)
     if not hasattr(the_iterable, '__iter__'):
@@ -2552,22 +2591,22 @@ class DALazyTemplate(DAObject):
     @property
     def subject(self):
         if not hasattr(self, 'source_subject'):
-            raise NameError("name '" + unicode(self.instanceName) + "' is not defined")
+            raise LazyNameError("name '" + unicode(self.instanceName) + "' is not defined")
         return self.source_subject.text(self.user_dict).rstrip()
     @property
     def content(self):
         if not hasattr(self, 'source_content'):
-            raise NameError("name '" + unicode(self.instanceName) + "' is not defined")
+            raise LazyNameError("name '" + unicode(self.instanceName) + "' is not defined")
         return self.source_content.text(self.user_dict).rstrip()
     @property
     def decorations(self):
         if not hasattr(self, 'source_decorations'):
-            raise NameError("name '" + unicode(self.instanceName) + "' is not defined")
+            raise LazyNameError("name '" + unicode(self.instanceName) + "' is not defined")
         return [dec.text(self.user_dict).rstrip for dec in self.source_decorations]
     def show(self, **kwargs):
         """Displays the contents of the template."""
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
-            content = unicode(self.content)
+            content = unicode(self)
             content = re.sub(r'^<w:r>', r'', content)
             content = re.sub(r'^<w:rPr>.*?</w:rPr>', r'', content)
             content = re.sub(r'^<w:t.*?>', r'', content)
@@ -2586,14 +2625,13 @@ class DALazyTemplate(DAObject):
     def __str__(self):
         return unicode(self).encode('utf-8')
 
-
 class DALazyTableTemplate(DALazyTemplate):
     """The class used for tables."""
     @property
     def content(self):
         if not hasattr(self, 'table_info'):
-            raise NameError("name '" + unicode(self.instanceName) + "' is not defined")
-        return text_of_table(self.table_info, self.user_dict)
+            raise LazyNameError("name '" + unicode(self.instanceName) + "' is not defined")
+        return text_of_table(self.table_info, self.user_dict, self.temp_vars)
 
 def selections(*pargs, **kwargs):
     """Packs a list of objects in the appropriate format for including
@@ -2654,7 +2692,7 @@ def objects_from_file(file_ref, recursive=True, gathered=True, name=None):
         thename = name
     #logmessage("objects_from_file: thename is " + str(thename))
     file_info = server.file_finder(file_ref, folder='sources')
-    if 'path' not in file_info:
+    if file_info is None or 'path' not in file_info:
         raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' not found')
     if thename is None:
         objects = DAList()

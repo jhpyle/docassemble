@@ -4,11 +4,32 @@
 ### Changed
 - Using `table` with a `DADict` now sets `row_index` to the key and
   `row_item` to the value, and `DADict`s can be edited using tables.
+- No delete buttons on a `table` when deletion would cause the number 
+  of items to fall below `minimum_number`.
+- The `edit` option on a `table` can now use reference indices as well
+  as attributes.
+- The default `message` for the `add_action()` method on a group is
+  "Add an item" if the group is empty.
+- Clicking on a navigable section header empties the queue, ensuring
+  that clicking "Resume" puts the user back in the interview, rather
+  than the screen they saw before they clicked the header.
 ### Added
 - The `delete buttons` option when using `edit` on a `table`.
+- The `only_if_empty` option on the `reset_gathered()` method.
+- The `slice` method of the `DADict` class.
+- The `re_gather` attribute of groups to `basic-questions.yml`.
+- The `follow up` option in a `review` block `fields`.
+- The `reconsider()` function.
+- The `preloaded modules` configuration directive.
 ### Fixed
 - URL for restarting interview session conflicted with another URL
   when user logged in.
+- `table`s could not appear inside of `review` blocks because they
+  were always undefined.
+- Navigable section headers not styled correctly.
+- One of two processes simultaneously loading the playground modules at
+  same time could encounter an empty directory.
+- Screen loads through `url_action_perform()` did not show the spinner.
 
 ## [0.3.1] - 2018-10-02
 ### Changed

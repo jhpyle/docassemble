@@ -758,6 +758,15 @@ from jinja2.exceptions import TemplateError
 import uuid
 from bs4 import BeautifulSoup
 
+import importlib
+modules_to_import = daconfig.get('preloaded modules', None)
+if type(modules_to_import) is list:
+    for module_name in daconfig['preloaded modules'] + ['docassemble.base.legal']:
+        try:
+            importlib.import_module(module_name)
+        except:
+            pass
+        
 mimetypes.add_type('application/x-yaml', '.yml')
 mimetypes.add_type('application/x-yaml', '.yaml')
 
@@ -1414,11 +1423,33 @@ def copy_playground_modules():
         for role in user.roles:
             if role.name == 'admin' or role.name == 'developer':
                 devs.append(user.id)
+    key = 'da:pgcopylock'
+    found = False
+    count = 20
+    while count > 0:
+        record = r.get(key)
+        if record:
+            time.sleep(1.0)
+        else:
+            found = False
+            break
+        found = True
+        count -= 1
+    if found:
+        sys.stderr.write("Request for " + key + " deadlocked\n")
+        r.delete(key)        
+    pipe = r.pipeline()
+    pipe.set(key, 1)
+    pipe.expire(key, 4)
+    pipe.execute()
     for user_id in devs:
         mod_dir = SavedFile(user_id, fix=True, section='playgroundmodules')
         local_dir = os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'playground' + str(user_id))
         if os.path.isdir(local_dir):
-            shutil.rmtree(local_dir)
+            try:
+                shutil.rmtree(local_dir)
+            except:
+                pass
         os.makedirs(local_dir)
         #sys.stderr.write("Copying " + str(mod_dir.directory) + " to " + str(local_dir) + "\n")
         for f in [f for f in os.listdir(mod_dir.directory) if re.search(r'^[A-Za-z].*\.py$', f)]:
@@ -1426,6 +1457,7 @@ def copy_playground_modules():
         #shutil.copytree(mod_dir.directory, local_dir)
         with open(os.path.join(local_dir, '__init__.py'), 'w') as the_file:
             the_file.write(init_py_file)
+    r.delete(key)
 
 def proc_example_list(example_list, examples):
     for example in example_list:
@@ -1857,20 +1889,28 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
             #output += '<li class="' + li_class + '" role="presentation">'
         new_key = the_title if the_key is None else the_key
         seen.add(new_key)
+        #logmessage("new_key is: " + str(new_key))
         #logmessage("seen sections are: " + str(seen))
-        if len(nav.past.difference(seen)) or new_key in nav.past:
+        #logmessage("nav past sections are: " + repr(nav.past))
+        if len(nav.past.difference(seen)) or new_key in nav.past or the_title in nav.past:
             seen_more = True
         else:
             seen_more = False
         #logmessage("the title is " + str(the_title) + " and show links is " + str(show_links) + " and seen_more is " + str(seen_more) + " and currently_active is " + str(currently_active) + " and section_reached is " + str(section_reached) + " and the_key is " + str(the_key) + " and interview is " + unicode(interview) + " and in q is " + ('in q' if the_key in interview.questions else 'not in q'))
         if show_links and (seen_more or currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
             #url = docassemble.base.functions.interview_url_action(the_key)
-            output += '<a tabindex="0" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + active_class + '">' + unicode(the_title) + '</a>'
+            if section_reached and not currently_active and not seen_more:
+                output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
+            else:
+                if active_class == '' and not (seen_more and not section_reached):
+                    output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
+                else:
+                    output += '<a tabindex="0" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + active_class + '">' + unicode(the_title) + '</a>'
         else:
             if section_reached and not currently_active and not seen_more:
                 output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
             else:
-                if active_class == '':
+                if active_class == '' and not (seen_more and not section_reached):
                     output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
                 else:
                     output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + active_class + '">' + unicode(the_title) + '</a>'
@@ -6398,6 +6438,7 @@ def index():
               args = {};
           }
           var data = {action: action, arguments: args};
+          daSpinnerTimeout = setTimeout(showSpinner, 1000);
           $.ajax({
             type: "POST",
             url: """ + '"' + url_for('index') + '"' + """,
@@ -6421,6 +6462,7 @@ def index():
               args = {};
           }
           var data = {action: action, arguments: args};
+          daSpinnerTimeout = setTimeout(showSpinner, 1000);
           $.ajax({
             type: "POST",
             url: """ + '"' + url_for('index') + '"' + """,
@@ -7732,7 +7774,7 @@ def index():
         });
         $(".danav a.clickable").click(function(e){
           var the_key = $(this).data('key');
-          url_action_perform(the_key, {});
+          url_action_perform("_da_priority_action", {action: the_key});
           e.preventDefault();
           return false;
         });
@@ -9316,6 +9358,7 @@ def observer():
               args = {};
           }
           var data = {action: action, arguments: args};
+          daSpinnerTimeout = setTimeout(showSpinner, 1000);
           $.ajax({
             type: "POST",
             url: """ + '"' + url_for('index') + '"' + """,
@@ -9340,6 +9383,7 @@ def observer():
               args = {};
           }
           var data = {action: action, arguments: args};
+          daSpinnerTimeout = setTimeout(showSpinner, 1000);
           $.ajax({
             type: "POST",
             url: """ + '"' + url_for('index') + '"' + """,

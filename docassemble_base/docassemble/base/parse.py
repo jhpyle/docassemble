@@ -29,7 +29,7 @@ import json
 import docassemble.base.filter
 import docassemble.base.pdftk
 import docassemble.base.file_docx
-from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError, ForcedReRun
+from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError, ForcedReRun, LazyNameError
 import docassemble.base.functions
 from docassemble.base.functions import pickleable_objects, word, get_language, server, RawValue, get_config
 from docassemble.base.logger import logmessage
@@ -1086,7 +1086,8 @@ class Question:
         if 'skip undefined' in data:
             if 'review' not in data:
                 raise DAError("You cannot set the skip undefined directive if the type of question is not review." + self.idebug(data))
-            self.skip_undefined = False
+            if not data['skip undefined']:
+                self.skip_undefined = False
         if 'mandatory' in data:
             if 'question' not in data and 'code' not in data and 'objects' not in data and 'attachment' not in data and 'data' not in data and 'data from code' not in data:
                 raise DAError("You cannot use the mandatory modifier on this type of block." + self.idebug(data))
@@ -1828,6 +1829,7 @@ class Question:
                 raise DAError("A table definition must have definitions for table, row, and column." + self.idebug(data))
             if type(data['rows']) in (list, dict, set, bool, int, float):
                 raise DAError("The row part of a table definition must be plain Python code." + self.idebug(data))
+            data['rows'] = data['rows'].strip()
             if type(data['columns']) is not list:
                 raise DAError("The column part of a table definition must be a list." + self.idebug(data))
             # if 'header' in data:
@@ -1849,11 +1851,11 @@ class Question:
                     raise DAError("A column item in a table definition cannot be empty." + self.idebug(data))
                 if 'header' in col and 'cell' in col:
                     header_text = col['header']
-                    cell_text = col['cell']
+                    cell_text = unicode(col['cell']).strip()
                 else:
                     for key, val in col.iteritems():
                         header_text = key
-                        cell_text = val
+                        cell_text = unicode(val).strip()
                         break
                 if header_text == '':
                     header.append(TextObject('&nbsp;'))
@@ -1870,7 +1872,7 @@ class Question:
                 keyword_args = ''
                 if 'delete buttons' in data and not data['delete buttons']:
                     keyword_args += ', delete=False'
-                column.append(compile(data['rows'] + '.item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ')', '<column code>', 'eval'))
+                column.append(compile(data['rows'] + '.item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ')', '<edit code>', 'eval'))
                 if 'edit header' in data:
                     if type(data['edit header']) not in (str, unicode):
                         raise DAError("The edit header directive must be text" + self.idebug(data))
@@ -1881,7 +1883,7 @@ class Question:
                 else:
                     header.append(TextObject(word("Actions")))
             elif 'delete buttons' in data and data['delete buttons']:
-                column.append(compile(data['rows'] + '.item_actions(row_item, row_index, edit=False)', '<column code>', 'eval'))
+                column.append(compile(data['rows'] + '.item_actions(row_item, row_index, edit=False)', '<delete button code>', 'eval'))
                 if 'edit header' in data:
                     if type(data['edit header']) not in (str, unicode):
                         raise DAError("The edit header directive must be text" + self.idebug(data))
@@ -2310,11 +2312,11 @@ class Question:
                             field_list = field[key]
                         field_data = []
                         for the_saveas in field_list:
-                            if type(the_saveas) not in (str, unicode):
-                                raise DAError("Invalid variable name in fields." + self.idebug(data))
-                            the_saveas = the_saveas.strip()
-                            if invalid_variable_name(the_saveas):
-                                raise DAError("Missing or invalid variable name " + repr(the_saveas) + " ." + self.idebug(data))
+                            #if type(the_saveas) not in (str, unicode):
+                            #    raise DAError("Invalid variable name in fields." + self.idebug(data))
+                            the_saveas = unicode(the_saveas).strip()
+                            #if invalid_variable_name(the_saveas):
+                            #    raise DAError("Missing or invalid variable name " + repr(the_saveas) + " ." + self.idebug(data))
                             if the_saveas not in field_data:
                                 field_data.append(the_saveas)
                             self.find_fields_in(the_saveas)
@@ -2331,7 +2333,7 @@ class Question:
                             field_list = field[key]
                         field_info['data'] = []
                         for the_saveas in field_list:
-                            if type(the_saveas) is dict and len(the_saveas) == 1 and ('undefine' in the_saveas or 'recompute' in the_saveas or 'set' in the_saveas):
+                            if type(the_saveas) is dict and len(the_saveas) == 1 and ('undefine' in the_saveas or 'recompute' in the_saveas or 'set' in the_saveas or 'follow up' in the_saveas):
                                 if 'set' in the_saveas:
                                     if type(the_saveas['set']) is not list:
                                         raise DAError("The set statement must refer to a list." + self.idebug(data))
@@ -2348,6 +2350,18 @@ class Question:
                                         self.find_fields_in(the_var_stripped)
                                         clean_list.append([the_var_stripped, the_val])
                                     field_info['data'].append(dict(action='_da_set', arguments=dict(variables=clean_list)))
+                                if 'follow up' in the_saveas:
+                                    if type(the_saveas['follow up']) is not list:
+                                        raise DAError("The follow up statement must refer to a list." + self.idebug(data))
+                                    for var in the_saveas['follow up']:
+                                        if type(var) not in (str, unicode):
+                                            raise DAError("Invalid variable name in follow up " + command + "." + self.idebug(data))
+                                        var_saveas = var.strip()
+                                        if invalid_variable_name(var_saveas):
+                                            raise DAError("Missing or invalid variable name " + repr(var_saveas) + " ." + self.idebug(data))
+                                        self.find_fields_in(var_saveas)
+                                        #field_info['data'].append(dict(action="_da_follow_up", arguments=dict(action=var)))
+                                        field_info['data'].append(dict(action=var, arguments=dict()))
                                 for command in ('undefine', 'recompute'):
                                     if command not in the_saveas:
                                         continue
@@ -2356,7 +2370,7 @@ class Question:
                                     clean_list = []
                                     for undef_var in the_saveas[command]:
                                         if type(undef_var) not in (str, unicode):
-                                            raise DAError("Invalid variable name in fields " + command + "." + self.idebug(data))
+                                            raise DAError("Invalid variable name " + repr(undef_var) + " in " + command + "." + self.idebug(data))
                                         undef_saveas = undef_var.strip()
                                         if invalid_variable_name(undef_saveas):
                                             raise DAError("Missing or invalid variable name " + repr(undef_saveas) + " ." + self.idebug(data))
@@ -2367,7 +2381,7 @@ class Question:
                                         field_info['data'].append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
                                 continue
                             if type(the_saveas) not in (str, unicode):
-                                raise DAError("Invalid variable name in fields." + self.idebug(data))
+                                raise DAError("Invalid variable name " + repr(the_saveas) + " in fields." + self.idebug(data))
                             the_saveas = the_saveas.strip()
                             if invalid_variable_name(the_saveas):
                                 raise DAError("Missing or invalid variable name " + repr(the_saveas) + " ." + self.idebug(data))
@@ -2413,7 +2427,7 @@ class Question:
                                     clean_list = []
                                     for undef_var in the_saveas[command]:
                                         if type(undef_var) not in (str, unicode):
-                                            raise DAError("Invalid variable name in fields " + command + "." + self.idebug(data))
+                                            raise DAError("Invalid variable name " + repr(undef_var) + " in fields " + command + "." + self.idebug(data))
                                         undef_saveas = undef_var.strip()
                                         if invalid_variable_name(undef_saveas):
                                             raise DAError("Missing or invalid variable name " + repr(undef_saveas) + " ." + self.idebug(data))
@@ -2424,7 +2438,7 @@ class Question:
                                         field_info['data'].append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
                                 continue
                             if type(the_saveas) not in (str, unicode):
-                                raise DAError("Invalid variable name in fields." + self.idebug(data))
+                                raise DAError("Invalid variable name " + repr(the_saveas) + " in fields." + self.idebug(data))
                             the_saveas = the_saveas.strip()
                             if invalid_variable_name(the_saveas):
                                 raise DAError("Missing or invalid variable name " + repr(the_saveas) + " ." + self.idebug(data))
@@ -3010,7 +3024,10 @@ class Question:
                         if skip_undefined:
                             try:
                                 the_val = eval(expression, user_dict)
-                            except:
+                            except LazyNameError:
+                                raise
+                            except Exception as err:
+                                logmessage(err.__class__.__name__ + ": " + unicode(err))
                                 failed = True
                                 break
                             if is_showif and not the_val:
@@ -3031,7 +3048,10 @@ class Question:
                             if skip_undefined:
                                 try:
                                     extras[key][field.number] = field.extras[key].text(user_dict)
-                                except Exception:
+                                except LazyNameError:
+                                    raise
+                                except Exception as err:
+                                    logmessage(err.__class__.__name__ + ": " + unicode(err))
                                     continue
                             else:
                                 extras[key][field.number] = field.extras[key].text(user_dict)
@@ -3039,7 +3059,10 @@ class Question:
                     if skip_undefined:
                         try:
                             helptexts[field.number] = field.helptext.text(user_dict)
-                        except:
+                        except LazyNameError:
+                            raise
+                        except Exception as err:
+                            logmessage(err.__class__.__name__ + ": " + unicode(err))
                             continue
                     else:
                         helptexts[field.number] = field.helptext.text(user_dict)
@@ -3047,7 +3070,10 @@ class Question:
                     if skip_undefined:
                         try:
                             labels[field.number] = field.label.text(user_dict)
-                        except:
+                        except LazyNameError:
+                            raise
+                        except Exception as err:
+                            logmessage(err.__class__.__name__ + ": " + unicode(err))
                             continue
                     else:
                         labels[field.number] = field.label.text(user_dict)
@@ -4651,7 +4677,7 @@ class Interview:
             seeking.append({'variable': missingVariable, 'time': time.time()})
         if recursion_depth > self.recursion_limit:
             raise DAError("There appears to be an infinite loop.  Variables in stack are " + ", ".join(variable_stack) + ".")
-        # logmessage("askfor: I don't have " + str(missingVariable) + " for language " + str(language))
+        #logmessage("askfor: I don't have " + str(missingVariable) + " for language " + str(language))
         #sys.stderr.write("I don't have " + str(missingVariable) + " for language " + str(language) + "\n")
         origMissingVariable = missingVariable
         docassemble.base.functions.set_current_variable(origMissingVariable)
@@ -4704,6 +4730,7 @@ class Interview:
                             questions_to_try.append((the_question, False, 'None', mv['iterators'], missingVariable, None))
         # logmessage("askfor: questions to try is " + str(questions_to_try))
         num_cycles = 0
+        missing_var = "_unknown"
         while True:
             num_cycles += 1
             if num_cycles > self.loop_limit:
@@ -4847,7 +4874,10 @@ class Interview:
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "table":
+                        temp_vars = dict()
+                        question.exec_setup(is_generic, the_x, iterators, temp_vars)
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        #logmessage("temp_vars are " + repr(temp_vars))
                         table_info = TableInfo()
                         table_info.header = question.fields[0].extras['header']
                         table_info.row = question.fields[0].extras['row']
@@ -4875,6 +4905,7 @@ class Interview:
                                 raise DAError("askfor: failure to define template object")
                         the_object.table_info = table_info
                         the_object.user_dict = user_dict
+                        the_object.temp_vars = temp_vars
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == 'attachments':
@@ -4935,9 +4966,10 @@ class Interview:
                 if a_question_was_skipped:
                     raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
                 if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc:
+                    logmessage("Forgiving " + origMissingVariable)
                     docassemble.base.functions.pop_current_variable()
                     docassemble.base.functions.pop_event_stack(origMissingVariable)
-                    return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
+                    return({'type': 'continue', 'sought': origMissingVariable, 'orig_sought': origMissingVariable})
                 raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
             except ForcedReRun as the_exception:
                 continue
@@ -5151,6 +5183,7 @@ class Interview:
             #     new_question.name = "Question_Temp"
             #     return(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
         if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc:
+            logmessage("Forgiving " + missing_var + " and " + origMissingVariable)
             docassemble.base.functions.pop_current_variable()
             docassemble.base.functions.pop_event_stack(origMissingVariable)
             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})

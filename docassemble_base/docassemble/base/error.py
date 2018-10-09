@@ -20,6 +20,9 @@ class CodeExecute(Exception):
 class ForcedReRun(Exception):
     pass
 
+class LazyNameError(NameError):
+    pass
+
 class ForcedNameError(NameError):
     def __init__(self, *pargs, **kwargs):
         the_args = [x for x in pargs]
