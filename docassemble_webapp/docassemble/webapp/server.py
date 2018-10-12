@@ -27,27 +27,6 @@ PACKAGE_PROTECTION = daconfig.get('package protection', True)
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 request_active = True
 
-word_file_list = daconfig.get('words', list())
-if type(word_file_list) is not list:
-    word_file_list = [word_file_list]
-for word_file in word_file_list:
-    #sys.stderr.write("Reading from " + str(word_file) + "\n")
-    filename = docassemble.base.functions.static_filename_path(word_file)
-    if os.path.isfile(filename):
-        with open(filename, 'rU') as stream:
-            try:
-                for document in ruamel.yaml.safe_load_all(stream):
-                    if document and type(document) is dict:
-                        for lang, words in document.iteritems():
-                            if type(words) is dict:
-                                docassemble.base.functions.update_word_collection(lang, words)
-                            else:
-                                sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
-                    else:
-                        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
-            except:
-                sys.stderr.write("Error reading " + str(word_file) + ": yaml could not be processed.\n")
-
 default_playground_yaml = """metadata:
   title: Default playground interview
   short title: Test

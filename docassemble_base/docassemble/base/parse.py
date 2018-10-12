@@ -35,7 +35,7 @@ from docassemble.base.functions import pickleable_objects, word, get_language, s
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import MyPandoc, word_to_markdown
 from docassemble.base.mako.template import Template as MakoTemplate
-from docassemble.base.mako.exceptions import SyntaxException
+from docassemble.base.mako.exceptions import SyntaxException, CompileException
 from docassemble.base.astparser import myvisitnode
 from types import CodeType, NoneType
 
@@ -4163,6 +4163,9 @@ class Interview:
                     except SyntaxException as qError:
                         self.success = False
                         raise Exception("Syntax Exception: " + unicode(qError) + "\n\nIn file " + unicode(source.path) + " from package " + unicode(source_package) + ":\n" + unicode(source_code))
+                    except CompileException as qError:
+                        self.success = False
+                        raise Exception("Compile Exception: " + unicode(qError) + "\n\nIn file " + unicode(source.path) + " from package " + unicode(source_package) + ":\n" + unicode(source_code))
                     except SyntaxError as qError:
                         self.success = False
                         raise Exception("Syntax Error: " + unicode(qError) + "\n\nIn file " + unicode(source.path) + " from package " + unicode(source_package) + ":\n" + unicode(source_code))
@@ -4646,6 +4649,17 @@ class Interview:
                     if the_question is not None:
                         raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
                     raise DAError("no question available: " + str(qError))
+                except CompileException as qError:
+                    docassemble.base.functions.reset_context()
+                    the_question = None
+                    try:
+                        the_question = question
+                    except:
+                        pass
+                    docassemble.base.functions.wrap_up(user_dict)
+                    if the_question is not None:
+                        raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
+                    raise DAError("no question available: " + str(qError))
                 else:
                     docassemble.base.functions.wrap_up(user_dict)
                     raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
@@ -4965,7 +4979,7 @@ class Interview:
                         return question.ask(user_dict, old_user_dict, the_x, iterators, missing_var, origMissingVariable)
                 if a_question_was_skipped:
                     raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
-                if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc:
+                if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc and origMissingVariable in docassemble.base.functions.this_thread.misc['forgive_missing_question']:
                     logmessage("Forgiving " + origMissingVariable)
                     docassemble.base.functions.pop_current_variable()
                     docassemble.base.functions.pop_event_stack(origMissingVariable)
@@ -5170,6 +5184,17 @@ class Interview:
                 if the_question is not None:
                     raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
                 raise DAError("no question available in askfor: " + str(qError))
+            except CompileException as qError:
+                # logmessage("CompileException")
+                docassemble.base.functions.reset_context()
+                the_question = None
+                try:
+                    the_question = question
+                except:
+                    pass
+                if the_question is not None:
+                    raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
+                raise DAError("no question available in askfor: " + str(qError))
             # except SendFileError as qError:
             #     #logmessage("Trapped SendFileError2")
             #     question_data = dict(extras=dict())
@@ -5182,7 +5207,7 @@ class Interview:
             #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
             #     new_question.name = "Question_Temp"
             #     return(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
-        if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc:
+        if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc and origMissingVariable in docassemble.base.functions.this_thread.misc['forgive_missing_question']:
             logmessage("Forgiving " + missing_var + " and " + origMissingVariable)
             docassemble.base.functions.pop_current_variable()
             docassemble.base.functions.pop_event_stack(origMissingVariable)
@@ -5487,7 +5512,7 @@ def invalid_variable_name(varname):
 def exec_with_trap(the_question, the_dict):
     try:
         exec(the_question.compute, the_dict)
-    except (NameError, UndefinedError, CommandError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, QuestionError, AttributeError, MandatoryQuestion, CodeExecute, SyntaxException):
+    except (NameError, UndefinedError, CommandError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, QuestionError, AttributeError, MandatoryQuestion, CodeExecute, SyntaxException, CompileException):
         raise
     except Exception as e:
         cl, exc, tb = sys.exc_info()

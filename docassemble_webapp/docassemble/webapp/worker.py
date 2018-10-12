@@ -927,14 +927,18 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 sys.stderr.write("Time in background response action was " + str(time.time() - start_time))
                 return worker_controller.functions.ReturnValue(value=new_action, extra=extra)
             if hasattr(interview_status, 'questionText') and interview_status.questionText:
-                sys.stderr.write("background_action: The end result of the background action was the asking of this question: " + repr(str(interview_status.questionText).strip()) + "\n")
+                if interview_status.orig_sought != interview_status.sought:
+                    sought_message = unicode(interview_status.orig_sought) + " (" + interview_status.sought + ")"
+                else:
+                    sought_message = unicode(interview_status.orig_sought)
+                sys.stderr.write("background_action: The end result of the background action was the seeking of the variable " + sought_message + ", which resulted in asking this question: " + repr(str(interview_status.questionText).strip()) + "\n")
                 sys.stderr.write("background_action: Perhaps your interview did not ask all of the questions needed for the background action to do its work.")
                 sys.stderr.write("background_action: Or perhaps your background action did its job, but you did not end it with a call to background_response().")
                 error_type = 'QuestionError'
                 error_trace = None
                 error_message = interview_status.questionText
                 variables = list(reversed([y for y in worker_controller.functions.this_thread.current_variable]))
-                worker_controller.error_notification(Exception("The end result of the background action was the asking of this question: " + repr(str(interview_status.questionText).strip())))
+                worker_controller.error_notification(Exception("The end result of the background action was the seeking of the variable " + sought_message + ", which resulted in asking this question: " + repr(str(interview_status.questionText).strip())))
                 if 'on_error' not in worker_controller.functions.this_thread.current_info:
                     return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
                 else:

@@ -21,6 +21,7 @@ from Crypto.Cipher import AES
 from Crypto import Random
 from dateutil import tz
 import tzlocal
+import ruamel.yaml
 
 import docassemble.base.parse
 import re
@@ -185,6 +186,34 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.update_locale()
+
+word_file_list = daconfig.get('words', list())
+if type(word_file_list) is not list:
+    word_file_list = [word_file_list]
+for word_file in word_file_list:
+    #sys.stderr.write("Reading from " + str(word_file) + "\n")
+    if not isinstance(word_file, basestring):
+        sys.stderr.write("Error reading words: file references must be plain text.\n")
+        continue
+    filename = docassemble.base.functions.static_filename_path(word_file)
+    if filename is None:
+        sys.stderr.write("Error reading " + str(word_file) + ": file not found.\n")
+        continue
+    if os.path.isfile(filename):
+        with open(filename, 'rU') as stream:
+            try:
+                for document in ruamel.yaml.safe_load_all(stream):
+                    if document and type(document) is dict:
+                        for lang, words in document.iteritems():
+                            if type(words) is dict:
+                                docassemble.base.functions.update_word_collection(lang, words)
+                            else:
+                                sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
+                    else:
+                        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
+            except:
+                sys.stderr.write("Error reading " + str(word_file) + ": yaml could not be processed.\n")
+
 if 'currency symbol' in daconfig:
     docassemble.base.functions.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
 

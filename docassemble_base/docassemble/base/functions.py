@@ -974,7 +974,6 @@ server.chat_partners_available = null_func
 server.absolute_filename = null_func
 server.save_numbered_file = null_func
 server.send_mail = null_func
-server.absolute_filename = null_func
 server.file_finder = null_func
 server.url_finder = null_func
 server.user_id_dict = null_func
@@ -2322,7 +2321,10 @@ def package_template_filename(the_file, **kwargs):
         m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
         if m:
             parts[1] = re.sub(r'^data/templates/', '', parts[1])
-            return(server.absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1])).path)
+            abs_file = server.absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))
+            if abs_file is None:
+                return None
+            return(abs_file.path)
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/templates/' + parts[1]
         try:
@@ -2350,9 +2352,15 @@ def package_data_filename(the_file):
         if m:
             if re.search(r'^data/sources/', parts[1]):
                 parts[1] = re.sub(r'^data/sources/', '', parts[1])
-                return(server.absolute_filename("/playgroundsources/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1])).path)
+                abs_file = server.absolute_filename("/playgroundsources/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))
+                if abs_file is None:
+                    return None
+                return(abs_file.path)
             parts[1] = re.sub(r'^data/static/', '', parts[1])
-            return(server.absolute_filename("/playgroundstatic/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1])).path)
+            abs_file = server.absolute_filename("/playgroundstatic/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))
+            if abs_file is None:
+                return None
+            return(abs_file.path)
         try:
             result = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
         except:
@@ -2434,7 +2442,7 @@ def process_action():
                     raise ForcedReRun()
                 else:
                     #logmessage("process_action: forcing a nameerror")
-                    this_thread.misc['forgive_missing_question'] = True #restore
+                    this_thread.misc['forgive_missing_question'] = [event_info['action']] #restore
                     force_ask_nameerror(event_info['action'])
                     #logmessage("process_action: done with trying")
         #logmessage("process_action: returning")
@@ -2455,7 +2463,7 @@ def process_action():
             this_thread.internal['event_stack'][unique_id] = []
         the_action = this_thread.current_info['arguments']['action']
     elif the_action == '_da_force_ask' and 'variables' in this_thread.current_info['arguments']:
-        this_thread.misc['forgive_missing_question'] = True #restore
+        this_thread.misc['forgive_missing_question'] = this_thread.current_info['arguments']['variables'] #restore
         force_ask(*this_thread.current_info['arguments']['variables'])
     elif the_action == '_da_compute' and 'variables' in this_thread.current_info['arguments']:
         for variable_name in this_thread.current_info['arguments']['variables']:
@@ -2573,7 +2581,7 @@ def process_action():
             del this_thread.misc['forgive_missing_question']
         return
     #logmessage("process_action: calling force_ask")
-    this_thread.misc['forgive_missing_question'] = True #restore
+    this_thread.misc['forgive_missing_question'] = [the_action] #restore
     force_ask(the_action)
 
 def url_action(action, **kwargs):
