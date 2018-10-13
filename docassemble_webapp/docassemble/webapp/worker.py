@@ -643,8 +643,8 @@ def ocr_page(**kwargs):
     sys.stderr.write("ocr_page started in worker\n")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    worker_controller.functions.set_uid(kwargs['user_code'])
     worker_controller.functions.reset_local_variables()
+    worker_controller.functions.set_uid(kwargs['user_code'])
     with worker_controller.flaskapp.app_context():
         return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.ocr.ocr_page(**kwargs))
 
@@ -669,8 +669,8 @@ def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png, page=None):
     sys.stderr.write("make_png_for_pdf started in worker for size " + prefix + "\n")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    worker_controller.functions.set_uid(user_code)
     worker_controller.functions.reset_local_variables()
+    worker_controller.functions.set_uid(user_code)
     with worker_controller.flaskapp.app_context():
         worker_controller.ocr.make_png_for_pdf(doc, prefix, resolution, pdf_to_png, page=page)
     return
@@ -704,8 +704,8 @@ def email_attachments(user_code, email_address, attachment_info):
     success = False
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    worker_controller.functions.set_uid(user_code)
     worker_controller.functions.reset_local_variables()
+    worker_controller.functions.set_uid(user_code)
     with worker_controller.flaskapp.app_context():
         worker_controller.set_request_active(False)
         doc_names = list()
@@ -812,8 +812,8 @@ def email_attachments(user_code, email_address, attachment_info):
 def background_action(yaml_filename, user_info, session_code, secret, url, url_root, action, extra=None):
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    worker_controller.functions.set_uid(session_code)
     worker_controller.functions.reset_local_variables()
+    worker_controller.functions.set_uid(session_code)
     with worker_controller.flaskapp.app_context():
         with worker_controller.flaskapp.test_request_context(base_url=url):
             if not str(user_info['the_user_id']).startswith('t'):

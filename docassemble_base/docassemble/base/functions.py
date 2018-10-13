@@ -89,13 +89,15 @@ def get_current_variable():
 
 def reset_context():
     this_thread.evaluation_context = None
-    this_thread.docx_include_count = 0
-    this_thread.docx_template = None
+    if 'docx_include_count' in this_thread.misc:
+        del this_thread.misc['docx_include_count']
+    if 'docx_template' in this_thread.misc:
+        del this_thread.misc['docx_template']
 
 def set_context(new_context, template=None):
     this_thread.evaluation_context = new_context
-    this_thread.docx_include_count = 0
-    this_thread.docx_template = template
+    this_thread.misc['docx_include_count'] = 0
+    this_thread.misc['docx_template'] = template
 
 def set_current_variable(var):
     #logmessage("set_current_variable: " + str(var))
@@ -1545,15 +1547,20 @@ def get_default_timezone():
 
 def reset_local_variables():
     this_thread.language = server.default_language
+    this_thread.dialect = server.default_dialect
+    this_thread.country = server.default_country
     this_thread.locale = server.default_locale
-    this_thread.prevent_going_back = False
+    this_thread.session_id = None
+    this_thread.evaluation_context = None
     this_thread.gathering_mode = dict()
+    this_thread.global_vars = GenericObject()
     this_thread.current_variable = list()
-    this_thread.open_files = set()
     this_thread.template_vars = list()
+    this_thread.open_files = set()
     this_thread.saved_files = dict()
     this_thread.message_log = list()
-    this_thread.global_vars = GenericObject()
+    this_thread.misc = dict()
+    this_thread.prevent_going_back = False
 
 def prevent_going_back():
     """Instructs docassemble to disable the user's back button, so that the user cannot

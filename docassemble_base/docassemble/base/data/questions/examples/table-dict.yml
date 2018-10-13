@@ -24,7 +24,7 @@ question: |
 fields:
   - "Do you get income from ${ i }?": income[i].receives
     datatype: yesnoradio
-  - "How much do you get from ${ i }": income[i].amount
+  - "How much do you get from ${ i }?": income[i].amount
     datatype: currency
     show if: income[i].receives
 ---
@@ -37,9 +37,8 @@ columns:
       'Yes' if row_item.receives else 'No'
   - Amount: |
       currency(row_item.amount) if row_item.receives else ''
-#edit:
-#  - receives
-delete buttons: True
+edit:
+  - receives
 ---
 question: |
   What new income type would

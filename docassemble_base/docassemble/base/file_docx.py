@@ -89,7 +89,7 @@ def include_docx_template(template_file, **kwargs):
         template_path = template_file.path()
     else:
         template_path = package_template_filename(template_file, package=this_thread.current_package)
-    sd = this_thread.docx_template.new_subdoc()
+    sd = this_thread.misc['docx_template'].new_subdoc()
     sd.subdocx = Document(template_path)
     sd.subdocx._part = sd.docx._part
     first_paragraph = sd.subdocx.paragraphs[0]
@@ -99,7 +99,9 @@ def include_docx_template(template_file, **kwargs):
         else:
             the_repr = '"' + re.sub(r'\n', '', unicode(val).encode('utf-8').encode('base64')) + '".decode("base64").decode("utf-8")'
         first_paragraph.insert_paragraph_before(str("{%%p set %s = %s %%}" % (key, the_repr)))
-    this_thread.docx_include_count += 1
+    if 'docx_include_count' not in this_thread.misc:
+        this_thread.misc['docx_include_count'] = 0
+    this_thread.misc['docx_include_count'] += 1
     return sd
 
 def add_to_rt(tpl, rt, parsed):

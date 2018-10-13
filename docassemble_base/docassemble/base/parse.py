@@ -3027,7 +3027,8 @@ class Question:
                             except LazyNameError:
                                 raise
                             except Exception as err:
-                                logmessage(err.__class__.__name__ + ": " + unicode(err))
+                                if self.interview.debug:
+                                    logmessage("Exception in review block: " + err.__class__.__name__ + ": " + unicode(err))
                                 failed = True
                                 break
                             if is_showif and not the_val:
@@ -3051,7 +3052,8 @@ class Question:
                                 except LazyNameError:
                                     raise
                                 except Exception as err:
-                                    logmessage(err.__class__.__name__ + ": " + unicode(err))
+                                    if self.interview.debug:
+                                        logmessage("Exception in review block: " + err.__class__.__name__ + ": " + unicode(err))
                                     continue
                             else:
                                 extras[key][field.number] = field.extras[key].text(user_dict)
@@ -3062,7 +3064,8 @@ class Question:
                         except LazyNameError:
                             raise
                         except Exception as err:
-                            logmessage(err.__class__.__name__ + ": " + unicode(err))
+                            if self.interview.debug:
+                                logmessage("Exception in review block: " + err.__class__.__name__ + ": " + unicode(err))
                             continue
                     else:
                         helptexts[field.number] = field.helptext.text(user_dict)
@@ -3073,7 +3076,8 @@ class Question:
                         except LazyNameError:
                             raise
                         except Exception as err:
-                            logmessage(err.__class__.__name__ + ": " + unicode(err))
+                            if self.interview.debug:
+                                logmessage("Exception in review block: " + err.__class__.__name__ + ": " + unicode(err))
                             continue
                     else:
                         labels[field.number] = field.label.text(user_dict)
@@ -3565,13 +3569,13 @@ class Question:
                         try:
                             the_template = result['template']
                             while True:
-                                old_count = docassemble.base.functions.this_thread.docx_include_count
+                                old_count = docassemble.base.functions.this_thread.misc.get('docx_include_count', 0)
                                 the_template.render(result['field_data'], jinja_env=custom_jinja_env())
-                                if docassemble.base.functions.this_thread.docx_include_count > old_count and old_count < 10:
+                                if docassemble.base.functions.this_thread.misc.get('docx_include_count', 0) > old_count and old_count < 10:
                                     new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                                     the_template.save(new_template_file.name)
                                     the_template = docassemble.base.file_docx.DocxTemplate(new_template_file.name)
-                                    docassemble.base.functions.this_thread.docx_template = the_template
+                                    docassemble.base.functions.this_thread.misc['docx_template'] = the_template
                                 else:
                                     break
                         except TemplateError as the_error:
@@ -4454,6 +4458,8 @@ class Interview:
                     continue
                 except NameError as the_exception:
                     #logmessage("Error in NameError is " + str(the_exception))
+                    if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
+                        logmessage("NameError exception during document assembly: " + unicode(the_exception))
                     docassemble.base.functions.reset_context()
                     seeking_question = False
                     if isinstance(the_exception, ForcedNameError):
@@ -4496,6 +4502,8 @@ class Interview:
                         interview_status.populate(question_result)
                         break
                 except UndefinedError as the_exception:
+                    if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
+                        logmessage("UndefinedError exception during document assembly: " + unicode(the_exception))
                     docassemble.base.functions.reset_context()
                     missingVariable = extract_missing_name(the_exception)
                     variables_sought.add(missingVariable)
@@ -4888,10 +4896,14 @@ class Interview:
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "table":
-                        temp_vars = dict()
-                        question.exec_setup(is_generic, the_x, iterators, temp_vars)
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
-                        #logmessage("temp_vars are " + repr(temp_vars))
+                        temp_vars = dict()
+                        if is_generic:
+                            if the_x != 'None':
+                                temp_vars['x'] = user_dict['x']
+                        if len(iterators):
+                            for indexno in range(len(iterators)):
+                                temp_vars[list_of_indices[indexno]] = user_dict[list_of_indices[indexno]]
                         table_info = TableInfo()
                         table_info.header = question.fields[0].extras['header']
                         table_info.row = question.fields[0].extras['row']
@@ -4989,6 +5001,8 @@ class Interview:
                 continue
             except NameError as the_exception:
                 # logmessage("NameError: " + str(the_exception))
+                if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
+                    logmessage("NameError exception during document assembly: " + unicode(the_exception))
                 docassemble.base.functions.reset_context()
                 seeking_question = False
                 if isinstance(the_exception, ForcedNameError):
@@ -5039,6 +5053,8 @@ class Interview:
                 return(question_result)
             except UndefinedError as the_exception:
                 #logmessage("UndefinedError: " + unicode(the_exception))
+                if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
+                    logmessage("UndefinedError exception during document assembly: " + unicode(the_exception))
                 docassemble.base.functions.reset_context()
                 newMissingVariable = extract_missing_name(the_exception)
                 if newMissingVariable not in questions_tried:
@@ -5640,4 +5656,4 @@ def custom_jinja_env():
     return env
 
 def markdown_filter(text):
-    return docassemble.base.file_docx.markdown_to_docx(unicode(text), docassemble.base.functions.this_thread.docx_template)
+    return docassemble.base.file_docx.markdown_to_docx(unicode(text), docassemble.base.functions.this_thread.misc.get('docx_template', None))

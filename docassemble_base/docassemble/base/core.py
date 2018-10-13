@@ -2231,7 +2231,7 @@ class DAFile(DAObject):
             if self.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return docassemble.base.file_docx.include_docx_template(self)
             else:
-                return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.docx_template, width=width)
+                return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width)
         else:
             if width is not None:
                 return(u'[FILE ' + unicode(self.number) + u', ' + unicode(width) + u']')
@@ -2372,7 +2372,7 @@ class DAStaticFile(DAObject):
             if self.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return docassemble.base.file_docx.include_docx_template(self)
             else:
-                return docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(self.path()), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.docx_template, width=width)
+                return docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(self.path()), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width)
         else:
             if width is not None:
                 return('[FILE ' + str(self.filename) + ', ' + str(width) + ']')
@@ -2498,7 +2498,7 @@ class DATemplate(DAObject):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             #return unicode(self.content)
             #return unicode(docassemble.base.filter.docx_template_filter(self.content))
-            return unicode(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.docx_template))
+            return unicode(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.misc('docx_template', None)))
         return(unicode(self.content))
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -2620,7 +2620,7 @@ class DALazyTemplate(DAObject):
             content = re.sub(r'\\_', r'\\\\_', content)
             #return unicode(self.content)
             #return unicode(docassemble.base.filter.docx_template_filter(self.content))
-            return unicode(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.docx_template))
+            return unicode(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
         return(unicode(self.content))
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -2797,6 +2797,6 @@ class DALink(DAObject):
         return unicode(self.show())
     def show(self):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
-            return docassemble.base.file_docx.create_hyperlink(self.url, self.anchor_text, docassemble.base.functions.this_thread.docx_template)
+            return docassemble.base.file_docx.create_hyperlink(self.url, self.anchor_text, docassemble.base.functions.this_thread.misc.get('docx_template', None))
         else:
             return '[%s](%s)' % (self.anchor_text, self.url)
