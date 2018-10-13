@@ -164,6 +164,26 @@ asking the user a question.
 For an example of this in action, see the code example in the
 [`forget_result_of()`] subsection.
 
+## <a name="reconsider"></a>reconsider()
+
+The `reconsider()` function is similar to the [`reconsider`] modifier
+on a [`code`] block.  Each argument to `reconsider()` needs to be a
+variable name, as text.  E.g., `reconsider('number_of_fruit',
+'number_of_vegetables')`.
+
+When `reconsider()` is run, it will undefine the given variables and
+then seek their definitions.  However, it will only do this once
+in a given assembly process (i.e., once each time a screen loads).
+Thus, even if your [`code`] block executes multiple times in a given
+assembly process, each variable will only be recomputed one time.
+
+{% include side-by-side.html demo="reconsider-function" %}
+
+Using this function is computationally more efficient than using the
+[`reconsider`] modifier or the [`reset`] initial block because
+[`reconsider`] and [`reset`] cause code to run every time the screen
+loads.
+
 ## <a name="need"></a>need()
 
 The `need()` function takes one or more variables as arguments and
@@ -6108,3 +6128,5 @@ $(document).on('daPageLoad', function(){
 [special buttons]: {{ site.baseurl }}/docs/questions.html#special buttons
 [starting an interview from the beginning]: {{ site.baseurl }}/docs/interviews.html#reset
 [tags]: #session_tags
+[`reconsider`]: {{ site.baseurl }}/docs/logic.html#reconsider
+[`reset`]: {{ site.baseurl }}/docs/initial.html#reset

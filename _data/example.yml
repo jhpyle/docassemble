@@ -7750,6 +7750,39 @@
   code: |
     cat_food_cans_needed = number_of_cats * 4
   reconsider: True
+"reconsider-function": |-
+  code: |
+    number_of_pets = number_of_cats + number_of_dogs
+  ---
+  question: |
+    You have
+    ${ nice_number(number_of_pets) }
+    pets.
+  subquestion: |
+    However, I do not think
+    you have been totally honest.
+  field: interim_report
+  ---
+  question: |
+    Do you want a goldfish?
+  yesno: wants_goldfish
+  ---
+  event: final_report
+  question: |
+    You really have
+    ${ nice_number(number_of_pets) }
+    pets.
+  subquestion: |
+    % if wants_goldfish:
+    You would rather have a goldfish.
+    % endif
+  ---
+  mandatory: True
+  code: |
+    interim_report
+    ask_dogs_again
+    reconsider('number_of_pets')
+    final_report
 "redact": |-
   template: petition_text
   content: |
@@ -8127,9 +8160,10 @@
   \ favorite fruit is ${ favorite_fruit }.\n  \n  % if favorite_fruit == 'Apple':\n\
   \  Your favorite apple is ${ favorite_apple }.\n  % endif\nfield: results_shown\n\
   ---\nquestion: |\n  Please review the results.\nreview:\n  - label: Edit\n    fields:\n\
-  \      - favorite_fruit\n      - favorite_apple\n    button: |\n      Your favorite\
-  \ fruit is ${ favorite_fruit }.\n      \n      % if favorite_fruit == 'Apple':\n\
-  \      Your favorite apple is ${ favorite_apple }.\n      % endif\nfield: results_reviewed"
+  \      - favorite_fruit\n      - follow up:\n        - favorite_apple\n    button:\
+  \ |\n      Your favorite fruit is ${ favorite_fruit }.\n      \n      % if favorite_fruit\
+  \ == 'Apple':\n      Your favorite apple is ${ favorite_apple }.\n      % endif\n\
+  field: results_reviewed"
 "review-edit-list": "mandatory: true\nquestion: |\n  Thank you for your answers!\n\
   subquestion: |\n  The people are ${ person } and your\n  favorite is ${ favorite\
   \ }.\n\n  You can\n  [edit your answers](${ url_action('review_interview') })\n\
@@ -9114,6 +9148,38 @@
         Number of Seeds
       cell: |
         row_item.seeds
+"table-dict": |-
+  objects:
+    - income: DADict.using(object_type=DAObject,
+                           keys=['employment', 'benefits', 'interest'],
+                           complete_attribute='complete',
+                           there_is_another=False)
+  ---
+  code: |
+    if income[i].receives:
+      income[i].amount
+    income[i].complete = True
+  ---
+  question: |
+    Income from ${ i }
+  fields:
+    - "Do you get income from ${ i }?": income[i].receives
+      datatype: yesnoradio
+    - "How much do you get from ${ i }?": income[i].amount
+      datatype: currency
+      show if: income[i].receives
+  ---
+  table: income.table
+  rows: income
+  columns:
+    - Type: |
+        row_index
+    - Receives: |
+        'Yes' if row_item.receives else 'No'
+    - Amount: |
+        currency(row_item.amount) if row_item.receives else ''
+  edit:
+    - receives
 "table-empty": |-
   table: fruit_table
   rows: fruit

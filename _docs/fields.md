@@ -1912,10 +1912,10 @@ already been asked about.
 
 If you would like to use the functionality of a `review` block, but
 you want all the variables to be defined first, set `skip undefined`
-to `True`:
+to `False`:
 
 {% highlight yaml %}
-skip undefined: True
+skip undefined: False
 question: |
   Review your answers
 review:

@@ -358,8 +358,15 @@ reset:
 
 Effectively, this causes variables to act like functions.
 
-For information about how to cause **docassemble** to reset variables
-set by [`code` blocks], see the [`reconsider` modifier].
+Another way to use this feature is to set the [`reconsider` modifier]
+on a [`code`] block.  This will have the same effect as `reset`, but
+it will apply automatically to all of the variables that are capable
+of being assigned by the [`code`] block.
+
+The `reset` block and the [`reconsider` modifier] are computationally
+inefficient because they cause extra code to be run every time a new
+screen loads.  For a more computationally efficient alternative, see
+the [`reconsider()`] function
 
 # <a name="order"></a>Changing order of precedence
 
@@ -1205,3 +1212,4 @@ features:
 [`back button`]: {{ site.baseurl}}/docs/modifiers.html#back button
 [`show login` metadata directive]: #show login
 [`show login`]: {{ site.baseurl}}/docs/config.html#show login
+[`reconsider()`]: {{ site.baseurl}}/docs/functions.html#reconsider
