@@ -18954,6 +18954,7 @@ else:
     #sys.stderr.write("calling set worker now\n")
     docassemble.base.functions.update_server(bg_action=docassemble.webapp.worker.background_action,
                                              #async_ocr=docassemble.webapp.worker.async_ocr,
+                                             chord=docassemble.webapp.worker.chord,
                                              ocr_page=docassemble.webapp.worker.ocr_page,
                                              ocr_finalize=docassemble.webapp.worker.ocr_finalize,
                                              worker_convert=docassemble.webapp.worker.convert)

@@ -12,7 +12,6 @@ from PIL import Image, ImageEnhance
 from twilio.rest import Client as TwilioRestClient
 import pycountry
 import docassemble.base.ocr
-from celery import chord
 import cPickle as pickle
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError, DAValidationError
@@ -1887,7 +1886,7 @@ def ocr_file_in_background(*pargs, **kwargs):
     todo = list()
     for item in docassemble.base.ocr.ocr_page_tasks(image_file, **args):
         todo.append(server.ocr_page.s(**item))
-    the_chord = chord(todo)(collector)
+    the_chord = server.chord(todo)(collector)
     if ui_notification is not None:
         worker_key = 'da:worker:uid:' + str(this_thread.current_info['session']) + ':i:' + str(this_thread.current_info['yaml_filename']) + ':userid:' + str(this_thread.current_info['user']['the_user_id'])
         #sys.stderr.write("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key + "\n")

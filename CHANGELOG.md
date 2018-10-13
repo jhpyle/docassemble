@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.3.2] - 2018-10-
+## [0.3.2] - 2018-10-13
 ### Changed
 - Using `table` with a `DADict` now sets `row_index` to the key and
   `row_item` to the value, and `DADict`s can be edited using tables.
@@ -10,9 +10,9 @@
   as attributes.
 - The default `message` for the `add_action()` method on a group is
   "Add an item" if the group is empty.
-- Clicking on a navigable section header empties the queue, ensuring
-  that clicking "Resume" puts the user back in the interview, rather
-  than the screen they saw before they clicked the header.
+- Clicking on a navigable section header empties the action queue,
+  ensuring that clicking "Resume" puts the user back in the interview,
+  rather than the screen they saw before they clicked the header.
 ### Added
 - The `delete buttons` option when using `edit` on a `table`.
 - The `only_if_empty` option on the `reset_gathered()` method.
@@ -21,6 +21,7 @@
 - The `follow up` option in a `review` block `fields`.
 - The `reconsider()` function.
 - The `preloaded modules` configuration directive.
+- The `action_button_html()` function.
 ### Fixed
 - URL for restarting interview session conflicted with another URL
   when user logged in.
@@ -29,7 +30,11 @@
 - Navigable section headers not styled correctly.
 - One of two processes simultaneously loading the playground modules at
   same time could encounter an empty directory.
-- Screen loads through `url_action_perform()` did not show the spinner.
+- Screen loads through `url_action_perform()` did not show the
+  spinner.
+- Some thread variables were not reset between requests.
+- The OCR background function did not work, so rolled back celery and
+  kombu to 4.1.0.
 
 ## [0.3.1] - 2018-10-02
 ### Changed
