@@ -461,8 +461,11 @@ sessions, where each object has the following keys:
   local time.
 - `subtitle`: The subtitle of the interview, or `null`.
 - `tags`: An array of tags.
+- `temp_user_id`: The user ID of the temporary user, if the user was
+  not logged in, or `null` if the user was logged in.
 - `title`: The title of the interview.
-- `user_id`: The user ID of the user.
+- `user_id`: The user ID of the user, or `null` if the user was not
+  logged in.
 - `utc_modtime`: The last time the interview dictionary was modified,
   in UTC format.
 - `utc_starttime`: The time the interview was started, in UTC format.
@@ -557,8 +560,8 @@ Parameters:
  - `key`: the API key.
  - `i` (optional): set to a filename of an interview, e.g.,
    `docassemble.demo:data/questions/questions.yml`, if you want to
-   delete only those sessions for a given interview file.
- - `tag` (optional): set to a tag if you want to delete only those
+   retrieve only those sessions for a given interview file.
+ - `tag` (optional): set to a tag if you want to retrieve only those
    interview sessions with the given tag.
 
 Required privileges: `admin` or `advocate`, or `user_id` is the same
