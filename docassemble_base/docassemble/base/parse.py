@@ -2889,7 +2889,7 @@ class Question:
             raise DAError("Unknown data type in attachment")
 
     def ask(self, user_dict, old_user_dict, the_x, iterators, sought, orig_sought):
-        #logmessage("ask: orig_sought is " + unicode(orig_sought))
+        #logmessage("ask: orig_sought is " + unicode(orig_sought) + " and q is " + self.name)
         docassemble.base.functions.this_thread.current_question = self
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
@@ -4488,6 +4488,8 @@ class Interview:
                             #interview_status.next_action.extend(the_exception.next_action)
                             if the_exception.name.startswith('_da_'):
                                 continue
+                        if the_exception.arguments is not None:
+                            docassemble.base.functions.this_thread.current_info.update(dict(action=the_exception.name, arguments=the_exception.arguments))
                         missingVariable = the_exception.name
                     else:
                         follow_mc = True
@@ -5031,6 +5033,8 @@ class Interview:
                             #logmessage("adding a new item to event_stack: " + repr(new_items))
                             user_dict['_internal']['event_stack'][session_uid] = new_items + user_dict['_internal']['event_stack'][session_uid]
                         #interview_status.next_action.extend(the_exception.next_action)
+                    if the_exception.arguments is not None:
+                        docassemble.base.functions.this_thread.current_info.update(dict(action=the_exception.name, arguments=the_exception.arguments))
                     if the_exception.name.startswith('_da_'):
                         continue
                 else:

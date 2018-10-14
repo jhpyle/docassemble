@@ -687,6 +687,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '              </fieldset>\n            </form>\n'
     elif status.question.question_type == "review":
         fieldlist = list()
+        if hasattr(status.question, 'review_saveas'):
+            datatypes[safeid(status.question.review_saveas)] = "boolean"
         for field in status.get_field_list():
             if 'html' in status.extras and field.number in status.extras['html']:
                 side_note_content = status.extras['html'][field.number].rstrip()
@@ -746,6 +748,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
+        output += datatype_tag(datatypes)
         output += '              </fieldset>\n            </form>\n'
     elif status.question.question_type == "fields":
         enctype_string = ""

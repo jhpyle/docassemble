@@ -31,8 +31,10 @@ class ForcedNameError(NameError):
             raise DAError("ForcedNameError must have at least one argument")
         if type(the_args[0]) is dict:
             self.name = the_args[0]['action']
+            self.arguments = the_args[0]['arguments']
         else:
             self.name = the_args[0]
+            self.arguments = None
         if kwargs.get('gathering', False):
             self.next_action = None
             return
