@@ -4258,7 +4258,7 @@ def checkin():
             obj['chatstatus'] = chatstatus
             obj['secret'] = secret
             obj['encrypted'] = is_encrypted
-            obj['mode'] = user_dict['_internal']['livehelp']['mode']
+            obj['mode'] = user_dict['_internal']['livehelp'].get('mode', 'help')
             if obj['mode'] in ('peer', 'peerhelp'):
                 peer_ok = True
             if obj['mode'] in ('help', 'peerhelp'):
@@ -5936,15 +5936,19 @@ def index():
         interview.assemble(user_dict, interview_status)
     will_save = True
     if interview_status.question.question_type == "refresh":
+        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
         return do_refresh(is_ajax, yaml_filename)
     if interview_status.question.question_type == "signin":
+        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
         return do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json)
     if interview_status.question.question_type == "register":
+        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
         return do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json)
     if interview_status.question.question_type == "leave":
+        save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
             return do_redirect(interview_status.questionText, is_ajax, is_json)
@@ -5973,8 +5977,10 @@ def index():
         manual_checkout()
         if interview_status.question.question_type == "exit_logout":
             reset_user_dict(user_code, yaml_filename)
-        delete_session()
+        #else:
+        #    save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
+        delete_session()
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json)
         else:

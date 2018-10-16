@@ -1844,6 +1844,7 @@ class Question:
             self.find_fields_in(data['rows'])
             header = list()
             column = list()
+            read_only = dict(edit=True, delete=True)
             for col in data['columns']:
                 if type(col) is not dict:
                     raise DAError("The column items in a table definition must be dictionaries." + self.idebug(data))
@@ -1872,6 +1873,10 @@ class Question:
                 keyword_args = ''
                 if 'delete buttons' in data and not data['delete buttons']:
                     keyword_args += ', delete=False'
+                if 'read only' in data:
+                    if not isinstance(data['read only'], basestring):
+                        raise DAError("The read only directive must be plain text referring to an attribute" + self.idebug(data))
+                    keyword_args += ', read_only_attribute=' + repr(data['read only'].strip())
                 column.append(compile(data['rows'] + '.item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ')', '<edit code>', 'eval'))
                 if 'edit header' in data:
                     if type(data['edit header']) not in (str, unicode):
@@ -1883,7 +1888,12 @@ class Question:
                 else:
                     header.append(TextObject(word("Actions")))
             elif 'delete buttons' in data and data['delete buttons']:
-                column.append(compile(data['rows'] + '.item_actions(row_item, row_index, edit=False)', '<delete button code>', 'eval'))
+                keyword_args = ''
+                if 'read only' in data:
+                    if not isinstance(data['read only'], basestring):
+                        raise DAError("The read only directive must be plain text referring to an attribute" + self.idebug(data))
+                    keyword_args += ', read_only_attribute=' + repr(data['read only'].strip())
+                column.append(compile(data['rows'] + '.item_actions(row_item, row_index, edit=False' + keyword_args + ')', '<delete button code>', 'eval'))
                 if 'edit header' in data:
                     if type(data['edit header']) not in (str, unicode):
                         raise DAError("The edit header directive must be text" + self.idebug(data))
@@ -4201,7 +4211,7 @@ class Interview:
                     self.orderings_by_question[question_b][question_a] = mode
         #logmessage(repr(self.orderings_by_question))
         self.sorter = self.make_sorter()
-        if len(self.images) > 0 or get_config('default icons', None) in ('material icons', 'font awesome'):
+        if len(self.images) > 0 or get_config('default icons', 'font awesome') in ('material icons', 'font awesome'):
             self.scan_for_emojis = True
         for metadata in self.metadata:
             for key, val in metadata.iteritems():

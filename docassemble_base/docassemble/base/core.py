@@ -16,7 +16,7 @@ from docassemble.base.functions import possessify, possessify_long, a_prepositio
 import docassemble.base.functions
 import docassemble.base.file_docx
 from docassemble.webapp.files import SavedFile
-from docassemble.base.error import LazyNameError
+from docassemble.base.error import LazyNameError, DAError
 from docxtpl import InlineImage, Subdoc
 import tempfile
 import time
@@ -985,9 +985,20 @@ class DAList(DAObject):
             can_delete = False
         else:
             can_delete = True
-        if kwargs.get('edit', True):
+        use_edit = kwargs.get('edit', True)
+        use_delete = kwargs.get('delete', True)
+        if 'read_only_attribute' in kwargs:
+            val = getattr(item, kwargs['read_only_attribute'])
+            if isinstance(val, bool):
+                if val:
+                    use_edit = False
+                    use_delete = False
+            elif hasattr(val, 'iteritems') and hasattr(val, 'get'):
+                use_edit = not val.get('edit', True)
+                use_delete = not val.get('delete', True)
+        if use_edit:
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=[item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
-        if kwargs.get('delete', True) and can_delete:
+        if use_delete and can_delete:
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
         return output
     def add_action(self, message=None):
@@ -1499,8 +1510,10 @@ class DADict(DAObject):
     def setdefault(self, *pargs):
         """Set a key to a default value if it does not already exist in the dictionary"""
         return self.elements.setdefault(*pargs)
-    def get(*pargs):
+    def get(self, *pargs):
         """Returns the value of a given key."""
+        if len(pargs) == 1:
+            return self[pargs[0]]
         return self.elements.get(*pargs)
     def clear(self):
         """Removes all the items from the dictionary."""
@@ -1635,9 +1648,20 @@ class DADict(DAObject):
         item = the_args.pop(0)
         index = the_args.pop(0)
         output = ''
-        if kwargs.get('edit', True):
+        use_edit = kwargs.get('edit', True)
+        use_delete = kwargs.get('delete', True)
+        if 'read_only_attribute' in kwargs:
+            val = getattr(item, kwargs['read_only_attribute'])
+            if isinstance(val, bool):
+                if val:
+                    use_edit = False
+                    use_delete = False
+            elif hasattr(val, 'iteritems') and hasattr(val, 'get'):
+                use_edit = not val.get('edit', True)
+                use_delete = not val.get('delete', True)
+        if use_edit:
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=[item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
-        if kwargs.get('delete', True):
+        if use_delete:
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
         return output
     def add_action(self, message=None):
