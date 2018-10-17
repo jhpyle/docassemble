@@ -2538,6 +2538,7 @@ def process_action():
         the_list = this_thread.current_info['action_list']
         the_list.appendObject()
         the_list.reset_gathered()
+        the_list.there_are_any = True
         the_list.there_is_another = False
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' not in this_thread.internal:
@@ -2555,6 +2556,7 @@ def process_action():
         #logmessage("_da_dict_add")
         the_dict = this_thread.current_info['action_dict']
         the_dict.reset_gathered()
+        the_dict.there_are_any = True
         the_dict.there_is_another = True
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' not in this_thread.internal:

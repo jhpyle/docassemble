@@ -1655,6 +1655,10 @@ class DADict(DAObject):
         item = the_args.pop(0)
         index = the_args.pop(0)
         output = ''
+        if self.minimum_number is not None and len(self.elements) <= self.minimum_number:
+            can_delete = False
+        else:
+            can_delete = True
         use_edit = kwargs.get('edit', True)
         use_delete = kwargs.get('delete', True)
         if 'read_only_attribute' in kwargs:
@@ -1675,7 +1679,7 @@ class DADict(DAObject):
             if self.complete_attribute is not None:
                 items += [dict(action='_da_compute', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
-        if use_delete:
+        if use_delete and can_delete:
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
         return output
     def add_action(self, message=None):

@@ -1877,7 +1877,7 @@ class Question:
                     if not isinstance(data['read only'], basestring):
                         raise DAError("The read only directive must be plain text referring to an attribute" + self.idebug(data))
                     keyword_args += ', read_only_attribute=' + repr(data['read only'].strip())
-                column.append(compile(data['rows'] + '.item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ')', '<edit code>', 'eval'))
+                column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ')', '<edit code>', 'eval'))
                 if 'edit header' in data:
                     if type(data['edit header']) not in (str, unicode):
                         raise DAError("The edit header directive must be text" + self.idebug(data))
@@ -1893,7 +1893,7 @@ class Question:
                     if not isinstance(data['read only'], basestring):
                         raise DAError("The read only directive must be plain text referring to an attribute" + self.idebug(data))
                     keyword_args += ', read_only_attribute=' + repr(data['read only'].strip())
-                column.append(compile(data['rows'] + '.item_actions(row_item, row_index, edit=False' + keyword_args + ')', '<delete button code>', 'eval'))
+                column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, edit=False' + keyword_args + ')', '<delete button code>', 'eval'))
                 if 'edit header' in data:
                     if type(data['edit header']) not in (str, unicode):
                         raise DAError("The edit header directive must be text" + self.idebug(data))
