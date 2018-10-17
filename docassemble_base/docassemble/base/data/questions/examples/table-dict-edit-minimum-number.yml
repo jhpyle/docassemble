@@ -1,9 +1,9 @@
 metadata:
-  title: Edit table for dictionary
-  short title: Table
-  documentation: "https://docassemble.org/docs/groups.html#editing"
+  title: Minimum number
+  short title: Delete
+  documentation: "https://docassemble.org/docs/groups.html#custom editing"
   example start: 2
-  example end: 5
+  example end: 2
 ---
 modules:
   - docassemble.base.util
@@ -12,6 +12,7 @@ objects:
   - income: DADict.using(object_type=DAObject,
                          keys=['employment', 'benefits', 'interest'],
                          complete_attribute='complete',
+                         minimum_number=3,
                          there_is_another=False)
 ---
 code: |

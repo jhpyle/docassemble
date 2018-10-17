@@ -1,8 +1,8 @@
 metadata:
-  title: Edit table for dictionary
-  short title: Table
-  documentation: "https://docassemble.org/docs/groups.html#editing"
-  example start: 2
+  title: Delete buttons
+  short title: Delete
+  documentation: "https://docassemble.org/docs/groups.html#custom editing"
+  example start: 5
   example end: 5
 ---
 modules:
@@ -37,8 +37,7 @@ columns:
       'Yes' if row_item.receives else 'No'
   - Amount: |
       currency(row_item.amount) if row_item.receives else ''
-edit:
-  - receives
+delete buttons: True
 ---
 question: |
   What new income type would
