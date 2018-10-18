@@ -2012,6 +2012,7 @@ def obtain_lock(user_code, filename):
     while count > 0:
         record = r.get(key)
         if record:
+            sys.stderr.write("obtain_lock: waiting for " + key + "\n")
             time.sleep(1.0)
         else:
             found = False
@@ -4662,8 +4663,8 @@ def index():
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
         except Exception as the_err:
-            #logmessage("index: there was an exception after fetch_user_dict and we need to reset")
-            #logmessage(unicode(the_err.__class__.__name__) + " " + unicode(the_err))
+            sys.stderr.write("index: there was an exception after fetch_user_dict with %s and %s and %s, so we need to reset\n" % (user_code, yaml_filename, secret))
+            sys.stderr.write(unicode(the_err.__class__.__name__) + " " + unicode(the_err) + "\n")
             release_lock(user_code, yaml_filename)
             logmessage("index: dictionary fetch failed, resetting without retain_code")
             user_code, user_dict = reset_session(yaml_filename, secret)

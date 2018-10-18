@@ -825,12 +825,13 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     action['arguments'] = dict(email=worker_controller.retrieve_email(action['arguments']['id']))
             interview = worker_controller.interview_cache.get_interview(yaml_filename)
             worker_controller.obtain_lock(session_code, yaml_filename)
-            worker_controller.release_lock(session_code, yaml_filename)
             try:
                 steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
             except Exception as the_err:
+                worker_controller.release_lock(session_code, yaml_filename)
                 sys.stderr.write("background_action: could not obtain dictionary because of " + str(the_err.__class__.__name__) + ": " + str(the_err) + "\n")
                 return(worker_controller.functions.ReturnValue(extra=extra))
+            worker_controller.release_lock(session_code, yaml_filename)
             if user_dict is None:
                 sys.stderr.write("background_action: dictionary could not be found\n")
                 return(worker_controller.functions.ReturnValue(extra=extra))
@@ -869,7 +870,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 else:
                     worker_controller.reset_user_dict(session_code, yaml_filename, user_id=user_info.get('theid', None))
             if interview_status.question.question_type in ["restart", "exit", "logout", "exit_logout", "new_session"]:
-                worker_controller.release_lock(session_code, yaml_filename)
+                #There is no lock to release.  Why is this here?
+                #worker_controller.release_lock(session_code, yaml_filename)
+                pass
             if interview_status.question.question_type == "response":
                 #sys.stderr.write("background_action: status was response\n")
                 if hasattr(interview_status.question, 'all_variables'):
@@ -906,11 +909,12 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     variables = list(reversed([y for y in worker_controller.functions.this_thread.current_variable]))
                     worker_controller.error_notification(e, message=error_message, trace=error_trace)
                     has_error = True
-                # is this right?
-                if str(user_info.get('the_user_id', None)).startswith('t'):
-                    worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
-                else:
-                    worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
+                # is this right?  Save even though there was an error on assembly?
+                if not has_error:
+                    if str(user_info.get('the_user_id', None)).startswith('t'):
+                        worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
+                    else:
+                        worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
                 worker_controller.release_lock(session_code, yaml_filename)
                 if has_error:
                     return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
