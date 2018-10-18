@@ -276,8 +276,8 @@ like `.there_is_another`.)
 
 {% include side-by-side.html demo="gather-fruit-number" %}
 
-You can avoid the `.there_are_any` question by setting the
-`.minimum_number` to a value:
+<a name="minimum_number"></a>You can avoid the `.there_are_any`
+question by setting the `.minimum_number` to a value:
 
 {% include side-by-side.html demo="gather-fruit-at-least-two" %}
 
@@ -800,8 +800,8 @@ This works using two features:
    button that the user can press in order to add an entry to an
    already-gathered list.
 
-You can also allow your users to edit a [`DAList`] from a [`review`]
-page.
+You can allow your users to edit a [`DAList`] from an edit button in a
+[`review`] page.
 
 {% include side-by-side.html demo="review-edit-list" %}
 
@@ -816,7 +816,36 @@ person.revisit`.  On this screen, you can show the list as a table
 and provide the `.add_action()` button if you want users to be able to
 add entries.
 
-# For loop
+Putting an editable table directly into a review page is also
+possible.
+
+{% include side-by-side.html demo="review-edit-list-table" %}
+
+The `edit` feature can also be used when the `rows` of the [`table`]
+refer to a [`DADict`].
+
+{% include side-by-side.html demo="table-dict-edit" %}
+
+### <a name="custom editing"></a>Customizing the editing interface
+
+If you do not want your users to be able to delete items, you can add
+`delete buttons: False` to the [`table`].
+
+{% include side-by-side.html demo="table-dict-edit-delete-buttons" %}
+
+Or, if you want your users to be able to delete items, but not edit
+items, you can include `delete buttons: True` and do not include
+`edit`:
+
+{% include side-by-side.html demo="table-dict-delete-buttons" %}
+
+If you want to allow your users to delete items, but only if the group
+is longer than a certain length, you can give the [`DAList`] or
+[`DADict`] a [`minimum_number`] attribute.
+
+{% include side-by-side.html demo="table-dict-edit-minimum-number" %}
+
+# <a name="for loop"></a>For loop
 
 In computer programming, a "for loop" allows you to do something
 repeatedly, such as iterating through each item in a list.
@@ -942,3 +971,4 @@ For more information about "for loops" in [Mako], see the
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`table`]: {{ site.baseurl }}/docs/template.html#table
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
+[`minimum_number`]: #minimum_number

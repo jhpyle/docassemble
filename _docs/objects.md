@@ -2470,14 +2470,13 @@ If you refer to an address in a [Mako] template, it returns `.block()`.
 <a name="Address.block"></a> The `.block()` method returns a formatted
 address.  The attribute `city` is needed.
 
-<a name="Address.geolocate"></a>
-The `.geolocate()` method determines the latitude and longitude of the
-address and stores it in the attribute `location`, which is a
-[`LatitudeLongitude`] object.  It uses the
-[`geopy.geocoders.GoogleV3`] class.  If you have an API key for the
-[Google Maps Geocoding API], you can set it using the [`google`]
-directive in the [configuration], and then your server will not be
-bound by Google's standard quotas.
+<a name="Address.geolocate"></a> The `.geolocate()` method determines
+the latitude and longitude of the address and stores it in the
+attribute `location`, which is a [`LatitudeLongitude`] object.  It
+uses the [`geopy.geocoders.GoogleV3`] class.  To use this, you will
+need an API key for the [Google Maps Geocoding API], which you will
+need to add to the [configuration] as the [`google api`] subdirective
+under the [`google`] directive.
 
 If you call `.geolocate()` on an [`Address`] object called
 `myaddress`, the following attributes will be set:

@@ -87,9 +87,9 @@ will contain, because the information is in a [list], [dictionary], or
 [set].  If you just want to format some text in a table format, see
 the documentation about [tables] in the [markup] section.
 
-In the following example, the variable `fruit` is a list of objects of
-type [`Thing`], each of which represents a fruit.  Each row in the
-resulting table will describe one of the fruits.
+In the following example, the variable `fruit` is a [`DAList`] of
+objects of type [`Thing`], each of which represents a fruit.  Each row
+in the resulting table will describe one of the fruits.
 
 {% include side-by-side.html demo="table" %}
 
@@ -243,6 +243,40 @@ setting value of [`table width`] in a [`features`] block.
 
 {% include side-by-side.html demo="table-width" %}
 
+You can also use `table` blocks with [`DADict`] objects:
+
+{% include side-by-side.html demo="table-dict" %}
+
+When `rows` refers to a [`DADict`], then in the `columns`, `row_index`
+represents the "key" and `row_item` represents the value of each item
+in the dictionary.
+
+You can pretend that the [Python expression]s under `columns` are
+evaluated in a context like this:
+
+{% highlight python %}
+for row_index in sorted(income):
+  row_item = fruit[row_index]
+  # evaluation takes place here
+{% endhighlight %}
+
+Note that running `sorted()` on a dictionary returns an alphabetically
+sorted list of keys of the dictionary.  In [Python], dictionaries are
+inherently unordered.  The keys are sorted is this fashion so that
+the order of the rows in a table does not change every time the table
+appears on the screen.
+
+## <a name="groups edit"></a>Using tables to edit groups
+
+You can use a `table` to provide the user with an interface for
+editing an already-gathered [`DAList`] or [`DADict`].
+
+{% include side-by-side.html demo="edit-list" %}
+
+For more information about this feature, see the section on [editing
+an already-gathered list] in the section on [groups].
+
+[editing an already-gathered list]: {{ site.baseurl }}/docs/groups.html#editing
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [`table width`]: {{ site.baseurl }}/docs/initial.html#table width
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
@@ -252,6 +286,7 @@ setting value of [`table width`] in a [`features`] block.
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [tables]: {{ site.baseurl }}/docs/markup.html#tables
 [group]: {{ site.baseurl }}/docs/groups.html
+[groups]: {{ site.baseurl }}/docs/groups.html
 [`docassemble.demo:data/templates/hello_template.md`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/templates/hello_template.md
 [`docassemble.base:data/questions/examples/template-file.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/examples/template-file.yml
 [`docassemble.base:data/templates/disclaimer.md`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/disclaimer.md
@@ -270,6 +305,7 @@ setting value of [`table width`] in a [`features`] block.
 [variable name]: {{ site.baseurl }}/docs/fields.html#variable names
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
+[`DADict`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`Thing`]:  {{ site.baseurl }}/docs/objects.html#Thing
 [list]: https://docs.python.org/2.7/tutorial/datastructures.html
 [dictionary]: https://docs.python.org/2/library/stdtypes.html#dict

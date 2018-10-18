@@ -63,6 +63,9 @@ metadata:
     - name: Jonathan Pyle
       organization: none
   revision_date: 2017-05-26
+  tags:
+    - demo
+    - legal
 comment: |
   A "metadata" block contains information about the interview, such as
   the title of the interview as displayed in the navigation bar.
@@ -217,6 +220,11 @@ comment: |
 ---
 mandatory: True
 code: |
+  multi_user = True
+  set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])
+---
+mandatory: True
+code: |
   need(user_saw_initial_screen)
   if user_understands_no_attorney_client_relationship == "understands":
     need(client_done)
@@ -340,9 +348,8 @@ subquestion: |
   % if interface() == 'web':
   In the navigation bar above, you can click "[Help]" to see the help
   text associated with the interview and with the individual question
-  (if any).  If "Help <i class="glyphicon glyphicon-star"></i>"
-  appears in the navigation bar, that means help text specific to the
-  question is available.
+  (if any).  If "Help :star:" appears in the navigation bar, that
+  means help text specific to the question is available.
 
   Click "Source" to toggle the display of the [YAML] code used to
   generate the question.  (Note: the "Source" tab is available because
@@ -628,6 +635,7 @@ question: |
   Where ${ x.do_question('live') }?
 fields:
   - Address: x.address.address
+    address autocomplete: True    
   - Unit: x.address.unit
     required: False
     help: The apartment, suite, or unit number of the residence.
@@ -645,14 +653,15 @@ comment: |
 ---
 generic object: Individual
 question: |
-  Please upload one or more pictures of ${ x.yourself_or_name() }.
+  Please upload a picture of ${ x.yourself_or_name() }.
 decoration: picture
 fields:
   - A test file: x.picture
-    datatype: files
+    datatype: camera
 comment: |
   You can accept file uploads from users by using the datatypes "file"
-  (for a single file) or "files" (for one or more files).
+  (for a single file) or "files" (for one or more files).  The "camera"
+  file type ensures that only image files are accepted.
 ---
 generic object: Individual
 question: |
@@ -720,7 +729,7 @@ decoration: finishline
 subquestion: |
   Here is an advice letter and a pleading you can file.
 
-  (Note: the options to see documents in Markdown and LaTeX format are
+  (Note: the option to see documents in Markdown format is
   hidden when **docassemble** is configured as a production server.
   End users will not see these options.)
 help: |
@@ -925,10 +934,9 @@ subquestion: |
 
   En la barra de navegación de arriba, puede hacer clic en "Ayuda"
   para ver el texto de ayuda asociado a la entrevista y con la
-  pregunta individual. Si "Ayuda <i class="glyphicon
-  glyphicon-star"></i>" aparece en la barra de navegación, eso
-  significa que el texto de ayuda específica a la cuestión está
-  disponible.
+  pregunta individual. Si "Ayuda :star:" aparece en la barra de 
+  navegación, eso significa que el texto de ayuda específica a la 
+  cuestión está disponible.
 
   Haga clic en "Fuente" para cambiar la visualización del código
   [YAML] utilizado para generar la pregunta.
@@ -1144,7 +1152,6 @@ guide to this file.
 
 {% highlight yaml %}
 ---
----
 metadata:
   description: |
     This question file contains questions that are common in
@@ -1247,6 +1254,26 @@ comment: |
   objects.  The object types here (Case, Individual, LegalFiling, and
   Court) are imported through the docassemble.base.legal module.
   (See the "modules" block above.)
+---
+generic object: Individual
+sets: x.child
+code: |
+  x.initializeAttribute('child', ChildList)
+---
+generic object: Individual
+sets: x.income
+code: |
+  x.initializeAttribute('income', Income)
+---
+generic object: Individual
+sets: x.asset
+code: |
+  x.initializeAttribute('asset', Asset)
+---
+generic object: Individual
+sets: x.expense
+code: |
+  x.initializeAttribute('expense', Expense)
 ---
 mandatory: true
 code: |
@@ -1414,27 +1441,18 @@ question: |
   Is this ${ x.possessive('signature') }?
 subquestion: |
   ${ x.signature.show() }
+field: x.signature_verified_button
 buttons:
-  - "Yes":
-      generic object: Individual
-      code: |
-        x.signature_verified = True
-  - "No":
-      generic object: Individual
-      code: |
-        x.signature_verified = False
-  - "Let me try again":
-      generic object: Individual
-      code: |
-        force_ask('x.signature')
-comment: |
-  This is an example of a multiple choice question where selecting an
-  option causes code to be run.  Each multiple choice option contains
-  an embedded block.
-  
-  Note that in order for an "embedded" code or question block to use
-  the special variable "x," you need to declare a generic object
-  within the embedded code or question.
+  - Yes: True
+  - No: False
+  - Let me try again: Null
+---
+generic object: Individual
+code: |
+  if x.signature_verified_button in (True, False):
+    x.signature_verified = x.signature_verified_button
+  else:
+    force_ask('x.signature', 'x.signature_verified_button')
 ---
 generic object: Individual
 question: |
@@ -1769,7 +1787,23 @@ sets:
 code: |
   x.geolocate()
 comment: |
+---
+generic object: DAList
+code: |
+  x.gather()
+  x.re_gathered = True
+---
+generic object: DADict
+code: |
+  x.gather()
+  x.re_gathered = True
+---
+generic object: DASet
+code: |
+  x.gather()
+  x.re_gathered = True
 ...
+
 {% endhighlight %}
 
 [Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29

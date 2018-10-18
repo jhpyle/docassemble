@@ -1639,8 +1639,9 @@ It would be tedious to have to write separate questions for each of
 these variables.
 
 Luckily, there are two features in **docassemble** that allow you to
-write questions in a generalized way: the [`generic object`](#generic)
-modifier, and [index variables](#index variables).
+write questions (and other blocks that set a variable) in a
+generalized way: the [`generic object`](#generic) modifier, and [index
+variables](#index variables).
 
 ## <a name="generic"></a>The `generic object` modifier
 
@@ -1654,6 +1655,11 @@ The special variable `x` stands in for any object of type
 
 If you are not yet familiar with the concept of "[objects]," see the
 [objects section].
+
+The [`generic object` modifier] can be used with [`question`] blocks,
+[`code`] blocks, and any other blocks that set variables
+([`template`], [`table`], [`attachment`], and [`objects`], [`objects
+from file`], [`data`], [`data from code`]).
 
 ## <a name="index variables"></a>Index variables
 
@@ -1678,6 +1684,33 @@ For more information about how **docassemble** identifies what
 question to ask in order to define a given variable, see the 
 [interview logic]({{ site.baseurl }}/docs/logic.html#variablesearching)
 section.
+
+Index variables can be used with [`question`] blocks, [`code`] blocks,
+and any other blocks that set variables ([`template`], [`table`],
+[`attachment`], and [`objects`], [`objects from file`], [`data`],
+[`data from code`]).
+
+## <a name="generic tips"></a>Tips on using generalized questions
+
+If you use generic object variable `x`, or index variables like `i`,
+`j`, `k`, etc., it is important that you do not use them in blocks
+that you have marked as `mandatory`.
+
+Suppose you have a block that defines `fruit[i].seeds`.  When
+**docassemble** needs a specific value, like `fruit[2].seeds`, it will
+find your block automatically, no matter where it is in the interview
+source file.  **docassemble** will take care of setting `i = 2` before
+"running" your block.  Your block will only work correctly if `i` is
+set to the right value.
+
+If you mark the block as `mandatory` in order to force it to be run,
+you will be forcing the running of [Python] code in a context where
+the value of `i` could be anything; it might be a number like `0` or
+`5`, or it might be a string like `'income'`.  The variable `i` might
+not even be defined at all.
+
+Thus, you should only use `x`, `i`, `j`, `k`, etc. when you are
+letting **docassemble** choose which block to use.
 
 # <a name="specialscreens"></a>Special screens
 
@@ -2094,3 +2127,10 @@ why this needs to be done manually as opposed to automatically:
 [`forget_result_of()`]: {{ site.baseurl}}/docs/functions.html#forget_result_of
 [`id`]: {{ site.baseurl }}/docs/modifiers.html#id
 [`if`]: {{ site.baseurl }}/docs/modifiers.html#if
+[`template`]: {{ site.baseurl}}/docs/template.html#template
+[`table`]: {{ site.baseurl}}/docs/template.html#table
+[`attachment`]: {{ site.baseurl}}/docs/documents.html#attachment
+[`objects`]: {{ site.baseurl}}/docs/initial.html#objects
+[`objects from file`]: {{ site.baseurl}}/docs/initial.html#objects from file
+[`data`]: {{ site.baseurl}}/docs/initial.html#data
+[`data from code`]: {{ site.baseurl}}/docs/initial.html#data from code

@@ -151,7 +151,7 @@ You can also use `objects` blocks to initialize attributes of the
 objects you create.  For information on how to do this, see the
 documentation for the [`using()`] method.
 
-<a name="objects from file"></a>Importing `objects from file`
+## <a name="objects from file"></a>Importing `objects from file`
 
 {% highlight yaml %}
 ---

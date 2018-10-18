@@ -1746,14 +1746,14 @@ google:
 
 This is required for the use of the [`map_of()`] feature.
 
-This will also enable you to use the [Google Maps Geocoding API]
-without limits (see the [`.geolocate()`] method), and will also enable
-the [Google Cloud Translation API] for the feature in Utilities for
-translating system words into other languages.
+This will also enable you to use the [Google Maps Geocoding API] (see
+the [`.geolocate()`] method), and will also enable the [Google Cloud
+Translation API] for the feature in Utilities for translating system
+words into other languages.
 
-If you specify a specific `google maps api key`, this key will be used
-for the [`map_of()`] feature and the [address autocomplete] feature
-instead of the `api key`.
+If you also specify a specific `google maps api key`, this key will be
+used for the [`map_of()`] feature and the [address autocomplete]
+feature instead of the `api key`.
 
 {% highlight yaml %}
 google:
@@ -1763,17 +1763,17 @@ google:
 
 If you use both geocoding and Google Maps, you will probably want to
 use a separate `google maps api key` because you can secure it
-differently.  Note that the [`map_of()`] feature puts its API key in
-the [JavaScript] source, and the contact with Google's server will
-come from the user's computer.  By contrast, when you use the
-[`.geolocate()`] method, the contact with Google's server comes from
-your server.  Thus, you may wish to secure the `api key` using IP
-addresses, and secure the `google maps api key` using "Referer"
-headers.
+differently.  Note that the [`map_of()`] feature and the [address
+autocomplete] feature put the API key in the [JavaScript] source, and
+the communications with Google's server will come from the user's
+computer.  By contrast, when you use the [`.geolocate()`] method, the
+communications with Google's server come from your server.  Thus, you
+may wish to secure the `api key` using IP addresses, and secure the
+`google maps api key` using "Referer" headers.
 
 If you use the [Google Cloud Translation API] for the feature in
-Utilities that translates system phrases into other languages, you can
-control how many phrases are translated in a single request to the
+[Utilities] that [translates system phrases] into other languages, you
+can control how many phrases are translated in a single request to the
 API.
 
 {% highlight yaml %}
@@ -2955,3 +2955,4 @@ and Facebook API keys.
 [Utilities]: {{ site.baseurl }}/docs/admin.html#utilities
 [XML manifest file]: {{ site.baseurl }}/docs/admin.html#word addin manifest
 [`show login` metadata directive]: {{ site.baseurl }}/docs/initial.html#show login
+[translates system phrases]: {{ site.baseurl }}/docs/admin.html#translate

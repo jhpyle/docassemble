@@ -492,6 +492,11 @@ in which these two blocks appear in the [YAML] file matters; the
 [`code`] block will be tried first only if it appears later in the
 [YAML] file than the [`question`] block.
 
+The `generic object` modifier can be used on any block that sets a
+variable, including [`question`], [`code`], [`template`], [`table`],
+[`attachment`], and [`objects`], [`objects from file`], [`data`],
+[`data from code`].
+
 A similar feature to `generic object` and its special variable `x` is
 the special [index variable `i`].  For more information about this
 feature, see the [index variable documentation] and the documentation
@@ -914,3 +919,10 @@ by **docassemble**, so it can contain any valid [YAML].
 [`question back button`]: {{ site.baseurl}}/docs/initial.html#question back button
 [`back button`]: #back button
 [`forget_result_of()`]: {{ site.baseurl}}/docs/functions.html#forget_result_of
+[`template`]: {{ site.baseurl}}/docs/template.html#template
+[`table`]: {{ site.baseurl}}/docs/template.html#table
+[`attachment`]: {{ site.baseurl}}/docs/documents.html#attachment
+[`objects`]: {{ site.baseurl}}/docs/initial.html#objects
+[`objects from file`]: {{ site.baseurl}}/docs/initial.html#objects from file
+[`data`]: {{ site.baseurl}}/docs/initial.html#data
+[`data from code`]: {{ site.baseurl}}/docs/initial.html#data from code
