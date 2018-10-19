@@ -212,19 +212,16 @@ This works within PDF and RTF documents as well as within questions.
 {% include side-by-side.html demo="emoji-inline" %}
 
 By default, if an "emoji-style" reference refers to an image that has
-not been defined in an [`image sets`] or [`images`] block, users will see
-the literal reference (e.g., `:cow:`).  However, if you set the
-[`use font awesome`] directive in the [Configuration] to `True`, then
-any reference to an image not defined with [`image sets`] or [`images`]
-will be treated as the name of a [Font Awesome] icon.
+not been defined in an [`image sets`] or [`images`] block, the
+reference will be treated as a reference to a [Font Awesome] icon.
 
 {% include side-by-side.html demo="font-awesome" %}
 
-As explained in the [Configuration], only one "style" of icon (by
-default, the "solid" style) can be used at one time.  If you need to
-use a different "style" for a particular icon, or you want to apply
-additional formatting to an icon, you can include the raw [HTML] for
-the icon.  For example:
+As explained in the [Configuration], only one "style" of [Font
+Awesome] icon (by default, the "solid" style) can be used at one time.
+If you need to use a different "style" for a particular icon, or you
+want to apply additional formatting to an icon, you can include the
+raw [HTML] for the icon.  For example:
 
 {% highlight yaml %}
 ---
