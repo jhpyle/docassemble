@@ -4204,6 +4204,7 @@ def checkin():
             if form_parameters is not None:
                 parameters = json.loads(form_parameters)
             #logmessage("Action was " + str(do_action) + " and parameters were " + repr(parameters))
+            obtain_lock(session_id, yaml_filename)
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters)))
@@ -4222,6 +4223,7 @@ def checkin():
             elif interview_status.question.question_type == "template" and interview_status.question.target is not None:
                 commands.append(dict(action=do_action, value=dict(target=interview_status.question.target, content=docassemble.base.util.markdown_to_html(interview_status.questionText, trim=True)), extra='backgroundresponse'))
             save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
+            release_lock(session_id, yaml_filename)
         peer_ok = False
         help_ok = False
         num_peers = 0
@@ -4255,11 +4257,16 @@ def checkin():
         chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         potential_partners = list()
         if str(chatstatus) != 'off': #in ('waiting', 'standby', 'ringing', 'ready', 'on', 'hangup', 'observeonly'):
+            obtain_lock(session_id, yaml_filename)
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+            release_lock(session_id, yaml_filename)
+            if user_dict is None:
+                sys.stderr.write("checkin: error accessing dictionary for %s and %s" % (session_id, yaml_filename))
+                return jsonify(success=False)
             obj['chatstatus'] = chatstatus
             obj['secret'] = secret
             obj['encrypted'] = is_encrypted
-            obj['mode'] = user_dict['_internal']['livehelp'].get('mode', 'help')
+            obj['mode'] = user_dict['_internal']['livehelp']['mode']
             if obj['mode'] in ('peer', 'peerhelp'):
                 peer_ok = True
             if obj['mode'] in ('help', 'peerhelp'):
@@ -4395,9 +4402,10 @@ def checkin():
             observer_control = False
         else:
             observer_control = True
-        parameters = request.form.get('parameters', None)
+        parameters = request.form.get('raw_parameters', None)
         if parameters is not None:
             key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+            #logmessage("checkin: published parameters to " + key)
             r.publish(key, parameters)
         worker_key = 'da:worker:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         worker_len = r.llen(worker_key)
@@ -4663,7 +4671,7 @@ def index():
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
         except Exception as the_err:
-            sys.stderr.write("index: there was an exception after fetch_user_dict with %s and %s and %s, so we need to reset\n" % (user_code, yaml_filename, secret))
+            sys.stderr.write("index: there was an exception after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
             sys.stderr.write(unicode(the_err.__class__.__name__) + " " + unicode(the_err) + "\n")
             release_lock(user_code, yaml_filename)
             logmessage("index: dictionary fetch failed, resetting without retain_code")
@@ -7497,10 +7505,10 @@ def index():
         var datastring;
         if ((daChatStatus != 'off') && $("#daform").length > 0 && !daBeingControlled){ // daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on' || daChatStatus == 'observeonly'
           if (daDoAction != null){
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: formAsJSON(), do_action: daDoAction});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: formAsJSON(), raw_parameters: JSON.stringify($("#daform").serializeArray()), do_action: daDoAction});
           }
           else{
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: formAsJSON()});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: formAsJSON(), raw_parameters: JSON.stringify($("#daform").serializeArray())});
           }
         }
         else{
@@ -9403,7 +9411,7 @@ def observer():
         });
       }
       function daInitialize(doScroll){
-        $('button[type="submit"], input[type="submit"], a.review-action, #backToQuestion, #questionlabel, #pagetitle, #helptoggle, a[data-linknum], a[data-embaction]').click(daSubmitter);
+        $('button[type="submit"], input[type="submit"], a.review-action, #backToQuestion, #questionlabel, #pagetitle, #helptoggle, a[data-linknum], a[data-embaction], #backbutton').click(daSubmitter);
         $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
         $(".to-labelauty-icon").labelauty({ label: false });
         var navMain = $("#navbar-collapse");
@@ -9595,6 +9603,7 @@ def observer():
                 }
             });
             socket.on('newpage', function(incoming) {
+                //console.log("Got newpage")
                 var data = incoming.obj;
                 $("#dabody").html(data.body);
                 $("body").removeClass();
@@ -9622,6 +9631,7 @@ def observer():
                 pushChanges();
             });
             socket.on('pushchanges', function(data) {
+                //console.log("Got pushchanges: " + JSON.stringify(data));
                 var valArray = Object();
                 var values = data.parameters;
                 for (var i = 0; i < values.length; i++) {
@@ -13789,7 +13799,7 @@ def playground_packages():
                                 for item in re.split(r', *', m.group(2)):
                                     inner_item = re.sub(r"'$", '', item)
                                     inner_item = re.sub(r"^u?'", '', inner_item)
-                                    inner_item = re.sub(r'"+$', '', item)
+                                    inner_item = re.sub(r'"+$', '', inner_item)
                                     inner_item = re.sub(r'^u?"+', '', inner_item)
                                     the_list.append(inner_item)
                                 extracted[m.group(1)] = the_list
@@ -13943,7 +13953,7 @@ def playground_packages():
                 for item in re.split(r', *', m.group(2)):
                     inner_item = re.sub(r"'$", '', item)
                     inner_item = re.sub(r"^u?'", '', inner_item)
-                    inner_item = re.sub(r'"+$', '', item)
+                    inner_item = re.sub(r'"+$', '', inner_item)
                     inner_item = re.sub(r'^u?"+', '', inner_item)
                     the_list.append(inner_item)
                 extracted[m.group(1)] = the_list

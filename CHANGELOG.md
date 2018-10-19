@@ -1,5 +1,34 @@
 # Change Log
 
+## [0.3.3] - 2018-10-19
+### Added
+- The ability to set a `read only` attribute on a `table` to indicate
+  that some rows cannot be deleted or edited.
+### Changed
+- Editing a table will cause the definition of the `complete_element`
+  attribute, if any, to be recomputed after the `edit` attributes are
+  sought.
+- Interview answers saved before a `leave`.
+- Background task callbacks that raise exceptions will no longer save
+  interview answers.
+### Fixed
+- Dependencies not being properly scanned from `setup.py` files.
+- Review screen resume button that set variable had unicode instead of
+  boolean data type.
+- Text was not scanned for emojis unless `images` were defined or the
+  `default icons` directive was set.
+- The `get()` method of `DADict` did not work.
+- Random errors where dictionary cannot be retrieved (potential fix).
+- The `minimum_number` feature introduced in 0.3.2 did not work on
+  `table`s based on `DADict` objects.
+- Elements could not be added through `add_action()` when the list was
+  empty.
+- The `rows` directive of a table resulted in an error if the
+  expression used a compound operator (e.g., `+`).
+- Changes to fields made by remote user not reflected in observer window.
+- Back button did not work when remote controlling.
+- Updated deprecated pandas code in the machine learning module.
+
 ## [0.3.2] - 2018-10-13
 ### Changed
 - Using `table` with a `DADict` now sets `row_index` to the key and

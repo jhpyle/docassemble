@@ -46,6 +46,32 @@ from docassemble.webapp.daredis import r as rr
 threads = dict()
 secrets = dict()
 
+def obtain_lock(user_code, filename):
+    key = 'da:lock:' + user_code + ':' + filename
+    found = False
+    count = 4
+    while count > 0:
+        record = rr.get(key)
+        if record:
+            sys.stderr.write("obtain_lock: waiting for " + key + "\n")
+            time.sleep(1.0)
+        else:
+            found = False
+            break
+        found = True
+        count -= 1
+    if found:
+        sys.stderr.write("Request for " + key + " deadlocked\n")
+        release_lock(user_code, filename)
+    pipe = rr.pipeline()
+    pipe.set(key, 1)
+    pipe.expire(key, 4)
+    pipe.execute()
+    
+def release_lock(user_code, filename):
+    key = 'da:lock:' + user_code + ':' + filename
+    rr.delete(key)
+
 def background_thread(sid=None, user_id=None, temp_user_id=None):
     if user_id is not None:
         user_id = int(user_id)
@@ -352,11 +378,14 @@ def get_dict():
     if session_id is None or yaml_filename is None:
         sys.stderr.write('Attempt to get dictionary where session not defined\n')
         return None
+    obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
+        release_lock(session_id, yaml_filename)
         sys.stderr.write('get_dict: attempt to get dictionary failed: ' + unicode(err) + '\n')
         return None
+    release_lock(session_id, yaml_filename)
     return user_dict
 
 def get_dict_encrypt():
@@ -368,11 +397,14 @@ def get_dict_encrypt():
     if session_id is None or yaml_filename is None:
         sys.stderr.write('Attempt to get dictionary where session not defined\n')
         return None, None
+    obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
+        release_lock(session_id, yaml_filename)
         sys.stderr.write('get_dict_encrypt: attempt to get dictionary failed: ' + unicode(err) + '\n')
         return None, None
+    release_lock(session_id, yaml_filename)
     return user_dict, is_encrypted
 
 #monitor
@@ -716,11 +748,14 @@ def monitor_chat_message(data):
     secret = secrets.get(sid, None)
     if secret is not None:
         secret = str(secret)
+    obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
+        release_lock(session_id, yaml_filename)
         sys.stderr.write("monitor_chat_message: could not get dictionary: " + unicode(err) + "\n")
         return
+    release_lock(session_id, yaml_filename)
     nowtime = datetime.datetime.utcnow()
     if encrypted:
         message = encrypt_phrase(data['data'], secret)
@@ -774,11 +809,14 @@ def monitor_chat_log(data):
     secret = secrets.get(sid, None)
     if secret is not None:
         secret = str(secret)
+    obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
+        release_lock(session_id, yaml_filename)
         sys.stderr.write("monitor_chat_log: could not get dictionary: " + unicode(err) + "\n")
         return
+    release_lock(session_id, yaml_filename)
     chat_mode = user_dict['_internal']['livehelp']['mode']
     m = re.match('t([0-9]+)', chat_user_id)
     if m:
@@ -833,7 +871,7 @@ def observer_thread(sid=None, key=None):
                     #sys.stderr.write("  got start_being_controlled message with key " + str(data['key']) + "\n")
                     socketio.emit('start_being_controlled', {'key': data['key']}, namespace='/observer', room=sid)
             else:
-                #sys.stderr.write("  Got something for observer\n")
+                #sys.stderr.write("  Got parameters for observer\n")
                 socketio.emit('pushchanges', {'parameters': data}, namespace='/observer', room=sid)
         sys.stderr.write('  exiting observer thread for sid ' + str(sid) + '\n')
 

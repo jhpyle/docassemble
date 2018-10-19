@@ -14,11 +14,11 @@ objects:
 mandatory: True
 code: |
   fruit.appendObject()
-  fruit[-1].important = True
+  fruit[-1].important = dict(delete=True, edit=False)
   fruit[-1].name.text = 'Apple'
   fruit[-1].seeds = 10
   fruit.appendObject()
-  fruit[-1].important = True
+  fruit[-1].important = dict(delete=False, edit=True)
   fruit[-1].name.text = 'Orange'
   fruit[-1].seeds = 5
 ---

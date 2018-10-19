@@ -3,7 +3,7 @@ metadata:
   short title: Review
   documentation: "https://docassemble.org/docs/groups.html#editing"
   example start: 9
-  example end: 12
+  example end: 10
 ---
 modules:
   - docassemble.base.util
@@ -38,18 +38,12 @@ question: |
   you would like to mention?
 yesno: person.there_is_another
 ---
-question: |
-  Who is your favorite person?
-fields:
-  - Favorite: favorite
-    code: person
----
+need: person.table
 mandatory: true
 question: |
   Thank you for your answers!
 subquestion: |
-  The people are ${ person } and your
-  favorite is ${ favorite }.
+  The people are ${ person }.
 
   You can
   [edit your answers](${ url_action('review_interview') })
@@ -59,9 +53,6 @@ event: review_interview
 question: |
   Edit your answers
 review:
-  - Edit: favorite
-    button: |
-      Your favorite person is ${ favorite }.
   - note: |
       % if len(person):
       The people are:

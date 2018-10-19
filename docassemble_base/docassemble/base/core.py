@@ -994,8 +994,8 @@ class DAList(DAObject):
                     use_edit = False
                     use_delete = False
             elif hasattr(val, 'iteritems') and hasattr(val, 'get'):
-                use_edit = not val.get('edit', True)
-                use_delete = not val.get('delete', True)
+                use_edit = val.get('edit', True)
+                use_delete = val.get('delete', True)
         if use_edit:
             if self.complete_attribute is not None:
                 items = [dict(action='_da_undefine', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
@@ -1668,8 +1668,8 @@ class DADict(DAObject):
                     use_edit = False
                     use_delete = False
             elif hasattr(val, 'iteritems') and hasattr(val, 'get'):
-                use_edit = not val.get('edit', True)
-                use_delete = not val.get('delete', True)
+                use_edit = val.get('edit', True)
+                use_delete = val.get('delete', True)
         if use_edit:
             if self.complete_attribute is not None:
                 items = [dict(action='_da_undefine', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
