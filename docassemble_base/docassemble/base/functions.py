@@ -730,7 +730,7 @@ class DANav(object):
         self.current = None
 
     def __unicode__(self):
-        return self.show_sections(style='inline')
+        return self.show_sections()
     
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -815,18 +815,16 @@ class DANav(object):
             language = '*'
         return self.sections.get(language, list())
 
-    def show_sections(self, style=None, show_links=False):
+    def show_sections(self, style='inline', show_links=True):
         """Returns the sections of the navigation as HTML."""
         if style == "inline":
-            the_class = 'dainline'
+            the_class = 'danavlinks dainline'
             interior_class = 'dainlineinside'
             a_class = "btn btn-secondary danavlink "
         else:
-            the_class = ''
+            the_class = 'danavlinks'
             interior_class = None
             a_class = None
-        #if this_thread.interview_status is not None and the_js is not None:
-        #   this_thread.interview_status.extra_scripts.append(the_js) 
         return '  <div class="dasections"><div class="' + the_class + '">' + "\n" + server.navigation_bar(self, this_thread.interview, wrapper=False, inner_div_class=interior_class, a_class=a_class, show_links=show_links, show_nesting=False, include_arrows=True) + '  </div></div>' + "\n"
 
 word_collection = {

@@ -1792,7 +1792,7 @@ def test_for_valid_var(varname):
 
 def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_links=True, hide_inactive_subs=True, a_class=None, show_nesting=True, include_arrows=False):
     if inner_div_class is None:
-        inner_div_class = 'nav flex-column nav-pills danav danavnested'
+        inner_div_class = 'nav flex-column nav-pills danav danavlinks danav-vertical danavnested'
     if a_class is None:
         a_class = 'nav-link danavlink'
     #logmessage("navigation_bar: starting: " + str(section))
@@ -1808,6 +1808,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
     if len(the_sections) == 0:
         return('')
     the_section = nav.current
+    #logmessage("Current section is " + repr(the_section))
     #logmessage("Past sections are: " + str(nav.past))
     if the_section is None:
         if type(the_sections[0]) is dict:
@@ -1816,7 +1817,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
             the_section = the_sections[0]
     max_section = the_section
     if wrapper:
-        output = '<div role="navigation" class="offset-xl-1 col-xl-2 col-lg-3 col-md-3 d-none d-md-block danavdiv">' + "\n" + '  <div class="nav flex-column nav-pills danav">' + "\n"
+        output = '<div role="navigation" class="offset-xl-1 col-xl-2 col-lg-3 col-md-3 d-none d-md-block danavdiv">' + "\n" + '  <div class="nav flex-column nav-pills danav danav-vertical danavlinks">' + "\n"
     else:
         output = ''
     section_reached = False
@@ -7766,38 +7767,46 @@ def index():
           daSubmitter = this;
           return true;
         });
-        $(".danav a.clickable").click(function(e){
+        $(".danavlinks a.clickable").click(function(e){
           var the_key = $(this).data('key');
           url_action_perform("_da_priority_action", {action: the_key});
           e.preventDefault();
           return false;
         });
-        $(".danav ul li ul").each(function(){
-          var the_ul = $(this);
-          var the_li = $(this).parent();
-          var the_a = $(the_li).children('a').first();
-          var the_toggle = document.createElement('div');
-          var the_toggle_inner = document.createElement('i');
-          $(the_toggle).addClass('ul-toggle');
-          if ($(the_a).hasClass('notavailableyet')){
-            $(the_toggle).addClass('notavailable');
+        $(".danav-vertical .danavnested").each(function(){
+          var box = this;
+          var prev = $(this).prev();
+          if (prev && !prev.hasClass('active')){
+            var toggler = $('<span class="toggler">');
+            if ($(box).hasClass('notshowing')){
+              $('<i class="fas fa-caret-right">').appendTo(toggler);
+            }
+            else{
+              $('<i class="fas fa-caret-down">').appendTo(toggler);
+            }
+            toggler.appendTo(prev);
+            toggler.on('click', function(e){
+              $(this).find("svg").each(function(){
+                if ($(this).attr('data-icon') == 'caret-down'){
+                  $(this).removeClass('fa-caret-down');
+                  $(this).addClass('fa-caret-right');
+                  $(this).attr('data-icon', 'caret-right');
+                  $(box).hide();
+                  $(box).toggleClass('notshowing');
+                }
+                else if ($(this).attr('data-icon') == 'caret-right'){
+                  $(this).removeClass('fa-caret-right');
+                  $(this).addClass('fa-caret-down');
+                  $(this).attr('data-icon', 'caret-down');
+                  $(box).show();
+                  $(box).toggleClass('notshowing');
+                }
+              });
+              e.stopPropagation();
+              e.preventDefault();
+              return false;
+            });
           }
-          else{
-            $(the_toggle).addClass('available');
-          }
-          if ($(the_ul).hasClass('notshowing')){
-            $(the_toggle_inner).addClass('fas fa-caret-right');
-          }
-          else{
-            $(the_toggle_inner).addClass('fas fa-caret-down');
-          }
-          $(the_toggle).append($(the_toggle_inner));
-          $(the_toggle).click(function(){
-            $(the_toggle_inner).toggleClass('fa-caret-right');
-            $(the_toggle_inner).toggleClass('fa-caret-down');
-            $(the_ul).toggle();
-          });
-          $(the_li).append($(the_toggle));
         });
         $("body").focus();
         var firstInput = $("#daform input, #daform textarea, #daform select").first();
@@ -8495,10 +8504,10 @@ def index():
         the_progress_bar = None
     if interview_status.question.interview.use_navigation:
         if interview_status.question.interview.use_navigation == 'horizontal':
-            the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, inner_div_class='nav flex-row justify-content-center align-items-center nav-pills danav danav-horiz danavnested-horiz')
+            the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, inner_div_class='nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz danavnested-horiz')
             if the_nav_bar != '':
                 #offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12
-                the_nav_bar = '        <div class="col d-none d-md-block">\n          <div class="nav flex-row justify-content-center align-items-center nav-pills danav danav-horiz">\n            ' + the_nav_bar + '\n          </div>\n        </div>\n      </div>\n      <div class="row tab-content">\n'
+                the_nav_bar = '        <div class="col d-none d-md-block">\n          <div class="nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz">\n            ' + the_nav_bar + '\n          </div>\n        </div>\n      </div>\n      <div class="row tab-content">\n'
         else:
             the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview)
         if the_nav_bar != '':

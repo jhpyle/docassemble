@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.3.4] - 2018-10-20
+### Fixed
+- Links not appearing in the inline navigation bar.
+- Toggle button not present in the vertical navigation bar.
+
 ## [0.3.3] - 2018-10-19
 ### Added
 - The ability to set a `read only` attribute on a `table` to indicate
