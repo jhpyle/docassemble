@@ -845,6 +845,28 @@ is longer than a certain length, you can give the [`DAList`] or
 
 {% include side-by-side.html demo="table-dict-edit-minimum-number" %}
 
+If you want specific items to be protected against editing and/or
+deletion, you can set a `read only` directive:
+
+{% include side-by-side.html demo="table-read-only" %}
+
+In this example, the attribute `important` of the table `fruit`
+determines whether the item is "read only" or not.  The first two
+items in the `DAList`, which are added to the list in a `code` block,
+have the `important` attribute set to `True`, while items that are
+added by the user have the `important` attribute set to `False`.
+Since `read only` is set to `important`, the `Edit` and `Delete`
+buttons are not available for the items that have the `important`
+attribute set to `True`.
+
+If you want to allow editing but not deletion, or vice versa, the
+value of the attribute can be set to a [Python] dictionary rather than
+the value `True` or `False`.  If the value of the key `edit` is false,
+the "Edit" button will not be shown.  If the value of the key
+`delete` is false, the "Delete" button will not be shown.
+
+{% include side-by-side.html demo="table-read-only-2" %}
+
 # <a name="for loop"></a>For loop
 
 In computer programming, a "for loop" allows you to do something

@@ -55,7 +55,14 @@
 
             h1.nextUntil('h1').filter('h2').each(function() {
                 ++innerSection;
-                var anchorId = config.anchorPrefix + tocLevel + '-' + tocSection + '-' +  + innerSection;
+                var anchorId;
+		var existingAnchor = $(this).children(":first");
+		if (existingAnchor.length > 0 && $(existingAnchor[0]).prop("tagName") == "A" && $(existingAnchor[0]).attr('name')){
+		    anchorId = $(existingAnchor[0]).attr('name');
+		}
+		else{
+		    anchorId = config.anchorPrefix + tocLevel + '-' + tocSection + '-' + innerSection;
+		}
                 $(this).attr('id', anchorId);
                 levelHTML += createLevelHTML(anchorId,
                     tocLevel + 1,
@@ -66,7 +73,14 @@
             if (levelHTML) {
                 levelHTML = '<ul>' + levelHTML + '</ul>\n';
             }
-            var anchorId = config.anchorPrefix + tocLevel + '-' + tocSection;
+            var anchorId;
+	    var existingAnchor = $(this).children(":first");
+	    if (existingAnchor.length > 0 && $(existingAnchor[0]).prop("tagName") == "A" && $(existingAnchor[0]).attr('name')){
+		anchorId = $(existingAnchor[0]).attr('name');
+	    }
+	    else{
+       		anchorId = config.anchorPrefix + tocLevel + '-' + tocSection;
+	    }
             h1.attr('id', anchorId);
             tocHTML += createLevelHTML(anchorId,
                 tocLevel,

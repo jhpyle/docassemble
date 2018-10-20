@@ -469,6 +469,258 @@
     <td align="left">nextval('tempuser_id_seq'::regclass)</td>
   </tr>
   <tr valign="top">
+    <td align="left">user_roles</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('user_roles_id_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">user_roles</td>
+    <td align="left">user_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">user_roles</td>
+    <td align="left">role_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">userdict</td>
+    <td align="left">indexno</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('userdict_indexno_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">userdict</td>
+    <td align="left">filename</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">userdict</td>
+    <td align="left">key</td>
+    <td align="left">character varying</td>
+    <td align="right">250</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">userdict</td>
+    <td align="left">dictionary</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">userdict</td>
+    <td align="left">user_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">userdict</td>
+    <td align="left">encrypted</td>
+    <td align="left">boolean</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">true</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">userdict</td>
+    <td align="left">modtime</td>
+    <td align="left">timestamp without time zone</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">user_invite</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('user_invite_id_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">user_invite</td>
+    <td align="left">email</td>
+    <td align="left">character varying</td>
+    <td align="right">255</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">user_invite</td>
+    <td align="left">role_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">user_invite</td>
+    <td align="left">invited_by_user_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">user_invite</td>
+    <td align="left">token</td>
+    <td align="left">character varying</td>
+    <td align="right">100</td>
+    <td align="left">''::character varying</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">userdictkeys</td>
+    <td align="left">indexno</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('userdictkeys_indexno_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">userdictkeys</td>
+    <td align="left">filename</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">userdictkeys</td>
+    <td align="left">key</td>
+    <td align="left">character varying</td>
+    <td align="right">250</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">userdictkeys</td>
+    <td align="left">user_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">userdictkeys</td>
+    <td align="left">temp_user_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">install</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('install_id_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">install</td>
+    <td align="left">hostname</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">install</td>
+    <td align="left">version</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">install</td>
+    <td align="left">packageversion</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">install</td>
+    <td align="left">package_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('email_id_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">short</td>
+    <td align="left">character varying</td>
+    <td align="right">250</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">all_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">to_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">cc_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">from_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">reply_to_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">return_path_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">subject</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">datetime_message</td>
+    <td align="left">timestamp without time zone</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">datetime_received</td>
+    <td align="left">timestamp without time zone</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
     <td align="left">user</td>
     <td align="left">id</td>
     <td align="left">integer</td>
@@ -607,174 +859,6 @@
     <td align="left">timestamp without time zone</td>
     <td align="right">&nbsp; </td>
     <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">user_invite</td>
-    <td align="left">id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">nextval('user_invite_id_seq'::regclass)</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">user_invite</td>
-    <td align="left">email</td>
-    <td align="left">character varying</td>
-    <td align="right">255</td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">user_invite</td>
-    <td align="left">role_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">user_invite</td>
-    <td align="left">invited_by_user_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">user_invite</td>
-    <td align="left">token</td>
-    <td align="left">character varying</td>
-    <td align="right">100</td>
-    <td align="left">''::character varying</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">userdictkeys</td>
-    <td align="left">indexno</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">nextval('userdictkeys_indexno_seq'::regclass)</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">userdictkeys</td>
-    <td align="left">filename</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">userdictkeys</td>
-    <td align="left">key</td>
-    <td align="left">character varying</td>
-    <td align="right">250</td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">userdictkeys</td>
-    <td align="left">user_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">userdictkeys</td>
-    <td align="left">temp_user_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">userdict</td>
-    <td align="left">indexno</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">nextval('userdict_indexno_seq'::regclass)</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">userdict</td>
-    <td align="left">filename</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">userdict</td>
-    <td align="left">key</td>
-    <td align="left">character varying</td>
-    <td align="right">250</td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">userdict</td>
-    <td align="left">dictionary</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">userdict</td>
-    <td align="left">user_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">userdict</td>
-    <td align="left">encrypted</td>
-    <td align="left">boolean</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">true</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">userdict</td>
-    <td align="left">modtime</td>
-    <td align="left">timestamp without time zone</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">user_roles</td>
-    <td align="left">id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">nextval('user_roles_id_seq'::regclass)</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">user_roles</td>
-    <td align="left">user_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">user_roles</td>
-    <td align="left">role_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">user_auth</td>
-    <td align="left">id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">nextval('user_auth_id_seq'::regclass)</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">user_auth</td>
-    <td align="left">user_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">user_auth</td>
-    <td align="left">password</td>
-    <td align="left">character varying</td>
-    <td align="right">255</td>
-    <td align="left">''::character varying</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">user_auth</td>
-    <td align="left">reset_password_token</td>
-    <td align="left">character varying</td>
-    <td align="right">100</td>
-    <td align="left">''::character varying</td>
   </tr>
   <tr valign="top">
     <td align="left">chatlog</td>
@@ -931,116 +1015,32 @@
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
-    <td align="left">email</td>
+    <td align="left">user_auth</td>
     <td align="left">id</td>
     <td align="left">integer</td>
     <td align="right">&nbsp; </td>
-    <td align="left">nextval('email_id_seq'::regclass)</td>
+    <td align="left">nextval('user_auth_id_seq'::regclass)</td>
   </tr>
   <tr valign="top">
-    <td align="left">email</td>
-    <td align="left">short</td>
+    <td align="left">user_auth</td>
+    <td align="left">user_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">user_auth</td>
+    <td align="left">password</td>
     <td align="left">character varying</td>
-    <td align="right">250</td>
-    <td align="left">&nbsp; </td>
+    <td align="right">255</td>
+    <td align="left">''::character varying</td>
   </tr>
   <tr valign="top">
-    <td align="left">email</td>
-    <td align="left">all_addr</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">email</td>
-    <td align="left">to_addr</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">email</td>
-    <td align="left">cc_addr</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">email</td>
-    <td align="left">from_addr</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">email</td>
-    <td align="left">reply_to_addr</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">email</td>
-    <td align="left">return_path_addr</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">email</td>
-    <td align="left">subject</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">email</td>
-    <td align="left">datetime_message</td>
-    <td align="left">timestamp without time zone</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">email</td>
-    <td align="left">datetime_received</td>
-    <td align="left">timestamp without time zone</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">install</td>
-    <td align="left">id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">nextval('install_id_seq'::regclass)</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">install</td>
-    <td align="left">hostname</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">install</td>
-    <td align="left">version</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">install</td>
-    <td align="left">packageversion</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">install</td>
-    <td align="left">package_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
+    <td align="left">user_auth</td>
+    <td align="left">reset_password_token</td>
+    <td align="left">character varying</td>
+    <td align="right">100</td>
+    <td align="left">''::character varying</td>
   </tr>
 </table>
 
