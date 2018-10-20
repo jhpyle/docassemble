@@ -8430,15 +8430,16 @@
   \ - Outie\n---\nmandatory: True\nquestion: |\n  What is your favorite fruit?\nfields:\n\
   \  - Favorite fruit: favorite_fruit\nsection: Preferences\n---\nmandatory: True\n\
   question: |\n  What is your favorite vegetable?\nfields:\n  - Favorite vegetable:\
-  \ favorite_vegetable\n---\nmandatory: True\nquestion: Thank you.\nsubquestion: |\n\
-  \  ${ first_name },\n\n  Your answers mean a lot to me.\n  \n  I am going to go\
-  \ eat some\n  ${ favorite_vegetable }\n  now.\nsection: Conclusion\n---\nevent:\
-  \ welcome_back\nquestion: |\n  Welcome back!\nsubquestion: |\n  You are currently\
-  \ in the\n  **${ nav.get_section(display=True) }**\n  section.\n\n  ${ nav }\n\n\
-  \  Press \"Continue\" to pick up\n  where you left off.\nbuttons:\n  Continue: continue\n\
-  ---\nevent: road_map\nquestion: |\n  Roadmap\nsubquestion: |\n  You are currently\
-  \ in the\n  **${ nav.get_section(display=True) }**\n  section.\n\n  ${ nav }\n\n\
-  \  Press \"Continue\" to resume the\n  interview.\nbuttons:\n  Continue: continue"
+  \ favorite_vegetable\n---\nprogress: 100\nmandatory: True\nquestion: Thank you.\n\
+  subquestion: |\n  ${ first_name },\n\n  Your answers mean a lot to me.\n  \n  I\
+  \ am going to go eat some\n  ${ favorite_vegetable }\n  now.\nsection: Conclusion\n\
+  ---\nevent: welcome_back\nquestion: |\n  Welcome back!\nsubquestion: |\n  You are\
+  \ currently in the\n  **${ nav.get_section(display=True) }**\n  section.\n\n  ${\
+  \ nav }\n\n  Press \"Continue\" to pick up\n  where you left off.\nbuttons:\n  Continue:\
+  \ continue\n---\nevent: road_map\nquestion: |\n  Roadmap\nsubquestion: |\n  You\
+  \ are currently in the\n  **${ nav.get_section(display=True) }**\n  section.\n\n\
+  \  ${ nav }\n\n  Press \"Continue\" to resume the\n  interview.\nbuttons:\n  Continue:\
+  \ continue"
 "sections-horizontal": |-
   features:
     navigation: horizontal

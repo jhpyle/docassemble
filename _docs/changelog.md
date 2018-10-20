@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.4](https://github.com/jhpyle/docassemble/releases/tag/v0.3.4) - 2018-10-20
+
+### Fixed
+- Links not appearing in the inline navigation bar.
+- Toggle button not present in the vertical navigation bar.
+
 ## [0.3.3](https://github.com/jhpyle/docassemble/releases/tag/v0.3.3) - 2018-10-19
 
 ### Added

@@ -62,8 +62,8 @@
 		}
 		else{
 		    anchorId = config.anchorPrefix + tocLevel + '-' + tocSection + '-' + innerSection;
+		    $(this).attr('id', anchorId);
 		}
-                $(this).attr('id', anchorId);
                 levelHTML += createLevelHTML(anchorId,
                     tocLevel + 1,
                     tocSection + innerSection,
@@ -80,8 +80,8 @@
 	    }
 	    else{
        		anchorId = config.anchorPrefix + tocLevel + '-' + tocSection;
+		h1.attr('id', anchorId);
 	    }
-            h1.attr('id', anchorId);
             tocHTML += createLevelHTML(anchorId,
                 tocLevel,
                 tocSection,
