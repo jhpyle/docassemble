@@ -2,7 +2,7 @@ metadata:
   title: Review table
   short title: Review
   documentation: "https://docassemble.org/docs/groups.html#editing"
-  example start: 9
+  example start: 8
   example end: 10
 ---
 modules:

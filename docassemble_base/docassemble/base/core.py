@@ -1007,14 +1007,22 @@ class DAList(DAObject):
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+        if kwargs.get('edit_url_only', False):
+            return docassemble.base.functions.url_action('_da_dict_edit', items=items)
+        if kwargs.get('delete_url_only', False):
+            return docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index))
         return output
-    def add_action(self, message=None):
+    def add_action(self, message=None, url_only=False):
         """Returns HTML for adding an item to a list"""
         if message is None:
             if len(self.elements) > 0:
                 message = word("Add another")
             else:
                 message = word("Add an item")
+        else:
+            message = word(unicode(message))
+        if url_only:
+            return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
         return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn btn-sm btn-success"><i class="fas fa-plus-circle"></i> ' + unicode(message) + '</a>'
 
 class DADict(DAObject):
@@ -1681,14 +1689,22 @@ class DADict(DAObject):
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+        if kwargs.get('edit_url_only', False):
+            return docassemble.base.functions.url_action('_da_dict_edit', items=items)
+        if kwargs.get('delete_url_only', False):
+            return docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index))
         return output
-    def add_action(self, message=None):
+    def add_action(self, message=None, url_only=False):
         """Returns HTML for adding an item to a dict"""
         if message is None:
             if len(self.elements) > 0:
                 message = word("Add another")
             else:
                 message = word("Add an item")
+        else:
+            message = word(unicode(message))
+        if url_only:
+            return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
         return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn btn-sm btn-success"><i class="fas fa-plus-circle"></i> ' + unicode(message) + '</a>'
 
 class DASet(DAObject):

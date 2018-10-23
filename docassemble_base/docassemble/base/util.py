@@ -44,7 +44,7 @@ from bs4 import BeautifulSoup
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_title', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_title', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask']
 
 #knn_machine_learner = DummyObject
 
@@ -2216,8 +2216,8 @@ def invalid_variable_name(varname):
         return True 
     return False
 
-def action_button_html(data, icon='pencil-alt', color='dark', size='sm', block=False, label='Edit'):
-    """Returns HTML for a button that runs an action."""
+def url_ask(data):
+    """Like url_action, but accepts a data structure containing a sequence of variables to be sought."""
     if type(data) is not list:
         data = [data]
     variables = []
@@ -2225,54 +2225,61 @@ def action_button_html(data, icon='pencil-alt', color='dark', size='sm', block=F
         if type(the_saveas) is dict and len(the_saveas) == 1 and ('undefine' in the_saveas or 'recompute' in the_saveas or 'set' in the_saveas or 'follow up' in the_saveas):
             if 'set' in the_saveas:
                 if type(the_saveas['set']) is not list:
-                    raise DAError("The set statement must refer to a list.  " + repr(data))
+                    raise DAError("url_ask: the set statement must refer to a list.  " + repr(data))
                 clean_list = []
                 for the_dict in the_saveas['set']:
                     if type(the_dict) is not dict:
-                        raise DAError("A set command must refer to a list of dicts.  " + repr(data))
+                        raise DAError("url_ask: a set command must refer to a list of dicts.  " + repr(data))
                     for the_var, the_val in the_dict.iteritems():
                         if not isinstance(the_var, basestring):
-                            raise DAError("A set command must refer to a list of dicts with keys as variable names.  " + repr(data))
+                            raise DAError("url_ask: a set command must refer to a list of dicts with keys as variable names.  " + repr(data))
                         the_var_stripped = the_var.strip()
                     if invalid_variable_name(the_var_stripped):
-                        raise DAError("Missing or invalid variable name " + repr(the_var) + " .  " + repr(data))
+                        raise DAError("url_ask: missing or invalid variable name " + repr(the_var) + " .  " + repr(data))
                     clean_list.append([the_var_stripped, the_val])
                 variables.append(dict(action='_da_set', arguments=dict(variables=clean_list)))
             if 'follow up' in the_saveas:
                 if type(the_saveas['follow up']) is not list:
-                    raise DAError("The follow up statement must refer to a list.  " + repr(data))
+                    raise DAError("url_ask: the follow up statement must refer to a list.  " + repr(data))
                 for var in the_saveas['follow up']:
                     if type(var) not in (str, unicode):
-                        raise DAError("Invalid variable name in follow up " + command + ".  " + repr(data))
+                        raise DAError("url_ask: invalid variable name in follow up " + command + ".  " + repr(data))
                     var_saveas = var.strip()
                     if invalid_variable_name(var_saveas):
-                        raise DAError("Missing or invalid variable name " + repr(var_saveas) + " .  " + repr(data))
+                        raise DAError("url_ask: missing or invalid variable name " + repr(var_saveas) + " .  " + repr(data))
                     variables.append(dict(action=var, arguments=dict()))
             for command in ('undefine', 'recompute'):
                 if command not in the_saveas:
                     continue
                 if type(the_saveas[command]) is not list:
-                    raise DAError("The " + command + " statement must refer to a list.  " + repr(data))
+                    raise DAError("url_ask: the " + command + " statement must refer to a list.  " + repr(data))
                 clean_list = []
                 for undef_var in the_saveas[command]:
                     if type(undef_var) not in (str, unicode):
-                        raise DAError("Invalid variable name " + repr(undef_var) + " in " + command + ".  " + repr(data))
+                        raise DAError("url_ask: invalid variable name " + repr(undef_var) + " in " + command + ".  " + repr(data))
                     undef_saveas = undef_var.strip()
                     if invalid_variable_name(undef_saveas):
-                        raise DAError("Missing or invalid variable name " + repr(undef_saveas) + " .  " + repr(data))
+                        raise DAError("url_ask: missing or invalid variable name " + repr(undef_saveas) + " .  " + repr(data))
                     clean_list.append(undef_saveas)
                 variables.append(dict(action='_da_undefine', arguments=dict(variables=clean_list)))
                 if command == 'recompute':
                     variables.append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
             continue
+        if type(the_saveas) is dict and len(the_saveas) == 2 and 'action' in the_saveas and 'arguments' in the_saveas:
+            if type(the_saveas['arguments']) is not dict:
+                raise DAError("url_ask: an arguments directive must refer to a dictionary.  " + repr(data))
+            variables.append(dict(action=the_saveas['action'], arguments=the_saveas['arguments']))
         if type(the_saveas) not in (str, unicode):
-            raise DAError("Invalid variable name " + repr(the_saveas) + " in fields.  " + repr(data))
+            raise DAError("url_ask: invalid variable name " + repr(the_saveas) + ".  " + repr(data))
         the_saveas = the_saveas.strip()
         if invalid_variable_name(the_saveas):
-            raise DAError("Missing or invalid variable name " + repr(the_saveas) + " .  " + repr(data))
+            raise DAError("url_ask: missing or invalid variable name " + repr(the_saveas) + " .  " + repr(data))
         if the_saveas not in variables:
             variables.append(the_saveas)
-    url = url_action('_da_force_ask', variables=variables)
+    return url_action('_da_force_ask', variables=variables)
+
+def action_button_html(url, icon='pencil-alt', color='dark', size='sm', block=False, label='Edit'):
+    """Returns HTML for a button that visits a particular URL."""
     if not isinstance(label, basestring):
         label = 'Edit'
     if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):

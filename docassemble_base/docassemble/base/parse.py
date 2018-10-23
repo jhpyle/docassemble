@@ -2390,6 +2390,10 @@ class Question:
                                     if command == 'recompute':
                                         field_info['data'].append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
                                 continue
+                            if type(the_saveas) is dict and len(the_saveas) == 2 and 'action' in the_saveas and 'arguments' in the_saveas:
+                                if type(the_saveas['arguments']) is not dict:
+                                    raise DAError("An arguments directive must refer to a dictionary.  " + repr(data))
+                                field_info['data'].append(dict(action=the_saveas['action'], arguments=the_saveas['arguments']))
                             if type(the_saveas) not in (str, unicode):
                                 raise DAError("Invalid variable name " + repr(the_saveas) + " in fields." + self.idebug(data))
                             the_saveas = the_saveas.strip()

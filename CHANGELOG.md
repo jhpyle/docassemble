@@ -1,5 +1,21 @@
 # Change Log
 
+## [0.3.5] - 2018-10-
+### Added
+- The `edit_url_only` and `delete_url_only` parameters to the
+  `item_actions()` methods.
+- The `url_only` parameter to the `add_action()` method.
+- The `url_ask()` and `action_button_html()` functions.
+### Changed
+- A `message` parameter to `add_action()` is now passed through
+  `word()`.
+- Removed the new feature from 0.3.3 where interview answers are saved
+  before a `leave`.
+- Different method of locking while copying playground modules.
+### Fixed
+- Percent signs in `number` fields may have avoided validation.
+- Database access for chat log not protected by locking.
+
 ## [0.3.4] - 2018-10-20
 ### Fixed
 - Links not appearing in the inline navigation bar.

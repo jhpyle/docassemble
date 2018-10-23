@@ -1402,25 +1402,6 @@ def copy_playground_modules():
         for role in user.roles:
             if role.name == 'admin' or role.name == 'developer':
                 devs.append(user.id)
-    key = 'da:pgcopylock'
-    found = False
-    count = 20
-    while count > 0:
-        record = r.get(key)
-        if record:
-            time.sleep(1.0)
-        else:
-            found = False
-            break
-        found = True
-        count -= 1
-    if found:
-        sys.stderr.write("Request for " + key + " deadlocked\n")
-        r.delete(key)        
-    pipe = r.pipeline()
-    pipe.set(key, 1)
-    pipe.expire(key, 4)
-    pipe.execute()
     for user_id in devs:
         mod_dir = SavedFile(user_id, fix=True, section='playgroundmodules')
         local_dir = os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'playground' + str(user_id))
@@ -1436,7 +1417,6 @@ def copy_playground_modules():
         #shutil.copytree(mod_dir.directory, local_dir)
         with open(os.path.join(local_dir, '__init__.py'), 'w') as the_file:
             the_file.write(init_py_file)
-    r.delete(key)
 
 def proc_example_list(example_list, examples):
     for example in example_list:
@@ -4189,10 +4169,13 @@ def checkin():
         the_user_id = current_user.id
         temp_user_id = None
     if request.form.get('action', None) == 'chat_log':
+        obtain_lock(session_id, yaml_filename)
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         if user_dict is None or user_dict['_internal']['livehelp']['availability'] != 'available':
+            release_lock(session_id, yaml_filename)
             return jsonify(success=False)
         messages = get_chat_log(user_dict['_internal']['livehelp']['mode'], yaml_filename, session_id, auth_user_id, temp_user_id, secret, auth_user_id, temp_user_id)
+        release_lock(session_id, yaml_filename)
         return jsonify(success=True, messages=messages)
     if request.form.get('action', None) == 'checkin':
         commands = list()
@@ -5372,7 +5355,7 @@ def index():
                 if data == '':
                     data = 0.0
                 if isinstance(data, basestring):
-                    data = re.sub(r',', '', data)
+                    data = re.sub(r'[,\%]', '', data)
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[real_key] in ('object', 'object_radio'):
@@ -5474,7 +5457,7 @@ def index():
                 if data == '':
                     data = 0.0
                 if isinstance(data, basestring):
-                    data = re.sub(r',', '', data)
+                    data = re.sub(r'[,\%]', '', data)
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[orig_key] in ('object', 'object_radio'):
@@ -5958,7 +5941,7 @@ def index():
         release_lock(user_code, yaml_filename)
         return do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json)
     if interview_status.question.question_type == "leave":
-        save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
+        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
             return do_redirect(interview_status.questionText, is_ajax, is_json)
@@ -19048,8 +19031,10 @@ with app.app_context():
     app.config['GLOBAL_CSS'] = global_css
     app.config['GLOBAL_JS'] = global_js
     app.config['PARTS'] = page_parts
+    obtain_lock('init', 'init')
     copy_playground_modules()
     write_pypirc()
+    release_lock('init', 'init')
 
 if __name__ == "__main__":
     app.run()
