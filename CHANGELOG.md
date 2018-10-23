@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.3.5] - 2018-10-
+## [0.3.5] - 2018-10-23
 ### Added
 - The `edit_url_only` and `delete_url_only` parameters to the
   `item_actions()` methods.
