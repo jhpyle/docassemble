@@ -1835,12 +1835,17 @@ gathered.
 
 If there is a follow-up question that might need to come after the
 changing of a variable, you can list the follow-up variable in the
-`fields` list, even though it might not need to be asked.  You will
-need to tag the follow-up question with an [`if`] modifier; in order
-for the `review` block to skip the field when it is not required, it
-needs to find no [`question`]s that will define the variable.
+`fields` under the directive `follow up`.
 
 {% include side-by-side.html demo="review-conditional" %}
+
+You will need to tag the follow-up question with an [`if`] modifier;
+in order for the `review` block to skip the field when it is not
+required, it needs to find no [`question`]s that will define the
+variable.  If the follow-up question is set up in this way, you can
+list its variable under `follow up`, and **docassemble** will ask the
+question if the `if` condition is true, but will ignore the `follow
+up` variable if the `if` condition is false.
 
 You can also indicate more than one variable when using `show if`:
 

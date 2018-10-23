@@ -821,8 +821,21 @@ possible.
 
 {% include side-by-side.html demo="review-edit-list-table" %}
 
-The `edit` feature can also be used when the `rows` of the [`table`]
-refer to a [`DADict`].
+The line `need: person.table` is important here.  An item in a
+`review` list will not be shown if it contains any undefined
+variables.  The presence of an undefined variable in a `review` list
+item will not cause **docassemble** to seek a definition of that
+variable (unless the directive `skip undefined: False` is used).
+Therefore, if you want a `review` item containing a `table` to be
+displayed, you need to make sure that the variable representing the
+`table` gets defined by the time that you want the table to be
+editable.  In this example, `need: person.table` ensures that the
+variable representing the table is defined before the user is given
+the opportunity to review his or her answers.
+
+While the above examples have all featured tables for editing `DAList`
+objects, the `edit` feature can also be used when the `rows` of the
+[`table`] refer to a [`DADict`]:
 
 {% include side-by-side.html demo="table-dict-edit" %}
 

@@ -1139,6 +1139,57 @@ The `url_of()` function also has a few special uses.
 * `url_of('configuration')` returns a URL to the [Configuration] page.
 * `url_of('root')` returns the root URL of your server.
 
+## <a name="url_ask"></a>url_ask()
+
+The `url_ask()` function is like [`url_action()`], except instead
+of accepting a single action name and optional arguments, it accepts a
+single data structure, which is treated like the `fields` directive
+inside an item of a [`review`] block.  It returns a URL that will
+result in the asking of certain [`question`]s when the user visits it.
+
+* `url_ask('favorite_fruit')` - Ask the [`question`] that defines `favorite_fruit`.
+* `url_ask(['favorite_fruit', 'favorite_vegetable'])` - Ask the
+  [`question`] that defines `favorite_fruit`, then ask the [`question`] that defines `favorite_vegetable`.
+* `url_ask(['favorite_fruit', {'follow up': ['favorite_apple']},
+  'favorite_vegetable'])` - Ask the
+  [`question`] that defines `favorite_fruit`; then ask the [`question`]
+  that defines `favorite_apple`, if such a [`question`] can be found;
+  then ask the [`question`] that defines `favorite_vegetable`.
+* `url_ask(['favorite_fruit', {'recompute': ['fruit_to_offer']},
+  'favorite_vegetable'])` - Ask the [`question`] that defines
+  `favorite_fruit`; then undefine the variable `fruit_to_offer` if it
+  is defined; then compute the value of `fruit_to_offer`; then ask the
+  [`question`] that defines `favorite_vegetable`.
+
+For more information on how these data structures work, see the
+subsection on [customizing the display of `review` options].
+
+## <a name="action_button_html"></a>action_button_html()
+
+The `action_button_html()` function returns the HTML of a
+Bootstrap-formatted button that visits a given URL.  It is typically
+given the output of [`url_ask()`] or [`url_action()`].
+
+It accepts the following optional keyword arguments:
+
+* `icon` - this is the name of the [Font Awesome] icon to use at the
+  start of the button.  The default is `'pencil-alt'`.  By default,
+  the icon is assumed to be in the "solid" collection (`fas`).  To use
+  a different collection, specify a name such as `fab-fa-windows` for
+  the `windows` icon in the "brand" collection.  If you do not want
+  any icon, set `icon` to `None`.
+* `color` - this is the Bootstrap color of the button.  The options
+  are `primary`, `secondary`, `success`, `danger`, `warning`, `info`,
+  `light`, and `dark`.  The default is `'dark'`.  The actual colors
+  depend on the Bootstrap theme.
+* `size` - this is the Bootstrap size of the button.  The options are
+  `'sm'`, `'md'`, and `'lg'`.  The default is `'sm'`.
+* `block` - if set to `True`, the button will fill the width of the
+  question area.
+* `label` - this is the text on the button.  It passes through the
+  [`word()`]  function, so you can use the translation system to
+  handle different languages.
+
 # <a name="qrfunctions"></a>QR code functions
 
 ## <a name="qr_code"></a>qr_code()
@@ -5809,6 +5860,7 @@ $(document).on('daPageLoad', function(){
 [`title_case()`]: #title_case
 [`track_location`]:  {{ site.baseurl }}/docs/special.html#track_location
 [`url_action()`]: #url_action
+[`url_ask()`]: #url_ask
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [action]: #url_action
 [`attachment`]: {{ site.baseurl }}/docs/documents.html
@@ -6130,3 +6182,7 @@ $(document).on('daPageLoad', function(){
 [tags]: #session_tags
 [`reconsider`]: {{ site.baseurl }}/docs/logic.html#reconsider
 [`reset`]: {{ site.baseurl }}/docs/initial.html#reset
+[`review`]: {{ site.baseurl }}/docs/fields.html#review
+[customizing the display of `review` options]: {{ site.baseurl }}/docs/fields.html#review customization
+[`word()`]: #word
+[Font Awesome]: https://fontawesome.com

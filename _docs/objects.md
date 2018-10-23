@@ -684,6 +684,29 @@ Other methods available on a `DAList` are:
   name="DASet.has_been_gathered"></a>`has_been_gathered()` - returns
   `True` if the group has been gathered yet.  Does not trigger the
   gathering process.
+* <a name="DAList.add_action"></a><a name="DADict.add_action"></a>`add_action()` -
+  returns HTML for a button that adds a new item to the list.  This
+  will set up a queue of actions for the user that will ensure that a
+  new item will be added and its elements gathered.  See the [groups]
+  section for details of how [`DAList`] and [`DADict`] gathering
+  works.  By default, the text of the button is "Add an item" if the
+  list is empty, and "Add another" if the list is non-empty.  The
+  message can be overridden with the optional keyword parameter
+  `message`.  The `message` passes through the [`word()`] function, so
+  you can use the translation system to handle different languages.
+  If you just want the URL for the action, not the HTML for the
+  button, set the optional keyword parameter `url_only` to `True`.
+* <a name="DAList.item_actions"></a><a
+  name="DADict.item_actions"></a>`item_actions()` - returns HTML for "Edit" and
+  "Delete" buttons.  This method is primarily used internally; there
+  are directives of the [`table`] that control it.  It takes two
+  positional parameters: the item itself (`the_group[the_index]`) and
+  its index (`the_index`).  It also accepts optional keyword
+  parameters.  If `edit` is false, the edit button is not shown.  If
+  `delete` is false, the delete button is not shown.  If
+  `edit_url_only` is true, a plain URL for the edit action is
+  returned, rather than HTML.  If `delete_url_only` is true, a plain
+  URL for the delete action is returned, rather than HTML.
 
 If you refer to a list in a [Mako] template (e.g., `The applicants
 include: ${ applicant }`) or convert it to text with the
@@ -3708,6 +3731,7 @@ of the original [`DADateTime`] object.  See
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`set_info()`]: {{ site.baseurl }}/docs/functions.html#set_info
 [`template`]: {{ site.baseurl }}/docs/template.html
+[`table`]: {{ site.baseurl }}/docs/template.html#table
 [`track_location`]:  {{ site.baseurl }}/docs/special.html#track_location
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
 [classes]: https://docs.python.org/2/tutorial/classes.html
