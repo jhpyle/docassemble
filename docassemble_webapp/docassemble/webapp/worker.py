@@ -865,10 +865,12 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 return(worker_controller.functions.ReturnValue(extra=extra))
             if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:
                 #sys.stderr.write("background_action: status was restart or exit\n")
+                worker_controller.obtain_lock(session_code, yaml_filename)
                 if str(user_info.get('the_user_id', None)).startswith('t'):
                     worker_controller.reset_user_dict(session_code, yaml_filename, temp_user_id=user_info.get('theid', None))
                 else:
                     worker_controller.reset_user_dict(session_code, yaml_filename, user_id=user_info.get('theid', None))
+                worker_controller.release_lock(session_code, yaml_filename)
             if interview_status.question.question_type in ["restart", "exit", "logout", "exit_logout", "new_session"]:
                 #There is no lock to release.  Why is this here?
                 #worker_controller.release_lock(session_code, yaml_filename)
