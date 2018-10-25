@@ -824,14 +824,14 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 if 'id' in action['arguments']:
                     action['arguments'] = dict(email=worker_controller.retrieve_email(action['arguments']['id']))
             interview = worker_controller.interview_cache.get_interview(yaml_filename)
-            #worker_controller.obtain_lock(session_code, yaml_filename)
+            worker_controller.obtain_lock(session_code, yaml_filename)
             try:
                 steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
             except Exception as the_err:
-                #worker_controller.release_lock(session_code, yaml_filename)
+                worker_controller.release_lock(session_code, yaml_filename)
                 sys.stderr.write("background_action: could not obtain dictionary because of " + str(the_err.__class__.__name__) + ": " + str(the_err) + "\n")
                 return(worker_controller.functions.ReturnValue(extra=extra))
-            #worker_controller.release_lock(session_code, yaml_filename)
+            worker_controller.release_lock(session_code, yaml_filename)
             if user_dict is None:
                 sys.stderr.write("background_action: dictionary could not be found\n")
                 return(worker_controller.functions.ReturnValue(extra=extra))
@@ -865,12 +865,12 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 return(worker_controller.functions.ReturnValue(extra=extra))
             if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:
                 #sys.stderr.write("background_action: status was restart or exit\n")
-                #worker_controller.obtain_lock(session_code, yaml_filename)
+                worker_controller.obtain_lock(session_code, yaml_filename)
                 if str(user_info.get('the_user_id', None)).startswith('t'):
                     worker_controller.reset_user_dict(session_code, yaml_filename, temp_user_id=user_info.get('theid', None))
                 else:
                     worker_controller.reset_user_dict(session_code, yaml_filename, user_id=user_info.get('theid', None))
-                #worker_controller.release_lock(session_code, yaml_filename)
+                worker_controller.release_lock(session_code, yaml_filename)
             if interview_status.question.question_type in ["restart", "exit", "logout", "exit_logout", "new_session"]:
                 #There is no lock to release.  Why is this here?
                 #worker_controller.release_lock(session_code, yaml_filename)
@@ -959,7 +959,7 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
     new_action['arguments']['error_message'] = error_message
     new_action['arguments']['error_trace'] = error_trace
     new_action['arguments']['variables'] = variables
-    #worker_controller.obtain_lock(session_code, yaml_filename)
+    worker_controller.obtain_lock(session_code, yaml_filename)
     steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
     interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
     try:
@@ -983,7 +983,7 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
         worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
     else:
         worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
-    #worker_controller.release_lock(session_code, yaml_filename)
+    worker_controller.release_lock(session_code, yaml_filename)
     if hasattr(interview_status, 'question'):
         if interview_status.question.question_type == "response":
             sys.stderr.write("Time in error callback was " + str(time.time() - start_time))

@@ -44,6 +44,18 @@ DEBUG = daconfig.get('debug', False)
 from docassemble.webapp.file_access import get_info_from_file_number, get_info_from_file_reference, reference_exists, url_if_exists
 from docassemble.webapp.file_number import get_new_file_number
 
+import time
+
+def elapsed(name_of_function):
+    def elapse_decorator(func):
+        def time_func(*pargs, **kwargs):
+            time_start = time.time()
+            result = func(*pargs, **kwargs)
+            sys.stderr.write(name_of_function + ': ' + unicode(time.time() - time_start) + "\n")
+            return result
+        return time_func
+    return elapse_decorator
+
 def write_record(key, data):
     new_record = ObjectStorage(key=key, value=pack_object(data))
     db.session.add(new_record)
@@ -60,6 +72,7 @@ def delete_record(key, id):
     ObjectStorage.query.filter_by(key=key, id=id).delete()
     db.session.commit()
 
+@elapsed('save_numbered_file')
 def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     if uid is None:
         if has_request_context() and 'uid' in session:
@@ -256,6 +269,7 @@ from docassemble.base.functions import pickleable_objects
 #docassemble.base.parse.set_absolute_filename(absolute_filename)
 #logmessage("Server started")
 
+@elapsed('can_access_file_number')
 def can_access_file_number(file_number, uid=None):
     if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
         return True
@@ -391,6 +405,7 @@ def nice_date_from_utc(timestamp, timezone=tz.tzlocal()):
 def nice_utc_date(timestamp, timezone=tz.tzlocal()):
     return timestamp.strftime('%F %T')
 
+@elapsed('fetch_user_dict')
 def fetch_user_dict(user_code, filename, secret=None):
     #logmessage("fetch_user_dict: user_code is " + str(user_code) + " and filename is " + str(filename))
     user_dict = None
@@ -416,12 +431,14 @@ def fetch_user_dict(user_code, filename, secret=None):
         break
     return steps, user_dict, encrypted
 
+@elapsed('user_dict_exists')
 def user_dict_exists(user_code, filename):
     result = UserDict.query.filter(and_(UserDict.key == user_code, UserDict.filename == filename)).first()
     if result:
         return True
     return False
 
+@elapsed('fetch_previous_user_dict')
 def fetch_previous_user_dict(user_code, filename, secret):
     user_dict = None
     max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).scalar()
@@ -434,6 +451,7 @@ def advance_progress(user_dict):
     user_dict['_internal']['progress'] += 0.05*(100-user_dict['_internal']['progress'])
     return
 
+@elapsed('reset_user_dict')
 def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=False):
     #logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename))
     if force:
@@ -486,6 +504,7 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
     #logmessage("reset_user_dict: done")
     return
 
+@elapsed('get_person')
 def get_person(user_id, cache):
     if user_id in cache:
         return cache[user_id]
@@ -494,6 +513,7 @@ def get_person(user_id, cache):
         return record
     return None
 
+@elapsed('get_chat_log')
 def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, self_user_id, self_temp_id):
     messages = list()
     people = dict()
@@ -586,6 +606,7 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
                 messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
     return messages
 
+@elapsed('file_set_attributes')
 def file_set_attributes(file_number, **kwargs):
     upload = Uploads.query.filter_by(indexno=file_number).first()
     if upload is None:
