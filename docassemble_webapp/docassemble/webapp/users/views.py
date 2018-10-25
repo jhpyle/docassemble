@@ -125,7 +125,15 @@ def edit_user_profile_page(id):
     if len(the_role_id) == 0:
         the_role_id = [str(Role.query.filter_by(name='user').first().id)]
     form = EditUserProfileForm(request.form, obj=user, role_id=the_role_id)
-    form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
+    if request.method == 'POST' and form.cancel.data:
+        flash(word('The user profile was not changed.'), 'success')
+        return redirect(url_for('user_list'))
+    if user.social_id.startswith('local$'):
+        form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
+        privileges_note = None
+    else:
+        form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name')]
+        privileges_note = word("Note: only users with e-mail/password accounts can be given admin privileges.")
     form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
     form.timezone.default = the_tz
     if str(form.timezone.data) == 'None':
@@ -154,7 +162,7 @@ def edit_user_profile_page(id):
 
     form.role_id.default = the_role_id
     confirmation_feature = True if user.id > 2 else False
-    return render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature)
+    return render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature, privileges_note=privileges_note)
 
 @app.route('/privilege/add', methods=['GET', 'POST'])
 @login_required

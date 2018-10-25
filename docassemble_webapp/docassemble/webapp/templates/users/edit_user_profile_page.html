@@ -17,7 +17,7 @@
     
     {{ render_checkbox_field(form.active) }}
 
-    {{ render_multiselect_field(form.role_id) }}
+    {{ render_multiselect_field(form.role_id, undernote=privileges_note) }}
 
     {{ render_field(form.email, tabindex=235) }}
 
@@ -42,6 +42,7 @@
     <br>
     <div class="form-actions">
       {{ render_submit_field(form.submit, tabindex=330) }}
+      {{ render_submit_field(form.cancel, tabindex=340, class="btn btn-warning " + config['BUTTON_CLASS']) }}
     </div>
 </form>
 

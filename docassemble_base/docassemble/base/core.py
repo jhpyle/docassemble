@@ -851,6 +851,8 @@ class DAList(DAObject):
         self._trigger_gather()
         return self.elements.__reversed__()
     def _fill_up_to(self, index):
+        if isinstance(index, basestring):
+            raise Exception("Attempt to fill up " + self.instanceName + " with index " + index)
         if index < 0 and len(self.elements) + index < 0:
             num_to_add = (-1 * index) - len(self.elements)
             for i in range(0, num_to_add):
@@ -997,13 +999,9 @@ class DAList(DAObject):
                 use_edit = val.get('edit', True)
                 use_delete = val.get('delete', True)
         if use_edit:
+            items = [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]
             if self.complete_attribute is not None:
-                items = [dict(action='_da_undefine', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
-            else:
-                items = []
-            items += [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]
-            if self.complete_attribute is not None:
-                items += [dict(action='_da_compute', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
+                items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
@@ -1679,13 +1677,9 @@ class DADict(DAObject):
                 use_edit = val.get('edit', True)
                 use_delete = val.get('delete', True)
         if use_edit:
+            items = [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]
             if self.complete_attribute is not None:
-                items = [dict(action='_da_undefine', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
-            else:
-                items = []
-            items += [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]
-            if self.complete_attribute is not None:
-                items += [dict(action='_da_compute', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
+                items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'

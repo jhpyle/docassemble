@@ -134,6 +134,7 @@ class UserProfileForm(FlaskForm):
     pypi_password = StringField(word('PyPI Password'), widget=PasswordInput(hide_value=False))
     confirmed_at = DateField(word('Confirmation Date'))
     submit = SubmitField(word('Save'))
+    cancel = SubmitField(word('Cancel'))
 
 class EditUserProfileForm(UserProfileForm):
     email = StringField(word('E-mail'), validators=[Email(word('Must be a valid e-mail address')), DataRequired(word('E-mail is required'))])

@@ -273,6 +273,7 @@
 "(Not a DAFile or DAFileList object)": Null
 "(Not a readable image file)": Null
 "Note": Null
+"Note: only users with e-mail/password accounts can be given admin privileges.": Null
 "Note that if you connect to a Google Drive folder, you will disable your connection to OneDrive.": Null
 "Note that if you connect to a OneDrive folder, you will disable your connection to Google Drive.": Null
 "?": Null
@@ -470,6 +471,7 @@
 "The synchronization was not successful.": Null
 "The synchronization was successful.": Null
 "The user can call you.  Click to cancel.": Null
+"The user profile was not changed.": Null
 "The version on PyPI is": Null
 "they": Null
 "Third subdivision": Null

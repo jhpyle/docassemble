@@ -2480,6 +2480,15 @@ def process_action():
             this_thread.internal['event_stack'][unique_id].pop(0)
         #logmessage("forcing nameerror on " + this_thread.current_info['arguments']['variables'][0])
         force_ask_nameerror(this_thread.current_info['arguments']['variables'][0])
+    elif the_action == '_da_define' and 'variables' in this_thread.current_info['arguments']:
+        for variable_name in this_thread.current_info['arguments']['variables']:
+            if variable_name not in this_thread.internal['gather']:
+                this_thread.internal['gather'].append(variable_name)
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and list_same(this_thread.internal['event_stack'][unique_id][0]['arguments']['variables'], this_thread.current_info['arguments']['variables']):
+            #logmessage("popped the da_compute")
+            this_thread.internal['event_stack'][unique_id].pop(0)
+        raise ForcedReRun()
     elif the_action == '_da_set':
         for the_args in this_thread.current_info['arguments']['variables']:
             #logmessage("defining " + repr(the_args))

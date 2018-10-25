@@ -6826,6 +6826,14 @@ def index():
         text = atob(text);
         return text;
       }
+      function injectTrim(handler){
+        return function (element, event) {
+          if (element.tagName === "TEXTAREA" || (element.tagName === "INPUT" && element.type !== "password")) {
+            element.value = $.trim(element.value);
+          }
+          return handler.call(this, element, event);
+        };
+      }
       function daValidationHandler(form){
         //form.submit();
         //console.log("daValidationHandler");

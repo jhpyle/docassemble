@@ -1721,6 +1721,7 @@ def add_validation(extra_scripts, validation_rules, field_error):
     extra_scripts.append("""<script>
   var validation_rules = """ + json.dumps(validation_rules) + """;
   validation_rules.submitHandler = daValidationHandler;
+  validation_rules.onfocusout = injectTrim($.validator.defaults.onfocusout);
   if ($("#daform").length > 0){
     //console.log("Running validator")
     var validator = $("#daform").validate(validation_rules);""" + error_show + """
