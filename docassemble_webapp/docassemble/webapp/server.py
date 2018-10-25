@@ -1278,7 +1278,7 @@ def substitute_secret(oldsecret, newsecret, user=None):
         for the_record in db.session.query(UserDict.filename).filter_by(key=user_code).group_by(UserDict.filename).all():
             to_do.add((the_record.filename, user_code))
     for (filename, user_code) in to_do:
-        obtain_lock(user_code, filename)
+        #obtain_lock(user_code, filename)
         #logmessage("substitute_secret: filename is " + str(filename) + " and key is " + str(user_code))
         changed = False
         for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
@@ -1321,7 +1321,7 @@ def substitute_secret(oldsecret, newsecret, user=None):
             changed = True
         if changed:
             db.session.commit()
-        release_lock(user_code, filename)
+        #release_lock(user_code, filename)
     return newsecret
 
 def MD5Hash(data=None):
@@ -3460,12 +3460,12 @@ def oauth_callback(provider):
         db.session.commit()
     login_user(user, remember=False)
     if 'i' in session and 'uid' in session:
-        obtain_lock(session['uid'], session['i'])
+        #obtain_lock(session['uid'], session['i'])
         if 'tempuser' in session:
             sub_temp_user_dict_key(session['tempuser'], user.id)
         save_user_dict_key(session['uid'], session['i'], priors=True)
         session['key_logged'] = True
-        release_lock(session['uid'], session['i'])
+        #release_lock(session['uid'], session['i'])
     #logmessage("oauth_callback: calling substitute_secret")
     secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()))
     response = redirect(url_for('interview_list'))
@@ -3562,12 +3562,12 @@ def phone_login_verify():
             login_user(user, remember=False)
             r.delete('da:phonelogin:ip:' + str(request.remote_addr) + ':phone:' + phone_number)
             if 'i' in session and 'uid' in session:
-                obtain_lock(session['uid'], session['i'])
+                #obtain_lock(session['uid'], session['i'])
                 if 'tempuser' in session:
                     sub_temp_user_dict_key(session['tempuser'], user.id)
                 save_user_dict_key(session['uid'], session['i'], priors=True)
                 session['key_logged'] = True
-                release_lock(session['uid'], session['i'])
+                #release_lock(session['uid'], session['i'])
             secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()))
             response = redirect(url_for('interview_list'))
             response.set_cookie('secret', secret)
@@ -4191,7 +4191,7 @@ def checkin():
             if form_parameters is not None:
                 parameters = json.loads(form_parameters)
             #logmessage("Action was " + str(do_action) + " and parameters were " + repr(parameters))
-            obtain_lock(session_id, yaml_filename)
+            #obtain_lock(session_id, yaml_filename)
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters)))
@@ -4210,7 +4210,7 @@ def checkin():
             elif interview_status.question.question_type == "template" and interview_status.question.target is not None:
                 commands.append(dict(action=do_action, value=dict(target=interview_status.question.target, content=docassemble.base.util.markdown_to_html(interview_status.questionText, trim=True)), extra='backgroundresponse'))
             save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
-            release_lock(session_id, yaml_filename)
+            #release_lock(session_id, yaml_filename)
         peer_ok = False
         help_ok = False
         num_peers = 0
@@ -4602,9 +4602,9 @@ def index():
                 # else:
                 #     retain_code = True
                 if reset_interview and 'uid' in session:
-                    obtain_lock(session['uid'], yaml_filename)
+                    #obtain_lock(session['uid'], yaml_filename)
                     reset_user_dict(session['uid'], yaml_filename)
-                    release_lock(session['uid'], yaml_filename)
+                    #release_lock(session['uid'], yaml_filename)
                 user_code, user_dict = reset_session(yaml_filename, secret)
                 add_referer(user_dict)
                 save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
@@ -4627,9 +4627,9 @@ def index():
     else:
         if session_parameter is None and (reset_interview or new_interview):
             if 'uid' in session and reset_interview:
-                obtain_lock(session['uid'], yaml_filename)
+                #obtain_lock(session['uid'], yaml_filename)
                 reset_user_dict(session['uid'], yaml_filename)
-                release_lock(session['uid'], yaml_filename)
+                #release_lock(session['uid'], yaml_filename)
             user_code, user_dict = reset_session(yaml_filename, secret, retain_code=False)
             add_referer(user_dict)
             save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
@@ -16328,12 +16328,12 @@ def fix_secret(user=None):
 def login_or_register(sender, user, **extra):
     #logmessage("login or register!")
     if 'i' in session and 'uid' in session:
-        obtain_lock(session['uid'], session['i'])
+        #obtain_lock(session['uid'], session['i'])
         if 'tempuser' in session:
             sub_temp_user_dict_key(session['tempuser'], user.id)
         save_user_dict_key(session['uid'], session['i'], priors=True, user=user)
         session['key_logged'] = True
-        release_lock(session['uid'], session['i'])
+        #release_lock(session['uid'], session['i'])
     fix_secret(user=user)
     if 'tempuser' in session:
         changed = False
@@ -16667,9 +16667,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if inp.lower() in (word('exit'), word('quit')):
             logmessage("do_sms: exiting")
             if save:
-                obtain_lock(sess_info['uid'], sess_info['yaml_filename'])
+                #obtain_lock(sess_info['uid'], sess_info['yaml_filename'])
                 reset_user_dict(sess_info['uid'], sess_info['yaml_filename'], temp_user_id=sess_info['tempuser'])
-                release_lock(sess_info['uid'], sess_info['yaml_filename'])
+                #release_lock(sess_info['uid'], sess_info['yaml_filename'])
             r.delete(key)
             return resp
         session['uid'] = sess_info['uid']
@@ -17948,13 +17948,13 @@ def api_file(file_number):
         return ('File not found', 404)
     
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
-    obtain_lock(session_id, yaml_filename)
+    #obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=str(secret))
     except Exception as the_err:
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
         raise Exception("Unable to decrypt interview dictionary: " + str(the_err))
-    release_lock(session_id, yaml_filename)
+    #release_lock(session_id, yaml_filename)
     if user_dict is None:
         raise Exception("Unable to obtain interview dictionary.")
     if simplify:
