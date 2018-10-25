@@ -378,14 +378,14 @@ def get_dict():
     if session_id is None or yaml_filename is None:
         sys.stderr.write('Attempt to get dictionary where session not defined\n')
         return None
-    obtain_lock(session_id, yaml_filename)
+    #obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
         sys.stderr.write('get_dict: attempt to get dictionary failed: ' + unicode(err) + '\n')
         return None
-    release_lock(session_id, yaml_filename)
+    #release_lock(session_id, yaml_filename)
     return user_dict
 
 def get_dict_encrypt():
@@ -397,14 +397,14 @@ def get_dict_encrypt():
     if session_id is None or yaml_filename is None:
         sys.stderr.write('Attempt to get dictionary where session not defined\n')
         return None, None
-    obtain_lock(session_id, yaml_filename)
+    #obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
         sys.stderr.write('get_dict_encrypt: attempt to get dictionary failed: ' + unicode(err) + '\n')
         return None, None
-    release_lock(session_id, yaml_filename)
+    #release_lock(session_id, yaml_filename)
     return user_dict, is_encrypted
 
 #monitor
@@ -748,14 +748,14 @@ def monitor_chat_message(data):
     secret = secrets.get(sid, None)
     if secret is not None:
         secret = str(secret)
-    obtain_lock(session_id, yaml_filename)
+    #obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
         sys.stderr.write("monitor_chat_message: could not get dictionary: " + unicode(err) + "\n")
         return
-    release_lock(session_id, yaml_filename)
+    #release_lock(session_id, yaml_filename)
     nowtime = datetime.datetime.utcnow()
     if encrypted:
         message = encrypt_phrase(data['data'], secret)
@@ -809,14 +809,14 @@ def monitor_chat_log(data):
     secret = secrets.get(sid, None)
     if secret is not None:
         secret = str(secret)
-    obtain_lock(session_id, yaml_filename)
+    #obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
         sys.stderr.write("monitor_chat_log: could not get dictionary: " + unicode(err) + "\n")
         return
-    release_lock(session_id, yaml_filename)
+    #release_lock(session_id, yaml_filename)
     chat_mode = user_dict['_internal']['livehelp']['mode']
     m = re.match('t([0-9]+)', chat_user_id)
     if m:

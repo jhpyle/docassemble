@@ -4175,13 +4175,10 @@ def checkin():
         the_user_id = current_user.id
         temp_user_id = None
     if request.form.get('action', None) == 'chat_log':
-        obtain_lock(session_id, yaml_filename)
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         if user_dict is None or user_dict['_internal']['livehelp']['availability'] != 'available':
-            release_lock(session_id, yaml_filename)
             return jsonify(success=False)
         messages = get_chat_log(user_dict['_internal']['livehelp']['mode'], yaml_filename, session_id, auth_user_id, temp_user_id, secret, auth_user_id, temp_user_id)
-        release_lock(session_id, yaml_filename)
         return jsonify(success=True, messages=messages)
     if request.form.get('action', None) == 'checkin':
         commands = list()
@@ -4247,9 +4244,7 @@ def checkin():
         chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         potential_partners = list()
         if str(chatstatus) != 'off': #in ('waiting', 'standby', 'ringing', 'ready', 'on', 'hangup', 'observeonly'):
-            obtain_lock(session_id, yaml_filename)
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
-            release_lock(session_id, yaml_filename)
             if user_dict is None:
                 sys.stderr.write("checkin: error accessing dictionary for %s and %s" % (session_id, yaml_filename))
                 return jsonify(success=False)
