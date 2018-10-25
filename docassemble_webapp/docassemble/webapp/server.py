@@ -4039,9 +4039,9 @@ def exit():
         del session['key_logged']
     if session_id is not None and yaml_filename is not None:
         manual_checkout()
-        obtain_lock(session_id, yaml_filename)
+        #obtain_lock(session_id, yaml_filename)
         reset_user_dict(session_id, yaml_filename)
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
     delete_session_for_interview()
     #delete_session()
     #response = redirect(the_exit_page)
@@ -4060,9 +4060,9 @@ def exit_logout():
         del session['key_logged']
     if session_id is not None and yaml_filename is not None:
         manual_checkout()
-        obtain_lock(session_id, yaml_filename)
+        #obtain_lock(session_id, yaml_filename)
         reset_user_dict(session_id, yaml_filename)
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
     if current_user.is_authenticated:
         flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
         logout_user()
@@ -4660,8 +4660,7 @@ def index():
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
         except Exception as the_err:
-            sys.stderr.write("index: there was an exception after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
-            sys.stderr.write(unicode(the_err.__class__.__name__) + " " + unicode(the_err) + "\n")
+            sys.stderr.write("index: there was an exception " + unicode(the_err.__class__.__name__) + " after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
             release_lock(user_code, yaml_filename)
             logmessage("index: dictionary fetch failed, resetting without retain_code")
             user_code, user_dict = reset_session(yaml_filename, secret)
@@ -16091,20 +16090,20 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         if len(sessions_to_delete):
             for session_id, yaml_filename, the_user_id in sessions_to_delete:
                 manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename, user_id=the_user_id)
-                obtain_lock(session_id, yaml_filename)
+                #obtain_lock(session_id, yaml_filename)
                 if the_user_id is None:
                     reset_user_dict(session_id, yaml_filename, user_id=the_user_id, force=True)
                 else:
                     reset_user_dict(session_id, yaml_filename, user_id=the_user_id)
-                release_lock(session_id, yaml_filename)
+                #release_lock(session_id, yaml_filename)
         return len(sessions_to_delete)
     if action == 'delete':
         if filename is None or session is None:
             raise Exception("user_interviews: filename and session must be provided in order to delete interview")
         manual_checkout(manual_session_id=session, manual_filename=filename, user_id=user_id)
-        obtain_lock(session, filename)
+        #obtain_lock(session, filename)
         reset_user_dict(session, filename, user_id=user_id)
-        release_lock(session, filename)
+        #release_lock(session, filename)
         return True
     if current_user and current_user.is_authenticated and current_user.timezone:
         the_timezone = pytz.timezone(current_user.timezone)
@@ -17964,49 +17963,49 @@ def get_session_variables(yaml_filename, session_id, secret=None, simplify=True)
     return user_dict
 
 def go_back_in_session(yaml_filename, session_id, secret=None, return_question=False):
-    obtain_lock(session_id, yaml_filename)
+    #obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
         raise Exception("Unable to decrypt interview dictionary.")
     if user_dict is None:
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
         raise Exception("Unable to obtain interview dictionary.")
     if steps == 1:
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
         raise Exception("Cannot go back.")
     old_user_dict = user_dict
     steps, user_dict, is_encrypted = fetch_previous_user_dict(session_id, yaml_filename, secret)
     if user_dict is None:
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
         raise Exception("Unable to obtain interview dictionary.")
     if return_question:
         try:
             data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, old_user_dict=old_user_dict)
         except Exception as the_err:
-            release_lock(session_id, yaml_filename)
+            #release_lock(session_id, yaml_filename)
             raise Exception("Problem getting current question:" + str(the_err))
     else:
         data = None
-    release_lock(session_id, yaml_filename)
+    #release_lock(session_id, yaml_filename)
     return data
 
 def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None):
-    obtain_lock(session_id, yaml_filename)
+    #obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
         raise Exception("Unable to decrypt interview dictionary.")
     if user_dict is None:
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
         raise Exception("Unable to obtain interview dictionary.")
     try:
         for key, val in variables.iteritems():
             exec(unicode(key) + ' = ' + repr(val), user_dict)
     except Exception as the_err:
-        release_lock(session_id, yaml_filename)
+        #release_lock(session_id, yaml_filename)
         raise Exception("Problem deleting variables:" + str(the_err))
     if literal_variables is not None:
         exec('import docassemble.base.core', user_dict)
@@ -18017,19 +18016,19 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             for key in del_variables:
                 exec('del ' + unicode(key), user_dict)
         except Exception as the_err:
-            release_lock(session_id, yaml_filename)
+            #release_lock(session_id, yaml_filename)
             raise Exception("Problem deleting variables: " + str(the_err))
     if return_question:
         try:
             data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted)
         except Exception as the_err:
-            release_lock(session_id, yaml_filename)
+            #release_lock(session_id, yaml_filename)
             raise Exception("Problem getting current question:" + str(the_err))
     else:
         data = None
     steps += 1
     save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
-    release_lock(session_id, yaml_filename)
+    #release_lock(session_id, yaml_filename)
     return data
 
 @app.route('/api/session/new', methods=['GET'])
