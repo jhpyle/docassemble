@@ -2638,8 +2638,10 @@ server is initialized.
 
 These functions behave differently according to the language and
 locale.  You can write functions for different languages, or reprogram
-the default functions, by calling
-`docassemble.base.util.update_language_function()`.
+the default functions, by 
+using `import docassemble.base.functions` and
+then running 
+`docassemble.base.functions.update_language_function()`.
 
 For example, suppose you had a Spanish linguistic package that you
 wanted to use for writing possessives.  You could include the
@@ -2652,7 +2654,7 @@ from special.spanish.package import spanish_possessify
 def possessify_es(a, b, **kwargs):
     return spanish_possessify(a, b)
 
-docassemble.base.util.update_language_function('es', 'possessify', possessify_es)
+docassemble.base.functions.update_language_function('es', 'possessify', possessify_es)
 {% endhighlight %}
 
 This means that whenever the current language is Spanish, the function
@@ -2892,7 +2894,7 @@ function by including something like the following in your
 def my_period_list():
   return [[365, word("Per Day")], [52, word("Per Week")]]
 
-docassemble.base.util.update_language_function('*', 'period_list', my_period_list)
+docassemble.base.functions.update_language_function('*', 'period_list', my_period_list)
 {% endhighlight %}
 
 ## <a name="name_suffix"></a>name_suffix()
@@ -3001,14 +3003,14 @@ def her_fr(word, capitalize=False):
     return 'Sa ' + word
   else:
     return 'sa ' + word
-docassemble.base.util.update_language_function('fr', 'her', her_fr)
+docassemble.base.functions.update_language_function('fr', 'her', her_fr)
 {% endhighlight %}
 
 Or, you can accomplish the same result with a handy function generator
 from [`docassemble.base.util`]:
 
 {% highlight python %}
-docassemble.base.util.update_language_function('fr', 'her', docassemble.base.util.prefix_constructor('sa '))
+docassemble.base.functions.update_language_function('fr', 'her', docassemble.base.util.prefix_constructor('sa '))
 {% endhighlight %}
 
 # <a name="formfilling"></a>Helper functions for form filling
