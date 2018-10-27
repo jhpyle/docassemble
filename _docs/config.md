@@ -1753,6 +1753,12 @@ the [`.geolocate()`] method), and will also enable the [Google Cloud
 Translation API] for the feature in Utilities for translating system
 words into other languages.
 
+As of June 2018, Google
+[requires that you enable billing](https://developers.google.com/maps/documentation/geolocation/usage-and-billing)
+on the API key in order to use the geocoding feature.  To avoid charges, you may want to 
+[restrict the API](https://developers.google.com/maps/faq#usage_cap) to no more than 2,500 
+requests per day.
+
 If you also specify a specific `google maps api key`, this key will be
 used for the [`map_of()`] feature and the [address autocomplete]
 feature instead of the `api key`.
