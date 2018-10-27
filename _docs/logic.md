@@ -852,7 +852,7 @@ or the [`id` and `supersedes`] modifiers.  You can use the
 [`if` modifier] to indicate that a given [`question`] should only be
 asked under certain conditions.  You can use the
 [`scan for variables` modifier] to indicate that a [`question`] or
-[`code`] block should
+[`code`] block should not be considered when looking for a way to define a variable.
 
 # <a name="multiple interviews"></a>Combining multiple interviews into one
 
