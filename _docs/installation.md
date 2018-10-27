@@ -770,6 +770,7 @@ interface.
   under the `auth0` part of the [`oauth`] directive so that it
   includes the `domain`, `id`, and `secret` values you noted in the
   steps above.  Make sure that `enable` is not set to `False`.
+* Also, in your [configuration], set the [`url root`] directive.
 
 ## <a name="azure"></a>Setting up Microsoft Azure logins
 

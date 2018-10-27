@@ -160,6 +160,8 @@ It is normally not necessary for **docassemble** to know how it is
 being accessed from the web, because the URL is provided to the web
 application with every HTTP request.
 
+You should also set `url root` if you are using [Auth0] logins.
+
 However, there are some circumstances when **docassemble** code runs
 outside the context of an HTTP request.  For example, if you have a
 [scheduled task] that uses [`send_sms()`] to send a text message with
