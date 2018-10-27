@@ -848,11 +848,12 @@ which sets `veggies[i][j]`, when applicable:
 
 <a name="precedence"></a>These rules about which blocks are tried
 before other blocks can be overriden using the [`order` initial block]
-or the [`id` and `supersedes`] modifiers.  You can use the
-[`if` modifier] to indicate that a given [`question`] should only be
-asked under certain conditions.  You can use the
-[`scan for variables` modifier] to indicate that a [`question`] or
-[`code`] block should not be considered when looking for a way to define a variable.
+or the [`id` and `supersedes`] modifiers.  You can use the [`if`
+modifier] to indicate that a given [`question`] should only be asked
+under certain conditions.  You can use the [`scan for variables`
+modifier] to indicate that a [`question`] or [`code`] block should
+only be considered when looking to define a particular variable or set
+of variables, even though it is capable of defining other variables.
 
 # <a name="multiple interviews"></a>Combining multiple interviews into one
 
