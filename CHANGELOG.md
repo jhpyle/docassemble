@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.7] - 2018-10-28
+### Fixed
+- Error importing `textstat`.
+
 ## [0.3.6] - 2018-10-28
 ### Changed
 - Validation is now applied in required fields so that spaces alone
