@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.7](https://github.com/jhpyle/docassemble/releases/tag/v0.3.7) - 2018-10-28
+
+### Fixed
+- Error importing `textstat`.
+
 ## [0.3.6](https://github.com/jhpyle/docassemble/releases/tag/v0.3.6) - 2018-10-28
 
 ### Changed
