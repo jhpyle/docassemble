@@ -2073,8 +2073,8 @@ This variable is only effective if **docassemble** is running on
 variable when the `docker run` command is run for the first time.
 
 If you change `external hostname`, you need to do a complete restart
-of the system for the change to take effect.  (That is, `docker -t60
-stop <container ID>` followed by `docker start <container ID>`.)
+of the system for the change to take effect.  (That is, `docker
+stop -t60 <container ID>` followed by `docker start <container ID>`.)
 
 ## <a name="behind https load balancer"></a>When behind a proxy
 
