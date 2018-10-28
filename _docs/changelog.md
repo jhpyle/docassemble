@@ -4,6 +4,24 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.6](https://github.com/jhpyle/docassemble/releases/tag/v0.3.6) - 2018-10-28
+
+### Changed
+- Validation is now applied in required fields so that spaces alone
+  cannot bypass validation.
+- Color of pressed button now "secondary" rather than "success" and
+  colors of non-pressed buttons now "light" instead of "secondary."
+
+### Fixed
+- Problem with editing lists where the `complete_attribute` is not
+  defined by a `code` block.
+- No proper error message when a non-text string is used as a variable
+  name in `fields`.
+- Problems with locking-related changes from 0.3.5.
+- Admin users were allowed to give `admin` privilege to users with
+  social logins.
+- Python error in cron.py.
+
 ## [0.3.5](https://github.com/jhpyle/docassemble/releases/tag/v0.3.5) - 2018-10-23
 
 ### Added

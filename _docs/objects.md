@@ -2889,14 +2889,13 @@ In the context of a [Mako] template, a `PeriodicFinancialList` returns `.total()
 
 ### <a name="Income"></a>Income
 
-This is a subclass of [`PeriodicFinancialList`].
-
-Here is some example code that triggers questions that ask about
-income items.
+This is a subclass of [`PeriodicFinancialList`] with no special
+properties except the name.
 
 ### <a name="Expense"></a>Expense
 
-`Expense` is a [`PeriodicFinancialList`] representing a person's expenses.
+`Expense` is a [`PeriodicFinancialList`] representing a person's
+expenses.  It has no special properties except the name.
 
 ## <a name="OfficeList"></a>OfficeList
 
