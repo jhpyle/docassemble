@@ -4177,7 +4177,7 @@ def checkin():
         the_user_id = current_user.id
         temp_user_id = None
     if request.form.get('action', None) == 'chat_log':
-        sys.stderr.write("checkin: fetch_user_dict1\n")
+        #sys.stderr.write("checkin: fetch_user_dict1\n")
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         if user_dict is None or user_dict['_internal']['livehelp']['availability'] != 'available':
             return jsonify(success=False)
@@ -4194,8 +4194,8 @@ def checkin():
             if form_parameters is not None:
                 parameters = json.loads(form_parameters)
             #logmessage("Action was " + str(do_action) + " and parameters were " + repr(parameters))
-            #obtain_lock(session_id, yaml_filename)
-            sys.stderr.write("checkin: fetch_user_dict2\n")
+            obtain_lock(session_id, yaml_filename)
+            #sys.stderr.write("checkin: fetch_user_dict2\n")
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters)))
@@ -4214,7 +4214,7 @@ def checkin():
             elif interview_status.question.question_type == "template" and interview_status.question.target is not None:
                 commands.append(dict(action=do_action, value=dict(target=interview_status.question.target, content=docassemble.base.util.markdown_to_html(interview_status.questionText, trim=True)), extra='backgroundresponse'))
             save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
-            #release_lock(session_id, yaml_filename)
+            release_lock(session_id, yaml_filename)
         peer_ok = False
         help_ok = False
         num_peers = 0
@@ -4248,7 +4248,7 @@ def checkin():
         chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         potential_partners = list()
         if str(chatstatus) != 'off': #in ('waiting', 'standby', 'ringing', 'ready', 'on', 'hangup', 'observeonly'):
-            sys.stderr.write("checkin: fetch_user_dict3\n")
+            #sys.stderr.write("checkin: fetch_user_dict3\n")
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             if user_dict is None:
                 sys.stderr.write("checkin: error accessing dictionary for %s and %s" % (session_id, yaml_filename))
@@ -4480,7 +4480,7 @@ def get_variables():
     #session_cookie_id = request.cookies.get('session', None)
     if session_id is None or yaml_filename is None:
         return jsonify(success=False)
-    sys.stderr.write("get_variables: fetch_user_dict\n")
+    #sys.stderr.write("get_variables: fetch_user_dict\n")
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
@@ -4663,7 +4663,7 @@ def index():
         #logmessage("index: session_id is defined")
         user_code = session_id
         obtain_lock(user_code, yaml_filename)
-        sys.stderr.write("index: calling fetch_user_dict1\n")
+        #sys.stderr.write("index: calling fetch_user_dict1\n")
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
         except Exception as the_err:
@@ -4804,7 +4804,7 @@ def index():
     #         flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
     if '_back_one' in post_data and steps > 1:
         old_user_dict = user_dict
-        sys.stderr.write("index: calling fetch_user_dict2\n")
+        #sys.stderr.write("index: calling fetch_user_dict2\n")
         steps, user_dict, is_encrypted = fetch_previous_user_dict(user_code, yaml_filename, secret)
         if encrypted != is_encrypted:
             encrypted = is_encrypted
@@ -5878,10 +5878,10 @@ def index():
                             user_dict['_internal']['event_stack'][session_uid].pop(0)
             #logmessage("finish: event_stack is " + repr(user_dict['_internal']['event_stack']))
         else:
-            sys.stderr.write("index: calling fetch_user_dict3\n")
+            #sys.stderr.write("index: calling fetch_user_dict3\n")
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     else:
-        sys.stderr.write("index: calling fetch_user_dict4\n")
+        #sys.stderr.write("index: calling fetch_user_dict4\n")
         steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     # restore this, maybe
     #if next_action:
@@ -6869,8 +6869,8 @@ def index():
         if (whichButton != null){
           $(".btn-da").each(function(){
             if (this != whichButton){
-              $(this).removeClass("btn-primary btn-info btn-warning btn-danger btn-light");
-              $(this).addClass("btn-secondary");
+              $(this).removeClass("btn-primary btn-info btn-warning btn-danger btn-secondary");
+              $(this).addClass("btn-light");
             }
           });
           if ($(whichButton).hasClass("btn-success")){
@@ -6878,8 +6878,8 @@ def index():
             $(whichButton).addClass("btn-primary");
           }
           else{
-            $(whichButton).removeClass("btn-primary btn-info btn-warning btn-danger btn-secondary btn-light");
-            $(whichButton).addClass("btn-success");
+            $(whichButton).removeClass("btn-primary btn-info btn-warning btn-danger btn-success btn-light");
+            $(whichButton).addClass("btn-secondary");
           }
         }
         whichButton = null;
@@ -16136,6 +16136,8 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         #logmessage("filename is " + str(interview_info.filename) + " " + str(interview_info.key))
         if session is not None and interview_info.key != session:
             continue
+        if interview_info.dictionary is None:
+            continue
         interview_title = dict()
         is_valid = True
         interview_valid = True
@@ -17958,7 +17960,7 @@ def api_file(file_number):
     
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
     #obtain_lock(session_id, yaml_filename)
-    sys.stderr.write("get_session_variables: fetch_user_dict\n")
+    #sys.stderr.write("get_session_variables: fetch_user_dict\n")
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=str(secret))
     except Exception as the_err:

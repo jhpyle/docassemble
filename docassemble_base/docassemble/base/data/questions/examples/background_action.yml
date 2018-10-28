@@ -4,12 +4,8 @@ metadata:
   example end: 6
   documentation: "https://docassemble.org/docs/background.html#background_action"
 ---
-imports:
-  - time
----
 mandatory: True
 code: |
-  foobar = 22
   the_task
   if the_task.ready():
     final_screen
@@ -29,7 +25,7 @@ event: bg_task
 code: |
   # This is where time-consuming code
   # would go.
-  background_response(553 + foobar + action_argument('additional'))
+  background_response(553 + action_argument('additional'))
 ---
 event: waiting_screen
 question: |
