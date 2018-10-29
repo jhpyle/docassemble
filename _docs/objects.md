@@ -3241,7 +3241,7 @@ class definition itself:
 class Recipe(DAObject):
     def init(self, *pargs, **kwargs):
         self.initializeAttribute('ingredients', DAList)
-        return super(Recipe, self).init(*pargs, **kwargs)
+        super(Recipe, self).init(*pargs, **kwargs)
 {% endhighlight %}
 
 Then, you would only need to write this in your interview file:
@@ -3258,10 +3258,9 @@ function, which is built in to [Python]; you should use `init()`, not
 `__init__()`.
 
 When you write your own `init()` function for a class, you should (but
-are not required to) include the 
-`return super(Recipe, self).init(*pargs, **kwargs)` line at the end.
-This will ensure that `Recipe` objects can initialized properly.  For
-example, if you wrote:
+are not required to) include the `super(Recipe, self).init(*pargs,
+**kwargs)` line.  This will ensure that `Recipe` objects are
+initialized properly.  For example, if you wrote:
 
 {% highlight python %}
 dinner.initializeAttribute('recipe', Recipe, oven_temperature=300)
@@ -3269,10 +3268,15 @@ dinner.initializeAttribute('recipe', Recipe, oven_temperature=300)
 
 then `dinner.recipe` would be a `Recipe` object and
 `dinner.recipe.oven_temperature` would be `300`.  However, if you
-included an `init()` function and failed to conclude it with 
-`return super(Recipe, self).init(*pargs, **kwargs)`, then the
-`oven_temperature` variable would not be set.  Therefore, it is a good
-practice to always write your `init()` methods in this way.
+included an `init()` function and failed to include `super(Recipe,
+self).init(*pargs, **kwargs)`, then the `oven_temperature` variable
+would not be set.  Therefore, it is a good practice to always write
+your `init()` methods in this way.
+
+Before you use objects and [inheritance], you should buy a [Python
+book] and learn how [Python] handles object orientation.  Object
+oriented programming is an advanced topic and **docassemble**
+documentation is not a substitute for [Python] documentation.
 
 ## <a name="usingglob"></a>Using global variables in your classes
 
@@ -3878,3 +3882,4 @@ of the original [`DADateTime`] object.  See
 [`service account credentials`]: {{ site.baseurl }}/docs/config.html#service account credentials
 [Object-oriented Programming for Document Assembly Developers]: https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/
 [Quinten Steenhuis]: https://www.nonprofittechy.com/about/
+[Python book]: http://shop.oreilly.com/product/0636920028154.do
