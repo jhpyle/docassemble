@@ -732,6 +732,7 @@
 "background_action": |-
   mandatory: True
   code: |
+    the_task
     if the_task.ready():
       final_screen
     else:
@@ -10249,12 +10250,13 @@
   \ wonder\n  > if it will ever even stop\n  > because it keeps going on and \n  >\
   \ on.\n  \n  ## This is a heading\n\n  This is some regular text.\n\n  This line\
   \ has a br.[BR] This is the second line.\n\n  ### Lists\n  \n  Here is a bullet\
-  \ list:\n\n  * Apple\n  * Peach\n  * Pear\n\n  Here is a numbered list:\n\n  1.\
-  \ Nutmeg\n  2. Celery\n  3. Oregano\n\n  Your favorite fruit is ${ favorite_fruit\
-  \ }.\n  \n  Here is a\n  [link to a web site](https://google.com).\n\n  Here is\
-  \ a picture:\n\n  [FILE house.png]\n---\nmandatory: True\nquestion: |\n  Here is\
-  \ your document.\nattachment:\n  - name: Your attachment\n    filename: the_file\n\
-  \    docx template file: markdown_template_demo.docx"
+  \ list:\n\n  * Apple\n  * Peach\n  * Pear\n\n  Here is a nested bullet list:\n\n\
+  \  * Apple\n      * Fuji\n      * Red Delicious\n  * Peach\n  * Pear\n\n  Here is\
+  \ a numbered list:\n\n  1. Nutmeg\n  2. Celery\n  3. Oregano\n\n  Your favorite\
+  \ fruit is ${ favorite_fruit }.\n  \n  Here is a\n  [link to a web site](https://google.com).\n\
+  \n  Here is a picture:\n\n  [FILE house.png]\n---\nmandatory: True\nquestion: |\n\
+  \  Here is your document.\nattachment:\n  - name: Your attachment\n    filename:\
+  \ the_file\n    docx template file: markdown_template_demo.docx"
 "multi-user": "modules:\n  - docassemble.base.util\n---\nobjects:\n  firstparty: Individual\n\
   \  secondparty: Individual\n---\ninitial: true\ncode: |\n  multi_user = True\n \
   \ if user_logged_in():\n    if not defined('firstparty.email'):\n      firstparty.email\
