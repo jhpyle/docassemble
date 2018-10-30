@@ -2278,7 +2278,7 @@ def url_ask(data):
             variables.append(the_saveas)
     return url_action('_da_force_ask', variables=variables)
 
-def action_button_html(url, icon='pencil-alt', color='dark', size='sm', block=False, label='Edit'):
+def action_button_html(url, icon=None, color='success', size='sm', block=False, label='Edit'):
     """Returns HTML for a button that visits a particular URL."""
     if not isinstance(label, basestring):
         label = 'Edit'

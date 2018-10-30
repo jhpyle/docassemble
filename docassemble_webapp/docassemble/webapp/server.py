@@ -1677,6 +1677,7 @@ def sub_temp_user_dict_key(temp_user_id, user_id):
 def save_user_dict_key(session_id, filename, priors=False, user=None):
     if user is not None:
         user_id = user.id
+        user_auth = True
     else:
         if current_user.is_authenticated and not current_user.is_anonymous:
             is_auth = True

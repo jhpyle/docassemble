@@ -934,6 +934,8 @@ class Question:
         self.fields_used = set()
         self.names_used = set()
         self.mako_names = set()
+        self.reconsider = list()
+        self.undefine = list()
         self.validation_code = None
         num_directives = 0
         for directive in ('yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'fields', 'buttons', 'choices', 'dropdown', 'combobox', 'signature', 'review'):
@@ -1804,14 +1806,14 @@ class Question:
                 self.fields.append(Field(field_data))
                 self.question_type = 'settrue'
         if 'need' in data:
-            if type(data['need']) == str:
+            if isinstance(data['need'], basestring):
                 need_list = [data['need']]
-            elif type(data['need']) == list:
+            elif isinstance(data['need'], list):
                 need_list = data['need']
             else:
                 raise DAError("A need phrase must be text or a list." + self.idebug(data))
             try:
-                self.need = list(map((lambda x: compile(x, '<code block>', 'exec')), need_list))
+                self.need = list(map((lambda x: compile(x, '<need expression>', 'exec')), need_list))
                 for x in need_list:
                     self.find_fields_in(x)
             except:
@@ -1967,16 +1969,41 @@ class Question:
                     self.find_fields_in(data['code'])
             else:
                 raise DAError("A code section must be text, not a list or a dictionary." + self.idebug(data))
-            if 'reconsider' in data:
-                if type(data['reconsider']) is not bool:
-                    raise DAError("A reconsider designation must be true or false." + self.idebug(data))
-                if data['reconsider'] is True:
+        if 'reconsider' in data:
+            #if type(data['reconsider']) is not bool:
+            #    raise DAError("A reconsider directive must be true or false." + self.idebug(data))
+            if 'code' in data and type(data['reconsider']) is bool:
+                if data['reconsider']:
                     if self.is_generic:
                         if self.generic_object not in self.interview.reconsider_generic:
                             self.interview.reconsider_generic[self.generic_object] = set()
                         self.interview.reconsider_generic[self.generic_object].update(self.fields_used)
                     else:
                         self.interview.reconsider.update(self.fields_used)
+            else:
+                if isinstance(data['reconsider'], basestring):
+                    fields = [data['reconsider']]
+                elif isinstance(data['reconsider'], list):
+                    fields = data['reconsider']
+                else:
+                    raise DAError("A reconsider directive must be true, false, a single variable or a list." + self.idebug(data))
+                for the_field in fields:
+                    if not isinstance(the_field, basestring):
+                        raise DAError("A reconsider directive must refer to variable names expressed as text." + self.idebug(data))
+                    self.find_fields_in(the_field)
+                    self.reconsider.append(the_field)
+        if 'undefine' in data:
+            if isinstance(data['undefine'], basestring):
+                fields = [data['undefine']]
+            elif isinstance(data['undefine'], list):
+                fields = data['undefine']
+            else:
+                raise DAError("A undefine directive must a single variable or a list." + self.idebug(data))
+            for the_field in fields:
+                if not isinstance(the_field, basestring):
+                    raise DAError("A undefine directive must refer to variable names expressed as text." + self.idebug(data))
+                self.find_fields_in(the_field)
+                self.undefine.append(the_field)
         if 'fields' in data:
             self.question_type = 'fields'
             if 'continue button field' in data:
@@ -2582,6 +2609,10 @@ class Question:
         if self.need is not None:
             for need_code in self.need:
                 exec(need_code, user_dict)
+        for the_field in self.undefine:
+            docassemble.base.functions.undefine(the_field)
+        if len(self.reconsider) > 0:
+            docassemble.base.functions.reconsider(*self.reconsider)
     def recursive_data_from_code(self, target):
         if type(target) is dict or (hasattr(target, 'elements') and type(target.elements) is dict):
             new_dict = dict()
@@ -2918,6 +2949,10 @@ class Question:
         if self.need is not None:
             for need_code in self.need:
                 exec(need_code, user_dict)
+        for the_field in self.undefine:
+            docassemble.base.functions.undefine(the_field)
+        if len(self.reconsider) > 0:
+            docassemble.base.functions.reconsider(*self.reconsider)
         question_text = self.content.text(user_dict)
         #logmessage("Asking " + str(question_text))
         #sys.stderr.write("Asking " + str(question_text) + "\n")

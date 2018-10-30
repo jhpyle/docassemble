@@ -1010,8 +1010,31 @@ class DAList(DAObject):
         if kwargs.get('delete_url_only', False):
             return docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index))
         return output
-    def add_action(self, message=None, url_only=False):
+    def add_action(self, message=None, url_only=False, icon='plus-circle', color='success', size='sm', block=None, classname=None):
         """Returns HTML for adding an item to a list"""
+        if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
+            color = 'success'
+        if size not in ('sm', 'md', 'lg'):
+            size = 'sm'
+        if size == 'md':
+            size = ''
+        else:
+            size = " btn-" + size
+        if block:
+            block = ' btn-block'
+        else:
+            block = ''
+        if isinstance(icon, basestring):
+            icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
+            if not re.search(r'^fa[a-z] fa-', icon):
+                icon = 'fas fa-' + icon
+            icon = '<i class="' + icon + '"></i> '
+        else:
+            icon = ''
+        if classname is None:
+            classname = ''
+        else:
+            classname = ' ' + unicode(classname)
         if message is None:
             if len(self.elements) > 0:
                 message = word("Add another")
@@ -1021,7 +1044,7 @@ class DAList(DAObject):
             message = word(unicode(message))
         if url_only:
             return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
-        return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn btn-sm btn-success"><i class="fas fa-plus-circle"></i> ' + unicode(message) + '</a>'
+        return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn' + size + block + ' btn-' + color + classname + '">' + icon + unicode(message) + '</a>'
 
 class DADict(DAObject):
     """A base class for objects that behave like Python dictionaries."""
@@ -1688,8 +1711,31 @@ class DADict(DAObject):
         if kwargs.get('delete_url_only', False):
             return docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index))
         return output
-    def add_action(self, message=None, url_only=False):
+    def add_action(self, message=None, url_only=False, icon='plus-circle', color='success', size='sm', block=None, classname=None):
         """Returns HTML for adding an item to a dict"""
+        if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
+            color = 'success'
+        if size not in ('sm', 'md', 'lg'):
+            size = 'sm'
+        if size == 'md':
+            size = ''
+        else:
+            size = " btn-" + size
+        if block:
+            block = ' btn-block'
+        else:
+            block = ''
+        if isinstance(icon, basestring):
+            icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
+            if not re.search(r'^fa[a-z] fa-', icon):
+                icon = 'fas fa-' + icon
+            icon = '<i class="' + icon + '"></i> '
+        else:
+            icon = ''
+        if classname is None:
+            classname = ''
+        else:
+            classname = ' ' + unicode(classname)
         if message is None:
             if len(self.elements) > 0:
                 message = word("Add another")
@@ -1699,7 +1745,7 @@ class DADict(DAObject):
             message = word(unicode(message))
         if url_only:
             return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
-        return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn btn-sm btn-success"><i class="fas fa-plus-circle"></i> ' + unicode(message) + '</a>'
+        return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn' + size + block + ' btn-' + color + classname + '">' + icon + unicode(message) + '</a>'
 
 class DASet(DAObject):
     """A base class for objects that behave like Python sets."""
