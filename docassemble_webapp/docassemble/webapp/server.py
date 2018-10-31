@@ -8394,6 +8394,9 @@ def index():
         return """ + json.dumps(word("Please select exactly")) + """ + " " + params[1] + ".";
       });
       $.validator.addMethod('mindate', function(value, element, params){
+        if (value == null || value == ''){
+          return true;
+        }
         try {
           var date = new Date(value);
           var comparator = new Date(params);
@@ -8404,6 +8407,9 @@ def index():
         return false;
       }, """ + json.dumps(word("Please enter a valid date.")) + """);
       $.validator.addMethod('maxdate', function(value, element, params){
+        if (value == null || value == ''){
+          return true;
+        }
         try {
           var date = new Date(value);
           var comparator = new Date(params);
@@ -8414,6 +8420,9 @@ def index():
         return false;
       }, """ + json.dumps(word("Please enter a valid date.")) + """);
       $.validator.addMethod('minmaxdate', function(value, element, params){
+        if (value == null || value == ''){
+          return true;
+        }
         try {
           var date = new Date(value);
           var before_comparator = new Date(params[0]);
