@@ -106,11 +106,11 @@ fi
 
 # echo "10"
 
-if [ "${S3ENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/hostname-rabbitmq) ]] && [[ $(s3cmd ls s3://${S3BUCKET}/ip-rabbitmq) ]]; then
+if [ "${S3ENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && [[ $(aws s3 ls s3://${S3BUCKET}/hostname-rabbitmq) ]] && [[ $(aws s3 ls s3://${S3BUCKET}/ip-rabbitmq) ]]; then
     TEMPKEYFILE=`mktemp`
-    s3cmd -q -f get s3://${S3BUCKET}/hostname-rabbitmq $TEMPKEYFILE
+    aws s3 cp s3://${S3BUCKET}/hostname-rabbitmq $TEMPKEYFILE --quiet
     HOSTNAMERABBITMQ=$(<$TEMPKEYFILE)
-    s3cmd -q -f get s3://${S3BUCKET}/ip-rabbitmq $TEMPKEYFILE
+    aws s3 cp s3://${S3BUCKET}/ip-rabbitmq $TEMPKEYFILE --quiet
     IPRABBITMQ=$(<$TEMPKEYFILE)
     rm -f $TEMPKEYFILE
     if [ -n "$(grep $HOSTNAMERABBITMQ /etc/hosts)" ]; then
@@ -146,27 +146,27 @@ fi
 # echo "13"
 
 if [ "${S3ENABLE:-false}" == "true" ]; then
-    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/letsencrypt.tar.gz) ]]; then
+    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(aws s3 ls s3://${S3BUCKET}/letsencrypt.tar.gz) ]]; then
 	rm -f /tmp/letsencrypt.tar.gz
-	s3cmd -q get s3://${S3BUCKET}/letsencrypt.tar.gz /tmp/letsencrypt.tar.gz
+	aws s3 cp s3://${S3BUCKET}/letsencrypt.tar.gz /tmp/letsencrypt.tar.gz --quiet
 	cd /
 	tar -xf /tmp/letsencrypt.tar.gz
 	rm -f /tmp/letsencrypt.tar.gz
     fi
-    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/apache) ]]; then
-	s3cmd -q sync s3://${S3BUCKET}/apache/ /etc/apache2/sites-available/
+    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(aws s3 ls s3://${S3BUCKET}/apache) ]]; then
+	aws s3 sync s3://${S3BUCKET}/apache/ /etc/apache2/sites-available/ --quiet
     fi
-    if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/log) ]]; then
-	s3cmd -q sync s3://${S3BUCKET}/log/ ${LOGDIRECTORY:-${DA_ROOT}/log}/
+    if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(aws s3 ls s3://${S3BUCKET}/log) ]]; then
+	aws s3 sync s3://${S3BUCKET}/log/ ${LOGDIRECTORY:-${DA_ROOT}/log}/ --quiet
 	chown -R www-data.www-data ${LOGDIRECTORY:-${DA_ROOT}/log}
     fi
-    if [[ $(s3cmd ls s3://${S3BUCKET}/config.yml) ]]; then
+    if [[ $(aws s3 ls s3://${S3BUCKET}/config.yml) ]]; then
 	rm -f $DA_CONFIG_FILE
-	s3cmd -q get s3://${S3BUCKET}/config.yml $DA_CONFIG_FILE
+	aws s3 cp s3://${S3BUCKET}/config.yml $DA_CONFIG_FILE --quiet
 	chown www-data.www-data $DA_CONFIG_FILE
     fi
-    if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/redis.rdb) ]] && [ "$REDISRUNNING" = false ]; then
-	s3cmd -q -f get s3://${S3BUCKET}/redis.rdb "/var/lib/redis/dump.rdb"
+    if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(aws s3 ls s3://${S3BUCKET}/redis.rdb) ]] && [ "$REDISRUNNING" = false ]; then
+	aws s3 cp s3://${S3BUCKET}/redis.rdb "/var/lib/redis/dump.rdb" --quiet
 	chown redis.redis "/var/lib/redis/dump.rdb"
     fi
 elif [ "${AZUREENABLE:-false}" == "true" ]; then
@@ -291,11 +291,11 @@ source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.r
 
 # echo "17"
 
-if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s3cmd ls s3://${S3BUCKET}/config.yml) ]]; then
-    s3cmd -q put $DA_CONFIG_FILE s3://${S3BUCKET}/config.yml
+if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(aws s3 ls s3://${S3BUCKET}/config.yml) ]]; then
+    aws s3 cp $DA_CONFIG_FILE s3://${S3BUCKET}/config.yml --quiet
 fi
 
-if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s3cmd ls s3://${S3BUCKET}/files) ]]; then
+if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(aws s3 ls s3://${S3BUCKET}/files) ]]; then
     if [ -d ${DA_ROOT}/files ]; then
 	for the_file in $(ls ${DA_ROOT}/files); do
 	    if [[ $the_file =~ ^[0-9]+ ]]; then
@@ -306,10 +306,10 @@ if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s3cmd ls s3://${S3BUCKET}/files)
 		    target_file=${sub_file#${file_directory}}
 		    file_number=${file_number//\//}
 		    file_number=$((16#$file_number))
-		    s3cmd -q put $sub_file s3://${S3BUCKET}/files/$file_number/$target_file
+		    aws s3 cp $sub_file s3://${S3BUCKET}/files/$file_number/$target_file --quiet
 		done
 	    else
-	       s3cmd -q sync ${DA_ROOT}/files/$the_file/ s3://${S3BUCKET}/$the_file/
+	       aws s3 sync ${DA_ROOT}/files/$the_file/ s3://${S3BUCKET}/$the_file/ --quiet
 	    fi
 	done
     fi
@@ -455,9 +455,9 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
     if [ -z "$roleexists" ]; then
 	echo "create role "${DBUSER:-docassemble}" with login password '"${DBPASSWORD:-abc123}"';" | su -c psql postgres || exit 1
     fi
-    if [ "${S3ENABLE:-false}" == "true" ] && [[ $(s3cmd ls s3://${S3BUCKET}/postgres) ]]; then
+    if [ "${S3ENABLE:-false}" == "true" ] && [[ $(aws s3 ls s3://${S3BUCKET}/postgres) ]]; then
 	PGBACKUPDIR=`mktemp -d`
-	s3cmd -q sync s3://${S3BUCKET}/postgres/ "$PGBACKUPDIR/"
+	aws s3 sync s3://${S3BUCKET}/postgres/ "$PGBACKUPDIR/" --quiet
     elif [ "${AZUREENABLE:-false}" == "true" ] && [[ $(python -m docassemble.webapp.list-cloud postgres) ]]; then
 	echo "There are postgres files on Azure" >&2
 	PGBACKUPDIR=`mktemp -d`
@@ -660,11 +660,11 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	    rm -f /tmp/letsencrypt.tar.gz
 	    if [ -d etc/letsencrypt ]; then
 		tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-		s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz
+		aws s3 cp /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz --quiet
 		rm -f /tmp/letsencrypt.tar.gz
 	    fi
 	fi
-	s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
+	aws s3 sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/ --quiet
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
 	    cd /
@@ -803,7 +803,7 @@ function deregister {
     if [ "${S3ENABLE:-false}" == "true" ]; then
 	su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_deregister" www-data 
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
-	    s3cmd -q sync ${DA_ROOT}/log/ s3://${S3BUCKET}/log/
+	    aws s3 sync ${DA_ROOT}/log/ s3://${S3BUCKET}/log/ --quiet
 	fi
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_deregister" www-data 
