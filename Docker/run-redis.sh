@@ -26,7 +26,7 @@ function stopfunc {
     redis-cli shutdown
     echo backing up redis
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	s3cmd -q put "/var/lib/redis/dump.rdb" s3://${S3BUCKET}/redis.rdb
+	aws s3 cp "/var/lib/redis/dump.rdb" s3://${S3BUCKET}/redis.rdb --quiet
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	blob-cmd -f cp "/var/lib/redis/dump.rdb" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/redis.rdb"
     else
