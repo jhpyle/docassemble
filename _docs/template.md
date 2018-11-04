@@ -19,7 +19,7 @@ section is to describe the `template` and `table` blocks.
 
 # <a name="template"></a>The `template` block
 
-A `template` block allows you assign text to a variable and then
+A `template` block allows you to assign text to a variable and then
 re-use the text by referring to a variable.
 
 {% include side-by-side.html demo="template" %}
