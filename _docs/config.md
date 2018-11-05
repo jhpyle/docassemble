@@ -1301,6 +1301,15 @@ secretkey: CnFUCzajSgjVZKD1xFfMQdFW8o9JxnBL
 The [startup process] on [Docker] sets the `secretkey` to a random
 value.
 
+## <a name="backup days"></a>Number of days of backups to keep
+
+The [Docker] setup creates 14 days of daily backups.  The number of
+days can be changed using the `backup days` directive.
+
+{% highlight yaml %}
+backup days: 7
+{% endhighlight %}
+
 ## <a name="password secretkey"></a>Secret key for passwords
 
 The `password secretkey` is used in the process of encrypting

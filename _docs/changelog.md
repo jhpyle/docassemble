@@ -4,6 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.8](https://github.com/jhpyle/docassemble/releases/tag/v0.3.8) - 2018-11-04
+
+### Added
+- The `backup days` configuration directive.
+
+### Fixed
+- The `word()` function did not work on words with non-ASCII
+  characters.
+- Empty fields question skipping did not work where variable was
+  attribute of a non-existent object.
+- Interviews that changed the language changed the language of the Playground.
+
 ## [0.3.7](https://github.com/jhpyle/docassemble/releases/tag/v0.3.7) - 2018-10-28
 
 ### Fixed

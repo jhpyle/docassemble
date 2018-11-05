@@ -603,10 +603,13 @@ container for the new configuration to take effect.
   `PACKAGES` environment variable.  The packages will be installed
   when the image is run.  See the [`debian packages`] configuration
   directive.
-* <a name="PACKAGES"></a>`DASECRETKEY`: The secret key for protecting
-  against cross-site forgery.  See the [`secret key`] configuration
+* <a name="DASECRETKEY"></a>`DASECRETKEY`: The secret key for protecting
+  against cross-site forgery.  See the [`secretkey`] configuration
   directive.  If `DASECRETKEY` is not set, a random secret key will be
   generated.
+* <a name="DABACKUPDAYS"></a>`DABACKUPDAYS`: The number of days
+  backups should be kept.  The default is 14.  See the [`backup days`]
+  configuration directive.
 
 ## <a name="configuration"></a>Changing the configuration
 
@@ -1725,7 +1728,7 @@ line), as the containers depend on the images.
 [Security Group]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html
 [HTTP]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
 [region]: http://docs.aws.amazon.com/general/latest/gr/rande.html
-[`secret key`]: {{ site.baseurl }}/docs/config.html#secret key
+[`secretkey`]: {{ site.baseurl }}/docs/config.html#secretkey
 [Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 [`cross site domain`]: {{ site.baseurl }}/docs/config.html#cross site domain
 [`server administrator email`]: {{ site.baseurl }}/docs/config.html#server administrator email
