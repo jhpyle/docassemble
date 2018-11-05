@@ -829,21 +829,21 @@ class DANav(object):
 
 word_collection = {
     'es': {
-        'Continue': 'Continuar',
-        'Help': 'Ayuda',
-        'Sign in': 'Registrarse',
-        'Sign in or sign up to save answers': 'Inicie sesión o regístrese para guardar las respuestas',
-        'Question': 'Interrogación',
-        'save_as_multiple': 'The document is available in the following formats:',
-        'save_as_singular': 'The document is available in the following format:',
-        'pdf_message': 'for printing; requires Adobe Reader or similar application',
-        'rtf_message': 'for editing; requires Microsoft Word, Wordpad, or similar application',
-        'docx_message': 'for editing; requires Microsoft Word or compatible application',
-        'tex_message': 'for debugging PDF output',
-        'attachment_message_plural': 'The following documents have been created for you.',
-        'attachment_message_singular': 'The following document has been created for you.',
-        'Yes': 'Sí',
-        'No': 'No'
+        'Continue': u'Continuar',
+        'Help': u'Ayuda',
+        'Sign in': u'Registrarse',
+        'Sign in or sign up to save answers': u'Inicie sesión o regístrese para guardar las respuestas',
+        'Question': u'Interrogación',
+        'save_as_multiple': u'The document is available in the following formats:',
+        'save_as_singular': u'The document is available in the following format:',
+        'pdf_message': u'for printing; requires Adobe Reader or similar application',
+        'rtf_message': u'for editing; requires Microsoft Word, Wordpad, or similar application',
+        'docx_message': u'for editing; requires Microsoft Word or compatible application',
+        'tex_message': u'for debugging PDF output',
+        'attachment_message_plural': u'The following documents have been created for you.',
+        'attachment_message_singular': u'The following document has been created for you.',
+        'Yes': u'Sí',
+        'No': u'No'
         },
     'en': {
         'and': "and",
@@ -1456,7 +1456,7 @@ def word(the_word, **kwargs):
     elif the_word is None:
         the_word = "I don't know"
     try:
-        the_word = word_collection[kwargs.get('language', this_thread.language)][the_word].decode('utf8')
+        the_word = word_collection[kwargs.get('language', this_thread.language)][the_word]
     except:
         the_word = unicode(the_word)
     if kwargs.get('capitalize', False):

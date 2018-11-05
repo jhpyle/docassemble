@@ -1972,7 +1972,7 @@ class Question:
         if 'reconsider' in data:
             #if type(data['reconsider']) is not bool:
             #    raise DAError("A reconsider directive must be true or false." + self.idebug(data))
-            if 'code' in data and type(data['reconsider']) is bool:
+            if type(data['reconsider']) is bool:
                 if data['reconsider']:
                     if self.is_generic:
                         if self.generic_object not in self.interview.reconsider_generic:
@@ -3263,6 +3263,19 @@ class Question:
                 else:
                     only_empty_fields_exist = False
             if len(self.fields) > 0 and only_empty_fields_exist:
+                assumed_objects = set()
+                for field in self.fields:
+                    if hasattr(field, 'saveas'):
+                        parse_result = parse_var_name(from_safeid(field.saveas))
+                        if not parse_result['valid']:
+                            raise DAError("Variable name " + from_safeid(field.saveas) + " is invalid: " + parse_result['reason'])
+                        if len(parse_result['objects']):
+                            assumed_objects.add(parse_result['objects'][-1])
+                        if len(parse_result['bracket_objects']):
+                            assumed_objects.add(parse_result['bracket_objects'][-1])
+                for var in assumed_objects:
+                    if complications.search(var) or var not in user_dict:
+                        eval(var, user_dict)
                 raise CodeExecute(commands_to_run, self)
             extras['ok'] = dict()
             for field in self.fields:
@@ -4699,8 +4712,8 @@ class Interview:
                     docassemble.base.functions.reset_context()
                     #if self.debug:
                     #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
-                    #logmessage("I am going to execute " + str(code_error.compute))
                     exec(code_error.compute, user_dict)
+                    code_error.question.mark_as_answered(user_dict)
                 except SyntaxException as qError:
                     docassemble.base.functions.reset_context()
                     the_question = None
@@ -5228,7 +5241,6 @@ class Interview:
                 # the_question = new_question.follow_multiple_choice(user_dict)
                 return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable))
             except CodeExecute as code_error:
-                # logmessage("CodeExecute")
                 docassemble.base.functions.reset_context()
                 #if self.debug:
                 #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
@@ -5236,7 +5248,6 @@ class Interview:
                 exec(code_error.compute, user_dict)
                 try:
                     eval(missing_var, user_dict)
-                    #logmessage(str(missing_var) + " was defined")
                     code_error.question.mark_as_answered(user_dict)
                     #logmessage("Got here 1")
                     #logmessage("returning from running code")
@@ -5376,6 +5387,8 @@ def process_selections(data, manual=False, exclude=None):
                     result.append(dict(key=key, label=value))
                 elif hasattr(value, 'instanceName'):
                     result.append(dict(key=key, label=unicode(value)))
+                else:
+                    logmessage("process_selections: non-label passed as label in dictionary")
     else:
         raise DAError("Unknown data type in choices selection: " + re.sub(r'[<>]', '', repr(data)))
     return(result)
@@ -5569,7 +5582,7 @@ def ensure_object_exists(saveas, datatype, user_dict, commands=None):
             commands.append(saveas + ' = docassemble.base.core.DAList(' + repr(saveas) + ', auto_gather=False)')
     if execute:
         for command in commands:
-            # logmessage("Doing " + command)
+            #logmessage("Doing " + command)
             exec(command, user_dict)
     
 def invalid_variable_name(varname):

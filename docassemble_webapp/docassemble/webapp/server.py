@@ -2523,6 +2523,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             has_error = True
             error_type = DAErrorCompileError
         else:
+            old_language = docassemble.base.functions.get_language()
             try:
                 interview.assemble(user_dict, interview_status)
                 has_error = False
@@ -2531,6 +2532,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 error_message = str(errmess)
                 error_type = type(errmess)
                 logmessage("get_vars_in_use: failed assembly with error type " + str(error_type) + " and message: " + error_message)
+            docassemble.base.functions.set_language(old_language)
     fields_used = set()
     names_used = set()
     field_origins = dict()
@@ -18095,13 +18097,16 @@ def create_new_interview(yaml_filename, secret, url_args=None, request=None):
     ci['encrypted'] = True
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     interview_status.checkin = True
+    old_language = docassemble.base.functions.get_language()
     try:
         interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable as err:
         pass
     except Exception as e:
         release_lock(session_id, yaml_filename)
+        docassemble.base.functions.set_language(old_language)
         raise Exception("Failure to assemble interview: " + str(e))
+    docassemble.base.functions.set_language(old_language)
     if user_dict.get('multi_user', False) is True:
         encrypted = False
     else:
@@ -18143,6 +18148,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     ci['encrypted'] = is_encrypted
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     interview_status.checkin = True
+    old_language = docassemble.base.functions.get_language()
     try:
         if old_user_dict is not None:
             interview.assemble(user_dict, interview_status, old_user_dict)
@@ -18152,11 +18158,14 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         if use_lock:
             save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
             release_lock(session_id, yaml_filename)
+        docassemble.base.functions.set_language(old_language)
         return dict(questionType='undefined_variable', variable=err.variable, message_log=docassemble.base.functions.get_message_log())
     except Exception as e:
         if use_lock:
             release_lock(session_id, yaml_filename)
+        docassemble.base.functions.set_language(old_language)
         raise Exception("Failure to assemble interview: " + str(e))
+    docassemble.base.functions.set_language(old_language)
     if use_lock:
         save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
         release_lock(session_id, yaml_filename)
@@ -18259,16 +18268,20 @@ def api_session_action():
     ci['encrypted'] = is_encrypted
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     interview_status.checkin = True
+    old_language = docassemble.base.functions.get_language()
     try:
         interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable as err:
         steps += 1
         save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
         release_lock(session_id, yaml_filename)
+        docassemble.base.functions.set_language(old_language)
         return ('', 204)        
     except Exception as e:
         release_lock(session_id, yaml_filename)
+        docassemble.base.functions.set_language(old_language)
         return jsonify_with_status("Failure to assemble interview: " + str(e), 400)
+    docassemble.base.functions.set_language(old_language)
     steps += 1
     save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
     release_lock(session_id, yaml_filename)

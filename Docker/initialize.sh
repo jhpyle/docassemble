@@ -266,6 +266,7 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{AZUREACCOUNTNAME}}/'"${AZUREACCOUNTNAME:-null}"'/' \
 	-e 's@{{AZUREACCOUNTKEY}}@'"${AZUREACCOUNTKEY:-null}"'@' \
 	-e 's/{{AZURECONTAINER}}/'"${AZURECONTAINER:-null}"'/' \
+	-e 's/{{DABACKUPDAYS}}/'"${DABACKUPDAYS:-14}"'/' \
 	-e 's@{{REDIS}}@'"${REDIS:-null}"'@' \
 	-e 's#{{RABBITMQ}}#'"${RABBITMQ:-null}"'#' \
 	-e 's@{{TIMEZONE}}@'"${TIMEZONE:-null}"'@' \
