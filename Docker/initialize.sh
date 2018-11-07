@@ -372,7 +372,6 @@ fi
 # echo "22"
 
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
-
     a2dissite -q 000-default &>/dev/null || true
     a2dissite -q default-ssl &>/dev/null || true
     rm -f /etc/apache2/sites-available/000-default.conf

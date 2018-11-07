@@ -90,7 +90,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     fi
     if [ "${AZUREENABLE:-false}" == "true" ]; then
 	for the_file in $( find "$PGBACKUPDIR/" -type f ); do
-	    target_file=`basename $the_file`	    
+	    target_file=`basename $the_file`
 	    blob-cmd -f cp "$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}"/postgres/$target_file"
 	done
     fi
