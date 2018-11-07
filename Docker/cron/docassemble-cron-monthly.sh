@@ -7,5 +7,5 @@ export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
-    ${DA_ROOT}/webapp/run-cron.sh cron_monthly
+	${DA_ROOT}/webapp/run-cron.sh cron_monthly
 fi
