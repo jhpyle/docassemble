@@ -320,11 +320,11 @@ code: |
 {% endhighlight %}
 
 The first argument to `initializeAttribute` is the attribute name, as
-quoted text.  The second argument is the name of object the attribute
+quoted text.  The second argument is the name of the object the attribute
 should be (not quoted).
 
 It is necessary to modify the [`code`] block with [`sets`] because
-**docassemble** needs help figuring out that that the code block
+**docassemble** needs help figuring out that the code block
 offers to define `fish.best_friend`.
 
 <a name="DAObject.reInitializeAttribute"></a>The
@@ -421,7 +421,7 @@ by the argument.  For example, `thing.pronoun_possessive('reason')`
 returns `'its reason'`.
 
 <a name="DAObject.as_serializable"></a>The `.as_serializable()` method
-returns a representation of the object and its attributes that uses a
+returns a representation of the object and its attributes that use a
 [Python dict] as the base and other basic data types for the
 attributes, so that the object can be serialized to [JSON].  The
 conversion is not reversible, and much information cannot be
@@ -501,14 +501,16 @@ This will result in the following five questions being asked:
 * What is the name of the fourth recipient?
 * What is the name of the fifth recipient?
 
-<a name="DAList.appendObject"></a> The `appendObject()` method is
-similar to the `initializeAttribute()` method we discussed earlier.
-Running `recipient.appendObject(Individual)` creates a new object of
-the class [`Individual`] and adds it to the list.  In the example
-above, the first such object is the fourth item in the list, which
-means that the intrinsic name of the new object is `recipient[3]`.
-The result of [`using()`] can be used in place of the name of a
-class.used as the second parameter.
+The fourth and fifth items in the list are named intrinsically,
+`recipient[3]` and `recipient[4]` respectively.
+
+<a name="DAList.appendObject"></a> Using `recipient.append(Individual())`
+is similar to writing `recipient.appendObject(Individual)`.
+The `appendObject()` method is also similar to the `initializeAttribute()`
+method we discussed earlier. Running `recipient.appendObject(Individual)`
+creates a new object of the class [`Individual`] and adds it to the list.
+`appendObject()` has an additional, optional second parameter, see [`using()`]
+for more information.
 
 A `DAList` can be given a default object type, so that
 `appendObject()` can be called without an argument.  This default
@@ -599,7 +601,7 @@ Other methods available on a `DAList` are:
   `case.plaintiff`, returns `plaintiffs` or `plaintiff` depending on
   the number of items in the list; if the variable name is
   `applicant`, returns `applicants` or `applicant` depending on the
-  number of items in the list.  If you can also give this function any
+  number of items in the list.  You can also give this function any
   arbitrary noun and it will pluralize it or not depending on whether
   the number of items in the list is more than one.  E.g.,
   `client.child.as_noun('kid')` will return `'kid'` or `'kids'`.
@@ -627,7 +629,7 @@ Other methods available on a `DAList` are:
   items of the list run through the [`comma_and_list()`] function.
 * <a name="DAList.possessive"></a>`possessive()` - if the variable
   name is `plaintiff` and the target is `"fish"`, returns "plaintiff's
-  fish" if there is one item in the list, and "plaintiffs' fish" if
+  fish" if there is one item in the list and "plaintiffs' fish" if
   there is more than one item in the list.
 * <a name="DAList.pronoun"></a><a name="DADict.pronoun"></a><a
   name="DASet.pronoun"></a>`pronoun()` - returns a pronoun like "you,"
@@ -661,14 +663,14 @@ Other methods available on a `DAList` are:
 * <a name="DAList.isdisjoint"></a><a
   name="DADict.isdisjoint"></a>`isdisjoint()` - returns `True` if no
   items overlap between the current list, considered as a set, and
-  the other_set.  Otherwise, returns `False`.
+  the other set.  Otherwise, returns `False`.
 * <a name="DAList.issubset"></a><a
   name="DADict.issubset"></a>`issubset()` - returns `True` if the
-  current list, considered as a set, is a subset of the other_set.
+  current list, considered as a set, is a subset of the other set.
   Otherwise, returns `False`.
 * <a name="DAList.issuperset"></a><a
   name="DADict.issuperset"></a>`issuperset()` - returns `True` if the
-  other_set is a subset of the current list, considered as a set.
+  other set is a subset of the current list, considered as a set.
   Otherwise, returns `False`.
 * <a name="DAList.gather"></a><a name="DADict.gather"></a><a
   name="DASet.gather"></a>`gather()` - causes the items of the list
@@ -721,7 +723,7 @@ The `DAList` uses the following attributes:
   `Individual`, then new items will be created as objects of this
   type.  You can also use the result of the [`using()`] method here.
 * `gathered`: a boolean value, initially undefined.  It is set to
-  `True` when then all of the items of the list are defined.
+  `True` when all of the items of the list are defined.
 * `elements`: a [Python list] containing the items of the list.  If
   this is set, the list will be considered gathered as soon as it is
   initialized.
@@ -732,7 +734,7 @@ The `DAList` uses the following attributes:
   you initialize `parties` as a `DAList` using `elements=[plaintiff,
   defendant]` and `set_instance_name=True`, then the name of
   `plaintiff` will be changed to `parties[0]` and the name of
-  `defendant` will be changed to `defendant[0]`.  The variables
+  `defendant` will be changed to `parties[0]`.  The variables
   `plaintiff` and `defendant` will still exist, but if your interview
   refers to an undefined attribute `plaintiff.net_worth`, the
   interview will seek a definition of `parties[0].net_worth`.
@@ -747,7 +749,7 @@ The `DAList` uses the following attributes:
   ask questions to gather the items of the list.
 * `complete_attribute`: a text string indicating the name of an
   attribute of each item of the list.  If you have a [`DAList`] called
-  `fruit` and you set `fruit.complete_attribute = 'weight'`, then then
+  `fruit` and you set `fruit.complete_attribute = 'weight'`, then
   when the `.gather()` method is gathering the items of the list, it
   will seek a definition of `fruit[i].weight` for every item of the
   list, as it is gathering the items of the list.
@@ -1459,7 +1461,7 @@ Objects of this type have two attributes:
 * `subject`
 
 When **docassemble** defines a [template], it assembles any [Mako] in
-the `content` and option `subject` sets defines these attributes as
+the `content` and the optional `subject` components into
 the resulting text.  Note that the text may have
 [Markdown]<span></span> [markup] in it.
 
@@ -1506,10 +1508,6 @@ object is used within a [`docx template file`], an actual .docx
 hyperlink is inserted into the document.
 
 {% include side-by-side.html demo="dalink" %}
-
-Unfortunately, when [LibreOffice] converts a .docx file to PDF, links
-that include URL parameters (text after the `?`) are misinterpreted as
-links to local files.  This is a [LibreOffice] issue.
 
 ## <a name="DARedis"></a>DARedis
 
