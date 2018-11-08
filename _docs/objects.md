@@ -1507,10 +1507,6 @@ hyperlink is inserted into the document.
 
 {% include side-by-side.html demo="dalink" %}
 
-Unfortunately, when [LibreOffice] converts a .docx file to PDF, links
-that include URL parameters (text after the `?`) are misinterpreted as
-links to local files.  This is a [LibreOffice] issue.
-
 ## <a name="DARedis"></a>DARedis
 
 The `DARedis` class facilitates the use of [Redis] for in-memory
