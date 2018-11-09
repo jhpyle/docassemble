@@ -8600,6 +8600,71 @@
     favorite_vegetable
     nav.set_section(new_keyword)
     final_screen
+"sections-non-progressive": |-
+  sections:
+    - intro: Introduction
+    - about: About you
+      subsections:
+        - contact: Contact info
+        - demographic: Demographics
+    - prefs: Preferences
+    - conclusion: Conclusion
+  progressive: False
+  ---
+  event: intro
+  code: |
+    force_ask('sees_nav_bar')
+  ---
+  event: about
+  code: |
+    force_ask('intro_to_about_you')
+  ---
+  event: contact
+  code: |
+    force_ask('first_name', 'email_address')
+  ---
+  event: demographic
+  code: |
+    force_ask('gender', 'belly_button')
+  ---
+  event: prefs
+  code: |
+    force_ask('favorite_fruit', 'favorite_vegetable')
+  ---
+  event: conclusion
+  code: |
+    force_ask('final_screen')
+  ---
+  features:
+    navigation: True
+  ---
+  mandatory: True
+  code: |
+    sees_nav_bar
+    intro_to_about_you
+    first_name
+    email_address
+    gender
+    belly_button
+    favorite_fruit
+    favorite_vegetable
+    final_screen
+  ---
+  question: |
+    Welcome to the interview
+  subquestion: |
+    If you are not on a
+    smartphone-sized device,
+    you should see a navigation
+    bar to the left.
+  field: sees_nav_bar
+  section: intro
+  ---
+  question: |
+    I am going to ask you some
+    questions about yourself.
+  field: intro_to_about_you
+  section: about
 "send-email": |-
   objects:
     - recipient: Individual
@@ -8680,7 +8745,6 @@
     if len(list_of_interviews) > 0:
       list_of_interviews += [dict()]
   ---
-  reconsider: True
   table: session_table
   rows: |
     list_of_interviews
@@ -9605,11 +9669,12 @@
   ---
   mandatory: True
   code: |
+    recipient.clear()
     recipient.append(trustee)
     recipient.append(beneficiary)
     recipient.append(grantor)
-    recipient.append(Individual())
-    recipient.append(Individual())
+    recipient.appendObject(Individual)
+    recipient.appendObject(Individual)
     recipient.gathered = True
   ---
   mandatory: True
