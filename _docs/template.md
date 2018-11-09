@@ -19,7 +19,7 @@ section is to describe the `template` and `table` blocks.
 
 # <a name="template"></a>The `template` block
 
-A `template` block allows you assign text to a variable and then
+A `template` block allows you to assign text to a variable and then
 re-use the text by referring to a variable.
 
 {% include side-by-side.html demo="template" %}
@@ -65,9 +65,9 @@ separate [Markdown] file.
 The file [`disclaimer.md`] is a simple [Markdown] file containing the
 disclaimer from the previous example.
 
-The `source file` is assumed to refer to a file in the "templates"
+The `content file` is assumed to refer to a file in the "templates"
 folder of the same package as the interview source, unless a specific
-package name is indicated.  (e.g., `source file:`
+package name is indicated.  (e.g., `content file:`
 [`docassemble.demo:data/templates/hello_template.md`])
 
 In the example above, the sample interview is in the file
@@ -234,7 +234,7 @@ lines, determines the relative width of columns, and determines the
 final width of a table based on the characters in the divider row
 (`----|---------`).
 
-By default, **docassemble** will construct a divider row is no longer
+By default, **docassemble** will construct a divider row that is no longer
 than 65 characters.  This should work for standard applications (12
 point font, letter size paper).
 
