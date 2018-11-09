@@ -22,7 +22,7 @@ experience errors or unexpected results.
   part of the [scheduled tasks] system.
 * <span></span>[`loop`]: within a [Mako] "for" loop, this variable has
   special meaning.
-* <span></span>[`i`], `j`, `k`, `l`, `m`, `n`: used as iterators when
+* <span></span>[`i`], [`j`], [`k`], [`l`], [`m`], [`n`]: used as iterators when
   dictionaries or lists are used.
 * <span></span>[`incoming_email`]: a [special variable] that is used
   as part of the [background processes] system.
@@ -492,6 +492,11 @@ All others are available for you to use and to retrieve with
 [`get_language`]: {{ site.baseurl }}/docs/functions.html#get_language
 [`get_locale`]: {{ site.baseurl }}/docs/functions.html#get_locale
 [`i`]: {{ site.baseurl }}/docs/groups.html#i
+[`j`]: {{ site.baseurl }}/docs/groups.html#i
+[`k`]: {{ site.baseurl }}/docs/groups.html#i
+[`l`]: {{ site.baseurl }}/docs/groups.html#i
+[`m`]: {{ site.baseurl }}/docs/groups.html#i
+[`n`]: {{ site.baseurl }}/docs/groups.html#i
 [`indefinite_article`]: {{ site.baseurl }}/docs/functions.html#indefinite_article
 [`interview_url`]: {{ site.baseurl }}/docs/functions.html#interview_url
 [`need`]: {{ site.baseurl }}/docs/functions.html#need

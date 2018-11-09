@@ -125,6 +125,22 @@ offers to sets [`role_event`], and ask that question.  **docassemble**
 will set the variable `role_needed` to a list of roles capable of
 answering the next question in the interview.
 
+# Variables used when finding blocks to set variables
+
+The following variables are set by **docassemble** in the course of
+searching for blocks that will define variables.
+
+* `x`
+* `i`
+* `j`
+* `k`
+* `l`
+* `m`
+* `n`
+
+You should never set these variables yourself; they will be set for
+you before your blocks are used.
+
 # Variables that interviews can set
 
 ## <a name="role"></a>role
