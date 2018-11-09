@@ -360,9 +360,9 @@ The aspects of the page that can be manipulated are:
   has one or more submit buttons.  This is empty by default.
 * `post`: text that appears after the content of a page.  This is
   empty by default.
-* `extra css`: raw [HTML] that you can insert into the `<head>` of the
+* `extra css`: raw [CSS] that you can insert into the `<head>` of the
   page.  This is empty by default.
-* `extra javascript`: raw [HTML] that you can insert at the end of the
+* `extra javascript`: raw [Javascript] that you can insert at the end of the
   `<body>` of the page.  This is empty by default.
 
 All of the directives accept [HTML], except you will not want to use

@@ -1874,7 +1874,7 @@ The second category of methods is for [Google Cloud packages] like
 [`google.cloud.storage`] and [`google.cloud.translate`].  If a Google
 service is available both through [`google-api-python-client`] and
 through one of the [Google Cloud packages], the [Google Cloud
-packages] packages are probably preferable because they are newer and
+packages] are probably preferable because they are newer and
 easier to use.  Most of these packages are not installed in the
 **docassemble** system by default and will need to be installed with
 "Package Management" if you want to use them.  Whatever package name
@@ -2090,8 +2090,7 @@ use of `defendant.country` to format the phone number, since the
 [E.164] format contains the international country code of the phone
 number.  If the `.country` attribute is not defined, the method will
 call [`get_country()`].  The `.country` attribute is expected to be a
-two-letter, capitalized abbreviation of a country.  It is a good idea
-to set the attribute using 
+two-letter, capitalized abbreviation of a country.
 
 ### <a name="Organization"></a>Organization
 
