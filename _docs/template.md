@@ -234,7 +234,7 @@ lines, determines the relative width of columns, and determines the
 final width of a table based on the characters in the divider row
 (`----|---------`).
 
-By default, **docassemble** will construct a divider row is no longer
+By default, **docassemble** will construct a divider row that is no longer
 than 65 characters.  This should work for standard applications (12
 point font, letter size paper).
 
