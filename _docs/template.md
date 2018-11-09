@@ -65,9 +65,9 @@ separate [Markdown] file.
 The file [`disclaimer.md`] is a simple [Markdown] file containing the
 disclaimer from the previous example.
 
-The `source file` is assumed to refer to a file in the "templates"
+The `content file` is assumed to refer to a file in the "templates"
 folder of the same package as the interview source, unless a specific
-package name is indicated.  (e.g., `source file:`
+package name is indicated.  (e.g., `content file:`
 [`docassemble.demo:data/templates/hello_template.md`])
 
 In the example above, the sample interview is in the file
