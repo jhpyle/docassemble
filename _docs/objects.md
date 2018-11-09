@@ -320,11 +320,11 @@ code: |
 {% endhighlight %}
 
 The first argument to `initializeAttribute` is the attribute name, as
-quoted text.  The second argument is the name of object the attribute
-should be (not quoted).
+quoted text.  The second argument is the name of the object the
+attribute should be (not quoted).
 
 It is necessary to modify the [`code`] block with [`sets`] because
-**docassemble** needs help figuring out that that the code block
+**docassemble** needs help figuring out that the code block
 offers to define `fish.best_friend`.
 
 <a name="DAObject.reInitializeAttribute"></a>The
@@ -421,12 +421,12 @@ by the argument.  For example, `thing.pronoun_possessive('reason')`
 returns `'its reason'`.
 
 <a name="DAObject.as_serializable"></a>The `.as_serializable()` method
-returns a representation of the object and its attributes that uses a
-[Python dict] as the base and other basic data types for the
-attributes, so that the object can be serialized to [JSON].  The
-conversion is not reversible, and much information cannot be
-converted, but this can be a useful way to access information in your
-objects.  See also the [`all_variables()`] function.
+returns a representation of the object and its attributes.  Objects
+are converted to [Python dict]s, so that they can be serialized to
+[JSON].  The conversion is not reversible, and much information cannot
+be converted.  Nevertheless, this can be a useful way to access
+information in your objects in other systems.  See also the
+[`all_variables()`] function.
 
 <a name="DAObject.copy_shallow"></a>The `copy_shallow()` method
 creates a copy of the object and gives it a new intrinsic name.
@@ -501,14 +501,17 @@ This will result in the following five questions being asked:
 * What is the name of the fourth recipient?
 * What is the name of the fifth recipient?
 
-<a name="DAList.appendObject"></a> The `appendObject()` method is
-similar to the `initializeAttribute()` method we discussed earlier.
-Running `recipient.appendObject(Individual)` creates a new object of
-the class [`Individual`] and adds it to the list.  In the example
-above, the first such object is the fourth item in the list, which
-means that the intrinsic name of the new object is `recipient[3]`.
-The result of [`using()`] can be used in place of the name of a
-class.used as the second parameter.
+<a name="DAList.appendObject"></a>The `DAList` operates like a [list]
+in [Python], but it also has some special methods.  When adding a new
+item to the list, you should use the **docassemble**-specific method
+`appendObject()` method.  This method is similar to the
+`initializeAttribute()` method we discussed earlier.  Running
+`recipient.appendObject(Individual)` creates a new object of the class
+[`Individual`] and adds it to the list.  In the example above, the
+first such object is the fourth item in the list, which means that the
+intrinsic name of the new object is `recipient[3]`.  The result of
+[`using()`] can be used in place of the name of a class.used as the
+second parameter.
 
 A `DAList` can be given a default object type, so that
 `appendObject()` can be called without an argument.  This default
@@ -599,7 +602,7 @@ Other methods available on a `DAList` are:
   `case.plaintiff`, returns `plaintiffs` or `plaintiff` depending on
   the number of items in the list; if the variable name is
   `applicant`, returns `applicants` or `applicant` depending on the
-  number of items in the list.  If you can also give this function any
+  number of items in the list.  You can also give this function any
   arbitrary noun and it will pluralize it or not depending on whether
   the number of items in the list is more than one.  E.g.,
   `client.child.as_noun('kid')` will return `'kid'` or `'kids'`.
@@ -627,7 +630,7 @@ Other methods available on a `DAList` are:
   items of the list run through the [`comma_and_list()`] function.
 * <a name="DAList.possessive"></a>`possessive()` - if the variable
   name is `plaintiff` and the target is `"fish"`, returns "plaintiff's
-  fish" if there is one item in the list, and "plaintiffs' fish" if
+  fish" if there is one item in the list and "plaintiffs' fish" if
   there is more than one item in the list.
 * <a name="DAList.pronoun"></a><a name="DADict.pronoun"></a><a
   name="DASet.pronoun"></a>`pronoun()` - returns a pronoun like "you,"
@@ -647,29 +650,30 @@ Other methods available on a `DAList` are:
   name="DASet.pronoun_subjective"></a>`pronoun_subjective()` - returns
   a pronoun like "you," "she," "he," or "they" as appropriate,
   depending on the number of items in the list.
-* <a name="DAList.union"></a><a name="DADict.union"></a>`union()` -
-  returns a [Python set] consisting of the items of current list,
-  considered as a set, combined with the items of the other_set.
+* <a name="DAList.union"></a><a
+  name="DADict.union"></a>`union(other_set)` - returns a [Python set]
+  consisting of the items of current list, considered as a set,
+  combined with the items of the `other_set`.
 * <a name="DAList.intersection"></a><a
-  name="DADict.intersection"></a>`intersection()` - returns a
-  [Python set] consisting of the items of the current list,
-  considered as a set, that also exist in the other_set.
+  name="DADict.intersection"></a>`intersection(other_set)` - returns a
+  [Python set] consisting of the items of the current list, considered
+  as a set, that also exist in the `other_set`.
 * <a name="DAList.difference"></a><a
-  name="DADict.difference"></a>`difference()` - returns a [Python set]
-  consisting of the items of the current list, considered as a set,
-  that do not exist in the other_set.
+  name="DADict.difference"></a>`difference(other_set)` - returns a
+  [Python set] consisting of the items of the current list, considered
+  as a set, that do not exist in the `other_set`.
 * <a name="DAList.isdisjoint"></a><a
-  name="DADict.isdisjoint"></a>`isdisjoint()` - returns `True` if no
-  items overlap between the current list, considered as a set, and
-  the other_set.  Otherwise, returns `False`.
+  name="DADict.isdisjoint"></a>`isdisjoint(other_set)` - returns
+  `True` if no items overlap between the current list, considered as a
+  set, and the `other_set`.  Otherwise, returns `False`.
 * <a name="DAList.issubset"></a><a
-  name="DADict.issubset"></a>`issubset()` - returns `True` if the
-  current list, considered as a set, is a subset of the other_set.
-  Otherwise, returns `False`.
+  name="DADict.issubset"></a>`issubset(other_set)` - returns `True` if
+  the current list, considered as a set, is a subset of the
+  `other_set`.  Otherwise, returns `False`.
 * <a name="DAList.issuperset"></a><a
-  name="DADict.issuperset"></a>`issuperset()` - returns `True` if the
-  other_set is a subset of the current list, considered as a set.
-  Otherwise, returns `False`.
+  name="DADict.issuperset"></a>`issuperset(other_set)` - returns
+  `True` if the `other_set` is a subset of the current list,
+  considered as a set.  Otherwise, returns `False`.
 * <a name="DAList.gather"></a><a name="DADict.gather"></a><a
   name="DASet.gather"></a>`gather()` - causes the items of the list
   to be gathered and named.  Returns `True`.
@@ -680,8 +684,8 @@ Other methods available on a `DAList` are:
   complete.  If called with the optional keyword argument `recursive`
   set to `True` (the default is `False`), the lists inside the list
   are also marked as not-yet-gathered.
-* <a name="DAList.has_been_gathered"></a><a name="DADict.has_been_gathered"></a><a
-  name="DASet.has_been_gathered"></a>`has_been_gathered()` - returns
+* <a name="DAList.has_been_gathered"></a><a name="DADict.has_been_gathered"></a>
+  <a name="DASet.has_been_gathered"></a>`has_been_gathered()` - returns
   `True` if the group has been gathered yet.  Does not trigger the
   gathering process.
 * <a name="DAList.add_action"></a><a name="DADict.add_action"></a>`add_action()` -
@@ -721,7 +725,7 @@ The `DAList` uses the following attributes:
   `Individual`, then new items will be created as objects of this
   type.  You can also use the result of the [`using()`] method here.
 * `gathered`: a boolean value, initially undefined.  It is set to
-  `True` when then all of the items of the list are defined.
+  `True` when all of the items of the list are defined.
 * `elements`: a [Python list] containing the items of the list.  If
   this is set, the list will be considered gathered as soon as it is
   initialized.
@@ -732,7 +736,7 @@ The `DAList` uses the following attributes:
   you initialize `parties` as a `DAList` using `elements=[plaintiff,
   defendant]` and `set_instance_name=True`, then the name of
   `plaintiff` will be changed to `parties[0]` and the name of
-  `defendant` will be changed to `defendant[0]`.  The variables
+  `defendant` will be changed to `parties[0]`.  The variables
   `plaintiff` and `defendant` will still exist, but if your interview
   refers to an undefined attribute `plaintiff.net_worth`, the
   interview will seek a definition of `parties[0].net_worth`.
@@ -747,7 +751,7 @@ The `DAList` uses the following attributes:
   ask questions to gather the items of the list.
 * `complete_attribute`: a text string indicating the name of an
   attribute of each item of the list.  If you have a [`DAList`] called
-  `fruit` and you set `fruit.complete_attribute = 'weight'`, then then
+  `fruit` and you set `fruit.complete_attribute = 'weight'`, then
   when the `.gather()` method is gathering the items of the list, it
   will seek a definition of `fruit[i].weight` for every item of the
   list, as it is gathering the items of the list.
@@ -1459,9 +1463,8 @@ Objects of this type have two attributes:
 * `subject`
 
 When **docassemble** defines a [template], it assembles any [Mako] in
-the `content` and option `subject` sets defines these attributes as
-the resulting text.  Note that the text may have
-[Markdown]<span></span> [markup] in it.
+the `content` and optional `subject` attributes as the resulting text.
+Note that the text may have [Markdown]<span></span> [markup] in it.
 
 <a name="DATemplate.show"></a>If a template is a variable
 `disclaimer`, the content can be inserted by writing 
@@ -1506,10 +1509,6 @@ object is used within a [`docx template file`], an actual .docx
 hyperlink is inserted into the document.
 
 {% include side-by-side.html demo="dalink" %}
-
-Unfortunately, when [LibreOffice] converts a .docx file to PDF, links
-that include URL parameters (text after the `?`) are misinterpreted as
-links to local files.  This is a [LibreOffice] issue.
 
 ## <a name="DARedis"></a>DARedis
 
