@@ -181,11 +181,27 @@ If you want to use the [multi-user interview feature], you need to set
 When `multi_user` is set to `True`, **docassemble** will not encrypt
 the interview answers on the server.  This is necessary so that
 different people can access the same interview.  When interview
-answers are encrypted, only the user who started the interview can
-access the interview answers.
+answers are encrypted (which is the default), only the user who
+started the interview can access the interview answers.
 
 Setting `multi_user` to `True` will reduce [security] somewhat, but it
-is necessary for allowing the [multi-user interview feature].
+is necessary for allowing the [multi-user interview feature] and for
+allowing third parties to access the interview answers via the [API].
+
+The `multi_user` variable can be changed dynamically over the course
+of an interview.  For example, at a certain point in the interview,
+you could ask the user:
+
+{% highlight yaml %}
+question: |
+  Would you like an attorney to review your answers?
+yesno: multi_user
+{% endhighlight %}
+
+After `multi_user` is set to `True`, then the next time the interview
+answers are saved, encryption will not be used.  Later in the
+interview, you can turn encryption back on again by setting
+`multi_user` to `False`.
 
 ## <a name="menu_items"></a>menu_items
 
@@ -286,4 +302,4 @@ There are some built-in variable names with special meaning:
 [`nav` functions]: {{ site.baseurl }}/docs/functions.html#get_section
 [event]: {{ site.baseurl }}/docs/background.html
 [`incoming_email`]: {{ site.baseurl }}/docs/background.html#email
-
+[API]: {{ site.baseurl }}/docs/api.html
