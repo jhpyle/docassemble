@@ -387,6 +387,16 @@ def custom_register():
         else:
             safe_reg_next = _endpoint_url(user_manager.after_confirm_endpoint)
         if user_manager.auto_login_after_register:
+            if app.config['USE_MFA']:
+                if user.otp_secret is None and len(app.config['MFA_REQUIRED_FOR_ROLE']) and user.has_role(*app.config['MFA_REQUIRED_FOR_ROLE']):
+                    session['validated_user'] = user.id
+                    session['next'] = safe_reg_next
+                    if app.config['MFA_ALLOW_APP'] and (twilio_config is None or not app.config['MFA_ALLOW_SMS']):
+                        return redirect(url_for('mfa_setup'))
+                    elif not app.config['MFA_ALLOW_APP']:
+                        return redirect(url_for('mfa_sms_setup'))
+                    else:
+                        return redirect(url_for('mfa_choose'))
             return flask_user.views._do_login_user(user, safe_reg_next)
         else:
             return redirect(url_for('user.login') + '?next=' + urllib.quote(safe_reg_next))
@@ -440,22 +450,33 @@ def custom_login():
             safe_next = user_manager.make_safe_url_function(login_form.next.data)
             safe_next = login_form.next.data
             #safe_next = url_for('post_login', next=login_form.next.data)
-            if daconfig.get('two factor authentication', False) is True and user.otp_secret is not None:
-                session['validated_user'] = user.id
-                if user.otp_secret.startswith(':phone:'):
-                    phone_number = re.sub(r'^:phone:', '', user.otp_secret)
-                    verification_code = random_digits(daconfig['verification code digits'])
-                    message = word("Your verification code is") + " " + str(verification_code) + "."
-                    key = 'da:mfa:phone:' + str(phone_number) + ':code'
-                    pipe = r.pipeline()
-                    pipe.set(key, verification_code)
-                    pipe.expire(key, daconfig['verification code timeout'])
-                    pipe.execute()
-                    success = docassemble.base.util.send_sms(to=phone_number, body=message)
-                    if not success:
-                        flash(word("Unable to send verification code."), 'error')
-                        return add_secret_to(redirect(url_for('user.login')))
-                return add_secret_to(redirect(url_for('mfa_login', next=safe_next)))
+            if app.config['USE_MFA']:
+                if user.otp_secret is None and len(app.config['MFA_REQUIRED_FOR_ROLE']) and user.has_role(*app.config['MFA_REQUIRED_FOR_ROLE']):
+                    session['validated_user'] = user.id
+                    session['next'] = safe_next
+                    if app.config['MFA_ALLOW_APP'] and (twilio_config is None or not app.config['MFA_ALLOW_SMS']):
+                        return redirect(url_for('mfa_setup'))
+                    elif not app.config['MFA_ALLOW_APP']:
+                        return redirect(url_for('mfa_sms_setup'))
+                    else:
+                        return redirect(url_for('mfa_choose'))
+                if user.otp_secret is not None:
+                    session['validated_user'] = user.id
+                    session['next'] = safe_next
+                    if user.otp_secret.startswith(':phone:'):
+                        phone_number = re.sub(r'^:phone:', '', user.otp_secret)
+                        verification_code = random_digits(daconfig['verification code digits'])
+                        message = word("Your verification code is") + " " + str(verification_code) + "."
+                        key = 'da:mfa:phone:' + str(phone_number) + ':code'
+                        pipe = r.pipeline()
+                        pipe.set(key, verification_code)
+                        pipe.expire(key, daconfig['verification code timeout'])
+                        pipe.execute()
+                        success = docassemble.base.util.send_sms(to=phone_number, body=message)
+                        if not success:
+                            flash(word("Unable to send verification code."), 'error')
+                            return add_secret_to(redirect(url_for('user.login')))
+                    return add_secret_to(redirect(url_for('mfa_login')))
             if user_manager.enable_email and user_manager.enable_confirm_email \
                and len(daconfig['email confirmation privileges']) \
                and user.has_role(*daconfig['email confirmation privileges']) \
@@ -1780,6 +1801,10 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         a_class = 'nav-link danavlink'
     #logmessage("navigation_bar: starting: " + str(section))
     the_language = docassemble.base.functions.get_language()
+    if hasattr(nav, 'progressive') and not nav.progressive:
+        non_progressive = True
+    else:
+        non_progressive = False
     if the_language not in nav.sections:
         the_language = DEFAULT_LANGUAGE
     if the_language not in nav.sections:
@@ -1859,7 +1884,10 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
             seen_more = True
         else:
             seen_more = False
-        #logmessage("the title is " + str(the_title) + " and show links is " + str(show_links) + " and seen_more is " + str(seen_more) + " and currently_active is " + str(currently_active) + " and section_reached is " + str(section_reached) + " and the_key is " + str(the_key) + " and interview is " + unicode(interview) + " and in q is " + ('in q' if the_key in interview.questions else 'not in q'))
+        if non_progressive:
+            seen_more = True
+            section_reached = False
+        #logmessage("the title is " + str(the_title) + " and non_progressive is " + str(non_progressive) + " and show links is " + str(show_links) + " and seen_more is " + str(seen_more) + " and active_class is " + repr(active_class) + " and currently_active is " + str(currently_active) + " and section_reached is " + str(section_reached) + " and the_key is " + str(the_key) + " and interview is " + unicode(interview) + " and in q is " + ('in q' if the_key in interview.questions else 'not in q'))
         if show_links and (seen_more or currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
             #url = docassemble.base.functions.interview_url_action(the_key)
             if section_reached and not currently_active and not seen_more:
@@ -1915,6 +1943,9 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                     seen_more = True
                 else:
                     seen_more = False
+                if non_progressive:
+                    seen_more = True
+                    section_reached = False
                 if show_links and (seen_more or sub_currently_active or not section_reached) and sub_key is not None and interview is not None and sub_key in interview.questions:
                     #url = docassemble.base.functions.interview_url_action(sub_key)
                     suboutput += '<a tabindex="0" data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + sub_active_class + '">' + unicode(sub_title) + '</a>'
@@ -1936,7 +1967,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         #output += "</li>"
     if wrapper:
         output += "\n</div>\n</div>\n"
-    if not section_reached:
+    if (not non_progressive) and (not section_reached):
         logmessage("Section \"" + unicode(the_section) + "\" did not exist.")
     return output        
 
@@ -2159,20 +2190,20 @@ def delete_session_for_interview():
     return
 
 def delete_session():
-    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next'):
+    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next'):
         if key in session:
             del session[key]
     return
 
 def backup_session():
     backup = dict()
-    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next'):
+    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next'):
         if key in session:
             backup[key] = session[key]
     return backup
 
 def restore_session(backup):
-    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next'):
+    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next'):
         if key in backup:
             session[key] = backup[key]
 
@@ -3583,10 +3614,17 @@ def phone_login_verify():
             return redirect(url_for('user.login'))
     return render_template('flask_user/phone_login_verify.html', form=form, version_warning=None, title=word("Verify your phone"), tab_title=word("Enter code"), page_title=word("Enter code"), description=word("We just sent you a text message with a verification code.  Enter the verification code to proceed."))
 
-@login_required
 @app.route('/mfa_setup', methods=['POST', 'GET'])
 def mfa_setup():
-    if daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication privileges']) or not current_user.social_id.startswith('local'):
+    in_login = False
+    if current_user.is_authenticated:
+        user = current_user
+    elif 'validated_user' in session:
+        in_login = True
+        user = load_user(session['validated_user'])
+    else:
+        abort(404)
+    if not app.config['USE_MFA'] or not user.has_role(*app.config['two factor authentication privileges']) or not user.social_id.startswith('local'):
         abort(404)
     form = MFASetupForm(request.form)
     if request.method == 'POST' and form.submit.data:
@@ -3598,17 +3636,29 @@ def mfa_setup():
         totp = pyotp.TOTP(otp_secret)
         if not totp.verify(supplied_verification_code):
             flash(word("Your verification code was invalid."), 'error')
+            if in_login:
+                del session['validated_user']
+                if 'next' in session:
+                    del session['next']
+                return redirect(url_for('user.login'))
             return redirect(url_for('user_profile_page'))
-        user = load_user(current_user.id)
+        user = load_user(user.id)
         user.otp_secret = otp_secret
         db.session.commit()
+        if in_login:
+            if 'next' in session:
+                next_url = session['next']
+                del session['next']
+            else:
+                next_url = url_for('interview_list')
+            return flask_user.views._do_login_user(user, next_url, False)
         flash(word("You are now set up with two factor authentication."), 'success')
         return redirect(url_for('user_profile_page'))
     otp_secret = pyotp.random_base32()
-    if current_user.email:
-        the_name = current_user.email
+    if user.email:
+        the_name = user.email
     else:
-        the_name = re.sub(r'.*\$', '', current_user.social_id)
+        the_name = re.sub(r'.*\$', '', user.social_id)
     the_url = pyotp.totp.TOTP(otp_secret).provisioning_uri(the_name, issuer_name=app.config['APP_NAME'])
     im = qrcode.make(the_url, image_factory=qrcode.image.svg.SvgPathImage)
     output = StringIO.StringIO()
@@ -3629,36 +3679,54 @@ def mfa_setup():
 @login_required
 @app.route('/mfa_reconfigure', methods=['POST', 'GET'])
 def mfa_reconfigure():
-    if daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication privileges']) or not current_user.social_id.startswith('local'):
+    if not app.config['USE_MFA'] or not current_user.has_role(*app.config['two factor authentication privileges']) or not current_user.social_id.startswith('local'):
         abort(404)
     user = load_user(current_user.id)
     if user.otp_secret is None:
-        if twilio_config is None:
+        if app.config['MFA_ALLOW_APP'] and (twilio_config is None or not app.config['MFA_ALLOW_SMS']):
             return redirect(url_for('mfa_setup'))
-        return redirect(url_for('mfa_choose'))
+        elif not app.config['MFA_ALLOW_APP']:
+            return redirect(url_for('mfa_sms_setup'))
+        else:
+            return redirect(url_for('mfa_choose'))
     form = MFAReconfigureForm(request.form)
     if request.method == 'POST':
         if form.reconfigure.data:
-            if twilio_config is None:
+            if app.config['MFA_ALLOW_APP'] and (twilio_config is None or not app.config['MFA_ALLOW_SMS']):
                 return redirect(url_for('mfa_setup'))
-            return redirect(url_for('mfa_choose'))
-        elif form.disable.data:
+            elif not app.config['MFA_ALLOW_APP']:
+                return redirect(url_for('mfa_sms_setup'))
+            else:
+                return redirect(url_for('mfa_choose'))
+        elif form.disable.data and not (len(app.config['MFA_REQUIRED_FOR_ROLE']) and current_user.has_role(*app.config['MFA_REQUIRED_FOR_ROLE'])):
             user.otp_secret = None
             db.session.commit()
             flash(word("Your account no longer uses two-factor authentication."), 'success')
             return redirect(url_for('user_profile_page'))
         elif form.cancel.data:
             return redirect(url_for('user_profile_page'))
-    return render_template('flask_user/mfa_reconfigure.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("Your account already has two-factor authentication enabled.  Would you like to reconfigure or disable two-factor authentication?"))
+    if len(app.config['MFA_REQUIRED_FOR_ROLE']) and current_user.has_role(*app.config['MFA_REQUIRED_FOR_ROLE']):
+        return render_template('flask_user/mfa_reconfigure.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), allow_disable=False, description=word("Would you like to reconfigure two-factor authentication?"))
+    else:
+        return render_template('flask_user/mfa_reconfigure.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), allow_disable=True, description=word("Your account already has two-factor authentication enabled.  Would you like to reconfigure or disable two-factor authentication?"))
 
-@login_required
 @app.route('/mfa_choose', methods=['POST', 'GET'])
 def mfa_choose():
-    if daconfig.get('two factor authentication', False) is not True or current_user.is_anonymous or not current_user.has_role(*daconfig['two factor authentication privileges']) or not current_user.social_id.startswith('local'):
+    in_login = False
+    if current_user.is_authenticated:
+        user = current_user
+    elif 'validated_user' in session:
+        in_login = True
+        user = load_user(session['validated_user'])
+    else:
         abort(404)
-    if twilio_config is None:
+    if not app.config['USE_MFA'] or user.is_anonymous or not user.has_role(*app.config['two factor authentication privileges']) or not user.social_id.startswith('local'):
+        abort(404)
+    if app.config['MFA_ALLOW_APP'] and (twilio_config is None or not app.config['MFA_ALLOW_SMS']):
         return redirect(url_for('mfa_setup'))
-    user = load_user(current_user.id)
+    elif not app.config['MFA_ALLOW_APP']:
+        return redirect(url_for('mfa_sms_setup'))
+    user = load_user(user.id)
     form = MFAChooseForm(request.form)
     if request.method == 'POST':
         if form.sms.data:
@@ -3666,16 +3734,28 @@ def mfa_choose():
         elif form.auth.data:
             return redirect(url_for('mfa_setup'))
         else:
+            if in_login:
+                del session['validated_user']
+                if 'next' in session:
+                    del session['next']
+                return redirect(url_for('user.login'))
             return redirect(url_for('user_profile_page'))
     return render_template('flask_user/mfa_choose.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=Markup(word("""Which type of two-factor authentication would you like to use?  The first option is to use an authentication app like <a target="_blank" href="https://en.wikipedia.org/wiki/Google_Authenticator">Google Authenticator</a> or <a target="_blank" href="https://authy.com/">Authy</a>.  The second option is to receive a text (SMS) message containing a verification code.""")))
 
-@login_required
 @app.route('/mfa_sms_setup', methods=['POST', 'GET'])
 def mfa_sms_setup():
-    if twilio_config is None or daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication privileges']) or not current_user.social_id.startswith('local'):
+    in_login = False
+    if current_user.is_authenticated:
+        user = current_user
+    elif 'validated_user' in session:
+        in_login = True
+        user = load_user(session['validated_user'])
+    else:
+        abort(404)
+    if twilio_config is None or not app.config['USE_MFA'] or not user.has_role(*app.config['two factor authentication privileges']) or not user.social_id.startswith('local'):
         abort(404)
     form = MFASMSSetupForm(request.form)
-    user = load_user(current_user.id)
+    user = load_user(user.id)
     if request.method == 'GET' and user.otp_secret is not None and user.otp_secret.startswith(':phone:'):
         form.phone_number.data = re.sub(r'^:phone:', '', user.otp_secret)
     if request.method == 'POST' and form.submit.data:
@@ -3695,15 +3775,27 @@ def mfa_sms_setup():
                 return redirect(url_for('mfa_verify_sms_setup'))
             else:
                 flash(word("There was a problem sending the text message."), 'error')
+                if in_login:
+                    del session['validated_user']
+                    if 'next' in session:
+                        del session['next']
+                    return redirect(url_for('user.login'))
                 return redirect(url_for('user_profile_page'))
         else:
             flash(word("Invalid phone number."), 'error')            
     return render_template('flask_user/mfa_sms_setup.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("""Enter your phone number.  A confirmation code will be sent to you."""))
 
-@login_required
 @app.route('/mfa_verify_sms_setup', methods=['POST', 'GET'])
 def mfa_verify_sms_setup():
-    if 'phone_number' not in session or twilio_config is None or daconfig.get('two factor authentication', False) is not True or not current_user.has_role(*daconfig['two factor authentication privileges']) or not current_user.social_id.startswith('local'):
+    in_login = False
+    if current_user.is_authenticated:
+        user = current_user
+    elif 'validated_user' in session:
+        in_login = True
+        user = load_user(session['validated_user'])
+    else:
+        abort(404)
+    if 'phone_number' not in session or twilio_config is None or not app.config['USE_MFA'] or not user.has_role(*app.config['two factor authentication privileges']) or not user.social_id.startswith('local'):
         abort(404)
     form = MFAVerifySMSSetupForm(request.form)
     if request.method == 'POST' and form.submit.data:
@@ -3717,16 +3809,23 @@ def mfa_verify_sms_setup():
             flash(word('Your verification code was missing or expired'), 'error')
             return redirect(url_for('user_profile_page'))
         if verification_code == supplied_verification_code:
-            user = load_user(current_user.id)
+            user = load_user(user.id)
             user.otp_secret = ':phone:' + phone_number
             db.session.commit()
+            if in_login:
+                if 'next' in session:
+                    next_url = session['next']
+                    del session['next']
+                else:
+                    next_url = url_for('interview_list')
+                return flask_user.views._do_login_user(user, next_url, False)
             flash(word("You are now set up with two factor authentication."), 'success')
             return redirect(url_for('user_profile_page'))
     return render_template('flask_user/mfa_verify_sms_setup.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word('We just sent you a text message with a verification code.  Enter the verification code to proceed.'))
 
 @app.route('/mfa_login', methods=['POST', 'GET'])
 def mfa_login():
-    if daconfig.get('two factor authentication', False) is not True:
+    if not app.config['USE_MFA']:
         logmessage("mfa_login: two factor authentication not configured")
         abort(404)
     if 'validated_user' not in session:
@@ -3741,6 +3840,11 @@ def mfa_login():
         form.next.data = _get_safe_next_param('next', url_for('interview_list'))
     if request.method == 'POST' and form.submit.data:
         del session['validated_user']
+        if 'next' in session:
+            safe_next = session['next']
+            del session['next']
+        else:
+            safe_next = form.next.data
         fail_key = 'da:failedlogin:ip:' + str(request.remote_addr)
         failed_attempts = r.get(fail_key)
         if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
@@ -3767,8 +3871,6 @@ def mfa_login():
                 return redirect(url_for('user.login'))
             elif failed_attempts is not None:
                 r.delete(fail_key)
-        #safe_next = user_manager.make_safe_url_function(form.next.data)
-        safe_next = form.next.data
         return flask_user.views._do_login_user(user, safe_next, False)
     description = word("This account uses two-factor authentication.")
     if user.otp_secret.startswith(':phone:'):
@@ -3960,7 +4062,7 @@ def github_oauth_callback():
         logmessage('github_oauth_callback: server does not use github')
         failed = True
     elif 'github_next' not in session:
-        logmessage('github_oauth_callback: github_next not in session')
+        logmessage('github_oauth_callback: next not in session')
         failed = True
     if failed is False:
         github_next = json.loads(session['github_next'])
@@ -7640,6 +7742,22 @@ def index():
         $('#pagetitle').click(function(e) {
           e.preventDefault();
           $('#questionlabel').tab('show');
+        });
+        $('.dacurrency').each(function(){
+          var theVal = $(this).val();
+          if (theVal.includes('.') || theVal.includes(',')){
+            var num = parseFloat(theVal);
+            var cleanNum = num.toFixed(""" + unicode(daconfig.get('currency decimal places', 2)) + """);
+            $(this).val(cleanNum);
+          }
+        });
+        $('.dacurrency').on('blur', function(){
+          var theVal = $(this).val();
+          if (theVal.includes('.') || theVal.includes(',')){
+            var num = parseFloat(theVal);
+            var cleanNum = num.toFixed(""" + unicode(daconfig.get('currency decimal places', 2)) + """);
+            $(this).val(cleanNum);
+          }
         });
         if (navigator.userAgent.match(/(iPad|iPhone|iPod touch);/i)) {
           var selects = document.querySelectorAll("select");
@@ -17760,7 +17878,7 @@ def get_secret(username, password):
     user = UserModel.query.filter_by(active=True, email=username).first()
     if user is None:
         raise Exception("Username not known")
-    if daconfig.get('two factor authentication', False) is True and user.otp_secret is not None:
+    if app.config['USE_MFA'] and user.otp_secret is not None:
         raise Exception("Secret will not be supplied because two factor authentication is enabled")
     user_manager = current_app.user_manager
     if not user_manager.get_password(user):

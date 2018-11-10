@@ -17,7 +17,26 @@ app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use tls', True)
 app.config['APP_SYSTEM_ERROR_SUBJECT_LINE'] = app.config['APP_NAME'] + " system error"
 app.config['APPLICATION_ROOT'] = daconfig.get('root', '/')
 app.config['CSRF_ENABLED'] = False
-app.config['USE_MFA'] = True if daconfig.get('two factor authentication', False) is True else False
+if daconfig['two factor authentication'].get('enable', True):
+    app.config['USE_MFA'] = True
+else:
+    app.config['USE_MFA'] = False
+if daconfig['two factor authentication'].get('allow sms', True):
+    app.config['MFA_ALLOW_SMS'] = True
+else:
+    app.config['MFA_ALLOW_SMS'] = False
+if daconfig['two factor authentication'].get('allow app', True):
+    app.config['MFA_ALLOW_APP'] = True
+else:
+    app.config['MFA_ALLOW_APP'] = False
+if 'required for' in daconfig['two factor authentication'] and isinstance(daconfig['two factor authentication']['required for'], list):
+    app.config['MFA_REQUIRED_FOR_ROLE'] = daconfig['two factor authentication']['required for']
+else:
+    app.config['MFA_REQUIRED_FOR_ROLE'] = []
+if 'allowed for' in daconfig['two factor authentication']:
+    app.config['two factor authentication privileges'] = daconfig['two factor authentication']['allowed for']
+if not (app.config['MFA_ALLOW_SMS'] or app.config['MFA_ALLOW_APP']):
+    app.config['USE_MFA'] = False
 app.config['MFA_ROLES'] = daconfig.get('two factor authentication privileges', ['admin', 'developer'])
 app.config['API_ROLES'] = daconfig.get('api privileges', ['admin', 'developer'])
 app.config['WTF_CSRF_TIME_LIMIT'] = 604800

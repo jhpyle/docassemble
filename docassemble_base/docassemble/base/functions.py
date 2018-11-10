@@ -728,6 +728,7 @@ class DANav(object):
         self.past = set()
         self.sections = None
         self.current = None
+        self.progressive = True
 
     def __unicode__(self):
         return self.show_sections()

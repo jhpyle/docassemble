@@ -190,10 +190,12 @@ def update_versions():
     for package in installed_packages:
         if package.key in package_by_name:
             if package_by_name[package.key].id in install_by_id and package.version != install_by_id[package_by_name[package.key].id].packageversion:
-                install_by_id[package_by_name[package.key].id].packageversion = package.version
+                install_row = Install.query.filter_by(hostname=hostname, package_id=package_by_name[package.key].id).first()
+                install_row.packageversion = package.version
                 db.session.commit()
             if package.version != package_by_name[package.key].packageversion:
-                package_by_name[package.key].packageversion = package.version
+                package_row = Package.query.filter_by(active=True, name=package_by_name[package.key].name).first()
+                package_row.packageversion = package.version
                 db.session.commit()
     return
 

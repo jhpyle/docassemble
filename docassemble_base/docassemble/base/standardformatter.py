@@ -2163,6 +2163,7 @@ def input_for(status, field, wide=False, embedded=False):
                     if field.datatype == 'currency':
                         step_string = ' step="0.01"'
                 if field.datatype == 'currency':
+                    extra_class += ' dacurrency'
                     if embedded:
                         output += '<span class="embed-currency-wrapper"><span class="embed-currency-symbol">' + currency_symbol() + '</span>'
                     else:

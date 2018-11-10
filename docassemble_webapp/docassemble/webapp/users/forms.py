@@ -64,6 +64,8 @@ class MySignInForm(LoginForm):
             from flask import current_app
             user_manager = current_app.user_manager
             user, user_email = user_manager.find_user_by_email(self.email.data)
+            if user is None:
+                return False
             if user and (user.password is None or (user.social_id is not None and not user.social_id.startswith('local$'))):
                 self.email.errors = list(self.email.errors)
                 if user.social_id.startswith('google$'):

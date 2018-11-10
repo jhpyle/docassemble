@@ -1027,6 +1027,12 @@ class Question:
             else:
                 the_language = '*'
             self.interview.sections[the_language] = data['sections']
+        if 'progressive' in data:
+            if 'sections' not in data:
+                raise DAError("A progressive directive can only be used with sections." + self.idebug(data))
+            if not isinstance(data['progressive'], bool):
+                raise DAError("A progressive directive can only be true or false." + self.idebug(data))
+            self.interview.sections_progressive = data['progressive']
         if 'section' in data:
             if 'question' not in data:
                 raise DAError("You can only set the section from a question." + self.idebug(data))
@@ -4365,10 +4371,12 @@ class Interview:
         docassemble.base.functions.this_thread.interview = self
         docassemble.base.functions.this_thread.interview_status = interview_status
         docassemble.base.functions.this_thread.internal = user_dict['_internal']
-        if 'nav' not in user_dict: # waste of CPU cycles; eventually take out!
-            user_dict['nav'] = docassemble.base.functions.DANav()
+        #if 'nav' not in user_dict: # waste of CPU cycles; eventually take out!
+        #    user_dict['nav'] = docassemble.base.functions.DANav()
         if user_dict['nav'].sections is None:
             user_dict['nav'].sections = self.sections
+            if hasattr(self, 'sections_progressive'):
+                user_dict['nav'].progressive = self.sections_progressive
         for question in self.questions_list:
             if question.question_type == 'imports':
                 for module_name in question.module_list:

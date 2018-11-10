@@ -215,12 +215,24 @@ def load(**kwargs):
             daconfig['api privileges'] = ['admin', 'developer']
     else:
         daconfig['api privileges'] = ['admin', 'developer']
-    if 'two factor authentication privileges' in daconfig:
-        if type(daconfig['two factor authentication privileges']) is not list:
+    if 'two factor authentication' in daconfig:
+        if type(daconfig['two factor authentication']) is bool:
+            daconfig['two factor authentication'] = dict(enable=daconfig['two factor authentication'])
+        if type(daconfig['two factor authentication']) is not dict:
+            daconfig['two factor authentication'] = dict()
+    if 'allowed for' in daconfig['two factor authentication']:
+        if type(daconfig['two factor authentication']['allowed for']) is not list:
             sys.stderr.write("two factor authentication privileges must be in the form of a list\n")
-            daconfig['two factor authentication privileges'] = ['admin', 'developer']
+            daconfig['two factor authentication']['allowed for'] = ['admin', 'developer']
     else:
-        daconfig['two factor authentication privileges'] = ['admin', 'developer']
+        if 'two factor authentication privileges' in daconfig:
+            if type(daconfig['two factor authentication privileges']) is list:
+                daconfig['two factor authentication']['allowed for'] = daconfig['two factor authentication privileges']
+            else:
+                sys.stderr.write("two factor authentication privileges must be in the form of a list\n")
+                daconfig['two factor authentication']['allowed for'] = ['admin', 'developer']
+        else:
+            daconfig['two factor authentication']['allowed for'] = ['admin', 'developer']
     if 'email confirmation privileges' in daconfig:
         if type(daconfig['email confirmation privileges']) is not list:
             sys.stderr.write("email confirmation privileges must be in the form of a list\n")
