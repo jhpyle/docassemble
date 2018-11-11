@@ -140,6 +140,7 @@ do
          "$file" = "sections-keywords-get-sections" -o \
          "$file" = "sections-keywords-review" -o \
          "$file" = "sections-keywords-set-sections" -o \
+	 "$file" = "sections-non-progressive" -o \
          "$file" = "centered" ]
     then
 	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 -resize 478x9999 docassemble_webapp/docassemble/webapp/static/examples/$file.png

@@ -3,7 +3,7 @@ metadata:
   short title: Non-progressive
   documentation: "https://docassemble.org/docs/initial.html#sections"
   example start: 1
-  example end: 11
+  example end: 8
 ---
 sections:
   - intro: Introduction
