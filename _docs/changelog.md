@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.9](https://github.com/jhpyle/docassemble/releases/tag/v0.3.9) - 2018-11-10
+
+### Added
+- The `allow for`, `required for`, `allow sms`, and `allow app`
+  options of `two factor authentication`.
+- The `progressive` option for `sections`.
+
 ## [0.3.8](https://github.com/jhpyle/docassemble/releases/tag/v0.3.8) - 2018-11-04
 
 ### Added

@@ -8637,34 +8637,6 @@
   ---
   features:
     navigation: True
-  ---
-  mandatory: True
-  code: |
-    sees_nav_bar
-    intro_to_about_you
-    first_name
-    email_address
-    gender
-    belly_button
-    favorite_fruit
-    favorite_vegetable
-    final_screen
-  ---
-  question: |
-    Welcome to the interview
-  subquestion: |
-    If you are not on a
-    smartphone-sized device,
-    you should see a navigation
-    bar to the left.
-  field: sees_nav_bar
-  section: intro
-  ---
-  question: |
-    I am going to ask you some
-    questions about yourself.
-  field: intro_to_about_you
-  section: about
 "send-email": |-
   objects:
     - recipient: Individual

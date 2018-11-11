@@ -1493,7 +1493,7 @@ fields:
 ---
 reconsider: True
 code: |
-  food_list = [{'Favorite candy: 'favorite_candy'}]
+  food_list = [{'Favorite candy': 'favorite_candy'}]
   if likes_legumes:
     food_list.append({'Favorite legume': 'favorite_legume'})
 {% endhighlight %}

@@ -2040,26 +2040,66 @@ configuration, the system can send a verification code to the user in
 an [SMS] message.
 
 To give your users the option of using two-factor authentication, set
-`two factor authentication` to `True`.  Logged-in users will then see
-an option on their "Profile" page for configuring two-factor
-authentication.  By default, only administrators and developers see an
-option on their user profile to configure second-factor
-authentication.  To configure which privileges have the option of using
-second factor authentication, set `two factor authentication privileges` to
-the full list of [privileges] you want to be able to use the feature.
+`two factor authentication` as follows:
 
 {% highlight yaml %}
-two factor authentication: True
-two factor authentication privileges:
-  - admin
-  - developer
-  - user
-  - advocate
+two factor authentication:
+  enable: True
 {% endhighlight %}
 
-Two-factor authentication is not available to users who sign in with
-[external authentication methods](#oauth) or who are using the
-[phone login] feature.
+Logged-in users will then see an option on their "Profile" page for
+configuring two-factor authentication.  By default, only
+administrators and developers see an option on their user profile to
+configure second-factor authentication.  To configure which privileges
+have the option of using second factor authentication, set the `allow
+for` subdirective to the full list of [privileges] for which you want
+the feature to be available.
+
+{% highlight yaml %}
+two factor authentication:
+  allow for:
+    - admin
+    - developer
+    - user
+    - advocate
+{% endhighlight %}
+
+Regardless of these settings, two-factor authentication is not
+available to users who sign in with [external authentication
+methods](#oauth) or who are using the [phone login] feature.  It is
+only available when the first authentication method is a standard
+e-mail and password combination.
+
+If you want to enable of the two methods and disable the other, you
+can use the `allow sms` and `allow app` subdirectives.
+
+{% highlight yaml %}
+two factor authentication:
+  allow sms: False
+  allow app: True
+{% endhighlight %}
+
+By default, `allow sms` and `allow app` are both True.
+
+If you want users with certain privileges to be required to use
+two-factor authentication, use the `required for` subdirective:
+
+{% highlight yaml %}
+two factor authentication:
+  required for:
+    - developer
+    - admin
+{% endhighlight %}
+
+By default, two-factor authentication is optional for all users.  As
+usual, two-factor authentication is not compatible with [external
+authentication methods](#oauth) or the [phone login] feature, so you
+will want to disable those features if you want to enforce two-factor
+authentication.
+
+The default value of `enable` is True, so you can omit the
+`enable` line.  You can write `two factor authentication: True`
+to enable two-factor authentication with all of the default options.
 
 ## <a name="vim"></a>Vim-like editor in Playground
 

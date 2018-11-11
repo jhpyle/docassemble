@@ -494,6 +494,12 @@ for the question they are currently answering.  Alternatively, you
 could use [`code` blocks] and the [`nav.set_section()`] function to
 make sure that the section is set appropriately.
 
+By default, users are only able to click on sections that they have
+visited.  If you want users to be able to click on any section at any
+time, set `progressive` to `False`:
+
+{% include side-by-side.html demo="sections-non-progressive" %}
+
 # <a name="interview help"></a>Assisting users with `interview help`
 
 {% highlight yaml %}
