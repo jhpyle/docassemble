@@ -1819,7 +1819,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
     #logmessage("Current section is " + repr(the_section))
     #logmessage("Past sections are: " + str(nav.past))
     if the_section is None:
-        if type(the_sections[0]) is dict:
+        if isinstance(the_sections[0], dict):
             the_section = the_sections[0].keys()[0]
         else:
             the_section = the_sections[0]
@@ -1841,7 +1841,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         the_key = None
         subitems = None
         currently_active = False
-        if type(x) is dict:
+        if isinstance(x, dict):
             #logmessage("It is a dict")
             if len(x) == 2 and 'subsections' in x:
                 for key, val in x.iteritems():
@@ -1856,7 +1856,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                 the_key = x.keys()[0]
                 test_for_valid_var(the_key)
                 value = x[the_key]
-                if type(value) is list:
+                if isinstance(value, list):
                     subitems = value
                     the_title = the_key
                 else:
@@ -1916,7 +1916,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                 first_sub = False
                 indexno += 1
                 sub_currently_active = False
-                if type(y) is dict:
+                if isinstance(y, dict):
                     if len(y) == 1:
                         sub_key = y.keys()[0]
                         test_for_valid_var(sub_key)
@@ -2107,12 +2107,12 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
           <ul class="navbar-nav ml-auto">
 """
     if 'menu_items' in status.extras:
-        if type(status.extras['menu_items']) is not list:
+        if not isinstance(status.extras['menu_items'], list):
             custom_menu += '<a tabindex="0" class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
         elif len(status.extras['menu_items']):
             custom_menu = ""
             for menu_item in status.extras['menu_items']:
-                if not (type(menu_item) is dict and 'url' in menu_item and 'label' in menu_item):
+                if not (isinstance(menu_item, dict) and 'url' in menu_item and 'label' in menu_item):
                     custom_menu += '<a tabindex="0" class="dropdown-item">' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
                 else:
                     match_action = re.search(r'^\?action=([^\&]+)', menu_item['url'])
@@ -3624,7 +3624,7 @@ def mfa_setup():
         user = load_user(session['validated_user'])
     else:
         abort(404)
-    if not app.config['USE_MFA'] or not user.has_role(*app.config['two factor authentication privileges']) or not user.social_id.startswith('local'):
+    if not app.config['USE_MFA'] or not user.has_role(*app.config['MFA_ROLES']) or not user.social_id.startswith('local'):
         abort(404)
     form = MFASetupForm(request.form)
     if request.method == 'POST' and form.submit.data:
@@ -3679,7 +3679,7 @@ def mfa_setup():
 @login_required
 @app.route('/mfa_reconfigure', methods=['POST', 'GET'])
 def mfa_reconfigure():
-    if not app.config['USE_MFA'] or not current_user.has_role(*app.config['two factor authentication privileges']) or not current_user.social_id.startswith('local'):
+    if not app.config['USE_MFA'] or not current_user.has_role(*app.config['MFA_ROLES']) or not current_user.social_id.startswith('local'):
         abort(404)
     user = load_user(current_user.id)
     if user.otp_secret is None:
@@ -3720,7 +3720,7 @@ def mfa_choose():
         user = load_user(session['validated_user'])
     else:
         abort(404)
-    if not app.config['USE_MFA'] or user.is_anonymous or not user.has_role(*app.config['two factor authentication privileges']) or not user.social_id.startswith('local'):
+    if not app.config['USE_MFA'] or user.is_anonymous or not user.has_role(*app.config['MFA_ROLES']) or not user.social_id.startswith('local'):
         abort(404)
     if app.config['MFA_ALLOW_APP'] and (twilio_config is None or not app.config['MFA_ALLOW_SMS']):
         return redirect(url_for('mfa_setup'))
@@ -3752,7 +3752,7 @@ def mfa_sms_setup():
         user = load_user(session['validated_user'])
     else:
         abort(404)
-    if twilio_config is None or not app.config['USE_MFA'] or not user.has_role(*app.config['two factor authentication privileges']) or not user.social_id.startswith('local'):
+    if twilio_config is None or not app.config['USE_MFA'] or not user.has_role(*app.config['MFA_ROLES']) or not user.social_id.startswith('local'):
         abort(404)
     form = MFASMSSetupForm(request.form)
     user = load_user(user.id)
@@ -3795,7 +3795,7 @@ def mfa_verify_sms_setup():
         user = load_user(session['validated_user'])
     else:
         abort(404)
-    if 'phone_number' not in session or twilio_config is None or not app.config['USE_MFA'] or not user.has_role(*app.config['two factor authentication privileges']) or not user.social_id.startswith('local'):
+    if 'phone_number' not in session or twilio_config is None or not app.config['USE_MFA'] or not user.has_role(*app.config['MFA_ROLES']) or not user.social_id.startswith('local'):
         abort(404)
     form = MFAVerifySMSSetupForm(request.form)
     if request.method == 'POST' and form.submit.data:
@@ -4308,9 +4308,9 @@ def checkin():
             interview.assemble(user_dict, interview_status)
             if interview_status.question.question_type == "backgroundresponse":
                 the_response = interview_status.question.backgroundresponse
-                if type(the_response) is dict and 'pargs' in the_response and type(the_response['pargs']) is list and len(the_response['pargs']) == 2 and the_response['pargs'][1] in ('javascript', 'flash', 'refresh', 'fields'):
+                if isinstance(the_response, dict) and 'pargs' in the_response and isinstance(the_response['pargs'], list) and len(the_response['pargs']) == 2 and the_response['pargs'][1] in ('javascript', 'flash', 'refresh', 'fields'):
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response['pargs'][0]), extra=the_response['pargs'][1]))
-                elif type(the_response) is list and len(the_response) == 2 and the_response[1] in ('javascript', 'flash', 'refresh', 'fields'):
+                elif isinstance(the_response, list) and len(the_response) == 2 and the_response[1] in ('javascript', 'flash', 'refresh', 'fields'):
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response[0]), extra=the_response[1]))
                 elif isinstance(the_response, basestring) and the_response == 'refresh':
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(None), extra='refresh'))
@@ -4512,7 +4512,7 @@ def checkin():
                     try:
                         result = docassemble.webapp.worker.workerapp.AsyncResult(id=worker_id)
                         if result.ready():
-                            if type(result.result) == ReturnValue:
+                            if isinstance(result.result, ReturnValue):
                                 commands.append(dict(value=result.result.value, extra=result.result.extra))
                         else:
                             r.rpush(worker_key, worker_id)
@@ -5425,7 +5425,7 @@ def index():
                     data = "False"
                     test_data = False
             elif known_datatypes[real_key] in ('date', 'datetime'):
-                if type(data) in (str, unicode):
+                if isinstance(data, basestring):
                     data = data.strip()
                     if data != '':
                         try:
@@ -5445,7 +5445,7 @@ def index():
                 else:
                     data = repr('')
             elif known_datatypes[real_key] == 'time':
-                if type(data) in (str, unicode):
+                if isinstance(data, basestring):
                     data = data.strip()
                     if data != '':
                         try:
@@ -5527,7 +5527,7 @@ def index():
                     data = "False"
                     test_data = False
             elif known_datatypes[orig_key] in ('date', 'datetime'):
-                if type(data) in (str, unicode):
+                if isinstance(data, basestring):
                     data = data.strip()
                     if data != '':
                         try:
@@ -5547,7 +5547,7 @@ def index():
                 else:
                     data = repr('')
             elif known_datatypes[orig_key] == 'time':
-                if type(data) in (str, unicode):
+                if isinstance(data, basestring):
                     data = data.strip()
                     if data != '':
                         try:
@@ -5710,7 +5710,7 @@ def index():
     if validated:
         if '_files_inline' in post_data:
             fileDict = json.loads(myb64unquote(post_data['_files_inline']))
-            if type(fileDict) is not dict:
+            if not isinstance(fileDict, dict):
                 raise DAError("inline files was not a dict")
             file_fields = fileDict['keys']
             has_invalid_fields = False
@@ -11104,7 +11104,7 @@ def update_package_ajax():
         #if 'taskwait' in session:
         #    del session['taskwait']
         the_result = result.get()
-        if type(the_result) is ReturnValue:
+        if isinstance(the_result, ReturnValue):
             if the_result.ok:
                 #logmessage("update_package_ajax: success")
                 return jsonify(success=True, status='finished', ok=the_result.ok, summary=summarize_results(the_result.results, the_result.logmessages))
@@ -12429,7 +12429,7 @@ def checkin_sync_with_google_drive():
         if 'taskwait' in session:
             del session['taskwait']
         the_result = result.get()
-        if type(the_result) is ReturnValue:
+        if isinstance(the_result, ReturnValue):
             if the_result.ok:
                 logmessage("checkin_sync_with_google_drive: success")
                 return jsonify(success=True, status='finished', ok=the_result.ok, summary=add_br(the_result.summary), restart=the_result.restart)
@@ -12458,7 +12458,7 @@ def checkin_sync_with_onedrive():
         if 'taskwait' in session:
             del session['taskwait']
         the_result = result.get()
-        if type(the_result) is ReturnValue:
+        if isinstance(the_result, ReturnValue):
             if the_result.ok:
                 logmessage("checkin_sync_with_onedrive: success")
                 return jsonify(success=True, status='finished', ok=the_result.ok, summary=add_br(the_result.summary), restart=the_result.restart)
@@ -13861,7 +13861,7 @@ def playground_packages():
             with open(filename, 'rU') as fp:
                 content = fp.read().decode('utf8')
                 old_info = yaml.load(content)
-                if type(old_info) is dict:
+                if isinstance(old_info, dict):
                     github_url_from_file = old_info.get('github_url', None)
                     pypi_package_from_file = old_info.get('pypi_package_name', None)
                     for field in ('license', 'description', 'author_name', 'author_email', 'version', 'url', 'readme'):
@@ -13869,12 +13869,12 @@ def playground_packages():
                             form[field].data = old_info[field]
                         else:
                             form[field].data = ''
-                    if 'dependencies' in old_info and type(old_info['dependencies']) is list and len(old_info['dependencies']):
+                    if 'dependencies' in old_info and isinstance(old_info['dependencies'], list) and len(old_info['dependencies']):
                         for item in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
                             if item in old_info['dependencies']:
                                 del old_info['dependencies'][item]
                     for field in ('dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
-                        if field in old_info and type(old_info[field]) is list and len(old_info[field]):
+                        if field in old_info and isinstance(old_info[field], list) and len(old_info[field]):
                             form[field].data = old_info[field]
         else:
             filename = None
@@ -15595,9 +15595,9 @@ def utilities():
                     except Exception as errstr:
                         logmessage("utilities: translation failed: " + str(errstr))
                         resp = None
-                    if type(resp) is dict and u'translations' in resp and type(resp[u'translations']) is list and len(resp[u'translations']) == len(chunk):
+                    if isinstance(resp, dict) and u'translations' in resp and isinstance(resp[u'translations'], list) and len(resp[u'translations']) == len(chunk):
                         for index in range(len(chunk)):
-                            if type(resp[u'translations'][index]) is dict and 'translatedText' in resp[u'translations'][index]:
+                            if isinstance(resp[u'translations'][index], dict) and 'translatedText' in resp[u'translations'][index]:
                                 result[language][chunk[index]] = re.sub(r'&#39;', r"'", resp['translations'][index]['translatedText'])
                             else:
                                 result[language][chunk[index]] = 'XYZNULLXYZ'
@@ -15738,10 +15738,10 @@ def ensure_training_loaded(interview):
                     if len(content):
                         try:
                             href = json.loads(content)
-                            if type(href) is dict:
+                            if isinstance(href, dict):
                                 nowtime = datetime.datetime.utcnow()
                                 for group_id, train_list in href.iteritems:
-                                    if type(train_list) is list:
+                                    if isinstance(train_list, list):
                                         for entry in train_list:
                                             if 'independent' in entry:
                                                 new_entry = MachineLearning(group_id=source_filename + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry.get('dependent', None)), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
@@ -15820,12 +15820,12 @@ def train():
                 flash(word("Error reading JSON file.  Not a valid JSON file."), 'error')
                 return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
             json_file.close()
-            if type(href) is not dict:
+            if not isinstance(href, dict):
                 flash(word("Error reading JSON file.  The JSON file needs to contain a dictionary at the root level."), 'error')
                 return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
             nowtime = datetime.datetime.utcnow()
             for group_id, train_list in href.iteritems():
-                if type(train_list) is not list:
+                if not isinstance(train_list, list):
                     logmessage("train: could not import part of JSON file.  Items in dictionary must be lists.")
                     continue
                 if uploadform.importtype.data == 'replace':
@@ -16089,7 +16089,7 @@ def train():
         model = docassemble.base.util.SimpleTextMachineLearner(group_id=group_id_to_use)
         for record in db.session.query(MachineLearning.id, MachineLearning.group_id, MachineLearning.key, MachineLearning.info, MachineLearning.independent, MachineLearning.dependent, MachineLearning.create_time, MachineLearning.modtime, MachineLearning.active).filter(and_(MachineLearning.group_id == group_id_to_use, show_cond)):
             new_entry = dict(id=record.id, group_id=record.group_id, key=record.key, independent=pickle.loads(codecs.decode(record.independent, 'base64')) if record.independent is not None else None, dependent=pickle.loads(codecs.decode(record.dependent, 'base64')) if record.dependent is not None else None, info=pickle.loads(codecs.decode(record.info, 'base64')) if record.info is not None else None, create_type=record.create_time, modtime=record.modtime, active=MachineLearning.active)
-            if isinstance(new_entry['independent'], DADict) or type(new_entry['independent']) is dict:
+            if isinstance(new_entry['independent'], DADict) or isinstance(new_entry['independent'], dict):
                 new_entry['independent_display'] = '<div class="mldatacontainer">' + '<br>'.join(['<span class="mldatakey">' + unicode(key) + '</span>: <span class="mldatavalue">' + unicode(val) + ' (' + str(val.__class__.__name__) + ')</span>' for key, val in new_entry['independent'].iteritems()]) + '</div>'
                 new_entry['type'] = 'data'
             else:
@@ -16138,7 +16138,7 @@ def train():
                 sample_indep = None
         else:
             sample_indep = entry_list[0]['independent']
-        if isinstance(sample_indep, DADict) or type(sample_indep) is dict:
+        if isinstance(sample_indep, DADict) or isinstance(sample_indep, dict):
             is_data = True
         else:
             is_data = False

@@ -33,11 +33,9 @@ if 'required for' in daconfig['two factor authentication'] and isinstance(daconf
     app.config['MFA_REQUIRED_FOR_ROLE'] = daconfig['two factor authentication']['required for']
 else:
     app.config['MFA_REQUIRED_FOR_ROLE'] = []
-if 'allowed for' in daconfig['two factor authentication']:
-    app.config['two factor authentication privileges'] = daconfig['two factor authentication']['allowed for']
+app.config['MFA_ROLES'] = daconfig['two factor authentication'].get('allowed for', ['admin', 'developer'])
 if not (app.config['MFA_ALLOW_SMS'] or app.config['MFA_ALLOW_APP']):
     app.config['USE_MFA'] = False
-app.config['MFA_ROLES'] = daconfig.get('two factor authentication privileges', ['admin', 'developer'])
 app.config['API_ROLES'] = daconfig.get('api privileges', ['admin', 'developer'])
 app.config['WTF_CSRF_TIME_LIMIT'] = 604800
 app.config['WTF_CSRF_SSL_STRICT'] = daconfig.get('require referer', True)

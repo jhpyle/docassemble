@@ -220,6 +220,8 @@ def load(**kwargs):
             daconfig['two factor authentication'] = dict(enable=daconfig['two factor authentication'])
         if type(daconfig['two factor authentication']) is not dict:
             daconfig['two factor authentication'] = dict()
+    else:
+        daconfig['two factor authentication'] = dict(enable=False)
     if 'allowed for' in daconfig['two factor authentication']:
         if type(daconfig['two factor authentication']['allowed for']) is not list:
             sys.stderr.write("two factor authentication privileges must be in the form of a list\n")

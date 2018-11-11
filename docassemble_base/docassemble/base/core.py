@@ -417,6 +417,10 @@ class DAList(DAObject):
         if 'elements' in kwargs:
             for element in kwargs['elements']:
                 self.append(element)
+            if len(self.elements) > 0:
+                self.there_are_any = True
+            else:
+                self.there_are_any = False
             self.gathered = True
             self.revisit = True
             del kwargs['elements']

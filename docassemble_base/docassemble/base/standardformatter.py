@@ -54,9 +54,9 @@ def varname_tag(varnames):
 
 def icon_html(status, name, width_value=1.0, width_units='em'):
     #logmessage("icon_html: name is " + repr(name))
-    if type(name) is dict and name['type'] == 'decoration':
+    if isinstance(name, dict) and name['type'] == 'decoration':
         name = name['value']
-    if type(name) is not dict:
+    if not isinstance(name, dict):
         is_decoration = True
         the_image = status.question.interview.images.get(name, None)
         if the_image is None:
@@ -388,9 +388,9 @@ def as_sms(status, links=None, menu_items=None):
                     qoutput += "\n" + word("Type the") + " " + label + " " + word("or type skip to leave blank.") + next_label
     if 'underText' in status.extras and question.question_type != 'signature':
         qoutput += "\n" + to_text(markdown_to_html(status.extras['underText'], status=status), terms, links, status)
-    if 'menu_items' in status.extras and type(status.extras['menu_items']) is list:
+    if 'menu_items' in status.extras and isinstance(status.extras['menu_items'], list):
         for menu_item in status.extras['menu_items']:
-            if type(menu_item) is dict and 'url' in menu_item and 'label' in menu_item:
+            if isinstance(menu_item, dict) and 'url' in menu_item and 'label' in menu_item:
                 menu_items.append((menu_item['url'], menu_item['label']))
     if len(links):
         indexno = 1
@@ -792,7 +792,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             else:
                 side_note = ''
                 side_note_parent = ''
-            if hasattr(field, 'disableothers') and field.disableothers and type(field.disableothers) is list:
+            if hasattr(field, 'disableothers') and field.disableothers and isinstance(field.disableothers, list):
                 if 'disableothers' not in status.extras:
                     status.extras['disableothers'] = dict()
                 status.extras['disableothers'][field.number] = list()
@@ -1112,7 +1112,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '              </fieldset>\n            </form>\n'
     elif status.question.question_type == "multiple_choice":
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
-        if status.question.fields[0].number in status.defaults and type(status.defaults[status.question.fields[0].number]) in [str, unicode, int, float]:
+        if status.question.fields[0].number in status.defaults and isinstance(status.defaults[status.question.fields[0].number], (basestring, int, float)):
             defaultvalue = unicode(status.defaults[status.question.fields[0].number])
             #logmessage("Default value is " + str(defaultvalue))
         else:
@@ -1153,7 +1153,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     if 'default' in pair and pair['default'] and defaultvalue is None:
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
                     formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
-                    if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue):
+                    if defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == unicode(defaultvalue):
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
                     if status.question.question_variety == "radio":
                         if True or pair['key'] is not None: #not sure why this was added
@@ -1732,7 +1732,7 @@ def input_for(status, field, wide=False, embedded=False):
     output = ""
     if field.number in status.defaults:
         defaultvalue_set = True
-        if type(status.defaults[field.number]) in (str, int, float):
+        if isinstance(status.defaults[field.number], (basestring, int, float)):
             defaultvalue = unicode(status.defaults[field.number])
         else:
             defaultvalue = status.defaults[field.number]
@@ -1821,15 +1821,15 @@ def input_for(status, field, wide=False, embedded=False):
                         ischecked = ' checked'
                     elif defaultvalue is None:
                         ischecked = ''
-                    elif type(defaultvalue) in (list, set) and unicode(pair['key']) in defaultvalue:
+                    elif isinstance(defaultvalue, (list, set)) and unicode(pair['key']) in defaultvalue:
                         ischecked = ' checked'
-                    elif type(defaultvalue) is dict and unicode(pair['key']) in defaultvalue and defaultvalue[unicode(pair['key'])]:
+                    elif isinstance(defaultvalue, dict) and unicode(pair['key']) in defaultvalue and defaultvalue[unicode(pair['key'])]:
                         ischecked = ' checked'
-                    elif (hasattr(defaultvalue, 'elements') and type(defaultvalue.elements) is dict) and unicode(pair['key']) in defaultvalue.elements and defaultvalue.elements[unicode(pair['key'])]:
+                    elif (hasattr(defaultvalue, 'elements') and isinstance(defaultvalue.elements, dict)) and unicode(pair['key']) in defaultvalue.elements and defaultvalue.elements[unicode(pair['key'])]:
                         ischecked = ' checked'
                     elif pair['key'] is defaultvalue:
                         ischecked = ' checked'
-                    elif type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue):
+                    elif isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == unicode(defaultvalue):
                         ischecked = ' checked'
                     else:
                         ischecked = ''
@@ -1877,7 +1877,7 @@ def input_for(status, field, wide=False, embedded=False):
                     else:
                         the_icon = ''
                     formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and type(defaultvalue) not in [str, unicode, int, bool, float] and defaultvalue_printable and unicode(pair['label']) == defaultvalue_printable):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and defaultvalue_printable and unicode(pair['label']) == defaultvalue_printable):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
@@ -1897,7 +1897,7 @@ def input_for(status, field, wide=False, embedded=False):
                     if True or pair['key'] is not None:
                         #sys.stderr.write(str(saveas_string) + "\n")
                         formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
-                        if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and type(defaultvalue) not in [str, unicode, int, bool, float] and defaultvalue_is_printable and unicode(pair['label']) == defaultvalue_printable):
+                        if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and defaultvalue_is_printable and unicode(pair['label']) == defaultvalue_printable):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
@@ -1950,7 +1950,7 @@ def input_for(status, field, wide=False, embedded=False):
                     formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, do_terms=False)
                     #logmessage("Considering " + repr(pair['key']) + " and " + repr(pair['label']))
                     output += '<option value="' + unicode(pair['key']) + '"'
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and type(defaultvalue) not in [str, unicode, int, bool, float] and defaultvalue_is_printable and unicode(pair['label']) == defaultvalue_printable):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and defaultvalue_is_printable and unicode(pair['label']) == defaultvalue_printable):
                         output += ' selected="selected"'
                     output += '>' + formatted_item + '</option>'
             if embedded:
@@ -1975,7 +1975,7 @@ def input_for(status, field, wide=False, embedded=False):
                         else:
                             the_icon = ''
                         helptext = pair.get('help', None)
-                        if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
+                        if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == unicode(defaultvalue)):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
@@ -1992,7 +1992,7 @@ def input_for(status, field, wide=False, embedded=False):
                         else:
                             the_icon = ''
                         helptext = pair.get('help', None)
-                        if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
+                        if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == unicode(defaultvalue)):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
@@ -2007,7 +2007,7 @@ def input_for(status, field, wide=False, embedded=False):
                     output += "".join(inner_fieldlist)
             else:
                 if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
-                    if type(field.uncheckothers) is list:
+                    if isinstance(field.uncheckothers, list):
                         uncheck = ''
                     else:
                         uncheck = ' uncheckothers'
@@ -2048,7 +2048,7 @@ def input_for(status, field, wide=False, embedded=False):
                     else:
                         the_icon = ''
                     helptext = pair.get('help', None)
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
@@ -2065,7 +2065,7 @@ def input_for(status, field, wide=False, embedded=False):
                     else:
                         the_icon = ''
                     helptext = pair.get('help', None)
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
@@ -2112,7 +2112,7 @@ def input_for(status, field, wide=False, embedded=False):
                 if not (hasattr(field, 'extras') and key in field.extras and key in status.extras and field.number in status.extras[key]):
                     ok = False
             if ok:
-                if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
+                if defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)):
                     the_default = ' data-slider-value="' + str(defaultvalue) + '"'
                 else:
                     the_default = ' data-slider-value="' + str(int((float(status.extras['max'][field.number]) + float(status.extras['min'][field.number]))/2)) + '"'
@@ -2135,13 +2135,13 @@ def input_for(status, field, wide=False, embedded=False):
             if embedded:
                 output += '<span class="embed-area-wrapper">'
             output += '<textarea alt=' + json.dumps(word("Input box")) + ' class="form-control' + extra_class + '"' + title_text + ' rows="4" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + disable_others_data + '>'
-            if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
+            if defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)):
                 output += defaultvalue
             output += '</textarea>'
             if embedded:
                 output += '</span>'
         else:
-            if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
+            if defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)):
                 defaultstring = ' value="' + defaultvalue + '"'
             elif isinstance(defaultvalue, datetime.datetime):
                 defaultstring = ' value="' + format_date(defaultvalue, format='yyyy-MM-dd') + '"'
