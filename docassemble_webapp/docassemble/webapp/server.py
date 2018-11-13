@@ -429,7 +429,8 @@ def custom_login():
     if request.method != 'POST':
         login_form.next.data     = register_form.next.data     = safe_next
         login_form.reg_next.data = register_form.reg_next.data = safe_reg_next
-
+    if request.method == 'GET' and 'validated_user' in session:
+        del session['validated_user']
     if request.method=='POST' and login_form.validate():
         user = None
         user_email = None
@@ -475,7 +476,7 @@ def custom_login():
                         success = docassemble.base.util.send_sms(to=phone_number, body=message)
                         if not success:
                             flash(word("Unable to send verification code."), 'error')
-                            return add_secret_to(redirect(url_for('user.login')))
+                            return redirect(url_for('user.login'))
                     return add_secret_to(redirect(url_for('mfa_login')))
             if user_manager.enable_email and user_manager.enable_confirm_email \
                and len(daconfig['email confirmation privileges']) \
@@ -483,7 +484,7 @@ def custom_login():
                and not user.has_confirmed_email():
                 url = url_for('user.resend_confirm_email', email=user.email)
                 flash(word('You cannot log in until your e-mail address has been confirmed.') + '<br><a href="' + url + '">' + word('Click here to confirm your e-mail') + '</a>.', 'error')
-                return add_secret_to(redirect(url_for('user.login')))
+                return redirect(url_for('user.login'))
             return add_secret_to(flask_user.views._do_login_user(user, safe_next, login_form.remember_me.data))
     if is_json:
         return jsonify(action='login', csrf_token=generate_csrf())
@@ -1037,6 +1038,9 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'register':
         remove_question_package(kwargs)
         return(url_for('user.register', **kwargs))
+    elif file_reference == 'config':
+        remove_question_package(kwargs)
+        return(url_for('config_page', **kwargs))
     elif file_reference == 'leave':
         remove_question_package(kwargs)
         return(url_for('leave', **kwargs))
@@ -3832,6 +3836,9 @@ def mfa_login():
         logmessage("mfa_login: validated_user not in session")
         abort(404)
     user = load_user(session['validated_user'])
+    if current_user.is_authenticated and current_user.id != user.id:
+        del session['validated_user']
+        abort(404)
     if user is None or user.otp_secret is None or not user.social_id.startswith('local'):
         logmessage("mfa_login: user not setup for MFA where validated_user was " + str(session['validated_user']))
         abort(404)
@@ -9861,7 +9868,7 @@ def observer():
 @roles_required(['admin', 'advocate'])
 def monitor():
     if request.method == 'GET' and needs_to_change_password():
-        return redirect(url_for('user.change_password', next=url_for('interview_list')))
+        return redirect(url_for('user.change_password', next=url_for('monitor')))
     session['monitor'] = 1
     if 'user_id' not in session:
         session['user_id'] = current_user.id
@@ -11935,7 +11942,7 @@ def restart_page():
         setTimeout(daRestart, 100);
       });
     </script>"""
-    next_url = request.args.get('next', url_for('interview_list'))
+    next_url = request.args.get('next', url_for('interview_list', post_restart=1))
     extra_meta = """\n    <meta http-equiv="refresh" content="8;URL='""" + next_url + """'">"""
     return render_template('pages/restart.html', version_warning=None, bodyclass='adminbody', extra_meta=Markup(extra_meta), extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting'))
 
@@ -12037,7 +12044,7 @@ def google_drive_callback():
         error = word("could not connect to Google Drive")
     if error:
         flash(word('There was a Google Drive error: ' + error), 'error')
-        return redirect(url_for('interview_list'))
+        return redirect(url_for('user.profile'))
     else:
         flash(word('Connected to Google Drive'), 'success')
     return redirect(url_for('google_drive_page'))
@@ -12093,7 +12100,7 @@ def sync_with_google_drive():
     next = request.args.get('next', url_for('playground_page'))
     if app.config['USE_GOOGLE_DRIVE'] is False:
         flash(word("Google Drive is not configured"), "error")
-        return redirect(url_for('interview_list'))
+        return redirect(next)
     storage = RedisCredStorage(app='googledrive')
     credentials = storage.get()
     if not credentials or credentials.invalid:
@@ -12218,7 +12225,7 @@ def onedrive_callback():
         error = word("could not connect to OneDrive")
     if error:
         flash(word('There was a OneDrive error: ' + error), 'error')
-        return redirect(url_for('interview_list'))
+        return redirect(url_for('user.profile'))
     else:
         flash(word('Connected to OneDrive'), 'success')
     return redirect(url_for('onedrive_page'))
@@ -12300,7 +12307,7 @@ def sync_with_onedrive():
     next = request.args.get('next', url_for('playground_page'))
     if app.config['USE_ONEDRIVE'] is False:
         flash(word("OneDrive is not configured"), "error")
-        return redirect(url_for('interview_list'))
+        return redirect(next)
     storage = RedisCredStorage(app='onedrive')
     credentials = storage.get()
     if not credentials or credentials.invalid:
@@ -12648,7 +12655,7 @@ def checkin_sync_with_onedrive():
 def google_drive_page():
     if app.config['USE_GOOGLE_DRIVE'] is False:
         flash(word("Google Drive is not configured"), "error")
-        return redirect(url_for('interview_list'))
+        return redirect(url_for('user.profile'))
     form = GoogleDriveForm(request.form)
     if request.method == 'POST' and form.cancel.data:
         return redirect(url_for('user.profile'))
@@ -15531,7 +15538,7 @@ def request_developer():
                 flash(word('Your request was submitted.'), 'success')
             except:
                 flash(word('We were unable to submit your request.'), 'error')
-        return redirect(url_for('interview_list'))
+        return redirect(url_for('user.profile'))
     return render_template('users/request_developer.html', version_warning=None, bodyclass='adminbody', tab_title=word("Developer Access"), page_title=word("Developer Access"), form=form)
 
 def docx_variable_fix(variable):
@@ -16386,6 +16393,13 @@ def interview_list():
             return redirect(url_for('interview_list', json='1'))
         else:
             return redirect(url_for('interview_list'))
+    if request.args.get('post_restart', False) or re.search(r'user/(register|sign-in)', str(request.referrer)):
+        next_page = page_after_login()
+        if next_page is None:
+            logmessage("Invalid page " + unicode(next_page))
+            next_page = 'interview_list'
+        if next_page not in ('interview_list', 'interviews'):
+            return redirect(get_url_from_file_reference(next_page))
     if daconfig.get('session list interview', None) is not None:
         if is_json:
             return redirect(url_for('index', i=daconfig.get('session list interview'), from_list='1', json='1'))
@@ -18877,6 +18891,13 @@ def pypi_status(packagename):
             result['error'] = False
             result['exists'] = True
     return result
+
+def page_after_login():
+    if current_user.is_authenticated:
+        for role, page in daconfig['page after login']:
+            if role == '*' or current_user.has_role(role):
+                return page
+    return 'interview_list'
 
 def secure_filename(filename):
     filename = werkzeug.secure_filename(filename)

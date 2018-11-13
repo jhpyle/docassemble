@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.10] - 2018-11-13
+### Added
+- The `page after login` feature.
+
 ## [0.3.9] - 2018-11-10
 ### Added
 - The `allow for`, `required for`, `allow sms`, and `allow app`

@@ -4,6 +4,7 @@ if not docassemble.base.config.loaded:
 from docassemble.base.config import daconfig, hostname
 from celery import Celery, chord
 from celery.result import result_from_tuple, AsyncResult
+from celery.backends.redis import RedisBackend
 import celery
 import copy
 import sys

@@ -84,6 +84,21 @@ def load(**kwargs):
     #         if key[1] not in daconfig or daconfig[key[1]] != val:
     #             daconfig[key[1]] = val
     #             changed = True
+    if 'page after login' in daconfig:
+        if isinstance(daconfig['page after login'], basestring):
+            daconfig['page after login'] = [{'*': daconfig['page after login']}]
+        if isinstance(daconfig['page after login'], dict):
+            daconfig['page after login'] = [daconfig['page after login']]
+        page_after_login = []
+        if isinstance(daconfig['page after login'], list):
+            for item in daconfig['page after login']:
+                if isinstance(item, dict):
+                    for key, val in item.iteritems():
+                        if isinstance(key, basestring) and isinstance(val, basestring):
+                            page_after_login.append((key, val))
+        daconfig['page after login'] = page_after_login
+    else:
+        daconfig['page after login'] = []
     if 'keymap' in daconfig and daconfig['keymap'] not in ['vim', 'emacs', 'sublime']:
         sys.stderr.write("WARNING!  You used a keymap that is not supported.  Available values are vim, emacs, and sublime.\n")
         del daconfig['keymap']
