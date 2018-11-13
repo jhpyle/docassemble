@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.10](https://github.com/jhpyle/docassemble/releases/tag/v0.3.10) - 2018-11-13
+
+### Added
+- The `page after login` feature.
+
 ## [0.3.9](https://github.com/jhpyle/docassemble/releases/tag/v0.3.9) - 2018-11-10
 
 ### Added

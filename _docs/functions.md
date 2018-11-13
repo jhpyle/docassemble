@@ -1135,6 +1135,7 @@ The `url_of()` function also has a few special uses.
   on-going interviews of a signed-in user.
 * `url_of('dispatch')` returns a URL to the page listing the
   interviews defined in the [`dispatch`] directive of the [Configuration].
+* `url_of('config')` returns a URL to the [Configuration] page.
 * `url_of('playground')` returns a URL to the [Playground].
 * `url_of('configuration')` returns a URL to the [Configuration] page.
 * `url_of('root')` returns the root URL of your server.

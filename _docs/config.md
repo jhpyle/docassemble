@@ -526,6 +526,39 @@ If you set an `auto resume interview`, you may wish to set [`show
 interviews link`] to `False` if the "My Interviews" menu is not useful
 on your server.
 
+## <a name="page after login"></a>Customizing the page that appears after login
+
+By default, the user is directed to the "My Interviews" page after
+logging in.  This can be customized with the `page after login`
+directive:
+
+{% highlight yaml %}
+page after login: profile
+{% endhighlight %}
+
+In this example, the user will be directed to the "Profile" page after
+logging in.  See the documentation for the [`url_of()`] function to
+see what names to use for each page of the web site.  (The name you
+give is effectively passed to [`url_of()`].)
+
+You can also set up different pages for users with different
+[privileges]:
+
+{% highlight yaml %}
+page after login:
+  - admin: config
+  - developer: playground
+{% endhighlight %}
+
+In this example, users with [privileges] of `admin` will be directed to
+the [Configuration] page, while users with privileges of `developer`
+will be directed to the [Playground].
+
+If a user has [privileges] of both `admin` and `developer`, the user
+will be directed to `config`.  Each item in `page after login` is
+processed in order, and the first match is used.  If no items match,
+the user is directed to "My Interviews."
+
 ## <a name="global css"></a><a name="global javascript"></a><a name="raw global css"></a><a name="raw global javascript"></a>CSS and Javascript customization
 
 You can use the [`javascript` features setting] and the
@@ -3014,3 +3047,4 @@ and Facebook API keys.
 [XML manifest file]: {{ site.baseurl }}/docs/admin.html#word addin manifest
 [`show login` metadata directive]: {{ site.baseurl }}/docs/initial.html#show login
 [translates system phrases]: {{ site.baseurl }}/docs/admin.html#translate
+[`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
