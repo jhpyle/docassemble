@@ -22,15 +22,15 @@ if [ "${AZUREENABLE:-false}" == "true" ]; then
     blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
-function stopfunc {
+function stopfunc() {
     redis-cli shutdown
     echo backing up redis
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	aws s3 cp "/var/lib/redis/dump.rdb" s3://${S3BUCKET}/redis.rdb --quiet
+        aws s3 cp "/var/lib/redis/dump.rdb" s3://${S3BUCKET}/redis.rdb --quiet
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
-	blob-cmd -f cp "/var/lib/redis/dump.rdb" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/redis.rdb"
+        blob-cmd -f cp "/var/lib/redis/dump.rdb" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/redis.rdb"
     else
-	cp /var/lib/redis/dump.rdb ${DA_ROOT}/backup/redis.rdb
+        cp /var/lib/redis/dump.rdb ${DA_ROOT}/backup/redis.rdb
     fi
     exit 0
 }

@@ -22,7 +22,7 @@ wget https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js
 rm -f socket.io.*
 wget https://cdn.socket.io/socket.io-1.7.3.js
 mv socket.io-*.js socket.io.min.js
-pygmentize -S default -f html > pygments.css
+pygmentize -S default -f html >pygments.css
 cd ..
 rm -rf bootstrap
 wget https://github.com/twbs/bootstrap/releases/download/v3.3.7/bootstrap-3.3.7-dist.zip
