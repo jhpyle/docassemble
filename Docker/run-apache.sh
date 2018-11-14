@@ -30,6 +30,11 @@ else
     echo "Define DACROSSSITEDOMAINVALUE *" >> /etc/apache2/conf-available/docassemble.conf
 fi
 echo "Listen 80" > /etc/apache2/ports.conf
+if [[ $CONTAINERROLE =~ .*:(log):.* ]]; then
+    echo "Listen 8080" >> /etc/apache2/ports.conf
+    a2enmod cgid
+    a2ensite docassemble-log
+fi
 if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
     echo "Listen 8081" >> /etc/apache2/ports.conf
     a2ensite docassemble-redirect
