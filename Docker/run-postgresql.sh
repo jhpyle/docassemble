@@ -5,7 +5,7 @@ export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/local}/bin/activate"
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
 source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
 
-PGVERSION=`pg_config --version | sed 's/PostgreSQL \([0-9][0-9]*\.[0-9][0-9]*\).*/\1/'`
+PGVERSION=$(pg_config --version | sed 's/PostgreSQL \([0-9][0-9]*\.[0-9][0-9]*\).*/\1/')
 
 if [[ $PGVERSION == 10* ]]; then
     PGVERSION=10
@@ -33,26 +33,26 @@ if [ "${AZUREENABLE:-false}" == "true" ]; then
     blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
-function stopfunc {
+function stopfunc() {
     sleep 1
     echo "backing up postgres" >&2
     if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
-	PGBACKUPDIR=`mktemp -d`
+        PGBACKUPDIR=$(mktemp -d)
     else
-	PGBACKUPDIR=${DA_ROOT}/backup/postgres
-	mkdir -p $PGBACKUPDIR
+        PGBACKUPDIR=${DA_ROOT}/backup/postgres
+        mkdir -p $PGBACKUPDIR
     fi
     chown postgres.postgres "$PGBACKUPDIR"
     su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	aws s3 sync "$PGBACKUPDIR/" s3://${S3BUCKET}/postgres/
-	rm -rf "$PGBACKUPDIR"
+        aws s3 sync "$PGBACKUPDIR/" s3://${S3BUCKET}/postgres/
+        rm -rf "$PGBACKUPDIR"
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
-	for the_file in $(find "$PGBACKUPDIR" -type f); do
-	    target_file=`basename $the_file`
-	    blob-cmd -f cp "$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/${target_file}"
-	done
-	rm -rf "$PGBACKUPDIR"
+        for the_file in $(find "$PGBACKUPDIR" -type f); do
+            target_file=$(basename $the_file)
+            blob-cmd -f cp "$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/${target_file}"
+        done
+        rm -rf "$PGBACKUPDIR"
     fi
     echo "stopping postgres" >&2
     pg_ctlcluster --force $PGVERSION main stop
