@@ -18508,13 +18508,14 @@ def api_interviews():
 def api_playground():
     if not api_verify(request, roles=['admin', 'developer']):
         return jsonify_with_status("Access denied.", 403)
-    folder = request.args.get('folder', 'static')
+    post_data = request.form.copy()
+    folder = post_data.get('folder', 'static')
     try:
         if current_user.has_role('admin'):
-            user_id = int(request.args.get('user_id', current_user.id))
+            user_id = int(post_data.get('user_id', current_user.id))
         else:
             if 'user_id' in requests.args:
-                assert int(request.args['user_id']) == current_user.id
+                assert int(post_data['user_id']) == current_user.id
             user_id = current_user.id
     except:
         return jsonify_with_status("Invalid user_id.", 400)
@@ -18526,6 +18527,7 @@ def api_playground():
         section = 'template'
     else:
         section = folder
+    docassemble.base.functions.this_thread.current_info['user'] = dict(is_anonymous=False, theid=user_id)
     from docassemble.webapp.playground import PlaygroundSection
     pg_section = PlaygroundSection(section=section)
     found = False
@@ -18543,6 +18545,8 @@ def api_playground():
         return jsonify_with_status("Error saving file(s).", 400)
     if not found:
         return jsonify_with_status("No file found.", 400)
+    for key in r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
+        r.incr(key)
     if section == 'modules':
         restart_all()
     return ('', 204)

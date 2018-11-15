@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.11] - 2018-11-15
+### Added
+- The `/api/playground` file upload feature.
+
 ## [0.3.10] - 2018-11-13
 ### Added
 - The `page after login` feature.
