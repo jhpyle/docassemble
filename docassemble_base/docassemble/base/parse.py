@@ -2835,8 +2835,8 @@ class Question:
                 if 'pdf template file' in target:
                     template_type = 'pdf'
                     target['valid formats'] = ['pdf']
-                    if 'editable' in target and not target['editable']:
-                        options['editable'] = False
+                    if 'editable' in target:
+                        options['editable'] = compile(unicode(target['editable']), '<editable expression>', 'eval')
                 elif 'docx template file' in target:
                     template_type = 'docx'
                     if 'valid formats' in target:
@@ -3629,7 +3629,7 @@ class Question:
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
                         docassemble.base.functions.set_context('pdf')
-                        the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=attachment['options'].get('editable', True), pdfa=result['convert_to_pdf_a'], password=result['password'])
+                        the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'])
                         result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
                         for key in ('images', 'data_strings', 'convert_to_pdf_a', 'password', 'update_references'):
                             if key in result:
@@ -3765,6 +3765,10 @@ class Question:
                 result['redact'] = attachment['options']['redact']
         else:
             result['redact'] = True
+        if 'editable' in attachment['options']:
+            result['editable'] = eval(attachment['options']['editable'], user_dict)
+        else:
+            result['editable'] = True
         docassemble.base.functions.this_thread.misc['redact'] = result['redact']
         result['markdown'] = dict();
         result['content'] = dict();

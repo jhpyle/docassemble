@@ -179,7 +179,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name]
     #logmessage("Arguments are " + str(subprocess_arguments))
-    if editable:
+    if editable or len(images):
         subprocess_arguments.append('need_appearances')
     else:
         subprocess_arguments.append('flatten')
@@ -252,6 +252,8 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
             shutil.copyfile(new_pdf_file.name, pdf_file.name)
             for item in image_todo:
                 item['overlay_stream'].close()
+    if (not editable) and len(images):
+        flatten_pdf(pdf_file.name)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
     if editable:
@@ -538,3 +540,15 @@ def replicate_js_and_calculations(template_filename, original_filename, password
     writer.write(outfile)
     outfile.flush()
     shutil.move(outfile.name, original_filename)
+
+def flatten_pdf(filename):
+    #logmessage("flatten_pdf: running")
+    outfile = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+    subprocess_arguments = [PDFTK_PATH, filename, 'output', outfile.name, 'flatten']
+    #logmessage("Arguments are " + str(subprocess_arguments))
+    result = call(subprocess_arguments)
+    if result != 0:
+        logmessage("Failed to flatten PDF form " + str(template))
+        raise DAError("Call to pdftk failed for template " + str(template) + " where arguments were " + " ".join(subprocess_arguments))
+    commands = []
+    shutil.move(outfile.name, filename)

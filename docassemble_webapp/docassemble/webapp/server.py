@@ -18465,7 +18465,7 @@ def api_user_interviews():
         try:
             the_list = user_interviews(user_id=current_user.id, secret=secret, filename=filename, session=session, exclude_invalid=False, tag=tag, include_dict=include_dict)
         except:
-            return jsonify_with_status("Error reading interview list.", 400)            
+            return jsonify_with_status("Error reading interview list.", 400)
         return jsonify(docassemble.base.functions.safe_json(the_list))
     elif request.method == 'DELETE':
         try:
@@ -18502,6 +18502,50 @@ def api_interviews():
         for info in the_list:
             user_interviews(user_id=info['user_id'], action='delete', filename=info['filename'], session=info['session'])
         return ('', 204)
+
+@app.route('/api/playground', methods=['POST'])
+@csrf.exempt
+def api_playground():
+    if not api_verify(request, roles=['admin', 'developer']):
+        return jsonify_with_status("Access denied.", 403)
+    folder = request.args.get('folder', 'static')
+    try:
+        if current_user.has_role('admin'):
+            user_id = int(request.args.get('user_id', current_user.id))
+        else:
+            if 'user_id' in requests.args:
+                assert int(request.args['user_id']) == current_user.id
+            user_id = current_user.id
+    except:
+        return jsonify_with_status("Invalid user_id.", 400)
+    if folder not in ('questions', 'sources', 'static', 'templates', 'modules'):
+        return jsonify_with_status("Invalid folder.", 400)
+    if folder == 'questions':
+        section = ''
+    elif folder == 'template':
+        section = 'template'
+    else:
+        section = folder
+    from docassemble.webapp.playground import PlaygroundSection
+    pg_section = PlaygroundSection(section=section)
+    found = False
+    try:
+        for filekey in request.files:
+            the_files = request.files.getlist(filekey)
+            if the_files:
+                for the_file in the_files:
+                    filename = secure_filename(the_file.filename)
+                    temp_file = tempfile.NamedTemporaryFile(prefix="datemp", delete=False)
+                    the_file.save(temp_file.name)
+                    pg_section.copy_from(temp_file.name, filename=filename)
+                    found = True
+    except:
+        return jsonify_with_status("Error saving file(s).", 400)
+    if not found:
+        return jsonify_with_status("No file found.", 400)
+    if section == 'modules':
+        restart_all()
+    return ('', 204)
 
 @app.route('/manage_api', methods=['GET', 'POST'])
 @login_required
