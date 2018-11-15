@@ -1082,6 +1082,42 @@ Response on success: [200]
 
 Body of response: the contents of the file
 
+## <a name="playground_upload"></a>Upload files to the Playground
+
+Description: Saves one or more uploaded files to a folder in the [Playground].
+
+Path: `/api/playground`
+
+Method: [POST]
+
+Parameters:
+
+ - `key`: the API key.
+ - `user_id` (optional): the user ID of the user whose [Playground]
+   should be written to.  Only users with `admin` privileges can write
+   to a different user's [Playground].  The default is the current
+   user's user ID.
+ - `folder` (optional): the folder in the [Playground] to which the
+   uploaded file(s) should be written.  Must be one of `questions`,
+   `sources`, `static`, `templates`, or `modules`.
+ - `file` or `files[]`: the files to upload.
+
+Required privileges: `admin` or `developer`
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Invalid user_id" if the user does not have administrative
+   privileges and the `user_id` is different from the current user's
+   user ID.
+ - [400] "Invalid folder" if the value of `folder` is unknown.
+ - [400] "Error saving file(s)" if an error occurred during the
+   process of saving files.
+ - [400] "No file found." if no uploaded files were provided.
+
+Response on success: [200]
+
+Body of response: empty.
+
 # <a name="questionless"></a>Example of usage: questionless interview
 
 One way to use the API is to use **docassemble** as nothing more than
@@ -1215,3 +1251,4 @@ function.
 [`log()`]: {{ site.baseurl }}/docs/functions.html#log
 [`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
 [`del`]: https://docs.python.org/2.0/ref/del.html
+[Playground]: {{ site.baseurl }}/docs/playground.html

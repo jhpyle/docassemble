@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.11](https://github.com/jhpyle/docassemble/releases/tag/v0.3.11) - 2018-11-15
+
+### Added
+- The `/api/playground` file upload feature.
+
 ## [0.3.10](https://github.com/jhpyle/docassemble/releases/tag/v0.3.10) - 2018-11-13
 
 ### Added
