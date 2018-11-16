@@ -2278,7 +2278,7 @@ def url_ask(data):
             variables.append(the_saveas)
     return url_action('_da_force_ask', variables=variables)
 
-def action_button_html(url, icon=None, color='success', size='sm', block=False, label='Edit'):
+def action_button_html(url, icon=None, color='success', size='sm', block=False, label='Edit', classname=None, new_window=True):
     """Returns HTML for a button that visits a particular URL."""
     if not isinstance(label, basestring):
         label = 'Edit'
@@ -2294,6 +2294,10 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
         block = ' btn-block'
     else:
         block = ''
+    if classname is None:
+        classname = ''
+    else:
+        classname = ' ' + unicode(classname)
     if isinstance(icon, basestring):
         icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
         if not re.search(r'^fa[a-z] fa-', icon):
@@ -2301,4 +2305,8 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
         icon = '<i class="' + icon + '"></i> '
     else:
         icon = ''
-    return '<a href="' + url + '" class="btn' + size + block + ' btn-' + color + ' btn-revisit">' + icon + word(label) + '</a> '
+    if new_window:
+        target = ''
+    else:
+        target = 'target="_self" '
+    return '<a ' + target + 'href="' + url + '" class="btn' + size + block + ' btn-' + color + ' btn-revisit' + classname + '">' + icon + word(label) + '</a> '
