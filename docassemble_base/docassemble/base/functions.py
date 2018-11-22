@@ -2842,7 +2842,8 @@ def value(var):
     cum_variable = ''
     for elem in components:
         if elem[0] == 'name':
-            cum_variable += elem[1]
+            if cum_variable == '':
+                cum_variable = elem[1]
             continue
         elif elem[0] == 'attr':
             to_eval = "hasattr(" + cum_variable + ", " + repr(elem[1]) + ")"
@@ -2852,10 +2853,18 @@ def value(var):
                 the_index = eval(elem[1], the_user_dict)
             except:
                 force_ask(var, persistent=False)
-            if type(the_index) == int:
-                to_eval = 'len(' + cum_variable + ') > ' + str(the_index)
+            try:
+                the_cum_variable = eval(cum_variable, the_user_dict)
+            except:
+                force_ask(var, persistent=False)
+            if hasattr(the_cum_variable, 'instanceName') and hasattr(the_cum_variable, 'elements'):
+                cum_variable_elements = cum_variable + '.elements'
             else:
-                to_eval = elem[1] + " in " + cum_variable
+                cum_variable_elements = cum_variable
+            if type(the_index) == int:
+                to_eval = 'len(' + cum_variable_elements + ') > ' + str(the_index)
+            else:
+                to_eval = elem[1] + " in " + cum_variable_elements
             cum_variable += '[' + elem[1] + ']'
         try:
             result = eval(to_eval, the_user_dict)
