@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.12](https://github.com/jhpyle/docassemble/releases/tag/v0.3.12) - 2018-11-22
+
+### Fixed
+- Problem with `value()` using a variable as an iterator.
+
 ## [0.3.11](https://github.com/jhpyle/docassemble/releases/tag/v0.3.11) - 2018-11-15
 
 ### Added
