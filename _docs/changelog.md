@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.13](https://github.com/jhpyle/docassemble/releases/tag/v0.3.13) - 2018-11-23
+
+### Added
+- "Sync and Run" button in the Playground.
+
 ## [0.3.12](https://github.com/jhpyle/docassemble/releases/tag/v0.3.12) - 2018-11-22
 
 ### Fixed

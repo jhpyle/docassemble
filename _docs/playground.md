@@ -510,6 +510,12 @@ When you go into a "folder," you will see a button that looks like this:
 
 Pressing any of these buttons will trigger a synchronization process.
 
+![Playground GD Sync and Run]({{ site.baseurl }}/img/playground-gd-sync-and-run.png) 
+
+Pressing the "Sync and Run" button is like "Save and Run" except it
+triggers a synchronization process and then starts an interview in
+another tab.
+
 The synchronization process moves files between [Google Drive] and the
 Playground depending on which files were more recently modified, or
 which files are missing in one place and present in the other.  The
