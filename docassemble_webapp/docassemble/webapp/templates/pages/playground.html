@@ -87,6 +87,13 @@
   <div class="form-actions mt-2 ml-1">
     {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS'], tabindex="90") }}
     {% if is_new == 'False' %}<a tabindex="100" id="daRun" target="_blank" href="{{ url_for('playground_redirect') }}" class="btn btn-warning {{ config['BUTTON_CLASS'] }}" >{{ word("Save and Run") }}</a>
+    {%- if use_gd %}
+    <a tabindex="101" id="daRunSyncGD" target="_blank" href="{{ url_for('playground_poll') }}" class="btn btn-warning {{ config['BUTTON_CLASS'] }}" ><i class="fab fa-google-drive" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Sync and Run") }}</a>
+    {%- endif %}
+    {%- if use_od %}
+    <a tabindex="101" id="daRunSyncOD" target="_blank" href="{{ url_for('playground_poll') }}" class="btn btn-warning {{ config['BUTTON_CLASS'] }}" ><i class="fab fa-windows" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Sync and Run") }}</a>
+    {%- endif %}
+    
     {{ render_submit_field(form.delete, id='daDelete', class="btn btn-danger " + config['BUTTON_CLASS'], tabindex="110") }}
     {% if interview_path %}
     <a tabindex="120" title="Right-click to copy link" class="badge badge-secondary example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="fas fa-link"></i>&nbsp;&nbsp;{{ word('Share') }}</a>

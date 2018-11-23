@@ -11946,6 +11946,33 @@ def restart_page():
     extra_meta = """\n    <meta http-equiv="refresh" content="8;URL='""" + next_url + """'">"""
     return render_template('pages/restart.html', version_warning=None, bodyclass='adminbody', extra_meta=Markup(extra_meta), extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting'))
 
+@app.route('/playground_poll', methods=['GET'])
+@login_required
+@roles_required(['admin', 'developer'])
+def playground_poll():
+    script = """
+    <script>
+      function daPollCallback(data){
+        if (data.success){
+          window.location.replace(data.url);
+        }
+      }
+      function daPoll(){
+        $.ajax({
+          type: 'GET',
+          url: """ + json.dumps(url_for('playground_redirect_poll')) + """,
+          success: daPollCallback,
+          dataType: 'json'
+        });
+        return true;
+      }
+      $( document ).ready(function() {
+        //console.log("polling");
+        setInterval(daPoll, 4000);
+      });
+    </script>"""
+    return render_template('pages/playground_poll.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Waiting'), page_title=word('Waiting'))
+
 def get_gd_flow():
     app_credentials = current_app.config['OAUTH_CREDENTIALS'].get('googledrive', dict())
     client_id = app_credentials.get('id', None)
@@ -12098,6 +12125,7 @@ def trash_gd_file(section, filename):
 @roles_required(['admin', 'developer'])
 def sync_with_google_drive():
     next = request.args.get('next', url_for('playground_page'))
+    auto_next = request.args.get('auto_next', None)
     if app.config['USE_GOOGLE_DRIVE'] is False:
         flash(word("Google Drive is not configured"), "error")
         return redirect(next)
@@ -12109,17 +12137,22 @@ def sync_with_google_drive():
         return redirect(uri)
     task = docassemble.webapp.worker.sync_with_google_drive.delay(current_user.id)
     session['taskwait'] = task.id
-    return redirect(url_for('gd_sync_wait', next=next))
+    if auto_next:
+        return redirect(url_for('gd_sync_wait', auto_next=auto_next))
+    else:
+        return redirect(url_for('gd_sync_wait', next=next))
 
 @app.route('/gdsyncing', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
 def gd_sync_wait():
     next_url = request.args.get('next', url_for('playground_page'))
+    auto_next_url = request.args.get('auto_next', None)
     my_csrf = generate_csrf()
     script = """
     <script>
       var checkinInterval = null;
+      var autoNext = """ + json.dumps(auto_next_url) + """;
       var resultsAreIn = false;
       function daRestartCallback(data){
         //console.log("Restart result: " + data.success);
@@ -12139,6 +12172,9 @@ def gd_sync_wait():
           if (data.status == 'finished'){
             resultsAreIn = true;
             if (data.ok){
+              if (autoNext != null){
+                window.location.replace(autoNext);
+              }
               $("#notification").html(""" + json.dumps(word("The synchronization was successful.")) + """);
               $("#notification").removeClass("alert-info");
               $("#notification").removeClass("alert-danger");
@@ -12305,6 +12341,7 @@ def trash_od_file(section, filename):
 @roles_required(['admin', 'developer'])
 def sync_with_onedrive():
     next = request.args.get('next', url_for('playground_page'))
+    auto_next = request.args.get('auto_next', None)
     if app.config['USE_ONEDRIVE'] is False:
         flash(word("OneDrive is not configured"), "error")
         return redirect(next)
@@ -12316,17 +12353,22 @@ def sync_with_onedrive():
         return redirect(uri)
     task = docassemble.webapp.worker.sync_with_onedrive.delay(current_user.id)
     session['taskwait'] = task.id
-    return redirect(url_for('od_sync_wait', next=next))
+    if auto_next:
+        return redirect(url_for('od_sync_wait', auto_next=auto_next))
+    else:
+        return redirect(url_for('od_sync_wait', next=next))
 
 @app.route('/odsyncing', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
 def od_sync_wait():
     next_url = request.args.get('next', url_for('playground_page'))
+    auto_next_url = request.args.get('auto_next', None)
     my_csrf = generate_csrf()
     script = """
     <script>
       var checkinInterval = null;
+      var autoNext = """ + json.dumps(auto_next_url) + """;
       var resultsAreIn = false;
       function daRestartCallback(data){
         //console.log("Restart result: " + data.success);
@@ -12346,6 +12388,9 @@ def od_sync_wait():
           if (data.status == 'finished'){
             resultsAreIn = true;
             if (data.ok){
+              if (autoNext != null){
+                window.location.replace(autoNext);
+              }
               $("#notification").html(""" + json.dumps(word("The synchronization was successful.")) + """);
               $("#notification").removeClass("alert-info");
               $("#notification").removeClass("alert-danger");
@@ -14378,6 +14423,18 @@ def splitall(path):
             allparts.insert(0, parts[1])
     return allparts
 
+@app.route('/playground_redirect_poll', methods=['GET'])
+@login_required
+@roles_required(['developer', 'admin'])
+def playground_redirect_poll():
+    key = 'da:runplayground:' + str(current_user.id)
+    the_url = r.get(key)
+    #logmessage("playground_redirect: key " + str(key) + " is " + str(the_url))
+    if the_url is not None:
+        r.delete(key)
+        return jsonify(dict(success=True, url=the_url))
+    return jsonify(dict(success=False, url=the_url))
+
 @app.route('/playground_redirect', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -14763,6 +14820,23 @@ def assign_opacity(files):
         for file_dict in sorted(files, key=lambda x: x['modtime']):
             file_dict['opacity'] = round(0.2 + 0.8*(indexno/max_indexno), 2)
             indexno += 1.0
+
+@app.route('/playground_run', methods=['GET', 'POST'])
+@login_required
+@roles_required(['developer', 'admin'])
+def playground_page_run():
+    the_file = request.args.get('file')
+    if the_file:
+        active_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + the_file
+        the_url = url_for('index', reset=1, i=active_interview_string)
+        key = 'da:runplayground:' + str(current_user.id)
+        #logmessage("Setting key " + str(key) + " to " + str(the_url))
+        pipe = r.pipeline()
+        pipe.set(key, the_url)
+        pipe.expire(key, 25)
+        pipe.execute()
+        return redirect(url_for('playground_page', file=the_file))
+    return redirect(url_for('playground_page'))
             
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
@@ -15137,6 +15211,12 @@ $( document ).ready(function() {
     });
     //event.preventDefault();
     return true;
+  });
+  $("#daRunSyncGD").click(function(event){
+    window.location.replace('""" + url_for('sync_with_google_drive', auto_next=url_for('playground_page_run', file=the_file)) + """');
+  });
+  $("#daRunSyncOD").click(function(event){
+    window.location.replace('""" + url_for('sync_with_onedrive', auto_next=url_for('playground_page_run', file=the_file)) + """');
   });
   $("#form button[name='submit']").click(function(event){
     daCodeMirror.save();

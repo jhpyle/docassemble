@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.13] - 2018-11-23
+### Added
+- "Sync and Run" button in the Playground.
+
 ## [0.3.12] - 2018-11-22
 ### Fixed
 - Problem with `value()` using a variable as an iterator.
