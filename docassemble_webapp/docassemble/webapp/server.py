@@ -11704,7 +11704,7 @@ from fnmatch import fnmatchcase
 from distutils2.util import convert_path
 
 standard_exclude = ('*.py', '*.pyc', '*~', '.*', '*.bak', '*.swp*')
-standard_exclude_directories = ('.*', 'CVS', '_darcs', './build', './dist', 'EGG-INFO', '*.egg-info', '.git', '.gitignore')
+standard_exclude_directories = ('.*', 'CVS', '_darcs', os.path.join('.', 'build'), os.path.join('.', 'dist'), 'EGG-INFO', '*.egg-info')
 def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
     out = {}
     stack = [(convert_path(where), '', package)]
@@ -11728,7 +11728,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
                         new_package = package + '.' + name
                         stack.append((fn, '', new_package))
                 else:
-                    stack.append((fn, prefix + name + '/', package))
+                    stack.append((fn, prefix + name + os.path.sep, package))
             else:
                 bad_name = False
                 for pattern in exclude:
@@ -11754,7 +11754,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
       packages=find_packages(),
       namespace_packages = ['docassemble'],
       zip_safe = False,
-      package_data=find_package_data(where='docassemble/""" + str(pkgname) + """/', package='docassemble.""" + str(pkgname) + """'),
+      package_data=find_package_data(where=os.path.join('docassemble', '""" + str(pkgname) + """', ''), package='docassemble.""" + str(pkgname) + """'),
      )
 
 """
@@ -12371,6 +12371,11 @@ def od_sync_wait():
       var autoNext = """ + json.dumps(auto_next_url) + """;
       var resultsAreIn = false;
       function daRestartCallback(data){
+        if (autoNext != null){
+          setTimeout(function(){
+            window.location.replace(autoNext);
+          }, 1000);
+        }
         //console.log("Restart result: " + data.success);
       }
       function daRestart(){
@@ -12388,9 +12393,6 @@ def od_sync_wait():
           if (data.status == 'finished'){
             resultsAreIn = true;
             if (data.ok){
-              if (autoNext != null){
-                window.location.replace(autoNext);
-              }
               $("#notification").html(""" + json.dumps(word("The synchronization was successful.")) + """);
               $("#notification").removeClass("alert-info");
               $("#notification").removeClass("alert-danger");
@@ -12409,6 +12411,11 @@ def od_sync_wait():
             }
             if (data.restart){
               daRestart();
+            }
+            else{
+              if (autoNext != null){
+                window.location.replace(autoNext);
+              }
             }
           }
           else if (data.status == 'failed' && !resultsAreIn){

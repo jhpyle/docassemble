@@ -449,6 +449,26 @@ class DAList(DAObject):
             self.ask_object_type = False
         return super(DAList, self).init(*pargs, **kwargs)
     
+    def filter(self, *pargs, **kwargs):
+        """Returns a filtered version of the list containing only items with particular values of attributes."""
+        self._trigger_gather()
+        new_elements = list()
+        for item in self.elements:
+            include = True
+            for key, val in kwargs.iteritems():
+                if getattr(item, key) != val:
+                    include = False
+                    break
+            if include:
+                new_elements.append(item)
+        if len(pargs):
+            new_instance_name = pargs[0]
+        else:
+            new_instance_name = self.instanceName
+        new_list = self.copy_shallow(new_instance_name)
+        new_list.elements = new_elements
+        return new_list
+        
     def _trigger_gather(self):
         """Triggers the gathering process."""
         if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
@@ -1764,6 +1784,25 @@ class DASet(DAObject):
             self.revisit = True
             del kwargs['elements']
         return super(DASet, self).init(*pargs, **kwargs)
+    def filter(self, *pargs, **kwargs):
+        """Returns a filtered version of the list containing only items with particular values of attributes."""
+        self._trigger_gather()
+        new_elements = set()
+        for item in self.elements:
+            include = True
+            for key, val in kwargs.iteritems():
+                if getattr(item, key) != val:
+                    include = False
+                    break
+            if include:
+                new_elements.add(item)
+        if len(pargs):
+            new_instance_name = pargs[0]
+        else:
+            new_instance_name = self.instanceName
+        new_set = self.copy_shallow(new_instance_name)
+        new_set.elements = new_elements
+        return new_set
     def _trigger_gather(self):
         """Triggers the gathering process."""
         if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:

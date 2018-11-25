@@ -7,6 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
 from selenium.webdriver import ChromeOptions, Chrome
 import time
+import os
 
 default_path = "http://localhost"
 #default_path = "https://demo.docassemble.org"
@@ -79,11 +80,11 @@ def setup_browser():
         options = ChromeOptions()
         options.add_argument("--window-size=1005,9999")
         options.add_argument("--headless");
-        world.browser = MyChrome(executable_path='../../chromedriver', chrome_options=options)
+        world.browser = MyChrome(executable_path=os.path.join('..', '..', 'chromedriver'), chrome_options=options)
     else:
         options = ChromeOptions()
         options.add_argument("--start-maximized");
-        world.browser = MyChrome(executable_path='../../chromedriver', chrome_options=options)
+        world.browser = MyChrome(executable_path=os.path.join('..', '..', 'chromedriver'), chrome_options=options)
     world.da_path = default_path
     world.wait_seconds = default_wait_seconds
 

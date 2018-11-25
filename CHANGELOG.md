@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.3.14] - 2018-11-24
+### Added
+- The `.filter()` method of the `DAList` class.
+- The `mmdc()` function for generating diagrams and flowcharts with mermaid.
+
 ## [0.3.13] - 2018-11-23
 ### Added
 - "Sync and Run" button in the Playground.
