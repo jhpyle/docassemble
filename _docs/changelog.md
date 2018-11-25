@@ -8,6 +8,7 @@ short_title: Change Log
 
 ### Added
 - The `.filter()` method of the `DAList` class.
+- The `mmdc()` function for generating diagrams and flowcharts with mermaid.
 
 ## [0.3.13](https://github.com/jhpyle/docassemble/releases/tag/v0.3.13) - 2018-11-23
 
