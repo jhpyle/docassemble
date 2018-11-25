@@ -4453,6 +4453,36 @@ arguments is a list, it will be unpacked.
 * `password`: if provided, the [PDF] file will be protected.  See the
   documentation for the [`password`] document modifier.
 
+## <a name="overlay_pdf"></a>overlay_pdf()
+
+The `overlay_pdf()` function overlays a single page from a PDF file on
+top of the pages of another PDF file.
+
+It has two mandatory parameters: a main document, and an overlay
+document.  The parameters can be [`DAFileCollection`], [`DAFileList`],
+or [`DAFile`] objects.  They can also be file paths for files on the
+file system.
+
+The function returns a [`DAFile`] containing a PDF file where the
+first page of the overlay document has been superimposed on top of the
+main document.
+
+{% include demo-side-by-side.html demo="overlay-pdf" %}
+
+The `overlay_pdf()` function accepts several optional keyword
+parameters.  If you only want to overlay on top of some of the pages
+of the main document, you can indicate a `first_page` and/or a
+`last_page`, which will instruct `overlay_pdf()` to start at a given
+page number and/or end at a given page number.  By default,
+`overlay_pdf()` starts on the first page and ends on the last page.
+If you only want to overlay over even-numbered pages, set `only` to
+`'even'`.  If you only want to overlay over odd-numbered pages, set
+`only` to `'odd'`.
+
+If your document containing the logo has more than one page, you can
+specify which page to use by setting `logo_page` to the page number of
+the page you want to use.
+
 ## <a name="zip_file"></a>zip_file()
 
 The `zip_file()` function is like the [`pdf_concatenate()`] function,

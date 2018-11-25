@@ -5911,7 +5911,6 @@
   \ an option from the\n  menu in the upper right."
 "mermaid": |-
   modules:
-    - docassemble.base.util
     - docassemble.base.mermaid
   ---
   template: diagram
@@ -5922,7 +5921,7 @@
         ${ b }-->${ d };
         ${ c }-->${ d };
   ---
-  question: Give me some names
+  question: Give me some names.
   fields:
     - A: a
       default: A
@@ -10379,6 +10378,39 @@
   fields:
     - First: client.name.first
     - Last: client.name.last
+"overlay-pdf": |-
+  modules:
+    - docassemble.base.util
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+  ---
+  question: |
+    What is your favorite vegetable?
+  fields:
+    - Vegetable: favorite_vegetable
+  ---
+  question: |
+    Upload your company logo.
+  fields:
+    - Logo: logo_image
+      datatype: file
+  ---
+  attachment:
+    variable name: logo_page
+    docx template file: logo_template.docx
+  ---
+  attachment:
+    variable name: the_document
+    docx template file: food_template.docx
+  ---
+  mandatory: True
+  question: |
+    Here is your document.
+  subquestion: |
+    ${ overlay_pdf(the_document, logo_page) }
 "predict-activity": |-
   mandatory: True
   question: |
