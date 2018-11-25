@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.14](https://github.com/jhpyle/docassemble/releases/tag/v0.3.14) - 2018-11-24
+
+### Added
+- The `.filter()` method of the `DAList` class.
+
 ## [0.3.13](https://github.com/jhpyle/docassemble/releases/tag/v0.3.13) - 2018-11-23
 
 ### Added

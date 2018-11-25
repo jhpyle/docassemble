@@ -4545,6 +4545,34 @@ it converts a variable name from base64 encoding to plain text.
 u'favorite_fruit'
 {% endhighlight %}
 
+## <a name="mmdc"></a>mmdc()
+
+Using the `mmdc()` function, you can use the [mermaid] diagram-drawing
+system to produce a [`DAFile`] containing a completed diagram.
+
+The `mmdc()` function is defined in the `docassemble.base.mermaid`
+package.  To use it, you will need to include the
+`docassemble.base.mermaid` module in your interview:
+
+{% highlight yaml %}
+modules: 
+  - docassemble.base.mermaid
+{% endhighlight %}
+
+Then you can call the `mmdc()` function on a text string or a
+[template].
+
+{% include side-by-side.html demo="mermaid" %}
+
+If you installed **docassemble** with the standard [Docker]
+installation, then the [mermaid] executable (`mmdc`) should be
+available on the standard system path.  You can set a precise location
+by setting the `mmdc path` directive in the [Configuration].
+
+{% highlight yaml %}
+mmdc path: /var/www/node_modules/.bin/mmdc
+{% endhighlight %}
+
 # <a name="sms"></a>Functions for working with SMS messages
 
 ## <a name="send_sms"></a>send_sms()
@@ -6189,3 +6217,5 @@ $(document).on('daPageLoad', function(){
 [customizing the display of `review` options]: {{ site.baseurl }}/docs/fields.html#review customization
 [`word()`]: #word
 [Font Awesome]: https://fontawesome.com
+[mermaid]: https://github.com/mermaidjs/mermaid.cli
+[template]: {{ site.baseurl }}/docs/template.html#template

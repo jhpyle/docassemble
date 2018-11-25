@@ -140,7 +140,6 @@ trustee's name (so it can say "Remember that John Smith's phone number
 is ..."), and then ask for the trustee's `phone_number` if it is not
 already defined.
 
-
 # <a name="stdclasses"></a>Standard docassemble classes
 
 To use the classes described in this section in your interviews, you
@@ -711,6 +710,22 @@ Other methods available on a `DAList` are:
   `edit_url_only` is true, a plain URL for the edit action is
   returned, rather than HTML.  If `delete_url_only` is true, a plain
   URL for the delete action is returned, rather than HTML.
+* <a name="DAList.filter"></a> - returns a shallow copy of the list
+  object where the elements of the list are filtered according to
+  criteria specified in keyword arguments.  For example, if `person`
+  is a list of [`Individual`]s, and each individual has an attribute
+  `is_witness` that is either `True` if the person is a witness and
+  `False` otherwise, you can write `person.filter(is_witness=True)` to
+  get a list of witnesses.  This only works if the list is a list of
+  objects.  By default, the list that is returned will have the same
+  instance name as the original list, but you can change this by
+  passing a single positional parameter.  Running `witness =
+  person.filter('witness', is_witness=True)`, for example, will set
+  `witness` to an object with the instance name `witness`.  However,
+  note that the instance names of the elements of the list will not be
+  changed.  While the `filter()` method can be a useful shorthand, its
+  features are very limited.  In most situations, it is probably
+  better to use a [list comprehension].
 
 If you refer to a list in a [Mako] template (e.g., `The applicants
 include: ${ applicant }`) or convert it to text with the
@@ -3881,3 +3896,4 @@ of the original [`DADateTime`] object.  See
 [Object-oriented Programming for Document Assembly Developers]: https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/
 [Quinten Steenhuis]: https://www.nonprofittechy.com/about/
 [Python book]: http://shop.oreilly.com/product/0636920028154.do
+[list comprehension]: https://docs.python.org/2.7/tutorial/datastructures.html#list-comprehensions
