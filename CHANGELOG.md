@@ -1,6 +1,10 @@
 # Change Log
 
-## [0.3.14] - 2018-11-24
+## [0.3.15] - 2018-11-26
+### Added
+- The `overlay_pdf()` function.
+
+## [0.3.14] - 2018-11-25
 ### Added
 - The `.filter()` method of the `DAList` class.
 - The `mmdc()` function for generating diagrams and flowcharts with mermaid.

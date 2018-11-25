@@ -552,3 +552,34 @@ def flatten_pdf(filename):
         raise DAError("Call to pdftk failed for template " + str(template) + " where arguments were " + " ".join(subprocess_arguments))
     commands = []
     shutil.move(outfile.name, filename)
+
+def overlay_pdf(main_file, logo_file, out_file, first_page=None, last_page=None, logo_page=None, only=None):
+    main_pdf = pypdf.PdfFileReader(main_file)
+    logo_pdf = pypdf.PdfFileReader(logo_file)
+    output_pdf = pypdf.PdfFileWriter()
+    if first_page is None or first_page < 1:
+        first_page = 1
+    if last_page is None or last_page < 1:
+        last_page = main_pdf.getNumPages()
+    if first_page > main_pdf.getNumPages():
+        first_page = main_pdf.getNumPages()
+    if last_page < first_page:
+        last_page = first_page
+    if logo_page is None or logo_page < 1:
+        logo_page = 1
+    if logo_page > logo_pdf.getNumPages():
+        logo_page = logo_pdf.getNumPages()
+    for page_no in range(first_page - 1, last_page):
+        if only == 'even':
+            if page_no % 2 == 0:
+                continue
+        elif only == 'odd':
+            if page_no % 2 != 0:
+                continue
+        page = main_pdf.getPage(page_no)
+        page.mergePage(logo_pdf.getPage(logo_page - 1))
+    for page_no in range(main_pdf.getNumPages()):
+        page = main_pdf.getPage(page_no)
+        output_pdf.addPage(page)
+    with open(out_file, 'wb') as fp:
+        output_pdf.write(fp)
