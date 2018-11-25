@@ -1,24 +1,24 @@
 ---
 layout: docs
-title: Objects
-short_title: Objects
+title: Objects Blocks
+short_title: Objects Blocks
 ---
 
-# <a name="how"></a>How docassemble uses objects
+# <a name="how"></a>How DALang uses Objects
 
 [Python] allows [object-oriented programming] and so does
-**docassemble**.
+[DALang].
 
 Object-oriented programming can seem complicated at first, but it
 actually makes programming much easier.  For an easy-to-read
 introduction to object-oriented programming, see [Object-oriented
-Programming for Document Assembly Developers] by [Quinten Steenhuis].
+Programming] by [Quinten Steenhuis].
 
 Here is a non-object-oriented way of saying hello to the user by name:
 
 {% include side-by-side.html demo="hello-not-oop" %}
 
-A better way is to define `user` as a **docassemble** object,
+A better way is to define `user` as a [DALang] object,
 [`Individual`].
 
 {% include side-by-side.html demo="hello-oop" %}
@@ -33,10 +33,10 @@ An object is a special type of variable.  Rather than being a piece of
 text, like `user_first_name` is, the variable `user` is an "object"
 that is an "instance" of the "class" known as [`Individual`].
 
-Using objects in **docassemble** requires a little bit of setup using
+Using objects in DALang requires a little bit of setup using
 [initial blocks].  [`Individual`] is defined in the
 [`docassemble.base.util`]<span></span> [Python module], so it was necessary to
-bring that module into the interview with a [`modules`] block.  It was
+bring that module into the DALang with a [`modules`] block.  It was
 also necessary to use an [`objects`] block to declare that `user` is
 an instance of the class [`Individual`].
 
@@ -60,7 +60,7 @@ before them.  The difference is that they run code to produce a value,
 rather than simply accessing a stored value.  You can tell by the
 presence of parentheses whether a method is being used.
 
-Using objects in your interviews has a number of advantages over
+Using objects in your DALang has a number of advantages over
 using plain variables.
 
 <a name="generic"></a>The first advantage is that you can write
@@ -76,7 +76,7 @@ that acts as a stand-in for any object of type `Individual`.
 
 {% include side-by-side.html demo="generic-object-phone-number" %}
 
-Any time **docassemble** needs to know the phone number of an
+Any time your Steward needs to know the phone number of an
 [`Individual`], this question will allow it to ask the appropriate question.
 
 In the question text above, [`possessive()`] is a "method" that you can
@@ -117,7 +117,7 @@ they allow you to write code that looks much like plain English.
 
 In part, this is because objects allow you to do complicated things in
 an implicit way.  For example, writing `${ grantee }` in a [Mako]
-template will return the name of the grantee.  The interview
+template will return the name of the grantee.  The Steward
 implicitly calls the method `__str()__` on `grantee`.
 `grantee.__str()__` in turn calls `grantee.name.full()`, which strings
 together the `grantee`'s full name from its constituent parts
@@ -127,7 +127,7 @@ not defined.
 
 Note that object methods may depend upon particular attributes of
 objects being defined.  If an attribute is needed but not defined,
-**docassemble** will go looking for a `question` or `code` block that
+your Steward will go looking for a `question` or `code` block that
 defines the attribute.  For example, if you write this in a question:
 
 {% highlight text %}
@@ -135,40 +135,40 @@ Remember that ${ trustee.possessive('phone number') } is
 ${ trustee.phone_number }.
 {% endhighlight %}
     
-then in order to ask the question, **docassemble** may ask you for the
+then in order to ask the question, your Steward may ask you for the
 trustee's name (so it can say "Remember that John Smith's phone number
 is ..."), and then ask for the trustee's `phone_number` if it is not
 already defined.
 
-# <a name="stdclasses"></a>Standard docassemble classes
+# <a name="stdclasses"></a>Standard DALang Objects
 
-To use the classes described in this section in your interviews, you
+To use the [DALang] objects described in this section in your [DALang], you
 need to include them from the [`docassemble.base.util`] module by
-writing the following somewhere in your interview:
+writing the following somewhere in your DALang:
 
 {% highlight yaml %}
 modules:
   - docassemble.base.util
 {% endhighlight %}
 
-Unless otherwise instructed, you can assume that all of the classes
-discussed in this section are available in interviews when you include
+Unless otherwise instructed, you can assume that all of the objects
+discussed in this section are available in DALang when you include
 this [`modules`] block.
 
-## <a name="DAObject"></a>DAObject
+## <a name="DAObject"></a>DAObject - DALang Object
 
-All **docassemble** objects are instances of the `DAObject` class.
+All [DALang] objects are instances of the `DAObject` class.
 `DAObject`s are different from normal [Python objects] because they
 have special features that allow their attributes to be set by
-**docassemble** questions.  If `fruit` is an ordinary [Python object]
+a Steward's questions.  If `fruit` is an ordinary [Python object]
 and you refer to `fruit.seeds` when `seeds` is not an existing
 attribute of `fruit`, [Python] will generate an [AttributeError].  But
-if `fruit` is a `DAObject`, **docassemble** will intercept that error
+if `fruit` is a `DAObject`, the Steward will intercept that error
 and look for a [`question`] or [`code`] block that offers to define
 `fruit.seeds`.  Or, if that does not work, it will look for a
 [`generic object`] block that offers to define `x.seeds` for a `DAObject`.
 
-From the interview author's perspective, `DAObject`s can be treated
+From the Steward developer's perspective, `DAObject`s can be treated
 like ordinary [Python objects] in most ways, but there are exceptions.
 
 An important characteristic of all [`DAObject`]s is that they have
@@ -188,7 +188,7 @@ code: |
 
 then `foo.instanceName` will be `'foo'`.  The object knows its own
 name.  This is not a standard feature of [Python] objects, but a
-feature added by **docassemble**.
+feature added by DALang.
 
 Since `foo` is a [Python] object, you can create other names
 for the same object, but the `instanceName` attribute will not change.
@@ -210,7 +210,7 @@ for the same object, but the `instanceName` attribute will not change.
 {% endhighlight %}
 
 The fact that each [`DAObject`] has only one intrinsic name can lead
-to confusion in interviews if you are not careful.  For example,
+to confusion in DALang if you are not careful.  For example,
 suppose you try the following:
 
 {% include side-by-side.html demo="branch-error" %}
@@ -221,17 +221,17 @@ This will result in the following error:
 > not be looked up in the question file or in any of the files
 > incorporated by reference into the question file.
 
-You might think, "hey, why doesn't my interview ask the question that
+You might think, "hey, why doesn't my Steward ask the question that
 sets `tree.branch.length`?"  The reason is that `tree.branch` is just
 an alias for `long_branch`, and the object knows itself only as
-`long_branch`.  Thus, when the interview needs a definition for the
+`long_branch`.  Thus, when the Steward needs a definition for the
 `.length` attribute of this object, it will look for
 `long_branch.length`.
 
 If you had a question that defined `long_branch.length` or a
 [`generic object`] question for the `x.length` where `x` is a
-[`DAObject`], then the interview would use that question.  However,
-the interview is not able to search for the length of the branch using
+[`DAObject`], then the Steward would use that question.  However,
+the Steward is not able to search for the length of the branch using
 `tree.branch.length` since the intrinsic name of the object is
 `long_branch`, not `tree.branch`.
 
@@ -279,7 +279,7 @@ the gender of the second argument.)
 leaves`.  Calling `park.front_gate.object_possessive('latch')` will
 return `the latch of the front gate in the park`.
 
-The `DAObject` is the most basic object, and all other **docassemble**
+The `DAObject` is the most basic object, and all other [DALang]
 objects inherit from it.  These objects will have different methods
 and behaviors.  For example, if `friend` is an [`Individual`] (from
 [`docassemble.base.util`]), calling `${ friend }` in a [Mako] template
@@ -304,7 +304,7 @@ code: |
 Under many circumstances, this works, and the variable on the left
 will be assigned a correct `instanceName`.
 
-However, **docassemble**'s system for setting the `instanceName`
+However, [DALang]'s system for setting the `instanceName`
 in circumstances like this relies on hacking the internals of
 [Python].  It is not guaranteed to work in all circumstances.  A safe
 way to define attributes is as follows:
@@ -323,7 +323,7 @@ quoted text.  The second argument is the name of the object the
 attribute should be (not quoted).
 
 It is necessary to modify the [`code`] block with [`sets`] because
-**docassemble** needs help figuring out that the code block
+your Steward needs help figuring out that the code block
 offers to define `fish.best_friend`.
 
 <a name="DAObject.reInitializeAttribute"></a>The
@@ -467,17 +467,17 @@ False
 
 {% include side-by-side.html demo="copy-deep" %}
 
-## <a name="DAList"></a>DAList
+## <a name="DAList"></a>DAList - DALang List
 
 A `DAList` acts like an ordinary [Python list], except that
-**docassemble** can ask questions to define items of the list.
+a Steward can ask questions to define items of the list.
 
 Here is a simple "Mad Libs" interview that uses `DAList`s to keep
 track of words:
 
 {% include side-by-side.html demo="madlibs" %}
 
-The variable `i` is special.  When the interview encounters
+The variable `i` is special.  When the Steward encounters
 `person[0]` and sees that it is undefined, it will go searching for a
 question that offers to define `person[0]`.  If it does not find that,
 it will generalize and look for a question that offers to define
@@ -500,10 +500,13 @@ This will result in the following five questions being asked:
 * What is the name of the fourth recipient?
 * What is the name of the fifth recipient?
 
+The fourth and fifth items in the list are named intrinsically,
+`recipient[3]` and `recipient[4]` respectively.
+
 <a name="DAList.appendObject"></a>The `DAList` operates like a [list]
 in [Python], but it also has some special methods.  When adding a new
-item to the list, you should use the **docassemble**-specific method
-`appendObject()` method.  This method is similar to the
+item to the list, you should use the DALang method
+`appendObject()`.  This method is similar to the
 `initializeAttribute()` method we discussed earlier.  Running
 `recipient.appendObject(Individual)` creates a new object of the class
 [`Individual`] and adds it to the list.  In the example above, the
@@ -537,7 +540,7 @@ asked by this question, since the pattern `x[i]` (where `x[i]` is an
 `recipient[4]`.  Since the other [`generic object`] question, which
 matches `x` (where `x` is an [`Individual`]) also matches `recipient[3]`
 and `recipient[4]`, the order in which you list the questions in the
-[YAML] file will determine which one is chosen.  Later-appearing questions
+[DALang] file will determine which one is chosen.  Later-appearing questions
 take precedence, so you would need to place the second [`generic
 object`] question somewhere after the first [`generic object`] question
 in order for it to be chosen.
@@ -752,17 +755,17 @@ The `DAList` uses the following attributes:
   defendant]` and `set_instance_name=True`, then the name of
   `plaintiff` will be changed to `parties[0]` and the name of
   `defendant` will be changed to `parties[0]`.  The variables
-  `plaintiff` and `defendant` will still exist, but if your interview
+  `plaintiff` and `defendant` will still exist, but if your DALang
   refers to an undefined attribute `plaintiff.net_worth`, the
-  interview will seek a definition of `parties[0].net_worth`.
+  Steward will seek a definition of `parties[0].net_worth`.
 * `are_there_any`: a boolean value, initially undefined, indicating
   whether any values should be gathered.  The expectation is that the
-  interview will define a [question] or [code block] that defines this
+  Steward will define a [question] or [code block] that defines this
   attribute.
 * `is_there_another`: a boolean value, initially undefined, indicating
   whether there are any additional values that should be gathered.
 * `auto_gather`: a boolean value, set to `True` by default, which
-  indicates whether the interview should use the `.gather()` method to
+  indicates whether the Steward should use the `.gather()` method to
   ask questions to gather the items of the list.
 * `complete_attribute`: a text string indicating the name of an
   attribute of each item of the list.  If you have a [`DAList`] called
@@ -773,7 +776,7 @@ The `DAList` uses the following attributes:
 * `ask_object_type`: a boolean value, initially set to `False`.  This
   is used when you want to build a list of objects of diverse types.
   When `ask_object_type` is `True`, then when items are added to the
-  list, **docassemble** will seek out a definition of the
+  list, your Steward will seek out a definition of the
   `new_object_type` attribute before adding an item to the list.  When
   it gets the object type, the object it adds to the list will be of
   this type.
@@ -785,12 +788,12 @@ The `DAList` uses the following attributes:
 For more information about gathering items using [`DAList`] objects,
 see the section on [groups].
 
-## <a name="DADict"></a><a name="DADict.initializeObject"></a>DADict
+## <a name="DADict"></a><a name="DADict.initializeObject"></a>DADict - DALang Dictionary
 
 A `DADict` acts like a [Python dictionary] except that dictionary keys
-and values can be defined through **docassemble** questions.
+and values can be defined through questions in [DALang].
 
-To add a value that is a new **docassemble** object, you need to call
+To add a value that is a new [DALang] object, you need to call
 the `initializeObject()` method.
 
 For example:
@@ -805,9 +808,9 @@ used in place of the class name.
 name="PeriodicFinancialList.new"></a>The `DADict` also uses a similar
 method called `.new()`.  This method initializes a new object and
 makes it an entry in the dictionary.  For example, if the dictionary
-is called `positions`, calling `positions.new('file clerk',
+is called `positions`, calling `positions.new('file Steward',
 'supervisor')` will result in the creation of the object
-`positions['file clerk']` and the object `positions['supervisor']`.
+`positions['file Steward']` and the object `positions['supervisor']`.
 The type of object is given by the [`object_type`] attribute, or
 [`DAObject`] if [`object_type`] is not set.  You can also pass a
 [list] and it will unpack the list, initializing dictionary entries
@@ -929,7 +932,7 @@ result, so `fruit.item('apple').seeds` or
 For more information about using [`DADict`] objects, see the section
 on [groups].
 
-## <a name="DASet"></a>DASet
+## <a name="DASet"></a>DASet - DALang Set
 
 A `DASet` is like a [`DADict`] and a [`DAList`], except it acts like a
 [Python] "[set]."
@@ -963,7 +966,7 @@ the methods of the [Python set].
 For more information about using [`DASet`] objects, see the section
 on [groups].
 
-## <a name="DAFile"></a>DAFile
+## <a name="DAFile"></a>DAFile - DALang File
 
 A `DAFile` object is used to refer to a file, which might be an
 uploaded file, an assembled document, or a file generated by code.  It
@@ -972,8 +975,8 @@ has the following attributes:
 * `filename`: the filename (e.g., `complaint.pdf`).
 * `mimetype`: the MIME type of the file.
 * `extension`: the file extension (e.g., `pdf` or `rtf`).
-* `number`: the internal integer number used by **docassemble** to
-  keep track of documents stored in the system.  (You will likely never need to
+* `number`: the internal integer number used by the [server] to
+  keep track of documents stored on the system.  (You will likely never need to
   use this.)
 * `ok`: this is `True` if the `number` has been defined, and is
   otherwise `False`.  (You will likely never need to use this,
@@ -981,12 +984,12 @@ has the following attributes:
 
 You might work with `DAFile` objects in the following contexts:
 
-* Your interview contains a [document upload field].  The variable
+* Your [DALang] contains a [document upload field].  The variable
   representing the upload will be set to a [`DAFileList`] object after
   the upload has been done.  If the
   variable name is `pretty_picture`, then `pretty_picture[0]` will be
   a `DAFile` object.
-* Your interview assembles a document and the document is assigned to
+* Your Steward assembles a document and the document is assigned to
   a [`variable name`].  If the variable name is
   `motion_to_reconsider`, then `motion_to_reconsider` will be a
   [`DAFileCollection`] object, the attributes of which represent the
@@ -994,7 +997,7 @@ You might work with `DAFile` objects in the following contexts:
   `motion_to_reconsider.pdf` (the `.pdf` here is an attribute, not a
   file extension) will be a `DAFile` object representing the PDF
   version of the document.
-* Your interview contains code that needs to create a file.  You can
+* Your [DALang] contains code that needs to create a file.  You can
   use an [`objects`] block to create a blank [`DAFile`] object.  Then
   you would call [`.initialize()`](#DAFile.initialize) to give the
   file a name and a presence on the file system.
@@ -1005,10 +1008,10 @@ file directly in whatever way you want.  However, the `DAFile` object
 has a number of built-in methods for doing common things with files,
 so it is a good idea to use the methods whenever possible.
 
-While the `DAFile` object is saved in your interview dictionary like
+While the `DAFile` object is saved in your [interview session dictionary] like
 any other variable, the content of the file may be stored on
 [Amazon S3], [Azure blob storage], or the file system, depending on
-the server's configuration.  The path you obtain from
+the [server]'s configuration.  The path you obtain from
 [`.path()`](#DAFile.path) might be different from one screen of your
 interview to another.  You should not save the path to a variable and
 expect to be able to use that variable across screens of the
@@ -1095,7 +1098,7 @@ in 60 seconds.
 
 <a name="DAFile.retrieve"></a>The `.retrieve()` command ensures that a
 stored file is ready for use on the system.  Calling `.retrieve` is
-necessary because if **docassemble** is configured to use [Amazon S3]
+necessary because if your [server] is configured to use [Amazon S3]
 or [Azure blob storage], documents are stored in the cloud, and the
 server accesses them by copying them from the cloud to the server and
 then copying them back to the cloud.  If the file does not exist yet,
@@ -1105,14 +1108,14 @@ calling `.retrieve()` will generate an error.
 allows you to set two characteristics of the uploaded document:
 
 * `private`: the default value of this attribute is `True`, which
-  means that other interviews and other interview sessions cannot
+  means that other Stewards and the same Steward conducting other interview sessions cannot
   access the contents of the file, even if they know the `.number`, or
   have the `DAFile` object itself, or have a URL to the file obtained
   from [`.url_for()`](#DAFile.url_for).  You will need to set the
   `private` attribute to `False` if you want other sessions or other
-  people to be able to access the file.  For example, you might store
+  users to be able to access the file.  For example, you might store
   a [`DAFile`] object in [storage] and retrieve it within other
-  interviews at a later time.  The contents of the file will not be
+  interviews sessions at a later time.  The contents of the file will not be
   accessible unless you set `private` to `False`.
 * `persistent`: the default value of this attribute is `False`, which
   means that the file will be deleted when the interview session is
@@ -1214,7 +1217,7 @@ code: |
 
 <a name="DAFile.commit"></a>The `.commit()` method ensures that
 changes to the file are stored permanently.  Under normal
-circumstances, **docassemble** will automatically commit changes when
+circumstances, a Steward will automatically commit changes when
 the interview is finished processing (i.e. right before a new screen
 appears), but `.commit()` can be called to ensure that changes are
 written, just in case there is an error.
@@ -1232,9 +1235,9 @@ started for whatever reason, for example if you are constructing files
 manually, you can start the process by running `.make_pngs()`.  This
 will launch background processes and wait until they are completed.
 
-## <a name="DAFileCollection"></a>DAFileCollection
+## <a name="DAFileCollection"></a>DAFileCollection - DALang File Collection
 
-`DAFileCollection` objects are created internally by **docassemble**
+`DAFileCollection` objects are created internally by Stewards
 in order to refer to a document assembled by an
 [`attachment`]/[`attachments`] block.  When such a block features a
 `variable name`, then a variable by that name will be defined as a
@@ -1280,7 +1283,7 @@ markup that displays each file in the collection as an image, or as a
 link if the file cannot be displayed as an image.  This
 method takes an optional keyword argument, `width`.
 
-## <a name="DAFileList"></a>DAFileList
+## <a name="DAFileList"></a>DAFileList - DALang File List
 
 A `DAFileList` is a [`DAList`], the items of which are expected to be
 [`DAFile`] objects.
@@ -1330,9 +1333,9 @@ code: |
   the_upload.set_attributes(private=False)
 {% endhighlight %}
 
-## <a name="DAStaticFile"></a>DAStaticFile
+## <a name="DAStaticFile"></a>DAStaticFile - DALang Static File
 
-A `DAStaticFile` represents a file in the "static folder" of a
+A `DAStaticFile` represents a file in the "static folder" of a Steward's
 package.  It has some of the same characteristics and methods of a
 [`DAFile`].
 
@@ -1341,7 +1344,7 @@ to a static file, such as:
 
 * `coins.png` - a file in the static folder of the current package
 * `docassemble.base:data/static/cow.jpg` - a file in the static folder
-  of another package.
+  of another Steward's package.
 
 The `DAStaticFile` object can be used like this:
 
@@ -1384,14 +1387,14 @@ used interchangeably.
 
 {% include side-by-side.html demo="file-types" %}
 
-## <a name="DAEmail"></a>DAEmail
+## <a name="DAEmail"></a>DAEmail - DALang Email
 
 The [e-mail receiving] feature converts actual e-mails into objects of
 type `DAEmail`.  These objects have the following attributes:
 
 * `short`: the code that was assigned by [`interview_email()`]
-  (e.g. `ugjrye`) in order to create the e-mail address to which this
-  e-mail was sent (e.g. `ugjrye@help.example.com`).
+  (e.g. `user`) in order to create the e-mail address to which this
+  e-mail was sent (e.g. `user@example.com`).
 * `key`: the `key` that was passed to [`interview_email()`], or `None` if no
   `key` was passed.
 * `index`: the `index` that was passed to [`interview_email()`], or
@@ -1430,7 +1433,7 @@ type `DAEmail`.  These objects have the following attributes:
   [list] with two items, the first of which is the name of the
   header (e.g., `To`, `From`), and the second item is the value.
 
-## <a name="DAEmailRecipient"></a>DAEmailRecipient
+## <a name="DAEmailRecipient"></a>DAEmailRecipient - DALang Email Recipient
 
 A `DAEmailRecipient` object is used within [`DAEmail`] objects to
 represent a single e-mail address and the name associated with the
@@ -1462,11 +1465,11 @@ e-mails with [`send_email()`].  (See the
 The `.exists()` method returns `True` if the `.address` attribute has
 been defined, and `False` otherwise.
 
-## <a name="DAEmailRecipientList"></a>DAEmailRecipientList
+## <a name="DAEmailRecipientList"></a>DAEmailRecipientList - DALang Email Recipient List
 
 A `DAEmailRecipientList` is a [`DAList`] of [`DAEmailRecipient`] objects.
 
-## <a name="DATemplate"></a>DATemplate
+## <a name="DATemplate"></a>DATemplate - DALang Template
 
 The [`template`] block allows you to store some text to a variable.  See
 [template].  The variable will be defined as an object of the
@@ -1477,7 +1480,7 @@ Objects of this type have two attributes:
 * `content`
 * `subject`
 
-When **docassemble** defines a [template], it assembles any [Mako] in
+When your [DALang] defines a [template], your Steward will assemble any [Mako] in
 the `content` and optional `subject` attributes as the resulting text.
 Note that the text may have [Markdown]<span></span> [markup] in it.
 
@@ -1491,11 +1494,11 @@ For more information about using [`DATemplate`]s, see the
 documentation for [templates].  Also, see the documentation for
 [`send_email()`] and [`send_sms()`].
 
-## <a name="DAEmpty"></a>DAEmpty
+## <a name="DAEmpty"></a>DAEmpty - DALang Empty Object
 
 The `DAEmpty` object is designed to stand in place of an object that
 might otherwise have important attributes, but it will always return
-an empty string whenever the interview tries to access its
+an empty string whenever the Steward tries to access its
 attributes.
 
 So if `exemption` is a `DAEmpty` object, `exemption.amount` will
@@ -1505,12 +1508,12 @@ return `''`, as will `exemption[2]`,
 This object is used internally by the [`item()`](#DAList.item) method.
 It can also be useful to use the `DAEmpty` object if you have a
 template that refers to variables that you decide you don't actually
-want to use.  If your interview simply sets those variables to
+want to use.  If your [DALang] simply sets those variables to
 `DAEmpty`, your template will not trigger an error.
 
-## <a name="DALink"></a>DALink
+## <a name="DALink"></a>DALink - DALang Link
 
-The `DALink` class represents a [hyperlink] to a [URL].  It has two
+The `DALink` object represents a [hyperlink] to a [URL].  It has two
 properties:
 
 * `url`: the [URL] to which the link points.
@@ -1525,9 +1528,9 @@ hyperlink is inserted into the document.
 
 {% include side-by-side.html demo="dalink" %}
 
-## <a name="DARedis"></a>DARedis
+## <a name="DARedis"></a>DARedis - DALang Redis
 
-The `DARedis` class facilitates the use of [Redis] for in-memory
+The `DARedis` object facilitates the use of [Redis] for in-memory
 storage.
 
 {% include side-by-side.html demo="redis" %}
@@ -1538,7 +1541,7 @@ object created through `redis.StrictRedis()` using the standard
 `.get()`, `.delete()`, `.incr()`, etc.
 
 However, there are three additional methods that facilitate the use of
-[Redis] in the context of **docassemble** interviews.
+[Redis] in [DALang].
 
 <a name="DARedis.key"></a>The `key()` method is a convenience function
 for obtaining keys that you can use as [Redis] keys in order to avoid
@@ -1552,7 +1555,7 @@ used the same key, the interviews would interfere with one another.
 <a name="DARedis.set_data"></a><a name="DARedis.get_data"></a>The 
 `set_data()` and `get_data()` methods act just like the standard
 methods `set()` and `get()`, except that they perform [pickling] and
-unpickling.  This allows you to store and retrieve **docassemble**
+unpickling.  This allows you to store and retrieve [DALang]
 objects or any type of data structure that is able to be [pickled].
 The `set_data()` method takes an optional keyword argument `expire`,
 which you can set to an integer representing the number of seconds
@@ -1560,14 +1563,14 @@ after which the data should be removed from [Redis].
 
 {% include side-by-side.html demo="redis-data" %}
 
-## <a name="DACloudStorage"></a>DACloudStorage
+## <a name="DACloudStorage"></a>DACloudStorage - DALang Cloud Storage
 
 The `DACloudStorage` object allows you to access low-level
 functionality of cloud storage using [Amazon S3] or [Azure blob
 storage], using the [boto3] and [azure.storage.blob] libraries,
 respectively.
 
-Suppose you include the following in your interview:
+Suppose you include the following in your DALang file:
 
 {% highlight yaml %}
 objects:
@@ -1667,11 +1670,11 @@ manual s3 configuration:
   secret access key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
 {% endhighlight %}
 
-## <a name="DAGoogleAPI"></a>DAGoogleAPI
+## <a name="DAGoogleAPI"></a>DAGoogleAPI - DALang the Google API 
 
 The `DAGoogleAPI` object provides convenient access to Google's APIs
 through a Google [service account] that you set up in the [Google
-Developers Console] and enable in the **docassemble** [Configuration].
+Developers Console] and enable in your [server]'s [Configuration].
 
 The `DAGoogleAPI` object can be used with the low-level [Google API]
 and also with higher-level API packages like [gspread] or the [Cloud
@@ -1682,15 +1685,15 @@ process of authenticating to Google's servers.  It also provides a
 standard way to keep [service account] authentication information in
 the [Configuration].
 
-### <a name="DAGoogleAPI setup"></a>Setup process
+### <a name="DAGoogleAPI setup"></a>Setup Process
 
 In order for your site to communicate with Google, you will need to
 create an account on the [Google Developers Console] and create an
 "app."  Within this app, you will need to create a [service account].
-Then set the [`service account credentials`] directive in the
+Then set the [`service account credentials`] configuration directive in the
 [Configuration] to the credentials for this [service account].  For
 more information on how to do this, see the documentation for the
-[`service account credentials`] directive.
+[`service account credentials`] configuration directive.
 
 Finally, you need to use the [Google Developers Console] to enable the
 APIs that you want to use.  For example, if you want to use the
@@ -1822,7 +1825,7 @@ address of your [service account].  Then, when you call
 that is returned.
 
 Here is an interview that uses this module to access a [Google Drive]
-folder called "DADemo".  It assumes the module is a file called
+folder called "DemoSteward".  It assumes the module is a file called
 `google_drive.py` in the same package as the interview.
 
 {% highlight yaml %}
@@ -1839,8 +1842,8 @@ code: |
 question: |
   Files in your Google Drive
 subquestion: |
-  % for item in get_files_in_folder('DADemo'):
-  * ${ item } ${ download_file(item, 'DADemo') }
+  % for item in get_files_in_folder('DemoSteward'):
+  * ${ item } ${ download_file(item, 'DemoSteward') }
   % endfor
 field: first_screen
 ---
@@ -1853,13 +1856,13 @@ fields:
 code: |
   for the_file in uploaded_files:
     (path, mimetype) = path_and_mimetype(the_file)
-    write_file_to_folder(path, mimetype, the_file.filename, 'DADemo')
+    write_file_to_folder(path, mimetype, the_file.filename, 'DemoSteward')
   files_copied_to_google_drive = True
 ---
 event: final_screen
 question: Names of files in folder
 subquestion: |
-  % for item in get_files_in_folder('DADemo'):
+  % for item in get_files_in_folder('DemoSteward'):
   * ${ item }
   % endfor
 {% endhighlight %}
@@ -1879,10 +1882,10 @@ service = apiclient.discovery.build('translate', 'v2', http=http)
 {% endhighlight %}
 
 Note that while the `api` object can safely persist in your users'
-interview answers, a variable like `service` cannot be [pickled], so
-if you store it in your interview file, you will get an error.
+[interview session dictionary], a variable like `service` cannot be [pickled], so
+if you try to store it in DALang, you will get an error.
 Ideally, you should always use Python modules for functions that access APIs,
-so that there is no danger of an error if **docassemble** tries to
+so that there is no danger of an error if your Steward tries to
 pickle an object that cannot be pickled.
 
 The second category of methods is for [Google Cloud packages] like
@@ -1890,8 +1893,8 @@ The second category of methods is for [Google Cloud packages] like
 service is available both through [`google-api-python-client`] and
 through one of the [Google Cloud packages], the [Google Cloud
 packages] are probably preferable because they are newer and
-easier to use.  Most of these packages are not installed in the
-**docassemble** system by default and will need to be installed with
+easier to use.  Most of these packages are not installed on
+[servers] by default and will need to be installed with
 "Package Management" if you want to use them.  Whatever package name
 Google tells you to use with `pip`, you can type into the "Package on
 PyPI" field in "Package Management."
@@ -1934,7 +1937,7 @@ def make_blob(bucket_name, blob_name, blob_content):
   return blob
 {% endhighlight %}
 
-# <a name="person classes"></a>Classes for information about people and things
+# <a name="person classes"></a>DALang People and Things
 
 ## <a name="Thing"></a>Thing
 
@@ -1943,7 +1946,7 @@ If `pet_rock` is a `Thing`, it will be an object with one attribute:
 * `pet_rock.name` (object of class [`Name`])
 
 If you include `${ pet_rock }` in text, the name of the `Thing` will
-be inserted.  **docassemble** will look for a definition of
+be inserted.  Your Steward will look for a definition of
 `pet_rock.name.text`.
 
 If you set the `name` attribute of a `Thing` to text, the
@@ -1962,7 +1965,7 @@ they are up to you to choose.
 
 ## <a name="Person"></a>Person
 
-The `Person` class encompasses [`Individual`]s as well as legal persons,
+The `Person` object encompasses [`Individual`]s as well as legal persons,
 like companies, government agencies, etc.  If you create an object of
 type `Person` by doing:
 
@@ -2087,7 +2090,7 @@ format.  E.g., `'ABC Corporation <info@abc.com>'`.  If the name is not
 yet defined, the e-mail address by itself (`info@abc.com`) will be
 returned.
 
-If you want to force **docassemble** to ask for the recipient's name,
+If you want to force your Steward to ask for the recipient's name,
 set the optional keyword parameter `include_name` to `True`.
 
 You can suppress the inclusion of the person's name by setting
@@ -2164,7 +2167,7 @@ The following attributes are also used, but undefined by default:
 A number of useful methods can be applied to objects of class
 `Individual`.  Many of them will respond differently depending on
 whether the `Individual` is the user or not.  If you use these
-methods, be sure to inform **docassemble** who the user is by
+methods, be sure to inform your Steward who the user is by
 inserting the following [initial block]:
 
 {% highlight yaml %}
@@ -2194,7 +2197,7 @@ There are two optional arguments that modify the method's behavior:
 To determine the user's age, this method first looks to see if there
 is an attribute [`age`].  If there is, the value of this attribute is
 returned.  However, the `age_in_years()` method will not cause the
-interview to seek out this attribute.
+Steward to seek out this attribute.
 
 If the [`age`] attribute is not defined, this method will calculate
 the individual's age based on the [`birthdate`] attribute, which will
@@ -2204,7 +2207,7 @@ or it can be a [`datetime`] object.
 
 ### <a name="Individual.first_name_hint"></a><a name="Individual.last_name_hint"></a>`.first_name_hint()` and `.last_name_hint()`
 
-When you are writing questions in an interview, you may find yourself
+When you are writing questions for an interview, you may find yourself
 in this position:
 
 * You are asking for the name of a person;
@@ -2317,7 +2320,7 @@ def salutation_default(indiv, with_name=False, with_name_and_punctuation=False):
 {% endhighlight %}
 
 If you wanted a simpler function, you could include something like
-this in a [Python] module that you include in your interview:
+this in a [Python] module that you include in your DALang:
 
 {% highlight python %}
 def my_salutation(indiv):
@@ -2463,9 +2466,9 @@ its own will return `.full()`.
 The `full()` method attempts to form a full name from these
 components.  Only `first` is required, however.  This means that if
 you refer to an `IndividualName` in a [Mako] template, e.g., by
-writing `${ applicant.name }`, **docassemble** will attempt to return
+writing `${ applicant.name }`, DALang will attempt to return
 `applicant.name.full()`, and if `applicant.name.first` has not been
-defined yet, **docassemble** will look for a question that defines
+defined yet, DALang will look for a question that defines
 `applicant.name.first`.
 
 Here is how `full()` and other methods of the `IndividualName` work:
@@ -2711,7 +2714,7 @@ code: |
 {% endhighlight %}
 
 Alternatively, if you do not want to include all of the questions and
-code blocks of the [`basic-questions.yml`] file in your interview, you
+code blocks of the [`basic-questions.yml`] file in your DALang file, you
 can do:
 
 {% highlight yaml %}
@@ -2746,10 +2749,10 @@ question: |
 yesno: user_ok_with_sharing_location
 {% endhighlight %}
 
-[`track_location`] is a [special variable] that tells **docassemble**
+[`track_location`] is a [special variable] that tells thew Steward
 whether or not it should ask the browser for the user's GPS
 coordinates the next time a question is posed to the user.  If
-[`track_location`] is `True`, **docassemble** will ask the browser to
+[`track_location`] is `True`, the Steward will ask the browser to
 provide the information, and if it receives it, it will make it
 available for retrieval through the [`user_lat_lon()`] function.
 
@@ -2766,12 +2769,12 @@ asking for it."  Otherwise, it returns `True`, which means "the
 browser has not yet been asked for the location information, so let's
 ask it."
 
-# <a name="currencyclasses"></a>Classes for currency
+# <a name="currencyclasses"></a>Classes for Currency in DALang
 
 ## <a name="Value"></a>Value
 
 A `Value` is a subclass of [`DAObject`] that is intended to represent a
-currency value that may or may not need to be asked for in an interview.
+currency value that may or may not need to be asked for in an interview session.
 
 For example, suppose you want to have a variable that represents the
 value of the user's real estate holdings.  But before you ask the
@@ -2831,7 +2834,7 @@ Referring to a `PeriodicValue` in a [Mako] template will show the
 `.amount()`.  The value of `.amount()` is also returned when you pass
 a `PeriodicValue` to the [`currency()`] function.
 
-# <a name="listclasses"></a>Classes for lists of things
+# <a name="listclasses"></a>Classes for Lists of Things in DALang
 
 ## <a name="PartyList"></a>PartyList
 
@@ -2857,7 +2860,7 @@ The `FinancialList` has three methods:
 
 * <a name="FinancialList.total"></a>`.total()`: tallies up the total
   value of all `Value`s in the list for which the `exists` attribute
-  is `True`.  A reference to `.total()` will cause **docassemble** to
+  is `True`.  A reference to `.total()` will cause DALang to
   ask the questions necessary to gather the full list of items.
 * <a name="FinancialList.existing_items"></a>`.existing_items()`:
   returns a list of types of amounts that exist within the financial
@@ -2916,12 +2919,12 @@ An `OfficeList` object is a type of [`DAList`], the items of which are
 expected to be [`Address`] objects.  It is used in [`Organization`]
 objects.
 
-# <a name="specialclasses"></a>Classes for special purposes
+# <a name="specialclasses"></a>DALang Classes for Special Purposes
 
 ## <a name="RoleChangeTracker"></a>RoleChangeTracker
 
 The `RoleChangeTracker` class is provided to facilitate [multi-user
-interviews] with **docassemble**'s [roles] system.  It facilitates
+interviews] with DALang's [roles] system.  It facilitates
 sending e-mails to the participants to let them know when the
 interview needs their attention.  It keeps track of when these e-mails
 have been sent to make sure that duplicative e-mails are not sent.
@@ -2995,7 +2998,7 @@ content: |
 {% endhighlight %}
 
 The `send_email()` method's first argument is the special variable
-`role_needed`, a [Python list] that **docassemble** defines internally
+`role_needed`, a [Python list] that DALang defines internally
 whenever there is a mismatch between the current user's role and the
 role required by a question that needs to be asked.
 
@@ -3010,7 +3013,7 @@ defined.
 * `email`: this needs to a [`DATemplate`] containing the subject and
 body of the e-mail that will be sent.
 
-# <a name="DAObject.using"></a>Special object method `using()`
+# <a name="DAObject.using"></a>Special Object Method `using()`
 
 If you wanted to initialize the variable `possession` as a [`DAList`]
 of [`Thing`]s, you could write
@@ -3051,15 +3054,15 @@ including [`objects`] initial blocks, as a parameter in the methods
 [`appendObject()`], and [`gather()`], or as the [`object_type`]
 attribute of a [`DAList`] or [`DADict`].
 
-# <a name="instanceName"></a>How docassemble objects are different
+# <a name="instanceName"></a>How DALang Objects are Different
 
-For most purposes, **docassemble** objects behave just like [Python]
+For most purposes, DALang objects behave just like [Python]
 objects.  However, they have special properties that facilitate the
 automatic asking of questions.  You may need to be mindful of these
 special properties if you do anything fancy in your code.
 
-In contrast to [Python objects] in general, **docassemble** objects
-are aware of their first-given names.  All **docassemble** objects
+In contrast to [Python objects] in general, DALang objects
+are aware of their first-given names.  All DALang objects
 have an `.instanceName` attribute.  So if you do:
 
 {% highlight yaml %}
@@ -3077,7 +3080,7 @@ code: |
   user = Individual()
 {% endhighlight %}
 
-In this circumstance, **docassemble** uses some [magic] to set
+In this circumstance, the Steward uses some [magic] to set
 `.instanceName` to `user`.  However, the magic has its limits.  For
 example, the following does not work:
 
@@ -3086,7 +3089,7 @@ code: |
   (user, advocate) = (Individual(), Individual())
 {% endhighlight %}
 
-If you ever get an error message in **docassemble** referring to
+If you ever get an error message in DALang referring to
 variables with a name like `qjAMyvGQYnyK`, and you are sure you did
 not create such a variable, then you have an object that was unable to
 determine its given name.
@@ -3140,7 +3143,7 @@ The `.instanceName` is not simply an internal attribute; it is used by
 the [`.object_possessive()`] method to refer to the object in
 human-readable format.
 
-# <a name="writing"></a>Writing your own classes
+# <a name="writing"></a>Writing your Own DALang Classes
 
 If you know how to write your own [Python] code, it is pretty easy
 to write your own classes.
@@ -3149,8 +3152,8 @@ For example, you could create your own [package] for interviews
 related to cooking.
 
 You would start by using the [package system] to create a
-**docassemble** package called `cooking`, the full name of which would
-be `docassemble.cooking` (interview packages are subpackages of the
+packaged Steward called `cooking`, the full name of which would
+be `docassemble.cooking` (Steward packages are subpackages of the
 `docassemble` namespace package).
 
 You would create a module file within this package called
@@ -3167,8 +3170,8 @@ class Recipe(DAObject):
         return "#### Ingredients\n\n" + self.ingredients + "\n\n#### Instructions\n\n" + self.instructions
 {% endhighlight %}
 
-Your class `Recipe` needs to "inherit" from the basic **docassemble**
-object called [`DAObject`].  If you did not do this, **docassemble**
+Your class `Recipe` needs to "inherit" from the basic DALang
+object called [`DAObject`].  If you did not do this, a Steward
 would not be able to ask questions to define attributes of `Recipe`
 objects.
 
@@ -3189,10 +3192,10 @@ Note that the [`modules`] block refers to `.objects`, which is a
 [relative module name].  The `.` at the beginning means "in the
 current package."  You could also have written
 `docassemble.cooking.objects`.  The [relative module name] works so
-long as the interview file is in the same package as the module.
+long as the DALang file is in the same package as the module.
 
-By the way, there is way to write the `summary()` method that is more
-friendly to other interview authors:
+By the way, there is a way to write the `summary()` method that is more
+friendly to other Steward developers:
 
 {% highlight python %}
 from docassemble.base.core import DAObject
@@ -3203,14 +3206,14 @@ class Recipe(DAObject):
         return "#### " + word('Ingredients') + "\n\n" + self.ingredients + "\n\n#### " + word('Instructions') + "\n\n" + self.instructions
 {% endhighlight %}
 
-If you use the [`word()`] function in this way, interview authors will
+If you use the [`word()`] function in this way, Steward developers will
 be able to translate the "cooking" interview from English to another
 language without having to edit your code.  All they would need to do
 is include the words `Ingredients` and `Instructions` in a translation
-[YAML] file referenced in a [`words`] directive in the **docassemble**
+[YAML] file referenced in a [`words`] directive in the server's
 [configuration].
 
-## <a name="ownclassattributes"></a>Initializing object attributes
+## <a name="ownclassattributes"></a>Initializing DALang Object Attributes
 
 In the example above, all the attributes of the `Recipe` object were
 plain text values.  What if you want attributes of your objects to be
@@ -3219,7 +3222,7 @@ objects themselves?
 Suppose you want the `ingredients` attribute to be a [`DAList`].
 
 There are several ways that `ingredients` can be initialized.  In the
-interview itself, you can do:
+DALang file itself, you can do:
 
 {% highlight yaml %}
 modules:
@@ -3257,7 +3260,7 @@ class Recipe(DAObject):
         super(Recipe, self).init(*pargs, **kwargs)
 {% endhighlight %}
 
-Then, you would only need to write this in your interview file:
+Then, you would only need to write this in your DALang file:
 
 {% highlight yaml %}
 objects:
@@ -3270,8 +3273,7 @@ are initialized.  This is not to be confused with the `__init__()`
 function, which is built in to [Python]; you should use `init()`, not
 `__init__()`.
 
-When you write your own `init()` function for a class, you should (but
-are not required to) include the `super(Recipe, self).init(*pargs,
+When you write your own `init()` function for a class, you should are not required to) include the `super(Recipe, self).init(*pargs,
 **kwargs)` line.  This will ensure that `Recipe` objects are
 initialized properly.  For example, if you wrote:
 
@@ -3288,10 +3290,10 @@ your `init()` methods in this way.
 
 Before you use objects and [inheritance], you should buy a [Python
 book] and learn how [Python] handles object orientation.  Object
-oriented programming is an advanced topic and **docassemble**
+oriented programming is an advanced topic and the Docassemble Framework
 documentation is not a substitute for [Python] documentation.
 
-## <a name="usingglob"></a>Using global variables in your classes
+## <a name="usingglob"></a>Using Global Variables in Your Classes
 
 Normally in [Python] you can use global variables to keep track of
 information that your methods need to know but that is not passed in
@@ -3321,7 +3323,7 @@ text.  Here, it is necessary because `self.oven_temperature` may be a
 number, and [Python] will complain if you ask it to "add" text to a
 number.)
 
-Then to change the `temperature_type` from an interview, you might
+Then to change the `temperature_type` in a DALang file, you might
 write:
 
 {% highlight yaml %}
@@ -3338,8 +3340,8 @@ code: |
 
 This would be effective at changing the `temperature_type` variable
 because the `modules` block loads all the names from
-`docassemble.cooking.objects` into the variable store of the
-interview, including `temperature_type`.
+`docassemble.cooking.objects` into the variable store for the
+Steward, including `temperature_type`.
 
 However, this is not [thread-safe] and it will not work correctly 100%
 of the time.  If your server is under heavy load, users might randomly
@@ -3372,7 +3374,7 @@ class Recipe(DAObject):
             return str(self.oven_temperature) + ' K'
 {% endhighlight %}
 
-Then from your interview you can include [`docassemble.base.util`] as
+Then from your DALang you can include [`docassemble.base.util`] as
 one of the [`modules`] and then run [`set_info()`] in [`initial`]
 code:
 
@@ -3426,8 +3428,8 @@ class Recipe(DAObject):
             return str(self.oven_temperature) + ' K'
 {% endhighlight %}
 
-We added an `__all__` statement so that interviews can a `module`
-block including `docassemble.cooking.objects` does not clutter the
+We added an `__all__` statement so when your DALang uses a `module`
+block including `docassemble.cooking.objects` it does not clutter the
 variable store with extraneous names like `threading`.  We also added
 functions for setting and retrieving the value of the "temperature
 type."
@@ -3436,7 +3438,7 @@ The temperature type is now an attribute of the object `this_thread`,
 which is an instance of `threading.local`.  This attribute needs to be
 set in `initial` code that will run every time a screen refreshes.
 
-Now in your interview you can do:
+Now in your DALang you can do:
 
 {% highlight yaml %}
 modules:
@@ -3453,10 +3455,10 @@ code: |
 {% endhighlight %}
 
 Note that you do not need to worry about whether your global variables
-are [thread-safe] if they do not change from interview to interview.
+are [thread-safe] if they do not change from interview session to interview session.
 
 For example, if you only wanted to allow people to change the
-temperature type from the **docassemble** [configuration], you could
+temperature type from the server [configuration], you could
 do the following in your [Python module]:
 
 {% highlight python %}
@@ -3466,7 +3468,7 @@ from docassemble.webapp.config import daconfig
 temperature_type = daconfig.get('temperature type', 'Celsius')
 {% endhighlight %}
 
-Then your interviews would not have to do anything with `temperature_type`.
+Then your Steward would not have to do anything with `temperature_type`.
 
 Also, you could avoid the complication of global variables entirely if
 you are willing to pass the temperature type as an argument to
@@ -3485,7 +3487,7 @@ class Recipe(DAObject):
             return str(self.oven_temperature) + ' K'
 {% endhighlight %}
 
-Then you could have this in your interview:
+Then you could have this in your DALang:
 
 {% highlight yaml %}
 question: |
@@ -3504,9 +3506,9 @@ Set your oven to ${ apple_pie.get_oven_temperature(temperature_type) }
 and let it warm up.
 {% endhighlight %}
 
-# <a name="extending"></a>Extending existing classes
+# <a name="extending"></a>Extending Existing DALang Classes
 
-If you want to add a method to an existing **docassemble** class, such
+If you want to add a method to an existing DALang class, such
 as [`Individual`], you do not need to reinvent the wheel or copy and
 paste code from anywhere.  Just take advantage of [inheritance].
 
@@ -3564,11 +3566,11 @@ then you would get an error because `can_practice_in()` is not a valid
 method for `user`, which is only an instance of the [`Individual`] class
 and not an instance of the `Attorney` class.
 
-# <a name="DADateTime"></a>Special date/time class `DADateTime`
+# <a name="DADateTime"></a>DADateTime - DALang date/time 
 
 When you set a variable with [`datatype: date`], or use one of the
 [date functions] that returns a date, the variable is a special object
-of the class `DADateTime`.  This object is special to **docassemble**,
+of the class `DADateTime`.  This object is special in DALang,
 but it is not a [`DAObject`].  You cannot create these with an
 [`objects`] block.  (If you want to create one, use
 [`as_datetime()`].)
@@ -3747,7 +3749,6 @@ of the original [`DADateTime`] object.  See
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`set_info()`]: {{ site.baseurl }}/docs/functions.html#set_info
 [`template`]: {{ site.baseurl }}/docs/template.html
-[`table`]: {{ site.baseurl }}/docs/template.html#table
 [`track_location`]:  {{ site.baseurl }}/docs/special.html#track_location
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
 [classes]: https://docs.python.org/2/tutorial/classes.html
@@ -3893,7 +3894,12 @@ of the original [`DADateTime`] object.  See
 [Google Cloud Storage]: https://cloud.google.com/storage/docs/reference/libraries
 [LibreOffice]: https://www.libreoffice.org/
 [`service account credentials`]: {{ site.baseurl }}/docs/config.html#service account credentials
-[Object-oriented Programming for Document Assembly Developers]: https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/
+[Object-oriented Programming]: https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/
 [Quinten Steenhuis]: https://www.nonprofittechy.com/about/
-[Python book]: http://shop.oreilly.com/product/0636920028154.do
+[DALang]: {{ site.baseurl }}/docs/interviews.html#yaml
+[server]: {{ site.baseurl }}/docs/installation.html
+[servers]: {{ site.baseurl }}/docs/installation.html
+[interview flow]: {{ site.baseurl }}/docs/logic.html
+[interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
 [list comprehension]: https://docs.python.org/2.7/tutorial/datastructures.html#list-comprehensions
+[Python book]: http://shop.oreilly.com/product/0636920028154.do

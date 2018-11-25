@@ -1,27 +1,30 @@
-- title: Tutorial
-  docs:
-    - helloworld
-- title: Authoring
+- title: Docassemble Framework
   docs:
     - authoring
     - interviews
+    - logic
+- title: Tutorial
+  docs:
+    - demo
+    - helloworld
+- title: DALang
+  docs:
+    - markup
+    - groups
     - initial
     - questions
     - fields
     - modifiers
-    - code
-    - logic
-    - markup
-    - template
     - documents
+    - template
+    - code
     - objects
-    - groups
     - functions
-    - legal
     - special
     - reserved
-- title: Special features
+- title: Advanced Features
   docs:
+    - legal
     - language
     - roles
     - background
@@ -50,4 +53,3 @@
     - security
     - changelog
     - license
-    

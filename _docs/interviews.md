@@ -1,43 +1,46 @@
 ---
 layout: docs
-title: How to write an interview
-short_title: Interviews
+title: Steward Web Apps
+short_title: Stewards
 ---
 
-# <a name="whatis"></a>What is a **docassemble** interview?
+# <a name="whatis"></a>What is a Steward?
 
-An "interview" in **docassemble** is a [YAML] file that
-**docassemble** reads, and on the basis of what it finds, asks
-questions of a user.
+A Steward is a web application on the Docassemble Framework. It is written in a
+[domain specific language] called [DALang] that is based on [Python].
+The Steward reads this DALang and based on what it finds,
+it asks questions of the user(s) during an interview session.
 
-**docassemble** stores the user's answers in "variables."  The values
-of these variables may be incorporated into the the text of [questions],
-or into the text of [documents].
+Stewards store users' answers in [variables].  The values
+of these variables can be incorporated into future [questions]
+and into deliverables, such as [generated documents] or an API call to
+another web application like [Zapier].
 
-The interview can ask different questions of the user depending on
-what the answers to earlier questions were.
+The Steward can ask users different questions based on the answers
+a user gave to previous questions. Therefore, not every interview session with a Steward is identical.
 
-# <a name="simple interview"></a>The contents of an interview file
+# <a name="simple interview"></a>Example of a Steward
 
-The interview file is a series of possible questions that could
+A Steward is fundamentally comprised of a series of possible questions that could
 potentially be asked, arranged in no particular order.  Which
 questions will be asked, and the order in which they are asked, will
-be determined by **docassemble**.  All you need to do is give
-**docassemble** an end goal.
+be determined by the Steward.  All you need to do is give
+the Steward an objective. Both of which are accomplished in [DALang]. 
 
-The end goal might be as simple as "show the exit screen."  This will
-instruct **docassemble** to try to show the exit screen.  But
-**docassemble** will doubtless find that in order to show the exit
-screen, it will need some piece of information.  It will look for a
-question in the [YAML] file that will provide that information, and it
+The objective might be as simple as "show the exit screen."  This will
+instruct the Steward to try to show the exit screen.  But
+the Steward will doubtless find that in order to show the exit
+screen, it will need some other pieces of information.  It will look for a
+question in the [DALang] that will provide that information, and it
 will try to ask that question.  But it may find that in order to ask
 that question, it needs to know another piece of information, and it
 will look for a question that provides that information, and so forth
 and so on.  The first question will turn out to be something basic,
-like "What is your name?" and **docassemble** might not reach the exit
+like "What is your name?" and the Steward might not reach the exit
 screen until 20 questions have been asked and answered.
+This is called [backward chaining].
 
-In addition to questions, the [YAML] file can contain bits of logic,
+In addition to questions, [DALang] can contain bits of logic,
 written as lines of [Python] code.  For example:
 
 {% highlight yaml %}
@@ -56,13 +59,13 @@ code: |
       recommended_insurance = "Private Insurance"
 {% endhighlight %}
 
-If the interview ever needs to know the recommended insurance, it will
-run this code.  If it does not know the user's age, it will ask.  If
-the user is under 65, **docassemble** will ask questions to determine
+If the Steward ever needs to know the recommended health insurance, it will
+need to run this code.  If it does not know the user's age, it will need to ask.
+If the user is under 65, the Steward will need to ask questions to determine
 whether the household is low income.
 
-A [YAML] interview file is simply a text file consisting of "blocks"
-separated by `---`.  For example, this interview has three blocks:
+[DALang] is stored in the [YAML] file format, and a Steward is made up of 
+multiple "blocks" each separated by `---`.  For example, this Steward has three blocks:
 
 {% include side-by-side.html demo="animal" %}
 
@@ -74,97 +77,102 @@ The third block is a "question" that is marked as `mandatory`.  This
 is not really a question, since it offers the user no option except
 clicking the "Exit" button.  It refers to the variable `favorite_animal`.
 
-When **docassemble** presents this interview to the user, it follows
-these steps:
+When the Steward is run by a user, it does the following steps: 
 
-1. It scans the file and processes everything that is "[`mandatory`]."  It
-  treats everything else as optional.
+1. It scans the DALang file and processes everything that is "[`mandatory`]."
+  It treats everything else as optional.
 2. It finds a [`mandatory`] question in the third block and tries to
    ask the question.
 3. It can't assemble the question because `favorite_animal` is not defined,
 so it looks for a question that defines `favorite_animal`.
-4. It looks through the blocks for a question that defines
+4. It looks through the other blocks for a question that defines
 `favorite_animal`, and finds it in the first block.
 5. It asks the user for his or her favorite animal, and goes back to
 step 1.  This time around, it is able to ask the `mandatory` question,
-and the interview stops there because the only thing the user can do
+and the Steward stops there because the only thing the user can do
 is press the "Exit" button.
 
-The order of the blocks in the file is irrelevant; **docassemble**
-would do the same thing regardless of the order of the blocks.
+The order of the blocks in the file is irrelevant; the Steward
+would follow the same steps regardless of the order of the blocks.
 
 Note that the second block, containing the question about the user's
 favorite vegetable, was never used because it was never needed.
 
-This is a very simple interview; there are more types of blocks that
+This is a very simple Steward; there are more types of blocks that
 you can write.  These blocks are explained in the following sections:
 
-* [Initial Blocks] - Explains special blocks you can write that have
-  an effect on whole interview.
-* [Question Blocks] - Explains the basics of the [`question`] block, which presents a
+* [Initial Blocks] - Explains special blocks you can write that make the Steward
+  behave in certain ways.
+* [Question Blocks] - Explains the basics of the [`question`] blocks, which presents a
   screen to the user (which usually asks a question but does not need to).
-* [Setting Variables] - Explains how to use collect information from users
-  using `question` blocks.
-* [Question Modifiers] - Explains ways you can enhance questions with
+* [Question Blocks: Fields] - Explains how to collect information from users
+  interacting with `question` blocks.
+* [Question Blocks: Modifiers] - Explains ways you can enhance questions with
 special features, for example by adding help text or icons.
-* [Templates] - Explains `template` blocks, which allow you to assign
-  text to a variable and then include it by reference in a question or
-  document.
-* [Code] - Explains `code` blocks, which are like `question`s except
+* [Code Blocks] - Explains `code` blocks, which are like `question`s except
   that instead of presenting something to the user, they run [Python]
   code that defines variables or does other things that computer code
   can do.
-* [Interview Logic] - Explains [`mandatory`] and [`initial`] blocks and how
-  **docassemble** processes your interview.
+* [Interview Flow] - Explains [`mandatory`] and [`initial`] blocks and how
+  a Steward will process your [DALang].
 * [Objects] - Explains the use of Python objects to simplify the way
   information is organized.
-* [Markup] - Explains how to change the formatting of text in **docassemble**.
+* [Markup] - Explains how to format text in DALang.
+* [Template Blocks] - Explains `template` blocks, which allow you to assign
+  data to a variable and then include that variable into future question
+  or in document generation.
 * [Functions] - Explains how to use special [Python] functions to
   simplify and generalize the way questions are asked.
-* [Documents] - Explains how to offer your users documents in PDF and
-  RTF format based on the user's answers to the interview questions.
-* [Roles] - Explains **docassemble**'s features for multi-user interviews.
+* [Documents] - Explains how to generate documents for users and/or counsel
+  in PDF, DOCX, and RTF format, based on the answers provided to the Steward.
+* [Roles] - Explains features for interviews involving multi-users.
 * [Reserved Names] - Lists the variable names you aren't allowed to use
   because they would conflict with the functionality of
-  **docassemble** and [Python].
-* [Special Variables] - Describes variables that have special properties
+  the Docassemble Framework and [Python].
+* [Special Variables] - Describes variables that have special properties.
 * [Errors] - Explains some common error messages and how to avoid them.
 
-# <a name="invocation"></a>How you run a **docassemble** interview
+# <a name="invocation"></a>How to Run a Steward
 
-Users start an interview by going to its URL, which is the
-`/interview` path on your server with the `i` URL parameter set to the
-name of the interview.
+A Steward must be hosted on a [server]; a server is a single instance of
+the Docassemble Framework, running locally or in the cloud.
+In either case, a server can host many Stewards at once, a Steward can perform multiple different interviews, and a Steward can conduct many interview sessions for any particular interview simultaniously.
+Users can begin an interview session with a Steward by going to the URL for that particular interview.
+This is the URL of the Steward's host server appended with the `/interview` path and the
+`i` URL parameter set to the path for the DALang file of that interview.
 
-For example, the [demo interview], which is hosted on the server
+For example, the [demo Steward], which is hosted on the [server] at
 `demo.docassemble.org`, can be accessed with this URL.
 
 [{{ site.demourl }}/interview?i=docassemble.demo:data/questions/questions.yml]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/questions.yml){:target="_blank"}
 
-Here, the interview file name is
+The file path is
 `docassemble.demo:data/questions/questions.yml`.  This tells
-**docassemble** to look for a Python package named `docassemble.demo`
-and then within that package, look for the file `questions.yml`
+the Docassemble Framework to look for a Steward named `demo`
+and then within it, look for the interview file `questions.yml`
 located in the subdirectory `data/questions`.
 
-You can make your own [packages] and then install them on your server.
-If the name of your server is `interview.example.com`, the name of
-your package is `docassemble.mypackage`, and the name of your
-interview file is `myinterview.yml`, your users can access the
-interview at:
+Stewards are simply Python [packages]. You can make your own Stewards
+and then install them on any [server].
+If the URL of your server is `Steward.example.com`, the name of
+your Steward is `mySteward`, and the name of the interview
+file is `myDALang.yml`, your users can access the
+Steward at:
 
-> https://interview.example.com/interview?i=docassemble.mypackage:data/questions/myinterview.yml
+> https://interview.example.com/interview?i=docassemble.mySteward:data/questions/myDALang.yml
 
-Note that while you are using an interview, the URL in the location
+Note that the naming convention for Python namespace [packages] is such that the full name
+for your Steward, `mySteward`, is actually `docassemble.mySteward`.  Likewise all Stewards' full names
+will have `docassemble.` prepended to them.
+
+While you are interacting with a Steward, the URL in the location
 bar will change.  It will end with `#page1`, then `#page2`, then
-`#page3`, etc., as the interview progresses.  These tags have no
+`#page3`, etc., as the Steward progresses.  These tags have no
 effect except to allow the user to click the browser's back button in
-order to go back one screen.
+order to go back one screen. They aren't specifically linked to any particular block for that Steward.
 
-If you want to use **docassemble** to give users a list of interviews
-from which to choose, there is also a special page of the site,
-located at `/list`, which displays a [list of interviews] available on
-your server.
+If you want to give users a list of interviews avaliable on the [server],
+there is a special page located at `/list`, which displays a [list of interviews].
 
 > https://interview.example.com/list
 
@@ -172,10 +180,10 @@ This list is not automatically-generated.  You need to configure the
 list using the [`dispatch`] configuration directive.  The list of
 interviews can also be [embedded] into a page of another web site.
 This page is highly [configurable].  You can also replace the default
-`/list` page with an interview using the [`dispatch interview`]
-configuration directive.  Within that interview, you can use the
-[`interview_menu()`] function within that interview to present the
-list of interviews in whatever way you want.
+`/list` page with your own Steward using the [`dispatch interview`]
+configuration directive.  Within that Steward, you can use the
+[`interview_menu()`] function to present a list of interviews
+in whatever way you want.
 
 The [`dispatch`] configuration directive also allows your users to
 access specific interviews at human-readable URLs like:
@@ -185,9 +193,9 @@ access specific interviews at human-readable URLs like:
 
 If the user visits the main (or "root") URL for the site, e.g.,
 `https://interview.example.com`, the user will be redirected to the
-URL indicated by the [`root redirect url`] configuration directive.  A
-typical way to use this feature is to direct users to a web site
-outside of **docassemble** where they can find out information about
+URL indicated by the [`root redirect url`] configuration directive.
+A typical way to use this feature is to direct users to a web site
+outside of the Docassemble Framework where they can find out information about
 the services you offer.
 
 If you don't have a [`root redirect url`] set, the user will be
@@ -200,8 +208,8 @@ URL such as:
 
 > https://interview.example.com
 
-If you have set [`root redirect url`], your [`default interview`]
-interview will still be accessible at:
+If you have set [`root redirect url`], your
+[`default interview`] will still be accessible at:
 
 > https://interview.example.com/interview
 
@@ -210,25 +218,28 @@ If you do not have a [`default interview`], but you have configured a
 user who visits the "root" URL of your site will be redirected to
 `/list`.
 
-However, if the user had previously been using another interview
+However, if the user had previously been in another interview session
 during the same browser session, going to
 `https://interview.example.com/` (without a [`root redirect url`]) or
 `https://interview.example.com/interview` will resume the original
-session.
+interview session.
 
-If you want your users who are in the middle of an interview to be
-able to begin a different interview, you can enable [`show dispatch
-link`] in the [configuration], and then in the menu, the user will see
+If you want your users who are in the middle of an interview session with a Steward
+to be able to begin a different interview session with the same or a different Steward,
+you can enable [`show dispatch link`] in the [configuration],
+and then in the menu, the user will see
 a link called "Available Interviews," which directs to your `/list`
 page.  You can also use the [`menu_items` special variable] within an
-interview to provide options on the pull-down menu for starting other
-interviews.  Within the body of an interview question, you can insert
+interview session to provide options on the pull-down menu for starting a different interview.
+
+Or if you want a single Steward to perform multiple different interviews,
+within the body of an interview question you can insert
 a link to another interview using the [`interview_url()`] function
 with an `i` parameter indicating the interview.
 
-## <a name="iframe"></a>Embedding the interview into a web page
+## <a name="iframe"></a>Embedding a Steward into a Web Page
 
-You can embed an interview into a web page by inserting an [iframe]
+You can embed a Steward into a web page by inserting an [iframe]
 into the [HTML] of the page.
 
 {% highlight html %}
@@ -236,85 +247,85 @@ into the [HTML] of the page.
 {% endhighlight %}
 
 You should adjust the width and height of the [iframe] based on what
-makes sense for the web page.  **docassemble** can handle a variety of
+makes sense for the web page.  The Docassemble Framework can handle a variety of
 sizes, but make sure you test the user experience both on desktop
-and on mobile.  Since embedded interviews are often less than ideal for
+and on mobile.  Since embedded Stewards are often less than ideal for
 mobile users, you can use the [`go full screen`] feature to cause the
-interview to "go full screen" on the user's device once the user
+Steward to "go full screen" on the user's device once the user
 starts interacting with it.
 
-## <a name="reset"></a>Starting an interview from the beginning
+## <a name="reset"></a>Restarting an Interview Session
 
-The **docassemble** web application uses browser cookies to keep track
+Stewards use browser cookies to keep track
 of the user's current interview session.  If the user starts an
-interview, then navigates to a different page, and then navigates to
-`/interview` on the **docassemble** server with no URL parameters, or
+interview session with a Steward, then navigates to a different page, and then navigates to
+`/interview` on the [server] with no URL parameters, or
 with an `i` parameter that is the same as the `i` parameter of the
 current interview session, the user will be redirected to where they left
-off in the previous session.
+off in the previous interview session.
 
 <a name="new_session"></a>If you want to be able to provide your users
-with a URL that always starts a fresh interview session, and will not
+with a URL that always starts a fresh interview session with the Steward, and will not
 resume an existing session, include `&new_session=1` in the URL.
 Whenever this link is clicked (or the [iframe] is drawn), the
-interview will start at the beginning, even if the user had just been
-in a session of the same interview.  The prior session, if any, is
+Steward will start the interview session at the beginning, even if the user had just been
+in a session of the same interview.  The prior interview session, if any, is
 preserved.
 
-If you add `&reset=1` to the end of an interview URL, this will have
+If you add `&reset=1` to the end of a interview's URL, this will have
 the same effect as `&new_session=1`, but if the user had just been in
 a session with the same interview, that session will be deleted.
 In this cirumstance, adding `&reset=1` is like a "restart" operation.
 
-If the user is in interview session, and then clicks a link to an
-interview with a different `i` parameter, this has the same effect as
-if `&new_session=1` had been added; a fresh interview will always be
+If the user is in an interview session, and then clicks a link
+with a different `i` parameter, this has the same effect as
+if `&new_session=1` had been added; a fresh interview session will always be
 started.
 
 For other session restarting options, see the `'restart'` and
 `'new_session'` options for the [`url_of()`] and [`command()`]
 functions, and the `restart` and `new_session` [special buttons].
 
-# <a name="howstored"></a>How answers are stored
+# <a name="howstored"></a>How Answers are Stored
 
-When a user starts a new interview, a new "variable store" is created.
+When a user starts a new interview session with a Steward, a new "variable store" is created.
 A variable store is a [Python dictionary] containing the names of the
-variables that get defined during the course of the interview, such as
-`favorite_animal` in the example interview above.  The variable store
-is saved on the **docassemble** server.
+variables that get defined during the course of the interview session, such as
+`favorite_animal` in the example Steward above.  The variable store
+is then saved in the [server]'s [database].
 
-**docassemble** keeps a copy of the variable store for every step of
-the interview.  If the user presses the **docassemble** back button
-(not the browser back button), **docassemble** will restore the
+The Steward keeps a copy of the variable store in the server's database for every step of an
+interview session.  If the user presses the Steward's back button
+(not the browser back button), the Steward will restore the
 variable store to the next earliest version.
 
-# <a name="comingback"></a>Leaving an interview and coming back
+# <a name="comingback"></a>Leaving an Interview Session and Coming Back
 
-If the user is not logged in through **docassemble**'s
+If the user is not logged in through the Docassemble Framework's
 [username and password system], then the user's progress through an
-interview will be lost if the web browser is closed.
+interview session with a Steward will be lost if the web browser is closed.
 
 If the user is logged in, however, then when the user logs in again,
-the user will be able to resume the interview where he left off.
+the user will be able to resume the interview session where one left off.
 
-If a new user starts an interview without being logged in, and then
+If a new user starts an interview session without being logged in, and then
 clicks the link to log in, and then clicks the link to register, the
 user will be logged in and will immediately be directed back to the
-interview they had been using, and they will immediately pick up where
+Steward and the interview session they had been using, and they will immediately pick up where
 they left off.
 
-If a logged-inuser leaves an interview without completing it, closes
+If a logged-in user leaves an interview session without completing it, closes
 their browser, then opens their browser at a later time, and visits
-the interview link again, they will start a new interview session.  If
+the interview's link again, they will start a new interview session with that Steward.  If
 they then log in using the menu in the corner, they will be directed
-to the `/interviews` page, where they will see two interview sessions
+to the `/interviews` page, where they will see two interview sessions with that Steward
 listed, including their original session and the session they just
 started.
 
-If your users will only ever need to use a single session of an
-interview, you might want to change the code of your interview so that
+If your users will only ever need to use a single interview session with a
+Steward, you might want to change the [DALang] code of your Steward so that
 they have a different experience.  For example, you might want to
-start your interview with a multiple-choice question that asks the
+start your Steward with a multiple-choice question that asks the
 user if they are a new user or a returning user.  If they are a
 returning user.
 
@@ -338,48 +349,48 @@ code: |
 Running [`command()`] with `'exit'` deletes the current interview
 session.  The `url` keyword parameter redirects the user to a
 particular page.  The function [`url_of()`] with the parameter
-`'login'` returns the URL for the **docassemble** login page.
+`'login'` returns the URL for the Docassemble Framework login page.
 
 For other exiting options, see the `'exit'`, `'leave'`, `'logout'`, and
 `'exit_logout'` options for the [`url_of()`] and [`command()`]
 functions.
 
-# <a name="htauthor"></a>How to author your own interviews
+# <a name="htauthor"></a>How to Build Your Own Stewards
 
-To write and test your own interviews, you will need:
+To write and test your own Stewards, you will need:
 
-1. A **docassemble** server (see [installation]);
+1. A Docassemble Framework server (see [installation]);
 2. An account on the [username and password system] of that server,
    where the privileges of the account have been upgraded to
    "developer" or "admin."
 
-There are three ways to author your own interviews:
+There are three ways to build your own Stewards:
 
 1. When logged in, go to the "Playground" from the menu in the upper
    right hand corner.  The [playground] allows you to quickly edit and
-   run interview [YAML].
-2. Create a [package] on your local computer and then install it on
-   the **docassemble** server either through [GitHub] or by uploading a ZIP
-   file.
-3. Create a [package], push it to [GitHub], and then edit your
-   interviews using [GitHub]'s web interface.  (You can also upload
-   static files using [GitHub].)  To run your interview, update your
-   [package] on **docassemble** (which will retrieve your code from
+   run [DALang].
+2. Create a Steward on your local computer and then install it on
+   your [server] either through [GitHub] or by uploading a ZIP
+   file of the [package] containing the Steward.
+3. Create a Steward, push it to [GitHub], and then edit your
+   Steward using [GitHub]'s web interface.  (You can also upload
+   static files using [GitHub].)  To run your Steward, update your
+   Steward on your [server] (which will retrieve your code from
    [GitHub]).
 
-# <a name="yaml"></a>Brief introduction to YAML
+# <a name="yaml"></a>Brief Introduction to DALang
 
-**docassemble** interviews are written in [YAML] format, rather than
+Stewards are written in DALang using [YAML] formating, rather than being
 assembled using a [graphical user interface], because once authors
-have climbed the **docassemble** learning curve, the text format is
-ideal for managing the complexity of advanced interviews, since it
+have climbed the learning curve, the text format is
+ideal for managing the complexity of advanced Stewards, since it
 allows authors to copy-and-paste, search-and-replace, and organize
 text into multiple files.  [YAML] was chosen as the format because it
 is the cleanest-looking of data formats that are both machine-readable
 and human-readable.
 
-The hardest part about learning **docassemble** is not writing
-[Python] code, since sophisticated interviews can be built using
+The hardest part about learning DALang is not writing
+Python [code], since sophisticated Stewards can be built using
 nothing more complicated than a few [if/else statements].  The more
 difficult aspect may be learning [YAML].  While the [YAML] format
 looks simple, it can be frustrating.
@@ -412,7 +423,7 @@ and definitions.  More generally, it associates "keys" with "values."
 [YAML] interprets lines of text and figures out whether you are
 talking about a list or a dictionary depending on what punctuation you
 use.  If it sees a hyphen, it thinks you are talking about a list.  If
-it sees a color, it things you are talking about a dictionary.
+it sees a color, it thinks you are talking about a dictionary.
 
 Lists and dictionaries can be combined.  You can have a dictionary of
 lists and a list of dictionaries.  If I wanted to express the to-do
@@ -535,13 +546,13 @@ are writing.
 The following values in [YAML] are special:
 
 * `null`, `Null`, `NULL` -- these become `None` in [Python]
-* `True`, `True`, `TRUE` -- these become `True` in [Python]
-* `False`, `False`, `FALSE` -- these become `False` in [Python]
+* `true`, `True`, `TRUE` -- these become `True` in [Python]
+* `false`, `False`, `FALSE` -- these become `False` in [Python]
 * numbers such as `54`, `3.14` -- these become numbers in [Python]
 
 These values will not be interpreted as literal pieces of text, but as
 values with special meaning in [Python].  This can cause confusion in
-your interviews, so if you ever use "True" and "False" as a label or
+your Stewards, so if you ever use "True" and "False" as a label or
 value, make sure to enclose it in quotation marks.
 
 This [YAML] text:
@@ -580,7 +591,7 @@ You can write:
 {% endhighlight %}
 
 Both mean the same thing.  You might want to use this technique if
-your labels in a [`fields`] directive are long.  For example, instead
+your labels in a [`fields`] component are long.  For example, instead
 of writing:
 
 {% highlight yaml %}
@@ -628,11 +639,11 @@ For more information about [YAML], see the [YAML specification].
 [Question Blocks]: {{ site.baseurl }}/docs/questions.html
 [questions]: {{ site.baseurl }}/docs/questions.html
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
-[Setting Variables]: {{ site.baseurl }}/docs/fields.html
-[Question Modifiers]: {{ site.baseurl }}/docs/modifiers.html
-[Templates]: {{ site.baseurl }}/docs/template.html
-[Code]: {{ site.baseurl }}/docs/code.html
-[Interview Logic]: {{ site.baseurl }}/docs/logic.html
+[Question Blocks: Fields]: {{ site.baseurl }}/docs/fields.html
+[Question Blocks: Modifiers]: {{ site.baseurl }}/docs/modifiers.html
+[Template Blocks]: {{ site.baseurl }}/docs/template.html
+[Code Blocks]: {{ site.baseurl }}/docs/code.html
+[Interview Flow]: {{ site.baseurl }}/docs/logic.html
 [Objects]: {{ site.baseurl }}/docs/objects.html
 [Markup]: {{ site.baseurl }}/docs/markup.html
 [Functions]: {{ site.baseurl }}/docs/functions.html
@@ -650,7 +661,7 @@ For more information about [YAML], see the [YAML specification].
 [`default interview`]: {{ site.baseurl }}/docs/config.html#default interview
 [embedded]: {{ site.baseurl }}/docs/config.html#dispatch
 [list of interviews]: {{ site.baseurl }}/docs/config.html#dispatch
-[demo interview]: {{ site.baseurl }}/demo.html
+[demo Steward]: {{ site.baseurl }}/demo.html
 [iframe]: https://www.w3schools.com/TAgs/tag_iframe.asp
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [`go full screen`]: {{ site.baseurl }}/docs/initial.html#go full screen
@@ -665,3 +676,11 @@ For more information about [YAML], see the [YAML specification].
 [configurable]: {{ site.baseurl }}/docs/config.html#customization
 [`show dispatch link`]: {{ site.baseurl }}/docs/config.html#show dispatch link
 [special buttons]: {{ site.baseurl }}/docs/questions.html#special buttons
+[domain specific language]: https://en.wikipedia.org/wiki/Domain-specific_language
+[backward chaining]: https://en.wikipedia.org/wiki/Backward_chaining
+[variables]: {{ site.baseurl }}/docs/fields.html
+[DALang]: {{ site.baseurl }}/docs/interviews.html#yaml
+[Zapier]: https://zapier.com
+[generated documents]: {{ site.baseurl }}/docs/documents.html
+[server]: {{ site.baseurl }}/docs/installation.html
+[database]: {{ site.baseurl }}/docs/schema.html

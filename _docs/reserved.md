@@ -1,10 +1,10 @@
 ---
 layout: docs
-title: Reserved variable names
+title: Reserved Variable Names
 short_title: Reserved Names
 ---
 
-The following variables are set internally by **docassemble**.  If you
+The following variables are reserved for DALang.  If you
 try to use these reserved names for your own purposes, you will
 experience errors or unexpected results.
 
@@ -23,7 +23,6 @@ experience errors or unexpected results.
 * <span></span>[`loop`]: within a [Mako] "for" loop, this variable has
   special meaning.
 * <span></span>[`i`], [`j`], [`k`], [`l`], [`m`], [`n`]: used as iterators when
-  dictionaries or lists are used.
 * <span></span>[`incoming_email`]: a [special variable] that is used
   as part of the [background processes] system.
 * <span></span>[`menu_items`]: used to add items to the menu.
@@ -397,7 +396,7 @@ encounter an error or an unexpected problem.
 
 In addition, you should never use a variable name that begins with an
 underscore.  Although `_internal` is the only variable in the variable
-store that begins with an underscore, the **docassemble** web app uses
+store that begins with an underscore, the docassemble web app uses
 names that begin with underscores to communicate information between
 the browser and the server, and if your variable names conflict with
 these names, you may experience errors or unexpected results.  These
@@ -419,7 +418,7 @@ internal names include:
 * `_tracker`
 * `_varnames`
 
-The following URL parameters have special meaning in **docassemble**.
+The following URL parameters have special meaning in DALang.
 All others are available for you to use and to retrieve with
 [`url_args`].
 

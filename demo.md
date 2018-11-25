@@ -1,74 +1,71 @@
 ---
 layout: docs
-title: A demonstration of docassemble
-short_title: Demo
+title: Docassemble Demo
+short_title: Demo Steward
 order: 10
 ---
 
-# The demonstration
+# The Demo Steward
 
-You can [run a simple demonstration](https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml){:target="_blank"} to see **docassemble** in action.
+You can [run a simple Demo Steward](https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml){:target="_blank"} to see the Docassemble Framework in action.
 
 <a class="btn btn-primary btn-lg"
 href="https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml"
-target="_blank">Run the demo</a>
+target="_blank">Run the Demo Steward</a>
 
 The interface is based on [Bootstrap], which is both mobile-friendly
 and desktop-friendly.  Try it out on a mobile device.
 
-Note that the example interview is not intended to make logical sense
-as an interview; it is simply intended to demonstrate the features of
-**docassemble**.
+Note that the example Steward is not intended to make logical sense;
+it is simply intended to demonstrate the features of
+the Docassemble Framework.
 
-100% of the source code for the example interview is listed below in
+100% of the [DALang] source code for the example Steward is listed below in
 the form of two [YAML] files, which are annotated with comments.
 
 When you are using the demonstration, you can click "Source" to see
-the [YAML] source code that generated the question, along with a
+the [DALang] source code that generated the question, along with a
 review of the conditions that led to the question being asked.  You
-can learn a lot about how to do things in **docassemble** by clicking
-"Source" and comparing the [YAML] source to the end result.  The
-"Source" tab is only available because the demo server is configured
-as a development server (by setting `debug: True` in the
+can learn a lot about how to do things in DALang by clicking
+"Source" and comparing the DALang source to the end result.  The
+"Source" tab is only available because the demo [server] is configured
+as a development [server] (by setting `debug: True` in the
 [configuration file]).  End users will not see a "Source" tab.
 
-# The YAML file that generates the demonstration interview
+# The DALang File for the Demo Steward
 
-The [YAML] file that generates the interview, `questions.yml`, is
+The [DALang] file that powers the Demo Steward, `questions.yml`, is
 listed below.  Note that:
 
-* It incorporates by reference another [YAML] file,
+* It incorporates by reference another [DALang] file,
   `basic-questions.yml`, which specifies how certain common questions
-  should be asked.  The content of this file is listed below.
+  should be asked.  The content of this file is also listed below.
 * The code is not entirely self-explanatory, but for computer code, it
   is pretty close to plain English.
 * The questions and logic are not specified in any particular order.
-  If **docassemble** needs to get the value of a variable, it knows
-  where to find it.  This makes things easier for the author, who can
+  If the Demo Steward needs to get the value of a variable, it knows
+  where to find it.  This makes things easier for the developer, who can
   organize the questions however he or she wants and use keyword
-  searching to navigate.  Moreover, the author can represent the
+  searching to navigate.  Moreover, the developer can represent the
   underlying legal logic in modular, bite-size pieces.  A question or
-  a bit of logic that an author writes for one interview can be
-  packaged and reused in other interviews.
+  a bit of logic that a developer writes for one Steward can be
+  packaged and reused in another Steward.
 
 {% highlight yaml %}
 metadata:
   title: |
-    Demonstration interview
+    Demonstration Steward
   short title:
     Demo
   description: |
-    This is a demonstration of the docassemble system.
+    This is a demonstration of the Docassemble Framework.
   authors:
     - name: Jonathan Pyle
       organization: none
   revision_date: 2017-05-26
-  tags:
-    - demo
-    - legal
 comment: |
-  A "metadata" block contains information about the interview, such as
-  the title of the interview as displayed in the navigation bar.
+  A "metadata" block contains information about the Steward, such as
+  the title of the Steward as displayed in the navigation bar.
 ---
 interview help:
   heading: |
@@ -88,7 +85,7 @@ interview help:
     % endif
 comment: |
   An "interview help" block adds text to the "Help" page of every
-  question in the interview.  If the question has help text of its
+  question a Steward asks.  If the question has help text of its
   own, the "interview help" will appear after the question-specific
   help.
 
@@ -102,25 +99,25 @@ interview help:
     Conteste cada pregunta. Al final, se le puede dar un documento
     que puede ahorrar.
 comment: |
-  This interview is not fully translated into Spanish, but this shows
+  This Steward is not fully bilingual in Spanish, but this shows
   how you would provide a Spanish translation of the "interview help."
 ---
 include:
   - basic-questions.yml
 comment: |
-  This loads some question definitions that are common to many legal
-  interviews.  It also defines basic variables like "user" and sets
-  the names of icons that you can use to "decorate" your questions.
+  This loads some question definitions that are common to many Legal
+  Stewards.  It also defines basic variables like "user" and sets
+  the names of icons that you can use to "decorate" your Steward's questions.
 
-  The "basic-questions.yml" comes from the docassemble.base package
+  The "basic-questions.yml" comes from the docassemble.base Steward
   and is located in the directory docassemble/base/data/questions
-  in that package.
+  in that Steward's package.
 
-  You can include question files from other packages by explicitly
-  referring to their package names.  For example,
+  You can include question files from other Stewards by explicitly
+  referring to their names.  For example,
   "docassemble.helloworld:questions.yml" refers to the file
   questions.yml in the docassemble/helloworld/data/questions
-  directory of the docassemble.helloworld package.
+  directory of the package for the Steward docassemble.helloworld.
 ---
 image sets:
   freepik:
@@ -132,7 +129,7 @@ image sets:
       injury: accident3.svg
 comment: |
   An "image sets" block defines the names of icons that you can use to
-  "decorate" your questions.  Loading the "basic-questions.yml" file
+  "decorate" your Steward's questions.  Loading the "basic-questions.yml" file
   already defined a number of icons, but this block defines some more
   icons.
 
@@ -142,9 +139,9 @@ comment: |
   attribution text at the bottom of any page that uses one of the
   icons.
   
-  Since this file, questions.yml, is in the docassemble.demo package,
-  the image files referenced here are also in the docassemble.demo
-  package.  The files are located in the directory
+  Since this file, questions.yml, is in the Steward docassemble.demo,
+  the image files referenced here are also in the package for the Steward docassemble.demo.
+  The files are located in the directory
   docassemble/demo/data/static.
 ---
 objects:
@@ -152,7 +149,7 @@ objects:
 comment: |
   In a later question we will refer to the variable "village_idiot."
   This "objects" block creates the variable "village_idiot" and
-  specifies that it is an object of type "Individual."
+  specifies that it is a DALang object of type "Individual."
 ---
 auto terms:
   rhododendron: |
@@ -174,7 +171,7 @@ auto terms:
 comment: |
   Sometimes you will use vocabulary that the user may or may not know.
   Instead of interrupting the flow of your questions to define every
-  term, you can define certain vocabulary words, and docassemble will
+  term, you can define certain vocabulary words, and the Steward will
   turn them into hyperlinks wherever they appear.  When the user
   clicks on the hyperlink, a popup appears with the word's definition.
 ---
@@ -185,16 +182,16 @@ code: |
   client.income.new('employment', 'self employment', 'SSI', 'TANF', 'rent', period=12)
   client.income.gathered = True
 comment: |
-  This interview will ask whether the client has particular income and assets.
+  This Steward will ask whether the client has particular income and assets.
 
-  The objects client.asset and client.income are docassemble objects that function
+  The objects client.asset and client.income are DALang objects that function
   like Python "dictionaries."
   
   This code initializes the list of income and asset items.
 
   The attribute "gathered" is set to True because after being initialized with
   the given items, we want the list to be considered complete.  That is, we
-  do not want the interview to ask the user if there are any additional items
+  do not want the Steward to ask the user if there are any additional items
   to add.
   
   "Mandatory" sections like this one are evaluated in the order they
@@ -204,13 +201,13 @@ initial: True
 code: |
   set_language(user.language)
 comment: |
-  When providing interviews in multiple languages, you need to tell docassemble
+  When providing multilingual Stewards, you need to tell the Steward
   what language it should use for the built-in words and expressions
   that the user will see.  This needs to be set up-front in "initial" code, which
   will run every time the screen loads.
 
-  When the interview first loads, user.language is undefined.  Therefore
-  docassemble will ask the user a question in order to obtain a definition for
+  When the Steward first loads, user.language is undefined.  Therefore
+  the Steward will ask the user a question in order to obtain a definition for
   user.language.  We will encounter this question below.
   
   "Mandatory" and "initial" sections are evaluated in the order they
@@ -220,45 +217,40 @@ comment: |
 ---
 mandatory: True
 code: |
-  multi_user = True
-  set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])
----
-mandatory: True
-code: |
   need(user_saw_initial_screen)
   if user_understands_no_attorney_client_relationship == "understands":
     need(client_done)
   else:
     need(client_kicked_out)
 comment: |
-  This is the code that directs the flow of the interview.
+  This is the code that directs the question flow for the Steward.
 
   It runs after the user's language is set by the previous "initial" block.
 
-  Note that there are no other "mandatory" or "initial" questions in the
-  interview.  This code block determines how the interview will end.
+  Note that there are no other "mandatory" or "initial" questions for this
+  Steward.  This code block determines how the Steward will end.
   
   This code indicates to the system that we need to get to the
   endpoint "client_done."  There is a question elsewhere that contains
-  "event: client_done."  Docassemble will ask all the questions
+  "event: client_done."  The Steward will ask all the questions
   necessary to get the information need to pose that that final
   question to the user.
 
   However, if the answer to the question
   user_understands_no_attorney_client_relationship is not
-  "understands," the interview will looks for a question that sets the
+  "understands," the Steward will looks for a question that sets the
   variable "client_kicked_out."  There is a question elsewhere that
   contains "event: client_kicked_out."
 
-  This is the code that determines the entire path of the interview,
-  and yet it is very short, even though the interview has many questions.
-  That is because interview flow in docassemble is automatic.  The order
+  This is the code that determines the entire path for the Steward,
+  and yet it is very short, even though the Steward has many questions.
+  That is because flow of an interview session on the Docassemble Framework is automatic.  The order
   in which questions are asked can vary depending on the user input.  In
-  some interviews, a question is asked early, and in another, it is asked
-  later.  Questions are asked if and when there is a necessity to
+  some interview sessions, a question is asked early by a Steward, and in another, it is asked
+  later.  Questions are asked by the Steward if and when there is a necessity to
   gather information.
 
-  There is one additional bit of the interview flow that is manual: the
+  There is one additional bit of the flow of interview sessions that is manual: the
   requirement of "user_saw_initial_screen."  This causes a "welcome" screen
   to be shown.  We always want this screen to be displayed first (at
   least as soon as we determine the user's language).
@@ -271,19 +263,19 @@ code: |
   case.plaintiff.there_are_any = True
   case.defendant.there_are_any = True
 comment: |
-  This interview relates to a court case.  It takes advantage of the
-  basic-questions.yml file in the docassemble.base package.  This
-  interview file provides some functionality for legal interviews.
+  This Steward relates to a court case.  It takes advantage of the
+  basic-questions.yml file in the Steward docassemble.base.  This
+  Steward file provides some functionality for Legal Stewards.
 
   For example, basic-questions.yml defines the objects "case" and "client."
 
-  But in our interview, what do we want to do with "case" and "client"?
+  But in our Steward, what do we want to do with "case" and "client"?
   What is the relation of the client to the case?  Is the client the user,
   or a different person from the user?
 
   The purpose of the above code is to set initial values for the
   objects case.plaintiff and case.defendant.  These objects are
-  docassemble objects that function as Python lists.  They represent
+  DALang objects that function as Python lists.  They represent
   the plaintiffs and defendants in the case.
 
   This code will add the client as a plaintiff, or add the client as a
@@ -296,7 +288,7 @@ comment: |
 
   The end result of this code is to define the "there_are_any"
   attributes of the two lists.  Note that this code is not
-  "mandatory."  It will be run when and if the interview needs to know
+  "mandatory."  It will be run when and if the Steward needs to know
   whether the lists are empty.  We set the attributes to True because
   all court cases need to have at least one plaintiff and at least one
   defendant.
@@ -304,10 +296,10 @@ comment: |
 event: client_kicked_out
 progress: 100
 question: |
-  Sorry, you cannot proceed with the interview.
+  Sorry, you cannot proceed with the interview session.
 subquestion: |
-  You can only proceed with the interview if you agree that your
-  completion of the interview does not create an attorney-client
+  You can only proceed with the interview session if you agree that your
+  completion of the interview session with the Steward does not create an attorney-client
   relationship.
 
   % if user_understands_no_attorney_client_relationship == 'unsure':
@@ -322,10 +314,10 @@ comment: |
   This is an endpoint question (note that the only options are exiting
   or restarting).
 
-  If the interview was configured to show a progress bar, the progress
+  If the Steward was configured to show a progress bar, the progress
   bar would be set to 100% on this question.
 
-  This question uses the "event" directive.  "client_kicked_out" is a
+  This question uses the "event" component.  "client_kicked_out" is a
   variable, just like any other variable, except that it is never
   defined, only sought.
 
@@ -339,31 +331,31 @@ comment: |
   in the basic-questions.yml file.
 ---
 question: |
-  Welcome to the **docassemble** demonstration.
+  Welcome to the Docassemble Framework Demonstration.
 subquestion: |
-  The following interview is designed to demonstrate almost all of
-  **docassemble**'s features.  At the end, you will be provided with a
+  The following Steward is designed to demonstrate almost all of
+  the Docassemble Framework's features.  At the end, you will be provided with a
   fake client letter and a fake pleading.
 
   % if interface() == 'web':
   In the navigation bar above, you can click "[Help]" to see the help
-  text associated with the interview and with the individual question
-  (if any).  If "Help :star:" appears in the navigation bar, that
-  means help text specific to the question is available.
+  text associated with the Steward and with the individual question
+  (if any).  If "Help <i class="glyphicon glyphicon-star"></i>"
+  appears in the navigation bar, that means help text specific to the
+  question is available.
 
-  Click "Source" to toggle the display of the [YAML] code used to
+  Click "Source" to toggle the display of the DALang code used to
   generate the question.  (Note: the "Source" tab is available because
   this server is configured as a development server; end users would
   not see a "Source" tab.)
   % endif
 
   [Help]: ${ url_of('help') }
-  [YAML]: https://en.wikipedia.org/wiki/YAML
 field: user_saw_initial_screen
 buttons:
   - Ok, got it: True
 comment: |
-  This is the "splash screen" for the interview.  The question is a
+  This is the "splash screen" for the Steward.  The question is a
   multiple-choice question with one option.
 
   This example demonstrates that HTML can be combined with Markdown
@@ -404,10 +396,10 @@ subquestion: |
 yesno: x.has_support_order
 comment: |
   This question illustrates how you can include images in your
-  questions.  The file sample-support-order.jpg is stored in the
-  docassemble.demo package in the subdirectory
+  questions.  The file sample-support-order.jpg is part of the Steward
+  docassemble.demo and it is stored in the package subdirectory
   docassemble/demo/data/static.  This is how you refer to a "static"
-  file that exists within a docassemble subpackage.
+  file that exists within a Steward's subpackage.
 
   The "100%" indicates that the image width should fill the screen.
 ---
@@ -440,7 +432,7 @@ code: |
   else:
     client_has_standing = False
 comment: |
-  This is an example of how docassemble can serve as a legal "expert
+  This is an example of how a Steward can serve as a legal "expert
   system."  The variable "client_has_standing" (a legal concept) can
   be set using simple logical expressions in Python.  Legal concepts
   can be expressed as true/false variables and the law can be coded in
@@ -520,7 +512,7 @@ comment: |
   The text of 'script' is added to the bottom of the page, while the
   text of 'css' is added to the <head>.
 
-  Note that you can use Mako templates in each of these declarations.
+  Note that you can use Mako templates in each of these components.
 ---
 question: |
   Why do you think you deserve to win this case?
@@ -536,7 +528,7 @@ code: |
   jurisdiction_county = "Philadelphia"
 comment: |
   This code sets some information about the current jurisdiction.  The
-  interview assumes that the legal case is in a Pennsylvania court.
+  Steward assumes that the legal case is in a Pennsylvania court.
 
   The court.jurisdiction variable uses a special format that is
   particular to the docassemble.base.legal module.  It is used to
@@ -546,7 +538,7 @@ comment: |
   layer of questions and code applicable at a county level, etc.
 
   Note that this code is not "mandatory."  It will be called when and
-  if the interview needs to know any of these variables.
+  if the Steward needs to know any of these variables.
 ---
 code: |
   if jurisdiction_state == "Pennsylvania":
@@ -635,7 +627,6 @@ question: |
   Where ${ x.do_question('live') }?
 fields:
   - Address: x.address.address
-    address autocomplete: True    
   - Unit: x.address.unit
     required: False
     help: The apartment, suite, or unit number of the residence.
@@ -653,15 +644,14 @@ comment: |
 ---
 generic object: Individual
 question: |
-  Please upload a picture of ${ x.yourself_or_name() }.
+  Please upload one or more pictures of ${ x.yourself_or_name() }.
 decoration: picture
 fields:
   - A test file: x.picture
-    datatype: camera
+    datatype: files
 comment: |
   You can accept file uploads from users by using the datatypes "file"
-  (for a single file) or "files" (for one or more files).  The "camera"
-  file type ensures that only image files are accepted.
+  (for a single file) or "files" (for one or more files).
 ---
 generic object: Individual
 question: |
@@ -691,7 +681,7 @@ mako: |
   ${ person } is adorable. \
   </%def>
 comment: |
-  docassemble uses the Mako templating system to expand variables
+  DALang uses the Mako templating system to expand variables
   within Markdown text.  Mako allows functions to be defined within
   source text using "def" constructs.  If you write Mako "def"
   functions, you may want to use them in more than one document.  This
@@ -699,22 +689,22 @@ comment: |
   Mako text, and an example below shows how an attachment can include
   this Mako text by referring to it by its name (kid_defs).
 
-  Another way to write functions in docassemble is to write methods
-  that act on docassemble objects, which you define in your objects.py
-  file within your package.
+  Another way to write functions in DALang is to write methods
+  that act on DALang objects, which you define in your objects.py
+  file within your Steward.
 ---
 comment: |
-  This very long question is the interview's main endpoint (it offers
+  This very long question is the Steward's main endpoint (it offers
   to define client_done, which was referred to in the mandatory code
   block above.  This question has two "attachment" documents.  Most of
-  the questions in the interview are asked because they are needed by
+  the Steward's questions are asked because they are needed by
   this question or one of its attachments.
 
-  This question also demonstrates use of the "need" directive to
+  This question also demonstrates use of the "need" component to
   gather information about the case's plaintiffs and defendants up
   front.  This is not strictly necessary, because the case caption
   will cause those questions to be answered.  However, the "need"
-  clause forces docassemble to gather the information up front, before
+  clause forces the Steward to gather the information up front, before
   it starts processing the question and its attachments.  This helps
   to direct the order of the questions in a more sensible fashion.
 event: client_done
@@ -729,14 +719,14 @@ decoration: finishline
 subquestion: |
   Here is an advice letter and a pleading you can file.
 
-  (Note: the option to see documents in Markdown format is
-  hidden when **docassemble** is configured as a production server.
+  (Note: the options to see documents in Markdown and LaTeX format are
+  hidden when the server is configured for production.
   End users will not see these options.)
 help: |
-  This is the end of the interview, ${ client }.  You can exit or
+  This is the end of the interview session, ${ client }.  You can exit or
   restart.
 
-  I hope you enjoyed this interview.
+  I hope you enjoyed this interview session.
 buttons:
   - Exit: exit
   - Restart: restart
@@ -926,36 +916,36 @@ attachments:
 ---
 language: es
 question: |
-  Bienvenido a la demostración **docassemble**.
+  Bienvenido a la demostración Docassemble Framework.
 subquestion: |
   La siguiente entrevista está diseñado para demostrar la casi
-  totalidad de características de **docassemble**. Al final, se le
+  totalidad de características de Docassemble Framework. Al final, se le
   proporcionará un carta cliente falso y un escrito falso.
 
   En la barra de navegación de arriba, puede hacer clic en "Ayuda"
   para ver el texto de ayuda asociado a la entrevista y con la
-  pregunta individual. Si "Ayuda :star:" aparece en la barra de 
-  navegación, eso significa que el texto de ayuda específica a la 
-  cuestión está disponible.
+  pregunta individual. Si "Ayuda <i class="glyphicon
+  glyphicon-star"></i>" aparece en la barra de navegación, eso
+  significa que el texto de ayuda específica a la cuestión está
+  disponible.
 
   Haga clic en "Fuente" para cambiar la visualización del código
-  [YAML] utilizado para generar la pregunta.
+  DALang utilizado para generar la pregunta.
   
-  (This demonstration interview has not been fully translated into
-  Spanish; only this page has.  The remainder of the interview will
+  (This demonstration Steward is not fully bilingual in
+  Spanish; only this page has.  The remainder of the interview session will
   fall back to using the available English versions of each question.)
 
-  [YAML]: https://en.wikipedia.org/wiki/YAML
 field: user_saw_initial_screen
 datatype: boolean
 buttons:
   - Comprendo: True
 comment: |
-  This demonstration interview is not available in Spanish, but this
+  This demonstration Steward is not available in Spanish, but this
   question and the question after it demonstrate how multi-lingual
-  interviews can be constructed.  This question offers to set
+  Stewards can be constructed.  This question offers to set
   "user_saw_initial_screen," just like a previous question block did,
-  except that this question has a "language: es" directive, indicating
+  except that this question has a "language: es" component, indicating
   that this question should only be used if the current language (as
   set by the "initial" code block above using the set_language()
   function) is Spanish.
@@ -1019,6 +1009,7 @@ comment: |
   "employment."  Although this question and the previous question are
   both capable of defining x.income['employment'].value, this one
   takes precedence because it is more specific.
+  This is called precedence.
 
   The following questions are also specific cases.  The decorations
   are different for each question.
@@ -1143,36 +1134,37 @@ fields:
 ...
 {% endhighlight %}
 
-# The basic-questions.yml file, incorporated by reference into the demo
+# The basic-questions.yml File, Incorporated by Reference into the Demo Steward
 
-Many of the questions asked in the demonstration interview do not need
-to be defined in the [YAML] source file because they are already
+Many of the questions asked in the demonstration Steward do not need
+to be defined in the Steward's main source file because they are already
 defined in the `basic-questions.yml` file.  Here is an annotated
 guide to this file.
 
 {% highlight yaml %}
 ---
+---
 metadata:
   description: |
     This question file contains questions that are common in
-    law-related interviews.  It also imports docassemble functions,
+    law-related Stewards.  It also imports DALang functions,
     initializes a role system involving a "client" and an "advocate,"
     and defines objects including "client," "advocate," "case,"
     "spouse," "pleading," and "court."    
   authors:
     - name: Jonathan Pyle
       organization: none
-  revision_date: 2017-05-26
+  revision_date: 2018-09-21
 comment: |
-  A "metadata" block contains information about the interview, such as
-  the title of the interview as displayed in the navigation bar.
+  A "metadata" block contains information about the Steward, such as
+  the title of the Steward as displayed in the navigation bar.
 ---
 modules:
   - docassemble.base.legal
 comment: |
   A "modules" section imports class names and function names from
-  Python modules.  The docassemble.base.legal module defines some
-  object classes and functions that are useful in legal applications.
+  a module.  The docassemble.base.legal module defines some
+  object classes and functions that are useful for Legal Stewards.
   
   Using docassemble.base.legal in "modules" also has the effect of
   importing all of the class names and function names that are in
@@ -1191,26 +1183,26 @@ code: |
   set_info(user=user, role=role)
 comment: |
   This is a special "initial block" that initializes the "roles" system
-  for the interview.  (This is an advanced feature.)
+  for this Steward.  (This is an advanced feature.)
   
   The default user role is "client" and a secondary role is
-  "advocate."  Unless modified with a "role" directive, all questions
+  "advocate."  Unless a block has a "role" component, all questions
   will require the user to be a "client."  The user is assumed to have
-  the role of "advocate" role in this interview if the user is logged
+  the role of "advocate" role for interview sessions with this Steward if the user is logged
   in and the user has "advocate" as one of his or her user roles.
 
-  Many docassemble functions and methods need to know who the user is.
+  Many DALang functions and methods need to know who the user is.
   The set_info() function communicates that information to the
-  docassemble code.
+  DALang code.
 
-  Since the code here is paired with the "default role" declaration,
+  Since the code here is paired with the "default role" component,
   it is run as "initial" code, meaning that it is run every time
-  docassemble processes the interview (i.e., every time the screen
+  the Steward processes this DALang (i.e., every time the screen
   loads).  This is important because in a multi-user interview, a
-  "client" and an "advocate" could be interacting with the same
-  interview with the same dictionary of variables at the same time.
-  But they would need to see different things, so it isn't enough just
-  to use a variable in the interview to keep track of the current
+  "client" and an "advocate" could be a part of the same
+  interview session with the same dictionary of variables at the same time.
+  But they would need to see different things, so it isn't enough to just
+  to use a variable for the Steward to keep track of the current
   user; this needs to be reconsidered every time the screen loads.
 ---
 event: role_event
@@ -1225,7 +1217,7 @@ subquestion: |
     [${ interview_url() }](${ interview_url() })
     
   % else:
-    Thanks, the client needs to resume the interview now.
+    Thanks, the client needs to resume the interview session now.
   % endif
 decoration: exit
 buttons:
@@ -1234,13 +1226,13 @@ comment: |
   This block is related to the "roles" system that was initialized in
   the previous block.  (This is an advanced feature.)
 
-  When docassemble needs to ask a question that requires a role other
+  When a Steward needs to ask a question that requires a role other
   than the role of the current user, it needs to display a special
   message for the user.  It does this by searching for a question that
   offers to define the variable "role_event," and displaying that
   question.  The question above is an example of such a question.  It
   will be displayed in the event of a "role change" because it
-  contains the directive "event: role_event."
+  contains the component "event: role_event."
 ---
 objects:
   - case: Case
@@ -1250,30 +1242,10 @@ objects:
   - pleading: LegalFiling
   - court: Court
 comment: |
-  An "objects" section initializes variables that are docassemble
+  An "objects" section initializes variables that are DALang
   objects.  The object types here (Case, Individual, LegalFiling, and
   Court) are imported through the docassemble.base.legal module.
   (See the "modules" block above.)
----
-generic object: Individual
-sets: x.child
-code: |
-  x.initializeAttribute('child', ChildList)
----
-generic object: Individual
-sets: x.income
-code: |
-  x.initializeAttribute('income', Income)
----
-generic object: Individual
-sets: x.asset
-code: |
-  x.initializeAttribute('asset', Asset)
----
-generic object: Individual
-sets: x.expense
-code: |
-  x.initializeAttribute('expense', Expense)
 ---
 mandatory: true
 code: |
@@ -1281,10 +1253,10 @@ code: |
   pleading.case = case
 comment: |
   This code defines some basic relations among the objects created in
-  the objects block of this YAML file.
+  the objects block of this DALang file.
 
   The objects created by the `objects` block do not have any
-  connections among themselves, initially.  The interview needs to
+  connections among themselves, initially.  The Steward needs to
   make those connections.  This "mandatory" code block establishes
   those connections.
 
@@ -1337,8 +1309,8 @@ fields:
     datatype: date
 comment: |
   This question file defines a number of "generic" questions like
-  these.  If your interview refers to a variable called user.birthdate,
-  docassemble will first look for a question that sets "user.birthdate"
+  these.  If your Steward refers to a variable called user.birthdate
+  durring an interview session, it will first look for a question that sets "user.birthdate"
   specifically, but if it does not find it, it will look for a
   question for which the generic object property is set to the object
   type of the user object, which is Individual, and where the question
@@ -1363,7 +1335,8 @@ comment: |
   (E.g., "What is the birthdate of your lovely spouse?  If you don't
   know this, you are in deep trouble!")  You would do this by defining
   a non-generic question that sets spouse.birthdate, in which case
-  docassemble would use that question instead of the generic question.
+  the Steward would use that question instead of the generic question.
+  This is called precedence.
 ---
 generic object: Individual
 question: |
@@ -1417,7 +1390,7 @@ need:
 under: |
   ${ x.name }
 comment: |
-  docassemble can collect signatures from users, who can write their
+  A Steward can collect signatures from users, who can write their
   signature with their finger on a touchscreen device, or use a mouse
   or trackpad.  The signatures can be added to documents.
 ---
@@ -1441,18 +1414,27 @@ question: |
   Is this ${ x.possessive('signature') }?
 subquestion: |
   ${ x.signature.show() }
-field: x.signature_verified_button
 buttons:
-  - Yes: True
-  - No: False
-  - Let me try again: Null
----
-generic object: Individual
-code: |
-  if x.signature_verified_button in (True, False):
-    x.signature_verified = x.signature_verified_button
-  else:
-    force_ask('x.signature', 'x.signature_verified_button')
+  - "Yes":
+      generic object: Individual
+      code: |
+        x.signature_verified = True
+  - "No":
+      generic object: Individual
+      code: |
+        x.signature_verified = False
+  - "Let me try again":
+      generic object: Individual
+      code: |
+        force_ask('x.signature')
+comment: |
+  This is an example of a multiple choice question where selecting an
+  option causes code to be run.  Each multiple choice option contains
+  an embedded block.
+  
+  Note that in order for an "embedded" code or question block to use
+  the special variable "x," you need to declare a generic object
+  within the embedded code or question.
 ---
 generic object: Individual
 question: |
@@ -1516,7 +1498,7 @@ comment: |
   to it by the name of the variable itself, using the method
   .object_possessive().  For example, suppose you create an object,
   case.judge, with the class of Individual.  If the name of case.judge
-  is ever needed, docassemble will use the question above to ask "What
+  is ever needed, the Steward will use the question above to ask "What
   is the name of the judge in the case?"  If the object is called
   user, it will ask "What is your name?"  If the object is called
   village_idiot, it will ask "What is the village idiot's name?"
@@ -1537,9 +1519,9 @@ comment: |
   Generic questions can also use indices, for example to fill out the
   names of a list of people.  (E.g., case.plaintiff.)
 
-  This example also illustrates how the author can control whether the
+  This example also illustrates how the developer can control whether the
   user can leave a field blank.  By default, all fields are required,
-  but the author can add required: False to a field to indicate that
+  but the developer can add required: False to a field to indicate that
   the field can be left blank.
 ---
 generic list object: Individual
@@ -1578,7 +1560,7 @@ yesno: x.there_are_any
 comment: |
   The attributes .there_are_any and .there_is_another are special
   attributes that are used in the gathering of "groups" of things
-  in docassemble interviews.
+  by the Steward.
 ---
 generic object: Individual
 question: |
@@ -1674,20 +1656,20 @@ code: |
   x.geolocate()
 comment: |
   This code block and the question before it illustrate the concept
-  of "fallback" questions.  If the interview needs the "county"
+  of "fallback" questions.  If the Steward needs the "county"
   attribute of an address, but finds that it is not defined, it will
   first run this code block, which "geolocates" the address.  That is,
   it goes on to the internet and runs the address through a
   geolocation service, which returns geographic information about the
   address.
 
-  This code block uses the "sets" directive to indicate that the code
+  This code block uses the "sets" component to indicate that the code
   block offers sets the attribute "county."  Normally, you don't have
-  to use "sets" with code blocks because docassemble can see by
-  looking at the code what variables the code will set.  In the case
+  to use "sets" with code blocks because the Steward can see by
+  looking at the DALang code what variables the code will set.  In the case
   of the code "x.geolocate()," however, it is not apparent that the
   code is offering to set the "county" attribute.  Therefore we need
-  to manually specify what the code block is offering to do.
+  to manually specify what the code block is offering to do so.
 
   It is significant that the code block merely "offers" to set these
   variables.  The "x.geolocate()" code might fail.  The user might put
@@ -1696,17 +1678,17 @@ comment: |
   the code block will run, but the attributes will not be set.
 
   If the variable that a code block offers to set is not actually set
-  when the code is run, docassemble will look for another block that
+  when the code is run, the Steward will look for another block that
   offers to set the variables.  In the case of the "county" attribute
   of an address, the question immediately preceding this one offers to
   set the "county" attribute.  It does so by asking the user a
   question, rather than by using a geolocation service.  This question
   serves as a "fallback" question.
 
-  Note that when docassemble looks for a block that offers to set a
-  variable, it starts at the end of the interview and proceeds
+  Note that when the Steward looks for a block that offers to set a
+  variable, it starts at the end of the DALang and proceeds
   backward.  Therefore, the order in which these blocks appear in
-  the [YAML] file is significant.
+  the DALang file is significant.
 ---
 generic object: City
 question: |
@@ -1728,12 +1710,13 @@ comment: |
 
   Suppose you have an object "birthplace" of type "City."  A "City"
   object is a subtype of an "Address," and an "Address" is a type of
-  "DAObject."  If your interview needs a definition of
-  birthplace.county, docassemble will first look for blocks that offer
+  "DAObject."  If your Steward needs a definition of
+  birthplace.county, the Steward will first look for blocks that offer
   to define "birthplace.county," then for "generic object: City"
   blocks that offer to define "x.county," then for "generic object:
   Address" blocks that offer to define "x.county," then for "generic
   object: DAObject" blocks that offer to define "x.county."
+  This is called precedence.
 
   Therefore, the "generic object: Address" code block is capable of
   defining "birthplace.county."  However, if we wish to have a
@@ -1787,25 +1770,11 @@ sets:
 code: |
   x.geolocate()
 comment: |
----
-generic object: DAList
-code: |
-  x.gather()
-  x.re_gathered = True
----
-generic object: DADict
-code: |
-  x.gather()
-  x.re_gathered = True
----
-generic object: DASet
-code: |
-  x.gather()
-  x.re_gathered = True
 ...
-
 {% endhighlight %}
 
 [Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [configuration file]: {{ site.baseurl }}/docs/config.html
+[DALang]: {{ site.baseurl }}/docs/interviews.html#yaml
+[server]: {{ site.baseurl }}/docs/installation.html

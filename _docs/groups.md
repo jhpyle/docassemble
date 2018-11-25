@@ -1,14 +1,14 @@
 ---
 layout: docs
-title: "Groups of things: lists, dictionaries, and sets"
-short_title: Groups
+title: Data Structures
+short_title: Data Structures
 ---
 
-To help you organize groups of things, **docassemble** offers three
+To help you organize groups of things, DALang offers three
 data structures: lists, dictionaries, and sets.  These mirror the
 [list], [dict], and [set] data types that exist in [Python].
 
-# Overview of types of data structures
+# Overview of Types of Data Structures
 
 ## <a name="list"></a>List
 
@@ -48,7 +48,7 @@ Adding a new element to the list is called "appending" to the list.
 The [`sorted()` function] is a built-in [Python] function that
 arranges a list in alphabetical order.
 
-In **docassemble**, lists are objects of type [`DAList`], which behave
+In DALang, lists are objects of type [`DAList`], which behave
 much like [Python lists].
 
 ## <a name="dictionary"></a>Dictionary
@@ -86,7 +86,7 @@ add a new entry to the above dictionary, whereas doing
 dictionary are stored in no particular order; [Python] will not
 remember the order in which you add them.
 
-In **docassemble**, dictionaries are objects of type [`DADict`], which
+In DALang, dictionaries are objects of type [`DADict`], which
 behave much like [Python dict]s.
 
 ## <a name="set"></a>Set
@@ -111,12 +111,12 @@ set(['blue', 'green', 'red'])
 set(['blue', 'green'])
 {% endhighlight %}
 
-In **docassemble**, sets are objects of type [`DASet`], which behave
+In DALang, sets are objects of type [`DASet`], which behave
 much like [Python set]s.
 
-# <a name="gathering"></a>Lists, dictionaries, and sets in **docassemble**
+# <a name="gathering"></a>Lists, Dictionaries, and Sets in DALang
 
-In **docassemble**, you can track groups of things using objects of
+In DALang, you can track groups of things using objects of
 types [`DAList`], [`DADict`], or [`DASet`].  These are defined in the
 [`docassemble.base.core`] module.  They are also available if you use
 [`docassemble.base.util`] or [`docassemble.base.legal`] as
@@ -124,7 +124,7 @@ types [`DAList`], [`DADict`], or [`DASet`].  These are defined in the
 
 {% include side-by-side.html demo="object-demo" %}
 
-In your **docassemble** interviews, you will typically not use these
+In your DALang interviews, you will typically not use these
 object types directly, but rather you will use subtypes of these basic
 objects.  For example, if you include the [`basic-questions.yml`] file
 (see [legal applications]), an object of type [`Case`] will be created
@@ -139,13 +139,13 @@ When you want to gather information from the user into a list,
 dictionary, or set, you should use the objects [`DAList`], [`DADict`],
 and [`DASet`] (or subtypes thereof) instead of [Python]'s basic
 [list], [dict], and [set] data types.  These objects have special
-attributes that help interviews find the right questions to ask the
+attributes that help Stewards find the right questions to ask the
 user in order to populate the items of the group.  (If you want to,
 you can use [Python]'s basic [list], [dict], and [set] data types in
-your interviews; nothing will stop you -- but there are no special
+your DALang; nothing will stop you -- but there are no special
 features to help you populate these objects with user input.)
 
-# <a name="gather list"></a>Gathering information into lists
+# <a name="gather list"></a>Gathering Information Into Lists
 
 The following interview populates a list of fruits.
 
@@ -179,13 +179,13 @@ subquestion: |
   The fruits are ${ fruit }.
 {% endhighlight %}
 
-Since this [`question`] is [`mandatory`], **docassemble** tries to ask
+Since this [`question`] is [`mandatory`], DALang tries to ask
 it.  However, it encounters `fruit.number_as_word()`, which returns
 the number of items in the list.  But in order to know how many items
-are in the list, **docassemble** needs to ask the user what those
+are in the list, DALang needs to ask the user what those
 items are.  So the reference to `fruit.number_as_word()` will trigger
 the process of asking these questions.  (The reference to `${ fruit }`
-would also trigger the same process, but **docassemble** will
+would also trigger the same process, but DALang will
 encounter `fruit.number_as_word()` first.)
 
 The text of these questions is provided in [`question`] blocks that
@@ -196,7 +196,7 @@ define the following variables:
 * `fruit.there_is_another`: are there any more fruits that still need
   to be added?
 
-First, the interview will want to know whether there are any items in
+First, the Steward will want to know whether there are any items in
 the list at all.  It will seek a definition for `fruit.there_are_any`.
 Thus, it will ask the question, "Are there any fruit that you would
 like to add to the list?"
@@ -208,7 +208,7 @@ question: |
 yesno: fruit.there_are_any
 {% endhighlight %}
 
-If the answer to this is `True`, the interview will seek a definition
+If the answer to this is `True`, the Steward will seek a definition
 for `fruit[0]` to gather the first element.  Thus, it will ask the
 question "What fruit should be added to the list?"
 
@@ -221,7 +221,7 @@ fields:
 
 Assume the user enters "apples."
 
-Now **docassemble** knows the first item in the list, but it does not
+Now DALang knows the first item in the list, but it does not
 know if the list is complete yet.  Therefore, it will seek a
 definition for `fruit.there_is_another`.  It will ask the question "So
 far, the fruits include apples.  Are there any others?"
@@ -233,32 +233,32 @@ question: |
 yesno: fruit.there_is_another
 {% endhighlight %}
 
-If the answer to this is `True`, the interview will seek a definition
+If the answer to this is `True`, the Steward will seek a definition
 of `fruit[1]` to gather the second item in the list.  It will ask,
 again, "What fruit should be added to the list?"  Assume the user
 enters "oranges."
 
-Then the interview will again seek the definition of
+Then the Steward will again seek the definition of
 `fruit.there_is_another`.  This time, if the answer is `False`, then
 `fruit.number_as_word()` has all the information it needs, and it will
 return the number of items in `fruit` (in this case, 2).  When
-**docassemble** later encounters `The fruits are ${ fruit }.`, it will
-attempt to reduce the variable `fruit` to text.  Since the interview
+DALang later encounters `The fruits are ${ fruit }.`, it will
+attempt to reduce the variable `fruit` to text.  Since the Steward
 knows that there are no more elements in the list, it does not need to
 ask any further questions.  `${ fruit }` will result in 
 `apples and oranges`.
 
 <a name="i"></a>Note that the variable `i` is special in
-**docassemble**.  When the interview seeks a definition for
-`fruit[0]`, the interview will first look for a question that offers
+DALang.  When the Steward seeks a definition for
+`fruit[0]`, the Steward will first look for a question that offers
 to define `fruit[0]`.  If it does not find one, it will take a more
 general approach and look for a question that offers to define
 `fruit[i]`.  The question that offers to define `fruit[i]` will be
 reused as many times as necessary.
 
-## Customizing the way information is gathered
+## Customizing the Way Information is Gathered
 
-The way that **docassemble** asks questions to populate the list can
+The way that DALang asks questions to populate the list can
 be customized by setting attributes of `fruit`.  For example, perhaps
 you would prefer that the questions in the interview go like this:
 
@@ -281,7 +281,7 @@ question by setting the `.minimum_number` to a value:
 
 {% include side-by-side.html demo="gather-fruit-at-least-two" %}
 
-## <a name="list of objects"></a>Gathering a list of objects
+## <a name="list of objects"></a>Gathering a List of Objects
 
 The examples above have gathered simple variables (e.g., `'apple'`,
 `'orange'`) into a list.  You can also gather [objects] into a list.
@@ -300,7 +300,7 @@ example, [`DAEmailRecipientList`] lists have an `.object_type` of
 
 {% include side-by-side.html demo="gather-list-email-recipients" %}
 
-During the gathering process, **docassemble** only gathers the
+During the gathering process, DALang only gathers the
 attributes necessary to display each object as text.  So if you do:
 
 {% highlight yaml %}
@@ -312,7 +312,7 @@ code: |
   friend.object_type = Individual
 {% endhighlight %}
 
-then the list will consist of [`Individual`]s, and **docassemble**
+then the list will consist of [`Individual`]s, and DALang
 will gather `friend[i].name.first` for each item in the list.  This is
 because of the way that the [`Individual`] object works: if `x` is an
 [`Individual`], then its textual representation (e.g., including 
@@ -324,8 +324,8 @@ if `x` is an [`Address`], including `${ x }` in a [Mako] template will
 result in `x.block()`, which depends on the `address`, `city`, and
 `state` attributes.
 
-If your interview has a list of [`Individual`]s and uses attributes of
-the [`Individual`]s besides the name, **docassemble** will eventually
+If your DALang has a list of [`Individual`]s and uses attributes of
+the [`Individual`]s besides the name, DALang will eventually
 gather those additional attributes, but it will ask for the names
 first and only when it is done asking for the names of each individual
 in the list will it start asking about the other attributes.  Here is
@@ -335,7 +335,7 @@ an interview that does this:
 
 If you would prefer that all of the questions about each individual be
 asked together, you can use the `.complete_attribute` attribute to
-tell **docassemble** that an item is not completely gathered until a
+tell DALang that an item is not completely gathered until a
 particular attribute of that item is defined, and write a
 [`code` block] that defines this attribute.  You can use this
 [`code` block] to ensure that all the questions you want to be asked
@@ -344,8 +344,8 @@ are asked during the gathering process.
 In the above example, we can accomplish this by doing
 `friend.complete_attribute = 'complete'`.  Then we include a `code`
 block that sets `friend[i].complete = True`.  This tells
-**docassemble** that an item `friend[i]` is not fully gathered until
-`friend[i].complete` is defined.  Thus, before **docassemble** moves
+DALang that an item `friend[i]` is not fully gathered until
+`friend[i].complete` is defined.  Thus, before DALang moves
 on to the next item in a list, it will run this code block.  This
 `code` block will cause other attributes of `friend[i]` to be defined,
 including `.birthdate` and `.favorite_animal`.  Here is what the
@@ -356,13 +356,13 @@ revised interview looks like:
 You can use any attribute you want as the `complete_attribute`.
 Defining a `complete_attribute` simply means that in addition to
 ensuring that a list item is displayable (i.e., gathering the name of
-an `Individual`), **docassemble** will also seek a definition of the
+an `Individual`), DALang will also seek a definition of the
 attribute indicated by `complete_attribute`.  If `.birthdate` was the
 only other element we wanted to define during the gathering process,
 we could have written `friend.complete_attribute = 'birthdate'` and
 skipped the [`code` block] entirely.
 
-## <a name="mixed object types"></a>Mixed object types
+## <a name="mixed object types"></a>Mixed Object Types
 
 If you want to gather a list of objects that are not all the same
 object type, you can do so by setting the `.ask_object_type` attribute
@@ -374,17 +374,17 @@ of the list to `True` providing a block that defines the
 In this example, we have a list called `location`, which is a type of
 [`DAList`].  We have a [`mandatory`] <span></span> [`code` block] that
 sets `location.ask_object_type` to `True`.  This instructs
-**docassemble** that `location` is a list of objects, and that when a
-new item is added to the list, **docassemble** should to look for the
+DALang that `location` is a list of objects, and that when a
+new item is added to the list, DALang should to look for the
 value of `location.new_object_type` to figure out what type of object
 the new item should be.  By contrast, the `.object_type` attribute
-instructs **docassemble** that the object type for every new object
+instructs DALang that the object type for every new object
 should be the value of `.object_type`.
 
-Thus, before **docassemble** adds a new item to the list, it will seek
+Thus, before DALang adds a new item to the list, it will seek
 a definition of `location.new_object_type` and then the item it adds
 to the list will be an object of the type indicated by the value of
-`location.new_object_type`.  After each item is added, **docassemble**
+`location.new_object_type`.  After each item is added, DALang
 forgets about the value of `location.new_object_type`, so the
 question will be asked again for each item in the list.
 
@@ -462,22 +462,22 @@ fields:
 ---
 {% endhighlight %}
 
-You might be wondering how **docassemble** knows which of these two
+You might be wondering how DALang knows which of these two
 questions to ask for a given item in the `location` list.  If the
 object is a `City`, a textual representation of the object will first
 ask for `.city` and then `.state`.  If the object is an `Address`, a
 textual representation of the object will first ask for `.address`.
-When **docassemble** gathers items into a list, it asks whatever
+When DALang gathers items into a list, it asks whatever
 questions are necessary to construct a textual representation of the
-item.  So if the attribute **docassemble** needs is `.city`, both
+item.  So if the attribute DALang needs is `.city`, both
 questions are capable of defining that attribute.  The "What is the
 city" question comes last in the [YAML] file, so it takes precedence
 over the "What is the address" question, and it will be asked.  If the
-attribute **docassemble** needs is `.address`, only the "What is the
+attribute DALang needs is `.address`, only the "What is the
 address" question is capable of defining that, so only that question
 will be asked.
 
-# <a name="gather dictionary"></a>Gathering information into dictionaries
+# <a name="gather dictionary"></a>Gathering Information into Dictionaries
 
 The process of gathering the items in a [`DADict`] dictionary is
 slightly different from the process of gathering the items of a
@@ -507,7 +507,7 @@ the gathering process; only the value of the
 `.new_item_value`, you need to set it using a question that
 simultaneously sets `.new_item_name`, as in the example above.
 
-## <a name="dict of objects"></a>Gathering a dictionary of objects
+## <a name="dict of objects"></a>Gathering a Dictionary of Objects
 
 You can also populate the contents of a [`DADict`] in which each value
 is itself an object.
@@ -518,14 +518,14 @@ In the example above, we populate a [`DADict`] called `pet`, in which
 the keys are a type of pet (e.g., `'cat'`, `'dog'`), and the values
 are objects of type [`DAObject`] with attributes `.name` (e.g.,
 `'Mittens'`, `'Spot'`) and `.feet` (e.g., `4`).  We need to start by
-telling **docassemble** that the [`DADict`] is a dictionary of
+telling DALang that the [`DADict`] is a dictionary of
 objects.  We do this by setting the `.object_type` attribute of the
 [`DADict`] to [`DAObject`], using some [`mandatory`] code.
 (Alternatively, the [`objects`] block could have included the line
 `pet: DADict.using(object_type=DAObject)`) Then we provide a question 
 that sets the `.new_item_name` attribute.
 
-When a `.object_type` is provided, **docassemble** will take care of
+When a `.object_type` is provided, DALang will take care of
 initializing the value of each entry as an object of this type.  It
 will also automatically gather whatever attributes, if any, are
 necessary to represent the object as text.  The representation of the 
@@ -547,7 +547,7 @@ interview, which contains a "for" loop that describes the number of
 feet of each pet, causes the asking of questions to obtain the `.feet`
 and `.name` attributes.
 
-# <a name="gather set"></a>Gathering information into sets
+# <a name="gather set"></a>Gathering Information into Sets
 
 The gathering of items into a [`DASet`] is much like the gathering of
 items into a [`DADict`].  The difference is that instead of using the
@@ -572,7 +572,7 @@ questions.)
 
 {% include side-by-side.html demo="gather-set-object" %}
 
-# <a name="manual"></a>Manually triggering the gathering process
+# <a name="manual"></a>Manually Triggering the Gathering Process
 
 In the examples above, the process of asking questions that populate
 the list is triggered implicitly by code like `${ fruit.number() }`,
@@ -607,12 +607,12 @@ Thus, you can provide a [`code` block] that sets `.gathered` to
 {% include side-by-side.html demo="gather-manual-gathered" %}
 
 Setting `.gathered` to `True` means that when you try to get the
-length of the group or iterate through it, **docassemble** will assume
+length of the group or iterate through it, DALang will assume
 that nothing more needs to be done to populate the items in the group.
 You can still add more items to the list if you want to, using
 [`code` block]s.
 
-# Detailed explanation of gathering process
+# Detailed Explanation of Gathering Process
 
 At a very basic level, it is not complicated to gather a list of
 things from a user.  For example, you can do this:
@@ -630,14 +630,14 @@ than the second argument.  For example:
 
 The [`for` loop] iterates through all the numbers using the variable
 `index`, looking for `fruit[index]`.  The first item it looks for is
-`fruit[0]`.  Since this is not defined yet, the interview looks for a
+`fruit[0]`.  Since this is not defined yet, the Steward looks for a
 question that offers to define `fruit[0]`.  It does not find any
 questions that define `fruit[0]`, so it then looks for a question that
 offers to defined `fruit[i]`.  It finds this question, and asks it of
 the user.  After the user provides an answer, the [`for` loop] runs
 again.  This time, `fruit[0]` is already defined.  But on the next
-iteration of the [`for` loop], the interview looks for `fruit[1]` and
-finds it is not defined.  So the interview repeats the process with
+iteration of the [`for` loop], the Steward looks for `fruit[1]` and
+finds it is not defined.  So the Steward repeats the process with
 `fruit[1]`.  When all of the `fruit[index]` are defined, the
 `mandatory` question is able to be shown to the user, and the
 interview ends.
@@ -668,15 +668,15 @@ The first line makes sure that the first fruit, `fruit[0]`, is
 defined.  Initially, this is undefined.  So when the code
 encounters `fruit[0]`, it will go looking for the value of `fruit[0]`,
 and the question "What's the first fruit?" will be asked.  Once
-`fruit[0]` is defined, the interview considers whether `more_fruits`
-is true.  If `more_fruits` is undefined, the interview presents the
+`fruit[0]` is defined, the Steward considers whether `more_fruits`
+is true.  If `more_fruits` is undefined, the Steward presents the
 user with the `more_fruit` question, which asks "Are there more
-fruits?"  If `more_fruits` is `True`, however, the interview deletes
+fruits?"  If `more_fruits` is `True`, however, the Steward deletes
 the definition of `more_fruit` (making the variable undefined again),
 and then makes sure that `fruit[len(fruit)]` is defined.  The
 [expression] `len(fruit)` returns the number of items in the `fruit`
 list.  If there is only one item in the list (i.e., `fruit[0]`), then
-`len(fruit)` will return `1`, and the interview will look for the
+`len(fruit)` will return `1`, and the Steward will look for the
 second element in the list, `fruit[1]`.
 
 This is starting to get complicated.  And things get even more
@@ -688,7 +688,7 @@ supplied the full list.  But in the case of "You have told me about
 three fruits so far," you would not want this prerequisite.
 
 Since asking users for lists of things can get complicated,
-**docassemble** automates the process of asking the necessary
+DALang automates the process of asking the necessary
 questions to fully populate the list.
 
 If your list is `fruit`, there are three special attributes:
@@ -713,14 +713,14 @@ Here is a complete example:
 
 # <a name="examples"></a>Examples
 
-## <a name="nested objects"></a>List of dictionaries from checkbox
+## <a name="nested objects"></a>List of Dictionaries from Checkbox
 
 Here is an example of an interview that uses a checkbox to determine
 which items to use in a dictionary.
 
 {% include side-by-side.html demo="nested-objects" %}
 
-## <a name="prepopulate"></a>Prepopulate a list
+## <a name="prepopulate"></a>Prepopulate a List
 
 Here is an example of an interview that populates a list with two
 entries before allowing the user to add other entries.
@@ -734,7 +734,7 @@ populate the list of objects.
 
 Note that `user.favorite_things.clear()` is called.  This line happens
 to be unnecessary in this interview, but it illustrates a good
-practice.  Code blocks in **docassemble** often need to be
+practice.  Code blocks in DALang often need to be
 [idempotent]; they should be able to be run from the beginning more
 than once without causing unwanted side effects.  Code blocks often
 restart because when an undefined variable is encountered and the
@@ -743,34 +743,34 @@ original code block does not pick up where it left off, but rather
 starts at the beginning again.
 
 Alternatively, you could prepopulate a list by using [`mandatory`]
-code at the beginning of an interview to append items to the list.
-Then the interview will never even seek a definition of the
+code at the beginning of an DALang to append items to the list.
+Then the Steward will never even seek a definition of the
 `.there_are_any` attribute.  The method described above is helpful,
 however, in cases where the list being initialized does not exist at
 the start of the interview, as would be the case if the list was
 `user.sibling[i].favorite_things`.
 
-## <a name="postpopulate"></a>Postpopulate a list
+## <a name="postpopulate"></a>Postpopulate a List
 
 Here is an example of an interview that populates a list with two
 entries after the user is done adding entries.
 
 {% include side-by-side.html demo="postpopulate-list" %}
 
-This interview uses code blocks to determine
+This Steward uses code blocks to determine
 `user.favorite_things.there_are_any` and
 `user.favorite_things.there_is_another`.  Instead of asking the user
-questions that define these variables directly, the interview asks
+questions that define these variables directly, the Steward asks
 questions that set the variables `user.likes_something` and
 `user.likes_another_thing`.  It can then use code to do things
 depending on what the answers are.
 
-If the user says he has no favorite things, the interview adds Mom and
+If the user says he has no favorite things, the Steward adds Mom and
 apple pie to `user.favorite_things`.  If the user does describe some
 favorite things, and then says that he has no other favorite things,
-the interview will then add Mom and apple pie to the list.
+the Steward will then add Mom and apple pie to the list.
 
-Note that if the user says he has no favorite things, the interview
+Note that if the user says he has no favorite things, the Steward
 sets `.there_is_another` to `False`.  This is necessary to persuade the
 automatic gathering feature that the list is fully gathered.
 
@@ -782,7 +782,7 @@ user's favorite things will be infinite!  Similarly, behind the
 scenes, the automatic gathering process undefines `.there_is_another`
 after it is defined.
 
-## <a name="editing"></a>Edit an already-gathered list
+## <a name="editing"></a>Edit an Already Gathered List
 
 It is possible to allow your users to edit a [`DAList`] list that has
 already been gathered.  Here is an example.
@@ -824,7 +824,7 @@ possible.
 The line `need: person.table` is important here.  An item in a
 `review` list will not be shown if it contains any undefined
 variables.  The presence of an undefined variable in a `review` list
-item will not cause **docassemble** to seek a definition of that
+item will not cause the Steward to seek a definition of that
 variable (unless the directive `skip undefined: False` is used).
 Therefore, if you want a `review` item containing a `table` to be
 displayed, you need to make sure that the variable representing the
@@ -839,7 +839,7 @@ objects, the `edit` feature can also be used when the `rows` of the
 
 {% include side-by-side.html demo="table-dict-edit" %}
 
-### <a name="custom editing"></a>Customizing the editing interface
+### <a name="custom editing"></a>Customizing the Editing Interface
 
 If you do not want your users to be able to delete items, you can add
 `delete buttons: False` to the [`table`].
@@ -880,7 +880,7 @@ the "Edit" button will not be shown.  If the value of the key
 
 {% include side-by-side.html demo="table-read-only-2" %}
 
-# <a name="for loop"></a>For loop
+# <a name="for loop"></a>For Loop
 
 In computer programming, a "for loop" allows you to do something
 repeatedly, such as iterating through each item in a list.
@@ -899,7 +899,7 @@ This code "loops" through the elements of `numbers` and computes the
 total amount.  At the end, `14` is printed.
 
 For loops based on [`DAList`], [`DADict`], and [`DASet`] objects can be included in
-**docassemble** templates using the `for`/`endfor` [Mako] statement:
+DALang templates using the `for`/`endfor` [Mako] statement:
 
 {% include side-by-side.html demo="for_fruit" %}
 

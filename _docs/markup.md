@@ -1,11 +1,11 @@
 ---
 layout: docs
-title: Marking up text
+title: Marking Up Text
 short_title: Markup
 ---
 
-**docassemble** allows you to format your text using [Markdown] and to
-use [Mako] to make your documents "smart."  These [mark up] methods
+[DALang] allows you to format your text using [Markdown] and to
+use [Mako] to make your text "smart."  These [mark up] methods
 are available for use in [`question`] text, field labels, [`interview
 help`] text, the content of [documents], and other text elements.
 
@@ -14,7 +14,7 @@ help`] text, the content of [documents], and other text elements.
 The syntax of [Markdown] is explained well
 [elsewhere](https://daringfireball.net/projects/markdown/).
 
-When generating [documents], **docassemble** uses [Pandoc] to convert
+When generating [documents], a Steward uses [Pandoc] to convert
 your [Markdown] to PDF, RTF, and HTML.  (Unless you are using
 [Microsoft Word templates], in which case you will use the [Jinja2]
 templating language in the Word document.)
@@ -24,12 +24,12 @@ Here are some examples of things you can do with Markdown.
 {% include side-by-side.html demo="markdown-demo" %}
 
 All of these types of markup will format text in questions as well as
-text in assembled (with the exception of the `!` image insertion
+text in assembled documents (with the exception of the `!` image insertion
 command, which does not work within PDF and RTF documents).
 
-# <a name="mako"></a>Using Mako for logic and generated text
+# <a name="mako"></a>Using Mako for Logic and Generated Text
 
-**docassemble** uses a templating system called [Mako] to allow
+[DALang] uses a templating system called [Mako] to allow
 authors to insert variables and code into questions and documents.
 
 You can insert the values of variables into question text using [Mako]'s
@@ -100,7 +100,7 @@ Note that `loop.index` is a number in a range that starts with zero.
 The [`ordinal()`] function converts these numbers to words.
 
 For more information about working with groups of things, see
-[groups].
+[data structures].
 
 In addition to allowing you to insert [Python] expressions with the `${
 ... }` syntax, [Mako] allows you to embed [Python] statements using
@@ -118,7 +118,7 @@ but using [`STOP_RENDERING`] may be more readable.
 
 For more information about [Mako], see the [Mako documentation].
 Note, however, that not all features of [Mako] are available in
-**docassemble**.  For example, in normal [Mako], you can write:
+[DALang].  For example, in normal [Mako], you can write:
 
 {% highlight text %}
 % if some_variable is UNDEFINED:
@@ -126,11 +126,11 @@ Note, however, that not all features of [Mako] are available in
 % endif
 {% endhighlight %}
 
-In **docassemble**, this will not work as intended.  Instead, you
+In DALang, this will not work as intended.  Instead, you
 would use the [`defined()` function]:
 
 {% highlight text %}
-% if defined('some_variable'):
+% if not defined('some_variable'):
 ...
 % endif
 {% endhighlight %}
@@ -138,7 +138,7 @@ would use the [`defined()` function]:
 If you want to use the [`<%def>`] construct of [Mako], see the
 [`def` initial block].
 
-## <a name="formatting"></a>Formatting variables
+## <a name="formatting"></a>Formatting Variables
 
 When the variable you insert with `${ ... }` is a number, the way that
 it is formatted may not be to your liking.  There are a variety of
@@ -146,10 +146,10 @@ ways to format numbers in [Python].
 
 {% include side-by-side.html demo="number-formatting" %}
 
-# <a name="inserting images"></a>Inserting images
+# <a name="inserting images"></a>Inserting Images
 
-To insert an image that is located in the `static` folder of a custom
-Python package, use the `FILE` command.  This works within PDF, RTF,
+To insert an image that is located in the `static` folder of an installed Steward,
+use the `FILE` command.  This works within PDF, RTF,
 and DOCX documents as well as within questions.
 
 For example:
@@ -165,14 +165,14 @@ subquestion: |
 yesno: suspect_identified
 {% endhighlight %}
 
-This example presumes that there is a Python package called
-`docassemble.crimesolver` installed on the server, and there is a file
+This example presumes that there is a Steward named
+`docassemble.crimesolver` installed on the [server], and there is a file
 `mugshot.jpg` located within the `static` directory inside that
-package.
+Steward.
 
 If you omit the package name (e.g., `[FILE mugshot.jpg]`),
-**docassemble** will assume you are referring to a file located in the
-`static` directory of the package in which the question appears.
+your Steward will assume you are referring to a file located in its own
+`static` directory.
 
 Optionally, you can set the width of the image:
 
@@ -199,7 +199,7 @@ The [`show()`] method takes an optional argument, `width`:
 In the above example, the picture will be shrunk or expanded so that
 its width is 250 pixels.
 
-# <a name="emoji"></a>Inserting inline icons
+# <a name="emoji"></a>Inserting Inline Icons
 
 If you have defined "decorations" in an [`image sets`] block (see
 [initial blocks]), you can include these decorations as icons (having
@@ -221,7 +221,7 @@ As explained in the [Configuration], only one "style" of [Font
 Awesome] icon (by default, the "solid" style) can be used at one time.
 If you need to use a different "style" for a particular icon, or you
 want to apply additional formatting to an icon, you can include the
-raw [HTML] for the icon.  For example:
+raw [HTML] for the icon. For example:
 
 {% highlight yaml %}
 ---
@@ -237,9 +237,9 @@ Note that while ordinary inline icon references work in documents as
 well as on the web, [Font Awesome] references only work in questions,
 not in documents.
 
-# <a name="audio and video"></a>Inserting audio and video
+# <a name="audio and video"></a>Inserting Audio and Video
 
-In addition to using the [`audio`] and [`video`]<span></span> [modifiers], you can
+In addition to using the [`audio`] and [`video`]<span></span> [modifier components], you can
 insert audio and video into your [Mako] text in questions.
 
 {% include side-by-side.html demo="audio-upload" %}
@@ -285,9 +285,9 @@ video: |
 ---
 {% endhighlight %}
 
-See [modifiers] for more information about including audio and video.
+See [modifier components] for more information about including audio and video.
 
-# <a name="qr"></a>Inserting QR codes
+# <a name="qr"></a>Inserting QR Codes
 
 You can also display or insert QR codes using `[QR ...]`, where `...`
 is the text you want to encode.  This works like `[FILE ...]` in that
@@ -296,7 +296,7 @@ on the screen or inserted into a document.
 
 This works within PDF and RTF documents as well as within questions.
 
-For example, this interview provides a QR code that directs the user to
+For example, this [DALang] provides a QR code that directs the user to
 [Google News](http://news.google.com):
 
 {% include side-by-side.html demo="qr-code-demo" %}
@@ -304,7 +304,7 @@ For example, this interview provides a QR code that directs the user to
 See also the [`qr_code()`] function, which allows you to insert the
 `[QR ...]` markup using [Python].
 
-# <a name="inserting other"></a>Inserting other types of files
+# <a name="inserting other"></a>Inserting Other Types of Files
 
 Just as you can insert images with `[FILE
 docassemble.crimesolver:mugshot.jpg]` or `${ user_picture }`, you can
@@ -332,7 +332,7 @@ However, if you include a .docx file inside a .docx file created using
 [`docx template file`], the result is like that of calling
 [`include_docx_template()`].
 
-# <a name="tables"></a>Inserting tables
+# <a name="tables"></a>Inserting Tables
 
 Tables can be inserted in the format known as [PHP Markdown Extra].
 
@@ -340,9 +340,7 @@ Tables can be inserted in the format known as [PHP Markdown Extra].
 
 If you want to construct a table based on information in a list, the
 best practice is to collect the list information into an [object] and
-then use the [`table` block] to create a template for the table.  See
-the documentation of that block in the [documents] section for more
-information.
+then use the [`table` block] to create a template for the table.
 
 If you want to write tables in [Markdown] manually, note that the
 alignment characters do not have do be perfectly aligned from row to
@@ -379,14 +377,14 @@ page, note that there are special [document markup] tags for this
 special case: you can write `[BEGIN_TWOCOL]` (text of first column)
 `[BREAK]` (text of second column) `[END_TWOCOL]`.
 
-# <a name="field"></a>Embedding fields
+# <a name="field"></a>Embedding Fields
 
-In a [`fields`] block, you can use the markup syntax `[FIELD ...]` to
-embed fields within the within the [`subquestion`] text.  For more
+In a [`fields`] component, you can use the markup syntax `[FIELD ...]` to
+embed fields within the [`subquestion`] text.  For more
 information about this feature, see the section on
 [Embedding fields within a paragraph].
 
-# <a name="target"></a>Embedding areas for interim information
+# <a name="target"></a>Embedding Areas for Interim Information
 
 If you include the markup `[TARGET ...]` within text, you will create
 an invisible area where text can be placed by [`code`].  For more
@@ -406,7 +404,7 @@ information about this feature, see the section on
 [`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
 [document]: {{ site.baseurl }}/docs/documents.html
 [documents]: {{ site.baseurl }}/docs/documents.html
-[modifiers]: {{ site.baseurl }}/docs/modifiers.html
+[modifier components]: {{ site.baseurl }}/docs/modifiers.html
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [YAML]: https://en.wikipedia.org/wiki/YAML
@@ -431,7 +429,7 @@ information about this feature, see the section on
 [Python's `for` statement]: https://docs.python.org/2.7/tutorial/controlflow.html#for-statements
 [object]: {{ site.baseurl }}/docs/objects.html
 [objects]: {{ site.baseurl }}/docs/objects.html
-[groups]: {{ site.baseurl }}/docs/groups.html
+[data structures]: {{ site.baseurl }}/docs/groups.html
 [`loop`]: http://docs.makotemplates.org/en/latest/runtime.html#loop-context
 [`STOP_RENDERING`]: http://docs.makotemplates.org/en/latest/syntax.html#exiting-early-from-a-template
 [`ordinal()`]: {{ site.baseurl }}/docs/functions.html#ordinal
@@ -451,3 +449,5 @@ information about this feature, see the section on
 [`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [`include_docx_template()`]: {{ site.baseurl }}/docs/functions.html#include_docx_template
+[DALang]: {{ site.baseurl }}/docs/interviews.html#yaml
+[server]: {{ site.baseurl }}/docs/installation.html

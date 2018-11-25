@@ -1,10 +1,10 @@
 ---
 layout: docs
-title: Initial blocks
+title: Initial Blocks
 short_title: Initial Blocks
 ---
 
-# <a name="metadata"></a>Interview title and other `metadata`
+# <a name="metadata"></a>Interview Title and Other `Metadata`
 
 {% highlight yaml %}
 ---
@@ -22,7 +22,7 @@ metadata:
 ---
 {% endhighlight %}
 
-A `metadata` block contains information about the [YAML] file, such as
+A `metadata` block contains information about the interview, such as
 the name of the author.  It must be a [YAML] dictionary, but each the
 dictionary items can contain any arbitrary [YAML] structure.
 
@@ -39,7 +39,7 @@ If a `tab title` is provided, it will be displayed as the title
 of the browser tab.  Otherwise, the `title` will be used.
 
 If a `subtitle` is provided, it will be displayed as the subtitle of
-the interview in the "Interviews" list available to a logged-in user
+the interview in the "Interview Sessions" list available to a logged-in user
 at `/interviews`.
 
 These titles can be overridden using the [`set_title()` function].
@@ -48,15 +48,15 @@ The `metadata` block and the [`set_title()` function] can be used to
 modify other aspects of the navigation bar.
 
 <a name="exit link"></a>If an `exit link` is provided, the behavior of
-the "Exit" link can be modified.  (The "Exit" menu option is displayed
+the "Exit" link can be altered.  (The "Exit" menu option is displayed
 when the [`show login` configuration directive] is set to `False` or
-the [`show login` metadata directive] in an interview is set to
+the [`show login` metadata component] for an interview is set to
 `False`.)  The value can be either `exit` or `leave.` If it is `exit`,
 then when the user clicks the link, they will be logged out (if they
-are logged in) and their interview answers will be deleted from the
+are logged in) and their interview session answers will be deleted from the
 server.  If it is `leave`, the user will be logged out (if they are
-logged in), but the interview answers will not be deleted from the
-server.  It can be important to keep the interview answers on the
+logged in), but the interview session answers will not be deleted from the
+server.  It can be important to keep the interview session answers on the
 server if [background tasks] are still running.
 
 <a name="exit label"></a>If `exit label` is provided, the given text
@@ -66,12 +66,12 @@ translated into different languages.
 
 If you set `unlisted: True` for an interview that has an entry in the
 [`dispatch`] list in your [configuration], the interview will be
-exempted from display in the interview list available at `/list`.  For
+exempted from display in the list of interview available at `/list`.  For
 more information about this, see the documentation for the
 [`dispatch`] configuration directive.
 
 <a name="pre"></a><a name="submit"></a><a name="post"></a>The
-[`metadata`] block also accepts the directives `pre`, `submit`, and
+[`metadata`] block also accepts the components `pre`, `submit`, and
 `post`.  You can use these to provide raw [HTML] that will be inserted
 into the page before the [`question`] heading, before the buttons, and
 after the buttons, respectively.  You can also set server-wide
@@ -79,19 +79,19 @@ defaults for these values using the [`main page pre`], [`main page
 submit`], and [`main page post`] directives in the [Configuration].
 You can also customize these values with the [`set_title()`] function.
 
-<a name="error help">The [`metadata`] block also accepts the directive
+<a name="error help">The [`metadata`] block also accepts the component
 `error help`.  This is [Markdown]-formatted text that will be included
-on any error screen that appears to the user during the interview.
+on any error screen that appears to the user during the interview session.
 You can also provide this text on a server-wide basis using the
 [`error help`] directive in the [Configuration].
 
 {% include side-by-side.html demo="error-help" %}
 
-<a name="show login">The [`metadata`] block also accepts the directive
+<a name="show login">The [`metadata`] block also accepts the component
 `show login`, which can be `true` or `false`.  This controls whether
 the user sees a "Sign in or sign up to save answers" link in the upper
-right-hand corner during the interview.  If `show login` is not
-specified in the [`metadata`], the [Configuration] directive [`show
+right-hand corner during the interview session.  If `show login` is not
+specified in the [`metadata`] block, the [Configuration] directive [`show
 login`] determines whether this link is available.
 
 {% include side-by-side.html demo="show-login" %}
@@ -106,21 +106,21 @@ objects:
 ---
 {% endhighlight %}
 
-An `objects` block creates objects that may be referenced in your
-interview.  See [objects] for more information about objects in
-**docassemble**.
+An `objects` block creates objects that may be referenced by your
+DALang.  See [objects] for more information about objects in
+[DALang].
 
-If your interview references the variable `spouse`, **docassemble**
+If your DALang references the variable `spouse`, it
 will find the above `objects` block and process it.  It will define
 `spouse` as an instance of the object class `Individual` and define
 `user.case` as an instance of the object class `Case`.
 
-The use of objects in **docassemble** interviews is highly encouraged.
-However, the objects you use as variables in your interview [YAML] files
-need to inherit from the class `DAObject`.  Otherwise, **docassemble**
+The use of objects when building your interviews is highly encouraged.
+However, the objects you use as variables in your [DALang] files
+need to inherit from the class `DAObject`.  Otherwise, your Steward
 might not be able to find the appopriate [`code` blocks] or questions
-necessary to define them.  This is because of the way **docassemble**
-keeps track of the names of variables.
+necessary to define them.  This is because of the way Stewards
+keep track of the names of variables.
 
 A code block like this would effectively do the same thing as the
 `objects` block above:
@@ -161,10 +161,10 @@ objects from file:
 {% endhighlight %}
 
 An `objects from file` block imports objects or other data elements
-that you define in a separate [YAML] data file located in the
-[sources folder] of the current package.  If the interview file
+that you define in a separate [DALang] data file located in the
+[sources folder] of the current Steward.  If the DALang file
 containing the `objects from file` block is
-`data/questions/manage_claims.yml`, **docassemble** will expect the
+`data/questions/manage_claims.yml`, the Steward will expect the
 data file to be located at `data/sources/claim_list.yml`.
 
 For more information about how this works, and about how to format the
@@ -172,7 +172,7 @@ data file, see the documentation for the
 [`objects_from_file()` function].  The example above is equivalent to
 running `claims = objects_from_file('claim_list.yml', name='claims')`.
 
-# <a name="include"></a>Incorporation by reference: `include`
+# <a name="include"></a>Incorporation by Reference: `include`
 
 {% highlight yaml %}
 ---
@@ -182,27 +182,27 @@ include:
 ---
 {% endhighlight %}
 
-The `include` statement incorporates the questions in another [YAML]
-file, almost as if the contents of the other [YAML] file appeared in
-place of the `include` statement.  When the `include`d file is parsed,
-files referenced within it will be assumed to be located in the
-`include`d file's package.
+The `include` block incorporates the questions in another [DALang]
+file, almost as if the contents of the other DALang file appeared in
+place of the `include` block.  When the `include`d file is parsed,
+files referenced within it will be assumed to be part of the Steward containing the
+`include`d file.
 
-When a filename is provided without a package name, **docassemble**
-will look first in the `data/questions` directory of the current
-package (i.e., the package within which the [YAML] file being read is
+When a filename is provided without specifying a Steward, the Steward conducting the interview session
+will look first in its own `data/questions` directory
+(i.e., the package within which the [DALang] file being read is
 located), and then in the `data/questions` directory of
 [`docassemble.base`].
 
-You can include question files from other packages by explicitly
-referring to their package names.  E.g.,
-`docassemble.helloworld:questions.yml` refers to the file
+You can include [DALang] files from other Stewards by explicitly
+referring to that Steward's name.  E.g.,
+`docassemble.helloworld:questions.yml` refers to the DALang file
 `questions.yml` in the `docassemble/helloworld/data/questions`
-directory of that package.
+directory of the Steward named [helloworld].
 
 # <a name="im"></a>Images
 
-## <a name="image sets"></a>With attribution: `image sets`
+## <a name="image sets"></a>With Attribution: `image sets`
 
 {% highlight yaml %}
 ---
@@ -221,7 +221,7 @@ An `image sets` block defines the names of icons that you can use to
 decorate your questions.
 
 The file names refer to files located in the `data/static` directory
-of the package in which the [YAML] file is located.
+of the Steward in which the [DALang] file is located.
 
 Since most free icons available on the internet require attribution,
 the `image sets` block allows you to specify what attribution text
@@ -239,11 +239,11 @@ assigns names to icon files, so that you can refer to icons by a name
 of your choosing rather than by the name of the image file.
 
 For information on how to use the icons you have defined in an `image
-sets` block, see `decoration` in the [modifiers] section, `buttons`
+sets` block, see `decoration` in the [modifier components] section, `buttons`
 in the [setting variables] section, and "Inserting inline icons" in
 the [markup] section.
 
-## <a name="images"></a>Without attribution: `images`
+## <a name="images"></a>Without Attribution: `images`
 
 {% highlight yaml %}
 ---
@@ -269,9 +269,9 @@ image sets:
 ---
 {% endhighlight %}
 
-# <a name="mods"></a>Python modules
+# <a name="mods"></a>Python Modules
 
-## <a name="imports"></a>Importing module itself: `imports`
+## <a name="imports"></a>Importing Modules: `imports`
 
 {% highlight yaml %}
 ---
@@ -281,7 +281,7 @@ imports:
 ---
 {% endhighlight %}
 
-`imports` loads a Python module name into the namespace in which your
+`imports` loads a [Python module] name into the namespace in which your
 code and question templates are evaluated.  The example above is
 equivalent to running the following Python code:
 
@@ -290,7 +290,7 @@ import datetime
 import us
 {% endhighlight %}
 
-## <a name="modules"></a>Importing all names: `modules`
+## <a name="modules"></a>Importing All Names: `modules`
 
 {% highlight yaml %}
 ---
@@ -299,7 +299,7 @@ modules:
 ---
 {% endhighlight %}
 
-Like `imports`, `modules` loads Python modules into the namespace in
+Like `imports`, `modules` loads [Python modules] into the namespace in
 which your code and question templates are evaluated, except that it
 imports all of the names that the module exports.  The example above
 is equivalent to running the following Python code:
@@ -308,12 +308,12 @@ is equivalent to running the following Python code:
 from datetime import *
 {% endhighlight %}
 
-# <a name="data"></a>Storing structured `data` in a variable
+# <a name="data"></a>Storing Structured `data` in a Variable
 
 The `data` block allows you to specify a data structure in [YAML] in a
 block and have it available as a [Python] data structure.
 
-For example, in this interview we create a [Python] list and then
+For example, in this Steward we create a [Python] list and then
 re-use it in two questions to offer a multiple-choice list.
 
 {% include side-by-side.html demo="data-simple" %}
@@ -329,17 +329,17 @@ structures.  You can also use [Mako] in the data structure.
 
 {% include side-by-side.html demo="data" %}
 
-You can also import data from [YAML] files using the
+You can also import data from [DALang] files using the
 [`objects_from_file()` function].
 
-# <a name="data from code"></a>Storing structured `data` in a variable using code
+# <a name="data from code"></a>Storing Structured `data` in a Variable using Code
 
 The `data from code` block works just like the [`data`] block, except
 that [Python] code is used instead of text or [Mako] markup.
 
 {% include side-by-side.html demo="data-code" %}
 
-# <a name="reset"></a>Keeping variables fresh: `reset`
+# <a name="reset"></a>Keeping Variables Fresh: `reset`
 
 The `reset` block will cause variables to be undefined every time a
 screen loads.
@@ -368,22 +368,22 @@ inefficient because they cause extra code to be run every time a new
 screen loads.  For a more computationally efficient alternative, see
 the [`reconsider()`] function
 
-# <a name="order"></a>Changing order of precedence
+# <a name="order"></a>Changing Order of Precedence
 
-As explained in [how **docassemble** finds questions for variables],
+As explained in [how a Steward finds questions for variables],
 if there is more than one [`question`] or [`code`] block that offers
-to define a particular variable, blocks that are later in the [YAML]
+to define a particular variable, blocks that are later in the [DALang]
 file will be tried first.
 
 If you would like to specify the order of precedence of blocks in a
-more explicit way, so that you can order the blocks in the [YAML] file
+more explicit way, so that you can order the blocks in the [DALang] file
 in whatever way you want, you can tag two or more blocks with [`id`]s
 and insert an `order` block indicating the order of precedence of the
 blocks.
 
-For example, suppose you have an interview with two blocks that could
-define the variable `favorite_fruit`.  Normally, **docassemble** will
-try the the second block first because it appears later in the [YAML]
+For example, suppose you have a Steward with two blocks that could
+define the variable `favorite_fruit`.  Normally, the Steward will
+try the the second block first because it appears later in the [DALang]
 file; the second block will "override" the first.
 
 {% include side-by-side.html demo="supersede-regular" %}
@@ -394,7 +394,7 @@ can manually specify the order of blocks:
 {% include side-by-side.html demo="supersede-order" %}
 
 Another way to override the order in which blocks will be tried is by
-using the [`id` and `supersedes`] modifiers.
+using the [`id` and `supersedes`] components.
 
 # <a name="terms"></a><a name="auto terms"></a>Vocabulary `terms` and `auto terms`
 
@@ -411,7 +411,7 @@ terms:
 
 Sometimes you will use vocabulary that the user may or may not know.
 Instead of interrupting the flow of your questions to define every
-term, you can define certain vocabulary words, and **docassemble**
+term, you can define certain vocabulary words, and the Steward
 will turn them into hyperlinks wherever they appear in curly brackets.
 When the user clicks on the hyperlink, a popup appears with the word's
 definition.
@@ -423,15 +423,15 @@ whether in curly brackets or not, use `auto terms`.
 
 {% include side-by-side.html demo="auto-terms" %}
 
-You can also use `terms` and `auto terms` as [modifiers], in which
-case the terms will apply only to the question, not to the interview
+You can also use `terms` and `auto terms` as [modifier components], in which
+case the terms will apply only to the question, not to the Steward
 as a whole.
 
-# <a name="sections"></a>Defining the sections for the navigation bar
+# <a name="sections"></a>Defining the Sections for the Navigation Bar
 
-You can add use the [`navigation bar`] feature or the
+You can use the [`navigation bar`] feature or the
 [`nav.show_sections()`] function to show your users the "sections" of
-the interview and what the current section of the interview is.
+the interview session and what the current section of the interview session is.
 
 Here is a complete example.
 
@@ -439,8 +439,8 @@ Here is a complete example.
 
 Subsections are supported, but only one level of nesting is allowed.
 
-If your interview uses [multiple languages], you can specify more than
-one `sections` block and modify each one with a `language` modifier:
+If your Steward is [multilingual], you can specify more than
+one `sections` block and modify each one with a `language` component:
 
 {% highlight yaml %}
 ---
@@ -462,7 +462,7 @@ sections:
 
 If no language is specified, the fallback language `*` is used.
 
-In the example above, the [`section`] modifier referred to sections
+In the example above, the [`section`] component referred to sections
 using the same text that is displayed to the user.  However, in some
 circumstances, you might want to use a shorthand to refer to a
 section, and update the actual section names displayed to the user
@@ -500,7 +500,7 @@ time, set `progressive` to `False`:
 
 {% include side-by-side.html demo="sections-non-progressive" %}
 
-# <a name="interview help"></a>Assisting users with `interview help`
+# <a name="interview help"></a>Assisting Users with `interview help`
 
 {% highlight yaml %}
 ---
@@ -512,11 +512,11 @@ interview help:
 {% endhighlight %}
 
 An `interview help` block adds text to the "Help" page of every
-question in the interview.  If the question has `help` text of its
+question in the interview session.  If the question has `help` text of its
 own, the `interview help` will appear after the question-specific
 help.
 
-You can also add audio to your interview help:
+You can also add audio to your Steward's interview help:
 
 {% highlight yaml %}
 ---
@@ -528,9 +528,9 @@ interview help:
 ---
 {% endhighlight %}
 
-You can also add video to help text using the `video` declaration.
+You can also add video to your Steward's help text using the `video` component.
 
-See the [modifiers] section for an explanation of how audio and video
+See the [modifier components] section for an explanation of how audio and video
 file references work.
 
 You can also provide a `label` as part of the `interview help`.  This
@@ -557,7 +557,7 @@ Note that if you provide question-specific [`help`], and you include a
 label provided in the `interview help` (except if [`question help
 button`] is enabled).
 
-# <a name="def"></a>Mako functions: `def`
+# <a name="def"></a>Mako Functions: `def`
 
 {% highlight yaml %}
 def: adorability
@@ -581,7 +581,7 @@ usedefs:
 ---
 {% endhighlight %}
 
-Due to the way **docassemble** parses interviews, the `def` block
+Due to the way Stewards operate, the `def` block
 needs to be defined before it is used.
 
 Note the `\` marks at the end of the lines in the `mako` definition.
@@ -607,24 +607,23 @@ code: |
 ---
 {% endhighlight %}
 
-If your interview uses the [roles] feature for multi-user interviews,
-the `default role` statement will define what role or roles will be
+If your Steward uses the [roles] feature for multi-user interviews,
+the `default role` component will define what role or roles will be
 required for any question that does not contain an explicit `role`
-statement.
+component.
 
 When you use the [roles] feature, you need to have some way of telling
-your interview logic what the role of the interviewee is.
+your Steward what the role of the interviewee is.
 
-If you include `code` within the same block as your `default role`
-statement, that code will be executed every time the interview logic
-is processed, as if it was marked as `initial`.  For this reason, any
-`default role` statement that contains code should be placed earlier
-in the interview file than and `mandatory` questions or [`code` blocks].
+If you include a `default role` component within a `code` block or within a block with a `code` component,
+that code will be executed every time the Steward
+is accessed, as if it was marked as `initial`.  For this reason, any
+block with the `default role` component that also contains `code` should be placed earlier
+in the DALang file than and `mandatory` questions or [`code` blocks].
 
-In the example above, the interview has two roles: "client" and
+In the example above, there are two roles: "client" and
 "advocate".  The special variables `user` and `role` are set in the
-`code` block, which is executed every time the interview logic is
-processed.
+`code` block, which is executed every time the Steward is accessed.
 
 In addition, the [`set_info()`] function from
 [`docassemble.base.util`] is called.  This lets the linguistic
@@ -642,33 +641,31 @@ default language: es
 {% endhighlight %}
 
 This sets the language to use for all of the remaining questions in
-the file for which the [`language` modifier] is not specified.  The
+the file for which the [`language` component] is not specified.  The
 purpose of this is to save typing; otherwise you would have to set the
-[`language` modifier] for each question.  Note that this does not extend to
+[`language` component] for each question.  Note that this does not extend to
 questions in [`include`]d files.
 
-If your interview only supports one language, it is not necessary to
+If your Steward only speaks one language, it is not necessary to
 (and probably not a good idea to) set a `default language`.
 
 See [language support] for more information about how to create
-multi-lingual interviews.  See [modifiers] for information about the
+multilingual Steward.  See [modifier components] for information about the
 `language` setting of a question.
 
-# <a name="machine learning storage"></a>Machine learning training data
+# <a name="machine learning storage"></a>Machine Learning Training Data
  
-If you use [machine learning] in your interviews, then by default,
-**docassemble** will use training data associated with the
-particular interview in the particular [package] in which the
-interview resides.
+If you use the Docassemble Framework's [machine learning] features, then by default,
+your Steward will use training data associated with its own [package].
 
-If you would like your interview to share training data with another
-interview, you can use the `machine learning storage` directive to
-point to the training data of another interview.
+If you would like a Steward to share training data accross its
+interviews, you can use the `machine learning storage` configuration directive to
+point to the training data of another interview that Steward offers.
 
-For example, suppose you have developed an interview called
+For example, suppose you have developed a Steward with the [DALang] file
 `child_custody.yml` that uses [machine learning], and you have built
 rich training sets for variables within this interview.  Then you
-decide to develop another interview, in the same [package], called
+decide to develop another interview for this same Steward, called
 `child_support.yml`, which uses many of the same variables.  It would
 be a lot of work to maintain two identical training sets in two
 places.
@@ -683,12 +680,12 @@ machine learning storage: ml-child_custody.json
 {% endhighlight %}
 
 `ml-child_custody.json` is the name of a file in the `data/sources`
-directory of the [package].  This file contains the training data for
+directory of the Steward's [package].  This file contains the training data for
 the `child-custody.yml` interview.  The naming convention for these
-data files is to start with the name of the interview [YAML] file, add
-`ml-` to the beginning, and replace `.yml` with `.json`.
+data files is to add `ml-` to the beginning of the interview's [DALang] file
+and replace `.yml` with `.json` at the end.
 
-Now, both the `child-custody.yml` and `child-support.yml` interviews
+Now, both the Steward's interview files, `child-custody.yml` and `child-support.yml`,
 will use `ml-child_custody.json` as "storage" area for training data.
 In the [Training] interface, you will find this data set under the
 name `child_custody`.
@@ -703,16 +700,16 @@ Then go into the [Training] interface and delete any "items" that
 exist within the `child-support` interview.
 
 If you want, you can set `machine learning storage` to a name that
-does not correspond with an actual interview.  For example, you could
+corresponds with the Steward conducting both interviews, such as a Family Law Steward. You could
 include `machine learning storage: ml-family-law.json` in both the
 `child-custody.yml` and `child-support.yml` interviews.  Even though
-there is no interview called `family-law.yml`, this will still work.
+there is no [DALang] file named `family-law.yml` for your Family Law Steward, this will still work.
 If you are using the [Playground], a file called `ml-family-law.json`
 will automatically be created in the `Sources folder`.
 
-You can also share "storage" areas across packages.  Suppose you are
-working within a package called `docassemble.missourifamilylaw`, but
-you want to take advantage of training sets in a package called
+You can also share "storage" areas between Stewards.  Suppose you are
+working within a Steward named `docassemble.missourifamilylaw`, but
+you want to take advantage of training sets in a Steward named
 `docassemble.generalfamilylaw`.  You can write:
 
 {% highlight yaml %}
@@ -726,13 +723,13 @@ For more information about managing training data, see the
 
 # <a name="features"></a>Optional `features`
 
-The `features` block sets some optional features of the interview.
+The `features` block sets some optional features for your Stewards.
 
-## <a name="debug"></a>Whether debugging features are available
+## <a name="debug"></a>Whether Debugging Features are Available
 
 If the [`debug` directive] in the [Configuration] is `True`, then by
 default, the navigation bar will contain a "Source" link that shows
-information about how the interview arrived at the question being
+information about how the Steward arrived at the question being
 shown.  If the [`debug` directive] is `False`, then this will not be
 shown.
 
@@ -743,21 +740,21 @@ The following example demonstrates turning the `debug` feature off.
 
 {% include side-by-side.html demo="debug-mode" %}
 
-On the server that hosts the demonstration interviews, the [`debug`
+On the [server] that hosts the demonstration Stewards, the [`debug`
 directive] is `True`, so the "Source" link is normally shown.  Setting
 `debug: False` makes the "Source" link disappear.
 
-## <a name="centered"></a>Whether interview is centered
+## <a name="centered"></a>Whether Interview Questions are Centered
 
-If you do not want your interview to be centered on the screen, set
+If you do not want your interview questions to be centered on the screen, set
 `centered` to `False`.
 
 {% include side-by-side.html demo="centered" %}
 
-## <a name="progress bar"></a>Progress bar
+## <a name="progress bar"></a>Progress Bar
 
 The `progress bar` feature controls whether a progress bar is shown
-during the interview.  You can use the [`progress`] modifier or the
+during the interview session.  You can use the [`progress`] component or the
 [`set_progress()`] function to indicate the setting of the progress
 bar.
 
@@ -768,12 +765,12 @@ progress bar percentage: True`:
 
 {% include side-by-side.html demo="progress-features-percentage" %}
 
-## <a name="navigation bar"></a>Navigation bar
+## <a name="navigation bar"></a>Navigation Bar
 
 The `navigation` feature controls whether a navigation bar is
-shown during the interview.  You can use the [`sections`] initial
+shown during the interview session.  You can use the [`sections`] initial
 block or the [`nav.set_sections()`] function to define the sections of
-your interview.  The [`section`] modifier or the [`nav.set_section()`]
+your interview.  The [`section`] component or the [`nav.set_section()`]
 function can be used to change the current section.
 
 {% include side-by-side.html demo="sections" %}
@@ -787,12 +784,12 @@ page, set `navigation` to `horizontal`:
 
 {% include side-by-side.html demo="sections-horizontal" %}
 
-## <a name="question back button"></a><a name="navigation back button"></a>Back button style
+## <a name="question back button"></a><a name="navigation back button"></a>Back Button Style
 
 By default, there is a "Back" button located in the upper-left corner
 of the page.  (However, the "Back" button is not present when the user
-is on the first page of an interview, or the [`prevent_going_back()`]
-function has been used, or the [`prevent going back`] modifier is in
+is on the first page of an interview session, or the [`prevent_going_back()`]
+function has been used, or the [`prevent going back`] component is in
 use.)
 
 Whether this back button is present can be controlled using the
@@ -810,13 +807,13 @@ feature to `True` (the default is `False`).
 {% include side-by-side.html demo="question-back-button" %}
 
 You can also place a "Back" button inside the body of a question on
-some questions but not others, using the [`back button`] modifier.
+some questions but not others, using the [`back button`] component.
 
-## <a name="question help button"></a>Help tab style
+## <a name="question help button"></a>Help Tab Style
 
-When [`interview help`] is available, or the [`help`] modifier is
+When [`interview help`] is available, or the [`help`] component is
 present on a question, the "Help" tab will be present in the
-navigation bar.  When the [`help`] modifier is present, the "Help" tab
+navigation bar.  When the [`help`] component is present, the "Help" tab
 is highlighted yellow and marked with a yellow star.  When the user
 presses the help tab, the help screen will be shown.
 
@@ -826,12 +823,12 @@ body of the question, to the right of the other buttons on the page.
 When `question help button` is `True`, the "Help" tab will not be
 highlighted yellow.
 
-Here is an interview in which the `question help button` is not
+Here is a Steward in which the `question help button` is not
 enabled (which is the default).
 
 {% include side-by-side.html demo="question-help-button-off" %}
 
-Here is the same interview, with the `question help button` feature
+Here is the same Steward, with the `question help button` feature
 enabled:
 
 {% include side-by-side.html demo="question-help-button" %}
@@ -841,13 +838,13 @@ help tab in the navigation bar always defaults to "Help" or to the
 `label` of the [`interview help`], and it is not highlighted yellow
 when question-specific help is available.
 
-## <a name="hide standard menu"></a>Hiding the standard menu items
+## <a name="hide standard menu"></a>Hiding the Standard Menu Items
 
 By default, the menu in the corner provides logged-in users with the
 ability to edit their "Profile" and the ability to go to "My
 Interviews," which is a list of interview sessions that have been
-started.  If you want to disable these links, you can use the `hide
-standard menu` directive:
+started with Stewards on that [server].  If you want to disable these links, you can use the `hide
+standard menu` component:
 
 {% highlight yaml %}
 features:
@@ -867,17 +864,17 @@ code: |
   ]
 {% endhighlight %}
 
-## <a name="javascript"></a><a name="css"></a>Javascript and CSS files
+## <a name="javascript"></a><a name="css"></a>Javascript and CSS Files
 
 If you are a web developer and you know how to write [HTML],
 [Javascript], and [CSS], you can embed [HTML] in your interview text.
 You can also bring [Javascript] and [CSS] files into the user's
 browser.
 
-For example, the following interview brings in a [Javascript] file,
+For example, the following Steward brings in a [Javascript] file,
 [`my-functions.js`], and a [CSS] file, [`my-styles.css`], into the
 user's browser.  These files are located in the `data/static` folder
-of the same [package] in which the interview is located.
+of the Steward's [package].
 
 {% include side-by-side.html demo="external_files" %}
 
@@ -903,18 +900,18 @@ loaded after [jQuery] is loaded, so your code can use [jQuery], as
 this example does.
 
 If you have Javascript code that you want to run after each screen of
-the interview is loaded, attach a [jQuery] event handler to `document`
-for the event `daPageLoad`, which is a **docassemble**-specific event
-that is triggered after each screen loads.  (Since **docassemble**
-uses [Ajax] to load each new screen, if you attach code using
+the interview session is loaded, attach a [jQuery] event handler to `document`
+for the event `daPageLoad`, which is a Docassemble Framework specific event
+that is triggered after each screen loads.  (Since Stewards
+use [Ajax] to load each new screen, if you attach code using
 [jQuery]'s [`ready()`] method, the code will run when the browser
 first loads, but not every time the user sees a new screen.)  The
 example above demonstrates this; every time the page loads, the code
 will replace the contents of any element with the class `groovy`.
 
 This example demonstrates bringing in [CSS] and [Javascript] files that
-are located in the `data/static` directory of the same package as the
-interview.  You can also refer to files in other packages:
+are located in the `data/static` directory of the Steward conducting the
+interview session.  However, you can also refer to files in another Steward's package:
 
 {% highlight yaml %}
 features:
@@ -942,24 +939,24 @@ features:
 {% endhighlight %}
 
 If you want to include [CSS] or [Javascript] code in a specific
-question, rather than in all questions of your interview you can use
-the [`script`] and [`css`] modifiers.
+question, rather than in all questions of an interview you can use
+the [`script`] and [`css`] component.
 
-### <a name="charts"></a>Example use of JavaScript: charting
+### <a name="charts"></a>Example use of JavaScript: Charting
 
-Here is an example interview that uses a [`javascript`] feature and a
-[`script`] modifier to draw a doughnut chart using [chart.js].
+Here is an example Steward that uses a [`javascript`] feature and a
+[`script`] component to draw a doughnut chart using [chart.js].
 
 {% include side-by-side.html demo="chart" %}
 
-Here is an example interview that draws a pie chart using [Google Charts].
+Here is an example Steward that draws a pie chart using [Google Charts].
 
 {% include side-by-side.html demo="googlechart" %}
 
-## <a name="bootstrap theme"></a>Bootstrap theme
+## <a name="bootstrap theme"></a>Bootstrap Theme
 
 Using the `bootstrap theme` feature, you can change the look and feel
-of your interview's web interface by instructing your interview to use
+of your Steward's web interface by instructing your Steward to use
 a non-standard [CSS] file in place of the standard [CSS] file used by
 [Bootstrap].
 
@@ -968,19 +965,19 @@ a non-standard [CSS] file in place of the standard [CSS] file used by
 The file can be referenced in a number of ways:
 
 * `lumen.min.css`: the file `lumen.min.css` in the "static" folder of
-  the current package.
+  the current Steward.
 * `docassemble.demo:lumen.min.css`: the file `lumen.min.css` in the
-  "static" folder (`data/static/`) of the `docassemble.demo` package.
-* `docassemble.demo:data/static/lumen.min.css`: the same.
+  "static" folder (`data/static/`) of the Steward `docassemble.demo`.
+* `docassemble.demo:data/static/lumen.min.css`: the same as above.
 * `https://bootswatch.com/lumen/bootstrap.min.css`: a file on the internet.
 
 For more information about using custom [Bootstrap] themes, and for
 information about applying themese on a global level, see the
 documentation for the [`bootstrap theme` configuration directive].
 
-## <a name="inverse navbar"></a>Inverted Bootstrap navbar
+## <a name="inverse navbar"></a>Inverted Bootstrap Navbar
 
-By default, **docassemble** uses [Bootstrap]'s "dark" (formerly known
+By default, the Docassemble Framework uses [Bootstrap]'s "dark" (formerly known
 as "inverted") style of navigation bar so that the navigation bar
 stands out from the white background.  If you do not want to use the
 inverted navbar, set the `inverse navbar` feature to `False`.
@@ -990,12 +987,12 @@ inverted navbar, set the `inverse navbar` feature to `False`.
 To make this change at a global level, see the
 [`inverse navbar` configuration directive].
 
-## <a name="table width"></a>Width of tables in attachments
+## <a name="table width"></a>Width of Tables in Attachments
 
 As explained more fully in the [tables] section, if you include a
 [table] in an [`attachment`] and the table is too wide, or not wide
 enough, you can change the default character width of tables from 65
-to some other value using the `table width` directive within the
+to some other value using the `table width` component within the
 `features` block.
 
 {% highlight yaml %}
@@ -1003,9 +1000,9 @@ features:
   table width: 75
 {% endhighlight %}
 
-## <a name="cache documents"></a>Disabling document caching
+## <a name="cache documents"></a>Disabling Document Caching
 
-By default, **docassemble** caches assembled documents for performance
+By default, Stewards cache assembled documents for performance
 reasons.  To disable the [document caching feature] for a given
 interview, set `cache documents` to `False`.
 
@@ -1014,9 +1011,9 @@ features:
   cache documents: False
 {% endhighlight %}
 
-## <a name="pdfa"></a>Producing PDF/A files
+## <a name="pdfa"></a>Producing PDF/A Files
 
-If you want the [PDF] files produced by your interview to be in
+If you want the [PDF] files produced by your Steward to be in
 [PDF/A] format, you can set this as a default:
 
 {% highlight yaml %}
@@ -1028,12 +1025,12 @@ The default is determined by the [`pdf/a` configuration directive].
 The setting can also be made on a per-attachment basis by setting the
 [`pdf/a` attachment setting].
 
-## <a name="maximum image size"></a>Limiting size of uploaded images
+## <a name="maximum image size"></a>Limiting size of Uploaded Images
 
-If your users upload digital photos into your interviews, the uploads
+If your users upload digital photos to a Steward, the uploads
 may take a long time.  Images can be reduced in size before they are
-uploaded.  To require by default for all uploads in your interview,
-set `maximum image size` in the `features` block for your interview.
+uploaded.  To require by default for all uploads in an interview,
+set `maximum image size` in the `features` block of your interview.
 
 {% include side-by-side.html demo="upload-max-image-size-features" %}
 
@@ -1049,54 +1046,54 @@ This is just a default value; you can override it by setting the
 
 If you have an interview-wide default, but you want to override it for
 a particular field to allow full-resolution camera uploads, you can
-set the [`maximum image size` field modifier] to `None`.
+set the [`maximum image size` field component] to `None`.
 
-If you want to use a site-side default value, set the
+If you want to use a [server]-wide default value, set the
 [`maximum image size` in the configuration].
 
-## <a name="go full screen"></a>Going full screen when interview is embedded
+## <a name="go full screen"></a>Going Full Screen when Steward is Embedded
 
-It is possible to embed a **docassemble** interview in a web page
+It is possible to embed a Steward in a web page
 using an [iframe].  However, the user experience on mobile is degraded
-when an interview is embedded.
+when a Steward is embedded.
 
-If you want the interview to switch to "full screen" after the user
-moves to the next screen in the embedded interview, you can do so.
+If you want the Steward to switch to "full screen" after the user
+moves to the next screen in the embedded interview session, you can do so.
 Within a `features` block, include `go full screen: True`.
 
 {% include side-by-side.html demo="exit-url-referer-fullscreen" path="/static/test-iframe.html" %}
 
-For more information about implementing an embedded interview like
+For more information about implementing an embedded Stewards like
 this, see the [HTML source of the web page used in this example]({{ site.github.repository_url }}/blob/gh-pages/static/test-iframe.html){:target="_blank"}.
 
 Note that in this example, the user is provided with an [exit button]
-at the end of the interview that directs the user back to the page
-that originally embedded the interview.  This is accomplished by
+at the end of the interview session that directs the user back to the page
+that originally embedded the Steward.  This is accomplished by
 setting the `url` of the [exit button] to the result of the
 [`referring_url()`] function.
 
-If you only want the interview to go full screen if the user is using
+If you only want the Steward to go full screen if the user is using
 a mobile device, use `go full screen: mobile`.
 
 {% include side-by-side.html demo="exit-url-referer-fullscreen-mobile" path="/static/test-iframe-mobile.html" %}
 
 Note that this example provides a different [ending screen] depending
 on whether the user is on a desktop or a mobile device.  If a desktop
-user is viewing the interview in an [iframe] on a web site, the
-interview should not provide an exit button that takes the user to a
+user is viewing the Steward in an [iframe] on a web site, the
+Steward should not provide an exit button that takes the user to a
 web site, because then the user will see a web site embedded in a web
-site.  The interview in this example uses the [`device()`] function to
+site.  The Steward in this example uses the [`device()`] function to
 detect whether the user is using a mobile device.  Note that the
-interview logic looks both at `device().is_mobile` as well as
+Steward looks both at `device().is_mobile` as well as
 `device().is_tablet`.  This corresponds with the functionality of `go
-full screen: mobile`, which will make the interview go full screen if
+full screen: mobile`, which will make the Steward go full screen if
 the user has either a mobile phone or a tablet.
 
-## <a name="loop limit"></a><a name="recursion limit"></a>Infinite loop protection
+## <a name="loop limit"></a><a name="recursion limit"></a>Infinite Loop Protection
 
 The [infinite loop protection] section of the [configuration]
 documentation explains how you can change the default limits on
-recursion and looping for all interviews on the server.
+recursion and looping for all Stewards on the [server].
 
 You can also set these limits on a per-interview basis using the `loop
 limit` and `recursion limit` features.
@@ -1126,15 +1123,15 @@ features:
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [Mako]: http://www.makotemplates.org/
 [language support]: {{ site.baseurl }}/docs/language.html
-[multiple languages]: {{ site.baseurl }}/docs/language.html
-[modifiers]: {{ site.baseurl }}/docs/modifiers.html
+[multilingual]: {{ site.baseurl }}/docs/language.html
+[modifier components]: {{ site.baseurl }}/docs/modifiers.html
 [markup]: {{ site.baseurl }}/docs/markup.html
 [setting variables]: {{ site.baseurl }}/docs/fields.html
 [objects]: {{ site.baseurl }}/docs/objects.html
 [def]: http://docs.makotemplates.org/en/latest/defs.html
 [roles]: {{ site.baseurl}}/docs/roles.html
 [`progress`]: {{ site.baseurl}}/docs/modifiers.html#progress
-[`language` modifier]: {{ site.baseurl}}/docs/modifiers.html#language
+[`language` component]: {{ site.baseurl}}/docs/modifiers.html#language
 [`include`]: {{ site.baseurl}}/docs/initial.html#include
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
@@ -1145,7 +1142,7 @@ features:
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`code` block]: {{ site.baseurl}}/docs/code.html
 [`code` blocks]: {{ site.baseurl}}/docs/code.html
-[`reconsider` modifier]: {{ site.baseurl}}/docs/logic.html#reconsider
+[`reconsider` component]: {{ site.baseurl}}/docs/logic.html#reconsider
 [Javascript]: https://en.wikipedia.org/wiki/JavaScript
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [HTML]: https://en.wikipedia.org/wiki/HTML
@@ -1179,7 +1176,7 @@ features:
 [document caching feature]: {{ site.baseurl}}/docs/documents.html#caching
 [`id` and `supersedes`]: {{ site.baseurl}}/docs/modifiers.html#precedence
 [`id`]: {{ site.baseurl}}/docs/modifiers.html#precedence
-[how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
+[how a Steward finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`code`]: {{ site.baseurl }}/docs/code.html#code
 [PNG]: https://en.wikipedia.org/wiki/Portable_Network_Graphics
@@ -1216,6 +1213,11 @@ features:
 [`debug` directive]: {{ site.baseurl}}/docs/config.html#debug
 [Markdown]: https://daringfireball.net/projects/markdown/
 [`back button`]: {{ site.baseurl}}/docs/modifiers.html#back button
-[`show login` metadata directive]: #show login
+[`show login` metadata component]: #show login
 [`show login`]: {{ site.baseurl}}/docs/config.html#show login
 [`reconsider()`]: {{ site.baseurl}}/docs/functions.html#reconsider
+[Python module]: https://docs.python.org/2/tutorial/modules.html
+[Python modules]: https://docs.python.org/2/tutorial/modules.html
+[DALang]: {{ site.baseurl }}/docs/interviews.html#yaml
+[server]: {{ site.baseurl }}/docs/installation.html
+[helloworld]: {{ site.baseurl }}/docs/helloworld.md

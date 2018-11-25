@@ -4,7 +4,7 @@ title: Functions
 short_title: Functions
 ---
 
-# <a name="function"></a>What is a function?
+# <a name="function"></a>What is a Function?
 
 A function is a piece of code that takes one or more pieces of input
 and returns something as output or does something behind the scenes.
@@ -13,16 +13,16 @@ For example:
 {% include side-by-side.html demo="function" %}
 
 Functions allow you to do a lot of different things in
-**docassemble**.  This section explains the standard **docassemble**
+DALang.  This section explains the standard DALang
 functions.  If you know how to write [Python] code, you can write your
-own functions and include them in your interview using a [`modules`]
+own functions and include them in your own DALang using a [`modules`]
 block.
 
-# <a name="howtouse"></a>How to use functions
+# <a name="howtouse"></a>How to use Functions
 
-To use the functions described in this section in your interviews, you
+To use the functions described in this section in your DALang files, you
 need to include them from the [`docassemble.base.util`] module by
-writing the following somewhere in your interview:
+writing the following somewhere in your DALang:
 
 {% highlight yaml %}
 ---
@@ -32,19 +32,19 @@ modules:
 {% endhighlight %}
 
 Unless otherwise instructed, you can assume that all of the functions
-discussed in this section are available in interviews when you include
+discussed in this section are available to you when you include
 this [`modules`] block.
 
-# <a name="functions"></a>Functions for working with variable values
+# <a name="functions"></a>Functions for Working with Variable Values
 
 ## <a name="defined"></a>defined()
 
-As explained in [how **docassemble** runs your code], if your code or
-templates refer to a variable that is not yet defined, **docassemble**
+As explained in [how a Steward runs your code], if your code or
+templates refer to a variable that is not yet defined, your Steward
 will stop what it is doing to ask a question or run code in an attempt
 to obtain a definition for that variable.
 
-Sometimes, this is not what you want **docassemble** to do.  For
+Sometimes, this is not what you want your Steward to do.  For
 example, you might just want to check to see if a variable has been
 defined yet.
 
@@ -151,7 +151,7 @@ chance to run again until the next time the screen loads.
 ## <a name="re_run_logic"></a>re_run_logic()
 
 The `re_run_logic()` function causes code to stop executing and causesa
-the interview logic to restart from the beginning.  You might want to
+the interview flow to restart from the beginning.  You might want to
 use this in cases when, after you make changes to variables, you want
 the [`initial`] and not-yet-completed [`mandatory`] blocks to be
 re-run in light of the changes you made.
@@ -165,7 +165,6 @@ For an example of this in action, see the code example in the
 [`forget_result_of()`] subsection.
 
 ## <a name="reconsider"></a>reconsider()
-
 The `reconsider()` function is similar to the [`reconsider`] modifier
 on a [`code`] block.  Each argument to `reconsider()` needs to be a
 variable name, as text.  E.g., `reconsider('number_of_fruit',
@@ -191,9 +190,9 @@ causes **docassemble** to ask questions to define each of the
 variables if the variables are not already defined.  Note that with
 `need()`, you do _not_ put quotation marks around the variable name.
 
-For example, this [`mandatory`] code block expresses [interview logic]
+For example, this [`mandatory`] code block expresses [interview flow]
 requiring that the user first be shown a splash screen and then be
-asked questions necessary to get to the end of the intererview.
+asked questions necessary to get to the end of the interview.
 
 {% highlight yaml %}
 ---
@@ -221,12 +220,12 @@ because it helps you convey in "natural language" that your interview
 
 ## <a name="force_ask"></a>force_ask()
 
-Usually, **docassemble** only asks a question when it encounters a
+Usually, a Steward only asks a question when it encounters a
 variable that is not defined.  However, with the `force_ask` function,
 you can cause such a condition to happen manually, even when a
 variable is already defined.
 
-In this example, we use `force_ask` to cause **docassemble** to ask a
+In this example, we use `force_ask` to cause the Steward to ask a
 question that has already been asked.
 
 {% include side-by-side.html demo="force-ask-full" %}
@@ -248,8 +247,8 @@ discouraged, unless you are an expert and you know what you are doing.
 Note that variable names given to force_ask must be in quotes.  If
 your variable is `favorite_fruit`, you need to write
 `force_ask('favorite_fruit')`.  If you write
-`force_ask(favorite_fruit)`, **docassemble** will assume that, for
-example, `apples` is a variable in your interview.
+`force_ask(favorite_fruit)`, the Steward will assume that, for
+example, `apples` is a variable in your DALang code.
 
 Note also that no code that comes after `force_ask()` will ever be
 executed.  Once the `force_ask()` function is called, the code stops
@@ -287,8 +286,8 @@ each variable one after another.
 The second and subsequent arguments to `force_ask()` can specify
 [actions] with arguments.  If an argument to `force_ask()` is a
 [Python dictionary] with keys `action` and `arguments`, the specified
-action will be run.  (Internally, **docassemble** is using the
-[actions] mechanism to cause the interview to ask these subsequent
+action will be run.  (Internally, the Steward is using the
+[actions] mechanism which forces it to ask these subsequent
 questions.)
 
 ## <a name="force_gather"></a>force_gather()
@@ -318,19 +317,19 @@ your [`question`]s or [`code`] blocks, and **docassemble** will make
 sure that the variables get defined.  The [`force_ask()`] and
 [`force_gather()`] functions are primarily useful when you are using
 [actions] to do things that are outside the normal course of the
-[interview logic].
+[interview flow].
 
 ## <a name="dispatch"></a>dispatch()
 
-The `dispatch()` function provides logic so that an interview can
+The `dispatch()` function provides logic so that an Steward can
 present a menu system within a screen.  For example:
 
 {% include side-by-side.html demo="dispatch" %}
 
-To make a menu, you need to add a few components to your interview:
+To make a menu, you need to add a few components to your DALang:
 
 * Some code that runs `dispatch()` in order to launch the menu at a
-  particular place in your interview logic.
+  particular place in your interview.
 * A screen that shows the menu.  This is typically a
   [multiple-choice question] in which each choice represents a screen
   that the user can visit.
@@ -340,7 +339,7 @@ To make a menu, you need to add a few components to your interview:
 In the example above, the main menu is a [multiple-choice question]
 that sets the variable `main_menu_selection`.
 
-When the interview logic calls `dispatch('main_menu_selection')`, it
+When the Steward calls `dispatch('main_menu_selection')`, it
 looks for a definition of the variable `main_menu_selection`.  It
 finds a [multiple-choice question] that offers to define
 `main_menu_selection`.  This question will set the variable
@@ -352,10 +351,10 @@ to one of four values:
 * `Null`
 
 The first three values are the names of other variables in the
-interview.  Note that in the interview, `fruit_menu` and
+DALang.  Note that in the DALang, `fruit_menu` and
 `vegetable_menu` are variables defined by [`code`] blocks, and
 `rocks_page` is defined by a [`question`] block.  If the user selects
-one of these choices, the interview will look for a definition of the
+one of these choices, the Steward will look for a definition of the
 selected variable.  This all done by the `dispatch()` function.
 
 The last value, `Null`, is special; it ends the menu.  (Note that
@@ -364,7 +363,7 @@ The last value, `Null`, is special; it ends the menu.  (Note that
 function will end.  In this sample interview, the next step after the
 menu is to show the `final_screen`.  Thus, when the user selects
 "Continue," the user sees the `final_screen` question.  If you want
-the interview logic to be able to move past the `dispatch()` function,
+the interview to be able to move past the `dispatch()` function,
 you must include a `Null` option.
 
 This sample interview features two sub-menus.  You can tell this
@@ -380,23 +379,23 @@ and the variable `vegetable_menu` is defined with:
 vegetable_menu = dispatch('vegetable_menu_selection')
 {% endhighlight %}
 
-If the user selects "Fruit" from the main menu, the interview will
+If the user selects "Fruit" from the main menu, the Steward will
 seek a definition of `fruit_menu`.  This in turn leads to calling the
 `dispatch()` function on `'fruit_menu_selection'`.  This leads to
 seeking a definition of the variable `fruit_menu_selection`.  If the
 user selects the `Null` option on this menu, the user will go back to
 the main menu.
 
-If the user selects "Rocks" from the main menu, the interview will
+If the user selects "Rocks" from the main menu, the Steward will
 seek a definition of `rocks_page`.  In this case, the block that
 offers to define `rocks_page` is a [`question`] with a "Continue"
 button.  When the user presses "Continue" on the "Rocks screen," the
 user will return to the menu.
 
-Note that when the interview seeks definitions of variables and
+Note that when the Steward seeks definitions of variables and
 displays screens, it will ask questions to satisfy prerequisites.  For
 example, when the user selects "Apple" from the "Fruit menu," the
-interview will seek the definition of `apple`, but in order to pose
+Steward will seek the definition of `apple`, but in order to pose
 the `question` that defines `apple`, it needs the definition of
 `likes_apples`.  So it will stop and ask "Do you like apples?" before
 proceeding to the `question` that defines `apple`.
@@ -426,7 +425,7 @@ visited a page, you could do:
 ## <a name="all_variables"></a>all_variables()
 
 The `all_variables()` function returns all of the variables in the
-interview in the form of a simplified [Python dictionary].
+[interview session dictionary] in the form of a simplified [Python dictionary].
 
 {% include side-by-side.html demo="all_variables" %}
 
@@ -437,14 +436,14 @@ to its `isoformat()`.  Other objects are converted to `None`.
 
 If you want the raw [Python] dictionary, you can call
 `all_variables(simplify=False)`.  However, you should never
-save the result of this function to your interview, because then your
-interview dictionary will double in size.
+save the result of this function to your interview session dictionary, because then your
+dictionary will double in size.
 
-**docassemble** keeps a dictionary called `_internal` in the interview
+Your Steward keeps a dictionary called `_internal` in the interview
 variables and uses it for a variety of internal purposes.  By default,
 it is not included in the output of [`all_variables()`].  If you want
 `_internal` to be included, set the optional keyword parameter
-`include_internal` to `True`.  This has parameter has no effect when
+`include_internal` to `True`.  This parameter has no effect when
 `simplify` is `False`.
 
 The [`all_variables()`] function also has three special behaviors:
@@ -460,15 +459,15 @@ The [`all_variables()`] function also has three special behaviors:
   here is not updated to take into account changes made
   programmatically by the [`set_title()`] function.
 * `all_variables(special='tags')` will return a [Python set]
-  containing the current set of [tags] defined on the interview.
+  containing the current set of [tags] defined in the DALang.
 
-# <a name="special responses"></a>Functions for special responses
+# <a name="special responses"></a>Functions for Special Responses
 
 ## <a name="message"></a>message()
 
 {% include side-by-side.html demo="message" %}
 
-The `message()` function causes **docassemble** to stop what it is
+The `message()` function causes the Steward to stop what it is
 doing and present a screen to the user that contains a given message.
 
 By default, the user will be offered an "exit" button and a "restart"
@@ -505,9 +504,9 @@ The optional keyword arguments influence the appearance of the screen:
 ## <a name="response"></a>response()
 
 The `response()` command allows the interview author to use code to
-send a special HTTP response.  Instead of seeing a new **docassemble**
+send a special HTTP response.  Instead of seeing a new interview
 screen, the user will see raw content as an HTTP response, or be
-redirected to another web site.  As soon as **docassemble** runs the
+redirected to another web site.  As soon as the Steward runs the
 `response()` command, it stops what it is doing and returns the
 response.
 
@@ -537,7 +536,7 @@ The four response types are:
 * `file`: The contents of the specified file will be delivered in
   response to the HTTP request.  You can supply one of two types of
   file designators: a [`DAFile`] object (e.g., an assembled document
-  or an uploaded file), or a reference to a file in a **docassemble**
+  or an uploaded file), or a reference to a file in a Steward's
   package (e.g., `'moon_stars.jpg'` for a file in the static files
   folder of the current package, or
   `'docassemble.demo:data/static/orange_picture.jpg'` to refer to a
@@ -570,9 +569,9 @@ Note the following about this interview.
 3. The `query_fruit` [`event`] code will be run as an [action] when
    someone accesses the link created by [`interview_url_action()`].
 
-The `response()` command can be used to integrate a **docassemble**
-interview with another application.  For example, the other
-application could call **docassemble** with a URL that includes an
+The `response()` command can be used to integrate a Steward
+with another application.  For example, the other
+application could call the Steward with a URL that includes an
 interview file name (argument `i`) along with a number of
 [URL arguments].  The interview would process the information passed
 through the URLs, but would not ask any questions.  It would instead
@@ -611,10 +610,10 @@ The function `json_response(data)` is a shorthand for
 In other words, it takes a single argument and returns it as an HTTP
 response in [JSON] format.
 
-Another way to get [JSON] output from **docassemble** is to use the
-[JSON interface], which provides a [JSON] representation of a
-**docassemble** screen.  This can be useful if you are developing your
-own front end to **docassemble**.
+Another way to get [JSON] output from a Steward is to use the
+[JSON interface], which provides a [JSON] representation of an interview session
+screen.  This can be useful if you are developing your
+own front end to the Docassemble Framework.
 
 ## <a name="variables_as_json"></a>variables_as_json()
 
@@ -663,7 +662,7 @@ Note that the [special buttons] perform a similar function to
 `command()`.  See also the [starting an interview from the beginning]
 subsection for URL parameters that reset interview sessions.
 
-# <a name="texttransformation"></a>Text transformation functions
+# <a name="texttransformation"></a>Text Transformation Functions
 
 ## <a name="from_b64_json"></a>from_b64_json()
 
@@ -672,7 +671,7 @@ the string as [JSON], and returns the object represented by the
 [JSON].
 
 This is an advanced function that is used by software developers to
-integrate other systems with docassemble.
+integrate other systems with the Docassemble Framework.
 
 ## <a name="plain"></a><a name="bold"></a><a name="italic"></a>plain(), bold(), and italic()
 
@@ -838,15 +837,15 @@ assembling a document with the `redact` option set to `False`, then
 your "unredacted" document will contain a redacted Social Security
 number.
 
-# <a name="actions"></a>Functions for interacting with the interview using URLs
+# <a name="actions"></a>Functions for Interacting with a Steward using URLs
 
 ## <a name="url_action"></a><a name="process_action"></a>url_action() and process_action()
 
 The `url_action()` function allows users to interact with
-**docassemble** using hyperlinks embedded in questions.
+a Steward using hyperlinks embedded in questions.
 
 `url_action()` returns a URL that, when clicked, will perform an
-action within **docassemble**, such as running some code or asking a
+action within the Steward, such as running some code or asking a
 question.  Typically the URL will be part of a [Markdown] link inside
 of a [question], or in a `note` within a set of [fields].
 
@@ -863,19 +862,19 @@ Here is an example:
 
 When the user clicks one of the links, the interview will load as
 usual (much as if the user refreshed the web browser page).  The only
-difference is that **docassemble** sees the additional information
-stored in the URL and makes that information available to the
-interview.
+difference is that Steward sees the additional information
+stored in the URL and that information is available to the
+Steward for the interview.
 
 In the above example, when the user clicks on the link generated by
 `url_action('lucky_color')`, the interview will load as normal.
 Before [`initial`] and [`mandatory`] blocks are processed,
-**docassemble** will run the function `process_action()`.  The
+the Steward will run the function `process_action()`.  The
 `process_action` function will check to see if any "actions" have been
 requested.  In this case, it will find that the `'lucky_color'` action
-was requested.  As a result, **docassemble** will look for a
+was requested.  As a result, the Steward will look for a
 `question` or `code` block that defines `lucky_color`.  (Internally,
-it calls [`force_ask()`].)  Since there is a question in the interview
+it calls [`force_ask()`].)  Since there is a question in the DALang
 that offers to define `lucky_color`, that question will be asked.
 
 When the user clicks on the link generated by
@@ -933,7 +932,7 @@ code: |
 
 Note that these links will only work for the current user, whose
 access credentials are stored in a cookie in his or her browser.  It
-is possible for actions on the interview to be run by a "third party."
+is possible for actions in the interview to be run by a "third party."
 For information on how to do this, see [`interview_url_action()`] and
 [scheduled tasks].
 
@@ -967,16 +966,16 @@ store.  This is used in [multi-user interviews] to invite additional
 users to participate.
 
 People who click on the link (other than the current user) will not be
-able to access the interview answers unless [`multi_user`] is set to
-`True`.  This is because interviews are encrypted on the server by
+able to access the answers in the [interview session dictionary] unless [`multi_user`] is set to
+`True`.  This is because interview session answers are encrypted on the server by
 default.  Setting [`multi_user`] to `True` disables this encryption.
-Note that the communication between **docassemble** and the browser
+Note that the communication between the Steward and the browser
 will always be encrypted if the site is configured to use [HTTPS].
 The server-side encryption merely protects against the scenario in
-which the server running **docassemble** is compromised.
+which the server running the Steward is compromised.
 
 You can include keyword arguments to `interview_url()`.  These will be
-passed to the interview as [`url_args`].
+passed to the Steward as [`url_args`].
 
 The keyword argument `i` is special, however: you can set this to the
 name of an interview (e.g.,
@@ -987,15 +986,15 @@ variable store.
 
 The keyword argument `session` is also special: set this to the
 session ID of an interview (e.g., obtained from [`interview_list()`]),
-and also set `i` to the filename of the interview corresponding with
-the session.  Then the link will point not to the current session, but
-to the session indicated by the session ID.
+and also set `i` to the DALang filename corresponding with
+the interview session.  Then the link will point not to the current interview session, but
+to the interview session indicated by the session ID.
 
 The keyword argument `local` is also special: set this to `True` if
 you want the URL to be relative (i.e., it will start with `?`).  Note
 that for purposes of the "copy link" feature of web browsers, this
 does not matter; the web browser will provide a full URL even if the
-underlying URL is relative.  However, **docassemble** treats URLs
+underlying URL is relative.  However, a Steward will treat URLs
 differently if they begin with `http:`/`https:` or `?`: links that
 begin with `http` will open in another tab.
 
@@ -1069,11 +1068,11 @@ code: |
 
 ## <a name="url_of"></a>url_of()
 
-This function returns a URL to a file within a **docassemble**
-package's `static` folder.
+This function returns a URL to a file within a packaged Steward's
+`static` folder.
 
-For example, you might have PDF files associated with your interview.
-You would keep these in the `data/static` directory of your package,
+For example, you might have PDF files associated with your Steward.
+You would keep these in the `data/static` directory of a package,
 and you would refer to them by writing something like:
 
 {% highlight yaml %}
@@ -1086,7 +1085,7 @@ subquestion: |
 ---
 {% endhighlight %}
 
-You can also refer to files in the current package by leaving off the
+You can also refer to files in the current Steward's package by leaving off the
 package part of the file name:
 
 {% highlight yaml %}
@@ -1099,7 +1098,7 @@ subquestion: |
 ---
 {% endhighlight %}
 
-If you do not specify a package, **docassemble** will look for the
+If you do not specify a package, the Docassemble Framework will look for the
 file in the `static` folder of the package in which the current
 [`question`] or current [`code`] block resides.
 
@@ -1191,7 +1190,7 @@ It accepts the following optional keyword arguments:
   [`word()`]  function, so you can use the translation system to
   handle different languages.
 
-# <a name="qrfunctions"></a>QR code functions
+# <a name="qrfunctions"></a>QR Code Functions
 
 ## <a name="qr_code"></a>qr_code()
 
@@ -1270,7 +1269,7 @@ customize the reading of the PDF files (they are passed directly to
 The function returns a [Python list] with the codes found, in the
 order in which they were found.
 
-# <a name="emailfunctions"></a>E-mail functions
+# <a name="emailfunctions"></a>E-mail Functions
 
 ## <a name="send_email"></a>send_email()
 
@@ -1339,15 +1338,15 @@ Here is an example of sending an attachment via e-mail:
 {% include side-by-side.html demo="send-email-with-attachment" %}
 
 Sending e-mail can be slow.  If you call `send_email()` from within an
-interview, the user might have to look at a spinner.  In order to
+interview session, the user might have to look at a spinner.  In order to
 provide a better experience to users, you may wish to call
 `send_email()` from within a [background process].
 
 ## <a name="interview_email"></a>interview_email()
 
 The `interview_email()` function returns an e-mail address that the
-user can use to send a message to the interview.  For more information
-about how users can send e-mails to interviews, see the documentation
+user can use to send a message to the Steward for the current interview session.  For more information
+about how users can send e-mails to interview session, see the documentation
 for the [e-mail to interview] feature.
 
 If the [`incoming mail domain`] directive in your [configuration] is
@@ -1356,12 +1355,12 @@ like `kgjeir@help.example.com`.
 
 The address returned by `interview_email()` is a unique random
 sequence of six lowercase letters.  If any e-mails are received at
-this e-mail address, **docassemble** will associate them with the
+this e-mail address, the Steward will associate them with the
 user's interview session and the e-mails can be retrieved with
 [`get_emails()`].
 
 The result returned by `interview_email()` will be unique to the
-interview session.  Every time your interview calls
+interview session.  Every time your DALang calls
 `interview_email()`, the same e-mail address will be returned.
 
 You can also associate more than one e-mail address with the interview
@@ -1384,7 +1383,7 @@ counsel', index=2)`, etc.
 
 The `get_emails()` function returns a [list] of objects representing
 e-mail addresses generated with [`interview_email()`].  For more
-information about how users can send e-mails to interviews, see the
+information about how users can send e-mails to the Steward of an interview session, see the
 documentation for the [e-mail to interview] feature.
 
 Each object in the [list] returned by `get_emails()` has the following
@@ -1407,7 +1406,7 @@ only return information about e-mail addresses created with
 to the e-mail address created by `interview_email(key='evidence',
 index=2)`.
 
-# <a name="faxfunctions"></a>Fax functions
+# <a name="faxfunctions"></a>Fax Functions
 
 ## <a name="send_fax"></a>send_fax()
 
@@ -1486,17 +1485,17 @@ processing the request.
 In addition, the result will expire 24 hours after the last time
 [Twilio] reported a change in the status of the fax sending.  Thus, if
 you want to ensure that the outcome of a fax sending gets recorded in
-the interview dictionary, you should launch a [`background_action()`]
+the [interview session dictionary], you should launch a [`background_action()`]
 that polls the status, or set up a [scheduled task] that checks in
 hourly.
 
-# <a name="geofunctions"></a>Geographic functions
+# <a name="geofunctions"></a>Geographic Functions
 
 ## <a name="map_of"></a>map_of()
 
 The `map_of()` function inserts a Google Map into question text.  (It
 does not work within documents.)  The arguments are expected to be
-**docassemble** [objects].  Different objects are mapped differently:
+DALang [objects].  Different objects are mapped differently:
 
 * [`Address`] objects: if an [`Address`] object is provided as an argument
   to `map_of()`, a map marker will be placed at the geolocated
@@ -1508,7 +1507,7 @@ does not work within documents.)  The arguments are expected to be
     is a [`LatitudeLongitude`] object.)  The description of the marker
     will be set to `address.location.description`.  These fields are
     set automatically during the geolocation process, which will take
-    place the first time **docassemble** runs `map_of()`, if it has
+    place the first time the Steward runs `map_of()`, if it has
     not taken place already.  The marker icon can be customized by
     setting `address.icon`.
 * [`Organization`] objects: map markers will be placed at the
@@ -1535,22 +1534,22 @@ the `google maps api key` will be used if it exists.  If a
 
 ## <a name="location_known"></a>location_known()
 
-Returns `True` or `False` depending on whether **docassemble** was
+Returns `True` or `False` depending on whether the Steward was
 able to learn the user's GPS location through the web browser.
 
 See [`track_location`] and [`LatitudeLongitude`] for more information
-about how **docassemble** collects information about the user's
+about how a Steward collects information about the user's
 location.
 
 ## <a name="location_returned"></a>location_returned()
 
 Returns `True` or `False` depending on whether an attempt has yet been
 made to transmit the user's GPS location from the browser to
-docassemble.  Will return true even if the attempt was not successful
+the Steward.  Will return true even if the attempt was not successful
 or the user refused to consent to the transfer.
 
 See [`track_location`] and [`LatitudeLongitude`] for
-more information about how **docassemble** collects information about
+more information about how a Steward collects information about
 the user's location.
 
 ## <a name="user_lat_lon"></a>user_lat_lon()
@@ -1558,7 +1557,7 @@ the user's location.
 Returns the user's latitude and longitude as a tuple.
 
 See [`track_location`] and [`LatitudeLongitude`] for more information
-about how **docassemble** collects information about the user's
+about how a Steward collects information about the user's
 location.
 
 ## <a name="countries_list"></a><a name="country_name"></a>countries_list() and country_name()
@@ -1643,7 +1642,7 @@ meter will be hidden.  You can also use the [`progress`] modifier on a
 ## <a name="DANav.get_section"></a>nav.get_section()
 
 The [navigation bar] is controlled by a [special variable] called
-`nav`.  This is a special [Python object] of type [`DANav`].  Access
+`nav`.  This is a special DALang [Python object] of type [`DANav`].  Access
 to the [navigation bar] is achieved by [methods] that act upon this
 object.
 
@@ -1698,16 +1697,16 @@ users to be able to click on section names.
 # <a name="globalvars"></a>Functions for managing global variables
 
 If you try writing your own functions, you will learn that functions
-do not have access to all of the variables in your interview.
+do not have access to all of the variables in your DALang.
 Functions only know the variables you pass to them.
 
 If your functions need to know background information about the
 interview, but you do not want to have to pass a lot of variables to
 every function you call, you can use "global" variables.
 
-You set "global" variables in **docassemble** by calling [`set_info()`]
-and your retrieve them by calling [`get_info()`].  Note that
-**docassemble** will forget the values of these variables every time
+You set "global" variables in DALang by calling [`set_info()`]
+and you retrieve them by calling [`get_info()`].  Note that
+a Steward will forget the values of these variables every time
 the screen loads, so you will have to make sure they are set by
 setting them in [`initial`] code, which runs every time the screen
 loads.
@@ -1764,7 +1763,7 @@ code: |
 
 (See [initial blocks] for an explanation of [`objects`] and [`default
 role`].  See the [roles] section for an explanation of how user roles
-work in **docassemble**.)
+work in DALang.)
 
 ## <a name="get_info"></a>get_info()
 
@@ -1856,8 +1855,8 @@ who is not logged in could access the interview.
 The [`command()`] function redirects the browser to the given `url`.
 You could set the `url` to the result of `url_of('login')`, but then
 when the user logs in, the user will not be redirected back to the
-same interview again.  Thus the `next` parameter is set to a URL for
-the interview.  The URL returned by [`interview_url()`] takes the user
+same interview session.  Thus the `next` parameter is set to a URL for
+the interview session.  The URL returned by [`interview_url()`] takes the user
 back to the original interview session.
 
 ## <a name="user_privileges"></a>user_privileges()
@@ -1967,7 +1966,7 @@ tags associated with the interview session.
 
 {% include side-by-side.html demo="tags" %}
 
-# <a name="browser"></a>Functions for determining information about the browser
+# <a name="browser"></a>Functions for Determining Information about the Browser
 
 ## <a name="language_from_browser"></a>language_from_browser()
 
@@ -2007,7 +2006,7 @@ information about the user's browser, derived from the [User-Agent header].
 For more information about the properties of this object, see the
 documentation for the [user-agents] library.
 
-If **docassemble** cannot determine information about the user's
+If the Steward cannot determine information about the user's
 browser, this function will return `None`.
 
 You can also use this function to obtain the user's IP address.  If
@@ -2020,7 +2019,7 @@ returned:
 
 These functions access and change the active language and locale.  See
 [language support] for more information about these features of
-**docassemble**.
+multilingual Stewards.
 
 ## <a name="get_language"></a>get_language()
 
@@ -2029,7 +2028,7 @@ If the language is set to English, `get_language()` returns `en`.
 ## <a name="set_language"></a>set_language()
 
 This sets the language that will be used in the web application and in
-language-specific functions of **docassemble**.  It does not change
+language-specific functions of DALang.  It does not change
 the active [Python locale].  See `update_locale()` for information on
 changing the [Python locale].
 
@@ -2076,7 +2075,7 @@ text-to-speech engine to use an Australian dialect.  (The dialect is
 relevant only for the text-to-speech engine, which is controlled by
 the [special variable `speak_text`].)
 
-For more information about languages in **docassemble**, see
+For more information about languages in DALang, see
 [language support].
 
 ## <a name="get_dialect"></a>get_dialect()
@@ -2125,17 +2124,17 @@ Running `update_locale()` is necessary in order to affect the behavior
 of functions like [`currency()`] and [`currency_symbol()`].
 
 Note that changes to the locale are not [thread-safe].  This means that
-there is a risk that between the time **docassemble** runs
+there is a risk that between the time the Steward runs
 `update_locale()` and the time it runs [`currency_symbol()`], another
-user on the same server may cause **docassemble** to run
+user on the same server may cause the Steward to run
 `update_locale()` and change it to the wrong setting.
 
 If you want to host different interviews that use different locale
 settings on the same server (e.g., to format a numbers as 1,000,000 in
 one interview, but 1.000.000 in another), you will need to make sure
-you run the **docassemble** web server in a multi-process,
+you run the docassemble web server in a multi-process,
 single-thread configuration.  (See [installation] for instructions on
-how to do that.)  Then you would need to begin each interview with
+how to do that.)  Then you would need to begin the DALang for each interview with
 [`initial`] code such as:
 
 {% highlight yaml %}
@@ -2151,7 +2150,7 @@ code: |
 
 # <a name="time"></a>Access time functions
 
-Internally, **docassemble** keeps track of the last time the interview
+Internally, a Steward keeps track of the last time the interview session
 was accessed.  The following functions retrieve information about
 access times.  These functions are particularly useful in
 [scheduled tasks].
@@ -2159,7 +2158,7 @@ access times.  These functions are particularly useful in
 ## <a name="start_time"></a>start_time()
 
 `start_time()` returns a [`DADateTime`] object representing the time
-the interview was started.
+the interview session was started.
 
 The time is expressed in the [UTC] time zone.  If you would
 like to localize the time to a particular time zone, you can set the
@@ -2168,7 +2167,7 @@ optional keyword parameter `timezone` (e.g., to `'America/New_York'`).
 ## <a name="last_access_time"></a>last_access_time()
 
 `last_access_time()` returns a [`DADateTime`] object containing the last
-time the interview was accessed by a user other than the special
+time the interview session was accessed by a user other than the special
 [cron user].
 
 The time is expressed in the [UTC] time zone.  (Note: before version
@@ -2183,20 +2182,20 @@ this case, the function will return the latest access time by any user
 holding one of the [roles].
 
 * `last_access_time('client')`: returns the last time a user with the
-  role of `client` accessed the interview.
+  role of `client` accessed the interview session.
 * `last_access_time('advocate')`: returns the last time a user with
-  the role of `advocate` accessed the interview.
+  the role of `advocate` accessed the interview session.
 * `last_access_time(['advocate', 'admin'])`: returns the last time a
-  user with the role of `advocate` or `admin` accessed the interview.
+  user with the role of `advocate` or `admin` accessed the interview session.
 
-By default, `last_access_time()` will ignore interview access by the
+By default, `last_access_time()` will ignore interview session access by the
 [cron user].  However, if you do not wish to ignore access by the
 [cron user], you can call `last_access_time()` with the optional
 keyword argument `include_cron` equal to `True`:
 
 * `last_access_time(include_cron=True)`: returns the last time any
   user, including the [cron user] if applicable, accessed the
-  interview.
+  interview session.
 
 The `last_access_time()` function takes an optional keyword argument
 `timezone`.  If `timezone` is provided (e.g.,
@@ -2390,7 +2389,7 @@ becomes, for example:
 {% include side-by-side.html demo="timezone-list" %}
 
 The `timezone_list()` function returns a list of time zones that the
-other date-related functions in **docassemble** understand.  The list
+other date-related functions in DALang understand.  The list
 is generated from the [`pytz`] module.  The primary purpose of this
 function is to include in a multiple choice question.
 
@@ -2491,7 +2490,7 @@ The available keyword arguments are:
 This function is a direct wrapper around
 [`dateutil.relativedelta.relativedelta`].
 
-# <a name="phone"></a>Functions for working with phone numbers
+# <a name="phone"></a>Functions for Working with Phone Numbers
 
 The following functions help with mangaging phone numbers.  They rely
 on the [`phonenumbers`] package in [Python].
@@ -2530,13 +2529,13 @@ to format the phone number according to the national conventions.  If
 `country` is not provided, the [`get_country()`] function is used to
 determine the applicable country.
 
-# <a name="tasks"></a>Functions for tracking tasks
+# <a name="tasks"></a>Functions for Tracking Tasks
 
 These are helpful functions for keeping track of whether certain tasks
-have been performed.  For example, if your interview sends an e-mail
+have been performed.  For example, if your Steward sends an e-mail
 to the user about something, but you want to avoid sending the e-mail
 more than once, you can give the "task" a name and use these functions
-in your code to make sure your interview only sends the e-mail if it
+in your code to make sure your Steward only sends the e-mail if it
 has never been successfuly sent before.
 
 Instead of using these functions, you could use your own variables to
@@ -2589,7 +2588,7 @@ number of times the task has been performed.
 `remind_user` task to zero, which means that
 `task_performed('remind_user')` would subsequently return `False`.
 
-# <a name="translation"></a>Simple translation of words
+# <a name="translation"></a>Simple Translation of Words
 
 ## <a name="word"></a>word()
 
@@ -2618,24 +2617,24 @@ u'fish'
 {% endhighlight %}
 
 In your own [Python] code you may wish to use `word()` to help make
-your code multi-lingual.
+your Steward multi-lingual.
 
 It is not a good idea to call
-`docassemble.base.util.update_word_collection()` in interviews.  You
+`docassemble.base.util.update_word_collection()` in your DALang.  You
 can use it in [Python] modules, but keep in mind that the changes you
 make will have global effect within the [WSGI] process.  If other
-interviews on the server define the same word translations for the
+Stewards on the server define the same word translations for the
 same language using `docassemble.base.util.update_word_collection()`,
 the module that happened to load last will win, and the results could
 be unpredictable.
 
 The best practice is to load translations at the server level by using
 the [`words`]<span></span> [configuration] directive to load translations from one or
-more [YAML] files.  This causes **docassemble** to call
+more [YAML] files.  This causes the Docassemble Framework to call
 `docassemble.base.util.update_word_collection()` at the time the
 server is initialized.
 
-# <a name="linguistic"></a>Language-specific functions
+# <a name="linguistic"></a>Language-specific Functions
 
 These functions behave differently according to the language and
 locale.  You can write functions for different languages, or reprogram
@@ -2646,7 +2645,7 @@ then running
 
 For example, suppose you had a Spanish linguistic package that you
 wanted to use for writing possessives.  You could include the
-following in a [Python module] that you include in your interview:
+following in a [Python module] that you include in your DALang:
 
 {% highlight python %}
 import docassemble.base.util
@@ -2655,7 +2654,7 @@ from special.spanish.package import spanish_possessify
 def possessify_es(a, b, **kwargs):
     return spanish_possessify(a, b)
 
-docassemble.base.functions.update_language_function('es', 'possessify', possessify_es)
+ docassemble.base.functions.update_language_function('es', 'possessify', possessify_es)
 {% endhighlight %}
 
 This means that whenever the current language is Spanish, the function
@@ -2895,7 +2894,7 @@ function by including something like the following in your
 def my_period_list():
   return [[365, word("Per Day")], [52, word("Per Week")]]
 
-docassemble.base.functions.update_language_function('*', 'period_list', my_period_list)
+ docassemble.base.functions.update_language_function('*', 'period_list', my_period_list)
 {% endhighlight %}
 
 ## <a name="name_suffix"></a>name_suffix()
@@ -2961,7 +2960,7 @@ arguments to the `conjugate()` function of the [pattern.en].
 * `verb_present('helps', '1sg')` returns `help` (first person singular).
 * `verb_present('helps', 'pl')` returns `help` (plural).
 
-# <a name="simplelang"></a>Simple language functions
+# <a name="simplelang"></a>Simple Language Functions
 
 The following simple language functions all have the property that if
 the optional argument `capitalize=True` is added, the resulting phrase
@@ -2980,7 +2979,7 @@ will be capitalized.
 * `the('apple')` returns `the apple`.
 
 Note that unlike other functions in [`docassemble.base.util`], these
-functions are *not* available for use within interviews.  If you do:
+functions are *not* available for use within DALang.  If you do:
 
 {% highlight yaml %}
 modules:
@@ -3004,17 +3003,17 @@ def her_fr(word, capitalize=False):
     return 'Sa ' + word
   else:
     return 'sa ' + word
-docassemble.base.functions.update_language_function('fr', 'her', her_fr)
+ docassemble.base.functions.update_language_function('fr', 'her', her_fr)
 {% endhighlight %}
 
 Or, you can accomplish the same result with a handy function generator
 from [`docassemble.base.util`]:
 
 {% highlight python %}
-docassemble.base.functions.update_language_function('fr', 'her', docassemble.base.util.prefix_constructor('sa '))
+ docassemble.base.functions.update_language_function('fr', 'her', docassemble.base.util.prefix_constructor('sa '))
 {% endhighlight %}
 
-# <a name="formfilling"></a>Helper functions for form filling
+# <a name="formfilling"></a>Helper Functions for Form Filling
 
 ## <a name="yesno"></a>yesno()
 
@@ -3101,7 +3100,7 @@ of the variable is only returned if the variable is defined.
   variable `favorite_fruit` if the variable `favorite_fruit` is
   defined, and otherwise returns the text `no fruit`.
 
-# <a name="admin"></a>Administrative functions
+# <a name="admin"></a>Administrative Functions
 
 ## <a name="interview_list"></a>interview_list()
 
@@ -3110,37 +3109,37 @@ dictionaries indicating information about the user's interview
 sessions.  This function provides a programmatic version of the screen
 available at `/interviews`.  In addition, the optional keyword
 parameter `user_id` can be used (by a user with `admin` privileges) to
-get information about interviews owned by other people.
+get information about interview sessions owned by other people.
 
 In the list of dictionaries returned by the function, the keys of each
 dictionary are:
 
-* `dict`: the interview dictionary for the session.
+* `dict`: the [interview session dictionary].
 * `email`: the e-mail address of the logged-in user associated with the
-  interview, if any.
-* `user_id`: the user ID of the logged-in user associated with the interview, if
+  interview session, if any.
+* `user_id`: the user ID of the logged-in user associated with the interview session, if
   any.
 * `temp_user_id`: the temporary user ID of the anonymous user
-  associated with the interview, if the user was not logged in.  (Note
+  associated with the interview session, if the user was not logged in.  (Note
   that these IDs do not correspond in any way with the IDs of
   logged-in users.)
-* `filename`: the filename of the interview, e.g.,
+* `filename`: the filename of the DALang for the interview, e.g.,
   `docassemble.demo:data/questions/questions.yml`
 * `metadata`: the metadata of the interview as a dictionary.
-* `modtime`: the modification time of the interview, in text format,
+* `modtime`: the modification time of the interview session, in text format,
   formatted to the user's time zone.
-* `session`: the session ID of the session.
-* `starttime`: the start time of the interview, in text format,
+* `session`: the session ID of the interview session.
+* `starttime`: the start time of the interview session, in text format,
   formatted to the user's time zone.
 * `title`: the [title](#get_title) of the interview.
 * `subtitle`: the [subtitle](#get_title) of the interview.
-* `utc_modtime`: the modification time of the interview, in [UTC].
-* `utc_starttime`: the start time of the interview, in [UTC].
+* `utc_modtime`: the modification time of the interview session, in [UTC].
+* `utc_starttime`: the start time of the interview session, in [UTC].
 * `valid`: whether the interview session can be resumed.  This will be
-  `False` if there is an error with the interview that prevents it
-  from being resumed, or the interview is not able to be decrypted.
+  `False` if there is an error with the interview session that prevents it
+  from being resumed, or the interview session dictionary is not able to be decrypted.
 
-The following question will display a list of the titles of each
+The following DALang question will display a list of the titles of each
 interview session associated with the current user:
 
 {% highlight yaml %}
@@ -3151,7 +3150,7 @@ subquestion: |
   % endfor
 {% endhighlight %}
 
-To limit the results to sessions involving specific interviews, you
+To limit the results to interview sessions involving specific interviews, you
 can provide the optional keyword argument `filename`:
 
 {% highlight yaml %}
@@ -3185,9 +3184,9 @@ subquestion: |
   % endfor
 {% endhighlight %}
 
-Since the information about each interview could include the interview
-dictionary, to avoid storing all of this information in your own
-dictionary, it is a good idea to avoid keeping interview information
+Since the information about each interview session could include the
+[interview session dictionary], to avoid storing all of this information in your own
+dictionary, it is a good idea to avoid keeping interview session information
 around when you are done using it.  For example, this interview runs
 `del` to ensure that the variable `info` is not left over when the for
 loop completes its work:
@@ -3201,24 +3200,24 @@ code: |
 {% endhighlight %}
 
 The [`interview_list()`] function takes an optional keyword argument
-`exclude_invalid`.  If this is set to `False`, a session will be
-included even if there is an error that would prevent the session from
+`exclude_invalid`.  If this is set to `False`, an interview session will be
+included even if there is an error that would prevent the interview session from
 being resumed.  By default, `exclude_invalid` is `True`, meaning that
-sessions will only be included if they can be resumed.  You can check
-whether as session can be resumed by checking the value of the `valid`
-key.  The most common reason for an interview not to be `valid` is
+interview sessions will only be included if they can be resumed.  You can check
+whether an interview session can be resumed by checking the value of the `valid`
+key.  The most common reason for an interview session not to be `valid` is
 that the current user does not have an encryption key that decrypts
-the interview answers; so an interview belonging to someone else might
+the interview session dictionary; so an interview session belonging to someone else might
 be not `valid` for you, but `valid` for the user who started that
-interview.
+interview session.
 
 You can also use [`interview_list()`] to delete interview sessions.  If
 you set the optional keyword parameter `action` to `'delete_all'`, all
 of the user's interview sessions will be deleted.  You can delete a
-particular session by setting `action` to `'delete'`, with optional
-keyword parameter `filename` set to the filename of the session's
-interview, and optional keyword parameter `session` set to the session
-ID of the session.
+particular interview session by setting `action` to `'delete'`, with optional
+keyword parameter `filename` set to the filename of the interview session's
+DALang file, and optional keyword parameter `session` set to the session
+ID of the interview session.
 
 This function can be useful in interviews that replace the standard
 list of user sessions.  See the [`session list interview`]
@@ -3226,7 +3225,7 @@ configuration directive for more information.
 
 Note that more than one user can be associated with any given
 interview session.  Unless server-side encryption prevents it, any
-user who has the session ID of a session can join that interview by
+user who has the session ID of a session can join that interview session by
 visiting a URL with the `i` and `session` parameters set.  This will
 associate the user with the interview session.  Thus, if an interview
 session has been joined by more than one user, it will show up
@@ -3264,11 +3263,11 @@ rather than relative, so that the HTML can be used from a web site on
 another server.
 
 If `start_new` is set to `True`, then the URLs will have `&reset=1` at
-the end.  Thus, even if the user has already started an interview,
+the end.  Thus, even if the user has already started an interview session,
 clicking the link will start the interview at the beginning again.
 
 This function can be useful in interviews that replace the standard
-list of available interviews.  See the [`dispatch interview`]
+list of available interview sessions.  See the [`dispatch interview`]
 configuration directive for more information.
 
 For an [API] version of this function, see [`/api/list`].
@@ -3316,7 +3315,7 @@ e-mail address.  If no user is found, `None` is returned.
 Only users with `admin` privileges can see information about other
 users.
 
-This function will only work if the user running the interview that
+This function will therefore only work if the user in the interview session that
 calls the function is logged in.
 
 For [API] versions of this function, see [`/api/user`] and
@@ -3346,7 +3345,7 @@ parameters.  Note that the `user_id` and `email` attributes cannot be
 changed using this function; these attributes are used only for
 selecting the user whose information is going to be changed.
 
-This function will only work if the user running the interview that
+This function will only work if the user in the interview session that
 calls the function is logged in.
 
 Here is an example of a code block that updates the name of the user:
@@ -3357,7 +3356,7 @@ code: |
   set_user_info(first_name=user.name.first, last_name=user.name.last)
 {% endhighlight %}
 
-If the user running the interview that calls the function has `admin`
+If the user in the interview session that calls the function has `admin`
 privileges, then the function can be used to change the profiles of
 other users.  A user account can be indicated by the inclusion of an
 additional keyword parameter, `user_id` or `email`, that identifies
@@ -3396,7 +3395,7 @@ The [`get_user_secret()`] function takes an e-mail address and a
 password as arguments and returns a decryption key if the e-mail
 address/password combination is valid.  You will need this decryption
 key in order to use [`get_session_variables()`] and
-[`set_session_variables()`] with interview answers that are encrypted.
+[`set_session_variables()`] with interview session answers that are encrypted.
 
 {% highlight python %}
 secret = get_user_secret('jsmith@example.com', 'xx_Secr3t_xx')
@@ -3410,36 +3409,36 @@ protected because it is encrypted.  But if the decryption key is
 stored on the server in an accessible place, then the information
 would no longer be protected, since someone who found the decryption
 key could decrypt the data.  Thus, you would not want to store the
-result of [`get_user_secret()`] in the interview dictionary of an
-interview that sets [`multi_user`] to `True`.  Also, even if your
-interview answers are encrypted, it is still a good idea to avoid
-storing passwords or decryption keys in an interview dictionary.
+result of [`get_user_secret()`] in the [interview session dictionary] of an
+interview session that sets [`multi_user`] to `True`.  Also, even if your
+interview session answers are encrypted, it is still a good idea to avoid
+storing passwords or decryption keys in an interview session dictionary.
 
 For an [API] version of this function, see [`/api/secret`].
 
 ## <a name="get_session_variables"></a>get_session_variables()
 
-The [`get_session_variables()`] function retrieves the interview
-dictionary for an interview.  It has two required arguments: an
-interview filename (e.g.,
+The [`get_session_variables()`] function retrieves the [interview session dictionary]
+for an interview session.  It has two required arguments:
+the DALang filename for the interview (e.g.,
 `'docassemble.demo:data/questions/questions.yml'`), a session ID
 (e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`).  In addition, it can
 take a third argument, an encryption key for decrypting the interview
-answers.  If the interview is encrypted, the third argument is
+answers.  If the interview session dictionary is encrypted, the third argument is
 required.
 
-To get the interview filename for the current interview, and the
+To get the DALang filename for the current interview, and the
 session ID for the current interview session, you can use the
 [`user_info()`] function.
 
-However, note that if you want to get the interview dictionary for the
-current interview, you can simply use the [`all_variables()`]
+However, note that if you only want to get the interview session dictionary for the
+current interview session, you can simply use the [`all_variables()`]
 function.
 
 To obtain an encryption key, you can use [`get_user_secret()`].
 
 Like the [`all_variables()`] function, [`get_session_variables()`]
-simplifies the dictionary (converting objects to dictionaries, for
+simplifies the interview session dictionary (converting objects to dictionaries, for
 example), so that it is safe to convert the result to a format like
 [JSON].  If you want the raw [Python dictionary], you can call
 [`get_session_variables()`] with the optional keyword parameter
@@ -3454,13 +3453,13 @@ For an [API] version of this function, see the [GET method of `/api/session`].
 ## <a name="set_session_variables"></a>set_session_variables()
 
 The [`set_session_variables()`] function allows you to write changes
-to any interview dictionary.  It has three required arguments: an
-interview filename (e.g.,
+to any [interview session dictionary].  It has three required arguments:
+the DALang filename for the interview (e.g.,
 `'docassemble.demo:data/questions/questions.yml'`), a session ID
 (e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`), and a [Python
 dictionary] containing the variables you want to set.  In addition, it
 can take a fourth argument, an encryption key for decrypting the
-interview answers.  If the interview is encrypted, the fourth argument
+interview session answers.  If the interview session dictionary is encrypted, the fourth argument
 is required.
 
 For example, if you run this:
@@ -3470,7 +3469,7 @@ vars = {"defense['latches']": False, "client.phone_number": "202-555-3434"}
 set_session_variables(filename, session_id, vars, secret)
 {% endhighlight %}
 
-Then the following statements will be executed in the interview dictionary:
+Then the following statements will be executed in the interview session dictionary:
 
 {% highlight python %}
 defense['latches'] = False
@@ -3478,12 +3477,12 @@ client.phone_number = u'202-555-3434'
 {% endhighlight %}
 
 Note that if you pass [`DAFile`], [`DAFileList`], or
-[`DAFileCollection`] objects from one interview to another, the other
-interview will not be able to read the files unless the
+[`DAFileCollection`] objects from one interview session to another, the other
+interview session will not be able to read the files unless the
 [`.set_attributes()`] method has been used to either change the
-`session` and `filename` to match the destination interview, or the
+`session` and `filename` to match the destination interview session, or the
 `private` attribute has been set to `False`.  Note that if the
-`session` and `filename` are changed, then the first interview will no
+`session` and `filename` are changed, then the first interview session will no
 longer be able to access the file.  Note also that if `private` is set
 to `False`, then the file will be accessible on the internet from a
 URL.
@@ -3494,9 +3493,9 @@ For an [API] version of this function, see the [POST method of `/api/session`].
 
 The [`go_back_in_session()`] function causes the effect of clicking
 the "back" button in an interview session.  It has two required
-arguments: the interview filename and the session ID.  It also accepts
+arguments: the DALang filename for the interview and the session ID.  It also accepts
 an optional keyword argument `secret`, which is the encryption key to
-use to decrypt the interview dictionary, if it is encrypted.
+use to decrypt the [interview session dictionary], if it is encrypted.
 
 {% highlight python %}
 go_back_in_session(filename, session_id, secret)
@@ -3521,7 +3520,7 @@ existing privileges.
 
 For an [API] version of this function, see [`/api/privileges`].
 
-# <a name="functions"></a>Miscellaneous functions
+# <a name="functions"></a>Miscellaneous Functions
 
 ## <a name="validation_error"></a>validation_error()
 
@@ -3547,7 +3546,7 @@ for [`validate`]:
 
 However, note that [lambda functions] can be confusing to people who
 don't have a good knowledge of [Python], so you might want to keep
-them out of your interview files.
+them out of your DALang files.
 
 ## <a name="server_capabilities"></a>server_capabilities()
 
@@ -3589,10 +3588,10 @@ The keys are:
 ## <a name="referring_url"></a>referring_url()
 
 Returns the URL that the user was visiting when the user clicked on a
-link to go to the interview.
+link to go to the interview session.
 
 Under some circumstances, this URL cannot be obtained.  For example,
-if the user started the interview by typing a URL directly into the
+if the user started the interview session by typing a URL directly into the
 location bar of the browser, or if the user has a browser setting that
 blocks the [referer header], then the URL will not be available.
 
@@ -3602,7 +3601,7 @@ provided, or `default` is `None`, then the value of the configuration
 directive [`exitpage`] will be used.
 
 This function is useful when you want to bring the user back to where
-they started at the end of the interview.
+they started at the end of the interview session.
 
 {% include side-by-side.html demo="exit-url-referer" %}
 
@@ -3641,7 +3640,7 @@ static_image('docassemble.demo:crawling.png', width='2in'))
 
 ## <a name="get_config"></a>get_config()
 
-Returns a value from the **docassemble** configuration file.  If the
+Returns a value from the server's configuration file.  If the
 value is defined, returns None.
 
 See the explanation of this function in the
@@ -3650,9 +3649,9 @@ for more information.
 
 ## <a name="prevent_going_back"></a>prevent_going_back()
 
-**docassemble**'s back button helps users when they make a mistake and
+The web interface's back button helps users when they make a mistake and
 want to go back and correct it.  But sometimes, we want to prevent
-users from going back.  For example, if the interview code causes an
+users from going back.  For example, if the DALang code causes an
 e-mail to be sent, or data to be written to a database, allowing the
 user to go back and do the process again would create confusion.
 
@@ -3715,7 +3714,7 @@ items:
 This example uses two standard **docassemble** [objects],
 [`Individual`] and [`IndividualName`].
 
-### What gets returned
+### What Gets Returned
 
 The `objects_from_file()` function will return a [`DAList`] object if:
 
@@ -3734,8 +3733,8 @@ If there is one [YAML] "[document]" and it is something other than an
 There is an optional keyword argument `name` that will be used to set
 the [`.instanceName`] attribute of the resulting object.  If you do
 not pass a `name` parameter, the object/data structure returned by
-`objects_from_file()` will still be readable, not but it will not be
-writable by **docassemble** questions.
+`objects_from_file()` will still be readable, but it will not be
+writable by DALang questions.
 
 Note that there is an [initial block] called [`objects from file`]
 that can be used as a shorthand way of calling `objects_from_file()`.
@@ -3758,11 +3757,11 @@ objects from file:
 ---
 {% endhighlight %}
 
-### Using your own object types
+### Using your Own Object Types
 
-If you want to import objects that are not standard **docassemble**
+If you want to import objects that are not standard DALang
 [objects], you need to specify a `module` that defines the object's
-class so that **docassemble** knows where to get the class definition.
+class so that the Steward knows where to get the class definition.
 
 For example, suppose you defined some classes with a [Python module]
 called [`fish.py`]:
@@ -3815,7 +3814,7 @@ the interview:
 Note that the `.` in front of the module name (`.fish`) is
 [standard Python notation] for indicating that the module is part of
 the current package.  In this example, the interview lives in the
-[`docassemble.demo`] package, so we could have written the full module
+package of the Steward [`docassemble.demo`], so we could have written the full module
 name, `docassemble.demo.fish`, instead of `.fish`.
 
 To see how these separate files are able to find one another, check
@@ -3826,19 +3825,19 @@ following files:
 * The [Python module], `fish.py`
 * The [YAML] data file, `data/sources/fishes.yml`
 
-### How YAML files are located
+### How YAML Files are Located
 
-When the interview calls `objects_from_file('fishes.yml')`, the
+When the DALang calls `objects_from_file('fishes.yml')`, the
 `objects_from_file()` function looks for the file `fishes.yml` in the
 `data/sources` folder of the current package (or the [sources folder]
-if your interview is running in the [Playground]).
+if your DALang is running in the [Playground]).
 
 The `objects_from_file()` function can also be given explicit
 references.  For example, calling
 `objects_from_file('docassemble.demo:data/sources/fishes.yml')` would
 have the same effect.
 
-### Preventing recursive object conversion
+### Preventing Recursive Object Conversion
 
 By default, `objects_from_file()` will comb through the data structure
 looking for objects to convert.  If you only want it to convert
@@ -3847,7 +3846,7 @@ level, you can set the keyword parameter `recursive` to `False`.
 
 {% include demo-side-by-side.html demo="raw-data-example" %}
 
-### How objects are created
+### How Objects are Created
 
 The `objects_from_file()` creates objects by passing keyword arguments
 to the object constructor.  In the "fishes" example above, the first
@@ -3902,7 +3901,7 @@ item:
   day: 1
 {% endhighlight %}
 
-### Importing group objects
+### Importing Group Objects
 
 To import a [`DAList`], [`DADict`], or [`DASet`] objects that contain
 items, set the `elements` attribute to a [YAML] list (in the case of a
@@ -3925,13 +3924,13 @@ Here is an interview that imports this file:
 {% include demo-side-by-side.html demo="objects-from-file-dadict" %}
 
 By default, any groups that are populated by importing will be marked
-as [gathered].  If you want **docassemble** to ask the user if more
+as [gathered].  If you want the Steward to ask the user if more
 elements should be added, you can set the optional keyword argument
 `gathered` to `False`:
 
 {% include demo-side-by-side.html demo="objects-from-file-gather" %}
 
-### Avoiding problems with whitespace
+### Avoiding Problems with Whitespace
 
 If you include text in your [YAML] file and you wish to use this text
 within documents, you should understand a few rules about [YAML].
@@ -4151,8 +4150,8 @@ starts the OCR process in the background.  Then, the user is asked a
 question ("What is your nickname?").  Then is the user sent to a
 screen that displays the text obtained through OCR.  Hopefully, the
 question about the nickname took enough time that the results of the
-OCR are ready by the time this screen appears in the interview.  Just
-in case there wasn't enough time, the interview question calls
+OCR are ready by the time this screen appears in the interview session.  Just
+in case there wasn't enough time, the DALang question calls
 `.ready()` to check to see if the task is done.  If it is not done,
 the user is asked to wait, and to press "Refresh."  If the process has
 completed by then, `.ready()` will be `True`, and the user can see the
@@ -4217,12 +4216,12 @@ be a lot faster if there is more than one page image.  The
 core.  The [`ocr_file_in_background()`] function, by constrast,
 assigns each page image to a separate background task, and these tasks
 are then distributed across all the CPU cores in your system.  If your
-**docassemble** installation has two application servers, each with
+Docassemble Framework installation has two application servers, each with
 four CPU cores, the system will process the OCR job eight pages at a
 time rather than one page at a time.  For a large document,
 [`ocr_file_in_background()`] will get the whole job done much faster.
 
-### Running OCR with languages other than English
+### Running OCR with Languages Other than English
 
 [Tesseract] supports the following languages.
 
@@ -4300,14 +4299,14 @@ time rather than one page at a time.  For a large document,
 The `language` parameter is flexible; you can set it to a language
 code that [Tesseract] supports (e.g., `eng`, `chi-sim`, `chi-tra`,
 `slk-frak`), or you can give it a two-character [ISO-639-1] code, in
-which case **docassemble** will convert it to the corresponding
+which case the Steward will convert it to the corresponding
 [Tesseract] code.  If [Tesseract] does not support the language,
 English will be used.  If the `language` parameter is not supplied,
-**docassemble** will use the default language (the result of
+the Steward will use the default language (the result of
 `get_language()`), which is always a two-character [ISO-639-1] code.
 
 For some languages, there is more than one variant.  For example, if
-you specify Chinese, `zh`, **docassemble** will use `chi-tra`
+you specify Chinese, `zh`, the Steward will use `chi-tra`
 (traditional Chinese).  If this is not what you want, you can specify
 an explicit `language` parameter, such as `chi-sim` (simplified
 Chinese).  Alternatively, you can override the mapping between
@@ -4355,7 +4354,7 @@ subsequent user screens may be handled by different servers.
 
 If you want a file that persists from request to request, you should
 store its contents to a [`DAFile`] object.  When a [`DAFile`] object
-is assigned to an interview variable, you can reliably obtain the file
+is assigned to an DALang variable, you can reliably obtain the file
 path by calling the [`.path()`] method on the variable.
 
 The `path_and_mimetype()` function can be used along with the
@@ -4395,8 +4394,8 @@ The following three example interviews refer to a very simple
 print "Hello, world!"
 {% endhighlight %}
 
-The interviews and the [`hello.py`] module are all in the
-[`docassemble.demo`] package.
+The DALang for the interview and the [`hello.py`] module are all in the
+package for the Steward [`docassemble.demo`].
 
 The first example refers to the .py file:
 
@@ -4413,7 +4412,7 @@ The third example refers to the same [Python module], but using a
 {% include demo-side-by-side.html demo="run-python-module-3" %}
 
 Note that the first example and the third example only work because
-the interviews and the module are in the same package.
+the DALang and the module are in the same Steward's package.
 
 When calling `run_python_module()`, you can also include an optional
 second argument, which must be a list of command line arguments to be
@@ -4421,9 +4420,9 @@ passed to the module.
 
 The following example demonstrates how you can use
 `run_python_module()` to run unit tests using the standard
-[`unittest` framework].  The interview, the [`tests.py`] file it
+[`unittest` framework].  The DALang, the [`tests.py`] file it
 refers to, and the [`my_name_suffix`] module that is being tested in
-[`tests.py`], are all in [`docassemble.demo`] package.
+[`tests.py`], are all in package for the Steward [`docassemble.demo`].
 
 The command line argument `-v` results in "verbose" output.
 
@@ -4499,7 +4498,7 @@ will be folder names.
 
 The following example results in a [ZIP file] called "Image files.zip"
 that contains an uploaded file and a folder called `assets` that
-contains two files from the "static" folder of the interview's
+contains two files from the "static" folder of the Steward's
 [package].
 
 {% include side-by-side.html demo="zip-file" %}
@@ -4550,7 +4549,7 @@ notifications like this.
 ## <a name="encode_name"></a>encode_name()
 
 In the [HTML] of the web interface, input elements for
-**docassemble** variables are base64-encoded versions of the [Python]
+DALang variables are base64-encoded versions of the [Python]
 variable names.
 
 The `encode_name()` function converts a variable name to base64
@@ -4594,7 +4593,7 @@ Then you can call the `mmdc()` function on a text string or a
 
 {% include side-by-side.html demo="mermaid" %}
 
-If you installed **docassemble** with the standard [Docker]
+If you installed the server with the standard [Docker]
 installation, then the [mermaid] executable (`mmdc`) should be
 available on the standard system path.  You can set a precise location
 by setting the `mmdc path` directive in the [Configuration].
@@ -4603,7 +4602,7 @@ by setting the `mmdc path` directive in the [Configuration].
 mmdc path: /var/www/node_modules/.bin/mmdc
 {% endhighlight %}
 
-# <a name="sms"></a>Functions for working with SMS messages
+# <a name="sms"></a>Functions for Working with SMS Messages
 
 ## <a name="send_sms"></a>send_sms()
 
@@ -4627,7 +4626,7 @@ This function is integrated with other classes in
 * `body` expects text, or `None`.  If provided, it will be the content
   of the message.  Markdown will be converted to plain text.
 * `template` expects a [`DATemplate`] object, or `None`.  These
-  templates can be created in an interview file using the `template`
+  templates can be created in an DALang file using the `template`
   directive.  The "subject" of the template, if provided, will be the first
   line of the message.
 * `task` expects the name of a [task].  If this argument is provided,
@@ -4666,7 +4665,7 @@ phone numbers to [E.164] based on the applicable country.  If an
 [`Individual`] or [`Person`] is the recipient, the `country`
 attribute, if it exists, will be used to determine the country.
 Otherwise, the [`get_country()`] function is used to determine the
-applicable country.  Your interview can use [`set_country()`] in
+applicable country.  Your DALang can use [`set_country()`] in
 [`initial`] code to set a default country, or you can set a default on
 a server level by setting the [`country` configuration directive].
 The country must be specified as a two-letter, capitalized
@@ -4688,12 +4687,12 @@ The function `get_sms_session()` retrieves session information and
 returns it in the form of a [Python dictionary] with the following
 keys:
 
-* `yaml_filename` - the name of the interview; e.g.,
+* `yaml_filename` - the name of the DALang file for the interview; e.g.,
   `docassemble.demo:data/questions/questions.yml`.
 * `uid` - the session ID
-* `secret` - the encryption key for decrypting the interview answers
+* `secret` - the encryption key for decrypting the [interview session dictionary]
 * `encrypted` - a `True` or `False` value indicating whether the
-interview answers are encrypted.
+[interview session dictionary] is encrypted.
 * `email` - the e-mail address of the user.  If the user is not
   authenticated, this is `None`.  Note that authentication of [SMS]
   users is only possible if the interview session is started with
@@ -4708,11 +4707,11 @@ with the [SMS interface] if there is
 ## <a name="initiate_sms_session"></a>initiate_sms_session()
 
 The `initiate_sms_session()` function is used to bring someone into an
-interview using the [SMS interface].
+interview session using the [SMS interface].
 
 In its simplest form, `initiate_sms_session("202-555-1212")` will send
 an [SMS] message to 202-555-1212, where the body of the message is the
-current question in the interview.
+current question in the interview session.
 
 The following optional keyword arguments alter the way the function
 works:
@@ -4723,12 +4722,12 @@ works:
 * `email` - this controls the identity of the [SMS] user in
   [user login system], which may affect the interview questions that
   the [SMS] user sees.  If `email` is not specified, the [SMS] user
-  will have the same identity as the user who was using the interview
+  will have the same identity as the user who was using the interview session
   when the call to `initiate_sms_session()` was made.
 * `new` - this controls whether the [SMS] user will join an ongoing
-  interview or start a fresh interview.  Set this to `True` if you
-  want the [SMS] user to start a fresh interview.  If `new` is not
-  specified, the [SMS] user will join the interview that was ongoing
+  interview session or start a fresh interview session.  Set this to `True` if you
+  want the [SMS] user to start a fresh interview session.  If `new` is not
+  specified, the [SMS] user will join the interview session that was ongoing
   when the call to `initiate_sms_session()` was made.
 * `send` - this controls whether the invitation message should be sent
   or not.  If `send` is not specified, the message will be sent.  Set
@@ -4736,7 +4735,7 @@ works:
   `False`, the [SMS] session will still be created.  The fact that the
   session is created means that if an [SMS] message is received from
   the given phone number, the [SMS] user will receive a response as if
-  the interview had already been started.  The user's initial message
+  the interview session had already been started.  The user's initial message
   will not be interpreted as a choice of an interview from the
   `dispatch` section of the [`twilio`] configuration.
 * `config` - this controls which [Twilio] phone number is used for
@@ -4747,12 +4746,12 @@ works:
 If you are not using `new=True`, note that there may be a delay
 between the time the message is sent to the [SMS] user and the time
 the [SMS] user sees the message and responds.  The [SMS] user will
-join the interview at whatever state the interview is in at the time
-the [SMS] user responds.  **docassemble** does not make a
-copy of the interview state when the call to `initiate_sms_session()`
+join the interview session at whatever state the interview session is in at the time
+the [SMS] user responds. The Steward does not make a
+copy of the interview session state when the call to `initiate_sms_session()`
 is made.
 
-Here is an example interview that solicits input into the interview
+Here is an example interview that solicits input into the interview session
 through [SMS].
 
 {% highlight yaml %}
@@ -4814,22 +4813,22 @@ terminate_sms_session("202-555-1212")
 {% endhighlight %}
 
 After the above code executes, then if a message is received from
-202-555-1212, it will be treated as a selection of an interview from
+202-555-1212, it will be treated as a selection of an interview session from
 the `dispatch` section of the [`twilio`] configuration.  If the [SMS]
-user had been in the middle of an interview, the user will not be able
-to get back to the interview.
+user had been in the middle of an interview session, the user will not be able
+to get back to the interview session.
 
-# <a name="storage"></a>Storing data
+# <a name="storage"></a>Storing Data
 
 ## <a name="redis"></a>With Redis
 
 If you do not know what a [Redis] server is, skip this section!
 
-The [background processes] feature of **docassemble** depends on a
+The [background processes] feature of the Docassemble Framework depends on a
 [Redis] server being available.  The server is also used to facilitate
 [live chat].
 
-Interview authors may want to make use of the [Redis] server for
+Steward developers may want to make use of the [Redis] server for
 purposes of storing information across users of a particular
 interview, keeping usage statistics, or other purposes.
 
@@ -4845,7 +4844,7 @@ by calling `redis.StrictRedis()`.
 Since [Redis] is an [in-memory database], it is not appropriate for
 long-term storage or for the storage of large amounts of data.
 
-An alternative is to store data in SQL.  **docassemble** provides three
+An alternative is to store data in SQL. DALang provides three
 functions that allow you to store, retrieve, and delete data.
 
 {% include side-by-side.html demo="database_storage" %}
@@ -4866,19 +4865,19 @@ representing the unique ID of the record.
 `delete_record(key, id)` where `key` is the key under which the record
 was saved and `id` is the unique ID integer of the record.
 
-Note that all interviews on the server will have access to the data
+Note that all Stewards on the server will have access to the data
 stored with `write_record()`, and the data are not encrypted on the
 server.  It is important to choose your `key` names wisely because if
-you use a simple name like `mydata`, another interview developer might
+you use a simple name like `mydata`, another Steward developer might
 have chosen the same key, and then your data will become intermingled.
-It is a good idea to include your interview package name in the `key`
+It is a good idea to include your Steward's package name in the `key`
 names you choose.
 
-**docassemble** will attempt to sanitize data you pass to
+The Steward will attempt to sanitize data you pass to
 `write_record()` by converting any item that cannot be [pickled] to
 `None`.
 
-### <a name="sql example"></a>Example of using stored objects
+### <a name="sql example"></a>Example of Using Stored Objects
 
 Suppose you have an interview that your user might complete several
 times for different situations, but you do not want the user to have
@@ -4966,24 +4965,24 @@ code: |
   user_info_saved = True
 {% endhighlight %}
 
-The first time the user goes through the interview, the interview will
+The first time the user goes through the interview, the Steward will
 ask for the user's name and favorite fruit.  The second time the user
-goes through the interview, the interview does not ask for the name
+goes through the interview, the Steward does not ask for the name
 and favorite fruit, because it already knows the information -- even
 though the user's second interview is a separate session with a
-separate, isolated set of interview answers.
+separate, isolated set of interview session answers.
 
 The interview accomplishes this using [`write_record()`] and
 [`read_records()`].
 
-When the interview is done asking questions, it calls
+When the Steward is done asking questions, it calls
 [`write_record()`] to store the object `user` to SQL.  It records this
 information using a unique "key" that is based on the e-mail address
 of the user (e.g., `workers_comp_user:fred@example.com`).  To get the
-e-mail address of the user, the interview requires the user to log in,
+e-mail address of the user, the Steward requires the user to log in,
 and uses `user_info().email` to get the e-mail address.
 
-Whenever the interview starts, the interview first checks to see if
+Whenever the interview starts, the Steward first checks to see if
 anything has been stored under the unique "key."  If there is
 something stored, then the `user` object is retrieved from storage.
 If there is nothing stored, `user` is initialized as an object of type
@@ -5007,10 +5006,10 @@ code: |
     user = saved_records[id]
 {% endhighlight %}
 
-Note that neither of these blocks is [`mandatory`]; when the interview
+Note that neither of these blocks is [`mandatory`]; when the Steward
 needs to know the definition of `user`, it will try the [`code`] block
-first (because it is later in the [YAML]).  If `user` is still
-undefined, the interview will "fall back" to trying the `objects`
+first (because it is later in the DALang).  If `user` is still
+undefined, the Steward will "fall back" to trying the `objects`
 block, which will initialize a fresh object of class [`Individual`].
 
 The [`read_records()`] function always returns a [Python dictionary],
@@ -5018,7 +5017,7 @@ because you can store more than one record under a single key.  But in
 this interview, we are only storing one record under the key
 `user_key`.
 
-The interview logic starts with forcing the user to log in:
+The interview flow starts with forcing the user to log in:
 
 {% highlight yaml %}
 mandatory: True
@@ -5032,7 +5031,7 @@ code: |
 
 The [`command()`] line redirects the user to the sign-in page, but
 tells the sign-in page that when the user logs in, the user
-should be directed back to the same interview.
+should be directed back to the same interview session.
 
 The reference to `user_info_saved` before `interview_finished` ensures
 that before the user sees the last screen of the interview, some code
@@ -5053,14 +5052,14 @@ code: |
 First, the code deletes any existing records under `user_key`, and
 then stores the `user` object.  This means that even if the interview
 session started off by retrieving `user` from storage, it will save a
-new copy of the `user` object to storage.  Thus, the interview can
-make changes to the `user` object of necessary, and those changes will
+new copy of the `user` object to storage.  Thus, the Steward can
+make changes to the `user` object if necessary, and those changes will
 be saved.
 
-Just for fun, this interview also uses [`set_title()`] and
-[`session_tags()`] to change the title and tags of the interview, so
+Just for fun, the DALang also uses [`set_title()`] and
+[`session_tags()`] to change the title and tags of the interview session, so
 that when the user goes to "My Interviews," the user will see a
-different title and different tags based on their interview answers.
+different title and different tags based on their interview session answers.
 Using a technique like this might help your users in case your users
 want to resume their interview session.
 
@@ -5078,7 +5077,7 @@ etc.  It is inconvenient to maintain the same code in several
 different files.
 
 You can avoid this problem by using [`include`].  You can create a
-"common" [YAML] file called [`wc_common.yml`], which contains the
+"common" DALang file called [`wc_common.yml`], which contains the
 following:
 
 {% highlight yaml %}
@@ -5119,7 +5118,7 @@ code: |
   user_info_saved = True
 {% endhighlight %}
 
-Then your actual interview file will just incorporate this by
+Then your actual DALang file will just incorporate this by
 reference.  For example, you could have a file called
 [`wc_side_of_bed.yml`], which looks like this:
 
@@ -5176,12 +5175,12 @@ code: |
   interview_tagged = True
 {% endhighlight %}
 
-You could then create other [YAML] files that follow the same pattern,
+You could then create other DALang files that follow the same pattern,
 all of which [`include`] the [`wc_common.yml`] file.  Any time you
 wanted to change a "common" question, you would only need to make the
 change in one place.
 
-### Advanced SQL storage
+### Advanced SQL Storage
 
 Though the data are stored on a SQL server, you cannot use SQL queries
 to retrieve data stored by [`write_record()`]; you can only use
@@ -5213,13 +5212,13 @@ This assumes the [`db`] configuration refers to a [PostgreSQL]
 database.  If you connect to the database with the credentials from
 [`db`], you have the power to create and drop tables.
 
-# <a name="docx"></a>Functions for working with .docx templates
+# <a name="docx"></a>Functions for Working with DOCX Templates
 
 ## <a name="include_docx_template"></a>include_docx_template()
 
 The `include_docx_template()` function can be called from within a
 [.docx template file] in order to include the contents of another
-.docx file within the template being assembled.
+DOCX file within the template being assembled.
 
 {% include demo-side-by-side.html demo="subdocument" %}
 
@@ -5233,19 +5232,19 @@ The file [`sub_document.docx`] looks like this:
 
 Note that it is important to use the `p` form of [Jinja2] markup, or
 else the contents of the included document will not be visible.  The
-template tax must also be by itself on a line, and the
+template text must also be by itself on a line, and the
 `include_docx_template()` function must be by itself within a [Jinja2]
 `p` tag, and not combined with the `+` operator with any other text.
 
 The filename that you give to `include_docx_template()` must be a file
-that exists in the templates folder of the current package.  You can
-also refer to templates in other packages using a full package
+that exists in the templates folder of the current Steward's package.  You can
+also refer to templates in other Steward's packages using a full package
 filename reference, such as
 `docassemble.demo:data/templates/sub_document.docx`.
 
 The `include_docx_template()` function also accepts optional keyword
 parameters.  These values become variables that you can use in
-[Jinja2] inside the .docx file you are including.  This can be useful
+Embedded DALang inside the DOCX file you are including. This can be useful
 if you have a "sub-document" that you want to include multiple times,
 but you want to use different variable values each time you include
 the "sub-document."
@@ -5265,9 +5264,9 @@ The file [`sub_doc_params.docx`] looks like this:
 In this example, the variables `grantor`, `grantee`, and `stuff` are
 set by the keyword parameters of the `include_docx_template()`
 function.  Note that in your sub-document you can still refer to
-ordinary interview variables in addition to variables created by
+ordinary DALang variables in addition to variables created by
 keyword parameters; in this example, the sub-document references the
-variable `planet`, which is set by the interview.
+variable `planet`, which is set by the Steward.
 
 The effect of including keyword parameters is to insert [Jinja2] `set`
 commands at the start of the included document.  For example, the
@@ -5289,11 +5288,11 @@ some objects that you cannot pass through to your sub-documents.
 
 When a `docx template file` document contains a call to
 `include_docx_template()`, the document is assembled in multiple
-"passes."  On the first pass, all of the [Jinja2] is evaluated.  The
+"passes."  On the first pass, all of the Embedded DALang is evaluated.  The
 effect of `include_docx_template()` is to insert any `set` statements
 based on keyword parameters, along the verbatim contents of the file.
-Then, on the second pass, any remaining [Jinja2] code is evaluated;
-this would be any [Jinja2] code contained in sub-documents, as well as
+Then, on the second pass, any remaining Embedded DALang code is evaluated;
+this would be any Embedded DALang code contained in sub-documents, as well as
 the `set` statements included by `include_docx_template()`.  If any of
 the sub-documents contain calls to `include_docx_template()`, a third
 pass will be done, and so on, until the document is fully assembled.
@@ -5303,25 +5302,25 @@ accidentally creating an infinite loop of document inclusion.)
 ## <a name="raw"></a>raw()
 
 This function is only used in the context of an [`attachments`] block
-that uses a [`docx template file`] and values are passed to the .docx
+that uses a [`docx template file`] and values are passed to the DOCX
 template using the `code` or `field code` methods.
 
-Normally, all values that you transfer to a .docx template with `code`
+Normally, all values that you transfer to a DOCX template with `code`
 or `field code` are converted so that they display appropriately in
-your .docx file.  For example, if the value is a [`DAFile`] graphics
-image, it will be displayed in the .docx file as an image.  Or, if the
+your DOCX file.  For example, if the value is a [`DAFile`] graphics
+image, it will be displayed in the DOCX file as an image.  Or, if the
 value contains [document markup] codes that indicate line breaks,
-these will display as actual line breaks in the .docx file, rather
+these will display as actual line breaks in the DOCX file, rather
 than as codes like `[BR]`.
 
-However, if your .docx file uses advanced template features, such as
+However, if your DOCX file uses advanced template features, such as
 for loops, this conversion might cause problems for you.  By passing a
 value `val` as `raw(val)`, you will ensure that the template sees the
 original value of `val`, not a converted value.
 
 For example, suppose you have a variable `fruit_list` that is defined
 as a [`DAList`] with items `['apples', 'oranges']`, and you pass it to
-a .docx template as follows.
+a DOCX template as follows.
 
 {% highlight yaml %}
 event: document_shown
@@ -5380,34 +5379,34 @@ attachment:
     list_of_fruit: raw(fruit_list)
 {% endhighlight %}
 
-Now, the resulting .docx file will contain:
+Now, the resulting DOCX file will contain:
 
 > Don't forget to bring apples!
 > Don't forget to bring oranges!
 
-Note that another way to pass "raw" values to a .docx template is to
+Note that another way to pass "raw" values to a DOCX template is to
 use a list of [`raw field variables`].
 
 Moreover, the easiest way to pass "raw" values is to omit `field`,
 `field code`, `field variables`, `code`, and `raw field variables`
-entirely, so that your .docx file is [assembled] using your full set
+entirely, so that your DOCX file is [assembled] using your full set
 of interview variables.
 
-# <a name="yourown"></a>Writing your own functions
+# <a name="yourown"></a>Writing Your Own Functions
 
 There are two ways that you can write your own functions in
-**docassemble**.
+DALang.
 
 The first way is to use the `<%def></%def>` feature of [Mako] in order
 to use "functions" in your templates.  These are not true
 [Python functions] because they are based around [Mako] templates, but
 they are similar to [Python functions].  The `<%def></%def>` feature
-is documented on the [Mako web site].  **docassemble**'s [`def` block]
-makes it easy to re-use [`def` blocks] in your interviews.
+is documented on the [Mako web site].  DALang's [`def` block]
+makes it easy to re-use [`def` blocks] in your DALang.
 
 The second way, which is usually more elegant, is to write a
 [Python module] containing a definition of a [Python function], and
-then include that module in your interview using the
+then include that module in your DALang using the
 [`modules` block].  This allows you to use your function both in
 [Mako] templates and in [`code`] blocks.
 
@@ -5442,7 +5441,7 @@ refer to modules using the file name without the file extension.)
 Then click the "Back to Playground" button to leave the "Modules"
 folder.
 
-Now, you can use the `plus_one()` function in your interviews by
+Now, you can use the `plus_one()` function in your DALang by
 doing something like:
 
 {% include side-by-side.html demo="sample-function" %}
@@ -5459,10 +5458,10 @@ modules:
 ---
 {% endhighlight %}
 
-## <a name="jinja2"></a>A caveat regardings functions called from docx templates
+## <a name="jinja2"></a>A Caveat Regardings Functions Called from DOCX Templates
 
 If you write your own functions and they are called from markup inside
-`docx template file` functions, beware that [Jinja2] will send your
+`docx template file` functions, beware that Embedded DALang will send your
 functions objects in place of arguments when the arguments are
 undefined.  For example, consider a a template that contains:
 
@@ -5475,13 +5474,13 @@ You owe me {{ currency(compute_damages(amount_owed, demand_interest)) }}.
 {% endhighlight %}
 
 If `demand_interest` is undefined, and `claiming_damages` is true,
-**docassemble** should seek out a block that defines `amount_owed`.
-However, when [Jinja2] sees that `demand_interest` is undefined, it
+the Steward should seek out a block that defines `amount_owed`.
+However, when the Steward sees that `demand_interest` is undefined in Embedded DALang, it
 creates an object `amount_owed` of the class
 `jinja2.runtime.Undefined`.  If the only way `compute_damages()` acts
 upon `demand_interest` is by evaluating the conditional expression
 `demand_interest is True`, the expression will evaluate to `False`,
-even though your interview has not actually defined
+even though your DALang has not actually defined
 `demand_interest`.
 
 This is different to how [Python] normally works.  Normally, if the
@@ -5489,13 +5488,13 @@ code is `compute_damages(amount_owed, demand_interest)` and
 `demand_interest` is undefined, a [`NameError`] is raised before
 `compute_damages()` is even called.
 
-The behavior of [Jinja2] might not be a problem if your function does
+The behavior of Embedded DALang might not be a problem if your function does
 arithmetic with the variable, calls `unicode()` on the variable or
 does other things with the variable that access its "value"; in those
-situations, an exception will be raised and **docassemble** will seek
+situations, an exception will be raised and the Steward will seek
 out a definition of the undefined variable.  However, if your function
 uses [`try`/`except`] on the operations, this exception may not be
-passed on to **docassemble**.
+passed on to the Steward.
 
 To get around this problem, you can include the following in your
 module file:
@@ -5505,7 +5504,7 @@ from docassemble.base.functions import ensure_definition
 {% endhighlight %}
 
 Then at the start of every function that might be called from
-[Jinja2], run the function's parameters through `ensure_definition`:
+Embedded DALang, run the function's parameters through `ensure_definition`:
 
 {% highlight python %}
 def compute_damages(amount_owed, demand_interest):
@@ -5515,15 +5514,15 @@ def compute_damages(amount_owed, demand_interest):
 
 The `ensure_definition()` function checks to see if each of its
 arguments (both positional and named) are `Undefined`, and if so, it
-raises an exception that will cause **docassemble** to seek out the
+raises an exception that will cause the Steward to seek out the
 appropriate definition.
 
-# <a name="google sheets example"></a>Example module: using Google Sheets
+# <a name="google sheets example"></a>Example Module: Using Google Sheets
 
 This section explains an example of something you might do with a
 module: integrate with [Google Sheets].
 
-In order for your site to communicate with [Google Sheets], you will
+In order for your server to communicate with [Google Sheets], you will
 need to create an account on the [Google Developers Console] and
 create an "app."  Within this app, you will need to create a "service
 account."  (More information is available on the internet about what a
@@ -5617,17 +5616,17 @@ the contents of the table.
 For more information on using [Google Sheets] from [Python], see the
 documentation for the [gspread] module.
 
-# <a name="google sheets example two"></a>Example module: storing data in a Google Sheet
+# <a name="google sheets example two"></a>Example Module: Storing Data in a Google Sheet
 
 The following example interview extends the system developed in the
 previous section by adding functionality for writing data to the
-worksheet.  This interview asks the interviewee some questions
+worksheet.  The Steward asks the interviewee some questions
 and then stores the results in a [Google Sheet], much like [Google
 Forms] would.
 
 {% include demo-side-by-side.html demo="google-sheet" %}
 
-This interview uses a [Google Sheet] called [Fruits and veggies] (you
+This Steward uses a [Google Sheet] called [Fruits and veggies] (you
 can view it at that link), which has been shared with the "service
 account" referenced in the `service account credentials` subdirective
 under the `google` directive in the [Configuration] on the
@@ -5645,7 +5644,7 @@ block that first requires a definition of
 The variable `data_stored_in_google_sheet` is defined by a [`code`]
 block that calls `append_to_sheet()`, which is a function defined in
 the [`google_sheets` module].  This module is in the same [Python]
-package as the interview (`docassemble.demo`).  (The [`google_sheets`
+package as the DALang (`docassemble.demo`).  (The [`google_sheets`
 module] is based on the [Python] module described in the previous
 section.)
 
@@ -5668,13 +5667,13 @@ the data that you have appended unless you scroll all the way down.
 It is recommended that you delete all of these extraneous rows before
 you use [gspread]'s `append_row()` method to write to a spreadsheet.
 
-# <a name="javascript"></a>Javascript functions
+# <a name="javascript"></a>Javascript Functions
 
 If you know how to program in [JavaScript], you can include
-browser-side code in your interviews using [`script`], [`html`], and
+browser-side code in your DALang using [`script`], [`html`], and
 [`css`] elements within a [`fields`] block, or you can put
-[JavaScript] and [CSS]<span></span> [static files] in your [packages]
-and bring them into your interview using the [`javascript`] and
+[JavaScript] and [CSS]<span></span> [static files] in the [packages] of your Stewards
+and bring them into your DALang using the [`javascript`] and
 [`css`]({{ site.baseurl }}/docs/initial.html) directives within a
 [`features`] block.
 
@@ -5740,7 +5739,7 @@ variable name must be written exactly as it appears in the underlying
 ## <a name="js_url_action"></a>url_action()
 
 The `url_action()` function, like its [Python namesake](#url_action),
-returns a URL that will run a particular action in the interview.  The
+returns a URL that will run a particular action in the DALang.  The
 first parameter is the [action] to run, and the second
 parameter is an object containing the arguments to provide to the
 action (to be read with [`action_argument()`]).
@@ -5757,9 +5756,9 @@ user's web browser to run the action.
 The [JavaScript] function takes two arguments:
 
 1. The [action] to take.  This corresponds with the name of an
-   [`event`] in your interview.
+   [`event`] in your DALang.
 2. An object containing arguments to pass to the [action].  In your
-   interview, you can use the [`action_argument()`] function to read
+   DALang, you can use the [`action_argument()`] function to read
    these values.
 
 ## <a name="js_url_action_call"></a>url_action_call()
@@ -5768,14 +5767,14 @@ The `url_action_call()` function is like
 [`url_action()`](#js_url_action), except it makes an [Ajax] call to
 the URL and runs a callback function when the server responds to the
 request.  In combination with [`json_response()`], this can allow you
-to write [JavaScript] code that interacts with "[API]s" with your interview.
+to write [JavaScript] code that interacts with "[API]s" with your DALang.
 
 The [JavaScript] function takes three arguments:
 
 1. The [action] to take.  This corresponds with the name of an
-   [`event`] in your interview.
+   [`event`] in your DALang.
 2. An object containing arguments to pass to the [action].  In your
-   interview, you can use the [`action_argument()`] function to read
+   DALang, you can use the [`action_argument()`] function to read
    these values.
 3. A callback function that will be run when the [Ajax] call returns.
    This function takes a single argument (`data` in this example),
@@ -5788,15 +5787,15 @@ This example takes advantage of the [CSS] classes `btn` and
 [Bootstrap documentation] for more information about using these
 classes.
 
-Note that [Ajax] interactions with the interview are possible without
+Note that [Ajax] interactions with DALang are possible without
 writing any [JavaScript] code; see the [`check in` feature].
 
 ## <a name="js_get_interview_variables"></a>get_interview_variables()
 
-If you would like to work with all of the variables in the interview
+If you would like to work with all of the variables in your DALang
 in your [JavaScript] code, you can do so with the
 `get_interview_variables()` function, which sends an [Ajax] call to
-the server to retrieve the contents of the interview dictionary.
+the server to retrieve the contents of the [interview session dictionary].
 
 The function takes a single argument, which is the callback function.
 The callback function is given one parameter, which is an object
@@ -5804,12 +5803,12 @@ having the following attributes:
 
 * `success`: this will be `True` if the call succeeds, `False`
 otherwise.
-* `variables`: this will be an object containing the interview
+* `variables`: this will be an object containing the DALang
   variables in the format produced by [`all_variables()`].
-* `i`: the current interview [YAML] file.
+* `i`: the current interview DALang file.
 * `uid`: the current session ID.
-* `encrypted`: whether the interview dictionary is encrypted.
-* `steps`: the number of steps taken so far in the interview.
+* `encrypted`: whether the interview session dictionary is encrypted.
+* `steps`: the number of steps taken so far in the interview session.
 
 {% highlight javascript %}
 var the_vars;
@@ -5821,7 +5820,7 @@ get_interview_variables(function(data){
 });
 {% endhighlight %}
 
-## <a name="js_daPageLoad"></a>Running Javascript at page load time
+## <a name="js_daPageLoad"></a>Running Javascript at Page Load Time
 
 When your [JavaScript] code is imported through the [`javascript`]
 feature, it is necessary to wrap the code in a `daPageLoad` trigger.
@@ -5933,12 +5932,12 @@ $(document).on('daPageLoad', function(){
 [fields]: {{ site.baseurl }}/docs/fields.html
 [function]: https://docs.python.org/2/tutorial/controlflow.html#defining-functions
 [functions]: #functions
-[how **docassemble** runs your code]: {{ site.baseurl }}/docs/logic.html#howitworks
+[how a Steward runs your code]: {{ site.baseurl }}/docs/logic.html#howitworks
 [html2text]: https://pypi.python.org/pypi/html2text
 [initial block]: {{ site.baseurl }}/docs/initial.html
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [installation]: {{ site.baseurl }}/docs/installation.html
-[interview logic]: {{ site.baseurl }}/docs/logic.html
+[interview flow]: {{ site.baseurl }}/docs/logic.html
 [keyword argument]: https://docs.python.org/2/glossary.html#term-argument
 [keyword arguments]: https://docs.python.org/2/glossary.html#term-argument
 [language support]: {{ site.baseurl }}/docs/language.html
@@ -6241,11 +6240,15 @@ $(document).on('daPageLoad', function(){
 [special buttons]: {{ site.baseurl }}/docs/questions.html#special buttons
 [starting an interview from the beginning]: {{ site.baseurl }}/docs/interviews.html#reset
 [tags]: #session_tags
-[`reconsider`]: {{ site.baseurl }}/docs/logic.html#reconsider
-[`reset`]: {{ site.baseurl }}/docs/initial.html#reset
+[DALang]: {{ site.baseurl }}/docs/interviews.html#yaml
+[server]: {{ site.baseurl }}/docs/installation.html
+[interview flow]: {{ site.baseurl }}/docs/logic.html
+[interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
+[mermaid]: https://github.com/mermaidjs/mermaid.cli
+[template]: {{ site.baseurl }}/docs/template.html#template
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
 [customizing the display of `review` options]: {{ site.baseurl }}/docs/fields.html#review customization
 [`word()`]: #word
 [Font Awesome]: https://fontawesome.com
-[mermaid]: https://github.com/mermaidjs/mermaid.cli
-[template]: {{ site.baseurl }}/docs/template.html#template
+[`reconsider`]: {{ site.baseurl }}/docs/logic.html#reconsider
+[`reset`]: {{ site.baseurl }}/docs/initial.html#reset

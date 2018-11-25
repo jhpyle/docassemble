@@ -1,18 +1,18 @@
 ---
 layout: docs
-title: Special variables
+title: Special Variables
 short_title: Special Variables
 ---
 
-# Variables set by **docassemble**
+# Variables Set by the Docassemble Framework
 
-There are some special variables that **docassemble** sets in every
+There are some special variables that the Docassemble Framework sets in every
 interview's variable store.
 
 ## <a name="_internal"></a>_internal
 
-`_internal` is a [Python dictionary] that is used by **docassemble**
-but that is not intended to be used in interviews.
+`_internal` is a [Python dictionary] that is used by the Steward
+but that is not intended to be used in DALang.
 
 ## <a name="nav"></a>nav
 
@@ -26,7 +26,7 @@ for the [`nav` functions].
 `url_args` is a [Python dictionary] that is used to access parameters
 passed via URL.
 
-Users start an interview by going to a URL.  A basic URL would look
+Users start an interview session by going to a URL.  A basic URL would look
 like this:
 
 {% highlight text %}
@@ -36,16 +36,16 @@ http://example.com/interview?i=docassemble.example_inc:data/questions/survey.yml
 Here, the only parameter is `i`, the interview file name.
 
 It is possible to use the URL to pass special parameters to the
-interview code.  For example, if the user started the interview by
+Steward.  For example, if the user started the interview session by
 clicking on the following link:
 
 {% highlight text %}
 http://example.com/interview?i=docassemble.example_inc:data/questions/survey.yml&from=web
 {% endhighlight %}
 
-then the interview would load as usual, and the interview code could
+then the Steward would load as usual, and its DALang code could
 access the value of the `from` parameter by looking in the `url_args`
-variable in the variable store.  For example, the interview could
+variable in the variable store.  For example, the DALang could
 contain the following code:
 
 {% highlight yaml %}
@@ -76,12 +76,12 @@ You can test this out by trying the following links:
 * [{{ site.demourl }}/interview?i=docassemble.demo:data/questions/testurlarg.yml&from=web]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/testurlarg.yml&from=web){:target="_blank"}
 * [{{ site.demourl }}/interview?i=docassemble.demo:data/questions/testurlarg.yml&from=moon]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/testurlarg.yml&from=moon){:target="_blank"}
 
-As soon as the interview loads, the parameters will no longer appear
+As soon as the Steward loads, the parameters will no longer appear
 in the browser's location bar.  Nevertheless, the parameters remain
-available in the `url_args` dictionary for the life of the interview.
+available in the `url_args` dictionary for the life of the interview session.
 
 Moreover, you can set new `url_args` at any time during the course of
-the interview.  For example:
+the interview session.  For example:
 
 {% highlight yaml %}
 ---
@@ -102,7 +102,7 @@ You can test this out by trying the following link:
 
 The following parameter names are not available for use as URL
 parameters because they are used for other purposes by
-**docassemble**:
+Stewards:
 
 * `action`
 * `cache`
@@ -120,16 +120,14 @@ parameters because they are used for other purposes by
 
 If you use the [multi-user interview feature] and the user reaches a
 point in the interview where input is needed from a different user
-before proceeding, **docassemble** will look for a [`question`] that
-offers to sets [`role_event`], and ask that question.  **docassemble**
+before proceeding, the Steward will look for a [`question`] that
+offers to sets [`role_event`], and ask that question.  The Steward
 will set the variable `role_needed` to a list of roles capable of
 answering the next question in the interview.
 
 # Variables used when finding blocks to set variables
-
-The following variables are set by **docassemble** in the course of
+The following variables are set by a Steward in the course of
 searching for blocks that will define variables.
-
 * `x`
 * `i`
 * `j`
@@ -137,35 +135,34 @@ searching for blocks that will define variables.
 * `l`
 * `m`
 * `n`
-
 You should never set these variables yourself; they will be set for
 you before your blocks are used.
 
-# Variables that interviews can set
+# Variables that Your DALang Can Set
 
 ## <a name="role"></a>role
 
-If you use the [multi-user interview feature], your interview will
+If you use the [multi-user interview feature], your DALang will
 need to have a [`default role` initial block] containing code that
 sets the variable `role` to the user's role.
 
 ## <a name="speak_text"></a>speak_text
 
-If this special variable is set to `True`, **docassemble** will
+If this special variable is set to `True`, your Steward will
 present the user with an HTML5 audio control at the top of the page.
-When the user clicks it, **docassemble** will access the [VoiceRSS]
+When the user clicks it, the Steward will access the [VoiceRSS]
 web service to convert the text of the question to an audio file and
 then play that audio back for the user.  This requires enabling the
 [`voicerss`] setting in the [configuration].
 
 Since the [VoiceRSS] service costs money above the free usage tier,
-**docassemble** does not send the request to [VoiceRSS] until the user
+the Steward does not send the request to [VoiceRSS] until the user
 presses "Play" on the audio control.  It also caches the results and
 reuses them whenever possible.
 
 ## <a name="track_location"></a>track_location
 
-If set to `True`, the web app will attempt to obtain the user's
+If set to `True`, the Steward will attempt to obtain the user's
 position, based on GPS or any other geolocation feature enabled in the
 browser.  The [`location_known()`], [`location_returned()`], and
 [`user_lat_lon()`] functions can be used to retrieve the information.
@@ -194,9 +191,9 @@ If you want to use the [multi-user interview feature], you need to set
 `multi_user` to `True`.  This is usually done in a "mandatory" or
 "initial" code block.
 
-When `multi_user` is set to `True`, **docassemble** will not encrypt
-the interview answers on the server.  This is necessary so that
-different people can access the same interview.  When interview
+When `multi_user` is set to `True`, the Steward will not encrypt
+the answers in the [interview session dictionary].  This is necessary so that
+different people can access answers in the same interview session.  When interview
 answers are encrypted (which is the default), only the user who
 started the interview can access the interview answers.
 
@@ -221,9 +218,9 @@ interview, you can turn encryption back on again by setting
 
 ## <a name="menu_items"></a>menu_items
 
-Interviews can add entries to the menu within the web app.
+Your Steward can add or remove entries to the menu of the web app durring an interview session.
 
-When `menu_items` is set to a [Python list], **docassemble** will add
+When `menu_items` is set to a [Python list] in your DALang, the Steward will add
 entries to the menu based on the items in the list.
 
 Each item in the list is expected to be a [Python dictionary] with
@@ -231,7 +228,7 @@ keys `label` and `url`.  Typically, these entries are generated using
 the [`action_menu_item()` function], which creates a menu item that
 runs an "action."  (See the [`url_action()`] and [`process_action()`]
 sections of the [functions] page for more information about what
-"actions" are in **docassemble**, and for documentation for the
+"actions" are in DALang, and for documentation for the
 [`action_menu_item()` function].)
 
 {% highlight yaml %}
@@ -260,12 +257,12 @@ on and off during the course of the interview as necessary.
 This variable should be set to `True` if you want to allow the server
 to run [scheduled tasks] from your interview.
 
-# Variables that stand in for events
+# Variables that Stand in for Events
 
-**docassemble** interviews ask questions or run code when required by
-[interview logic] and also when caused to do so by [events] and
+Stewards ask questions or run code when required by the
+[interview flow] and also when caused to do so by [events] and
 [actions].  These [events] and [actions] are identified using
-variables, which may not ever be defined by an interview.
+variables, which may not ever be defined in your interview.
 
 There are some built-in variable names with special meaning:
 
@@ -283,7 +280,7 @@ There are some built-in variable names with special meaning:
 [`allow_cron`]: #allow_cron
 [scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
 [roles]: {{ site.baseurl }}/docs/roles.html
-[interview logic]: {{ site.baseurl }}/docs/logic.html
+[interview flow]: {{ site.baseurl }}/docs/logic.html
 [actions]: {{ site.baseurl }}/docs/functions.html#actions
 [events]: {{ site.baseurl }}/docs/fields.html#event
 [VoiceRSS]: http://www.voicerss.org/
@@ -318,4 +315,5 @@ There are some built-in variable names with special meaning:
 [`nav` functions]: {{ site.baseurl }}/docs/functions.html#get_section
 [event]: {{ site.baseurl }}/docs/background.html
 [`incoming_email`]: {{ site.baseurl }}/docs/background.html#email
+[interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
 [API]: {{ site.baseurl }}/docs/api.html

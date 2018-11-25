@@ -1,47 +1,47 @@
 ---
 layout: docs
-title: Code questions
-short_title: Code
+title: Code Blocks
+short_title: Code Blocks
 ---
 
-**docassemble** allows interview authors to use [Python], a general
-purpose programming language, to control the direction of interviews
+[DALang] allows developers to use [Python], a general
+purpose programming language, to control their Stewards
 and do things with user input.  It is not necessary to use [Python]
-code in an interview, but it is an extremely powerful tool.
+code when developing an interview, but it is an extremely powerful tool.
 
-[Python] appears in **docassemble** in a number of ways:
+[Python] appears in DALang in a number of ways:
 
-* Every [variable name] in **docassemble** is a [Python] variable,
-  whether authors realize it or not.  The value of the variable might
+* Every [variable name] in DALang is a [Python] variable,
+  whether developers realize it or not.  The value of the variable might
   be text (e.g., `"123 Main Street"`), a number (e.g., `42`), a
   special value that has meaning in [Python] (e.g. `True`, `False`,
-  and `None`), a [group] (e.g., a [list], [dictionary], or [set]), an
+  and `None`), a [data structure] (e.g., a [list], [dictionary], or [set]), an
   [object], or an attribute of an [object].
-* Authors can use [`code`] blocks to set variables using [Python]
+* Developers can use [`code`] blocks to set variables using [Python]
   code, which may act upon user input.
 * [Python] code can be embedded within [`question`]s, for example to
   generate a list of choices in a multiple-choice list.
-* The [Mako] templating system, which authors can use to format
+* The [Mako] templating system, which developers can use to format
   [questions] and [documents], is based on [Python], and allows
-  authors to embed [Python] statements within templates.  There are
+  developers to embed [Python] statements within templates.  There are
   slight syntax differences between [Mako] and [Python].  For example,
   [Mako] requires that if/then/else logic statements be closed with an
   `endif` statement.
 
-# <a name="python"></a> An introduction to coding in Python
+# <a name="python"></a> An Introduction to Coding in Python
 
 As general purpose programming languages go, [Python] is relatively
 user-friendly and readable.  Python programmers don't need to worry
 that their code will fail because of a missing semicolon.
 
-## <a name="simpleexamples"></a>Simple examples: arithmetic
+## <a name="simpleexamples"></a>Simple Examples: Arithmetic
 
 Here is some very simple [Python] code:
 
 {% include side-by-side.html demo="code-example-01" %}
 
 This code sets the variable `answer` to 2 + 2.  The code is contained
-in a **docassemble** [`code`] block, which is explained
+in a DALang [`code`] block, which is explained
 [below](#code).
 
 Here is a more complicated example:
@@ -84,7 +84,7 @@ will still function without them:
 However, using spaces in your code is highly recommended, because they
 make the code much more readable!
 
-## <a name="if"></a>Conditional actions: if/then/else statements
+## <a name="if"></a>Conditional Actions: if/then/else Statements
 
 Sometimes you want different code to run differently depending on
 certain conditions.  In computer programming, the simplest form of a
@@ -161,22 +161,22 @@ The following conditions apply when the variables are text.
 * `a.endswith(b)` returns true if the text in `b` is at the tail end
   of the text in `a`.
 
-## <a name="looping"></a>Going through the items in a group
+## <a name="looping"></a>Going Through the Items in a Data Structure
 
 There are special types of variables in [Python] that help you manage
 collections of things.  For more information about this, see the
-[groups] section.
+[data structures] section.
 
-# <a name="code"></a>The `code` block
+# <a name="code"></a>The `code` Block
 
-In a **docassemble** interview, a [`question`] block tells
-**docassemble** that if the interview logic wants to know the value of
+In [DALang], a [`question`] block tells
+the Steward that if the [interview flow] wants to know the value of
 a particular variable, such as `best_fruit_ever`, and that variable
-has not been defined yet, **docassemble** can pose the question to the
+has not been defined yet, the Steward can pose the question to the
 user and the user's answer to the question may provide a definition
 for that variable.
 
-For example, this [`question`] block:
+For example, this DALang [`question`] block:
 
 {% highlight yaml %}
 ---
@@ -186,7 +186,7 @@ fields:
 ---
 {% endhighlight %}
 
-asks the user to type in the name of the best fruit ever.
+It asks the user to type in the name of the best fruit ever.
 
 The value of variables like `best_fruit_ever` can also be retrieved by
 running Python code contained within `code` blocks:
@@ -198,20 +198,20 @@ code: |
 ---
 {% endhighlight %}
 
-This `code` "question" is "asked" in much the same way that the
-previous [`question`] question is asked: if and when it needs to be
-asked.  **docassemble** "asks" `code` questions not by asking for the
+This `code` "question" is "asked" by the Steward in much the same way that the
+previous [`question`] "question" is asked: if and when it needs to be
+asked.  The Steward "asks" `code` questions not by asking for the
 user's input and then processing the user's input, but by running the
 Python code contained in the `code` statement.
 
-As with user [`question`]s, **docassemble** might find that "asking" the
+As with user [`question`]s, the Steward might find that "asking" the
 `code` question did not actually define the needed variable.  In that
 case, it goes looking for another question (which could be of the
 [`question`] or `code` variety) that will provide a definition.
 
-Once `best_fruit_ever` is defined, **docassemble** will not need to
-run the `code` again if the interview logic calls for
-`best_fruit_ever` at a later point.  In the same way, **docassemble**
+Once `best_fruit_ever` is defined, the Steward will not need to
+run the `code` again if the interview flow calls for
+`best_fruit_ever` at a later point.  In the same way, the Steward
 does not need to ask the user for the user's name every time it needs
 to know the user's name.
 
@@ -246,7 +246,7 @@ code:
 
 All of the variables you set with [`question`] blocks are available to
 your Python code.  If your code uses a variable that is not defined
-yet, **docassemble** will "ask" [`question`] blocks and `code` blocks in
+yet, the Steward will "ask" [`question`] blocks and `code` blocks in
 order to define the variables.
 
 Consider the following example:
@@ -266,48 +266,51 @@ fields:
 ---
 {% endhighlight %}
 
-If **docassemble** needs to know `product_recommendation`, it will
+If the Steward needs to know `product_recommendation`, it will
 execute the code block, but the code block will fail to execute
-because `user_age` is undefined.  **docassemble** will then go looking
+because `user_age` is undefined.  The Steward will then go looking
 for a question that answers `user_age`, and it will ask the user "What
-is your age?"  Upon receiving a response, **docassemble** will
+is your age?"  Upon receiving a response, the Steward will
 continue in its effort to find a definition for
 `product_recommendation` and will complete the execution of the `code`
 block.
 
-# <a name="modifiers"></a>`code` block modifiers
+# <a name="modifiers"></a>`code` Block Components
 
-You can change the way `code` blocks work by adding modifiers:
+You can change the way `code` blocks work by adding components:
 
 * <span></span>[`reconsider`]: If `reconsider` is set to `True`, then
-  **docassemble** will always "reconsider" the values of any of the
+  the Steward will always "reconsider" the values of any of the
   variables set by the `code` block.  That is, every time the
-  interview is assembled (every time the screen loads) **docassemble**
+  Steward is engaged (every time the screen loads) it
   will forget about the value of any of the variables set by the
   `code` block.
-* <span></span>[`initial`]: If `initial` is set to `True`, then **docassemble**
-  will run the code every time the interview is assembled (every time
+* <span></span>[`initial`]: If `initial` is set to `True`, then the Steward
+  will run the code every time it is engaged (every time
   the screen loads).
 * <span></span>[`mandatory`]: If `mandatory` is set to `True`, then
-  **docassemble** will run the code when the interview is assembled,
-  except that once the code runs through all the way, **docassemble**
+  the Steward will run the code when it is engaged (every time the screen loads),
+  except that once the code runs through all the way, the Steward
   will remember that the `code` block was successfully run, and it will
   not re-run it again, as it does with `initial` code.
 
-For more information about these modifiers and how they are used, see
-the [Interview Logic] section.
+For more information about these components and how they are used, see
+the [Interview Flow] section. 
+
+* <span></span>[`sets`]: If `sets` is set, it helps
+  the Steward know which variables are set by the code block.
 
 # <a name="limitations"></a>Limitations
 
 You can run any [Python] code within [`code`] blocks, but there are
-some constraints based on the way **docassemble** works:
+some constraints based on the way Stewards conduct interview sessions:
 
 * After each screen loads, the variables are serialized with [pickle].
   Any name in the global namespace that refers to something
   non-pickleable will be omitted from this serialization.  So, you can
   define a function `foo()` with some code, but when the next screen
   loads, the name `foo` will be undefined (as though `reconsider` is
-  set to `True`).  Thus, **docassemble** will need to seek out the
+  set to `True`).  Thus, Stewards will need to seek out the
   definition of `foo`, and will re-run the [`code`] block that defines
   the function `foo`.
 * You can include a `class` definition in [`code`], but any instances
@@ -323,20 +326,20 @@ some constraints based on the way **docassemble** works:
   exception.  Better yet, stick with using [`modules`] and [`imports`]
   to bring in names from other packages, and then you don't have to
   worry about this.
-* When **docassemble** prepares the variables for serialization, it
+* When the Steward prepares the variables for serialization, it
   will discard non-serializable names in the global namespace, but it
   **does not do this recursively**.  So you can feel free to use
   non-serializable types in the global namespace, but if you use
   non-serializable types within lists, dictionaries, or attributes, an
   exception will be raised.
 
-While **docassemble** will allow you to do many things with code in
+While [DALang] will allow you to do many things with code in
 [`code`] blocks, it is a best practice to put complicated code into
-modules, and only use rudimentary [Python] code in your interviews.
+modules, and only use rudimentary [Python] code in DALang files.
 Ideally, non-programmers should at least be able to read and edit
-interview files, because subject matter experts are often not adept at
-coding.  The more [Python] code you put into an interview file, the
-more non-programmers will be intimidated by the interview file and be
+DALang files, because subject matter experts are often not adept at
+coding.  The more [Python] code you put into a DALang file, the
+more non-programmers will be intimidated by the DALang file and be
 unwilling to work with it.  If you can hide complexity behind a simple
 functional interface, you should do so.
 
@@ -348,19 +351,23 @@ functional interface, you should do so.
 [`reconsider`]: {{ site.baseurl }}/docs/logic.html#reconsider
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
-[Interview Logic]: {{ site.baseurl }}/docs/logic.html
+[`sets`]: {{ site.baseurl }}/docs/modifiers.html#sets
+[Interview Flow]: {{ site.baseurl }}/docs/logic.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [`code`]: #code
 [variable name]: {{ site.baseurl }}/docs/fields.html#variable names
 [object]: {{ site.baseurl }}/docs/objects.html
-[group]: {{ site.baseurl }}/docs/groups.html
+[data structure]: {{ site.baseurl }}/docs/groups.html
 [list]: {{ site.baseurl }}/docs/groups.html#list
 [dictionary]: {{ site.baseurl }}/docs/groups.html#dictionary
 [set]: {{ site.baseurl }}/docs/groups.html#set
 [Mako]: http://www.makotemplates.org/
 [questions]: {{ site.baseurl }}/docs/questions.html
 [documents]: {{ site.baseurl }}/docs/documents.html
-[groups]: {{ site.baseurl }}/docs/groups.html
+[data structures]: {{ site.baseurl }}/docs/groups.html
 [custom classes]: {{ site.baseurl }}/docs/objects.html#writing
 [module]: {{ site.baseurl }}/docs/packages.html
 [`objects`]: {{ site.baseurl }}/docs/initial.html#objects
+[DALang]: {{ site.baseurl }}/docs/interviews.html#yaml
+[server]: {{ site.baseurl }}/docs/installation.html
+[interview flow]: {{ site.baseurl }}/docs/logic.html

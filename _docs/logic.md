@@ -1,23 +1,23 @@
 ---
 layout: docs
-title: Interview logic
-short_title: Interview Logic
+title: Interview Flow
+short_title: Interview Flow
 ---
 
-# <a name="intro"></a>Introduction
+# <a name="intro"></a>Interview Flow Introduction
 
-Unlike other guided interview systems, in which the interview author
+Unlike other guided interview systems, in which the interview developer
 maps out a decision tree or flowchart to indicate which questions
-should be asked and in which order, **docassemble** implicitly figures
+should be asked and in which order, Stewards implicitly figure
 out what questions to ask and when to ask them.
 
 For example, if the point of your interview is to assemble a document,
 and one of the fields in the document is the user's Social Security
-Number (SSN), the interview will ask the user for his or her SSN;
-**docassemble** does not need to be told to ask for the SSN.
+Number (SSN), the Steward will ask the user for his or her SSN;
+The Steward does not need to be told to ask for the SSN.
 
 However, if your document only displays the SSN conditionally,
-**docassemble** will only ask for the SSN if that condition is met.
+the Steward will only ask for the SSN if that condition is met.
 For example, your document template might include:
 
 {% highlight text %}
@@ -30,31 +30,31 @@ lawful resident of the United States.
 % endif
 {% endhighlight %}
 
-This will cause the interview to ask for the petitioner's name and
+This will cause the Steward to ask for the petitioner's name and
 whether the petitioner is a citizen, because that information is
-necessary.  The interview will ask for the SSN only if the petitioner
+necessary.  The Steward will ask for the SSN only if the petitioner
 is a citizen.
 
 In other guided interview systems, the logic of the document assembly
 is separate from the logic that determines what interview questions
 are asked.  In the case of the template above, the dependence of the
 SSN on citizenship would need to be mapped out both in the document
-and in the specification of the interview questions.  In
-**docassemble**, however, the logic of the interview is determined
+and in the specification of the interview questions.  For
+a Steward however, the logic of the interview is determined
 implicitly from the requirements of the end result (in this case, a
 document).  So the logic only needs to be specified in one place.
 
-# <a name="endgoals"></a>End goals and the satisfaction of prerequisites
+# <a name="endgoals"></a>End goals and the Satisfaction of Prerequisites
 
-By default, all questions in a **docassemble** interview are asked
+By default, all questions in an interview session are asked
 only if and when they are needed.
 
-However, in order to start asking questions, **docassemble** needs to
+However, in order to start asking questions, the Steward needs to
 be given some direction.  You need to provide this direction by
 marking at least one [`question`] block or [`code`] block as
 [`mandatory`] (or one [`code`] block as [`initial`]).
 
-If **docassemble** does not know what question to ask, it will give
+If the Steward does not know what question to ask, it will give
 you an error that looks like this:
 
 {% include side-by-side.html demo="no-mandatory" %}
@@ -65,19 +65,19 @@ interview.
 
 {% include side-by-side.html demo="with-mandatory" %}
 
-Now **docassemble** knows what to do: it needs to present the final
+Now the Steward knows what to do: it needs to present the final
 screen.
 
 Note that the two questions in the interview ("How are you doing?"
 and "What is your favorite color?") were not marked as `mandatory`,
-but are nevertheless still asked during the interview.  Since the text
+but are nevertheless still asked during the interview session.  Since the text
 of the final `question` depends on the answers to these questions, the
 questions are asked automatically.  The order in which the questions
-are asked depends on the order in which **docassemble** needs the
+are asked depends on the order in which the Steward needs the
 answers (not the order in which the questions appear in the
-interview text).
+[DALang]).
 
-The interview above effectively tells **docassemble** the following:
+The DALang above effectively tells the Steward the following:
 
 1. If a definition of `how_doing` is needed, but `how_doing` is
    undefined, you can get a definition of `how_doing` by asking the "How
@@ -88,38 +88,39 @@ The interview above effectively tells **docassemble** the following:
 3. You must present the "Your favorite color is . . ."  screen to the
    user.
    
-Here is what happens in this interview:
+Here is what happens in a session of this interview:
 
-1. The user clicks on a link and goes to the **docassemble** interview.
-1. **docassemble** tries to present the "Your favorite color is . . ."
+1. The user clicks on a link and goes to the interview.
+1. The Steward starts an interview session with the user.
+1. The Steward tries to present the "Your favorite color is . . ."
    screen to the user.
-2. **docassemble** realizes it needs the definition of the
+2. The Steward realizes it needs the definition of the
    `favorite_color` variable, but it is undefined, so it asks the
    "What is your favorite color?" question.
 3. When the user answers the question, the variable `favorite_color`
    is set to the user's answer.
-4. **docassemble** again tries to present the "Your favorite color is
+4. The Steward again tries to present the "Your favorite color is
    . . ." screen to the user.
-5. **docassemble** realizes it needs the definition of the `how_doing`
+5. The Steward realizes it needs the definition of the `how_doing`
    variable, but it is undefined, so it asks the "How
    are you doing?" question.
 6. When the user answers the question, the variable `how_doing`
    is set to the user's answer.
-7. **docassemble** again tries to present the "Your favorite color is
+7. The Steward again tries to present the "Your favorite color is
    . . ." screen to the user.
-8. **docassemble** does not encounter any undefined variables, so it
+8. The Steward does not encounter any undefined variables, so it
    is able to present the "Your favorite color is . . ." screen to
    the user.
-9. The interview is now over because the "Your favorite color is
+9. The interview session is now over because the "Your favorite color is
    . . ."  screen does not allow the user to press any buttons to move
    forward.
 
 By making only the final screen `mandatory`, this interview takes
-advantage of **docassemble**'s feature for automatically satifying
-prerequisites.  The author simply needs to provide a collection of
-questions, in any order, and **docassemble** will figure out if and
+advantage of DALang's feature for automatically satifying
+prerequisites.  The developer simply needs to provide a collection of
+questions, in any order, and the Steward will figure out if and
 when to ask those questions, depending on what is necessary during any
-given interview.
+given interview session.
 
 Alternatively, you could make every question `mandatory`:
 
@@ -127,24 +128,25 @@ Alternatively, you could make every question `mandatory`:
 
 Here is what happens in this version of the interview:
 
-1. The user clicks a link to the **docassemble** interview.
-2. **docassemble** presents the mandatory "How are you doing?"
+1. The user clicks on a link and goes to the interview.
+1. The Steward starts an interview session with the user.
+2. The Steward presents the mandatory "How are you doing?"
    question to the user.
 3. When the user answers the question, the variable `how_doing`
    is set to the user's answer.
-4. **docassemble** presents the mandatory "What is your favorite color?"
+4. The Steward presents the mandatory "What is your favorite color?"
    question to the user.
 5. When the user answers the question, the variable `favorite_color`
    is set to the user's answer.
-6. **docassemble** presents the mandatory "Your favorite color is
+6. The Steward presents the mandatory "Your favorite color is
    . . ." screen to the user.  It does not need to ask any questions
    because the variables this screen depends on, `favorite_color` and
    `how_doing`, are already defined.
 
 The approach of marking everything as `mandatory` bypasses
-**docassemble**'s process of automatically satisfying prerequisites.
+a Steward's process of automatically satisfying prerequisites.
 
-When interview authors first start using **docassemble**, they tend to
+When Steward developers first start using DALang, they tend to
 use the approach of marking all questions as `mandatory` and listing
 them one after another.  For simple, linear interviews, this approach
 is attractive; it gives the author tight control over the interview
@@ -164,45 +166,45 @@ any flowchart that can accommodate every possible path of a
 complicated interview would look like a plate of spaghetti.
 
 The automatic satisfaction of prerequisites is a powerful feature of
-**docassemble**.  It allows interview authors to build any level of
-complexity into their interviews.  It frees the author from having to
+the Docassemble Framework.  It allows Steward developers to build any level of
+complexity into their interviews.  It frees the developer from having to
 envision all of the possible paths that could lead to the endpoint of
-an interview.  This allows the interview author to concentrate on the
+an interview.  This allows the Steward developer to concentrate on the
 substance of the interview's end goal rather than the process of
 gathering the information.
 
 The most "scalable" approach to building an interview is to allow
-**docassemble**'s prerequisite-satisfying algorithm to do the heavy
+a Steward's prerequisite-satisfying algorithm to do the heavy
 lifting.  This means using `mandatory` as little as possible.
 
-## <a name="changeorder"></a>Changing the order of questions
+## <a name="changeorder"></a>Changing the Order of Questions
 
 You may encounter situations where you don't like the order
-in which **docassemble** asks questions.  You can always tweak the
+in which a Steward asks questions.  You can always tweak the
 order of questions.  For example, suppose you want to make sure that
-your interview asks "How are you doing?" as the first question, rather
+your Steward asks "How are you doing?" as the first question, rather
 than "What is your favorite color?"
 
 One approach to change the order of questions is to use the
-[`need` directive] (explained in more detail [below](#need)):
+[`need` component] (explained in more detail [below](#need)):
 
 {% include side-by-side.html demo="with-mandatory-tweak-a" %}
 
-In this example, the [`need` directive] effectively tells
-**docassemble** that before **docassemble** tries to present the "Your
+In this example, the [`need` component] effectively tells
+the Steward that before it tries to present the "Your
 favorite color is . . ." screen to the user, it needs to make sure
 that the variables `how_doing` and `favorite_color` are defined.  It
-also indicates that **docassemble** should seek the definitions of
+also indicates that the Steward should seek the definitions of
 these variables in a specific order.  Thus, "How are you doing?" is asked
 first.
 
 Another approach to tweaking the order of questions is to use a
 [`code`] block as the single `mandatory` block that will control the
-course of the interview.
+course of the interview flow.
 
 {% include side-by-side.html demo="with-mandatory-tweak-b" %}
 
-In this example, the [`code`] block effectively tells **docassemble**:
+In this example, the [`code`] block effectively tells the Steward:
 
 1. Before doing anything else, make sure that `how_doing` is defined.
 2. Next, do what is necessary to show the [special screen] called
@@ -212,29 +214,29 @@ The prerequisite-satisfying process also works with [`code`] blocks.
 
 {% include side-by-side.html demo="code" %}
 
-In this example, when **docassemble** seeks the definition of
+In this example, when the Steward seeks the definition of
 `fruits`, it sees that it will find it by running the [`code`] block.
 When it tries to run this block, it will find that it does not know the
 definition of `peaches`, so it will ask a question to gather it.  Then
 it will find that it does not know the definition of `pears`, so it
 will ask a question to gather it.
 
-The following subsections explain in detail the `mandatory` directive
-and other directives that control interview flow.
+The following subsections explain in detail the `mandatory` component
+and other components that control interview flow.
 
 Before you move on, however, there are two important things to know
-about how **docassemble** satisfies prerequisites.
+about how a Steward satisfies prerequisites.
 
-First, remember that **docassemble** asks questions when a variable
+First, remember that Stewards asks questions when a variable
 that is _undefined_.  In the above example, if `fruits` had already
-been defined, **docassemble** would not have run the [`code`] block;
+been defined, the Steward would not have run the [`code`] block;
 it would have proceeded to display the final screen.  There are some
-exceptions to this.  The [`reconsider`] directive
+exceptions to this.  The [`reconsider`] component
 [discussed below](#reconsider) is one such exception; the
 [`force_ask()`] function is another.
 
 Second, note that the process of satisfying a prerequisite is
-triggered whenever **docassemble** needs to know the value of a variable,
+triggered whenever the Steward needs to know the value of a variable,
 but finds the variable is undefined.  If you write [Python] code
 (which is what [`code`] blocks are), keep in mind that under the rules
 of [Python], the mere mention of a variable name can trigger the
@@ -273,11 +275,11 @@ In this case, [Python] will not "need" the value of `apples` unless
 the number of peaches and pears exceeds 113,121, so the mention of
 `apples` does not necessarily trigger the asking of a question.
 
-# <a name="directives"></a>Directives that control interview logic
+# <a name="directives"></a>Components that Control Interview Flow
 
 ## <a name="mandatory"></a>`mandatory`
 
-Consider the following as a complete interview file:
+Consider the following [DALang] file as a complete interview:
 
 {% highlight yaml %}
 ---
@@ -294,11 +296,11 @@ mandatory: True
 ---
 {% endhighlight %}
 
-The interview will ask "Are you sitting down" and then it will say
+The Steward will ask "Are you sitting down" and then it will say
 "Your socks do not match."  It will not ask "What is the capital of
 Maine?"
 
-Another way to control the logic of an interview is to have a single,
+Another way to control the interview flow of a Steward is to have a single,
 simple `mandatory` [`code`] block that sets the interview in motion.
 
 For example:
@@ -331,7 +333,7 @@ sets: user_will_not_sit_down
 Here, the single `mandatory` block contains simple [Python] code that
 contains the entire logic of the interview.
 
-If a `mandatory` directive is not present within a block, it is as
+If a `mandatory` component is not present within a block, it is as
 though `mandatory` was set to `False`.
 
 The value of `mandatory` can be a [Python] expression.  If it is a
@@ -342,9 +344,9 @@ treated as mandatory if the expression evaluates to a true value.
 
 ## <a name="initial"></a>`initial`
 
-The `initial` modifier is very similar to [`mandatory`].  It can only
+The `initial` component is very similar to [`mandatory`].  It can only
 be used on a [`code`] block.  It causes the [`code`] block to be run
-every time **docassemble** processes your interview.  [`mandatory`]
+every time the Steward is engaged (every time the screen loads).  [`mandatory`]
 blocks, by contrast, are never run again if they are successfully
 "asked" once.
 
@@ -353,22 +355,22 @@ blocks, by contrast, are never run again if they are successfully
 Note in this example that from screen to screen, the `counter`
 increments from 1 to 2 and then to 4.  The counter does not count the
 number of screens displayed, but rather the number of times the
-interview logic was evaluated.  The "passes" through the interview are:
+[DALang] was evaluated.  The "passes" through the DALang are:
 
-1. The interview logic is evaluated, but the evaluation stops when the
-   undefined variable `fruit` is encountered.  The interview then
+1. The DALang is evaluated, but the evaluation stops when the
+   undefined variable `fruit` is encountered.  The Steward then
    tries to run the `code` block to get `fruit`, but encounters an
    undefined variable `peaches`, so it asks a question to gather
    `peaches`.
-2. The interview logic is evaluated, but the evaluation stops when the
-   undefined variable `fruit` is encountered.  The interview then
+2. The DALang is evaluated, but the evaluation stops when the
+   undefined variable `fruit` is encountered.  The Steward then
    tries to run the `code` block to get `fruit`, but encounters an
    undefined variable `pears`, so it asks a question to gather
    `pears`.
-3. The interview logic is evaluated, but the evaluation stops when the
-   undefined variable `fruit` is encountered.  The interview then runs
+3. The DALang is evaluated, but the evaluation stops when the
+   undefined variable `fruit` is encountered.  The Steward then runs
    the `code` block, and this time, `fruit` is successfully defined.
-4. The interview logic is evaluated again, and the final question is
+4. The DALang is evaluated again, and the final question is
    displayed.
 
 Like [`mandatory`], `initial` can be set to `True`, `False`, or to
@@ -378,47 +380,47 @@ true or false value.
 `initial` blocks are useful in a variety of contexts:
 
 * When you are using a [multi-user interview] and you want to set
-  interview variables to particular values depending on the user who
+  DALang variables to particular values depending on the user who
   is currently using the interview.
 * When you are using the [actions] feature and you want to make sure
   the [actions] are processed only in particular circumstances.
 
 ## <a name="need"></a>`need`
 
-The `need` directive allows you to manually specify the prerequisites
+The `need` component allows you to manually specify the prerequisites
 of a [`question`] or [`code`] block.  This can be helpful for tweaking
 the order in which questions are asked.
 
 {% include side-by-side.html demo="need-directive" %}
 
-In this example, the ordinary course of the interview logic would ask
+In this example, the ordinary course of the interview flow would ask
 "What is your favorite animal?" as the first question.  However,
 everyone knows that the first question you should ask of a child is
-"How old are you?"  The `need` directive indicates that before
-**docassemble** should even try to present the "Thank you for that
+"How old are you?"  The `need` component indicates that before
+the Steward should even try to present the "Thank you for that
 information" screen, it should ensure that `number_of_years_old` old
 is defined, then ensure that `favorite_animal`, and then try to
 present the screen.
 
-The variables listed in a `need` directive do not have to actually be
+The variables listed in a `need` component do not have to actually be
 used by the question.  Also, if your question uses variables that are
-not mentioned in the `need` list, **docassemble** will still pursue
+not mentioned in the `need` list, the Steward will still pursue
 definitions of those variables.
 
 ## <a name="reconsider"></a>`reconsider`
 
-The `reconsider` directive can only be used on [`code`] blocks.
+The `reconsider` component can only be used on [`code`] blocks.
 
-If `reconsider` is set to `True`, then **docassemble** will always
+If `reconsider` is set to `True`, then the Steward will always
 "reconsider" the values of any of the variables set by the `code`
 block.
 
-That is, every time the interview is assembled (every time the screen
-loads) **docassemble** will forget about the value of any of the
+That is, every time the Steward is engaged (every time the screen
+loads) it will forget about the value of any of the
 variables set by the `code` block.
 
 You will want to set `reconsider` to `True` if your interview flow is
-such that you want **docassemble** to reconsider its definition of a
+such that you want the Steward to reconsider its definition of a
 variable based on information that might be gathered in the future.
 
 For example, see if you can find the problem with the interview below.
@@ -464,8 +466,8 @@ cans of cat food needed when it says "To feed your own cat, you will
 need . . . cans of cat food," but it will not increase the number of
 cans of cat food to account for later-acquired information (i.e. the
 fact that the neighbor's cat comes over).  Once `cat_food_cans_needed`
-has been defined once, **docassemble** will continue to use that
-definition whenever the interview calls for the definition of
+has been defined once, the Steward will continue to use that
+definition whenever the [DALang] calls for the definition of
 `cat_food_cans_needed`.
 
 This problem can be fixed by adding `reconsider: True` to the [`code`]
@@ -479,35 +481,35 @@ reconsider: True
 ---
 {% endhighlight %}
 
-The `reconsider` modifier tells **docassemble** to always reconsider
+The `reconsider` component tells the Steward to always reconsider
 the variables in the [`code`] block.  When the final screen comes up,
-**docassemble** will have forgotten about the earlier-defined value of
+the Steward will have forgotten about the earlier-defined value of
 `cat_food_cans_needed` and will therefore re-define the value by
 re-running the [`code`] block.
 
 {% include side-by-side.html demo="reconsider" %}
 
-The `reconsider` modifier is particularly important to use when you
+The `reconsider` component is particularly important to use when you
 allow interviewees to go back and modify past answers using a
 [`review`] block.  For more information about how to implement such
 features, see [`review`], [`event`], [`url_action()`], [`process_action()`],
 [`action_menu_item()`], and [`menu_items`].
 
-**docassemble** also offers the [`reset` initial block], which has the
-same effect as the `reconsider` modifier, but using a different way of
+DALang also offers the [`reset` initial block], which has the
+same effect as the `reconsider` component, but using a different way of
 specifying which variables should be reconsidered.  Whether you use
-the [`reset` initial block] or the `reconsider` modifier is a question
+the [`reset` initial block] or the `reconsider` component is a question
 of what you consider to be more convenient and/or readable.
 
-# <a name="order"></a>The logical order of an interview
+# <a name="order"></a>The Order of DALang Blocks
 
 [`mandatory`] and [`initial`] blocks are evaluated in the order they
-appear in the question file.  Therefore, the location in the interview
+appear in the [DALang] files.  Therefore, the location in the DALang
 of [`mandatory`] and [`initial`] blocks, relative to each other, is
 important.
 
 The order in which non-[`mandatory`] and non-[`initial`] questions
-appear is usually not important.  If **docassemble** needs a
+appear is usually not important.  If a Steward needs a
 definition of a variable, it will go looking for a block that defines
 the variable.
 
@@ -525,15 +527,15 @@ The order of the questions is:
 The first two questions are asked because the corresponding
 [`question`] blocks are marked as [`mandatory`].  They are asked in
 the order in which they are asked because of the way the [`question`]
-blocks are ordered in the [YAML] file.
+blocks are ordered in the DALang file.
 
 The next two questions are asked implicitly.  The third and final
 [`mandatory`] block makes reference to two variables: `favorite_food`
 and `user_likes_penguins`.  Since the [`question`]s that define these
-variables are not `mandatory`, they can appear anywhere in the [YAML]
+variables are not `mandatory`, they can appear anywhere in the DALang
 file, in any order you want.  In this case, the `favorite_food`
-[`question`] block is at the end of the [YAML] file, and the
-`user_likes_penguins` [`question`] block is at the start of the [YAML]
+[`question`] block is at the end of the DALang file, and the
+`user_likes_penguins` [`question`] block is at the start of the DALang
 file.
 
 The order in which these two questions are asked is determined by the
@@ -544,22 +546,22 @@ about food and then asked about penguins.
 
 Note that there is also an extraneous question in the interview that
 defines `user_likes_elephants`; the presence of this [`question`]
-block in the [YAML] file has no effect on the interview.
+block in the DALang file has no effect on the interview.
 
-Generally, you can order non-[`mandatory`] blocks in your [YAML] file
+Generally, you can order non-[`mandatory`] blocks in your DALang file
 any way you want.  You may want to group them by subject matter into
-separate [YAML] files that you [`include`] in your main [YAML] file.
+separate DALang files that you [`include`] in your main DALang file.
 When your interviews get complicated, there is no natural order to
 questions.  In some situations, a question may be asked early, and in
 other situations, a question may be asked later.
 
-## <a name="overriding"></a>Overriding one question with another
+## <a name="overriding"></a>Overriding One Question with Another
 
-The order in which non-[`mandatory`] blocks appear in the [YAML] file
+The order in which non-[`mandatory`] blocks appear in the [DALang] file
 is only important if you have multiple blocks that each offer to
 define the same variable.  In that case, the order of these blocks
 relative to each other is important.  When looking for blocks that
-offer to define a variable, **docassemble** will use later-defined
+offer to define a variable, the Steward will use later-defined
 blocks first.  Later blocks "supersede" the blocks that came before.
 
 This allows you to [`include`] "libraries" of questions in your
@@ -570,7 +572,7 @@ As explained in the [initial blocks] section, the effect of an
 [`include`] block is basically equivalent to copying and pasting the
 contents of the included file into the original file.
 
-For example, suppose that there is a [YAML] file called
+For example, suppose that there is a DALang file called
 `question-library.yml`, which someone else wrote, which consists of
 the following questions:
 
@@ -588,7 +590,7 @@ You can write an interview that uses this question library:
 
 {% include side-by-side.html demo="use-question-library" %}
 
-When **docassemble** needs to know the definition of
+When the Steward needs to know the definition of
 `user_agrees_it_is_a_nice_evening` or `user_wants_to_go_to_dance`, it
 will be able to find a block in `question-library.yml` that offers to
 define the variable.
@@ -601,15 +603,15 @@ doing the following:
 
 {% include side-by-side.html demo="override" %}
 
-This interview file loads the two questions defined in
+This DALang file loads the two questions defined in
 `question-library.yml`, but then, later in the list of questions,
 provides a different way to get the value of
-`user_wants_to_go_to_dance`.  When **docassemble** goes looking for a
+`user_wants_to_go_to_dance`.  When the Steward goes looking for a
 question to provide a definition of `user_wants_to_go_to_dance`, it
 starts with the questions that were defined last, and it will
 prioritize your question over the question in `question-library.yml`.
 Your [`question`] block takes priority because it is located _later_ in
-the [YAML] file.
+the DALang file.
 
 This is similar to the way law works: old laws do not disappear from
 the law books, but they can get superseded by newer laws.  "Current
@@ -624,29 +626,29 @@ continue to maintain.
 
 For example, if someone else has developed interview questions that
 determine a user's eligibility for food stamps, you can incorporate by
-reference that author's [YAML] file into an interview that assesses
+reference that author's DALang file into an interview that assesses
 whether a user is maximizing his or her public benefits.  When the law
 about food stamps changes, that author will be responsible for
-updating his or her [YAML] file; your interview will not need to
+updating his or her DALang file; your interview will not need to
 change.  This allows for a division of labor.  All you will need to do
-is make sure that the **docassemble** [package] containing the food
-stamp [YAML] file gets updated on the server when the law changes.
+is make sure that the Steward's [package] containing the food
+stamp DALang file gets updated on the server when the law changes.
 
-## <a name="fallback"></a>Fallback questions
+## <a name="fallback"></a>Fallback Questions
 
 If a more recently-defined [`question`] or [`code`] block does not,
-for whatever reason, actually define the variable, **docassemble**
-will fall back to a block that is located earlier in the [YAML] file.
+for whatever reason, actually define the variable, the Steward
+will fall back to a block that is located earlier in the DALang file.
 For example:
 
 {% include side-by-side.html demo="fallback" %}
 
-In this case, the special [`continue`] choice causes **docassemble**
+In this case, the special [`continue`] choice causes the Steward
 to skip the [`question`] block and look elsewhere for a definition of
-`user_wants_to_go_to_dance`.  **docassemble** will "fall back" to the
+`user_wants_to_go_to_dance`.  The Steward will "fall back" to the
 version of the question that exists within `question-library.yml`.
 When looking for a block that offers to define a variable,
-**docassemble** starts at the bottom and works its way up.
+the Steward starts at the bottom and works its way up.
 
 Such fall-backs can also happen with [Python] code that could
 potentially define a variable, but for whatever reason does not
@@ -654,34 +656,34 @@ actually do so.  For example:
 
 {% include side-by-side.html demo="fallback2" %}
 
-In this case, when **docassemble** tries to get a definition of
+In this case, when the Steward tries to get a definition of
 `user_wants_to_go_to_dance`, it will first try running the [`code`]
 block, and then it will encounter `we_already_agreed_to_go` and seek
 its definition.  If the value of `we_already_agreed_to_go` turns out
 to be false, the [`code`] block will run its course without setting a
 value for `user_wants_to_got_to_dance`.  Not giving up,
-**docassemble** will keep going backwards through the blocks in the
-[YAML] file, looking for one that offers to define
+the Steward will keep going backwards through the blocks in the
+DALang file, looking for one that offers to define
 `user_wants_to_got_to_dance`.  It will find such a question among the
 questions included by reference from `question_library.yml`, namely
 the question "Interested in going to the dance tonight?"
 
-So, to summarize: when **docassemble** considers what blocks it _must_
-process, it goes from top to bottom through your interview [YAML]
-file, looking for [`mandatory`] and [`initial`] blocks; if a block is
+So, to summarize: when the Steward considers what blocks it _must_
+process, it goes from top to bottom through your DALang file for the interview,
+looking for [`mandatory`] and [`initial`] blocks; if a block is
 later in the file, it is processed later in time.  However, when
-**docassemble** considers what question it should ask to define a
+the Steward considers what question it should ask to define a
 particular variable, it goes from bottom to top; if a block is later
 in the file, it is considered to "supersede" blocks that are earlier
 in the file.
 
 As explained [below](#precedence), however, instead of relying on
-relative placement of blocks in the [YAML] file, you can explicitly
+relative placement of blocks in the DALang file, you can explicitly
 indicate which blocks take precedence over other blocks.
 
-# <a name="howitworks"></a>How **docassemble** runs your code
+# <a name="howitworks"></a>How a Steward Runs Your Code
 
-**docassemble** goes through your interview [YAML] file from start to
+A Steward goes through your DALang file for the interview from start to
 finish, incorporating [`include`]d files as it goes.  It always
 executes [`initial`] code when it sees it.  It executes any
 [`mandatory`]<span></span> [`code`] blocks that have not been
@@ -693,7 +695,7 @@ If at any time it encounters a variable that is undefined, for example
 while trying to formulate a question, it will interrupt itself in
 order to go find the a definition for that variable.
 
-Whenever **docassemble** comes back from one of these excursions to
+Whenever a Steward comes back from one of these excursions to
 find the definition of a variable, it does not pick up where it left
 off; it starts from the beginning again.
 
@@ -719,29 +721,29 @@ code: |
 The intention of this code is to increase the user's net worth by the
 resale value of the user's car, if the user has a car.  If the code
 only ran once, it would work as intended.  However, because of
-**docassemble**'s design, which is to ask questions "as needed," the
+how Stewards conduct interviews, which is to ask questions "as needed," the
 code actually runs like this:
 
-1. **docassemble** starts running the code; it encounters
+1. The Steward starts running the code; it encounters
  `user_has_car`, which is undefined.  It finds a question that defines
  `user_has_car` and asks it.  (We will assume `user_has_car` is set to True.)
-2. **docassemble** runs the code again, and tries to increment the
+2. The Steward runs the code again, and tries to increment the
  `user_net_worth` (which we can assume is already defined); it
  encounters `resale_value_of_user_car`, which is undefined.  It finds
  a question that defines `resale_value_of_user_car` and asks it.
-3. **docassemble** runs the code again.  The value of `user_net_worth`
+3. The Steward runs the code again.  The value of `user_net_worth`
  is increased.  Then the code encounters `user_car_brand`, which is
  undefined.  It finds a question that defines
  `user_car_brand` and asks it.
-4. **docassemble** runs the code again.  The value of `user_net_worth`
+4. The Steward runs the code again.  The value of `user_net_worth`
  is increased (again).  If `user_car_brand` is equal to "Toyota," then
  `user_is_sensible` is set.  In that case, the code runs successfully
  to the end, and the [`mandatory`] code block is marked as completed, so
  that it will not be run again.
 5. However, if `user_car_brand` is not equal to "Toyota," the code
  will encounter `user_car_is_convertible`, which is undefined.
- **docassemble** will find a question that defines
- `user_car_is_convertible` and ask it.  **docassemble** will then run
+ The Steward will find a question that defines
+ `user_car_is_convertible` and ask it.  The Steward will then run
  the code again, the value of `user_net_worth` will increase yet
  again, and then (finally) the code will run successfully to the end.
 
@@ -763,22 +765,22 @@ code: |
 
 Note that [`mandatory`] must be true for this to work sensibly.
 If this were an optional code block, it would not run to completion
-because `user_net_worth` would already be defined when **docassemble**
+because `user_net_worth` would already be defined when the Steward
 came back from asking whether the user has a car.
 
-# <a name="variablesearching"></a>How **docassemble** finds questions for variables
+# <a name="variablesearching"></a>How a Steward Finds Questions for Variables
 
-There can be multiple questions or code blocks in an interview that
+There can be multiple questions or code blocks in your [DALang] that
 can define a given variable.  You can write [`generic object`]
 questions in order to define attributes of objects, and you can use
 [index variables] to refer to any given item in a [`DAList`] or
 [`DADict`] (or a subtype of these objects).  Which one will be used?
 
 In general, if you have multiple questions or code blocks that are
-capable of defining a variable, **docassemble** will try the more
+capable of defining a variable, the Steward will try the more
 specific ones first, and then the more general ones.
 
-For example, if the interview needs a definition of
+For example, if the Steward needs a definition of
 `fruit['a'].seed_info.tally['b'].molecules[4].name`, it will look for
 questions that offer to define the following variables, in this order:
 
@@ -824,21 +826,21 @@ x[i].name
 x.name
 {% endhighlight %}
 
-Moreover, when **docassemble** searches for a [`generic object`]
+Moreover, when a Steward searches for a [`generic object`]
 question for a given variable, it first look for [`generic object`]
 questions with the object type of `x` (e.g., [`Individual`]).  Then it
 will look for [`generic object`] questions with the parent type of
 object type of `x` (e.g., [`Person`]).  It will keep going through the
 ancestors, stopping at the most general object type, [`DAObject`].
 
-Note that the order of questions or code blocks in the [YAML] matters
+Note that the order of questions or code blocks in the DALang matters
 where the variable name is the same; the blocks that appear later in
-the [YAML] will be tried first.  But when the variable name is
-different, the order of the blocks in the [YAML] does not matter.
-If your interview has a question that offers to define
+the DALang will be tried first.  But when the variable name is
+different, the order of the blocks in the DALang does not matter.
+If your DALang has a question that offers to define
 `seeds['apple']` and another question that offers to define
 `seeds[i]`, the `seeds['apple']` question will be tried first,
-regardless of where the question is located in the the [YAML].
+regardless of where the question is located in the DALang.
 
 Here is an example in which a relatively specific question, which sets
 `veggies[i][1]`, will be used instead of a more general question,
@@ -855,36 +857,36 @@ modifier] to indicate that a [`question`] or [`code`] block should
 only be considered when looking to define a particular variable or set
 of variables, even though it is capable of defining other variables.
 
-# <a name="multiple interviews"></a>Combining multiple interviews into one
+# <a name="multiple interviews"></a>Stewards with Multiple Interviews
 
-## <a name="multiple interviews umbrella"></a>Using an umbrella YAML file
+## <a name="multiple interviews umbrella"></a>Using an Umbrella DALang File
 
 If you have multiple interviews and you want the user to choose which
 interview to run, you could offer the multiple interviews as a single
-interview, where there is an "umbrella" [YAML] file that [`include`]s
+interview, where there is an "umbrella" [DALang] file that [`include`]s
 the others.
 
 For example:
 
 {% include side-by-side.html demo="umbrella-interview" %}
 
-Note that this interview [`include`]s three separate [YAML] files.
+Note that this interview [`include`]s three separate DALang files.
 The controlling logic is the [`code`] block in the "umbrella"
 interview that pursues a different endpoint depending on the value of
 `interview_choice`.
 
-The three interview files included are:
+The three DALang files included are:
 
 * [interview-fruit.yml] 
 * [interview-vegetables.yml] 
 * [interview-flowers.yml] 
 
-Note that these interview files contain everything needed for the
+Note that these DALang files contain everything needed for the
 interview except for any [`mandatory`] blocks that would define an
 interview endpoint; that function is reserved for the "umbrella"
 interview.
 
-## <a name="multiple interviews links"></a>Using hyperlinks
+## <a name="multiple interviews links"></a>Using Hyperlinks
 
 There are other ways to offer users a choice of interviews.  For
 example, you can use the [`interview_url()`] function with the `i`
@@ -900,10 +902,10 @@ You might also offer these hyperlinks in the menu, using the
 
 You can also use the [`dispatch`] configuration directive in
 combination with [`show dispatch link`] to allow the user to access a
-list of interviews available on your server by selecting "Available
+list of interviews available on your [server] by selecting "Available
 Interviews" from the menu.
 
-## <a name="multiple interviews redirect"></a>A/B testing with redirects
+## <a name="multiple interviews redirect"></a>A/B Testing with Redirects
 
 The hyperlinks described in the previous subsection can also be used
 with the [`command()`] function to automatically redirect the user to
@@ -917,7 +919,7 @@ function], depending on a computational coin flip.
 
 The use of `'exit'` in the [`command()`] function is important here
 because it will cause this brief interview session to be deleted from
-the list of interviews, since its sole purpose is to redirect the
+the user's list of interview sessions, since its sole purpose is to redirect the
 user.
 
 An interview like this might also log some data for purposes of
@@ -925,7 +927,7 @@ collecting metrics, perhaps using [Redis].  In the interviews being
 A/B tested, metrics could be logged using [Redis] or the [Google
 Analytics feature].
 
-## <a name="subinterview"></a>Using multiple endpoints in a single interview
+## <a name="subinterview"></a>Interviews with Multiple Endpoints 
 
 <a name="subinterview"></a>Another way to offer an "interview inside
 an interview" is to populate variables and then delete them.
@@ -944,7 +946,7 @@ code: |
 {% endhighlight %}
 
 This is concise but cryptic, so it may be easier to understand what
-the interview is doing by writing out the variables for which [Python]
+the Steward is doing by writing out the variables for which [Python]
 will seek definitions, in the order in which [Python] will seek them:
 
 {% highlight yaml %}
@@ -957,7 +959,7 @@ code: |
     del user
 {% endhighlight %}
 
-First, the interview asks for the goal (`user.goal`) -- whether the
+First, the Steward asks for the goal (`user.goal`) -- whether the
 user wants do an interview about fruit, vegetables, or legumes.
 
 Next, it seeks an endpoint for that goal -- a variable like
@@ -980,7 +982,7 @@ track information about the user: information that is permanent is
 stored in the `user_global` object, and information that is temporary
 is stored in the `user` object.
 
-Note that the interview author only uses the object `user` when
+Note that the interview developer only uses the object `user` when
 writing [`question`]s that refer to characteristics of the user.  The
 following [`code`] blocks assert that information about the `user`'s
 name and age should by defined by reference to attributes of the
@@ -995,47 +997,47 @@ code: |
   user.age_category = user_global.age_category
 {% endhighlight %}
 
-This means that whenever the interview needs the definition of
+This means that whenever the Steward needs the definition of
 `user.name.first`, it will actually seek out `user_global.name.first`.
 If the user has been asked for their name before, no question needs to
 be asked; the [`code`] will take care of defining `user.name.first`
 and `user.name.last`.  But other attributes, like
-`user.favorite_fruit`, are lost when the interview logic does `del
-user`.  As a result, the interview will remember some answers and
+`user.favorite_fruit`, are lost when the Steward runs `del
+user`.  As a result, the Steward will remember some answers and
 forget others.
 
-# <a name="bplogic"></a>Best practices for interview logic and organization
+# <a name="bplogic"></a>Best Practices for Interview Flow and Organization
 
 * Use only a single [`mandatory`]<span></span> [`code`] block for each
   interview, and put it at the top of the file after the
   [initial blocks].
 
-# <a name="bpsharing"></a>Best practices for sharing with others
+# <a name="bpsharing"></a>Best Practices for Sharing with Others
 
 * Don't reinvent the wheel; [`include`] other people's questions.
 * Share your [`question`]s, [`code`], and [`template`]s with others.
-* To that end, keep your [`question`] blocks in a separate [YAML] file
-  from your [`mandatory`] interview logic, so that other people can
+* To that end, keep your [`question`] blocks in a separate [DALang] file
+  from your [`mandatory`] blocks, so that other people can
   incorporate your questions without having to edit your work.  Your
-  main interview file would consist only of:
-    * A [`metadata`] statement saying who you are and what your interview
+  main DALang file would consist only of:
+  * A [`metadata`] block saying who you are and what your interview
     is for;
-	* A statement to [`include`] your file of questions;
-	* Any [`interview help`] blocks;
-	* A [`default role`] block, if you use [roles];
-	* Any [`initial`] code;
-	* Your [`mandatory`] code or questions that set your interview in motion.
-* [`include`] other people's question files directly from their
-  **docassemble** packages, rather than by copying other people's
-  files into your package.  That way, when the other authors make
+  * An [`include`] block to your DALang file of questions;
+  * Any [`interview help`] blocks;
+  * A [`default role`] block, if you use [roles];
+  * Any [`initial`] code;
+  * Your [`mandatory`] code or questions that set your Steward in motion.
+* [`include`] other developer's DALang question files directly from their
+  Steward, rather than by copying other developer's
+  files into your Steward.  That way, when the other authors make
   improvements to their questions, you can gain the benefit of those
   improvements automatically.
 * Don't invent your own scheme for variable names; follow conventions
   and replicate what other people are doing.
 * If other people are including your questions and code, avoid
   changing your variable names unnecessarily, or else you will "break"
-  other people's interviews.  This does limit your autonomy somewhat,
-  but the benefits for the community of interview authors more than
+  other people's Stewards.  This does limit your autonomy somewhat,
+  but the benefits for the community of Steward developers more than
   make up for the loss of autonomy.
 
 [roles]: {{ site.baseurl }}/docs/roles.html
@@ -1075,13 +1077,13 @@ forget others.
 [`generic object`]: {{ site.baseurl }}/docs/modifiers.html#generic object
 [multi-user interview]: {{ site.baseurl }}/docs/roles.html
 [actions]: {{ site.baseurl }}/docs/functions.html#actions
-[`need` directive]: #need
+[`need` component]: #need
 [`reconsider`]: #reconsider
 [`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
 [`id` and `supersedes`]: {{ site.baseurl}}/docs/modifiers.html#precedence
 [`order` initial block]: {{ site.baseurl }}/docs/initial.html#order
-[`if` modifier]: {{ site.baseurl}}/docs/modifiers.html#if
-[`scan for variables` modifier]: {{ site.baseurl}}/docs/modifiers.html#scan for variables
+[`if` component]: {{ site.baseurl}}/docs/modifiers.html#if
+[`scan for variables` component]: {{ site.baseurl}}/docs/modifiers.html#scan for variables
 [restart button]: {{ site.baseurl}}/docs/questions.html#special buttons
 [`command()`]: {{ site.baseurl }}/docs/functions.html#command
 [demo interview]: https://demo.docassemble.org/interview?i=docassemble.demo:data/questions/questions.yml
@@ -1089,3 +1091,5 @@ forget others.
 [`show dispatch link`]: {{ site.baseurl }}/docs/config.html#show dispatch link
 [Redis]: {{ site.baseurl }}/docs/functions.html#redis
 [Google Analytics feature]: {{ site.baseurl }}/docs/config.html#google analytics
+[DALang]: {{ site.baseurl }}/docs/interviews.html#yaml
+[server]: {{ site.baseurl }}/docs/installation.html
