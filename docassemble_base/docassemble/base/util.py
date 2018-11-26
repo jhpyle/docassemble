@@ -343,6 +343,9 @@ class DADateTime(datetime.datetime):
     def replace_time(self, time):
         return self.replace(hour=time.hour, minute=time.minute, second=time.second, microsecond=time.microsecond)
     @property
+    def nanosecond(self):
+        return 0
+    @property
     def dow(self):
         return self.isocalendar()[2]
     @property
